@@ -62,12 +62,6 @@ class BattleManager(
      * 參數：(session, playerId, playerWin)
      */
     var onBattleEndCallback: (suspend (GameSession, Long, Boolean) -> Unit)? = null
-    companion object {
-        private const val SCENE_LIMIT_NO_CATCH_BIT = 1 shl 6
-        private const val NPC_KIND_ELEPHANT = 22
-        private const val RIDING_SKILL_ID = 14034
-    }
-
     /** 所有進行中的戰鬥（battleId → BattleInstance） */
     private val battles = ConcurrentHashMap<Long, BattleInstance>()
 
@@ -1074,6 +1068,9 @@ class BattleManager(
         private const val PLAYER_MAX_LEVEL = 200
         private const val TURN3_EXTRA_LEVELS = 50
         private const val TURN3_MAX_LEVEL = PLAYER_MAX_LEVEL + TURN3_EXTRA_LEVELS
+        private const val SCENE_LIMIT_NO_CATCH_BIT = 1 shl 6
+        private const val NPC_KIND_ELEPHANT = 22
+        private const val RIDING_SKILL_ID = 14034
     }
 
     // ── 封包序列化輔助 ──
