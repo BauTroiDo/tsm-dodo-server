@@ -1,0 +1,265 @@
+## Bảng Opcode S→C Đầy Đủ (72 handler)[cite: 1]
+
+### Cấu trúc Bộ phân phối (Dispatcher)[cite: 1]
+- Điểm vào (Entry): `0x006FD63C`[cite: 1]
+- Bảng Lookup: `0x006FD68C` (200 bytes, opcode → index)[cite: 1]
+- Bảng Jump: `0x006FD754` (73 × 4 bytes, index → handler VA)[cite: 1]
+- Mặc định: `0x007079C8`[cite: 1]
+- Chuỗi gọi lệnh: Mạng → Giải mã XOR → `0x0050BEF8` → `0x006FD63C` → handler[cite: 1]
+
+| Opcode | Hex | Handler | Tên | Trạng thái |
+|--------|-----|---------|------|------|
+| 0 | 0x00 | 0x006FD878 | System/Login | Dùng chung |
+| 1 | 0x01 | 0x006FDF3E | Auth | Dùng chung |
+| 2 | 0x02 | 0x006FE49D | Chat | Dùng chung |
+| 3 | 0x03 | 0x006FE559 | Look | Dùng chung |
+| 4 | 0x04 | 0x006FEE09 | PlayerAppear | Dùng chung |
+| 5 | 0x05 | 0x006FEFD0 | PlayerUpdate | Dùng chung |
+| 6 | 0x06 | 0x006FF0FA | Move | Dùng chung |
+| 7 | 0x07 | 0x006FF2D4 | PlayerDetail | Dùng chung |
+| 8 | 0x08 | 0x006FF4E3 | StatUpdate | Dùng chung |
+| 9 | 0x09 | 0x006FF8CC | CreateCharResult | Dùng chung |
+| 11 | 0x0B | 0x006FF9BE | Battle | Dùng chung |
+| 12 | 0x0C | 0x006FFBDA | Relocate | Dùng chung |
+| 13 | 0x0D | 0x006FFE52 | Group | Dùng chung |
+| 14 | 0x0E | 0x0070024B | Mail | Dùng chung |
+| 15 | 0x0F | 0x00700553 | Pet | Dùng chung |
+| 16 | 0x10 | 0x0070076C | NpcManage | Dùng chung |
+| 19 | 0x13 | 0x00700C1C | BattlePet | Dùng chung |
+| 20 | 0x14 | 0x00700D7B | Action | Dùng chung |
+| 22 | 0x16 | 0x00701E36 | Skill | Dùng chung |
+| 23 | 0x17 | 0x00702175 | Item | Dùng chung (112 sub) |
+| 24 | 0x18 | 0x00702EBF | ItemInfo | Dùng chung |
+| 25 | 0x19 | 0x00703409 | SceneManage | Dùng chung |
+| 26 | 0x1A | 0x007035ED | Talk | Dùng chung |
+| 27 | 0x1B | 0x00703B99 | Trade | Dùng chung |
+| 29 | 0x1D | 0x00703D38 | Bank | Dùng chung |
+| 30 | 0x1E | 0x00703F45 | Storage | Dùng chung |
+| 31 | 0x1F | 0x0070406C | NpcShop | Dùng chung |
+| 32 | 0x20 | 0x007044F9 | Express | Dùng chung |
+| 33 | 0x21 | 0x0070456A | Welcome | Dùng chung |
+| 34 | 0x22 | 0x00704729 | GamePoints | Dùng chung |
+| 35 | 0x23 | 0x007047AD | Guild | Dùng chung |
+| 36 | 0x24 | 0x00704EE2 | GuildInfo | Dùng chung |
+| 37 | 0x25 | 0x007051C0 | GuildAction | Dùng chung |
+| 38 | 0x26 | 0x0070526A | GuildBattle | Dùng chung |
+| 39 | 0x27 | 0x0070528B | SystemMaster | Dùng chung |
+| 40 | 0x28 | 0x00705D45 | Hotkey | Dùng chung |
+| 41 | 0x29 | 0x00705D66 | Quest | Dùng chung |
+| 42 | 0x2A | 0x00706063 | Friend | Dùng chung |
+| 43 | 0x2B | 0x007060CA | Compound | Dùng chung |
+| 44 | 0x2C | 0x00706216 | RebornPet | Dùng chung |
+| 45 | 0x2D | 0x00706264 | Reborn | Dùng chung |
+| 46 | 0x2E | 0x00706966 | WaterWar | Dùng chung |
+| 50 | 0x32 | 0x007069B6 | BattleCommand | Dùng chung |
+| 51 | 0x33 | 0x00706A0A | BattleView | Dùng chung |
+| 52 | 0x34 | 0x00706A2B | MountainThrow | Dùng chung |
+| 53 | 0x35 | 0x00706A57 | ShipSkill | Dùng chung |
+| 54 | 0x36 | 0x00706C1A | Keepalive | Dùng chung |
+| 55 | 0x37 | 0x00706C2B | Stall | Dùng chung |
+| **56** | **0x38** | **0x00706CB0** | **Stub (Vỏ rỗng)** | **NTS thêm mới** |
+| 57 | 0x39 | 0x00706CBB | Gacha | Dùng chung |
+| 58 | 0x3A | 0x00706D92 | Wheel | Dùng chung |
+| 59 | 0x3B | 0x00706DB3 | Festival | Dùng chung |
+| 60 | 0x3C | 0x00706E03 | Mount | Dùng chung |
+| 61 | 0x3D | 0x00706E6A | GuildWar | Dùng chung |
+| 62 | 0x3E | 0x007070D5 | BlissBag | Dùng chung |
+| 63 | 0x3F | 0x0070710E | Outfit | Dùng chung |
+| 64 | 0x40 | 0x007072AC | NavalCombat | Dùng chung |
+| 65 | 0x41 | 0x007072FC | Rank | Dùng chung |
+| 66 | 0x42 | 0x007073E2 | GmTool | Dùng chung |
+| 67 | 0x43 | 0x00707575 | HoleGame | Dùng chung |
+| 68 | 0x44 | 0x00707596 | Connect | Dùng chung |
+| 69 | 0x45 | 0x007075D5 | BoatSkill | Dùng chung |
+| 70 | 0x46 | 0x007076F7 | Mark | Dùng chung |
+| 71 | 0x47 | 0x007077D0 | AntiAddiction | Dùng chung |
+| 72 | 0x48 | 0x0070783E | CityEx | Dùng chung |
+| **73** | **0x49** | **0x007078E5** | **WorldBoss** | **NTS thêm mới** |
+| **74** | **0x4A** | **0x007078F9** | **NpcUpgrade** | **NTS thêm mới** |
+| **75** | **0x4B** | **0x0070790D** | **SaleRoom** | **NTS thêm mới** |
+| **76** | **0x4C** | **0x00707921** | **ExpSlot** | **NTS thêm mới** |
+| **77** | **0x4D** | **0x00707935** | **Activity** | **NTS thêm mới** |
+| **78** | **0x4E** | **0x00707985** | **Astrolabe** | **NTS thêm mới** |
+| 199 | 0xC7 | 0x00707996 | Reconnect | Dùng chung |
+
+---
+
+## Bảng Opcode C→S Đầy Đủ (69 handler)[cite: 1]
+
+### Cấu trúc Bộ phân phối[cite: 1]
+- Điểm vào: `0x006EE9D0`[cite: 1]
+- Bảng Lookup: `0x006EEA27` (200 bytes, opcode → index)[cite: 1]
+- Bảng Jump: `0x006EEAEF` (70 × 4 bytes, index → handler VA)[cite: 1]
+- Mặc định: `0x006FD1D2`[cite: 1]
+- Mô hình gọi lệnh: `mov dl, opcode; mov cl, sub; call 0x006EE9D0` (395 điểm gọi)[cite: 1]
+
+| Opcode | Hex | Idx | Handler | Tên | Trạng thái |
+|--------|-----|-----|---------|------|------|
+| 0 | 0x00 | 1 | 0x006EEC07 | Login | Dùng chung |
+| 1 | 0x01 | 2 | 0x006EEC1D | Auth | Dùng chung |
+| 2 | 0x02 | 3 | 0x006EEE99 | Chat | Dùng chung |
+| **3** | **0x03** | **4** | **0x006EF223** | **Look (Yêu cầu)** | **NTS thêm mới** |
+| 5 | 0x05 | 5 | 0x006EF298 | MoveConfirm | Dùng chung |
+| 6 | 0x06 | 6 | 0x006EF3D1 | Move | Dùng chung |
+| **7** | **0x07** | **7** | **0x006EF5C5** | **PlayerDetail (Yêu cầu)** | **NTS thêm mới** |
+| 8 | 0x08 | 8 | 0x006EF672 | StatPoint | Dùng chung |
+| 9 | 0x09 | 9 | 0x006EF872 | CreateChar | Dùng chung |
+| 10 | 0x0A | 10 | 0x006EFCA9 | (Chưa đặt tên) | Dùng chung¹ |
+| 11 | 0x0B | 11 | 0x006EFCA9 | Battle | Dùng chung |
+| 12 | 0x0C | 12 | 0x006F04D5 | Relocate | Dùng chung |
+| 13 | 0x0D | 13 | 0x006F0548 | Group | Dùng chung |
+| 14 | 0x0E | 14 | 0x006F0A24 | Mail | Dùng chung |
+| 15 | 0x0F | 15 | 0x006F0D16 | Pet | Dùng chung |
+| 16 | 0x10 | 16 | 0x006F16EC | NpcManage | Dùng chung |
+| 18 | 0x12 | 17 | 0x006F2FFC | (Chưa đặt tên) | Dùng chung¹ |
+| 19 | 0x13 | 18 | 0x006F30B7 | BattlePet | Dùng chung |
+| 20 | 0x14 | 19 | 0x006F31CA | Action | Dùng chung |
+| 22 | 0x16 | 20 | 0x006F34E0 | (Chưa đặt tên) | Dùng chung¹ |
+| 23 | 0x17 | 21 | 0x006F35E1 | Item | Dùng chung |
+| 24 | 0x18 | 22 | 0x006F62EC | ItemInfo | Dùng chung |
+| 25 | 0x19 | 23 | 0x006F64B7 | SceneManage | Dùng chung |
+| 26 | 0x1A | 24 | 0x006F6DCD | Talk | Dùng chung |
+| 27 | 0x1B | 26 | 0x006F7330 | Trade | Dùng chung |
+| 28 | 0x1C | 25 | 0x006F7076 | Skill | Dùng chung |
+| 29 | 0x1D | 27 | 0x006F758C | Bank | Dùng chung |
+| 30 | 0x1E | 28 | 0x006F7627 | Storage | Dùng chung |
+| 31 | 0x1F | 29 | 0x006F7A3D | NpcShop | Dùng chung |
+| 32 | 0x20 | 30 | 0x006F7F31 | Express | Dùng chung |
+| 33 | 0x21 | 31 | 0x006F8103 | Welcome | Dùng chung |
+| 34 | 0x22 | 32 | 0x006F8264 | GamePoints | Dùng chung |
+| 35 | 0x23 | 33 | 0x006F8345 | Guild | Dùng chung |
+| 36 | 0x24 | 34 | 0x006F888A | GuildInfo | Dùng chung |
+| 37 | 0x25 | 35 | 0x006F89C8 | GuildAction | Dùng chung |
+| 39 | 0x27 | 36 | 0x006F8A51 | SystemMaster | Dùng chung |
+| 40 | 0x28 | 37 | 0x006F9B8D | Hotkey | Dùng chung |
+| 41 | 0x29 | 38 | 0x006F9C19 | Quest | Dùng chung |
+| 42 | 0x2A | 39 | 0x006F9E97 | Friend | Dùng chung |
+| 43 | 0x2B | 40 | 0x006FA053 | Compound | Dùng chung |
+| 44 | 0x2C | 41 | 0x006FA233 | RebornPet | Dùng chung |
+| 45 | 0x2D | 42 | 0x006FA443 | Reborn | Dùng chung |
+| 46 | 0x2E | 43 | 0x006FA692 | WaterWar | Dùng chung |
+| 50 | 0x32 | 44 | 0x006FA705 | BattleCommand | Dùng chung |
+| 54 | 0x36 | 45 | 0x006FAB81 | Keepalive | Dùng chung |
+| 55 | 0x37 | 46 | 0x006FABA6 | Stall | Dùng chung |
+| 57 | 0x39 | 47 | 0x006FAC2E | Gacha | Dùng chung |
+| 58 | 0x3A | 48 | 0x006FACA1 | Wheel | Dùng chung |
+| 59 | 0x3B | 49 | 0x006FAD3E | Festival | Dùng chung |
+| 60 | 0x3C | 50 | 0x006FADD2 | Mount | Dùng chung |
+| 61 | 0x3D | 51 | 0x006FAF3E | GuildWar | Dùng chung |
+| 63 | 0x3F | 52 | 0x006FB0CE | Outfit | Dùng chung |
+| 64 | 0x40 | 53 | 0x006FB2FA | NavalCombat | Dùng chung |
+| 65 | 0x41 | 54 | 0x006FB476 | Rank | Dùng chung |
+| 66 | 0x42 | 55 | 0x006FB857 | GmTool | Dùng chung |
+| 67 | 0x43 | 56 | 0x006FBE6D | HoleGame | Dùng chung |
+| 68 | 0x44 | 57 | 0x006FBF84 | Connect | Dùng chung |
+| 69 | 0x45 | 58 | 0x006FC09B | BoatSkill | Dùng chung |
+| 70 | 0x46 | 59 | 0x006FC276 | Mark | Dùng chung |
+| 71 | 0x47 | 60 | 0x006FC2E9 | AntiAddiction | Dùng chung |
+| 72 | 0x48 | 61 | 0x006FC466 | CityEx | Dùng chung |
+| **73** | **0x49** | **62** | **0x006FC69F** | **WorldBoss** | **NTS thêm mới** |
+| **74** | **0x4A** | **63** | **0x006FC716** | **NpcUpgrade** | **NTS thêm mới** |
+| **75** | **0x4B** | **64** | **0x006FC863** | **SaleRoom** | **NTS thêm mới** |
+| **76** | **0x4C** | **65** | **0x006FCB4A** | **ExpSlot** | **NTS thêm mới** |
+| **77** | **0x4D** | **66** | **0x006FCDB8** | **Activity** | **NTS thêm mới** |
+| **78** | **0x4E** | **67** | **0x006FCEC9** | **Astrolabe** | **NTS thêm mới** |
+| **79** | **0x4F** | **68** | **0x006FCF4D** | **(Độc quyền C→S)** | **NTS thêm mới** |
+| 199 | 0xC7 | 69 | 0x006FCFD1 | Reconnect | Dùng chung |
+
+> ¹ 0x0A, 0x12, 0x16 cũng tồn tại trong bản TW (được đánh dấu là "Chỉ C→S"), nhưng CLAUDE.md §5 không liệt kê tên.[cite: 1]
+> Bản TW có 0x11 (Chỉ C→S), NTS đã gỡ bỏ.[cite: 1]
+
+---
+
+## Phân tích chi tiết Opcode do NTS thêm mới[cite: 1]
+
+### Thêm mới S→C (7 mã)[cite: 1]
+
+#### 0x38 — Stub (Vỏ rỗng) | Độ tin cậy 95%[cite: 1]
+- **S→C handler**: `0x00706CB0` (11 bytes)[cite: 1]
+- Chỉ có 3 lệnh: đọc sub → nhảy thẳng đến epilogue, không làm gì cả[cite: 1]
+- Bản TW ban đầu dành vị trí này cho chức năng nào đó, NTS giữ lại vỏ rỗng[cite: 1]
+
+#### 0x49 — WorldBoss (Thử thách Boss Thế Giới) | Độ tin cậy 99%[cite: 1]
+- **S→C handler**: `0x007078E5` (20 bytes), chuyển hướng gọi `[0x738A50]→0x5369C4`[cite: 1]
+- **C→S handler**: `0x006FC69F` (119 bytes)[cite: 1]
+- **Lớp Delphi**: `TFWorldBoss` (VMT=`0x4D0AC4`), `TFWorldBossPrize`, `TFWorldBossBuff`[cite: 1]
+- **Bằng chứng chuỗi**:
+  - "Thử thách Boss Thế Giới đã bắt đầu, vui lòng đến cổng thành Trác Quận tìm 'NPC Khiêu chiến Boss Thế giới' để tiến hành thảo phạt!"[cite: 1]
+  - "Điểm tích lũy nhận được trong lần khiêu chiến Boss Thế giới này là: %d"[cite: 1]
+  - "Chúc mừng bạn đạt Top %d xếp hạng sát thương đơn lần toàn server trong giải Thử thách Boss Thế Giới"[cite: 1]
+- **File .dat liên kết**: `WorldBoss.dat`, `WBPrize.dat`, `WBScorePrize.dat`, `WBSumScorePrize.dat`[cite: 1]
+- **Mã lệnh con (sub)**: 4+ sub (Bắt đầu/Kết thúc hoạt động/Phần thưởng/Xếp hạng/Tích điểm)[cite: 1]
+
+#### 0x4A — NpcUpgrade (Cường hóa/Tiến hóa Võ tướng) | Độ tin cậy 95%[cite: 1]
+- **S→C handler**: `0x007078F9` (20 bytes), chuyển hướng gọi `[0x738FA4]→0x5E4538`[cite: 1]
+- **C→S handler**: `0x006FC716` (333 bytes)[cite: 1]
+- **Lớp Delphi**: `TFNpcUpgradeManage`, `TFNpcUpgradeForm`, `TFNpcUpgradeMsgMenu`[cite: 1]
+- **Bằng chứng chuỗi**: "Cường hóa võ tướng thành công"[cite: 1]
+- **File .dat liên kết**: `EVOStatus.Dat`[cite: 1]
+- **Mã lệnh con (sub)**: 2 sub (sub=2: Kết quả cường hóa, sub=3: Reset UI)[cite: 1]
+
+#### 0x4B — SaleRoom (Khu đấu giá/Sàn giao dịch) | Độ tin cậy 99%[cite: 1]
+- **S→C handler**: `0x0070790D` (20 bytes), chuyển hướng gọi `[0x739450]→0x5136CC`[cite: 1]
+- **C→S handler**: `0x006FC863` (743 bytes — C→S lớn nhất)[cite: 1]
+- **Lớp Delphi**: `TFSaleRoomForm`[cite: 1]
+- **Bằng chứng chuỗi**:
+  - "Lên kệ thành công" "Dữ liệu vật phẩm lên kệ bất thường" "Khu đấu giá đã hết chỗ"[cite: 1]
+  - "Mua thành công" "Mua thất bại" "Xuống kệ thành công" "Xuống kệ thất bại"[cite: 1]
+  - "Khu đấu giá đang bận vui lòng đợi." "Khu đấu giá đang đóng."[cite: 1]
+  - "Không đủ điểm" "Vui lòng gỡ hàng hóa đã hết hạn xuống trước"[cite: 1]
+- **Mã lệnh con (sub)**: 7 sub (Danh sách/Lên kệ/Mua/Xuống kệ/Trạng thái/Đóng v.v.)[cite: 1]
+
+#### 0x4C — ExpSlot (Vòng quay Võ tướng/Slot máy kinh nghiệm) | Độ tin cậy 90%[cite: 1]
+- **S→C handler**: `0x00707921` (20 bytes), chuyển hướng gọi `[0x738F08]→0x4F7A80`[cite: 1]
+- **C→S handler**: `0x006FCB4A` (622 bytes)[cite: 1]
+- **Lớp Delphi**: `TFExpSlotForm`, `TFExpSlotPrzForm`[cite: 1]
+- **Bằng chứng chuỗi**:
+  - "'%s' đã quay trúng giải độc đắc trong Vòng quay Võ tướng, nhận được '5 triệu' điểm kinh nghiệm và phần thưởng thêm '%d' điểm kinh nghiệm."[cite: 1]
+  - "Chức năng chưa mở."[cite: 1]
+- **Mã lệnh con (sub)**: 6 sub (Mở/Quay/Kết quả/Thông báo toàn server/Đóng chức năng v.v.)[cite: 1]
+
+#### 0x4D — Activity (Hệ thống hoạt động tổng hợp) | Độ tin cậy 95%[cite: 1]
+- **S→C handler**: `0x00707935` (80 bytes — S→C lớn nhất, thực hiện phân phối phụ ở cấp handler)[cite: 1]
+- **C→S handler**: `0x006FCDB8` (273 bytes)[cite: 1]
+- **Phân phối cấp Handler**:
+- **Lớp Delphi**: `TFGovRequire`, `TFSwapItem`, `EpicBattleManage`[cite: 1]
+- **Bằng chứng chuỗi**:
+- "Hoạt động Quan phủ trưng triệu đã bắt đầu rồi!" "Nộp thành công"[cite: 1]
+- "Hoạt động đổi thưởng đã bắt đầu rồi!" "Đổi thành công"[cite: 1]
+- "Chiến dịch Sử thi đang đóng."[cite: 1]
+- **File .dat liên kết**: `GovRequire.Dat`, `SwapItem.Dat`[cite: 1]
+- **UI liên kết**: `form_GovReward.bmp`, `form_GSN.bmp`[cite: 1]
+
+#### 0x4E — Astrolabe (Hệ thống Tinh bàn) | Độ tin cậy 99%[cite: 1]
+- **S→C handler**: `0x00707985` (17 bytes), chuyển hướng gọi `[0x738880]→0x4FE980`[cite: 1]
+- **C→S handler**: `0x006FCEC9` (132 bytes)[cite: 1]
+- **Lớp Delphi**: `TLH_AstrolabeLvUpImage`, `TLH_AstrolabeForm`[cite: 1]
+- **Bằng chứng chuỗi**: "Nâng cấp Tinh bàn"[cite: 1]
+- **File .dat liên kết**: `Astrolabe.Dat`[cite: 1]
+- **UI liên kết**: `from_astrolabe.bmp`[cite: 1]
+- **Cấu trúc dữ liệu**: 8 ô, mỗi ô 1 byte (khi sub=1 sẽ đọc count + 8 bytes)[cite: 1]
+
+### Thêm mới độc quyền C→S (2 mã)[cite: 1]
+
+#### 0x03 C→S — Look Request (Yêu cầu ngoại hình)[cite: 1]
+- **C→S handler**: `0x006EF223` (117 bytes)[cite: 1]
+- Trong TW, 0x03 chỉ là S→C (Máy chủ gửi ngoại hình)[cite: 1]
+- NTS thêm hướng C→S = Client có thể chủ động yêu cầu xem ngoại hình người chơi khác[cite: 1]
+- Chức năng: Xây dựng gói tin (opcode + sub + ID mục tiêu), gọi `0x0050C080` (Gửi gói tin)[cite: 1]
+
+#### 0x07 C→S — PlayerDetail Request (Yêu cầu thông tin chi tiết người chơi)[cite: 1]
+- **C→S handler**: `0x006EF5C5` (173 bytes)[cite: 1]
+- Trong TW, 0x07 chỉ là S→C (Máy chủ gửi thông tin chi tiết người chơi)[cite: 1]
+- NTS thêm hướng C→S = Client có thể chủ động yêu cầu xem thuộc tính chi tiết người chơi khác[cite: 1]
+- Chức năng: Đọc thông tin mục tiêu từ đối tượng toàn cục, gọi nhiều lần `0x4B97D4` (WriteShort/WriteInt)[cite: 1]
+
+#### 0x4F C→S — (Chưa đặt tên, Độc quyền C→S)[cite: 1]
+- **C→S handler**: `0x006FCF4D` (132 bytes)[cite: 1]
+- Không có S→C handler tương ứng[cite: 1]
+- Cấu trúc tương tự 0x0A (DEC AL + JNE, trình tạo gói tin đơn giản)[cite: 1]
+- Có thể là gói tin yêu cầu của một tính năng mới, phản hồi được trả về thông qua sub của opcode khác[cite: 1]
+
+### Chức năng độc quyền của NTS chưa tương ứng với opcode mới[cite: 1]
+- **FashionStress (Tạo hình thời trang)**: `TFFashionStress`, `TFStyleAttrManage`, `FashionStress.Dat` — Có thể thực hiện thông qua mã lệnh con (sub) của opcode hiện tại[cite: 1]
+- **NewPack (Balo mới)**: `form_NewPack.bmp` — Có thể mở rộng mã lệnh con của Item(0x17)[cite: 1]
+- **Style (Tạo hình)**: `from_Style.bmp`, `btn_Style`, `btn_StyleEQ` — Có thể mở rộng Outfit(0x3F)[cite: 1]
