@@ -36,8 +36,46 @@ class SkillUpgradeHandler(
         when (subKind) {
             1 -> handlePlayerSkillUpgrade(session, characterId, data)
             2 -> handlePetSkillUpgrade(session, characterId, data)
+            5 -> handleTurn2SkillUpgrade(session, characterId, data)
             else -> logger.warn { "未處理的技能升級 subKind=$subKind" }
         }
+    }
+
+    private fun handleTurn2SkillUpgrade(session: GameSession, characterId: Long, data: ByteArray) {
+        if (data.size < 12) return
+        val reader = PacketReader(data)
+
+        val ballCount = reader.readUIntLE()
+        if (ballCount > 12 || reader.remaining < ballCount.toInt() + 8) return
+        val balls = MutableList(ballCount.toInt()) { reader.readUByte() }
+
+        if (reader.remaining < 4) return
+        val skillCount = reader.readUIntLE()
+        if (skillCount > 64 || reader.remaining < skillCount.toInt() * 3 + 4) return
+        val upgrades = MutableList(skillCount.toInt()) { reader.readUShortLE() to reader.readUByte() }
+
+        if (reader.remaining < 4) return
+        val slotCount = reader.readUIntLE()
+        if (slotCount > 8 || reader.remaining != slotCount.toInt() * 3) return
+        val heroSlots = MutableList(slotCount.toInt()) { reader.readUByte() to reader.readUShortLE() }
+
+        val state = playerStateManager.getState(characterId) ?: return
+        val ok = skillSystem.upgradeTurn2(
+            characterId = characterId,
+            addBalls = balls,
+            upgrades = upgrades,
+            heroSlots = heroSlots,
+            playerTurn = state.turn,
+            career = state.career
+        )
+        val sc = skillSystem.getCache(characterId) ?: return
+        synchronized(state) { state.skillPoint = sc.skillPoint }
+
+        // 成功或拒絕都回 authoritative snapshot，避免 client 保留本地暫存狀態。
+        responseSender.sendPlayerSkillData(session, sc.element, sc.skillPoint, sc.skills)
+        responseSender.sendTurn2Balls(session, sc.availableTurn2Balls, sc.activeTurn2Balls)
+        responseSender.sendTurn2HeroSkills(session, sc.heroSkills)
+        logger.info { "${session.characterName} C28:5 Turn2 ok=$ok balls=$balls skills=$upgrades hero=$heroSlots" }
     }
 
     private fun handlePetSkillUpgrade(session: GameSession, characterId: Long, data: ByteArray) {
