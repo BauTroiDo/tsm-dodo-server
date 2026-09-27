@@ -100,8 +100,13 @@ object BattleDamageCalc {
         if (skill != null && skill.hitStatus > 0 && skill.round > 0) {
             val statusChance = 50 + (attacker.intelligence - target.intelligence) / 2
             if (Random.nextInt(100) < statusChance.coerceIn(10, 90)) {
-                inflictedStatus = BattleStatus.fromId(skill.hitStatus)
-                statusRounds = skill.round
+                inflictedStatus = when (skill.hitStatus) {
+                    1 -> BattleStatus.ICE_BOUND
+                    2 -> BattleStatus.WHIRL_WIND
+                    3 -> BattleStatus.CLUMP
+                    else -> BattleStatus.NONE
+                }
+                statusRounds = if (inflictedStatus != BattleStatus.NONE) skill.round else 0
             }
         }
 
