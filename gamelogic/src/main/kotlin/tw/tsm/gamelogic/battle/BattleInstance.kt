@@ -224,7 +224,7 @@ class BattleInstance(
 
             val skillId = selectNpcSkill(npc.skills)
             val skillDef = skillResolver.getSkillDef(skillId)
-            val isHeal = skillDef != null && BattleDamageCalc.isHealSkill(skillDef)
+            val isFriendlyUtility = skillDef != null && skillDef.fightWay in FRIENDLY_ONLY_FIGHT_WAYS
 
             // Never queue a skill the NPC cannot currently pay for.
             // requireSp==1 is the Lua consume-all-SP sentinel and still requires SP >= 1.
@@ -236,7 +236,7 @@ class BattleInstance(
             // 根據 NPC 所在陣營決定目標：
             // 敵方 NPC（col 0-1）攻擊→玩家方，回復→敵方
             // 玩家方武將（col 2-3）攻擊→敵方，回復→玩家方
-            val targets = if (isHeal) {
+            val targets = if (isFriendlyUtility) {
                 if (npc.isPlayerSide) grid.getAlivePlayerSide() else grid.getAliveEnemySide()
             } else {
                 if (npc.isPlayerSide) grid.getAliveEnemySide() else grid.getAlivePlayerSide()
@@ -252,7 +252,7 @@ class BattleInstance(
                 targetRow = target.row
             )
             npc.hasActed = true
-            logger.debug { "戰鬥 $battleId: NPC ${npc.name} AI → skill=$skillId isHeal=$isHeal target=(${target.col},${target.row})" }
+            logger.debug { "戰鬥 $battleId: NPC ${npc.name} AI → skill=$skillId friendly=$isFriendlyUtility target=(${target.col},${target.row})" }
         }
     }
 
