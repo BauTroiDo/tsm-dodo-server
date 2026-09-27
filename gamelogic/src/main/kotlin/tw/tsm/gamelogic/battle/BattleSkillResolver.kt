@@ -236,9 +236,16 @@ class BattleSkillResolver(
                         }
                         EAttribute.SP -> {
                             if (change.isPositive) {
-                                val actual = minOf(change.value, (target.maxSp - target.sp).toInt())
+                                val actual = minOf(change.value.toLong(), target.maxSp - target.sp).toInt()
                                 target.sp = (target.sp + actual).coerceAtMost(target.maxSp)
                                 if (actual > 0) allAttrChanges.add(BattleAttrChange(EAttribute.SP, actual, true))
+                            } else {
+                                // S:050-001 uses the same Attr_Kind/Value/Sign contract for SP.
+                                // Clamp to the target's current SP so server state and serialized
+                                // client delta cannot underflow or diverge.
+                                val actual = minOf(change.value.toLong(), target.sp).toInt()
+                                target.sp = (target.sp - actual).coerceAtLeast(0)
+                                if (actual > 0) allAttrChanges.add(BattleAttrChange(EAttribute.SP, actual, false))
                             }
                         }
                     }
