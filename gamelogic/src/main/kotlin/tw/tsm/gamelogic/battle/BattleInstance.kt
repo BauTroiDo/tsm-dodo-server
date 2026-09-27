@@ -164,6 +164,13 @@ class BattleInstance(
                 }
             }
             if (action.actionKind == BattleAction.KIND_SKILL &&
+                action.id in NON_BATTLE_SKILLS
+            ) {
+                // DVT FightField.SetConSkill explicitly blocks these skills in battle.
+                logger.warn { "戰鬥 $battleId: ${fighter.name} 嘗試使用 Lua 明確禁止的戰鬥外技能 id=${action.id}" }
+                return false
+            }
+            if (action.actionKind == BattleAction.KIND_SKILL &&
                 action.id != BattleConstants.HAND_FIGHT_SKILL_ID
             ) {
                 val skill = skillResolver.getSkillDef(action.id)
@@ -600,6 +607,18 @@ class BattleInstance(
 
     companion object {
         private val TURN3_SUMMON_SKILLS = setOf(22011, 23011)
+        // Exact DVT FightField.SetConSkill list: these are non-battle skills.
+        private val NON_BATTLE_SKILLS = setOf(
+            14003, 14004, 14005,
+            14009, 14010, 14011,
+            14016, 14017, 14018, 14019, 14020,
+            14023, 14026, 14027, 14028,
+            14032, 14034,
+            10020, 11020, 12020, 13019, 14035,
+            14038, 14039, 14041, 14043, 14045,
+            14047, 14048, 14049, 14050, 14051,
+            14052, 14025, 14077
+        )
     }
 
 }
