@@ -71,8 +71,8 @@ class BattleInstance(
     /** 戰鬥結束後要跳轉的結果（linkToResult） */
     var linkToResult: Int = 0
 
-    /** 戰鬥中被捕捉的 NPC ID 列表 */
-    val capturedNpcs = mutableListOf<Int>()
+    /** 戰鬥中成功捕捉：捕捉者 playerId → NPC ID。不得在多人戰鬥把同一 NPC 發給所有玩家。 */
+    val capturedNpcs = mutableListOf<Pair<Long, Int>>()
 
     /**
      * 新增戰鬥角色到棋盤
@@ -500,7 +500,7 @@ class BattleInstance(
                         if (success) {
                             target.hp = 0
                             target.isDead = true
-                            capturedNpcs.add(target.npcId)
+                            capturedNpcs.add(ownerPlayerId to target.npcId)
                         }
                     }
                 }
