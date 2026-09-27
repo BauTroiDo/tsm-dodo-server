@@ -527,29 +527,6 @@ class BattleInstance(
     }
 
     /**
-     * S53:1 status_kind is EFightStatusKind (group), not EStatus/BattleStatus id.
-     * The client derives the concrete seal status from skillId in SealSkill().
-     */
-    private fun statusGroup(status: BattleStatus): Int = when (status) {
-        BattleStatus.WHIRL_WIND,
-        BattleStatus.ICE_BOUND,
-        BattleStatus.CLUMP,
-        BattleStatus.TRANCE,
-        BattleStatus.DIZZY_ATK -> 1 // EFightStatusKind.Seal
-        BattleStatus.SHRINK -> 2    // EFightStatusKind.Vary
-        BattleStatus.POISON,
-        BattleStatus.CHAOS,
-        BattleStatus.TARDY -> 3     // EFightStatusKind.Faint
-        BattleStatus.BOUNDARY -> 4  // EFightStatusKind.Spec
-        BattleStatus.GOD,
-        BattleStatus.GOLD_SHIELD -> 5 // EFightStatusKind.Strong
-        BattleStatus.POOR,
-        BattleStatus.SPELL,
-        BattleStatus.LANDSLIP -> 3
-        BattleStatus.NONE -> 0
-    }
-
-    /**
      * 檢查戰鬥是否結束
      *
      * @return 結束結果（null=尚未結束）
