@@ -83,11 +83,7 @@ class BattleSkillResolver(
             requiredSp == 1 -> attacker.sp.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
             else -> requiredSp
         }
-        if (spConsumed > 0) {
-            attacker.sp = max(0, attacker.sp - spConsumed)
-        }
-
-        // 決定目標列表
+        // 決定目標列表 before mutation. A stale/invalid target must not burn SP.
         val targets = if (isHeal) {
             // 回復技能：對友方施放
             grid.resolveTargets(fightArea, targetCol, targetRow, !attacker.isPlayerSide)
@@ -96,15 +92,22 @@ class BattleSkillResolver(
         }
 
         if (targets.isEmpty()) {
-            return SkillResolveResult(emptyList(), spConsumed, fightArea)
+            return SkillResolveResult(emptyList(), spConsumed = 0, fightArea = fightArea)
         }
+
+        if (spConsumed > 0) {
+            attacker.sp = max(0, attacker.sp - spConsumed)
+        }
+
+        /* targets resolved above */
+        val resolvedTargets = targets
 
         // 攻擊次數（howMuchTimes，0 或 1 都算 1 次）
         val hitTimes = max(1, skill?.howMuchTimes ?: 1)
 
         val targetResults = mutableListOf<TargetResult>()
 
-        for (target in targets) {
+        for (target in resolvedTargets) {
             var totalDamage = 0
             var lastRawDamage = 0  // 造成死亡那擊的原始傷害（打飛判定用）
             var finalAttackResult = EAttackResult.HIT
