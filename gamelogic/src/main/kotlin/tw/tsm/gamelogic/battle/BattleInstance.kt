@@ -199,6 +199,14 @@ class BattleInstance(
                 }
             }
             if (action.actionKind == BattleAction.KIND_SKILL &&
+                action.id in BOW_SKILLS &&
+                fighter.kind in PLAYER_BOW_CHECK_KINDS &&
+                !hasLuaBowWeapon(fighter)
+            ) {
+                logger.warn { "戰鬥 $battleId: ${fighter.name} 弓技能 id=${action.id} 未裝備 Lua 合法弓武器" }
+                return false
+            }
+            if (action.actionKind == BattleAction.KIND_SKILL &&
                 action.id in SUMMON_SKILLS &&
                 !canUseSummon(fighter, action.id)
             ) {
@@ -594,7 +602,7 @@ class BattleInstance(
         return BattleRewardCalc.calculate(involvedNpcDefs, playerLevel, npcDropTable)
     }
     private fun canUseSummon(fighter: BattleFighter, skillId: Int): Boolean {
-        if (skillId !in fighter.skills) return false
+        if (skillId !in fighter.skills || fighter.specialEquipDamage >= 250) return false
         val element = if (skillId == 22011 || skillId == 23011) {
             if (fighter.isHumanPlayer) fighter.turn3Element else fighter.element
         } else {
@@ -611,11 +619,17 @@ class BattleInstance(
         }
     }
 
+    private fun hasLuaBowWeapon(fighter: BattleFighter): Boolean =
+        fighter.weaponItemKind == 7 || fighter.weaponItemId in SPIRITUAL_BOW_ITEM_IDS
+
     private val ENEMY_ONLY_FIGHT_WAYS = setOf(1, 2, 3, 11, 15, 21)
     private val FRIENDLY_ONLY_FIGHT_WAYS = setOf(6, 7, 8, 14)
 
     companion object {
         private val SUMMON_SKILLS = setOf(10016, 11016, 12016, 13015, 22011, 23011)
+        private val BOW_SKILLS = setOf(14033, 14036, 14037, 14064)
+        private val SPIRITUAL_BOW_ITEM_IDS = setOf(57601, 57602, 57603, 57604)
+        private val PLAYER_BOW_CHECK_KINDS = setOf(EHuman.PLAYER, EHuman.PLAYERS, EHuman.DIVIDE)
         // Exact DVT FightField.SetConSkill list: these are non-battle skills.
         private val NON_BATTLE_SKILLS = setOf(
             14003, 14004, 14005,
