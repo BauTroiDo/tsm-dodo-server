@@ -113,7 +113,11 @@ class PacketReader(private val data: ByteArray) {
         check(remaining >= len) { "Đọc UTF-8($len) thất bại: còn lại $remaining bytes" }
         val bytes = data.copyOfRange(position, position + len)
         position += len
-        return String(bytes, UTF8).trimEnd('\u0000')
+        val offset = if (bytes.size >= 3 &&
+            bytes[0] == 0xEF.toByte() &&
+            bytes[1] == 0xBB.toByte() &&
+            bytes[2] == 0xBF.toByte()) 3 else 0
+        return String(bytes, offset, bytes.size - offset, UTF8).trimEnd('\u0000')
     }
 
     /** Đọc 2 bytes tiền tố độ dài (LE) + chuỗi Big5 */
