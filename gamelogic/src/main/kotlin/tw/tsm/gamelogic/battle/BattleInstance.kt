@@ -229,7 +229,18 @@ class BattleInstance(
             // Never queue a skill the NPC cannot currently pay for.
             // requireSp==1 is the Lua consume-all-SP sentinel and still requires SP >= 1.
             if (skillDef != null && npc.sp < skillDef.requireSp) {
-                logger.debug { "戰鬥 $battleId: NPC ${npc.name} SP不足，跳過 skill=$skillId need=${skillDef.requireSp} sp=${npc.sp}" }
+                val basicTargets = if (npc.isPlayerSide) grid.getAliveEnemySide() else grid.getAlivePlayerSide()
+                val target = basicTargets.randomOrNull()
+                if (target != null) {
+                    npc.pendingAction = BattleAction(
+                        actionKind = BattleAction.KIND_SKILL,
+                        id = BattleConstants.HAND_FIGHT_SKILL_ID,
+                        targetCol = target.col,
+                        targetRow = target.row
+                    )
+                    npc.hasActed = true
+                    logger.debug { "戰鬥 $battleId: NPC ${npc.name} SP不足，改用普攻 target=(${target.col},${target.row})" }
+                }
                 continue
             }
 
