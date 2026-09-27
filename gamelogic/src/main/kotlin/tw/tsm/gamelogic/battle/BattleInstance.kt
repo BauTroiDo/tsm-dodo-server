@@ -126,11 +126,22 @@ class BattleInstance(
                     return false
                 }
                 val skill = if (action.id == BattleConstants.HAND_FIGHT_SKILL_ID) null else skillResolver.getSkillDef(action.id)
-                val isHeal = skill != null && BattleDamageCalc.isHealSkill(skill)
                 val sameSide = fighter.isPlayerSide == target.isPlayerSide
-                if ((isHeal && !sameSide) || (!isHeal && sameSide)) {
-                    logger.warn { "戰鬥 $battleId: ${fighter.name} 技能 id=${action.id} 指定錯誤陣營" }
-                    return false
+                if (skill == null) {
+                    if (sameSide) {
+                        logger.warn { "戰鬥 $battleId: ${fighter.name} 普攻指定己方目標" }
+                        return false
+                    }
+                } else {
+                    // FightRoleController:CheckSkillTargetLegal uses fightWay, not HP-heal classification.
+                    if (sameSide && skill.fightWay in ENEMY_ONLY_FIGHT_WAYS) {
+                        logger.warn { "戰鬥 $battleId: ${fighter.name} 敵對技能 id=${action.id} 指定己方" }
+                        return false
+                    }
+                    if (!sameSide && skill.fightWay in FRIENDLY_ONLY_FIGHT_WAYS) {
+                        logger.warn { "戰鬥 $battleId: ${fighter.name} 友方技能 id=${action.id} 指定敵方" }
+                        return false
+                    }
                 }
             }
             if (action.actionKind == BattleAction.KIND_SKILL &&
@@ -575,6 +586,9 @@ class BattleInstance(
             else -> false
         }
     }
+
+    private val ENEMY_ONLY_FIGHT_WAYS = setOf(1, 2, 3, 11, 15, 21)
+    private val FRIENDLY_ONLY_FIGHT_WAYS = setOf(6, 7, 8, 14)
 
     companion object {
         private val TURN3_SUMMON_SKILLS = setOf(22011, 23011)
