@@ -451,9 +451,12 @@ class BattleInstance(
             fighter.hasActed = false
         }
 
-        // Statuses that were active during this action phase consume one round now.
+        // Statuses that were already present at action-phase start consume one round now.
+        // A status inflicted during this round starts counting from the next round.
         for (fighter in allFighters) {
-            if (fighter.isAlive && fighter.statusEffect != BattleStatus.NONE) {
+            if (fighter.isAlive && fighter.statusEffect != BattleStatus.NONE &&
+                fighter.statusAppliedRound < currentRound
+            ) {
                 fighter.statusRounds--
                 if (fighter.statusRounds <= 0) {
                     statusRestores.add(StatusRestore(fighter.col, fighter.row, statusGroup(fighter.statusEffect), fighter.statusSkillId))
