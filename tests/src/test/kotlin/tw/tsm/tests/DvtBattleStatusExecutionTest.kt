@@ -37,7 +37,8 @@ class DvtBattleStatusExecutionTest {
     private fun skill(
         attributeKind: Int,
         fightWayValue: Int,
-        rounds: Int
+        rounds: Int,
+        elementValue: Int = 1
     ) = mockk<SkillDef> {
         every { attribute } returns attributeKind
         every { fightWay } returns fightWayValue
@@ -47,7 +48,7 @@ class DvtBattleStatusExecutionTest {
         every { requireSp } returns 0
         every { howMuchTimes } returns 1
         every { numerical } returns 100
-        every { element } returns 1
+        every { element } returns elementValue
     }
 
     @Test
@@ -208,7 +209,7 @@ class DvtBattleStatusExecutionTest {
     fun `fightWay eight revives the selected dead ally`() {
         val skillId = 11011
         val resolver = BattleSkillResolver(
-            mapOf(skillId to skill(EAttribute.HP, fightWayValue = 8, rounds = 0))
+            mapOf(skillId to skill(EAttribute.HP, fightWayValue = 8, rounds = 0, elementValue = 2))
         )
         val attacker = fighter(1, col = 2, row = 0)
         val dead = fighter(2, col = 2, row = 1).also {
