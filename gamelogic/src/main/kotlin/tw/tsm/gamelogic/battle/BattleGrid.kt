@@ -181,8 +181,9 @@ class BattleGrid {
                 }
             }
             255 -> {
-                // Lua GetEnemyIdx(255): both parties/all occupied fighters.
-                return getAll()
+                // Lua GetEnemyIdx(255): both parties/all occupied fighters. Revive
+                // still obeys fightWay 8 dead-target eligibility.
+                return getAll().filter(::eligible)
             }
             else -> add(targetCol, targetRow)
         }
