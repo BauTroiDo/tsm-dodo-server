@@ -462,6 +462,8 @@ class BattleInstance(
                     }
                 }
                 BattleAction.KIND_CATCH -> {
+                    // 捕捉擁有者 = 操控此單位的玩家；與道具 ownership 規則一致。
+                    val ownerPlayerId = if (fighter.masterId != 0L) fighter.masterId else fighter.roleId
                     val target = grid.getAt(action.targetCol, action.targetRow)
                     if (target != null && target.isAlive && target.kind != EHuman.PLAYER) {
                         // 等級差限制
