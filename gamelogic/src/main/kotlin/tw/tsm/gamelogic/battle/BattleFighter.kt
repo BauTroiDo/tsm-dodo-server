@@ -74,6 +74,8 @@ class BattleFighter(
     var statusSkillId: Int = 0,
     /** Battle round in which the current status was inflicted. */
     var statusAppliedRound: Int = -1,
+    /** Independent client status groups (Seal/Vary/Faint/Spec/Strong). */
+    val groupedStatuses: MutableMap<Int, GroupedBattleStatus> = mutableMapOf(),
 
     /** 本回合是否已行動（跨執行緒：Netty 寫入 / 協程讀取） */
     @Volatile var hasActed: Boolean = false,
@@ -97,7 +99,31 @@ class BattleFighter(
     val isAlive: Boolean get() = !isDead && hp > 0
 
     /** 是否被控場（無法行動） */
-    val isStunned: Boolean get() = BattleStatus.isStunStatus(statusEffect)
+    val isStunned: Boolean get() = groupedStatuses.values.any { BattleStatus.isStunStatus(it.status) } || BattleStatus.isStunStatus(statusEffect)
+
+    fun setGroupedStatus(group: Int, status: BattleStatus, rounds: Int, skillId: Int, appliedRound: Int) {
+        if (group <= 0 || status == BattleStatus.NONE) return
+        groupedStatuses[group] = GroupedBattleStatus(status, rounds, skillId, appliedRound)
+        syncLegacyStatusView()
+    }
+
+    fun clearGroupedStatus(group: Int) {
+        groupedStatuses.remove(group)
+        syncLegacyStatusView()
+    }
+
+    fun clearAllGroupedStatuses() {
+        groupedStatuses.clear()
+        syncLegacyStatusView()
+    }
+
+    fun syncLegacyStatusView() {
+        val primary = groupedStatuses.toSortedMap().values.firstOrNull()
+        statusEffect = primary?.status ?: BattleStatus.NONE
+        statusRounds = primary?.rounds ?: 0
+        statusSkillId = primary?.skillId ?: 0
+        statusAppliedRound = primary?.appliedRound ?: -1
+    }
 
     /** 棋盤索引 (col * MAX_ROW + row) */
     val gridIndex: Int get() = col * BattleConstants.MAX_ROW + row
@@ -171,3 +197,11 @@ data class BattleAction(
         const val KIND_DEFEND = 5
     }
 }
+
+
+data class GroupedBattleStatus(
+    val status: BattleStatus,
+    var rounds: Int,
+    val skillId: Int,
+    val appliedRound: Int
+)
