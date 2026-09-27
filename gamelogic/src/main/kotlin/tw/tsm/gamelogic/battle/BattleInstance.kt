@@ -118,6 +118,13 @@ class BattleInstance(
             logger.warn { "戰鬥 $battleId: ($srcCol,$srcRow) 的角色 ${fighter.name} 不屬於玩家 $playerId" }
             return false
         }
+        // S:053-005 is the client acknowledgement that this fighter's command was
+        // accepted and control may advance. Do not let a duplicate/replayed C:050
+        // silently replace an already acknowledged command in the same round.
+        if (fighter.hasActed || fighter.pendingAction != null) {
+            logger.debug { "戰鬥 $battleId: ${fighter.name} 已提交本回合行動，忽略重複指令" }
+            return false
+        }
         if (fighter.isAlive && !fighter.isCommandBlocked) {
             if (action.actionKind == BattleAction.KIND_SKILL) {
                 val target = grid.getAt(action.targetCol, action.targetRow)
