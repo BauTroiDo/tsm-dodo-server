@@ -19,6 +19,28 @@ private val logger = KotlinLogging.logger {}
 class BattleSkillResolver(
     private val skillDefs: Map<Int, SkillDef>
 ) {
+    /** Mirrors SkillData:GetFightArea(skillLv) from the Lua client. */
+    private fun getFightArea(skill: SkillDef, skillLv: Int): Int {
+        return when (skill.fightWayGrowType) {
+            1 -> when (skillLv) {
+                1 -> 1
+                in 2..3 -> 2
+                in 4..6 -> 5
+                in 7..9 -> 6
+                10 -> 8
+                else -> skill.fightArea
+            }
+            2 -> when (skillLv) {
+                in 1..3 -> 3
+                in 4..6 -> 5
+                in 7..9 -> 6
+                10 -> 8
+                else -> skill.fightArea
+            }
+            else -> skill.fightArea
+        }
+    }
+
     /**
      * 查詢技能定義（供 NPC AI 判斷技能類型）
      */
@@ -45,7 +67,8 @@ class BattleSkillResolver(
         comboMultiplier: Double = 1.0
     ): SkillResolveResult {
         val skill = if (skillId == BattleConstants.HAND_FIGHT_SKILL_ID) null else skillDefs[skillId]
-        val fightArea = skill?.fightArea ?: 1
+        val skillLv = if (skill == null) 1 else (attacker.skillLevels[skillId] ?: 1).coerceIn(1, 10)
+        val fightArea = skill?.let { getFightArea(it, skillLv) } ?: 1
         val isHeal = skill != null && BattleDamageCalc.isHealSkill(skill)
 
         // SP 消耗檢查
