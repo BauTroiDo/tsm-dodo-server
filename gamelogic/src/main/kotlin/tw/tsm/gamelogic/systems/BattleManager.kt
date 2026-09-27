@@ -1132,7 +1132,10 @@ class BattleManager(
             ?: error("玩家 charId=$charId (playerId=${session.playerId}) 無運行時狀態")
 
         val equips = inventorySystem.getEquipment(charId)
+        // Keep the SPECIAL slot authoritative for Light/Dark summon validation.
+        // Other equipment IDs are still serialized as before.
         val equipIds = equips.values.map { it.itemId }.toIntArray()
+        val specialEquipId = equips[6]?.itemId ?: 0
         val normalSkills = skillSystem?.getCache(charId)?.skills?.filterValues { it > 0 }?.keys.orEmpty()
         val turn3Skills = runBlocking {
             skillRepository?.findTurn3State(charId)?.skills?.filterValues { it > 0 }?.keys.orEmpty()
@@ -1159,6 +1162,7 @@ class BattleManager(
             turn = state.turn,
             career = state.career,
             turn3Element = session.turn3Element,
+            specialEquipItemId = specialEquipId,
             sex = session.sex,
             face = session.face,
             hair = session.hair,
