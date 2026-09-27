@@ -211,13 +211,13 @@ class LoginResponseSender {
      *
      * 來源：protocal.lua protocolTable[3][0] → Role.PlayerAppear(index, data)
      */
-    fun sendPlayerAppear(session: SessionSender, playerId: Long, record: CharacterRecord, serverId: Int) {
+    fun sendPlayerAppear(session: SessionSender, playerId: Long, record: CharacterRecord, serverId: Int, turn3Element: Int = 0) {
         val writer = PacketWriter(128)
             .writeByte(Opcodes.CHARACTER).writeByte(0).writeByte(0)
             .writeLongLE(playerId)
             .writeByte(record.sex)
             .writeByte(record.element)
-            .writeByte(0)                     // 三轉元素
+            .writeByte(turn3Element)          // 三轉元素
             .writeByte(record.level)
             .writeByte(0)                     // 衰神標記
             .writeUIntLE(0)                   // 福神標記
@@ -311,7 +311,7 @@ class LoginResponseSender {
             .writeLongLE(other.playerId)
             .writeByte(other.sex)
             .writeByte(other.element)
-            .writeByte(0)                  // 三轉元素
+            .writeByte(other.turn3Element) // 三轉元素
             .writeByte(other.level)
             .writeByte(0)                  // 衰神標記
             .writeUIntLE(0)                // 福神標記
@@ -329,8 +329,8 @@ class LoginResponseSender {
             .writeByte(1)                  // 在線狀態
             .writeByte(0)                  // NPC 挑戰賽
             .writeByte(other.serverId)
-            .writeByte(0)                  // 轉生種類
-            .writeByte(0)                  // 職業種類
+            .writeByte(other.turn)         // 轉生種類
+            .writeByte(other.career)       // 職業種類
             .writeBig5WithByteLen(other.characterName)
             .writeShortLE(0)               // 分區
             .writeShortLE(other.mountNpcId) // 坐騎 NPC ID
