@@ -246,7 +246,8 @@ class BattleSkillResolver(
         tw.tsm.domain.enums.BattleStatus.POISON,
         tw.tsm.domain.enums.BattleStatus.CHAOS,
         tw.tsm.domain.enums.BattleStatus.TARDY,
-        tw.tsm.domain.enums.BattleStatus.LANDSLIP -> 3
+        tw.tsm.domain.enums.BattleStatus.LANDSLIP,
+        tw.tsm.domain.enums.BattleStatus.TAUNT -> 3
         tw.tsm.domain.enums.BattleStatus.SPELL -> 4
         else -> 0
     }
