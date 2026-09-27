@@ -122,7 +122,7 @@ object BattleDamageCalc {
      * Concrete status mapping proven by FightRoleController.lua.
      * Keep this deliberately limited to server-modeled statuses.
      */
-    private fun statusFromSkillId(skillId: Int): BattleStatus = when {
+    fun statusFromSkillId(skillId: Int): BattleStatus = when {
         skillId in ICE_BOUND_SKILLS -> BattleStatus.ICE_BOUND
         skillId in WHIRL_WIND_SKILLS -> BattleStatus.WHIRL_WIND
         skillId in CLUMP_SKILLS -> BattleStatus.CLUMP
