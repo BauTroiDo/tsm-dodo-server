@@ -118,10 +118,7 @@ class BattleItemResolver(
 
         if (def.kind == KIND_REVIVE) {
             target.isDead = false
-            target.statusEffect = tw.tsm.domain.enums.BattleStatus.NONE
-            target.statusRounds = 0
-            target.statusSkillId = 0
-            target.statusAppliedRound = -1
+            target.clearAllGroupedStatuses()
         }
 
         // Áp dụng hiệu ứng lên mục tiêu
