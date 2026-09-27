@@ -104,5 +104,7 @@ object EAttribute {
     // ── 職業/轉生資訊 ──
     const val CAREER = 251      // 職業
     const val TURN3_LV = 252    // 三轉等級
+    const val TURN3_EXP = 253   // 三轉經驗值
+    const val TURN3_ELEMENT = 254 // 三轉光暗屬性
     const val MARRIAGE = 255    // 婚姻狀態
 }
