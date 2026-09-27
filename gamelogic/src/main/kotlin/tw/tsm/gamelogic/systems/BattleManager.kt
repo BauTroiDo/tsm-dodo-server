@@ -841,6 +841,9 @@ class BattleManager(
                 val state = playerStateManager.getState(charId)
                 if (state != null && reward.exp > 0) {
                     distributeExp(session, charId, state, reward.exp)
+                    // DVT system channel is the player's battle/reward notification area.
+                    // S:008-001 updates the EXP gauge; it does not create a chat entry.
+                    responseSender.sendSystemMessage(session, "Nhận được ${reward.exp} điểm kinh nghiệm.")
                 }
 
                 // 金錢發放
@@ -848,6 +851,7 @@ class BattleManager(
                     val goldCharId = session.roleId.toLong()
                     if (moneySystem.addGold(goldCharId, reward.gold)) {
                         responseSender.sendAddMoney(session, reward.gold)
+                        responseSender.sendSystemMessage(session, "Nhận được ${reward.gold} vàng.")
                         logger.info { "戰鬥 ${battle.battleId}: 玩家 $playerId 獲得金錢 ${reward.gold}" }
                     }
                 }
