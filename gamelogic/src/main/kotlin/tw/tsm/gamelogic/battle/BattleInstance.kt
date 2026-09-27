@@ -170,6 +170,15 @@ class BattleInstance(
                 }
             }
             if (action.actionKind == BattleAction.KIND_SKILL &&
+                action.id in SELF_ONLY_SKILLS &&
+                (action.targetCol != fighter.col || action.targetRow != fighter.row)
+            ) {
+                // DVT FightRoleController.DoClick: 13008/14002/20006 require
+                // FightField.conIdx == selected target index, i.e. caster targets self.
+                logger.warn { "戰鬥 $battleId: ${fighter.name} 自身限定技能 id=${action.id} 指定了其他目標 (${action.targetCol},${action.targetRow})" }
+                return false
+            }
+            if (action.actionKind == BattleAction.KIND_SKILL &&
                 action.id in NON_BATTLE_SKILLS
             ) {
                 // DVT FightField.SetConSkill explicitly blocks these skills in battle.
@@ -665,6 +674,8 @@ class BattleInstance(
             35029, 35030, 35031, 35032, 35033, 35034, 35054, 35055, 35056
         )
         private val SUMMON_SKILLS = setOf(10016, 11016, 12016, 13015, 22011, 23011)
+        // FightRoleController.DoClick explicitly requires the selected target to be the caster.
+        private val SELF_ONLY_SKILLS = setOf(13008, 14002, 20006)
         private val BOW_SKILLS = setOf(14033, 14036, 14037, 14064)
         private val SPIRITUAL_BOW_ITEM_IDS = setOf(57601, 57602, 57603, 57604)
         private val PLAYER_BOW_CHECK_KINDS = setOf(EHuman.PLAYER, EHuman.PLAYERS, EHuman.DIVIDE)
