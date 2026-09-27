@@ -78,7 +78,16 @@ function ByteBuffer:ReadString(size, encoding)
     if encoding ~= nil then
       result = LuaHelper.BytesToString(encoding, result);
     else
-      result = LuaHelper.BytesToString(DataManager.encoding_Big5, result);
+      -- Font/encoding exception for the Vietnamese VTC client:
+      -- Kotlin prefixes UTF-8 strings with EF BB BF when Big5 cannot represent
+      -- Vietnamese characters. Detect that marker before falling back to the
+      -- original DVT Big5 contract.
+      local b1, b2, b3 = string.byte(result, 1, 3);
+      if b1 == 0xEF and b2 == 0xBB and b3 == 0xBF then
+        result = LuaHelper.BytesToString(DataManager.encoding_UTF8, string.sub(result, 4));
+      else
+        result = LuaHelper.BytesToString(DataManager.encoding_Big5, result);
+      end
     end
   end
 
