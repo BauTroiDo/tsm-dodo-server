@@ -1248,11 +1248,15 @@ class BattleManager(
             .filter { (id, lv) -> id > 0 && lv > 0 }
             .associate { it.first to it.second }
             .toMutableMap()
-        if (petData.canUseSpecialSkill && npcDef.specialSkill > 0) {
+        if (petData.canUseSpecialSkill && npcDef.specialSkill > 0 &&
+            skillDefs[npcDef.specialSkill]?.let { it.useLimit != 0 && it.fightWay != 0 } == true
+        ) {
             normalSkills[npcDef.specialSkill] = 1
         }
         val upgradeSkillLv = npcUpgradeDefs[petData.upgradeLv]?.skillLv ?: 0
-        if (npcDef.upgradeSkill > 0 && upgradeSkillLv > 0) {
+        if (npcDef.upgradeSkill > 0 && upgradeSkillLv > 0 &&
+            skillDefs[npcDef.upgradeSkill]?.let { it.useLimit != 0 && it.fightWay != 0 } == true
+        ) {
             normalSkills[npcDef.upgradeSkill] = upgradeSkillLv
         }
 
