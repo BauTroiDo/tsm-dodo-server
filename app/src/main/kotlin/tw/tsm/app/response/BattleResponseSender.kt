@@ -277,7 +277,7 @@ class BattleResponseSender {
 
     /** S:023-069 玩家轉職/轉生外觀同步。 */
     fun sendPlayerCareerChange(
-        session: GameSession,
+        session: SessionSender,
         playerId: Long,
         hair: Int,
         color1: Int,
