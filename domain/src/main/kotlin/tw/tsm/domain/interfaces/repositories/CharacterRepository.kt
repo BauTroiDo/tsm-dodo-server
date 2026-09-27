@@ -149,6 +149,7 @@ data class CharacterRecord(
     val attrPoint: Int = 0,
     val exp: Long = 0,
     val turn: Int = 0,
+    val career: Int = 0,
     val fightNpcId: Int = 0,
     val titleId: Int = 0
 )
