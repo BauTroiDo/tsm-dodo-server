@@ -1,6 +1,9 @@
 package tw.tsm.tests
 
+import io.mockk.every
 import io.mockk.mockk
+import tw.tsm.domain.constants.EAttribute
+import tw.tsm.domain.data.SkillDef
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -21,11 +24,23 @@ class DvtBattleCommandSemanticsTest {
         atk=100, def=10, agi=100, intelligence=100
     )
 
-    private fun fixture(a: BattleFighter, b: BattleFighter): BattleInstance {
+    private fun skill(fightWayValue: Int) = mockk<SkillDef> {
+        every { fightWay } returns fightWayValue
+        every { requireSp } returns 10
+        every { fightArea } returns 1
+        every { fightWayGrowType } returns 0
+        every { attribute } returns EAttribute.HP
+        every { round } returns 0
+        every { howMuchTimes } returns 1
+        every { numerical } returns 100
+        every { element } returns 2
+    }
+
+    private fun fixture(a: BattleFighter, b: BattleFighter, skills: Map<Int, SkillDef> = emptyMap()): BattleInstance {
         val grid = BattleGrid().also { it.place(a); it.place(b) }
         return BattleInstance(
             battleId=1, warType=0, terrain=0, eventNo=0, grid=grid,
-            skillResolver=BattleSkillResolver(emptyMap()),
+            skillResolver=BattleSkillResolver(skills),
             itemResolver=mockk<BattleItemResolver>(relaxed=true),
             involvedNpcDefs=emptyList()
         ).also { it.addFighter(a); it.addFighter(b) }
@@ -54,4 +69,39 @@ class DvtBattleCommandSemanticsTest {
         assertFalse(battle.setPlayerAction(actor.roleId, actor.col, actor.row, action))
         assertFalse(actor.hasActed)
     }
+    @Test
+    fun `fightWay eight accepts dead friendly target at queue time`() {
+        val reviveId = 11011
+        val actor = fighter(1, 2, 0)
+        val deadAlly = fighter(2, 3, 0).also { it.hp=0; it.isDead=true }
+        val battle = fixture(actor, deadAlly, mapOf(reviveId to skill(8)))
+        val action = BattleAction(BattleAction.KIND_SKILL, reviveId, deadAlly.col, deadAlly.row)
+
+        assertTrue(battle.setPlayerAction(actor.roleId, actor.col, actor.row, action))
+        assertEquals(action, actor.pendingAction)
+    }
+
+    @Test
+    fun `fightWay eight rejects living friendly target`() {
+        val reviveId = 11011
+        val actor = fighter(1, 2, 0)
+        val livingAlly = fighter(2, 3, 0)
+        val battle = fixture(actor, livingAlly, mapOf(reviveId to skill(8)))
+        val action = BattleAction(BattleAction.KIND_SKILL, reviveId, livingAlly.col, livingAlly.row)
+
+        assertFalse(battle.setPlayerAction(actor.roleId, actor.col, actor.row, action))
+    }
+
+    @Test
+    fun `ordinary friendly skill still rejects dead target`() {
+        val healId = 11001
+        val actor = fighter(1, 2, 0)
+        val deadAlly = fighter(2, 3, 0).also { it.hp=0; it.isDead=true }
+        val battle = fixture(actor, deadAlly, mapOf(healId to skill(6)))
+        val action = BattleAction(BattleAction.KIND_SKILL, healId, deadAlly.col, deadAlly.row)
+
+        assertFalse(battle.setPlayerAction(actor.roleId, actor.col, actor.row, action))
+    }
+
+
 }
