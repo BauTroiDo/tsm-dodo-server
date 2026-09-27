@@ -207,4 +207,25 @@ class DvtBattleCommandSemanticsTest {
     }
 
 
+    @Test
+    fun `CaseSkill Except rejects forged restricted fightWay skill`() {
+        val restrictedId = 16001
+        val actor = fighter(1, 2, 0, intArrayOf(restrictedId))
+        val ally = fighter(2, 3, 0)
+        val battle = fixture(actor, ally, mapOf(restrictedId to skill(6)))
+        assertFalse(battle.setPlayerAction(actor.roleId, actor.col, actor.row,
+            BattleAction(BattleAction.KIND_SKILL, restrictedId, ally.col, ally.row)))
+    }
+
+    @Test
+    fun `CaseSkill exception 21026 remains selectable`() {
+        val exceptionId = 21026
+        val actor = fighter(1, 2, 0, intArrayOf(exceptionId))
+        val ally = fighter(2, 3, 0)
+        val battle = fixture(actor, ally, mapOf(exceptionId to skill(6)))
+        assertTrue(battle.setPlayerAction(actor.roleId, actor.col, actor.row,
+            BattleAction(BattleAction.KIND_SKILL, exceptionId, ally.col, ally.row)))
+    }
+
+
 }
