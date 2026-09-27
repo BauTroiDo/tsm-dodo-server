@@ -16,6 +16,7 @@ class DvtSkillRulesTest {
         every { learnPoint } returns 3
         every { levelUpPoint } returns 2
         every { preSkills } returns prereqs.toList()
+        every { turnKind } returns 0
         every { name } returns "skill"
     }
     @Test fun `player pays doubled learn cost but normal subsequent cost`() = runTest {
@@ -46,4 +47,48 @@ class DvtSkillRulesTest {
         system.load(42, 1, 30)
         assertTrue(system.upgradeSkills(42, listOf(300 to 1)).isEmpty())
     }
+    @Test fun `turn skill requires matching rebirth count`() = runTest {
+        coEvery { repo.findByCharacterId(42) } returns emptyMap()
+        val turnSkill = skill().also { every { it.turnKind } returns 1 }
+        val system = SkillSystem(repo, mockk(), mapOf(10022 to turnSkill))
+        val cache = system.load(42, 1, 30)
+
+        assertTrue(system.upgradeSkills(42, listOf(10022 to 1), playerTurn = 0).isEmpty())
+        assertEquals(30, cache.skillPoint)
+        assertEquals(listOf(10022 to 1), system.upgradeSkills(42, listOf(10022 to 1), playerTurn = 1))
+    }
+
+    @Test fun `turn1 root requires a previously learned base branch skill`() = runTest {
+        coEvery { repo.findByCharacterId(42) } returns emptyMap()
+        val root = skill().also { every { it.turnKind } returns 1 }
+        val base = skill(skillElement = 1)
+        val system = SkillSystem(repo, mockk(), mapOf(10020 to root, 10013 to base))
+        val cache = system.load(42, 1, 30)
+
+        assertTrue(system.upgradeSkills(42, listOf(10020 to 1), playerTurn = 1).isEmpty())
+        assertEquals(30, cache.skillPoint)
+    }
+
+    @Test fun `turn1 root accepts one previously learned branch endpoint`() = runTest {
+        coEvery { repo.findByCharacterId(42) } returns mapOf(10013 to 1)
+        val root = skill().also { every { it.turnKind } returns 1 }
+        val base = skill(skillElement = 1)
+        val system = SkillSystem(repo, mockk(), mapOf(10020 to root, 10013 to base))
+        system.load(42, 1, 30)
+
+        assertEquals(listOf(10020 to 1), system.upgradeSkills(42, listOf(10020 to 1), playerTurn = 1))
+    }
+
+    @Test fun `turn1 root cannot satisfy special branch requirement inside same batch`() = runTest {
+        coEvery { repo.findByCharacterId(42) } returns emptyMap()
+        val root = skill().also { every { it.turnKind } returns 1 }
+        val base = skill(skillElement = 1)
+        val system = SkillSystem(repo, mockk(), mapOf(10020 to root, 10013 to base))
+        val cache = system.load(42, 1, 30)
+
+        assertTrue(system.upgradeSkills(42, listOf(10013 to 1, 10020 to 1), playerTurn = 1).isEmpty())
+        assertEquals(30, cache.skillPoint)
+        assertTrue(cache.skills.isEmpty())
+    }
+
 }
