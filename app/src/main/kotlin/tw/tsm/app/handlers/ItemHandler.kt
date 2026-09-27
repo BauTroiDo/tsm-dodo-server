@@ -157,6 +157,9 @@ class ItemHandler(
             state.turn = targetTurn
             state.career = career
         }
+        session.turn = targetTurn
+        session.career = career
+        if (targetTurn == 3) session.turn3Element = 0
         session.hair = hair
         session.color1 = color1
         session.color2 = color2
