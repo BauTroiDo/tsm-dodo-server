@@ -46,7 +46,12 @@ class BattleItemResolver(
         val sameSide = user.isPlayerSide == target.isPlayerSide
         if (!sameSide && def.kind in FRIENDLY_ONLY_KINDS) return false
         if (sameSide && def.kind == KIND_POISON) return false
-        if (resolveRecoveryEffect(def, target) == null) return false
+        if (def.kind == KIND_REVIVE) {
+            if (target.isAlive || target.isFlyOut) return false
+        } else {
+            if (!target.isAlive) return false
+            if (resolveRecoveryEffect(def, target) == null) return false
+        }
         return inventorySystem.getBag(ownerCharId).values.any { it.itemId == itemId && it.quantity > 0 }
     }
 
@@ -176,5 +181,7 @@ class BattleItemResolver(
 
         /** Độc dược (Chỉ dùng được lên phe địch) */
         private const val KIND_POISON = 19
+        /** Hồi sinh: client mở targetDead selection cho kind=50. */
+        const val KIND_REVIVE = 50
     }
 }
