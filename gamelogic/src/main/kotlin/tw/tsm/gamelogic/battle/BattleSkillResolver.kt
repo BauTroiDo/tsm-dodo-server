@@ -129,6 +129,28 @@ class BattleSkillResolver(
                 )
                 continue
             }
+
+            // Friendly status/buff skills are not HP heals and must not fall through to attack damage.
+            // Client FightRoleController derives their concrete status from skillId.
+            val utilityStatus = if (targetsFriendlySide && skill != null && skill.round > 0) {
+                BattleDamageCalc.statusFromSkillId(skillId)
+            } else tw.tsm.domain.enums.BattleStatus.NONE
+            if (utilityStatus != tw.tsm.domain.enums.BattleStatus.NONE) {
+                val group = modeledStatusGroup(utilityStatus)
+                if (group > 0) {
+                    target.setGroupedStatus(group, utilityStatus, skill!!.round, skillId, currentRound)
+                }
+                targetResults.add(
+                    TargetResult(
+                        targetCol = target.col,
+                        targetRow = target.row,
+                        attackResult = EAttackResult.HIT,
+                        beHitAction = EBeHitAction.NONE,
+                        attrChanges = emptyList()
+                    )
+                )
+                continue
+            }
             var totalDamage = 0
             var lastRawDamage = 0  // 造成死亡那擊的原始傷害（打飛判定用）
             var finalAttackResult = EAttackResult.HIT
