@@ -36,13 +36,18 @@ class DvtBattleStatusLifecycleTest {
     private fun battle(vararg fighters: BattleFighter): BattleInstance {
         val grid = BattleGrid()
         fighters.forEach(grid::place)
-        return BattleInstance(
+        val battle = BattleInstance(
             battleId = 1,
+            warType = 0,
+            terrain = 0,
+            eventNo = 0,
             grid = grid,
             skillResolver = BattleSkillResolver(emptyMap()),
             itemResolver = mockk<BattleItemResolver>(relaxed = true),
-            terrain = 0
+            involvedNpcDefs = emptyList()
         )
+        fighters.forEach(battle::addFighter)
+        return battle
     }
 
     @Test
