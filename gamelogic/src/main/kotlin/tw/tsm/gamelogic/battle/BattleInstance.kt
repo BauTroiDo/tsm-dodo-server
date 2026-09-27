@@ -136,15 +136,6 @@ class BattleInstance(
                     return false
                 }
                 val skill = if (action.id == BattleConstants.HAND_FIGHT_SKILL_ID) null else skillResolver.getSkillDef(action.id)
-                if (skill != null &&
-                    skill.fightWay in CASE_SKILL_EXCEPT_FIGHT_WAYS &&
-                    action.id != CASE_SKILL_EXCEPTION_ID
-                ) {
-                    // DVT FightField.CaseSkill falls back to hand attack for these
-                    // fightWay values unless SkillData:Except() is false (only 21026).
-                    logger.warn { "戰鬥 $battleId: ${fighter.name} 嘗試繞過 Lua CaseSkill Except id=${action.id} fightWay=${skill.fightWay}" }
-                    return false
-                }
                 val isRevive = skill?.fightWay == 8
                 // DVT FightField.UpdateSelectFrame exposes dead friendlies specifically
                 // for fightWay 8. Every other skill keeps the normal alive-target gate.
@@ -659,8 +650,6 @@ class BattleInstance(
         private val BOW_SKILLS = setOf(14033, 14036, 14037, 14064)
         private val SPIRITUAL_BOW_ITEM_IDS = setOf(57601, 57602, 57603, 57604)
         private val PLAYER_BOW_CHECK_KINDS = setOf(EHuman.PLAYER, EHuman.PLAYERS, EHuman.DIVIDE)
-        private val CASE_SKILL_EXCEPT_FIGHT_WAYS = setOf(6, 7, 8, 14, 19)
-        private const val CASE_SKILL_EXCEPTION_ID = 21026
         // Exact DVT FightField.SetConSkill list: these are non-battle skills.
         private val NON_BATTLE_SKILLS = setOf(
             14003, 14004, 14005,
