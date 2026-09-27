@@ -68,6 +68,18 @@ class BattleGrid {
         return result
     }
 
+    /** 取得棋盤上所有角色（包含死亡但尚未 FlyOut 的角色）。 */
+    fun getAll(): List<BattleFighter> {
+        val result = mutableListOf<BattleFighter>()
+        for (col in 0 until BattleConstants.MAX_COL) {
+            for (row in 0 until BattleConstants.MAX_ROW) {
+                val f = grid[col][row]
+                if (f != null && !f.isFlyOut) result.add(f)
+            }
+        }
+        return result
+    }
+
     /**
      * 取得所有存活角色
      */
@@ -170,8 +182,10 @@ class BattleGrid {
                 if (attackerIsPlayerSide) getAliveEnemySide() else getAlivePlayerSide()
             }
             255 -> {
-                // Lua FightField.GetEnemyIdx(255): 敵我雙方全體
-                getAllAlive()
+                // Lua FightField.GetEnemyIdx(255): 敵我雙方全體.
+                // Preserve every occupied fighter; the client enumerates fightHum,
+                // not only living targets. This matters for all-field revive/utility semantics.
+                getAll()
             }
             else -> listOfNotNull(getAliveAt(targetCol, targetRow))
         }
