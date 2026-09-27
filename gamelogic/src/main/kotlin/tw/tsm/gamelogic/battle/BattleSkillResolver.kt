@@ -240,7 +240,22 @@ class BattleSkillResolver(
         tw.tsm.domain.enums.BattleStatus.DIZZY_ATK -> 1
         tw.tsm.domain.enums.BattleStatus.BOUNDARY,
         tw.tsm.domain.enums.BattleStatus.GOD,
-        tw.tsm.domain.enums.BattleStatus.GOLD_SHIELD -> 2
+        tw.tsm.domain.enums.BattleStatus.GOLD_SHIELD,
+        tw.tsm.domain.enums.BattleStatus.ICE_WALL,
+        tw.tsm.domain.enums.BattleStatus.LIMPID,
+        tw.tsm.domain.enums.BattleStatus.ENLARGE,
+        tw.tsm.domain.enums.BattleStatus.AVOID,
+        tw.tsm.domain.enums.BattleStatus.MIRROR,
+        tw.tsm.domain.enums.BattleStatus.SOUL_MIRROR,
+        tw.tsm.domain.enums.BattleStatus.SAME_HEART,
+        tw.tsm.domain.enums.BattleStatus.INSPIRE,
+        tw.tsm.domain.enums.BattleStatus.FIRE_AMULET,
+        tw.tsm.domain.enums.BattleStatus.TRANSFER_ATTACK,
+        tw.tsm.domain.enums.BattleStatus.INVISIBLE,
+        tw.tsm.domain.enums.BattleStatus.DOLPHIN_GUARD,
+        tw.tsm.domain.enums.BattleStatus.IMMUNITY_SHIELD,
+        tw.tsm.domain.enums.BattleStatus.ICE_CRYSTALS,
+        tw.tsm.domain.enums.BattleStatus.DRAGON_TRANSFER -> 2
         tw.tsm.domain.enums.BattleStatus.POOR,
         tw.tsm.domain.enums.BattleStatus.SHRINK,
         tw.tsm.domain.enums.BattleStatus.POISON,
@@ -254,7 +269,16 @@ class BattleSkillResolver(
         tw.tsm.domain.enums.BattleStatus.HEALTH_DRAWER,
         tw.tsm.domain.enums.BattleStatus.WEAK_PERCENT,
         tw.tsm.domain.enums.BattleStatus.EW_COMMON_FAINT -> 3
-        tw.tsm.domain.enums.BattleStatus.SPELL -> 4
+        tw.tsm.domain.enums.BattleStatus.SPELL,
+        tw.tsm.domain.enums.BattleStatus.PROTECT,
+        tw.tsm.domain.enums.BattleStatus.MAGIC_PROTECT -> 4
+        tw.tsm.domain.enums.BattleStatus.BRIGHT_MIRROR,
+        tw.tsm.domain.enums.BattleStatus.WAR_STEP,
+        tw.tsm.domain.enums.BattleStatus.WILD_FIGHT_SOUL,
+        tw.tsm.domain.enums.BattleStatus.ANGRY_MIND,
+        tw.tsm.domain.enums.BattleStatus.MAGICAL_SHIELD,
+        tw.tsm.domain.enums.BattleStatus.CRAZY_SOUL,
+        tw.tsm.domain.enums.BattleStatus.PITY_SOLDIER -> 5
         else -> 0
     }
 
