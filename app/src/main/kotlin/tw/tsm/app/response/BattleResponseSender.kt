@@ -87,6 +87,16 @@ class BattleResponseSender {
         session.send(writer.toByteArray())
     }
 
+    /** S:008-012 設定三轉光暗元素結果。 */
+    fun sendTurn3ElementResult(session: SessionSender, result: Int) {
+        session.send(
+            PacketWriter()
+                .writeByte(8).writeByte(12).writeByte(0)
+                .writeByte(result)
+                .toByteArray()
+        )
+    }
+
     /** S:023-077 天珠資訊。 */
     fun sendTurn2Balls(session: SessionSender, available: Int, active: Set<Int>) {
         val writer = PacketWriter(4 + active.size)
