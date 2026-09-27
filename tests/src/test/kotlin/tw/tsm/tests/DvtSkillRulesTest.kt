@@ -6,10 +6,13 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import tw.tsm.domain.data.SkillDef
 import tw.tsm.domain.interfaces.repositories.SkillRepository
+import tw.tsm.domain.interfaces.repositories.Turn2SkillState
 import tw.tsm.gamelogic.systems.SkillSystem
 
 class DvtSkillRulesTest {
-    private val repo = mockk<SkillRepository>()
+    private val repo = mockk<SkillRepository>().also {
+        coEvery { it.findTurn2State(any()) } returns Turn2SkillState()
+    }
     private fun skill(prereqs: IntArray = intArrayOf(), skillElement: Int = 2) = mockk<SkillDef> {
         every { maxLv } returns 10
         every { element } returns skillElement
