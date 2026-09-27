@@ -41,7 +41,8 @@ object BattleDamageCalc {
         attacker: BattleFighter,
         target: BattleFighter,
         skill: SkillDef?,
-        terrain: Int = 0
+        terrain: Int = 0,
+        skillId: Int = 0
     ): AttackCalcResult {
         // 命中判定
         val hitRate = calculateHitRate(attacker.agi, target.agi)
@@ -102,7 +103,7 @@ object BattleDamageCalc {
             if (Random.nextInt(100) < statusChance.coerceIn(10, 90)) {
                 // Client FightRoleController resolves the concrete status from skillId
                 // inside a status group; hitStatus is not a concrete BattleStatus enum.
-                inflictedStatus = statusFromSkillId(skill.id)
+                inflictedStatus = statusFromSkillId(skillId)
                 statusRounds = if (inflictedStatus != BattleStatus.NONE) skill.round else 0
             }
         }
