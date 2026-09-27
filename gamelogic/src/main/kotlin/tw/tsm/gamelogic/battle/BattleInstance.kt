@@ -248,7 +248,7 @@ class BattleInstance(
                 action.id != BattleConstants.HAND_FIGHT_SKILL_ID &&
                 action.id !in BattleConstants.DEFEND_SKILL_IDS &&
                 action.id !in BattleConstants.ESCAPE_SKILL_IDS &&
-                action.id !in BattleConstants.CATCH_SKILL_IDS &&
+                action.id !in BattleConstants.CATCH_COMMAND_SKILL_IDS &&
                 action.id !in fighter.skills
             ) {
                 logger.warn { "戰鬥 $battleId: ${fighter.name} 嘗試使用未學技能 id=${action.id}" }
