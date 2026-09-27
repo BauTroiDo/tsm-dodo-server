@@ -119,6 +119,16 @@ class BattleInstance(
             return
         }
         if (fighter.isAlive && !fighter.isStunned) {
+            if (action.actionKind == BattleAction.KIND_SKILL &&
+                action.id != BattleConstants.HAND_FIGHT_SKILL_ID &&
+                action.id !in BattleConstants.DEFEND_SKILL_IDS &&
+                action.id !in BattleConstants.ESCAPE_SKILL_IDS &&
+                action.id !in BattleConstants.CATCH_SKILL_IDS &&
+                action.id !in fighter.skills
+            ) {
+                logger.warn { "戰鬥 $battleId: ${fighter.name} 嘗試使用未學技能 id=${action.id}" }
+                return
+            }
             fighter.pendingAction = action
             fighter.hasActed = true
             logger.debug { "戰鬥 $battleId: ${fighter.name} 設定行動 kind=${action.actionKind} id=${action.id}" }
