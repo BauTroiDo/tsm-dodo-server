@@ -1021,8 +1021,12 @@ class BattleManager(
             // DVT EAttribute.Exp is cumulative lifetime EXP. UIStatus computes:
             // currentBar = Exp - Calc.GetNeedTExp(level, turn)
             // Never subtract level costs from state.exp.
+            val expBeforeReward = state.exp
             state.exp += expGain
             responseSender.sendSetAttribute(session, EAttribute.EXP, state.exp.toInt(), true)
+            logger.info {
+                "EXP sync: charId=$charId lv=${state.level} before=$expBeforeReward gain=$expGain cumulative=${state.exp} floor=${statSystem.calculateNeedTotalExp(state.level, state.turn)}"
+            }
 
             // Level L advances when cumulative EXP reaches NeedTExp(L + 1).
             var levelsGained = 0
