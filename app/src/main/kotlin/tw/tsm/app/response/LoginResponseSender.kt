@@ -235,8 +235,8 @@ class LoginResponseSender {
             .writeByte(1)                     // 在線狀態
             .writeByte(0)                     // NPC 挑戰賽
             .writeByte(serverId)
-            .writeByte(0)                     // 轉生種類
-            .writeByte(0)                     // 職業種類
+            .writeByte(record.turn)           // 轉生種類
+            .writeByte(record.career)         // 職業種類
             .writeBig5WithByteLen(record.name)
             .writeShortLE(0)                  // 分區
             .writeShortLE(0)                  // 坐騎 NPC ID
