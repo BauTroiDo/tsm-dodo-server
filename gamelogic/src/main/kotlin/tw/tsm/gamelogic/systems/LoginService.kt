@@ -199,6 +199,8 @@ class LoginService(
         // S:008-013 Dữ liệu kỹ năng nhân vật chính
         val skillCache = skillSystem.load(record.id, record.element, record.skillPoint)
         responseSender.sendPlayerSkillData(session, skillCache.element, skillCache.skillPoint, skillCache.skills)
+        responseSender.sendTurn2Balls(session, skillCache.availableTurn2Balls, skillCache.activeTurn2Balls)
+        responseSender.sendTurn2HeroSkills(session, skillCache.heroSkills)
 
         // S:040-001 Dữ liệu phím tắt (Tải từ DB)
         val hotkeyEntries = hotkeyRepository.findByCharId(record.id)
