@@ -114,6 +114,14 @@ class BattleSkillResolver(
         val targetResults = mutableListOf<TargetResult>()
 
         for (target in resolvedTargets) {
+            val dispelAttrChanges = clearGroups.mapNotNull { group ->
+                modeledStatusAttribute(group).takeIf { it != EAttribute.NONE }?.let {
+                    // Lua RunEffect dispatches status/dispel exclusively from S:050-001 Attr_Kind.
+                    // The action skillId is then passed to HandleStatus(group, skillId), where
+                    // the client clear-skill lists resolve that group to EStatus.None.
+                    BattleAttrChange(it, 0, true)
+                }
+            }
             if (clearGroups.isNotEmpty()) {
                 clearModeledStatus(target, clearGroups)
             }
@@ -124,7 +132,7 @@ class BattleSkillResolver(
                         targetRow = target.row,
                         attackResult = EAttackResult.HIT,
                         beHitAction = EBeHitAction.NONE,
-                        attrChanges = emptyList()
+                        attrChanges = dispelAttrChanges
                     )
                 )
                 continue
@@ -169,7 +177,7 @@ class BattleSkillResolver(
             var lastRawDamage = 0  // 造成死亡那擊的原始傷害（打飛判定用）
             var finalAttackResult = EAttackResult.HIT
             var finalBeHitAction = EBeHitAction.HIT
-            val allAttrChanges = mutableListOf<BattleAttrChange>()
+            val allAttrChanges = dispelAttrChanges.toMutableList()
 
             for (hit in 0 until hitTimes) {
                 val rawCalcResult = when {
@@ -324,7 +332,10 @@ class BattleSkillResolver(
         else -> 0
     }
 
-    private fun modeledStatusAttribute(status: tw.tsm.domain.enums.BattleStatus): Int = when (modeledStatusGroup(status)) {
+    private fun modeledStatusAttribute(status: tw.tsm.domain.enums.BattleStatus): Int =
+        modeledStatusAttribute(modeledStatusGroup(status))
+
+    private fun modeledStatusAttribute(group: Int): Int = when (group) {
         1 -> EAttribute.SEAL
         2 -> EAttribute.VARY
         3 -> EAttribute.FAINT
