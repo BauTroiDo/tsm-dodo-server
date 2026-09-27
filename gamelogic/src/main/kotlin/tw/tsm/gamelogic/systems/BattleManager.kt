@@ -1065,6 +1065,9 @@ class BattleManager(
 
                 logger.info { "升級：charId=$charId 升了 $levelsGained 級 → Lv.${state.level} 技能點+$skillPointGain 屬性點+$attrPointGain" }
             }
+
+            // Persist the same cumulative EXP semantics sent to DVT so relog keeps the bar.
+            characterRepository?.updateExpAndLevel(charId, state.exp, state.level)
         }
     }
 
