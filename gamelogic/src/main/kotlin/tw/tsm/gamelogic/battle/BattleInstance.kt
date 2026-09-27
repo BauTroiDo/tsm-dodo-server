@@ -245,9 +245,10 @@ class BattleInstance(
             if (fighter.isAlive && fighter.statusEffect != BattleStatus.NONE) {
                 fighter.statusRounds--
                 if (fighter.statusRounds <= 0) {
-                    statusRestores.add(StatusRestore(fighter.col, fighter.row, fighter.statusEffect.id, 0))
+                    statusRestores.add(StatusRestore(fighter.col, fighter.row, fighter.statusEffect.id, fighter.statusSkillId))
                     fighter.statusEffect = BattleStatus.NONE
                     fighter.statusRounds = 0
+                    fighter.statusSkillId = 0
                 }
             }
         }
