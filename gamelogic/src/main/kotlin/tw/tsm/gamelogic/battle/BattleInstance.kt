@@ -312,7 +312,8 @@ class BattleInstance(
                         targetCol = action.targetCol,
                         targetRow = action.targetRow,
                         terrain = terrain,
-                        comboMultiplier = fighter.comboMultiplier
+                        comboMultiplier = fighter.comboMultiplier,
+                        currentRound = currentRound
                     )
                     actionResults.add(
                         ActionResult(
@@ -463,6 +464,7 @@ class BattleInstance(
                     fighter.statusEffect = BattleStatus.NONE
                     fighter.statusRounds = 0
                     fighter.statusSkillId = 0
+                    fighter.statusAppliedRound = -1
                 }
             }
         }
