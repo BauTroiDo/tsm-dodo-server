@@ -1,5 +1,5 @@
 
---未載入字串表前用到的字串
+-- Chuỗi được sử dụng trước khi bảng chuỗi được tải
 Str_DownloadSize = "本次下載 : %.2f MB\n解壓縮後 : %.2f MB\n請注意自身網路流量及儲存空間"
 Str_DiskFull = "儲存空間不足，請檢查儲存空間並重新啟動遊戲"
 Str_DownloadResources = "下載遊戲資源 : %.2f MB / %.2f MB";
@@ -46,7 +46,7 @@ Till the memory of what you have done to him is past and he is no longer angry: 
 Then Rebekah said to Isaac, My life is a weariness to me because of the daughters of Heth: if Jacob takes a wife from among the daughters of Heth, such as these, the women of this land, of what use will my life be to me?
 --]]
 
---GoogleAnalytics用到的字串
+-- Chuỗi được Google Analytics sử dụng
 GALabel = {
   OpenUI = "開啟%s介面";
   CloseUI = "關閉%s介面";
@@ -136,15 +136,15 @@ And when Tamar had news that her father-in-law was going up to Timnah to the woo
 She took off her widow's clothing, and covering herself with her veil, she took her seat near Enaim on the road to Timnah; for she saw that Shelah was now a man, but she had not been made his wife.
 --]]
 
--- UTF-8 helpers used by the Vietnamese VTC client.
--- Keep these byte-oriented so they also work with the Lua version bundled by the client.
+-- Hàm hỗ trợ UTF-8 dành cho client VTC Việt Nam.
+-- Xử lý trực tiếp theo byte để tương thích với phiên bản Lua đi kèm client.
 local function utf8CharSize(firstByte)
   if firstByte == nil then return 0 end
   if firstByte < 0x80 then return 1 end
   if firstByte >= 0xC2 and firstByte <= 0xDF then return 2 end
   if firstByte >= 0xE0 and firstByte <= 0xEF then return 3 end
   if firstByte >= 0xF0 and firstByte <= 0xF4 then return 4 end
-  -- Invalid/legacy byte: consume one byte instead of stalling.
+  -- Byte không hợp lệ/kiểu cũ: bỏ qua một byte để tránh kẹt vòng lặp.
   return 1
 end
 
@@ -197,7 +197,7 @@ function string.Sub(str, start, len)
 end
 
 function string.GetLength(s)
-  -- For UI/name validation, Vietnamese UTF-8 characters count as one character.
+  -- Khi kiểm tra UI/tên, mỗi ký tự UTF-8 tiếng Việt được tính là một ký tự.
   return string.Count(s);
 end
 
@@ -631,7 +631,7 @@ function string.Concat(...)
   return table.concat({ ... });
 end
 
---字串表
+-- Bảng chuỗi
 local tempParameter = nil;
 local tempText = "";
 function string.Get(key, parameter)
@@ -656,43 +656,43 @@ function string.Parse(text)
   local value = tonumber(string.match(text, "=(%d+)"));
   
   if key == 1 then
-    --玩家名稱
+    -- Tên người chơi
     if Role.player ~= nil then
       return Role.player.name;
     else
       return text;
     end
   elseif key == 2 then
-    --現實日期
+    -- Ngày thực tế
     return CGTimer.serverTime:ToShortDateString();
   elseif key == 3 then
-    --現實時間
+    -- Thời gian thực tế
     return CGTimer.serverTime:ToShortTimeString();
   elseif key == 4 then
-    --NPC名稱
+    -- Tên NPC
     if npcDatas[value] ~= nil then
       return npcDatas[value].name;
     end
   elseif key == 5 then
-    --物品名稱
+    -- Tên vật phẩm
     if itemDatas[value] ~= nil then
       return itemDatas[value]:GetName(true);
     end
   elseif key == 6 then
-    --成就名稱
+    -- Tên thành tựu
     if achievementDatas[value] ~= nil then
       return achievementDatas[value].name;
     end
   elseif key == 7 then
-    --字串
+    -- Chuỗi
     if textDatas[value] ~= nil then
       return textDatas[value];
     end
   elseif key == 8 then
-    --中文數字
+    -- Số dạng chữ Hán
     return string.GetChineseNumber(value);
   elseif key == 9 then
-    --GS名稱  
+    -- Tên GS
     for i = 1, table.Count(Network.servers) do
       if Network.servers[i].id == value then
         return Network.servers[i].name
@@ -864,7 +864,7 @@ function string.GetFightWay(kind)
 end
 
 function string.GetFightArea(kind)
-  --1 一人, 2同列二人, 3行三人, 4跳三人, 5十字五人, 6六人, 7同行五人, 8全體 
+  -- Phạm vi mục tiêu: 1 một người, 2 hai người cùng hàng, 3 ba người theo hàng, 4 ba người kiểu nhảy, 5 năm người hình chữ thập, 6 sáu người, 7 năm người cùng hàng, 8 toàn bộ
   if kind == 1 then
     return string.Get(99662);
   elseif kind == 2 then
