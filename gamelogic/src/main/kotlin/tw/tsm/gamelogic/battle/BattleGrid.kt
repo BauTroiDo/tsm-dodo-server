@@ -108,7 +108,8 @@ class BattleGrid {
         targetCol: Int,
         targetRow: Int,
         attackerIsPlayerSide: Boolean,
-        isCombo: Boolean = false
+        isCombo: Boolean = false,
+        deadTargetsOnly: Boolean = false
     ): List<BattleFighter> {
         fun occupiedAt(col: Int, row: Int): BattleFighter? =
             if (col in 0 until BattleConstants.MAX_COL && row in 0 until BattleConstants.MAX_ROW) getAt(col, row) else null
@@ -122,16 +123,23 @@ class BattleGrid {
         }
 
         val targets = mutableListOf<BattleFighter>()
+        fun eligible(f: BattleFighter): Boolean =
+            if (deadTargetsOnly) !f.isAlive else f.isAlive || isCombo
+
         fun add(col: Int, row: Int) {
-            occupiedAt(col, row)?.let { if (it.isAlive || isCombo) targets.add(it) }
+            occupiedAt(col, row)?.let { if (eligible(it)) targets.add(it) }
         }
 
         when (fightArea) {
             EFightArea.SINGLE -> {
                 val target = occupiedAt(targetCol, targetRow)
-                if (target != null && (target.isAlive || isCombo)) return listOf(target)
+                if (target != null && eligible(target)) return listOf(target)
 
-                // Preserve existing server retarget behavior only for a stale single target.
+                // Revive selection is explicit in DVT Lua (fightWay 8): never retarget
+                // a dead-target action to a living fighter.
+                if (deadTargetsOnly) return emptyList()
+
+                // Preserve existing server retarget behavior only for a stale normal single target.
                 val fallback = if (attackerIsPlayerSide) getAliveEnemySide().firstOrNull() else getAlivePlayerSide().firstOrNull()
                 return listOfNotNull(fallback)
             }
