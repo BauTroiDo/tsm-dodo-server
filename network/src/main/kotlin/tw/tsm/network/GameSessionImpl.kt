@@ -45,6 +45,9 @@ class GameSessionImpl(private val channel: Channel) : GameSession {
     override var sex: Int = 0
     override var element: Int = 0
     override var level: Int = 0
+    override var turn: Int = 0
+    override var career: Int = 0
+    override var turn3Element: Int = 0
     override var hair: Int = 0
     override var face: Int = 0
     override var color1: Int = 0
