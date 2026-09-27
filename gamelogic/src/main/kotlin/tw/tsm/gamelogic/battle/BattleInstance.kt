@@ -312,8 +312,9 @@ class BattleInstance(
             // 行動前再檢查：可能在這回合中被擊殺
             if (!fighter.isAlive) continue
 
-            // 被控場則跳過
-            if (fighter.isStunned) {
+            // Re-check all client-proven control states at the actual AGI turn.
+            // A faster actor may have applied Chaos/Seal after commands were queued.
+            if (fighter.isActionBlocked) {
                 fighter.pendingAction = null
                 fighter.hasActed = false
                 continue
