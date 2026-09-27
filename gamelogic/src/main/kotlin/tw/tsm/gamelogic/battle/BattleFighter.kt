@@ -98,8 +98,9 @@ class BattleFighter(
     /** 是否存活 */
     val isAlive: Boolean get() = !isDead && hp > 0
 
-    /** 是否被控場（無法行動） */
+    /** Seal prevents acting; client IsCanControl also blocks command input while Chaos is active. */
     val isStunned: Boolean get() = groupedStatuses.values.any { BattleStatus.isStunStatus(it.status) }
+    val isCommandBlocked: Boolean get() = isStunned || groupedStatuses.values.any { it.status == BattleStatus.CHAOS }
 
     fun setGroupedStatus(group: Int, status: BattleStatus, rounds: Int, skillId: Int, appliedRound: Int) {
         if (group <= 0 || status == BattleStatus.NONE) return
