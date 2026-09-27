@@ -118,7 +118,7 @@ class BattleInstance(
             logger.warn { "戰鬥 $battleId: ($srcCol,$srcRow) 的角色 ${fighter.name} 不屬於玩家 $playerId" }
             return false
         }
-        if (fighter.isAlive && !fighter.isStunned) {
+        if (fighter.isAlive && !fighter.isCommandBlocked) {
             if (action.actionKind == BattleAction.KIND_SKILL) {
                 val target = grid.getAt(action.targetCol, action.targetRow)
                 if (target == null || !target.isAlive) {
@@ -205,7 +205,7 @@ class BattleInstance(
      */
     fun allPlayersReady(): Boolean {
         return allFighters
-            .filter { it.isPlayerControlled && it.isAlive && !it.isStunned }
+            .filter { it.isPlayerControlled && it.isAlive && !it.isCommandBlocked }
             .all { it.hasActed }
     }
 
