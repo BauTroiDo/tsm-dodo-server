@@ -74,6 +74,7 @@ class BattleSkillResolver(
         val fightArea = skill?.let { getFightArea(it, skillLv) } ?: 1
         val isHeal = skill != null && BattleDamageCalc.isHealSkill(skill)
         val targetsFriendlySide = skill != null && skill.fightWay in FRIENDLY_ONLY_FIGHT_WAYS
+        val isDispel = skillId in DISPEL_SKILLS
 
         // Lua SkillData rule: requireSp == 1 means consume ALL current SP.
         val requiredSp = skill?.requireSp ?: 0
@@ -112,6 +113,19 @@ class BattleSkillResolver(
         val targetResults = mutableListOf<TargetResult>()
 
         for (target in resolvedTargets) {
+            if (isDispel) {
+                clearModeledStatus(target, skillId)
+                targetResults.add(
+                    TargetResult(
+                        targetCol = target.col,
+                        targetRow = target.row,
+                        attackResult = EAttackResult.HIT,
+                        beHitAction = EBeHitAction.NONE,
+                        attrChanges = emptyList()
+                    )
+                )
+                continue
+            }
             var totalDamage = 0
             var lastRawDamage = 0  // 造成死亡那擊的原始傷害（打飛判定用）
             var finalAttackResult = EAttackResult.HIT
@@ -204,6 +218,54 @@ class BattleSkillResolver(
 
         return SkillResolveResult(targetResults, spConsumed, fightArea)
     }
+    /**
+     * Client clear skills set concrete status to None in one or more status groups.
+     * With the current single-status server model, clear only when the active modeled
+     * status belongs to a group this skill clears.
+     */
+    private fun clearModeledStatus(target: BattleFighter, skillId: Int) {
+        val group = modeledStatusGroup(target.statusEffect)
+        if (group == 0 || group !in clearGroups(skillId)) return
+        target.statusEffect = tw.tsm.domain.enums.BattleStatus.NONE
+        target.statusRounds = 0
+        target.statusSkillId = 0
+        target.statusAppliedRound = -1
+    }
+
+    private fun modeledStatusGroup(status: tw.tsm.domain.enums.BattleStatus): Int = when (status) {
+        tw.tsm.domain.enums.BattleStatus.WHIRL_WIND,
+        tw.tsm.domain.enums.BattleStatus.ICE_BOUND,
+        tw.tsm.domain.enums.BattleStatus.CLUMP,
+        tw.tsm.domain.enums.BattleStatus.TRANCE,
+        tw.tsm.domain.enums.BattleStatus.DIZZY_ATK -> 1
+        tw.tsm.domain.enums.BattleStatus.BOUNDARY,
+        tw.tsm.domain.enums.BattleStatus.GOD,
+        tw.tsm.domain.enums.BattleStatus.GOLD_SHIELD -> 2
+        tw.tsm.domain.enums.BattleStatus.POOR,
+        tw.tsm.domain.enums.BattleStatus.SHRINK,
+        tw.tsm.domain.enums.BattleStatus.POISON,
+        tw.tsm.domain.enums.BattleStatus.CHAOS,
+        tw.tsm.domain.enums.BattleStatus.TARDY,
+        tw.tsm.domain.enums.BattleStatus.LANDSLIP -> 3
+        tw.tsm.domain.enums.BattleStatus.SPELL -> 4
+        else -> 0
+    }
+
+    private fun clearGroups(skillId: Int): Set<Int> = buildSet {
+        if (skillId in CLEAR_SEAL_SKILLS) add(1)
+        if (skillId in CLEAR_VARY_SKILLS) add(2)
+        if (skillId in CLEAR_FAINT_SKILLS) add(3)
+        if (skillId in CLEAR_SPEC_SKILLS) add(4)
+        if (skillId in CLEAR_STRONG_SKILLS) add(5)
+    }
+
+    private val CLEAR_SEAL_SKILLS = setOf(10009,10014,11012,11015,14007,11016,11017,11018,11019,20015,20019,11025,11031,14056,20050,10041,11040,11038,20054)
+    private val CLEAR_VARY_SKILLS = setOf(10009,10014,11012,11015,11016,11017,11018,11019,20015,20019,11025,11031,20050,20054,22011,22012,22013,22014,10041,11040,11038)
+    private val CLEAR_FAINT_SKILLS = setOf(11012,11015,14014,14022,11016,11017,11018,11019,20015,20019,11025,11031,14056,20050,20054,22005,11040,11038)
+    private val CLEAR_SPEC_SKILLS = setOf(20007)
+    private val CLEAR_STRONG_SKILLS = setOf(11012,11016,11017,11018,11019,20015,20019,11025,11031,14056,20050,20054,11040,11038)
+    private val DISPEL_SKILLS = CLEAR_SEAL_SKILLS + CLEAR_VARY_SKILLS + CLEAR_FAINT_SKILLS + CLEAR_SPEC_SKILLS + CLEAR_STRONG_SKILLS
+
 }
 
 /** 技能解析結果 */
