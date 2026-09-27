@@ -57,6 +57,9 @@ interface CharacterRepository {
      */
     suspend fun addStatPoint(characterId: Long, column: String, addValue: Int, newAttrPoint: Int)
 
+    /** Chỉ cập nhật điểm thuộc tính còn lại (dùng khi stat được lưu ở bảng Turn3). */
+    suspend fun updateAttrPoint(characterId: Long, newAttrPoint: Int)
+
     /**
      * 更新角色經驗和等級（戰鬥獎勵/斷線儲存時呼叫）
      */
