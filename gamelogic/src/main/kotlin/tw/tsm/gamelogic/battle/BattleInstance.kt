@@ -260,7 +260,7 @@ class BattleInstance(
             if (fighter.isAlive && fighter.statusEffect != BattleStatus.NONE) {
                 fighter.statusRounds--
                 if (fighter.statusRounds <= 0) {
-                    statusRestores.add(StatusRestore(fighter.col, fighter.row, fighter.statusEffect.id, fighter.statusSkillId))
+                    statusRestores.add(StatusRestore(fighter.col, fighter.row, statusGroup(fighter.statusEffect), fighter.statusSkillId))
                     fighter.statusEffect = BattleStatus.NONE
                     fighter.statusRounds = 0
                     fighter.statusSkillId = 0
@@ -475,6 +475,29 @@ class BattleInstance(
         state = State.ROUND_END
 
         return RoundResult(actionResults, statusRestores, escapeResults, flyOutTargets, consumedItems)
+    }
+
+    /**
+     * S53:1 status_kind is EFightStatusKind (group), not EStatus/BattleStatus id.
+     * The client derives the concrete seal status from skillId in SealSkill().
+     */
+    private fun statusGroup(status: BattleStatus): Int = when (status) {
+        BattleStatus.WHIRL_WIND,
+        BattleStatus.ICE_BOUND,
+        BattleStatus.CLUMP,
+        BattleStatus.TRANCE,
+        BattleStatus.DIZZY_ATK -> 1 // EFightStatusKind.Seal
+        BattleStatus.SHRINK -> 2    // EFightStatusKind.Vary
+        BattleStatus.POISON,
+        BattleStatus.CHAOS,
+        BattleStatus.TARDY -> 3     // EFightStatusKind.Faint
+        BattleStatus.BOUNDARY -> 4  // EFightStatusKind.Spec
+        BattleStatus.GOD,
+        BattleStatus.GOLD_SHIELD -> 5 // EFightStatusKind.Strong
+        BattleStatus.POOR,
+        BattleStatus.SPELL,
+        BattleStatus.LANDSLIP -> 3
+        BattleStatus.NONE -> 0
     }
 
     /**
