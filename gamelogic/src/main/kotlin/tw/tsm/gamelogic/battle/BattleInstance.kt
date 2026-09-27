@@ -189,6 +189,13 @@ class BattleInstance(
                     return false
                 }
             }
+            if (action.actionKind == BattleAction.KIND_ESCAPE &&
+                warStyle in setOf(EWarStyle.LIFE_PK, EWarStyle.WORLD_BOSS)
+            ) {
+                // FightRoleController.DoClick: fightWay=12 is disabled in LifePK/WorldBoss.
+                logger.warn { "戰鬥 $battleId: warStyle=$warStyle 禁止逃跑" }
+                return false
+            }
             if (action.actionKind == BattleAction.KIND_CATCH) {
                 val target = grid.getAt(action.targetCol, action.targetRow)
                 val npcDef = target?.let { t -> involvedNpcDefs.firstOrNull { it.first == t.npcId }?.second }
