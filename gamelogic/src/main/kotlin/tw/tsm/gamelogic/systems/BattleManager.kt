@@ -894,12 +894,28 @@ class BattleManager(
         if (state.turn >= 3) {
             val repo = skillRepository ?: return
             val turn3 = repo.findTurn3State(charId)
-            val newExp = (turn3.exp + expGain).coerceAtLeast(0)
-            repo.saveTurn3State(charId, turn3.copy(exp = newExp))
-            // RoleController.SetAttribute(EAttribute.Exp) routes attr 36 into turn3Info.exp when Turn == 3.
-            // Keep using wire EXP=36; 253 is an internal direct Turn3 attribute.
-            responseSender.sendSetAttribute(session, EAttribute.EXP, newExp.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(), true)
-            logger.info { "三轉經驗：charId=$charId +$expGain → $newExp" }
+            var exp = (turn3.exp + expGain).coerceAtLeast(0)
+            var level = state.level
+            var gained = 0
+            // Client represents Turn3 level as ordinary Lv 201..250; Calculator.lua derives
+            // turn3Lv = Lv - playerMaxLv (200). The configured cap is 200 + 50.
+            while (level < TURN3_MAX_LEVEL) {
+                val need = statSystem.calculateUpExp(level - PLAYER_MAX_LEVEL, 3)
+                if (exp < need) break
+                exp -= need
+                level++
+                gained++
+            }
+            repo.saveTurn3State(charId, turn3.copy(exp = exp))
+            responseSender.sendSetAttribute(session, EAttribute.EXP, exp.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(), true)
+            if (gained > 0) {
+                synchronized(state) { state.level = level }
+                session.level = level
+                responseSender.sendSetAttribute(session, EAttribute.LV, level, true)
+                logger.info { "三轉升級：charId=$charId +$gained → Lv.$level, exp=$exp" }
+            } else {
+                logger.info { "三轉經驗：charId=$charId +$expGain → $exp" }
+            }
             return
         }
         synchronized(state) {
@@ -973,6 +989,12 @@ class BattleManager(
             }
         }
         logger.debug { "戰鬥 ${battle.battleId} 資源已清理" }
+    }
+
+    companion object {
+        private const val PLAYER_MAX_LEVEL = 200
+        private const val TURN3_EXTRA_LEVELS = 50
+        private const val TURN3_MAX_LEVEL = PLAYER_MAX_LEVEL + TURN3_EXTRA_LEVELS
     }
 
     // ── 封包序列化輔助 ──
