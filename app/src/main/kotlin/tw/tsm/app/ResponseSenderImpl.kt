@@ -696,6 +696,6 @@ class ResponseSenderImpl(worldManager: WorldManager) : ResponseSender {
     override fun sendPlayerCareerChange(
         session: SessionSender, playerId: Long, hair: Int,
         color1: Int, color2: Int, turn: Int, career: Int
-    ) = battle.sendPlayerCareerChange(session as GameSession, playerId, hair, color1, color2, turn, career)
+    ) = battle.sendPlayerCareerChange(session, playerId, hair, color1, color2, turn, career)
 
 }
