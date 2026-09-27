@@ -45,7 +45,9 @@ object BattleRoleSerializer {
             // 武將名字 (UTF-8)
             writer.writeUtf8WithByteLen(data.name)
         }
-        // 其他 NPC 種類不需要額外資料
+        // RoleAppear always consumes one trailing UInt16 after every fighter,
+        // regardless of EHuman kind. DVT uses it as soulEquipId.
+        writer.writeShortLE(0)
 
         return writer.toByteArray()
     }
