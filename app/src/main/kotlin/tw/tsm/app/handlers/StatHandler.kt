@@ -9,6 +9,7 @@ import tw.tsm.domain.interfaces.PacketHandler
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.StatCalculator
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
+import tw.tsm.domain.interfaces.repositories.SkillRepository
 import tw.tsm.gamelogic.systems.PlayerStateManager
 import tw.tsm.gamelogic.systems.SkillSystem
 import tw.tsm.protocol.PacketReader
@@ -29,7 +30,8 @@ class StatHandler(
     private val characterRepository: CharacterRepository,
     private val responseSender: ResponseSender,
     private val statCalc: StatCalculator,
-    private val skillSystem: SkillSystem
+    private val skillSystem: SkillSystem,
+    private val skillRepository: SkillRepository
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.BATTLE
@@ -37,9 +39,31 @@ class StatHandler(
     override suspend fun handle(session: GameSession, subKind: Int, data: ByteArray) {
         when (subKind) {
             1 -> handleAllocateStat(session, data)
+            12 -> handleTurn3Element(session, data)
             13 -> handleRequestSkillData(session)
             else -> logger.trace { "未處理的 C:008-$subKind" }
         }
+    }
+
+    /** C:008-012 第一次選擇三轉光/暗元素：payload element(Byte). */
+    private suspend fun handleTurn3Element(session: GameSession, data: ByteArray) {
+        if (session.state != SessionState.IN_GAME || data.size != 1) return
+        val charId = session.roleId.toLong()
+        val player = playerStateManager.getState(charId) ?: return
+        val element = data[0].toInt() and 0xFF
+        // UISkillTree only exposes Light/Dark. Element enum values are grounded by skill data/UI as 7/8.
+        if (element !in 7..8 || player.turn < 3) {
+            responseSender.sendTurn3ElementResult(session, 1)
+            return
+        }
+        val current = skillRepository.findTurn3State(charId)
+        if (current.element != 0) {
+            responseSender.sendTurn3ElementResult(session, 1)
+            return
+        }
+        skillRepository.saveTurn3State(charId, current.copy(element = element))
+        responseSender.sendTurn3ElementResult(session, 0)
+        logger.info { "${session.characterName} selected Turn3 element=$element" }
     }
 
     private fun handleRequestSkillData(session: GameSession) {
