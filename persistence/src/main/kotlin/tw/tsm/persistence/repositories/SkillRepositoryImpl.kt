@@ -42,16 +42,16 @@ class SkillRepositoryImpl : SkillRepository {
                 .where { CharacterTurn2Skills.characterId eq characterId }
                 .toList()
             val available = rows.firstOrNull {
-                it[CharacterTurn2Skills.kind] == 1 && it[CharacterTurn2Skills.index] == 0
+                it[CharacterTurn2Skills.kind] == 1 && it[CharacterTurn2Skills.slotIndex] == 0
             }?.get(CharacterTurn2Skills.value) ?: 0
             val balls = rows.filter {
-                it[CharacterTurn2Skills.kind] == 1 && it[CharacterTurn2Skills.index] in 1..12 &&
+                it[CharacterTurn2Skills.kind] == 1 && it[CharacterTurn2Skills.slotIndex] in 1..12 &&
                     it[CharacterTurn2Skills.value] != 0
-            }.map { it[CharacterTurn2Skills.index] }.toSet()
+            }.map { it[CharacterTurn2Skills.slotIndex] }.toSet()
             val heroes = rows.filter {
-                it[CharacterTurn2Skills.kind] == 2 && it[CharacterTurn2Skills.index] in 6..13 &&
+                it[CharacterTurn2Skills.kind] == 2 && it[CharacterTurn2Skills.slotIndex] in 6..13 &&
                     it[CharacterTurn2Skills.value] > 0
-            }.associate { it[CharacterTurn2Skills.index] to it[CharacterTurn2Skills.value] }
+            }.associate { it[CharacterTurn2Skills.slotIndex] to it[CharacterTurn2Skills.value] }
             Turn2SkillState(available, balls, heroes)
         }
 
@@ -65,7 +65,7 @@ class SkillRepositoryImpl : SkillRepository {
             CharacterTurn2Skills.batchInsert(rows) { (kind, index, value) ->
                 this[CharacterTurn2Skills.characterId] = characterId
                 this[CharacterTurn2Skills.kind] = kind
-                this[CharacterTurn2Skills.index] = index
+                this[CharacterTurn2Skills.slotIndex] = index
                 this[CharacterTurn2Skills.value] = value
             }
         }
