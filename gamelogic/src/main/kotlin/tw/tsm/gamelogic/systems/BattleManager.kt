@@ -11,6 +11,7 @@ import tw.tsm.domain.data.EveFightData
 import tw.tsm.domain.data.EveFightEnemy
 import tw.tsm.domain.data.NpcDef
 import tw.tsm.domain.data.NpcDropDef
+import tw.tsm.domain.data.NpcUpgradeDef
 import tw.tsm.domain.data.SkillDef
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.ResponseSender
@@ -47,7 +48,8 @@ class BattleManager(
     private val macroBoxSystem: MacroBoxSystem? = null,
     private val itemDefs: Map<Int, tw.tsm.domain.data.ItemDef> = emptyMap(),
     private val skillRepository: SkillRepository? = null,
-    private val characterRepository: CharacterRepository? = null
+    private val characterRepository: CharacterRepository? = null,
+    private val npcUpgradeDefs: Map<Int, NpcUpgradeDef> = emptyMap()
 ) {
     /** 戰鬥道具解析器（無狀態，全戰鬥共用） */
     private val battleItemResolver = BattleItemResolver(inventorySystem, itemDefs)
@@ -1241,6 +1243,19 @@ class BattleManager(
         val maxSp = (npcDef.spBase + petData.level * (npcDef.spx + equipBonus.equipSpx) + equipBonus.equipMaxSp)
             .toLong().coerceAtLeast(sp)
 
+        val normalSkills = npcDef.skills.take(3)
+            .zip(listOf(petData.skill1Lv, petData.skill2Lv, petData.skill3Lv))
+            .filter { (id, lv) -> id > 0 && lv > 0 }
+            .associate { it.first to it.second }
+            .toMutableMap()
+        if (petData.canUseSpecialSkill && npcDef.specialSkill > 0) {
+            normalSkills[npcDef.specialSkill] = 1
+        }
+        val upgradeSkillLv = npcUpgradeDefs[petData.upgradeLv]?.skillLv ?: 0
+        if (npcDef.upgradeSkill > 0 && upgradeSkillLv > 0) {
+            normalSkills[npcDef.upgradeSkill] = upgradeSkillLv
+        }
+
         return BattleFighter(
             roleId = npcDataId.toLong(),
             kind = EHuman.FOLLOW_NPC,
@@ -1259,18 +1274,8 @@ class BattleManager(
             def = petData.def + equipBonus.equipDef,
             agi = petData.agi + equipBonus.equipAgi,
             intelligence = petData.intelligence + equipBonus.equipInt,
-            // DVT RoleController:GetSkillLv uses the NPC's three base skill IDs
-            // together with this individual pet's skillLv[1..3]. A base skill
-            // at level 0 is not learned and CaseSkill falls back to hand attack.
-            skills = npcDef.skills.take(3)
-                .zip(listOf(petData.skill1Lv, petData.skill2Lv, petData.skill3Lv))
-                .filter { (id, lv) -> id > 0 && lv > 0 }
-                .map { it.first }
-                .toIntArray(),
-            skillLevels = npcDef.skills.take(3)
-                .zip(listOf(petData.skill1Lv, petData.skill2Lv, petData.skill3Lv))
-                .filter { (id, lv) -> id > 0 && lv > 0 }
-                .associate { it.first to it.second }
+            skills = normalSkills.keys.toIntArray(),
+            skillLevels = normalSkills
         )
     }
 
