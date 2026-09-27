@@ -2,6 +2,7 @@ package tw.tsm.app.handlers
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import tw.tsm.domain.constants.Opcodes
+import tw.tsm.domain.constants.EAttribute
 import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.PacketHandler
@@ -250,7 +251,10 @@ class UISellHandler(
         val charId = session.roleId.toLong()
         val skillId = args.single()
         val state = skillRepository.findTurn3State(charId)
-        skillRepository.saveTurn3State(charId, state.copy(skills = state.skills + (skillId to 1)))
+        val updated = state.copy(skills = state.skills + (skillId to 1))
+        skillRepository.saveTurn3State(charId, updated)
+        responseSender.sendSetAttribute(session, EAttribute.TURN3_ELEMENT, updated.element, true)
+        sendMergedSkillState(session, charId, updated.skills)
         responseSender.sendUiSellSuccess(session, sellId)
         logger.info { "${session.characterName} unlocked Turn3 skill=$skillId" }
     }
@@ -266,8 +270,27 @@ class UISellHandler(
             skills = state.skills.filterKeys { it in allowed }
         ))
         session.turn3Element = target
+        responseSender.sendSetAttribute(session, EAttribute.TURN3_ELEMENT, target, true)
+        sendMergedSkillState(session, charId, state.skills.filterKeys { it in allowed })
         responseSender.sendUiSellSuccess(session, sellId)
         logger.info { "${session.characterName} changed Turn3 element=$target" }
+    }
+
+    private suspend fun sendMergedSkillState(
+        session: GameSession,
+        charId: Long,
+        turn3Skills: Map<Int, Int>
+    ) {
+        // S8:13 clears the client's whole skill table before reloading it, so Turn3
+        // skills must be merged with ordinary persisted skills rather than sent alone.
+        val normalSkills = skillRepository.findByCharacterId(charId)
+        val state = playerStateManager.getState(charId) ?: return
+        responseSender.sendPlayerSkillData(
+            session,
+            state.element,
+            state.skillPoint,
+            normalSkills + turn3Skills
+        )
     }
 
     /**
