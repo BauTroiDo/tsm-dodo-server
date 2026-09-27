@@ -563,7 +563,7 @@ class BattleManager(
 
         // S:011-010 戰場類型（Normal PvE）
         for (session in targets) {
-            responseSender.sendBattleFieldType(session, EWarStyle.NORMAL, 0, 0, 0)
+            responseSender.sendBattleFieldType(session, battle.warStyle, 0, 0, 0)
         }
     }
 
