@@ -83,7 +83,7 @@ class SkillSystem(
      * @param upgrades Danh sách các cặp (skillId, targetLevel) cần nâng cấp
      * @return Danh sách các cặp (skillId, newLevel) thực tế đã nâng cấp thành công
      */
-    fun upgradeSkills(characterId: Long, upgrades: List<Pair<Int, Int>>): List<Pair<Int, Int>> {
+    fun upgradeSkills(characterId: Long, upgrades: List<Pair<Int, Int>>, playerTurn: Int = 0): List<Pair<Int, Int>> {
         val sc = cache[characterId] ?: return emptyList()
         // UISkillTree.SendSkill uses pairs(): dependency order is not a contract.
         synchronized(sc) {
@@ -98,6 +98,24 @@ class SkillSystem(
                 val from = sc.skills[id] ?: 0
                 if (id in forbidden || def.element == opposite || target !in 1..minOf(255, def.maxLv) ||
                     target < from || from < 0 || def.learnPoint < 0 || def.levelUpPoint < 0) return emptyList()
+
+                // SkillData.turnKind: 0 = chưa chuyển sinh, 1 = kỹ năng chuyển sinh.
+                // UISkillTree chỉ mở tab Turn1 từ Turn >= 1. Server phải tự kiểm tra vì client không đáng tin cậy.
+                if (from == 0 && def.turnKind > 0 && playerTurn < def.turnKind) return emptyList()
+
+                // UISkillTree.AddSkillLv có điều kiện riêng cho bốn kỹ năng gốc Turn1.
+                // Lua dùng GetSkillLv(..., true), vì vậy chỉ kỹ năng đã học trước batch mới thỏa điều kiện này.
+                if (from == 0) {
+                    val turn1RootPrerequisites = when (id) {
+                        10020 -> setOf(10013, 10012, 10011, 10015, 10014, 10009)
+                        11020 -> setOf(11015, 11014, 11013, 11006)
+                        12020 -> setOf(12015, 12014, 12013)
+                        13019 -> setOf(13014, 13013, 13009)
+                        else -> emptySet()
+                    }
+                    if (turn1RootPrerequisites.isNotEmpty() &&
+                        turn1RootPrerequisites.none { (sc.skills[it] ?: 0) > 0 }) return emptyList()
+                }
                 if (target == from) continue
                 val first = if (from == 0) def.learnPoint.toLong() *
                     (if (def.element in 1..4 && def.element != sc.element) 2 else 1) else 0L
