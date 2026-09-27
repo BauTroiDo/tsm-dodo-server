@@ -204,4 +204,41 @@ class DvtBattleStatusExecutionTest {
     }
 
 
+    @Test
+    fun `fightWay eight revives the selected dead ally`() {
+        val skillId = 11011
+        val resolver = BattleSkillResolver(
+            mapOf(skillId to skill(EAttribute.HP, fightWayValue = 8, rounds = 0))
+        )
+        val attacker = fighter(1, col = 2, row = 0)
+        val dead = fighter(2, col = 2, row = 1).also {
+            it.hp = 0
+            it.isDead = true
+        }
+        val living = fighter(3, col = 3, row = 1)
+        val grid = BattleGrid().also {
+            it.place(attacker)
+            it.place(dead)
+            it.place(living)
+        }
+
+        val result = resolver.resolveSkill(
+            attacker = attacker,
+            grid = grid,
+            skillId = skillId,
+            targetCol = dead.col,
+            targetRow = dead.row,
+            terrain = 0,
+            currentRound = 7
+        )
+
+        assertTrue(dead.hp > 0)
+        assertFalse(dead.isDead)
+        assertEquals(1000, living.hp)
+        assertEquals(dead.col, result.targets.single().targetCol)
+        assertEquals(dead.row, result.targets.single().targetRow)
+        assertTrue(result.targets.single().attrChanges.any { it.attrKind == EAttribute.HP && it.isPositive })
+    }
+
+
 }
