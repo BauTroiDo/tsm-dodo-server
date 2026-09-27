@@ -189,6 +189,18 @@ class StatSystem(private val params: FormulaParams) : StatCalculator {
         }
     }
 
+    /** Mirrors Lua Calc.GetNeedTExp(level, turn): cumulative EXP through [level]. */
+    fun calculateNeedTotalExp(level: Int, turn: Int = 0): Long {
+        if (level <= 0) return 0L
+        var total = 0L
+        for (i in 1..level) {
+            val next = calculateUpExp(i, turn)
+            if (Long.MAX_VALUE - total < next) return Long.MAX_VALUE
+            total += next
+        }
+        return total
+    }
+
     fun calculateNeedTurn3Exp(level: Int): Long {
         if (level <= 0) return 0L
         var total = 0L
