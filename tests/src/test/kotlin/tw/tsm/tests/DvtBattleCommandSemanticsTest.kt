@@ -219,6 +219,33 @@ class DvtBattleCommandSemanticsTest {
 
 
     @Test
+    fun `Lua self only skill rejects another target`() {
+        val selfOnlyId = 20006
+        val actor = fighter(1, 2, 0, intArrayOf(selfOnlyId))
+        val ally = fighter(2, 3, 0)
+        val battle = fixture(actor, ally, mapOf(selfOnlyId to skill(6)))
+
+        assertFalse(battle.setPlayerAction(
+            actor.roleId, actor.col, actor.row,
+            BattleAction(BattleAction.KIND_SKILL, selfOnlyId, ally.col, ally.row)
+        ))
+        assertFalse(actor.hasActed)
+        assertEquals(null, actor.pendingAction)
+    }
+
+    @Test
+    fun `Lua self only skill accepts caster target`() {
+        val selfOnlyId = 20006
+        val actor = fighter(1, 2, 0, intArrayOf(selfOnlyId))
+        val ally = fighter(2, 3, 0)
+        val battle = fixture(actor, ally, mapOf(selfOnlyId to skill(6)))
+
+        val action = BattleAction(BattleAction.KIND_SKILL, selfOnlyId, actor.col, actor.row)
+        assertTrue(battle.setPlayerAction(actor.roleId, actor.col, actor.row, action))
+        assertEquals(action, actor.pendingAction)
+    }
+
+    @Test
     fun `LifePK rejects escape command at queue time`() {
         val actor = fighter(1, 2, 0)
         val target = fighter(2, 0, 0)
