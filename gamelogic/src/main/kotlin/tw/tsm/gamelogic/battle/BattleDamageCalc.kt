@@ -98,7 +98,7 @@ object BattleDamageCalc {
         // 狀態異常施加
         var inflictedStatus = BattleStatus.NONE
         var statusRounds = 0
-        if (skill != null && skill.hitStatus > 0 && skill.round > 0) {
+        if (skill != null && skill.round > 0 && statusFromSkillId(skillId) != BattleStatus.NONE) {
             val statusChance = 50 + (attacker.intelligence - target.intelligence) / 2
             if (Random.nextInt(100) < statusChance.coerceIn(10, 90)) {
                 // Client FightRoleController resolves the concrete status from skillId
