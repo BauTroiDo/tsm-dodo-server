@@ -149,7 +149,7 @@ class BattleInstance(
             if (action.actionKind == BattleAction.KIND_ITEM) {
                 val target = grid.getAt(action.targetCol, action.targetRow)
                 val ownerSession = playerSessions[playerId]
-                if (target == null || !target.isAlive || ownerSession == null ||
+                if (target == null || ownerSession == null ||
                     !itemResolver.canQueueItemUse(
                         user = fighter,
                         target = target,
