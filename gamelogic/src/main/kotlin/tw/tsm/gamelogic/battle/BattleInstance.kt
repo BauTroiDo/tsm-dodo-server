@@ -269,20 +269,7 @@ class BattleInstance(
             }
         }
 
-        // 先處理狀態異常回合遞減
-        for (fighter in allFighters) {
-            if (fighter.isAlive && fighter.statusEffect != BattleStatus.NONE) {
-                fighter.statusRounds--
-                if (fighter.statusRounds <= 0) {
-                    statusRestores.add(StatusRestore(fighter.col, fighter.row, statusGroup(fighter.statusEffect), fighter.statusSkillId))
-                    fighter.statusEffect = BattleStatus.NONE
-                    fighter.statusRounds = 0
-                    fighter.statusSkillId = 0
-                }
-            }
-        }
-
-        // 依敏捷排序（高敏先行動）
+        // Status duration is decremented after actions so round=1 blocks this round.\n\n        // 依敏捷排序（高敏先行動）
         val actingFighters = allFighters
             .filter { it.isAlive && it.hasActed && it.pendingAction != null }
             .sortedByDescending { it.agi }
@@ -462,6 +449,19 @@ class BattleInstance(
             // 清除行動
             fighter.pendingAction = null
             fighter.hasActed = false
+        }
+
+        // Statuses that were active during this action phase consume one round now.
+        for (fighter in allFighters) {
+            if (fighter.isAlive && fighter.statusEffect != BattleStatus.NONE) {
+                fighter.statusRounds--
+                if (fighter.statusRounds <= 0) {
+                    statusRestores.add(StatusRestore(fighter.col, fighter.row, statusGroup(fighter.statusEffect), fighter.statusSkillId))
+                    fighter.statusEffect = BattleStatus.NONE
+                    fighter.statusRounds = 0
+                    fighter.statusSkillId = 0
+                }
+            }
         }
 
         // 清除所有剩餘行動（未行動的角色）並重置 Combo 倍率
