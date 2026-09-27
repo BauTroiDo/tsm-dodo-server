@@ -23,6 +23,7 @@ import tw.tsm.gamelogic.systems.MountSystem
 import tw.tsm.gamelogic.systems.PetEquipSystem
 import tw.tsm.gamelogic.systems.PlayerStateManager
 import tw.tsm.gamelogic.systems.QuestSystem
+import tw.tsm.gamelogic.systems.SkillSystem
 import tw.tsm.gamelogic.systems.WorldManager
 import tw.tsm.protocol.PacketReader
 
@@ -48,7 +49,8 @@ class ItemHandler(
     private val flyPointSystem: FlyPointSystem,
     private val characterRepository: CharacterRepository,
     private val petEquipSystem: PetEquipSystem,
-    private val questSystem: QuestSystem
+    private val questSystem: QuestSystem,
+    private val skillSystem: SkillSystem
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.SHOP  // 23
@@ -113,6 +115,8 @@ class ItemHandler(
         // Validate everything before consuming the token.
         if (!inventorySystem.removeFromBag(characterId, bagIndex, 1)) return
         characterRepository.updateTurnCareer(characterId, currentTurn, newCareer)
+        skillSystem.resetTurn2CareerSkills(characterId)
+        skillSystem.save(characterId)
         synchronized(state) { state.career = newCareer }
 
         responseSender.sendPlayerCareerChange(
