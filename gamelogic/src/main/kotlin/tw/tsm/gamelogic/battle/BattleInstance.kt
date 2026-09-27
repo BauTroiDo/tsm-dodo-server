@@ -192,6 +192,21 @@ class BattleInstance(
                     return false
                 }
             }
+            if (action.actionKind == BattleAction.KIND_CATCH) {
+                val target = grid.getAt(action.targetCol, action.targetRow)
+                val npcDef = target?.let { t -> involvedNpcDefs.firstOrNull { it.first == t.npcId }?.second }
+                if (target == null || !target.isAlive || !target.isEnemySide ||
+                    target.kind == EHuman.PLAYER || target.kind == EHuman.PLAYERS ||
+                    target.kind == EHuman.FOLLOW_NPC || npcDef == null || npcDef.canBeCatch ||
+                    npcDef.level - fighter.level > 5
+                ) {
+                    // DVT FightRoleController.DoClick manual catch (15002):
+                    // enemy NPC only, NpcData.canBeCatch must allow it, and target
+                    // level may exceed the actor by at most five.
+                    logger.warn { "戰鬥 $battleId: ${fighter.name} 嘗試捕捉 Lua 不允許的目標 (${action.targetCol},${action.targetRow})" }
+                    return false
+                }
+            }
             if (action.actionKind == BattleAction.KIND_ITEM) {
                 val target = grid.getAt(action.targetCol, action.targetRow)
                 val ownerSession = playerSessions[playerId]
