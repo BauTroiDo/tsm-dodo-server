@@ -35,13 +35,13 @@ class DvtBattleStatusExecutionTest {
     )
 
     private fun skill(
-        attribute: Int,
-        fightWay: Int,
-        round: Int
+        attributeKind: Int,
+        fightWayValue: Int,
+        rounds: Int
     ) = mockk<SkillDef> {
-        every { this@mockk.attribute } returns attribute
-        every { this@mockk.fightWay } returns fightWay
-        every { this@mockk.round } returns round
+        every { attribute } returns attributeKind
+        every { fightWay } returns fightWayValue
+        every { round } returns rounds
         every { fightArea } returns 1
         every { fightWayGrowType } returns 0
         every { requireSp } returns 0
@@ -55,7 +55,7 @@ class DvtBattleStatusExecutionTest {
         // 14021 = Chaos in Attack.lua and FightRoleController.FaintSkill.
         val skillId = 14021
         val resolver = BattleSkillResolver(
-            mapOf(skillId to skill(EAttribute.FAINT, fightWay = 1, round = 3))
+            mapOf(skillId to skill(EAttribute.FAINT, fightWayValue = 1, rounds = 3))
         )
         val attacker = fighter(1, col = 2, row = 0)
         val target = fighter(2, col = 0, row = 0)
@@ -97,7 +97,7 @@ class DvtBattleStatusExecutionTest {
         // 14012 = SameHeart, a client-proven Vary-group friendly status.
         val skillId = 14012
         val resolver = BattleSkillResolver(
-            mapOf(skillId to skill(EAttribute.VARY, fightWay = 6, round = 3))
+            mapOf(skillId to skill(EAttribute.VARY, fightWayValue = 6, rounds = 3))
         )
         val attacker = fighter(1, col = 2, row = 0)
         val ally = fighter(2, col = 2, row = 1)
