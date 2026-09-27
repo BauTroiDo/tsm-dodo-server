@@ -463,21 +463,21 @@ class BattleInstance(
                     val ownerPlayerId = if (fighter.masterId != 0L) fighter.masterId else fighter.roleId
                     val target = grid.getAt(action.targetCol, action.targetRow)
                     if (target != null && target.isAlive && target.kind != EHuman.PLAYER) {
-                        // 等級差限制
-                        val levelDiff = fighter.level - target.level
-                        val canCatch = levelDiff >= -BattleConstants.CATCH_LEVEL_DIFF
-
-                        // 血量越低成功率越高
-                        val hpRatio = target.hp.toDouble() / target.maxHp.toDouble()
-                        val baseRate = 0.3 + 0.7 * (1.0 - hpRatio)
-                        val levelMod = (levelDiff * 0.02).coerceIn(-0.3, 0.3)
-                        val successRate = (baseRate + levelMod).coerceIn(0.05, 0.95)
-                        val success = canCatch && Math.random() < successRate
+                        // DVT manual +5/catchability/ownership gates are validated when queued.
+                        // DVT client does not calculate the random result. PC original server CatchPet
+                        // supplies the server-side formula: chance = lost HP percentage.
+                        val hpRatio = if (target.maxHp > 0) {
+                            (target.hp.toDouble() / target.maxHp.toDouble()).coerceIn(0.0, 1.0)
+                        } else {
+                            1.0
+                        }
+                        val successRate = (1.0 - hpRatio).coerceIn(0.0, 1.0)
+                        val success = Math.random() < successRate
 
                         val resultSkillId = if (success) BattleConstants.CATCH_NET_SUCCESS
                                            else BattleConstants.CATCH_NET_FAIL
 
-                        logger.info { "戰鬥 $battleId: ${fighter.name} 捕捉 ${target.name}（lv差=$levelDiff hp=${target.hp}/${target.maxHp} 血量=${(hpRatio*100).toInt()}% 成功率=${(successRate*100).toInt()}%）→ ${if (success) "成功" else "失敗"}" }
+                        logger.info { "戰鬥 $battleId: ${fighter.name} 捕捉 ${target.name}（hp=${target.hp}/${target.maxHp} 血量=${(hpRatio*100).toInt()}% 成功率=${(successRate*100).toInt()}%）→ ${if (success) "成功" else "失敗"}" }
 
                         actionResults.add(
                             ActionResult(
