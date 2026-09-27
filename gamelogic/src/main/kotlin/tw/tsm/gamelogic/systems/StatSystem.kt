@@ -176,13 +176,28 @@ class StatSystem(private val params: FormulaParams) : StatCalculator {
                 if (level <= 0) return 1L
                 val mod60 = level % 60
                 val div60 = level / 60
-                val part1 = mod60.toDouble().pow(3.85).roundToLong() *
-                        (div60 + 1.2).pow(1.6).roundToLong()
-                val part2 = (1400000.0 * (div60 + 0.5).pow(2.6)).roundToLong()
-                part1 + part2
+                // Lua: round(round((level % 60)^3.85) * (trunc(level/60)+1.2)^1.6
+                //          + 1400000 * (trunc(level/60)+0.5)^2.6)
+                // Only the first power term is rounded before multiplication; the final sum is
+                // rounded once. Rounding each multiplier separately changes the EXP curve.
+                val part1 = mod60.toDouble().pow(3.85).roundToLong().toDouble() *
+                        (div60 + 1.2).pow(1.6)
+                val part2 = 1400000.0 * (div60 + 0.5).pow(2.6)
+                (part1 + part2).roundToLong()
             }
             else -> level.toDouble().pow(params.w28).roundToLong() + params.extraExp
         }
+    }
+
+    fun calculateNeedTurn3Exp(level: Int): Long {
+        if (level <= 0) return 0L
+        var total = 0L
+        for (i in 1..level) {
+            val next = calculateUpExp(i, 3)
+            if (Long.MAX_VALUE - total < next) return Long.MAX_VALUE
+            total += next
+        }
+        return total
     }
 
     /**
