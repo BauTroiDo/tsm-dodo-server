@@ -916,6 +916,38 @@ class BattleManager(
                 session.level = level
                 characterRepository?.updateLevel(charId, level)
                 responseSender.sendSetAttribute(session, EAttribute.LV, level, true)
+
+                // Calculator.lua clamps Turn3's base formula level to 200, then applies
+                // automatic growth through turn3Lv: HPX += min(turn3Lv, 70), SPX += turn3Lv.
+                // Recalculate immediately on level-up so runtime/client do not stay stale
+                // until the next login.
+                val turn3Lv = (level - PLAYER_MAX_LEVEL).coerceAtLeast(0)
+                val newMaxHp = statSystem.calculateMaxHp(
+                    level = PLAYER_MAX_LEVEL,
+                    hpx = state.hpx + state.equipHpx + turn3Lv.coerceAtMost(70) + state.turn3Hpx,
+                    equipMaxHp = state.equipMaxHp,
+                    extraHp = 0,
+                    turn = state.turn,
+                    career = state.career,
+                    turn3Lv = turn3Lv
+                )
+                val newMaxSp = statSystem.calculateMaxSp(
+                    level = PLAYER_MAX_LEVEL,
+                    spx = state.spx + state.equipSpx + turn3Lv + state.turn3Spx,
+                    equipMaxSp = state.equipMaxSp,
+                    extraSp = 0,
+                    turn = state.turn,
+                    career = state.career,
+                    turn3Lv = turn3Lv
+                )
+                playerStateManager.updateMaxHp(charId, newMaxHp)?.let { (maxHp, hp) ->
+                    responseSender.sendSetAttribute(session, EAttribute.MAX_HP, maxHp.toInt(), true)
+                    responseSender.sendSetAttribute(session, EAttribute.HP, hp.toInt(), true)
+                }
+                playerStateManager.updateMaxSp(charId, newMaxSp)?.let { (maxSp, sp) ->
+                    responseSender.sendSetAttribute(session, EAttribute.MAX_SP, maxSp, true)
+                    responseSender.sendSetAttribute(session, EAttribute.SP, sp, true)
+                }
                 logger.info { "三轉升級：charId=$charId +$gained → Lv.$level, exp=$exp" }
             } else {
                 logger.info { "三轉經驗：charId=$charId +$expGain → $exp" }
