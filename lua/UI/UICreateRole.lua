@@ -989,14 +989,23 @@ function UICreateRole.OnClick_RandomAvatar()
 end
 
 function UICreateRole.OnClick_RandomName()
-  inputField_Name.text = string.GetRandomName();
+  -- Ngoại lệ Việt hóa tên nhân vật: dùng danh sách Unicode tiếng Việt
+  -- thay cho RandomNameData gốc để nút xúc xắc tạo tên phù hợp client VTC.
+  local familyNames = { "Nguyễn", "Trần", "Lê", "Phạm", "Hoàng", "Võ", "Đặng", "Bùi", "Đỗ", "Hồ" };
+  local boyNames = { "Minh", "Long", "Hùng", "Khang", "Phong", "Quân", "Dũng", "Nam", "Khôi", "Tùng" };
+  local girlNames = { "Linh", "Anh", "Ngọc", "Vy", "Trang", "Thảo", "Hương", "Nhi", "Mai", "Yến" };
+  local givenNames = currentSex == 1 and boyNames or girlNames;
+  inputField_Name.text = string.Concat(
+    familyNames[math.random(1, #familyNames)],
+    givenNames[math.random(1, #givenNames)]
+  );
 end
 
 function UICreateRole.OnChange_Name()
-  local convertedString = LuaHelper.StringToBytes(DataManager.encoding_Big5, inputField_Name.text);
-  if string.len(convertedString) > Name_Length then
-    convertedString = string.sub(convertedString, 1, Name_Length);
-    inputField_Name.text = LuaHelper.BytesToString(DataManager.encoding_Big5, convertedString);
+  -- Tên nhân vật được giữ nguyên dưới dạng Unicode.
+  -- Giới hạn theo số ký tự thay vì ép qua Big5, tránh làm hỏng dấu tiếng Việt.
+  if string.Count(inputField_Name.text) > Name_Length then
+    inputField_Name.text = string.Sub(inputField_Name.text, 1, Name_Length);
   end
   
   gameObject_InputName:SetActive(inputField_Name.text == "");
