@@ -55,8 +55,12 @@ object BattleConstants {
     const val SCENE_LOAD_DELAY_MS = 1200L
     /** 回合結束後等待最後一個動畫播完 */
     const val ROUND_END_DELAY_MS = 1200L
-    /** Minimum spacing between S:050-001 commands when SkillData.spendSecond is zero. */
-    const val MIN_ACTION_PLAYBACK_DELAY_MS = 1000L
+    /**
+     * Spacing between independent S:050-001 commands.
+     * DVT Lua animation scripts commonly use sub-second internal intervals and do not ACK completion.
+     * Keep this on the original-server pacing scale; do not derive it from SkillData.spendSecond.
+     */
+    const val ACTION_COMMAND_PACING_MS = 500L
     /** 打飛動畫等待 */
     const val FLY_OUT_ANIM_DELAY_MS = 500L
 
