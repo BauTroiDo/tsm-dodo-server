@@ -119,7 +119,7 @@ class LoginService(
         responseSender.sendInitMissionFlags(session, flags)
 
         // 1. S:003-000 Người chơi xuất hiện
-        responseSender.sendPlayerAppear(session, playerId, record, serverId)
+        responseSender.sendPlayerAppear(session, playerId, record, serverId, skillRepository.findTurn3State(record.id).element)
 
         // 2. Tải vật phẩm/trang bị/tiền tệ/nguyên bảo (Phải tải trước mới có thể tính được chỉ số cộng thêm từ trang bị)
         inventorySystem.loadCharacterData(record.id)
