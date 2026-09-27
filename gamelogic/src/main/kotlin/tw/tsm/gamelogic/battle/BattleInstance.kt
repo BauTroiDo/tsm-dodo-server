@@ -107,16 +107,16 @@ class BattleInstance(
      * @param srcRow 發招者所在行
      * @param action 選擇的行動
      */
-    fun setPlayerAction(playerId: Long, srcCol: Int, srcRow: Int, action: BattleAction) {
+    fun setPlayerAction(playerId: Long, srcCol: Int, srcRow: Int, action: BattleAction): Boolean {
         val fighter = grid.getAt(srcCol, srcRow)
         if (fighter == null) {
             logger.warn { "戰鬥 $battleId: 找不到 ($srcCol,$srcRow) 的角色" }
-            return
+            return false
         }
         // 驗證歸屬：roleId 匹配（玩家本體）或 masterId 匹配（武將）
         if (fighter.roleId != playerId && fighter.masterId != playerId) {
             logger.warn { "戰鬥 $battleId: ($srcCol,$srcRow) 的角色 ${fighter.name} 不屬於玩家 $playerId" }
-            return
+            return false
         }
         if (fighter.isAlive && !fighter.isStunned) {
             if (action.actionKind == BattleAction.KIND_SKILL &&
@@ -124,7 +124,7 @@ class BattleInstance(
                 !canUseTurn3Summon(fighter, action.id)
             ) {
                 logger.warn { "戰鬥 $battleId: ${fighter.name} 嘗試使用不符合光暗/特殊裝備條件的三轉召喚 id=${action.id}" }
-                return
+                return false
             }
             if (action.actionKind == BattleAction.KIND_SKILL &&
                 action.id != BattleConstants.HAND_FIGHT_SKILL_ID &&
@@ -134,12 +134,14 @@ class BattleInstance(
                 action.id !in fighter.skills
             ) {
                 logger.warn { "戰鬥 $battleId: ${fighter.name} 嘗試使用未學技能 id=${action.id}" }
-                return
+                return false
             }
             fighter.pendingAction = action
             fighter.hasActed = true
             logger.debug { "戰鬥 $battleId: ${fighter.name} 設定行動 kind=${action.actionKind} id=${action.id}" }
+            return true
         }
+        return false
     }
 
     /**
