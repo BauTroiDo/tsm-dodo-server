@@ -71,14 +71,18 @@ class BattleSkillResolver(
         val fightArea = skill?.let { getFightArea(it, skillLv) } ?: 1
         val isHeal = skill != null && BattleDamageCalc.isHealSkill(skill)
 
-        // SP 消耗檢查
-        if (skill != null && attacker.sp < skill.requireSp) {
-            logger.debug { "${attacker.name} SP 不足：需要 ${skill.requireSp}，擁有 ${attacker.sp}" }
+        // Lua SkillData rule: requireSp == 1 means consume ALL current SP.
+        val requiredSp = skill?.requireSp ?: 0
+        if (skill != null && attacker.sp < requiredSp) {
+            logger.debug { "${attacker.name} SP 不足：需要 $requiredSp，擁有 ${attacker.sp}" }
             return SkillResolveResult(emptyList(), spConsumed = 0, fightArea = fightArea)
         }
 
-        // 消耗 SP
-        val spConsumed = skill?.requireSp ?: 0
+        val spConsumed = when {
+            skill == null || requiredSp <= 0 -> 0
+            requiredSp == 1 -> attacker.sp.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+            else -> requiredSp
+        }
         if (spConsumed > 0) {
             attacker.sp = max(0, attacker.sp - spConsumed)
         }
