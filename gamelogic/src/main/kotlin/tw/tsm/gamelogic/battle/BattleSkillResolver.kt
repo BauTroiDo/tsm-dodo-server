@@ -247,7 +247,13 @@ class BattleSkillResolver(
         tw.tsm.domain.enums.BattleStatus.CHAOS,
         tw.tsm.domain.enums.BattleStatus.TARDY,
         tw.tsm.domain.enums.BattleStatus.LANDSLIP,
-        tw.tsm.domain.enums.BattleStatus.TAUNT -> 3
+        tw.tsm.domain.enums.BattleStatus.TAUNT,
+        tw.tsm.domain.enums.BattleStatus.TRAITOR,
+        tw.tsm.domain.enums.BattleStatus.STOOL,
+        tw.tsm.domain.enums.BattleStatus.THUNDER_FIRE,
+        tw.tsm.domain.enums.BattleStatus.HEALTH_DRAWER,
+        tw.tsm.domain.enums.BattleStatus.WEAK_PERCENT,
+        tw.tsm.domain.enums.BattleStatus.EW_COMMON_FAINT -> 3
         tw.tsm.domain.enums.BattleStatus.SPELL -> 4
         else -> 0
     }
