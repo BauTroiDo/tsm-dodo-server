@@ -15,6 +15,7 @@ import tw.tsm.domain.data.SkillDef
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.repositories.SkillRepository
+import tw.tsm.domain.interfaces.repositories.CharacterRepository
 import tw.tsm.domain.valueobjects.FollowNpcData
 import tw.tsm.gamelogic.battle.*
 import tw.tsm.protocol.BattleRoleData
@@ -45,7 +46,8 @@ class BattleManager(
     private val skillSystem: SkillSystem? = null,
     private val macroBoxSystem: MacroBoxSystem? = null,
     private val itemDefs: Map<Int, tw.tsm.domain.data.ItemDef> = emptyMap(),
-    private val skillRepository: SkillRepository? = null
+    private val skillRepository: SkillRepository? = null,
+    private val characterRepository: CharacterRepository? = null
 ) {
     /** 戰鬥道具解析器（無狀態，全戰鬥共用） */
     private val battleItemResolver = BattleItemResolver(inventorySystem, itemDefs)
@@ -911,7 +913,7 @@ class BattleManager(
             if (gained > 0) {
                 synchronized(state) { state.level = level }
                 session.level = level
-                characterRepository.updateLevel(charId, level)
+                characterRepository?.updateLevel(charId, level)
                 responseSender.sendSetAttribute(session, EAttribute.LV, level, true)
                 logger.info { "三轉升級：charId=$charId +$gained → Lv.$level, exp=$exp" }
             } else {
