@@ -64,7 +64,8 @@ class BattleSkillResolver(
         targetCol: Int,
         targetRow: Int,
         terrain: Int,
-        comboMultiplier: Double = 1.0
+        comboMultiplier: Double = 1.0,
+        currentRound: Int = 0
     ): SkillResolveResult {
         val skill = if (skillId == BattleConstants.HAND_FIGHT_SKILL_ID) null else skillDefs[skillId]
         val skillLv = if (skill == null) 1 else (attacker.skillLevels[skillId] ?: 1).coerceIn(1, 10)
@@ -171,6 +172,7 @@ class BattleSkillResolver(
                     target.statusEffect = calcResult.inflictedStatus
                     target.statusRounds = calcResult.statusRounds
                     target.statusSkillId = skillId
+                    target.statusAppliedRound = currentRound
                 }
 
                 // 死亡判定
