@@ -132,6 +132,21 @@ class BattleInstance(
                     return false
                 }
             }
+            if (action.actionKind == BattleAction.KIND_ITEM) {
+                val target = grid.getAt(action.targetCol, action.targetRow)
+                val ownerSession = playerSessions[playerId]
+                if (target == null || !target.isAlive || ownerSession == null ||
+                    !itemResolver.canQueueItemUse(
+                        user = fighter,
+                        target = target,
+                        itemId = action.id,
+                        ownerCharId = ownerSession.roleId.toLong()
+                    )
+                ) {
+                    logger.warn { "戰鬥 $battleId: ${fighter.name} 嘗試排入無效/未持有的戰鬥道具 id=${action.id}" }
+                    return false
+                }
+            }
             if (action.actionKind == BattleAction.KIND_SKILL &&
                 action.id in TURN3_SUMMON_SKILLS &&
                 !canUseTurn3Summon(fighter, action.id)
