@@ -148,6 +148,13 @@ class QuestSystem(
         logger.debug { "Thiết lập đánh dấu nhiệm vụ: charId=$charId bitIndex=$bitIndex bitValue=$bitValue" }
     }
 
+    /** Kiểm tra nhiệm vụ đã hoàn thành theo missionId, giống MarkManager.GetMissionFlag(). */
+    suspend fun hasMissionFlag(charId: Long, missionId: Int): Boolean {
+        val bitId = markDefs[missionId]?.bitId ?: return false
+        if (bitId == 0) return false
+        return repo.getMissionFlags(charId).any { it.bitIndex == bitId && it.bitValue != 0 }
+    }
+
     /**
      * Lấy tất cả nhiệm vụ đang tiến hành của nhân vật (dùng để khởi tạo khi đăng nhập)
      *
