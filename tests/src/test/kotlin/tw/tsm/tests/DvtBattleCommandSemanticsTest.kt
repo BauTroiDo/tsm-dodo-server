@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import kotlinx.coroutines.runBlocking
+import tw.tsm.domain.enums.BattleStatus
 import tw.tsm.domain.constants.BattleConstants
 import tw.tsm.domain.constants.EHuman
 import tw.tsm.gamelogic.battle.BattleAction
@@ -101,6 +103,41 @@ class DvtBattleCommandSemanticsTest {
         val action = BattleAction(BattleAction.KIND_SKILL, healId, deadAlly.col, deadAlly.row)
 
         assertFalse(battle.setPlayerAction(actor.roleId, actor.col, actor.row, action))
+    }
+
+
+    @Test
+    fun `round end clears accepted command and allows next round submission`() = runBlocking {
+        val actor = fighter(1, 2, 0)
+        val target = fighter(2, 0, 0)
+        val battle = fixture(actor, target)
+        val action = BattleAction(BattleAction.KIND_SKILL, BattleConstants.HAND_FIGHT_SKILL_ID, target.col, target.row)
+
+        assertTrue(battle.setPlayerAction(actor.roleId, actor.col, actor.row, action))
+        battle.resolveRound()
+
+        assertFalse(actor.hasActed)
+        assertEquals(null, actor.pendingAction)
+        assertTrue(battle.setPlayerAction(actor.roleId, actor.col, actor.row, action))
+    }
+
+    @Test
+    fun `blocked queued actor is cleared without executing and can act after status clears`() = runBlocking {
+        val actor = fighter(1, 2, 0)
+        val target = fighter(2, 0, 0)
+        val battle = fixture(actor, target)
+        val action = BattleAction(BattleAction.KIND_SKILL, BattleConstants.HAND_FIGHT_SKILL_ID, target.col, target.row)
+
+        assertTrue(battle.setPlayerAction(actor.roleId, actor.col, actor.row, action))
+        actor.setGroupedStatus(1, BattleStatus.ICE_BOUND, 2, 11014, battle.currentRound)
+        val result = battle.resolveRound()
+
+        assertTrue(result.actionResults.none { it.attackerCol == actor.col && it.attackerRow == actor.row })
+        assertFalse(actor.hasActed)
+        assertEquals(null, actor.pendingAction)
+
+        actor.clearAllGroupedStatuses()
+        assertTrue(battle.setPlayerAction(actor.roleId, actor.col, actor.row, action))
     }
 
 
