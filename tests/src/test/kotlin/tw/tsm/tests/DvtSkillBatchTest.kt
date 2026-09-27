@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import tw.tsm.domain.data.SkillDef
 import tw.tsm.domain.interfaces.repositories.SkillRepository
+import tw.tsm.domain.interfaces.repositories.Turn2SkillState
 import tw.tsm.gamelogic.systems.SkillSystem
 
 class DvtSkillBatchTest {
