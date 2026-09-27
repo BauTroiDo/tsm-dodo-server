@@ -233,6 +233,8 @@ class BattleManager(
 
         logger.info { "戰鬥 $battleId 建立：玩家 ${session.characterName} vs MapNpc ${npcDef.name} (id=$npcId, placement=$placementIndex)" }
 
+        installCatchOwnerValidator(battle)
+
         // 4. 發送戰鬥初始化封包
         sendBattleInit(battle)
 
