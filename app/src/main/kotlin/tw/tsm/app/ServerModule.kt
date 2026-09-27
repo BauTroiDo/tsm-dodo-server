@@ -371,7 +371,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { MailHandler(get()) }
     single { LeaderboardHandler(get()) }
     single { FriendHandler(get()) }
-    single { UISellHandler(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    single { UISellHandler(get(), get(), get(), get(), get(), get(), get(), get(), get(), get<SkillRepository>(), get<PlayerStateManager>()) }
     single { PetUpgradeHandler(get(), get()) }
     single { PetRebornHandler(get(), get(), get()) }
 }
