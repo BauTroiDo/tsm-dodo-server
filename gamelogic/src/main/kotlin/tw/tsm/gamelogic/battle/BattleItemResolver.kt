@@ -89,8 +89,15 @@ class BattleItemResolver(
             return null
         }
 
-        // Tính toán hiệu ứng (Hiện tại chỉ có loại hồi phục; các loại không được hỗ trợ sẽ không tiêu hao vật phẩm)
-        val changes = resolveRecoveryEffect(def, target) ?: run {
+        // Revive kind=50 targets a dead friendly role. Reuse the item's HP recovery fields
+        // as the revived HP amount; full-HP items remain full HP.
+        val changes = if (def.kind == KIND_REVIVE) {
+            resolveRecoveryEffect(def, target)?.ifEmpty {
+                listOf(BattleAttrChange(EAttribute.HP, 1, true))
+            }
+        } else {
+            resolveRecoveryEffect(def, target)
+        } ?: run {
             logger.warn { "Vật phẩm chiến đấu chưa được hỗ trợ: itemId=$itemId kind=${def.kind} specialAbility=${def.specialAbility} (TODO)" }
             return null
         }
@@ -107,6 +114,14 @@ class BattleItemResolver(
         if (!inventorySystem.removeFromBag(ownerCharId, bagSlot, 1)) {
             logger.warn { "Sử dụng vật phẩm chiến đấu thất bại: charId=$ownerCharId Trừ itemId=$itemId thất bại" }
             return null
+        }
+
+        if (def.kind == KIND_REVIVE) {
+            target.isDead = false
+            target.statusEffect = tw.tsm.domain.enums.BattleStatus.NONE
+            target.statusRounds = 0
+            target.statusSkillId = 0
+            target.statusAppliedRound = -1
         }
 
         // Áp dụng hiệu ứng lên mục tiêu
