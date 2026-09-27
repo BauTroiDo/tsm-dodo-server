@@ -16,6 +16,11 @@ Chuỗi làm việc chuẩn:
 
 ## 2. Nguyên tắc bắt buộc
 
+> **NGUYÊN TẮC TỐI CAO: SERVER PHẢI THEO LUA ĐA VŨ TRỤ — KHÔNG BAO GIỜ BẺ/SỬA LUA ĐỂ THEO SERVER HIỆN TẠI.**
+>
+> Kotlin hiện tại chỉ là implementation cần được audit. Khi Kotlin và Lua mâu thuẫn, phải quay về bằng chứng Lua/client/data để xác định contract và semantics rồi vá Kotlin. Không được lấy behavior hiện tại của server làm chuẩn để diễn giải ngược Lua. File opcode hoặc source server khác chỉ là tài liệu tham khảo phụ và không được phép lấn át bằng chứng Lua Đa Vũ Trụ.
+
+
 - Bám sát Lua: ưu tiên `Network.lua`, `protocal.lua`, UI/Skill/Battle/Item/Role/NPC/EVE Lua và dữ liệu liên quan.
 - Kiểm tra cả C→S và S→C: main/sub opcode, Byte/UInt16/Int16/Int32/UInt32, endian, thứ tự field, count/loop, packet length, điều kiện gửi/nhận và semantics.
 - **Không đoán game logic/công thức.** Nếu client chỉ chứng minh animation/status/target/duration nhưng không chứng minh damage/reflection/transfer/hit formula thì giữ PARTIAL/UNKNOWN.
