@@ -119,6 +119,20 @@ class BattleInstance(
             return false
         }
         if (fighter.isAlive && !fighter.isStunned) {
+            if (action.actionKind == BattleAction.KIND_SKILL) {
+                val target = grid.getAt(action.targetCol, action.targetRow)
+                if (target == null || !target.isAlive) {
+                    logger.warn { "戰鬥 $battleId: ${fighter.name} 指定無效/死亡技能目標 (${action.targetCol},${action.targetRow})" }
+                    return false
+                }
+                val skill = if (action.id == BattleConstants.HAND_FIGHT_SKILL_ID) null else skillResolver.getSkillDef(action.id)
+                val isHeal = skill != null && BattleDamageCalc.isHealSkill(skill)
+                val sameSide = fighter.isPlayerSide == target.isPlayerSide
+                if ((isHeal && !sameSide) || (!isHeal && sameSide)) {
+                    logger.warn { "戰鬥 $battleId: ${fighter.name} 技能 id=${action.id} 指定錯誤陣營" }
+                    return false
+                }
+            }
             if (action.actionKind == BattleAction.KIND_SKILL &&
                 action.id != BattleConstants.HAND_FIGHT_SKILL_ID
             ) {
