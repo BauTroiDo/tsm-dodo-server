@@ -4,11 +4,15 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import tw.tsm.domain.interfaces.repositories.SkillRepository
 import tw.tsm.domain.interfaces.repositories.Turn2SkillState
+import tw.tsm.domain.interfaces.repositories.Turn3State
 import tw.tsm.persistence.tables.CharacterSkills
 import tw.tsm.persistence.tables.CharacterTurn2Skills
+import tw.tsm.persistence.tables.CharacterTurn3States
+import tw.tsm.persistence.tables.CharacterTurn3Skills
 
 /**
  * SkillRepository 的 Exposed ORM 實作
@@ -70,4 +74,51 @@ class SkillRepositoryImpl : SkillRepository {
             }
         }
     }
+
+    override suspend fun findTurn3State(characterId: Long): Turn3State =
+        suspendTransaction {
+            val row = CharacterTurn3States.selectAll()
+                .where { CharacterTurn3States.characterId eq characterId }
+                .firstOrNull()
+            val skills = CharacterTurn3Skills.selectAll()
+                .where { CharacterTurn3Skills.characterId eq characterId }
+                .associate { it[CharacterTurn3Skills.skillId] to it[CharacterTurn3Skills.level] }
+            if (row == null) Turn3State(skills = skills) else Turn3State(
+                element = row[CharacterTurn3States.element],
+                exp = row[CharacterTurn3States.exp],
+                intelligence = row[CharacterTurn3States.int_],
+                atk = row[CharacterTurn3States.atk],
+                def = row[CharacterTurn3States.def],
+                agi = row[CharacterTurn3States.agi],
+                hpx = row[CharacterTurn3States.hpx],
+                spx = row[CharacterTurn3States.spx],
+                skills = skills
+            )
+        }
+
+    override suspend fun saveTurn3State(characterId: Long, state: Turn3State) {
+        suspendTransaction {
+            CharacterTurn3States.deleteWhere { CharacterTurn3States.characterId eq characterId }
+            CharacterTurn3States.insert {
+                it[CharacterTurn3States.characterId] = characterId
+                it[CharacterTurn3States.element] = state.element
+                it[CharacterTurn3States.exp] = state.exp
+                it[CharacterTurn3States.int_] = state.intelligence
+                it[CharacterTurn3States.atk] = state.atk
+                it[CharacterTurn3States.def] = state.def
+                it[CharacterTurn3States.agi] = state.agi
+                it[CharacterTurn3States.hpx] = state.hpx
+                it[CharacterTurn3States.spx] = state.spx
+            }
+            CharacterTurn3Skills.deleteWhere { CharacterTurn3Skills.characterId eq characterId }
+            if (state.skills.isNotEmpty()) {
+                CharacterTurn3Skills.batchInsert(state.skills.entries.toList()) { (skillId, level) ->
+                    this[CharacterTurn3Skills.characterId] = characterId
+                    this[CharacterTurn3Skills.skillId] = skillId
+                    this[CharacterTurn3Skills.level] = level
+                }
+            }
+        }
+    }
+
 }
