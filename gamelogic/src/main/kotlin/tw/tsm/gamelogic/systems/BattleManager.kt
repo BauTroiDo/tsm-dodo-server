@@ -723,14 +723,12 @@ class BattleManager(
      * action's playback window has elapsed.
      */
     /**
-     * DVT SkillData exposes spendSecond as its timing field. The client has no
-     * animation-complete ACK, so command pacing must be server-side.
-     * Basic/special commands without SkillData use the conservative one-second floor.
+     * DVT attack scripts finish from their own animation state machines (arrive/frame/light),
+     * not SkillData.spendSecond. The client has no animation-complete ACK, so use the
+     * original-server command pacing scale instead of treating spendSecond as seconds.
      */
-    private fun actionPlaybackDelayMs(action: ActionResult): Long {
-        val seconds = skillDefs[action.skillId]?.spendSecond ?: 0
-        return maxOf(BattleConstants.MIN_ACTION_PLAYBACK_DELAY_MS, seconds * 1000L)
-    }
+    private fun actionPlaybackDelayMs(@Suppress("UNUSED_PARAMETER") action: ActionResult): Long =
+        BattleConstants.ACTION_COMMAND_PACING_MS
 
     private suspend fun broadcastRoundResult(battle: BattleInstance, roundResult: RoundResult) {
         // 0. 逃跑成功者 — 先發 S:011-001 讓角色離開戰場
