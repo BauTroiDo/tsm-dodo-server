@@ -490,8 +490,8 @@ class BattleInstance(
     private fun canUseTurn3Summon(fighter: BattleFighter, skillId: Int): Boolean {
         if (!fighter.isHumanPlayer || skillId !in fighter.skills) return false
         return when (skillId) {
-            22011 -> fighter.turn3Element == 7 && fighter.equipItemIds.any { it == 23361 || it == 23367 }
-            23011 -> fighter.turn3Element == 8 && fighter.equipItemIds.any { it == 23362 || it == 23368 }
+            22011 -> fighter.turn3Element == 7 && fighter.specialEquipItemId in intArrayOf(23361, 23367)
+            23011 -> fighter.turn3Element == 8 && fighter.specialEquipItemId in intArrayOf(23362, 23368)
             else -> false
         }
     }
