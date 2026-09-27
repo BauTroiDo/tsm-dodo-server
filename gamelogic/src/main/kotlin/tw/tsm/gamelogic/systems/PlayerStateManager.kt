@@ -42,7 +42,13 @@ class PlayerStateManager {
         career: Int = 0,
         attrPoint: Int = 0,
         skillPoint: Int = 0,
-        equipBonus: EquipBonusData = EquipBonusData.EMPTY
+        equipBonus: EquipBonusData = EquipBonusData.EMPTY,
+        turn3Int: Int = 0,
+        turn3Atk: Int = 0,
+        turn3Def: Int = 0,
+        turn3Agi: Int = 0,
+        turn3Hpx: Int = 0,
+        turn3Spx: Int = 0
     ) {
         states[characterId] = PlayerState(
             hp = hp, sp = sp, maxHp = maxHp, maxSp = maxSp,
@@ -53,7 +59,9 @@ class PlayerStateManager {
             equipMaxHp = equipBonus.equipMaxHp, equipMaxSp = equipBonus.equipMaxSp,
             equipAtk = equipBonus.equipAtk, equipDef = equipBonus.equipDef,
             equipInt = equipBonus.equipInt, equipAgi = equipBonus.equipAgi,
-            equipHpx = equipBonus.equipHpx, equipSpx = equipBonus.equipSpx
+            equipHpx = equipBonus.equipHpx, equipSpx = equipBonus.equipSpx,
+            turn3Int = turn3Int, turn3Atk = turn3Atk, turn3Def = turn3Def,
+            turn3Agi = turn3Agi, turn3Hpx = turn3Hpx, turn3Spx = turn3Spx
         )
         logger.debug { "Khởi tạo trạng thái người chơi: characterId=$characterId hp=$hp/$maxHp sp=$sp/$maxSp lv=$level equipBonus=$equipBonus" }
     }
@@ -327,6 +335,12 @@ data class PlayerState(
     var attrPoint: Int = 0,
     /** Điểm kỹ năng có thể sử dụng */
     var skillPoint: Int = 0,
+    var turn3Int: Int = 0,
+    var turn3Atk: Int = 0,
+    var turn3Def: Int = 0,
+    var turn3Agi: Int = 0,
+    var turn3Hpx: Int = 0,
+    var turn3Spx: Int = 0,
 
     // ── Gia tăng từ trang bị (Tham khảo tskero TSCharacter.atk2/def2/mag2/agi2/hp2/sp2) ──
     /** Max HP được nâng cao bởi trang bị */
