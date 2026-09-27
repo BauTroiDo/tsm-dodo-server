@@ -59,6 +59,9 @@ class BattleFighter(
     var career: Int = 0,
     var turn3Element: Int = 0,
     var specialEquipItemId: Int = 0,
+    var specialEquipDamage: Int = 0,
+    var weaponItemId: Int = 0,
+    var weaponItemKind: Int = 0,
     var equipItemIds: IntArray = intArrayOf(),
     var outfitItemIds: IntArray = intArrayOf(),
 
