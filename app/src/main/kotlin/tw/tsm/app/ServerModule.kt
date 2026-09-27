@@ -351,7 +351,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { FollowNpcHandler(get(), get(), get()) }
     single { FollowNpcDeployHandler(get(), get()) }
     single { PkSettingHandler(get()) }
-    single { StatHandler(get(), get(), get(), get<StatSystem>(), get()) }
+    single { StatHandler(get(), get(), get(), get<StatSystem>(), get(), get<SkillRepository>()) }
     single { MountHandler(get(), get(), get()) }
     single { HotkeyHandler(get(), get()) }
     single { InnResponseSender() }
