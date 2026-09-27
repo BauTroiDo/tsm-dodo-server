@@ -69,7 +69,7 @@ class BattleCommandHandler(
                 logger.debug { "${session.characterName} 戰鬥逃跑：skillId=$skillId" }
                 BattleAction.KIND_ESCAPE
             }
-            skillId in BattleConstants.CATCH_SKILL_IDS -> {
+            skillId in BattleConstants.CATCH_COMMAND_SKILL_IDS -> {
                 logger.debug { "${session.characterName} 戰鬥捕捉：skillId=$skillId 目標($tgtCol,$tgtRow)" }
                 BattleAction.KIND_CATCH
             }
