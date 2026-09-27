@@ -927,6 +927,12 @@ interface ResponseSender {
      */
     fun sendPlayerSkillData(session: SessionSender, element: Int, skillPoint: Int, skills: Map<Int, Int>)
 
+    /** S:023-077 天珠資訊：可用數 + 已啟動索引。 */
+    fun sendTurn2Balls(session: SessionSender, available: Int, active: Set<Int>)
+
+    /** S:023-078 二轉英雄技能槽。Map key 使用 UI 槽 6..13。 */
+    fun sendTurn2HeroSkills(session: SessionSender, heroSkills: Map<Int, Int>)
+
     /**
      * 發送熱鍵資料 (S:040-001)
      *
