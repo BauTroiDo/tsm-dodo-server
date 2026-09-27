@@ -1158,6 +1158,7 @@ class BattleManager(
             skills = learnedSkills,
             turn = state.turn,
             career = state.career,
+            turn3Element = session.turn3Element,
             sex = session.sex,
             face = session.face,
             hair = session.hair,
