@@ -805,7 +805,8 @@ class BattleManager(
             // 捕捉成功的 NPC → 加入 PetSystem + 發送客戶端封包
             if (endResult.playerWin && battle.capturedNpcs.isNotEmpty()) {
                 val charId = session.roleId.toLong()
-                for (npcId in battle.capturedNpcs) {
+                for ((capturerPlayerId, npcId) in battle.capturedNpcs) {
+                    if (capturerPlayerId != playerId) continue
                     val npcDef = npcDefs[npcId]
                     if (npcDef == null) {
                         logger.warn { "戰鬥 ${battle.battleId}: 捕獲 npcId=$npcId 但 npcDefs 無此定義" }
