@@ -114,6 +114,11 @@ object EWarStyle {
     const val ARENA_PK = 3          // 擂台 PK
     const val W5TO5 = 4             // 團 P
     const val CITY_PK = 5           // 攻城
+    const val LIFE_PK = 11          // 生存戰 PK
+    const val WORLD_BOSS = 16       // 世界 Boss
+    const val NEW_CHAOS_5V5 = 17    // 新亂鬥
+    const val NEW_MIX_5V5 = 26      // 無界混 P
+    const val NEW_CHAOS_5V5_100 = 27 // 無界亂鬥 100LV
     const val DUNGEON = 29          // 副本
 }
 
