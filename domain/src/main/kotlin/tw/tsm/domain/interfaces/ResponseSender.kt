@@ -927,6 +927,9 @@ interface ResponseSender {
      */
     fun sendPlayerSkillData(session: SessionSender, element: Int, skillPoint: Int, skills: Map<Int, Int>)
 
+    /** S:008-012 設定三轉光暗元素結果。 */
+    fun sendTurn3ElementResult(session: SessionSender, result: Int)
+
     /** S:023-077 天珠資訊：可用數 + 已啟動索引。 */
     fun sendTurn2Balls(session: SessionSender, available: Int, active: Set<Int>)
 
