@@ -119,7 +119,7 @@ class BattleSkillResolver(
                 val rawCalcResult = if (isHeal) {
                     BattleDamageCalc.calculateHeal(attacker, target, skill!!)
                 } else {
-                    BattleDamageCalc.calculateAttack(attacker, target, skill, terrain)
+                    BattleDamageCalc.calculateAttack(attacker, target, skill, terrain, skillId)
                 }
 
                 // 套用 Combo 倍率：僅對物理攻擊傷害生效（Combo 不影響回復技能）
