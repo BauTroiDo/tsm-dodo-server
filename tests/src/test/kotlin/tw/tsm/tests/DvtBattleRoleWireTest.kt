@@ -1,5 +1,6 @@
 package tw.tsm.tests
 
+import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import tw.tsm.domain.constants.EHuman
@@ -32,5 +33,33 @@ class DvtBattleRoleWireTest {
         // The next record must begin immediately after the player's trailing soulEquipId.
         assertEquals(1, all[p.size].toInt() and 0xff)
         assertEquals(EHuman.MINE_NPC, all[p.size + 1].toInt() and 0xff)
+    }
+
+    @Test
+    fun `Vietnamese player and pet names carry UTF-8 BOM on battle wire`() {
+        fun assertBomPrefixedName(bytes: ByteArray) {
+            // Common BattleRoleData header before the conditional name field:
+            // 1+1+8+2+8+1+1+4+4+4+4+2+1+1 = 42 bytes.
+            val nameLength = bytes[42].toInt() and 0xff
+            val nameBytes = bytes.copyOfRange(43, 43 + nameLength)
+            assertArrayEquals(
+                byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte()),
+                nameBytes.copyOfRange(0, 3)
+            )
+        }
+
+        val player = BattleRoleData(
+            warType=1, humanKind=EHuman.PLAYER, roleId=42, npcId=0, masterId=0,
+            col=2, row=2, maxHp=100, maxSp=50, hp=100, sp=50, level=1,
+            element=1, name="ĐinhĐang"
+        )
+        val pet = BattleRoleData(
+            warType=1, humanKind=EHuman.FOLLOW_NPC, roleId=43, npcId=1001, masterId=42,
+            col=2, row=3, maxHp=100, maxSp=50, hp=100, sp=50, level=1,
+            element=1, name="Thủy Đậu Yêu"
+        )
+
+        assertBomPrefixedName(BattleRoleSerializer.serialize(player))
+        assertBomPrefixedName(BattleRoleSerializer.serialize(pet))
     }
 }
