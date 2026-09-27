@@ -4,6 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import tw.tsm.domain.data.SkillDef
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
 import tw.tsm.domain.interfaces.repositories.SkillRepository
+import tw.tsm.domain.interfaces.repositories.Turn2SkillState
 import java.util.concurrent.ConcurrentHashMap
 
 private val logger = KotlinLogging.logger {}
@@ -30,6 +31,9 @@ class SkillSystem(
         val element: Int,
         var skillPoint: Int,
         val skills: MutableMap<Int, Int> = mutableMapOf(),
+        var availableTurn2Balls: Int = 0,
+        val activeTurn2Balls: MutableSet<Int> = mutableSetOf(),
+        val heroSkills: MutableMap<Int, Int> = mutableMapOf(),
         var dirty: Boolean = false
     )
 
@@ -42,11 +46,15 @@ class SkillSystem(
      */
     suspend fun load(characterId: Long, element: Int, skillPoint: Int): SkillCache {
         val skills = skillRepository.findByCharacterId(characterId).toMutableMap()
+        val turn2 = skillRepository.findTurn2State(characterId)
 
         val sc = SkillCache(
             element = element,
             skillPoint = skillPoint,
-            skills = skills
+            skills = skills,
+            availableTurn2Balls = turn2.availableBalls.coerceAtLeast(0),
+            activeTurn2Balls = turn2.activeBalls.filter { it in 1..12 }.toMutableSet(),
+            heroSkills = turn2.heroSkills.filterKeys { it in 6..13 }.toMutableMap()
         )
         cache[characterId] = sc
         logger.info { "Tải kỹ năng: charId=$characterId element=$element skillPoint=$skillPoint số kỹ năng=${skills.size}" }
@@ -145,12 +153,66 @@ class SkillSystem(
     }
 
     /**
+     * C:028-005 二轉技能升級。
+     * 天珠索引 1..12；英雄槽索引 6..13。所有附加狀態只在技能 batch 驗證成功後才提交。
+     */
+    fun upgradeTurn2(
+        characterId: Long,
+        addBalls: List<Int>,
+        upgrades: List<Pair<Int, Int>>,
+        heroSlots: List<Pair<Int, Int>>,
+        playerTurn: Int,
+        career: Int
+    ): Boolean {
+        val sc = cache[characterId] ?: return false
+        if (playerTurn < 2 || career !in 1..4) return false
+        synchronized(sc) {
+            if (addBalls.distinct().size != addBalls.size || addBalls.any { it !in 1..12 || it in sc.activeTurn2Balls }) return false
+            if (heroSlots.map { it.first }.distinct().size != heroSlots.size ||
+                heroSlots.any { (slot, id) -> slot !in 6..13 || id !in HERO_SKILL_IDS }) return false
+            if (heroSlots.any { (slot, _) -> sc.heroSkills.containsKey(slot) }) return false
+            if (heroSlots.any { (_, id) -> upgrades.none { it.first == id && it.second == 1 } }) return false
+            if (addBalls.size > sc.availableTurn2Balls) return false
+
+            val base = TURN2_BASE_SKILLS[career] ?: return false
+            fun requiredSkill(ball: Int): Int = when (ball) {
+                in 1..4 -> base[0]
+                in 5..6 -> base[1]
+                in 7..8 -> base[2]
+                in 9..10 -> base[3]
+                else -> base[4]
+            }
+            val requested = upgrades.toMap()
+            if (addBalls.any { ball ->
+                    val id = requiredSkill(ball)
+                    (sc.skills[id] ?: 0) <= 0 && (requested[id] ?: 0) <= 0
+                }) return false
+
+            // Client Turn2 page contains only these five career skills plus chosen hero slots.
+            val allowedTurn2 = base.toSet() + heroSlots.map { it.second }.toSet()
+            if (upgrades.any { (id, _) ->
+                    id in ALL_TURN2_BASE_SKILLS && id !in base || id in HERO_SKILL_IDS && id !in allowedTurn2
+                }) return false
+
+            val changed = if (upgrades.isEmpty()) emptyList() else upgradeSkills(characterId, upgrades, playerTurn)
+            if (upgrades.any { (id, target) -> target > (sc.skills[id] ?: 0) } && changed.isEmpty()) return false
+
+            sc.availableTurn2Balls -= addBalls.size
+            sc.activeTurn2Balls.addAll(addBalls)
+            heroSlots.forEach { (slot, id) -> sc.heroSkills[slot] = id }
+            if (addBalls.isNotEmpty() || heroSlots.isNotEmpty()) sc.dirty = true
+            return true
+        }
+    }
+
+    /**
      * Lưu kỹ năng nhân vật vào DB (không hủy nạp, dùng cho tự động lưu định kỳ)
      */
     suspend fun save(characterId: Long) {
         val sc = cache[characterId] ?: return
         if (sc.dirty) {
             skillRepository.saveAll(characterId, sc.skills)
+            skillRepository.saveTurn2State(characterId, Turn2SkillState(sc.availableTurn2Balls, sc.activeTurn2Balls.toSet(), sc.heroSkills.toMap()))
             characterRepository.updateSkillPoint(characterId, sc.skillPoint)
             sc.dirty = false
         }
@@ -163,8 +225,20 @@ class SkillSystem(
         val sc = cache.remove(characterId) ?: return
         if (sc.dirty) {
             skillRepository.saveAll(characterId, sc.skills)
+            skillRepository.saveTurn2State(characterId, Turn2SkillState(sc.availableTurn2Balls, sc.activeTurn2Balls.toSet(), sc.heroSkills.toMap()))
             characterRepository.updateSkillPoint(characterId, sc.skillPoint)
             logger.info { "Lưu kỹ năng: charId=$characterId số kỹ năng=${sc.skills.size} skillPoint=${sc.skillPoint}" }
         }
+    }
+    companion object {
+        private val TURN2_BASE_SKILLS = mapOf(
+            1 to listOf(14038, 14043, 14044, 14045, 14046),
+            2 to listOf(14038, 14039, 14040, 14041, 14042),
+            3 to listOf(14038, 14047, 14048, 14049, 14050),
+            4 to listOf(14038, 14051, 14052, 14053, 14054)
+        )
+        private val ALL_TURN2_BASE_SKILLS = TURN2_BASE_SKILLS.values.flatten().toSet()
+        private val HERO_SKILL_IDS =
+            (10027..10034).toSet() + (11027..11034) + (12027..12034) + (13026..13033)
     }
 }
