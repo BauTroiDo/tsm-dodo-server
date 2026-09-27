@@ -18,6 +18,7 @@ class DvtSkillBatchTest {
         every { learnPoint } returns price
         every { levelUpPoint } returns 2
         every { maxLv } returns 10
+        every { turnKind } returns 0
     }
     @Test fun `reverse dependency order matches forward order`() = runTest {
         val defs = mapOf(100 to skill(), 200 to skill(listOf(100)), 300 to skill(listOf(200)))
