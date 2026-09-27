@@ -87,6 +87,27 @@ class BattleResponseSender {
         session.send(writer.toByteArray())
     }
 
+    /** S:023-077 天珠資訊。 */
+    fun sendTurn2Balls(session: SessionSender, available: Int, active: Set<Int>) {
+        val writer = PacketWriter(4 + active.size)
+            .writeByte(23).writeByte(77).writeByte(0)
+            .writeByte(available.coerceIn(0, 255))
+        active.filter { it in 1..12 }.sorted().forEach { writer.writeByte(it) }
+        session.send(writer.toByteArray())
+    }
+
+    /** S:023-078 二轉技能槽；wire index 1..8，client 讀取後 +5。 */
+    fun sendTurn2HeroSkills(session: SessionSender, heroSkills: Map<Int, Int>) {
+        val valid = heroSkills.filterKeys { it in 6..13 }.toSortedMap()
+        val writer = PacketWriter(3 + valid.size * 3)
+            .writeByte(23).writeByte(78).writeByte(0)
+        valid.forEach { (slot, skillId) ->
+            writer.writeByte(slot - 5)
+            writer.writeShortLE(skillId)
+        }
+        session.send(writer.toByteArray())
+    }
+
     // ── 戰鬥管理 (mainKind=11) ──
 
     /**
