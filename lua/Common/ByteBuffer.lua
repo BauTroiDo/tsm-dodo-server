@@ -193,7 +193,15 @@ function ByteBuffer:WriteStringWithByteL(value, encoding)
   if encoding ~= nil then
     convertedString = LuaHelper.StringToBytes(encoding, value);
   else
+    -- Ngoại lệ font/encoding cho client VTC:
+    -- nếu Big5 không thể round-trip tên Unicode (ví dụ tiếng Việt),
+    -- gửi UTF-8 kèm BOM để server/client nhận diện chính xác.
     convertedString = LuaHelper.StringToBytes(DataManager.encoding_Big5, value);
+    local roundTrip = LuaHelper.BytesToString(DataManager.encoding_Big5, convertedString);
+    if roundTrip ~= value then
+      convertedString = string.char(0xEF, 0xBB, 0xBF) ..
+        LuaHelper.StringToBytes(DataManager.encoding_UTF8, value);
+    end
   end
 
   self:WriteByte(string.len(convertedString));
