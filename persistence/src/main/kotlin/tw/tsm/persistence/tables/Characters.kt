@@ -78,7 +78,10 @@ object Characters : Table("characters") {
     val exp = long("exp").default(0)
 
     /** 轉生次數（0/1/2/3） */
-    val turn = integer("turn").default(0)\n\n    /** 二轉職業（0=無, 1=俠客, 2=霸王, 3=賢士, 4=嫡仙） */\n    val career = integer("career").default(0)
+    val turn = integer("turn").default(0)
+
+    /** 二轉職業（0=無, 1=俠客, 2=霸王, 3=賢士, 4=嫡仙） */
+    val career = integer("career").default(0)
 
     // ── 記錄點（重生位置）──
 
