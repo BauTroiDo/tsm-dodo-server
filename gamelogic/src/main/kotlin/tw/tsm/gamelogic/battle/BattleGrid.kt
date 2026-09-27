@@ -169,6 +169,10 @@ class BattleGrid {
                 // 全體：敵方所有存活
                 if (attackerIsPlayerSide) getAliveEnemySide() else getAlivePlayerSide()
             }
+            255 -> {
+                // Lua FightField.GetEnemyIdx(255): 敵我雙方全體
+                getAllAlive()
+            }
             else -> listOfNotNull(getAliveAt(targetCol, targetRow))
         }
     }
