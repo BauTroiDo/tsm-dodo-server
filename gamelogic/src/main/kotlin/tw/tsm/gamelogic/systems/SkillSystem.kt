@@ -154,6 +154,20 @@ class SkillSystem(
     }
 
     /**
+     * Đổi nghề nhị chuyển: xóa skill base của nghề cũ và hero slot đã chọn.
+     * Thiên Châu đã kích hoạt được giữ nguyên vì Lua biểu diễn chúng độc lập với career.
+     */
+    fun resetTurn2CareerSkills(characterId: Long) {
+        val sc = cache[characterId] ?: return
+        synchronized(sc) {
+            ALL_TURN2_BASE_SKILLS.forEach { sc.skills.remove(it) }
+            HERO_SKILL_IDS.forEach { sc.skills.remove(it) }
+            sc.heroSkills.clear()
+            sc.dirty = true
+        }
+    }
+
+    /**
      * C:028-005 二轉技能升級。
      * 天珠索引 1..12；英雄槽索引 6..13。所有附加狀態只在技能 batch 驗證成功後才提交。
      */
