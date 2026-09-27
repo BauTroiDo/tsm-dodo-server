@@ -74,6 +74,9 @@ class BattleInstance(
     /** 戰鬥中成功捕捉：捕捉者 playerId → NPC ID。不得在多人戰鬥把同一 NPC 發給所有玩家。 */
     val capturedNpcs = mutableListOf<Pair<Long, Int>>()
 
+    /** 由 BattleManager 注入玩家持有/容量檢查；null 僅供低階測試 fixture。 */
+    var catchOwnerValidator: ((playerId: Long, npcId: Int) -> Boolean)? = null
+
     /**
      * 新增戰鬥角色到棋盤
      */
@@ -192,7 +195,10 @@ class BattleInstance(
                 if (target == null || !target.isAlive || !target.isEnemySide ||
                     target.kind == EHuman.PLAYER || target.kind == EHuman.PLAYERS ||
                     target.kind == EHuman.FOLLOW_NPC || npcDef == null || npcDef.canBeCatch ||
-                    npcDef.level - fighter.level > BattleConstants.MANUAL_CATCH_LEVEL_DIFF
+                    npcDef.level - fighter.level > BattleConstants.MANUAL_CATCH_LEVEL_DIFF ||
+                    target.npcId in MANUAL_CATCH_NPC_BLACKLIST ||
+                    target.groupedStatuses.containsKey(SEAL_STATUS_GROUP) ||
+                    catchOwnerValidator?.invoke(playerId, target.npcId) == false
                 ) {
                     // DVT FightRoleController.DoClick manual catch (15002):
                     // enemy NPC only, NpcData.canBeCatch must allow it, and target
