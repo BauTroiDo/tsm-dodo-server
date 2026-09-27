@@ -114,6 +114,16 @@ class StatHandler(
             else -> current
         }
         skillRepository.saveTurn3State(charId, updated)
+        synchronized(state) {
+            when (attrKind) {
+                EAttribute.INT -> state.turn3Int = updated.intelligence
+                EAttribute.ATK -> state.turn3Atk = updated.atk
+                EAttribute.DEF -> state.turn3Def = updated.def
+                EAttribute.AGI -> state.turn3Agi = updated.agi
+                EAttribute.HPX -> state.turn3Hpx = updated.hpx
+                EAttribute.SPX -> state.turn3Spx = updated.spx
+            }
+        }
         characterRepository.updateAttrPoint(charId, state.attrPoint)
         responseSender.sendSetAttribute(session, turn3Kind, old + addPoints, true)
         responseSender.sendSetAttribute(session, EAttribute.ATTR_POINT, state.attrPoint, true)
