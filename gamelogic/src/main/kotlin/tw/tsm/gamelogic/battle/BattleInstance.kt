@@ -120,6 +120,19 @@ class BattleInstance(
         }
         if (fighter.isAlive && !fighter.isStunned) {
             if (action.actionKind == BattleAction.KIND_SKILL &&
+                action.id != BattleConstants.HAND_FIGHT_SKILL_ID
+            ) {
+                val skill = skillResolver.getSkillDef(action.id)
+                if (skill == null) {
+                    logger.warn { "戰鬥 $battleId: ${fighter.name} 嘗試使用不存在的技能 id=${action.id}" }
+                    return false
+                }
+                if (fighter.sp < skill.requireSp) {
+                    logger.debug { "戰鬥 $battleId: ${fighter.name} SP 不足，拒絕技能 id=${action.id} need=${skill.requireSp} sp=${fighter.sp}" }
+                    return false
+                }
+            }
+            if (action.actionKind == BattleAction.KIND_SKILL &&
                 action.id in TURN3_SUMMON_SKILLS &&
                 !canUseTurn3Summon(fighter, action.id)
             ) {
