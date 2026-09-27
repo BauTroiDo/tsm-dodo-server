@@ -1259,7 +1259,18 @@ class BattleManager(
             def = petData.def + equipBonus.equipDef,
             agi = petData.agi + equipBonus.equipAgi,
             intelligence = petData.intelligence + equipBonus.equipInt,
-            skills = npcDef.skills.filter { it > 0 }.toIntArray()
+            // DVT RoleController:GetSkillLv uses the NPC's three base skill IDs
+            // together with this individual pet's skillLv[1..3]. A base skill
+            // at level 0 is not learned and CaseSkill falls back to hand attack.
+            skills = npcDef.skills.take(3)
+                .zip(listOf(petData.skill1Lv, petData.skill2Lv, petData.skill3Lv))
+                .filter { (id, lv) -> id > 0 && lv > 0 }
+                .map { it.first }
+                .toIntArray(),
+            skillLevels = npcDef.skills.take(3)
+                .zip(listOf(petData.skill1Lv, petData.skill2Lv, petData.skill3Lv))
+                .filter { (id, lv) -> id > 0 && lv > 0 }
+                .associate { it.first to it.second }
         )
     }
 
