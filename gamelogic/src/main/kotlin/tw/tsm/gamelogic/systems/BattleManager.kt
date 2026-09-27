@@ -70,6 +70,24 @@ class BattleManager(
     private val nextBattleId = AtomicLong(1)
 
     /**
+     * DVT manual catch owner-side gates from FightRoleController.DoClick.
+     * Scene NoCatch and Elephant/14034 are intentionally handled separately when their
+     * authoritative server-side sources are available.
+     */
+    private fun installCatchOwnerValidator(battle: BattleInstance) {
+        battle.catchOwnerValidator = validator@{ playerId, npcId ->
+            val session = battle.playerSessions[playerId] ?: return@validator false
+            val pc = petSystem.getCache(session.roleId.toLong()) ?: return@validator false
+            if (pc.follow.size >= PetSystem.MAX_FOLLOW) return@validator false
+            val duplicate = pc.follow.values.any { it.npcId == npcId } ||
+                pc.cart.values.any { it.npcId == npcId } ||
+                pc.inn.values.any { it.npcId == npcId } ||
+                pc.warehouse.any { it.npcId == npcId }
+            !duplicate
+        }
+    }
+
+    /**
      * 建立 PvE 戰鬥（事件觸發）
      *
      * @param session 觸發的玩家
@@ -137,6 +155,8 @@ class BattleManager(
         session.battleId = battleId
 
         logger.info { "戰鬥 $battleId 建立：玩家 ${session.characterName} vs ${involvedNpcs.size} 個敵人（事件 ${fightData.eveNo}）leftEnemies=${fightData.leftEnemies.size} rightEnemies=${fightData.rightEnemies.size}" }
+
+        installCatchOwnerValidator(battle)
 
         // 4. 發送戰鬥初始化封包
         sendBattleInit(battle)
@@ -275,6 +295,8 @@ class BattleManager(
         defender.battleId = battleId
 
         logger.info { "PVP 戰鬥 $battleId 建立：${attacker.characterName} vs ${defender.characterName}" }
+
+        installCatchOwnerValidator(battle)
 
         // 發送戰鬥初始化封包
         sendBattleInit(battle)
