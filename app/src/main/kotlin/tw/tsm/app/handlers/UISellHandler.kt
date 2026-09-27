@@ -7,6 +7,7 @@ import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.PacketHandler
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
+import tw.tsm.domain.interfaces.repositories.SkillRepository
 import tw.tsm.gamelogic.systems.FlyPointSystem
 import tw.tsm.gamelogic.systems.InventorySystem
 import tw.tsm.gamelogic.systems.PartySystem
@@ -15,6 +16,7 @@ import tw.tsm.gamelogic.systems.RoleCountSystem
 import tw.tsm.gamelogic.systems.UISellSystem
 import tw.tsm.gamelogic.systems.UiSellQuote
 import tw.tsm.gamelogic.systems.WorldManager
+import tw.tsm.gamelogic.systems.PlayerStateManager
 import tw.tsm.protocol.PacketReader
 
 private val logger = KotlinLogging.logger {}
@@ -44,7 +46,9 @@ class UISellHandler(
     private val worldManager: WorldManager,
     private val characterRepository: CharacterRepository,
     private val partySystem: PartySystem,
-    private val roleCountSystem: RoleCountSystem
+    private val roleCountSystem: RoleCountSystem,
+    private val skillRepository: SkillRepository,
+    private val playerStateManager: PlayerStateManager
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.UI_SELL
@@ -118,6 +122,20 @@ class UISellHandler(
 
         // 效果前置驗證（先驗證再扣款，避免扣款後效果失敗）
         when (sellId) {
+            UISellSystem.SELL_TURN3_UNLOCK_SKILL -> {
+                val reason = validateTurn3Unlock(charId, args)
+                if (reason != 0) {
+                    responseSender.sendUiSellFail(session, 2, sellId, reason)
+                    return
+                }
+            }
+            UISellSystem.SELL_TURN3_CHANGE_ELEMENT -> {
+                val reason = validateTurn3ElementChange(charId, args)
+                if (reason != 0) {
+                    responseSender.sendUiSellFail(session, 2, sellId, reason)
+                    return
+                }
+            }
             UISellSystem.SELL_FLY_TELEPORT -> {
                 val reason = validateFlyTeleport(session, args)
                 if (reason != 0) {
@@ -134,6 +152,8 @@ class UISellHandler(
         when (sellId) {
             UISellSystem.SELL_FLY_TELEPORT -> executeFlyTeleport(session, sellId, args)
             UISellSystem.SELL_FLY_EXTEND -> executeFlyExtend(session, sellId)
+            UISellSystem.SELL_TURN3_UNLOCK_SKILL -> executeTurn3Unlock(session, sellId, args)
+            UISellSystem.SELL_TURN3_CHANGE_ELEMENT -> executeTurn3ElementChange(session, sellId, args)
             else -> {
                 val roleCountIndex = uiSellSystem.expansionRoleCountIndex(sellId)
                 if (roleCountIndex != null) {
@@ -200,6 +220,53 @@ class UISellHandler(
             is UiSellQuote.Fail -> return false  // 已在呼叫端處理
         }
         return true
+    }
+
+    private suspend fun validateTurn3Unlock(charId: Long, args: List<Int>): Int {
+        if (args.size != 1) return UISellSystem.REASON_NOT_USABLE
+        val state = playerStateManager.getState(charId) ?: return UISellSystem.REASON_NOT_USABLE
+        if (state.turn < 3) return UISellSystem.REASON_NOT_USABLE
+        val skillId = args[0]
+        if (skillId !in TURN3_LIGHT_SKILLS && skillId !in TURN3_DARK_SKILLS) return UISellSystem.REASON_NOT_USABLE
+        val turn3 = skillRepository.findTurn3State(charId)
+        val expected = if (skillId in TURN3_LIGHT_SKILLS) TURN3_LIGHT else TURN3_DARK
+        if (turn3.element != expected || turn3.skills.containsKey(skillId)) return UISellSystem.REASON_NOT_USABLE
+        return 0
+    }
+
+    private suspend fun validateTurn3ElementChange(charId: Long, args: List<Int>): Int {
+        if (args.size != 1) return UISellSystem.REASON_NOT_USABLE
+        val state = playerStateManager.getState(charId) ?: return UISellSystem.REASON_NOT_USABLE
+        if (state.turn < 3) return UISellSystem.REASON_NOT_USABLE
+        val turn3 = skillRepository.findTurn3State(charId)
+        val target = args[0]
+        if (target !in setOf(TURN3_LIGHT, TURN3_DARK) || turn3.element == 0 || target == turn3.element) {
+            return UISellSystem.REASON_NOT_USABLE
+        }
+        return 0
+    }
+
+    private suspend fun executeTurn3Unlock(session: GameSession, sellId: Int, args: List<Int>) {
+        val charId = session.roleId.toLong()
+        val skillId = args.single()
+        val state = skillRepository.findTurn3State(charId)
+        skillRepository.saveTurn3State(charId, state.copy(skills = state.skills + (skillId to 1)))
+        responseSender.sendUiSellSuccess(session, sellId)
+        logger.info { "${session.characterName} unlocked Turn3 skill=$skillId" }
+    }
+
+    private suspend fun executeTurn3ElementChange(session: GameSession, sellId: Int, args: List<Int>) {
+        val charId = session.roleId.toLong()
+        val target = args.single()
+        val state = skillRepository.findTurn3State(charId)
+        // Skill khác hệ bị loại bỏ để client không giữ skill trái với Turn3Element.
+        val allowed = if (target == TURN3_LIGHT) TURN3_LIGHT_SKILLS else TURN3_DARK_SKILLS
+        skillRepository.saveTurn3State(charId, state.copy(
+            element = target,
+            skills = state.skills.filterKeys { it in allowed }
+        ))
+        responseSender.sendUiSellSuccess(session, sellId)
+        logger.info { "${session.characterName} changed Turn3 element=$target" }
     }
 
     /**
@@ -287,5 +354,10 @@ class UISellHandler(
 
         /** C:084-002 總類 2：點數/免費 */
         private const val USE_KIND_POINT = 2
+
+        private const val TURN3_LIGHT = 7
+        private const val TURN3_DARK = 8
+        private val TURN3_LIGHT_SKILLS = setOf(22001,22002,22003,22004,22007,22010,22015,22016,22011)
+        private val TURN3_DARK_SKILLS = setOf(23001,23002,23003,23004,23009,23010,23015,23016,23011)
     }
 }
