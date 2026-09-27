@@ -337,7 +337,7 @@ class BattleInstance(
                     val ownerSession = playerSessions[ownerPlayerId]
                     val target = grid.getAt(action.targetCol, action.targetRow)
 
-                    if (ownerSession != null && target != null && target.isAlive) {
+                    if (ownerSession != null && target != null) {
                         val outcome = itemResolver.resolveItemUse(
                             user = fighter,
                             target = target,
