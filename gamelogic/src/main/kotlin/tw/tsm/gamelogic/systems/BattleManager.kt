@@ -896,15 +896,16 @@ class BattleManager(
         if (state.turn >= 3) {
             val repo = skillRepository ?: return
             val turn3 = repo.findTurn3State(charId)
-            var exp = (turn3.exp + expGain).coerceAtLeast(0)
+            // Lua UIStatus treats Turn3Exp as cumulative EXP:
+            // progress = Turn3Exp - Calc.GetNeedTExp(turn3Lv, 3).
+            // Never subtract level costs from the persisted value.
+            val exp = (turn3.exp + expGain).coerceAtLeast(0)
             var level = state.level
             var gained = 0
-            // Client represents Turn3 level as ordinary Lv 201..250; Calculator.lua derives
-            // turn3Lv = Lv - playerMaxLv (200). The configured cap is 200 + 50.
             while (level < TURN3_MAX_LEVEL) {
-                val need = statSystem.calculateUpExp(level - PLAYER_MAX_LEVEL, 3)
-                if (exp < need) break
-                exp -= need
+                val nextTurn3Level = (level - PLAYER_MAX_LEVEL) + 1
+                val threshold = statSystem.calculateNeedTurn3Exp(nextTurn3Level)
+                if (exp < threshold) break
                 level++
                 gained++
             }
