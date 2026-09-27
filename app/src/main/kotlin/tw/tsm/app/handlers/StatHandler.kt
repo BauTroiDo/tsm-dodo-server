@@ -74,6 +74,74 @@ class StatHandler(
         }
     }
 
+    private suspend fun handleAllocateTurn3Stat(
+        session: GameSession,
+        charId: Long,
+        state: tw.tsm.gamelogic.systems.PlayerState,
+        attrKind: Int,
+        addPoints: Int
+    ) {
+        val turn3Kind = when (attrKind) {
+            EAttribute.INT -> EAttribute.TURN3_INT
+            EAttribute.ATK -> EAttribute.TURN3_ATK
+            EAttribute.DEF -> EAttribute.TURN3_DEF
+            EAttribute.AGI -> EAttribute.TURN3_AGI
+            EAttribute.HPX -> EAttribute.TURN3_HPX
+            EAttribute.SPX -> EAttribute.TURN3_SPX
+            else -> return
+        }
+        val current = skillRepository.findTurn3State(charId)
+        val old = when (attrKind) {
+            EAttribute.INT -> current.intelligence
+            EAttribute.ATK -> current.atk
+            EAttribute.DEF -> current.def
+            EAttribute.AGI -> current.agi
+            EAttribute.HPX -> current.hpx
+            EAttribute.SPX -> current.spx
+            else -> 0
+        }
+        synchronized(state) {
+            if (state.attrPoint < addPoints || old + addPoints > 999) return
+            state.attrPoint -= addPoints
+        }
+        val updated = when (attrKind) {
+            EAttribute.INT -> current.copy(intelligence = old + addPoints)
+            EAttribute.ATK -> current.copy(atk = old + addPoints)
+            EAttribute.DEF -> current.copy(def = old + addPoints)
+            EAttribute.AGI -> current.copy(agi = old + addPoints)
+            EAttribute.HPX -> current.copy(hpx = old + addPoints)
+            EAttribute.SPX -> current.copy(spx = old + addPoints)
+            else -> current
+        }
+        skillRepository.saveTurn3State(charId, updated)
+        characterRepository.updateAttrPoint(charId, state.attrPoint)
+        responseSender.sendSetAttribute(session, turn3Kind, old + addPoints, true)
+        responseSender.sendSetAttribute(session, EAttribute.ATTR_POINT, state.attrPoint, true)
+
+        val turn3Lv = (state.level - 200).coerceAtLeast(0)
+        if (attrKind == EAttribute.HPX) {
+            val newMax = statCalc.calculateMaxHp(
+                level = 200, hpx = state.hpx + state.equipHpx + turn3Lv.coerceAtMost(70) + updated.hpx,
+                equipMaxHp = state.equipMaxHp, extraHp = 0,
+                turn = state.turn, career = state.career, turn3Lv = turn3Lv
+            )
+            playerStateManager.updateMaxHp(charId, newMax)?.let { (maxHp, hp) ->
+                responseSender.sendSetAttribute(session, EAttribute.MAX_HP, maxHp.toInt(), true)
+                responseSender.sendSetAttribute(session, EAttribute.HP, hp.toInt(), true)
+            }
+        } else if (attrKind == EAttribute.SPX) {
+            val newMax = statCalc.calculateMaxSp(
+                level = 200, spx = state.spx + state.equipSpx + turn3Lv + updated.spx,
+                equipMaxSp = state.equipMaxSp, extraSp = 0,
+                turn = state.turn, career = state.career, turn3Lv = turn3Lv
+            )
+            playerStateManager.updateMaxSp(charId, newMax)?.let { (maxSp, sp) ->
+                responseSender.sendSetAttribute(session, EAttribute.MAX_SP, maxSp, true)
+                responseSender.sendSetAttribute(session, EAttribute.SP, sp, true)
+            }
+        }
+    }
+
     /**
      * 處理屬性配點 (C:008-001)
      *
@@ -97,6 +165,12 @@ class StatHandler(
         val charId = session.roleId.toLong()
 
         logger.debug { "C:008-001 配點：charId=$charId attrKind=$attrKind addPoints=$addPoints" }
+
+        val currentState = playerStateManager.getState(charId) ?: return
+        if (currentState.turn >= 3) {
+            handleAllocateTurn3Stat(session, charId, currentState, attrKind, addPoints)
+            return
+        }
 
         // PlayerStateManager 處理驗證 + 更新記憶體狀態
         val result = playerStateManager.allocateStat(charId, attrKind, addPoints)
