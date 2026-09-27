@@ -22,6 +22,7 @@ import tw.tsm.gamelogic.systems.MoneySystem
 import tw.tsm.gamelogic.systems.MountSystem
 import tw.tsm.gamelogic.systems.PetEquipSystem
 import tw.tsm.gamelogic.systems.PlayerStateManager
+import tw.tsm.gamelogic.systems.QuestSystem
 import tw.tsm.gamelogic.systems.WorldManager
 import tw.tsm.protocol.PacketReader
 
@@ -46,7 +47,8 @@ class ItemHandler(
     private val mountSystem: MountSystem,
     private val flyPointSystem: FlyPointSystem,
     private val characterRepository: CharacterRepository,
-    private val petEquipSystem: PetEquipSystem
+    private val petEquipSystem: PetEquipSystem,
+    private val questSystem: QuestSystem
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.SHOP  // 23
@@ -70,8 +72,54 @@ class ItemHandler(
             54 -> handleRebirth(session, data, targetTurn = 2)
             81 -> handleRebirth(session, data, targetTurn = 3)
             73 -> handleFlyPoint(session, data)
+            76 -> handleCareerChange(session, data)
             else -> logger.warn { "未處理的物品子協定：subKind=$subKind" }
         }
+    }
+
+    /** C:023-076 職業轉換符: bagIndex(UInt16 LE) + career(Byte). */
+    private suspend fun handleCareerChange(session: GameSession, data: ByteArray) {
+        if (data.size != 3) return
+        val reader = PacketReader(data)
+        val bagIndex = reader.readUShortLE()
+        val newCareer = reader.readUByte()
+        if (newCareer !in 1..4) return
+
+        val characterId = session.roleId.toLong()
+        val state = playerStateManager.getState(characterId) ?: return
+        val currentTurn: Int
+        val oldCareer: Int
+        synchronized(state) {
+            currentTurn = state.turn
+            oldCareer = state.career
+        }
+        if (currentTurn < 2 || oldCareer == newCareer) return
+
+        val item = inventorySystem.getBagItem(characterId, bagIndex) ?: return
+        val itemDef = itemDefs[item.itemId] ?: return
+        if (item.quantity <= 0 || itemDef.specialAbility != EItemUseKind.ItemUse_208) return
+
+        // Item.lua requires 11495 before opening career UI.
+        if (!questSystem.hasMissionFlag(characterId, 11495)) return
+        val requiredMission = when (newCareer) {
+            1 -> 11487
+            2 -> 11463
+            3 -> 11491
+            4 -> 11489
+            else -> return
+        }
+        if (!questSystem.hasMissionFlag(characterId, requiredMission)) return
+
+        // Validate everything before consuming the token.
+        if (!inventorySystem.removeFromBag(characterId, bagIndex, 1)) return
+        characterRepository.updateTurnCareer(characterId, currentTurn, newCareer)
+        synchronized(state) { state.career = newCareer }
+
+        responseSender.sendPlayerCareerChange(
+            session, session.playerId, session.hair, session.color1, session.color2,
+            currentTurn, newCareer
+        )
+        logger.info { "${session.characterName} career changed: $oldCareer -> $newCareer, bagIndex=$bagIndex" }
     }
 
     /**
