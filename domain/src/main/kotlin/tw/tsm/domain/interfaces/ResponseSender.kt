@@ -99,7 +99,7 @@ interface ResponseSender {
      * @param record 角色資料
      * @param serverId 伺服器 ID
      */
-    fun sendPlayerAppear(session: SessionSender, playerId: Long, record: CharacterRecord, serverId: Int = 1)
+    fun sendPlayerAppear(session: SessionSender, playerId: Long, record: CharacterRecord, serverId: Int = 1, turn3Element: Int = 0)
 
     // ── 創角相關 ──
 
