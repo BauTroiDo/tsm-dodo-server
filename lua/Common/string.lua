@@ -136,127 +136,69 @@ And when Tamar had news that her father-in-law was going up to Timnah to the woo
 She took off her widow's clothing, and covering herself with her veil, she took her seat near Enaim on the road to Timnah; for she saw that Shelah was now a man, but she had not been made his wife.
 --]]
 
+-- UTF-8 helpers used by the Vietnamese VTC client.
+-- Keep these byte-oriented so they also work with the Lua version bundled by the client.
+local function utf8CharSize(firstByte)
+  if firstByte == nil then return 0 end
+  if firstByte < 0x80 then return 1 end
+  if firstByte >= 0xC2 and firstByte <= 0xDF then return 2 end
+  if firstByte >= 0xE0 and firstByte <= 0xEF then return 3 end
+  if firstByte >= 0xF0 and firstByte <= 0xF4 then return 4 end
+  -- Invalid/legacy byte: consume one byte instead of stalling.
+  return 1
+end
+
 function string.Count(str)
-  local len = #str;
-  local left = len;
-  local cnt = 0;
-  local arr = { 0, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc };
+  if str == nil or str == "" then return 0 end
 
-  while left ~= 0 do
-    local tmp = string.byte(str, -left);
-    local i = #arr;
+  local count = 0;
+  local i = 1;
+  local byteLen = #str;
 
-    while arr[i] do
-      if tmp >= arr[i] then
-        left = left - i;
-        break;
-      end
-
-      i = i - 1;
-    end
-
-    cnt = cnt + 1;
+  while i <= byteLen do
+    i = i + utf8CharSize(string.byte(str, i));
+    count = count + 1;
   end
 
-  return cnt;
+  return count;
 end
 
 function string.Sub(str, start, len)
-  local firstResult = "";
-  local strResult = "";
-  local maxLen = string.len(str);
-  start = start - 1;
+  if str == nil or str == "" or len == nil or len <= 0 then return "" end
 
-  --找到起始位置
-  local preSite = 1;
+  start = math.max(start or 1, 1);
 
-  if start > 0 then
-    for i = 1, maxLen do
-      local s_dropping = string.byte(str, i);
-      if not s_dropping then
-        local s_str = string.sub(str, preSite, i - 1);
+  local byteLen = #str;
+  local charIndex = 1;
+  local byteIndex = 1;
+  local startByte = nil;
+  local endByte = nil;
+  local lastChar = start + len - 1;
 
-        preSite = i + 1;
-        break;
-      end
-      
-      if s_dropping < 128 or (i + 1 - preSite) == 3 then
-        local s_str = string.sub(str, preSite, i);
-
-        preSite = i + 1;
-        firstResult = string.Concat(firstResult, s_str);
-
-        local curLen = string.Count(firstResult);
-        if curLen == start then
-          break;
-        end
-      end
+  while byteIndex <= byteLen do
+    if charIndex == start then
+      startByte = byteIndex;
     end
-  end
-  
-  --截取字符串
-  preSite = string.len(firstResult) + 1;
-  local startC = preSite;
-  for i = startC, maxLen do
-    local s_dropping = string.byte(str, i);
-    if not s_dropping then
-      local s_str = string.sub(str, preSite, i - 1);
 
-      preSite = i;
-      strResult = string.Concat(strResult, s_str);
+    local charSize = utf8CharSize(string.byte(str, byteIndex));
+    local nextByte = byteIndex + charSize;
 
-      return strResult
+    if charIndex == lastChar then
+      endByte = nextByte - 1;
+      break;
     end
-    
-    if s_dropping < 128 or (i + 1 - preSite) == 3 then
-      local s_str = string.sub(str, preSite, i)
 
-      preSite = i + 1;
-      strResult = string.Concat(strResult, s_str);
-
-      local curLen = string.Count(strResult);
-      if curLen == len then
-        return strResult;
-      end
-    end
+    byteIndex = nextByte;
+    charIndex = charIndex + 1;
   end
 
-  return strResult;
+  if startByte == nil then return "" end
+  return string.sub(str, startByte, endByte or byteLen);
 end
 
 function string.GetLength(s)
-  --计算字符串宽度
-  --可以计算出字符宽度，用于显示使用
-  local lenInByte = #s;
-  local width = 0;
-  local i = 1;
-
-  while i <= lenInByte do
-    local curByte = string.byte(s, i);
-
-    local byteCount = 1;
-    if curByte > 0 and curByte <= 127 then
-      --1字节字符
-      byteCount = 1;
-    elseif curByte >= 192 and curByte < 223 then
-      --双字节字符
-      byteCount = 2;
-    elseif curByte >= 224 and curByte < 239 then
-      --汉字
-      byteCount = 2;  --原本是3  因為delphi一個中文字長度是2所以改2
-    elseif curByte >= 240 and curByte <= 247 then
-      --4字节字符
-      byteCount = 4;
-    end
-
-    --重置下一字节的索引
-    i = i + byteCount;
-
-    --字符的个数（长度
-    width = width + 1;
-  end
-
-  return width;
+  -- For UI/name validation, Vietnamese UTF-8 characters count as one character.
+  return string.Count(s);
 end
 
 --[[
