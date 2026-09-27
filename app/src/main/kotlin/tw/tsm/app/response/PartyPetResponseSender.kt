@@ -185,7 +185,7 @@ class PartyPetResponseSender {
             writer.writeByte(pet.loyalty)
             writer.writeByte(pet.canGrow)
             writer.writeShortLE(pet.skillPoint)
-            writer.writeUtf8WithByteLen(pet.name)
+            writer.writeBig5WithByteLen(pet.name)
             // 技能等級 ×3
             writer.writeByte(pet.skill1Lv)
             writer.writeByte(pet.skill2Lv)
@@ -244,7 +244,7 @@ class PartyPetResponseSender {
             writer.writeShortLE(pet.npcId)
             writer.writeByte(pet.level)
             writer.writeUIntLE(pet.hp)
-            writer.writeUtf8WithByteLen(pet.name)
+            writer.writeBig5WithByteLen(pet.name)
         }
         session.send(writer.toByteArray())
     }
