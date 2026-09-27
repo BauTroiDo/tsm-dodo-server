@@ -418,7 +418,8 @@ class BattleInstance(
                             // 範圍技的特效覆蓋由客戶端依此欄位計算（GetEnemyIdx），不可寫死單體
                             fightArea = result.fightArea,
                             targets = result.targets,
-                            spConsumed = result.spConsumed
+                            spConsumed = result.spConsumed,
+                            comboWithPrevious = fighter.comboMultiplier > 1.0
                         )
                     )
                     // 收集被打飛的目標
@@ -736,7 +737,9 @@ data class ActionResult(
     /** 對每個目標的結果 */
     val targets: List<TargetResult>,
     /** 消耗的 SP */
-    val spConsumed: Int
+    val spConsumed: Int,
+    /** PC-original combo chain: this physical action joins the previous action packet. */
+    val comboWithPrevious: Boolean = false
 )
 
 /**
