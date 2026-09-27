@@ -87,8 +87,8 @@ class ResponseSenderImpl(worldManager: WorldManager) : ResponseSender {
     override fun sendHalfMonthCardTime(session: SessionSender, time: Double) =
         login.sendHalfMonthCardTime(session, time)
 
-    override fun sendPlayerAppear(session: SessionSender, playerId: Long, record: CharacterRecord, serverId: Int) =
-        login.sendPlayerAppear(session, playerId, record, serverId)
+    override fun sendPlayerAppear(session: SessionSender, playerId: Long, record: CharacterRecord, serverId: Int, turn3Element: Int) =
+        login.sendPlayerAppear(session, playerId, record, serverId, turn3Element)
 
     override fun sendCreateCharSuccess(session: SessionSender) =
         login.sendCreateCharSuccess(session)
