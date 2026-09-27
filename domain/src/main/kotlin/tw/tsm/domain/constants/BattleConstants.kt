@@ -58,8 +58,10 @@ object BattleConstants {
     /** 打飛動畫等待 */
     const val FLY_OUT_ANIM_DELAY_MS = 500L
 
-    /** 捕捉等級差限制（Attack.lua: MR_CatchLv = 40） */
+    /** 桃太郎飯糰 25085 的捕捉等級差限制；不是手動捕捉 15002 的 +5 規則。 */
     const val CATCH_LEVEL_DIFF = 40
+    /** DVT FightRoleController.DoClick: 15002 只允許目標最多高施放者 5 級。 */
+    const val MANUAL_CATCH_LEVEL_DIFF = 5
 
     /** 捕捉技能 ID 集合 */
     val CATCH_SKILL_IDS = setOf(CATCH_HAND, CATCH_NET_FAIL, CATCH_NET_SUCCESS, CATCH_NET_FAIL_2, CATCH_NET_SUCCESS_2)
