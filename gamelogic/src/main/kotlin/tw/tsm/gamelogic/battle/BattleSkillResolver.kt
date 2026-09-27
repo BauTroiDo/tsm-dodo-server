@@ -140,17 +140,31 @@ class BattleSkillResolver(
                 if (group > 0) {
                     target.setGroupedStatus(group, utilityStatus, skill!!.round, skillId, currentRound)
                 }
+                val statusAttr = modeledStatusAttribute(utilityStatus)
                 targetResults.add(
                     TargetResult(
                         targetCol = target.col,
                         targetRow = target.row,
                         attackResult = EAttackResult.HIT,
                         beHitAction = EBeHitAction.NONE,
-                        attrChanges = emptyList()
+                        // Lua FightRoleController.RunEffect only calls HandleStatus when
+                        // S:050-001 carries Seal/Vary/Faint/Spec/Strong as Attr_Kind.
+                        attrChanges = if (statusAttr != EAttribute.NONE) {
+                            listOf(BattleAttrChange(statusAttr, 0, true))
+                        } else emptyList()
                     )
                 )
                 continue
             }
+
+            // SkillData.attribute is the client-declared attribute kind. If it is itself
+            // a modeled status attribute, this is a status-only enemy skill: do not
+            // fabricate HP damage merely because the target is on the enemy side.
+            val enemyStatusOnly = !targetsFriendlySide && skill != null &&
+                skill.attribute in MODELED_STATUS_ATTRIBUTES &&
+                skill.round > 0 &&
+                BattleDamageCalc.statusFromSkillId(skillId) != tw.tsm.domain.enums.BattleStatus.NONE
+
             var totalDamage = 0
             var lastRawDamage = 0  // 造成死亡那擊的原始傷害（打飛判定用）
             var finalAttackResult = EAttackResult.HIT
@@ -158,10 +172,10 @@ class BattleSkillResolver(
             val allAttrChanges = mutableListOf<BattleAttrChange>()
 
             for (hit in 0 until hitTimes) {
-                val rawCalcResult = if (isHeal) {
-                    BattleDamageCalc.calculateHeal(attacker, target, skill!!)
-                } else {
-                    BattleDamageCalc.calculateAttack(attacker, target, skill, terrain, skillId)
+                val rawCalcResult = when {
+                    isHeal -> BattleDamageCalc.calculateHeal(attacker, target, skill!!)
+                    enemyStatusOnly -> BattleDamageCalc.calculateStatusOnly(attacker, target, skill!!, skillId)
+                    else -> BattleDamageCalc.calculateAttack(attacker, target, skill, terrain, skillId)
                 }
 
                 // 套用 Combo 倍率：僅對物理攻擊傷害生效（Combo 不影響回復技能）
@@ -214,6 +228,12 @@ class BattleSkillResolver(
                     val group = modeledStatusGroup(calcResult.inflictedStatus)
                     if (group > 0) {
                         target.setGroupedStatus(group, calcResult.inflictedStatus, calcResult.statusRounds, skillId, currentRound)
+                    }
+                    val statusAttr = modeledStatusAttribute(calcResult.inflictedStatus)
+                    if (statusAttr != EAttribute.NONE) {
+                        // S:050-001 Attr_Kind is how the Lua client learns which status
+                        // group to apply; value/sign are ignored for status attributes.
+                        allAttrChanges.add(BattleAttrChange(statusAttr, 0, true))
                     }
                 }
 
@@ -303,6 +323,23 @@ class BattleSkillResolver(
         tw.tsm.domain.enums.BattleStatus.PITY_SOLDIER -> 5
         else -> 0
     }
+
+    private fun modeledStatusAttribute(status: tw.tsm.domain.enums.BattleStatus): Int = when (modeledStatusGroup(status)) {
+        1 -> EAttribute.SEAL
+        2 -> EAttribute.VARY
+        3 -> EAttribute.FAINT
+        4 -> EAttribute.SPEC
+        5 -> EAttribute.STRONG
+        else -> EAttribute.NONE
+    }
+
+    private val MODELED_STATUS_ATTRIBUTES = setOf(
+        EAttribute.SEAL,
+        EAttribute.VARY,
+        EAttribute.FAINT,
+        EAttribute.SPEC,
+        EAttribute.STRONG
+    )
 
     private fun clearGroups(skillId: Int): Set<Int> = buildSet {
         if (skillId in CLEAR_SEAL_SKILLS) add(1)
