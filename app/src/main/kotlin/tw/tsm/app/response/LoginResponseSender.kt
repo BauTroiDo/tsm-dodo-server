@@ -20,7 +20,7 @@ class LoginResponseSender {
      * 封包格式：
      * +Result(1) [成功時繼續] +DBID(2) +GSID(2) +PlayerId(8)
      * +ServerTime(Double/8) +ServerSwitch(1)
-     * +L(1)+Account(Big5) +L(1)+Password(Big5) +AccountKind(1)
+     * +L(1)+Account(Big5) +L(1)+Password(Big5) +AccountKind(1) +NetworkDisconnectMessage(4)
      */
     fun sendLoginResult(
         session: SessionSender,
@@ -49,6 +49,7 @@ class LoginResponseSender {
                 .writeBig5WithByteLen(account)  // 帳號
                 .writeBig5WithByteLen(password) // 密碼
                 .writeByte(accountKind)         // 帳號綁定類型
+                .writeIntLE(0)                  // DVT: no network-disconnect message override
         }
 
         session.send(writer.toByteArray())
@@ -150,11 +151,7 @@ class LoginResponseSender {
             writer.writeByte(skillLv)
         }
 
-        // HP/SP 再寫一次（Role.lua 行 1700-1701）
-        writer
-            .writeUIntLE(data.hp)
-            .writeShortLE(data.sp)
-
+        // DVT Role.ReceivePlayerData reuses the hp/sp locals; no second wire copy.
         // 新增動態屬性
         writer.writeByte(data.newAttrs.size)
         for ((attrType, attrValue) in data.newAttrs) {
@@ -295,12 +292,14 @@ class LoginResponseSender {
         )
     }
 
-    /** S:000-000 斷線通知 */
+    /** S:000-000: cause(1), messageString(4), NetworkDisconnectMessage(4). */
     fun sendDisconnect(session: SessionSender, reason: Int) {
         session.send(
             PacketWriter()
                 .writeByte(Opcodes.DISCONNECT).writeByte(0).writeByte(0)
                 .writeByte(reason)
+                .writeIntLE(0) // No custom localized message (cause 61).
+                .writeIntLE(0) // No diagnostic suffix.
                 .toByteArray()
         )
     }

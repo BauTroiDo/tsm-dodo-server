@@ -1,0 +1,197 @@
+{
+  "S2C:0:0": {
+    "status": "MATCH",
+    "baseline_status": "MISMATCH",
+    "note": "Fixed: cause Byte + messageString Int32 + diagnostic Int32; DvtLoginWireTest consumes entire packet. Zero means no custom message/suffix."
+  },
+  "S2C:1:2": {
+    "status": "MATCH",
+    "baseline_status": "MISMATCH",
+    "note": "Fixed: successful login includes final NetworkDisconnectMessage Int32; error branch remains result-only. DvtLoginWireTest."
+  },
+  "S2C:5:3": {
+    "status": "MATCH",
+    "baseline_status": "MISMATCH",
+    "note": "Fixed: no duplicate HP/SP after turn3Skills. Role.lua:2071 reuses locals; dynamic attributes now aligned. DvtLoginWireTest. Wire scope only."
+  },
+  "S2C:12:0": {
+    "status": "MATCH",
+    "baseline_status": "MATCH",
+    "note": "Wire layout reviewed against protocal.lua:1758 and tested including equipment count, outfit count, title; no claim of end-to-end scene behavior."
+  },
+  "S2C:23:9": {
+    "status": "MATCH",
+    "baseline_status": "MISMATCH",
+    "note": "Fixed: bag index fields are UInt16; pet slot/equipment position remain Byte. DvtItemWireTest golden packets; wire scope."
+  },
+  "S2C:23:10": {
+    "status": "MATCH",
+    "baseline_status": "MISMATCH",
+    "note": "Fixed: bag index fields are UInt16; pet slot/equipment position remain Byte. DvtItemWireTest golden packets; wire scope."
+  },
+  "S2C:23:16": {
+    "status": "MATCH",
+    "baseline_status": "MISMATCH",
+    "note": "Fixed: bag index fields are UInt16; pet slot/equipment position remain Byte. DvtItemWireTest golden packets; wire scope."
+  },
+  "S2C:23:17": {
+    "status": "MATCH",
+    "baseline_status": "MISMATCH",
+    "note": "Fixed: bag index fields are UInt16; pet slot/equipment position remain Byte. DvtItemWireTest golden packets; wire scope."
+  },
+  "S2C:23:22": {
+    "status": "MATCH",
+    "baseline_status": "MISMATCH",
+    "note": "Fixed: bag index fields are UInt16; pet slot/equipment position remain Byte. DvtItemWireTest golden packets; wire scope."
+  },
+  "S2C:23:23": {
+    "status": "MATCH",
+    "baseline_status": "MISMATCH",
+    "note": "Fixed: bag index fields are UInt16; pet slot/equipment position remain Byte. DvtItemWireTest golden packets; wire scope."
+  },
+  "S2C:30:5": {
+    "status": "MATCH",
+    "baseline_status": "MISMATCH",
+    "note": "Fixed: bank slot UInt16 followed by Int32 quantity. DvtItemWireTest golden packet."
+  },
+  "S2C:23:5": {
+    "status": "PARTIAL",
+    "baseline_status": "MISMATCH",
+    "note": "Fixed UInt16 bag index and tested non-NFT ThingData boundaries. Lua Item.lua NFT branch adds 21 bytes; runtime build defines unavailable, so full profile compatibility unverified."
+  },
+  "S2C:23:8": {
+    "status": "PARTIAL",
+    "baseline_status": "MISMATCH",
+    "note": "Fixed UInt16 bag index and tested non-NFT ThingData boundaries. Lua Item.lua NFT branch adds 21 bytes; runtime build defines unavailable, so full profile compatibility unverified."
+  },
+  "S2C:30:1": {
+    "status": "PARTIAL",
+    "baseline_status": "MISMATCH",
+    "note": "Fixed UInt16 bank index and tested non-NFT ThingData boundaries; NFT branch remains unverified."
+  },
+  "S2C:30:4": {
+    "status": "PARTIAL",
+    "baseline_status": "MISMATCH",
+    "note": "Fixed UInt16 bank index and tested non-NFT ThingData boundaries; NFT branch remains unverified."
+  },
+  "C2S:30:1": {
+    "status": "PARTIAL",
+    "baseline_status": "MISMATCH",
+    "note": "Fixed index UInt16 + quantity Int32 from UIBank.lua:671-678; mocks verify decoded operations, malformed payload rejection and batch alignment; no DB integration claim."
+  },
+  "C2S:30:2": {
+    "status": "PARTIAL",
+    "baseline_status": "MISMATCH",
+    "note": "Fixed index UInt16 + quantity Int32 from UIBank.lua:671-678; mocks verify decoded operations, malformed payload rejection and batch alignment; no DB integration claim."
+  },
+  "C2S:102:2": {
+    "status": "PARTIAL",
+    "baseline_status": "MISMATCH",
+    "note": "Fixed deposited bag index UInt16; storage withdrawal stays Byte. DvtBankWireTest; DB behavior not exercised."
+  },
+  "C2S:23:3": {
+    "status": "PARTIAL",
+    "baseline_status": "MISMATCH",
+    "note": "Fixed bag index fields to UInt16 from Item.lua and UIBag.lua. DvtItemWireTest covers routing/decoding and response bytes; full item effects not certified."
+  },
+  "C2S:23:10": {
+    "status": "PARTIAL",
+    "baseline_status": "MISMATCH",
+    "note": "Fixed bag index fields to UInt16 from Item.lua and UIBag.lua. DvtItemWireTest covers routing/decoding and response bytes; full item effects not certified."
+  },
+  "C2S:23:11": {
+    "status": "PARTIAL",
+    "baseline_status": "MISMATCH",
+    "note": "Fixed bag index fields to UInt16 from Item.lua and UIBag.lua. DvtItemWireTest covers routing/decoding and response bytes; full item effects not certified."
+  },
+  "C2S:23:12": {
+    "status": "PARTIAL",
+    "baseline_status": "MISMATCH",
+    "note": "Fixed bag index fields to UInt16 from Item.lua and UIBag.lua. DvtItemWireTest covers routing/decoding and response bytes; full item effects not certified."
+  },
+  "C2S:23:15": {
+    "status": "PARTIAL",
+    "baseline_status": "MISMATCH",
+    "note": "Fixed bag index fields to UInt16 from Item.lua and UIBag.lua. DvtItemWireTest covers routing/decoding and response bytes; full item effects not certified."
+  },
+  "C2S:23:17": {
+    "status": "PARTIAL",
+    "baseline_status": "MISMATCH",
+    "note": "Fixed bag index fields to UInt16 from Item.lua and UIBag.lua. DvtItemWireTest covers routing/decoding and response bytes; full item effects not certified."
+  },
+  "C2S:23:18": {
+    "status": "PARTIAL",
+    "baseline_status": "PARTIAL",
+    "note": "Now validates/reads complete Byte follow + Byte equipment + UInt16 suggested destination; authoritative slot still selected by existing pet inventory logic. DvtItemWireTest."
+  },
+  "C2S:1:0": {
+    "status": "PARTIAL",
+    "baseline_status": "PARTIAL",
+    "note": "Network.lua:640-701 has channelId/deviceId/networkDisMsg tail ignored by server; account/guest supported, third-party/254/255 not complete. Version 258 matches. Login response truncation fixed separately."
+  },
+  "C2S:28:2": {
+    "status": "MISSING",
+    "baseline_status": "MISSING",
+    "note": "Registered branch exists but only logs TODO: no pet skill upgrade operation. UISkillTree.lua:1765-1770 supplies follow index + skill records. Do not treat route presence as implementation."
+  },
+  "S2C:3:0": {
+    "status": "PARTIAL",
+    "baseline_status": "PARTIAL",
+    "note": "Role.PlayerAppear wire ordering reviewed; self packet hardcodes turn/career/equipment/elf fields. Existing character data semantics need separate review."
+  },
+  "C2S:9:1": {
+    "status": "PARTIAL",
+    "baseline_status": "PARTIAL",
+    "note": "Creation reads name first then appearance/stats, consistent with UICreateRole writes; native ReadString encoding contract is unavailable. No byte-encoding equivalence claim."
+  },
+  "C2S:9:2": {
+    "status": "PARTIAL",
+    "baseline_status": "PARTIAL",
+    "note": "Creation reads name first then appearance/stats, consistent with UICreateRole writes; native ReadString encoding contract is unavailable. No byte-encoding equivalence claim."
+  },
+  "C2S:50:1": {
+    "status": "PARTIAL",
+    "baseline_status": "PARTIAL",
+    "note": "FightRoleController.lua:3724-3731 writes Byte source/target coordinates, UInt16 action, two check bytes. Kotlin shape matches; checks ignored and action validation/results not fully audited."
+  },
+  "C2S:50:2": {
+    "status": "PARTIAL",
+    "baseline_status": "PARTIAL",
+    "note": "FightRoleController.lua:3724-3731 writes Byte source/target coordinates, UInt16 action, two check bytes. Kotlin shape matches; checks ignored and action validation/results not fully audited."
+  },
+  "C2S:20:1": {
+    "status": "PARTIAL",
+    "baseline_status": "PARTIAL",
+    "note": "EventManager triggers use UInt16 IDs; advance/choice routes exist. EVE evaluator baseline has 8 failing tests; event semantics cannot be declared MATCH."
+  },
+  "C2S:20:2": {
+    "status": "PARTIAL",
+    "baseline_status": "PARTIAL",
+    "note": "EventManager triggers use UInt16 IDs; advance/choice routes exist. EVE evaluator baseline has 8 failing tests; event semantics cannot be declared MATCH."
+  },
+  "C2S:20:3": {
+    "status": "PARTIAL",
+    "baseline_status": "PARTIAL",
+    "note": "EventManager triggers use UInt16 IDs; advance/choice routes exist. EVE evaluator baseline has 8 failing tests; event semantics cannot be declared MATCH."
+  },
+  "C2S:20:4": {
+    "status": "PARTIAL",
+    "baseline_status": "PARTIAL",
+    "note": "EventManager triggers use UInt16 IDs; advance/choice routes exist. EVE evaluator baseline has 8 failing tests; event semantics cannot be declared MATCH."
+  },
+  "C2S:20:6": {
+    "status": "PARTIAL",
+    "baseline_status": "PARTIAL",
+    "note": "EventManager triggers use UInt16 IDs; advance/choice routes exist. EVE evaluator baseline has 8 failing tests; event semantics cannot be declared MATCH."
+  },
+  "C2S:20:8": {
+    "status": "PARTIAL",
+    "baseline_status": "PARTIAL",
+    "note": "EventManager triggers use UInt16 IDs; advance/choice routes exist. EVE evaluator baseline has 8 failing tests; event semantics cannot be declared MATCH."
+  },
+  "C2S:20:9": {
+    "status": "PARTIAL",
+    "baseline_status": "PARTIAL",
+    "note": "EventManager triggers use UInt16 IDs; advance/choice routes exist. EVE evaluator baseline has 8 failing tests; event semantics cannot be declared MATCH."
+  }
+}

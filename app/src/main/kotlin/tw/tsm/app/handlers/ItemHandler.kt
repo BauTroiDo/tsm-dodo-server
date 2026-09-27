@@ -129,12 +129,13 @@ class ItemHandler(
     /**
      * C:023-003 丟棄背包物品
      *
-     * 格式：+bagIndex(1) +quantity(4)
+     * 格式：+bagIndex(2) +quantity(4)
      * 來源：Item.lua:2626-2650
      */
     private suspend fun handleDropBagItem(session: GameSession, data: ByteArray) {
+        if (data.size != 6) return
         val reader = PacketReader(data)
-        val bagIndex = reader.readUByte()
+        val bagIndex = reader.readUShortLE()
         val quantity = reader.readIntLE()
         if (quantity < 0) return
 
@@ -160,19 +161,21 @@ class ItemHandler(
     /**
      * C:023-010 移動背包物品
      *
-     * 格式：+count(1) +<<from(1) +quantity(4) +to(1)>>
+     * 格式：+count(1) +<<from(2) +quantity(4) +to(2)>>
      * 來源：UIBag.lua:402-410
      */
     private suspend fun handleMoveBagItem(session: GameSession, data: ByteArray) {
+        if (data.isEmpty()) return
         val reader = PacketReader(data)
         val count = reader.readUByte()
+        if (data.size != 1 + count * 8) return
         if (count > 50) return  // 背包格數上限
         val characterId = session.roleId.toLong()
 
         for (i in 0 until count) {
-            val from = reader.readUByte()
+            val from = reader.readUShortLE()
             val quantity = reader.readIntLE()
-            val to = reader.readUByte()
+            val to = reader.readUShortLE()
 
             if (inventorySystem.moveBagItem(characterId, from, quantity, to)) {
                 responseSender.sendMoveBagItem(session, from, quantity, to)
@@ -183,12 +186,13 @@ class ItemHandler(
     /**
      * C:023-011 穿上裝備
      *
-     * 格式：+bagIndex(1)
+     * 格式：+bagIndex(2)
      * 來源：Item.lua:928-931
      */
     private suspend fun handleEquip(session: GameSession, data: ByteArray) {
+        if (data.size != 2) return
         val reader = PacketReader(data)
-        val bagIndex = reader.readUByte()
+        val bagIndex = reader.readUShortLE()
 
         val characterId = session.roleId.toLong()
         val result = inventorySystem.equipItem(characterId, bagIndex, session.level) ?: return
@@ -216,14 +220,15 @@ class ItemHandler(
     /**
      * C:023-012 卸下裝備
      *
-     * 格式：+fitType(1) +bagIndex(1)
+     * 格式：+fitType(1) +bagIndex(2)
      * 來源：Item.lua:2699-2703
      */
     private suspend fun handleUnequip(session: GameSession, data: ByteArray) {
+        if (data.size != 3) return
         val reader = PacketReader(data)
         val fitType = reader.readUByte()
         @Suppress("UNUSED_VARIABLE")
-        val requestedBagIndex = reader.readUByte()  // 客戶端建議的背包位，伺服器自行決定
+        val requestedBagIndex = reader.readUShortLE()  // 客戶端建議的背包位，伺服器自行決定
 
         val characterId = session.roleId.toLong()
         val bagSlot = inventorySystem.unequipItem(characterId, fitType)
@@ -282,16 +287,17 @@ class ItemHandler(
     /**
      * C:023-017 武將穿上裝備
      *
-     * 格式：+followIndex(1) +bagIndex(1)
+     * 格式：+followIndex(1) +bagIndex(2)
      * 來源：Item.lua:947-950
      *
      * 成功回 S:023-023，客戶端自行做背包格 ↔ 裝備格互換
      * （舊裝備回到同一背包格），武將屬性由客戶端本地重算（Item.GetEQIncrease）。
      */
     private suspend fun handlePetEquip(session: GameSession, data: ByteArray) {
+        if (data.size != 3) return
         val reader = PacketReader(data)
         val followSlot = reader.readUByte()
-        val bagSlot = reader.readUByte()
+        val bagSlot = reader.readUShortLE()
 
         val characterId = session.roleId.toLong()
         when (petEquipSystem.equip(characterId, followSlot, bagSlot)) {
@@ -306,17 +312,19 @@ class ItemHandler(
     /**
      * C:023-018 武將卸下裝備
      *
-     * 格式：+followIndex(1) +fitType(1) +bagIndex(1)
-     * 一鍵卸下變體（Item.UnEquipAll，Item.lua:2753-2758）的 bagIndex 是 2B，
-     * 但背包目標格由伺服器決定，多出的 1B 不需讀取。
+     * 格式：+followIndex(1) +fitType(1) +bagIndex(2)
+     * DVT Item.UnEquip and UnEquipAll both send a UInt16 destination suggestion;
+     * the server selects the authoritative destination slot.
      * 來源：Item.lua:2692-2697
      *
      * 成功回 S:023-022（武將卸下裝備到背包）。
      */
     private suspend fun handlePetUnequip(session: GameSession, data: ByteArray) {
+        if (data.size != 4) return
         val reader = PacketReader(data)
         val followSlot = reader.readUByte()
         val fitType = reader.readUByte()
+        reader.readUShortLE() // Client suggestion; authoritative destination chosen below.
 
         val characterId = session.roleId.toLong()
         when (val result = petEquipSystem.unequip(characterId, followSlot, fitType)) {
@@ -358,7 +366,7 @@ class ItemHandler(
     /**
      * C:023-015 使用物品
      *
-     * 格式：+bagIndex(1) +quantity(4) +followIndex(1) +useType(1)
+     * 格式：+bagIndex(2) +quantity(4) +followIndex(1) +useType(1)
      * 來源：Item.lua:954-961
      *
      * 處理流程：
@@ -369,8 +377,9 @@ class ItemHandler(
      * 5. S:008-001 逐筆發送屬性變化
      */
     private suspend fun handleUseItem(session: GameSession, data: ByteArray) {
+        if (data.size != 8) return
         val reader = PacketReader(data)
-        val bagIndex = reader.readUByte()
+        val bagIndex = reader.readUShortLE()
         val quantity = reader.readIntLE()
         val followIndex = reader.readUByte()
         val useType = reader.readUByte()

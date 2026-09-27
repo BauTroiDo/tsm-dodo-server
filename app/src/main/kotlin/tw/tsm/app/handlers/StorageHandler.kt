@@ -84,18 +84,18 @@ class StorageHandler(
     /**
      * C:102-002 寶庫存物品
      *
-     * 格式：<<+index(1) +quantity(4)>>
+     * 格式：<<+index(2) +quantity(4)>>
      * 來源：UIBank.lua:480
      */
     private suspend fun handleDeposit(session: GameSession, data: ByteArray) {
-        if (data.size < 5) return
+        if (data.isEmpty() || data.size % 6 != 0) return
         val reader = PacketReader(data)
         val characterId = session.roleId.toLong()
         var processed = 0
 
-        while (reader.remaining >= 5 && processed < MAX_BATCH) {
+        while (reader.remaining >= 6 && processed < MAX_BATCH) {
             processed++
-            val bagSlot = reader.readUByte()
+            val bagSlot = reader.readUShortLE()
             val quantity = reader.readIntLE()
 
             val bagItem = inventorySystem.getBagItem(characterId, bagSlot) ?: continue

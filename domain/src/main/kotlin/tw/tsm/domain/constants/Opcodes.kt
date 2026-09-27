@@ -132,9 +132,6 @@ object Opcodes {
     /** 任務（主副線） */
     const val MISSION = 47
 
-    /** 斷線重連（⚠ 值=50 與 BATTLE_COMMAND 相同，屬不同方向：重連=C→S, 戰鬥指令=C→S+S→C 共用） */
-    const val RECONNECT = 50
-
     /** 坐騎系統（protocolTable[79]） */
     const val MOUNT = 79
 
@@ -174,8 +171,8 @@ object Opcodes {
     /** 武將倉庫（protocolTable[122]） */
     const val WARRIOR_REPO = 122
 
-    /** 精靈系統 */
-    const val ELF = 110
+    /** 精靈系統（DVT UIElf.lua / protocolTable[107]） */
+    const val ELF = 107
 
     /** 除錯/測試 */
     const val DEBUG = 199

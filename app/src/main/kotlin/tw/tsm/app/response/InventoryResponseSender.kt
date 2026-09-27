@@ -24,7 +24,7 @@ class InventoryResponseSender {
             .writeByte(if (refresh) 1 else 0)
             .writeShortLE(items.size)
         for ((slot, thing) in items) {
-            writer.writeByte(slot)
+            writer.writeShortLE(slot)
             writer.writeThingData(thing)
         }
         session.send(writer.toByteArray())
@@ -35,7 +35,7 @@ class InventoryResponseSender {
         session.send(
             PacketWriter(40)
                 .writeByte(Opcodes.SHOP).writeByte(8).writeByte(0)
-                .writeByte(slot)
+                .writeShortLE(slot)
                 .writeThingData(thing)
                 .writeBoolean(showMsg)
                 .toByteArray()
@@ -47,7 +47,7 @@ class InventoryResponseSender {
         session.send(
             PacketWriter(8)
                 .writeByte(Opcodes.SHOP).writeByte(9).writeByte(0)
-                .writeByte(slot)
+                .writeShortLE(slot)
                 .writeIntLE(amount)
                 .toByteArray()
         )
@@ -58,9 +58,9 @@ class InventoryResponseSender {
         session.send(
             PacketWriter(9)
                 .writeByte(Opcodes.SHOP).writeByte(10).writeByte(0)
-                .writeByte(fromSlot)
+                .writeShortLE(fromSlot)
                 .writeIntLE(amount)
-                .writeByte(toSlot)
+                .writeShortLE(toSlot)
                 .toByteArray()
         )
     }
@@ -106,7 +106,7 @@ class InventoryResponseSender {
             PacketWriter(5)
                 .writeByte(Opcodes.SHOP).writeByte(16).writeByte(0)
                 .writeByte(fitType)
-                .writeByte(bagSlot)
+                .writeShortLE(bagSlot)
                 .toByteArray()
         )
     }
@@ -116,7 +116,7 @@ class InventoryResponseSender {
         session.send(
             PacketWriter(4)
                 .writeByte(Opcodes.SHOP).writeByte(17).writeByte(0)
-                .writeByte(bagSlot)
+                .writeShortLE(bagSlot)
                 .toByteArray()
         )
     }
@@ -141,7 +141,7 @@ class InventoryResponseSender {
                 .writeByte(Opcodes.SHOP).writeByte(22).writeByte(0)
                 .writeByte(followSlot)
                 .writeByte(fitType)
-                .writeByte(bagSlot)
+                .writeShortLE(bagSlot)
                 .toByteArray()
         )
     }
@@ -156,7 +156,7 @@ class InventoryResponseSender {
             PacketWriter(5)
                 .writeByte(Opcodes.SHOP).writeByte(23).writeByte(0)
                 .writeByte(followSlot)
-                .writeByte(bagSlot)
+                .writeShortLE(bagSlot)
                 .toByteArray()
         )
     }
@@ -297,7 +297,7 @@ class InventoryResponseSender {
         val writer = PacketWriter(3 + items.size * 36)
             .writeByte(Opcodes.BANK).writeByte(1).writeByte(0)
         for ((slot, thing) in items) {
-            writer.writeByte(slot)
+            writer.writeShortLE(slot)
             writer.writeThingData(thing)
         }
         session.send(writer.toByteArray())
@@ -308,7 +308,7 @@ class InventoryResponseSender {
         session.send(
             PacketWriter(39)
                 .writeByte(Opcodes.BANK).writeByte(4).writeByte(0)
-                .writeByte(slot)
+                .writeShortLE(slot)
                 .writeThingData(thing)
                 .toByteArray()
         )
@@ -319,7 +319,7 @@ class InventoryResponseSender {
         session.send(
             PacketWriter(8)
                 .writeByte(Opcodes.BANK).writeByte(5).writeByte(0)
-                .writeByte(slot)
+                .writeShortLE(slot)
                 .writeIntLE(amount)
                 .toByteArray()
         )
