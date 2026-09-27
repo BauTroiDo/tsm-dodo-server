@@ -74,7 +74,8 @@ class BattleSkillResolver(
         val fightArea = skill?.let { getFightArea(it, skillLv) } ?: 1
         val isHeal = skill != null && BattleDamageCalc.isHealSkill(skill)
         val targetsFriendlySide = skill != null && skill.fightWay in FRIENDLY_ONLY_FIGHT_WAYS
-        val isDispel = skillId in DISPEL_SKILLS
+        val clearGroups = clearGroups(skillId)
+        val isPureDispel = clearGroups.isNotEmpty() && skill != null && skill.fightWay in FRIENDLY_ONLY_FIGHT_WAYS
 
         // Lua SkillData rule: requireSp == 1 means consume ALL current SP.
         val requiredSp = skill?.requireSp ?: 0
@@ -113,8 +114,10 @@ class BattleSkillResolver(
         val targetResults = mutableListOf<TargetResult>()
 
         for (target in resolvedTargets) {
-            if (isDispel) {
-                clearModeledStatus(target, skillId)
+            if (clearGroups.isNotEmpty()) {
+                clearModeledStatus(target, clearGroups)
+            }
+            if (isPureDispel) {
                 targetResults.add(
                     TargetResult(
                         targetCol = target.col,
@@ -223,8 +226,8 @@ class BattleSkillResolver(
      * With the current single-status server model, clear only when the active modeled
      * status belongs to a group this skill clears.
      */
-    private fun clearModeledStatus(target: BattleFighter, skillId: Int) {
-        for (group in clearGroups(skillId)) {
+    private fun clearModeledStatus(target: BattleFighter, groups: Set<Int>) {
+        for (group in groups) {
             target.clearGroupedStatus(group)
         }
     }
