@@ -36,6 +36,35 @@ function HailStone:UpdateLogic()
     me.roleController:MagicAttack();
     FightField.attack[self.humIdx]:SetLight(EEffectLightKind.Ground ,10070, 40, 1, 32, 32, EEffectLightTracer.Stand, me.nowPos.x + 7, me.nowPos.y, 20, true, 50);
     self.interval = 1;
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local area =  DemoCode.CalTriangleArea(100, 100)
+      area = area * 1 + 2;
+      if area > DemoCode.GetBitxor(20) then  --test avg
+        local avg = DemoCode.CalAvg(10, 20, 30);
+      end
+    end
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
     self.step = 2;      
   elseif self.step == 2 then
     if self:CheckInterval() then 
@@ -55,6 +84,35 @@ function HailStone:UpdateLogic()
     if self:isPlayOver() then 
       self.isLightEnd = true;
       self.step = 6;
+      ---2--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        local area =  DemoCode.CalTriangleArea(100, 100)
+        area = area * 1 + 2;
+        if area > DemoCode.GetBitxor(20) then  --test avg
+          local avg = DemoCode.CalAvg(10, 20, 30);
+        end
+      end
+      --3----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        --local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     end
   end
 end
@@ -187,28 +245,24 @@ function HailStone:SetStone()
       self.iceStone[i] = nil;
     end
 
-    local stonePic = self:GetStonePic();
     self.iceStone[i] = IceStone.New();
-    self.iceStone[i]:SetPath(stonePic+ math.random(0,2), showPage, x, y+30, newPos.x, newPos.y+30, 0.36 + math.random(36)/100);--11016  10042
+    self.iceStone[i]:SetPath(10042+ math.random(0,2), showPage, x, y+30, newPos.x, newPos.y+30, 0.36 + math.random(36)/100);
   end
 end
 
 function HailStone:StoneAllFall()
   local aimIdx;
   local newPos;
-  local smokePic = self:GetSmokePic();
-  local coronaPic = self:GetCoronaPic();
 
   for i=1, 5 do  
     if self.iceStone[i].arrive and self.stoneInfo[i].isFall == false then    
       self.stoneInfo[i].isFall = true;
       newPos = self:GetFallPos(i);
 
-
-      self.smoke[i] = EffectLight.New(smokePic, 30, 14, 26, 26, EEffectLightTracer.StandAni, newPos.x, newPos.y, 30, false, 25);
+      self.smoke[i] = EffectLight.New(10045, 30, 14, 26, 26, EEffectLightTracer.StandAni, newPos.x, newPos.y, 30, false, 25);     
       self.smoke[i]:SetTimeScale(FightField.timeScale);  
       self.smoke[i]:SetSortingOrder(FightField.FIGHT_BODYLIGHT_ORDER);
-      self.corona[i] = EffectLight.New(coronaPic, 25, 1, 10, 10, EEffectLightTracer.StandAni, newPos.x, newPos.y, 10, false, 70);
+      self.corona[i] = EffectLight.New(10052, 25, 1, 10, 10, EEffectLightTracer.StandAni, newPos.x, newPos.y, 10, false, 70);
       self.corona[i]:SetTimeScale(FightField.timeScale);  
       self.corona[i]:SetSortingOrder(FightField.FIGHT_BODYLIGHT_ORDER);
 
@@ -260,29 +314,5 @@ function HailStone:ShowIceStone()
     if v ~= nil then 
       v:Update()
     end
-  end
-end
-
-function HailStone:GetStonePic()
-  if self.showKind == ESkill_Kind.HailStone then
-    return 10042;
-  elseif self.showKind == ESkill_Kind.IceStoneThunder then
-    return 11016;
-  end
-end
-
-function HailStone:GetSmokePic()
-  if self.showKind == ESkill_Kind.HailStone then
-    return 10045;
-  elseif self.showKind == ESkill_Kind.IceStoneThunder then
-    return 11019;
-  end
-end
-
-function HailStone:GetCoronaPic()
-  if self.showKind == ESkill_Kind.HailStone then
-    return 10052;
-  elseif self.showKind == ESkill_Kind.IceStoneThunder then
-    return 11020;
   end
 end

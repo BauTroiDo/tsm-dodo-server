@@ -68,7 +68,27 @@ skillInfos[ESkillTag.Fire][12] = { 12004, Vector2.New(106.5, 93), { 13 } };
 skillInfos[ESkillTag.Fire][13] = { 12007, Vector2.New(185, 93), { 14 } };
 skillInfos[ESkillTag.Fire][14] = { 12010, Vector2.New(258, 54), { 15 } };
 skillInfos[ESkillTag.Fire][15] = { 12013, Vector2.New(258, -23.5), { 0 } };
-skillInfos[ESkillTag.Fire][16] = { 14026, Vector2.New(-52, -20) }; --召喚技
+skillInfos[ESkillTag.Fire][16] = { 14026, Vector2.New(-52, -20) };
+
+--召喚技
+--turn2BaseSkills[ECareer.XiaKe] = { 14038, 14043, 14044, 14045, 14046 }; --俠客
+--turn2BaseSkills[ECareer.BaWang] = { 14038, 14039, 14040, 14041, 14042 }; --霸王
+--turn2BaseSkills[ECareer.XianShi] = { 14038, 14047, 14048, 14049, 14050 }; --賢士
+--turn2BaseSkills[ECareer.DiXian] = { 14038, 14051, 14052, 14053, 14054 }; --嫡仙
+--turn2BaseSkills[ECareer.XiaKe] = { 14038, 14043, 14044, 14045, 14046 }; --俠客
+--turn2BaseSkills[ECareer.BaWang] = { 14038, 14039, 14040, 14041, 14042 }; --霸王
+--turn2BaseSkills[ECareer.XianShi] = { 14038, 14047, 14048, 14049, 14050 }; --賢士
+--turn2BaseSkills[ECareer.DiXian] = { 14038, 14051, 14052, 14053, 14054 }; --嫡仙
+
+--turn2BaseSkills[ECareer.XiaKe] = { 14038, 14043, 14044, 14045, 14046 }; --俠客
+--turn2BaseSkills[ECareer.BaWang] = { 14038, 14039, 14040, 14041, 14042 }; --霸王
+--turn2BaseSkills[ECareer.XianShi] = { 14038, 14047, 14048, 14049, 14050 }; --賢士
+--turn2BaseSkills[ECareer.DiXian] = { 14038, 14051, 14052, 14053, 14054 }; --嫡仙
+
+--turn2BaseSkills[ECareer.XiaKe] = { 14038, 14043, 14044, 14045, 14046 }; --俠客
+--turn2BaseSkills[ECareer.BaWang] = { 14038, 14039, 14040, 14041, 14042 }; --霸王
+--turn2BaseSkills[ECareer.XianShi] = { 14038, 14047, 14048, 14049, 14050 }; --賢士
+--turn2BaseSkills[ECareer.DiXian] = { 14038, 14051, 14052, 14053, 14054 }; --嫡仙
 
 skillInfos[ESkillTag.Wind] = {};
 skillInfos[ESkillTag.Wind][1] = { 13001, Vector2.New(6, 147), { 2, 8 } };
@@ -121,6 +141,24 @@ skillInfos[ESkillTag.Turn1][25] = { 13023, Vector2.New(202.5, -118) };
 skillInfos[ESkillTag.Turn1][26] = { 13021, Vector2.New(278, 36.5), { 27 } };
 skillInfos[ESkillTag.Turn1][27] = { 13020, Vector2.New(278, -41.5), { 28 } };
 skillInfos[ESkillTag.Turn1][28] = { 13025, Vector2.New(278, -118) };
+--turn2BaseSkills[ECareer.XiaKe] = { 14038, 14043, 14044, 14045, 14046 }; --俠客
+--turn2BaseSkills[ECareer.BaWang] = { 14038, 14039, 14040, 14041, 14042 }; --霸王
+--turn2BaseSkills[ECareer.XianShi] = { 14038, 14047, 14048, 14049, 14050 }; --賢士
+--turn2BaseSkills[ECareer.DiXian] = { 14038, 14051, 14052, 14053, 14054 }; --嫡仙
+--turn2BaseSkills[ECareer.XiaKe] = { 14038, 14043, 14044, 14045, 14046 }; --俠客
+--turn2BaseSkills[ECareer.BaWang] = { 14038, 14039, 14040, 14041, 14042 }; --霸王
+--turn2BaseSkills[ECareer.XianShi] = { 14038, 14047, 14048, 14049, 14050 }; --賢士
+--turn2BaseSkills[ECareer.DiXian] = { 14038, 14051, 14052, 14053, 14054 }; --嫡仙
+
+--turn2BaseSkills[ECareer.XiaKe] = { 14038, 14043, 14044, 14045, 14046 }; --俠客
+--turn2BaseSkills[ECareer.BaWang] = { 14038, 14039, 14040, 14041, 14042 }; --霸王
+--turn2BaseSkills[ECareer.XianShi] = { 14038, 14047, 14048, 14049, 14050 }; --賢士
+--turn2BaseSkills[ECareer.DiXian] = { 14038, 14051, 14052, 14053, 14054 }; --嫡仙
+
+--turn2BaseSkills[ECareer.XiaKe] = { 14038, 14043, 14044, 14045, 14046 }; --俠客
+--turn2BaseSkills[ECareer.BaWang] = { 14038, 14039, 14040, 14041, 14042 }; --霸王
+--turn2BaseSkills[ECareer.XianShi] = { 14038, 14047, 14048, 14049, 14050 }; --賢士
+--turn2BaseSkills[ECareer.DiXian] = { 14038, 14051, 14052, 14053, 14054 }; --嫡仙
 
 skillInfos[ESkillTag.Turn2] = {};
 skillInfos[ESkillTag.Turn2][1] = { 0, Vector2.New(-0.5, -9), { 2, 3, 4, 5 } };
@@ -163,6 +201,24 @@ skillInfos[ESkillTag.LightDark][15] = { 23010, Vector2.New( 45, -122.5) };
 skillInfos[ESkillTag.LightDark][16] = { 23015, Vector2.New( 130, -122.5) };
 skillInfos[ESkillTag.LightDark][17] = { 23016, Vector2.New( 215, -122.5) };
 skillInfos[ESkillTag.LightDark][18] = { 23011, Vector2.New( 300, -122.5) };
+--turn2BaseSkills[ECareer.XiaKe] = { 14038, 14043, 14044, 14045, 14046 }; --俠客
+--turn2BaseSkills[ECareer.BaWang] = { 14038, 14039, 14040, 14041, 14042 }; --霸王
+--turn2BaseSkills[ECareer.XianShi] = { 14038, 14047, 14048, 14049, 14050 }; --賢士
+--turn2BaseSkills[ECareer.DiXian] = { 14038, 14051, 14052, 14053, 14054 }; --嫡仙
+--turn2BaseSkills[ECareer.XiaKe] = { 14038, 14043, 14044, 14045, 14046 }; --俠客
+--turn2BaseSkills[ECareer.BaWang] = { 14038, 14039, 14040, 14041, 14042 }; --霸王
+--turn2BaseSkills[ECareer.XianShi] = { 14038, 14047, 14048, 14049, 14050 }; --賢士
+--turn2BaseSkills[ECareer.DiXian] = { 14038, 14051, 14052, 14053, 14054 }; --嫡仙
+
+--turn2BaseSkills[ECareer.XiaKe] = { 14038, 14043, 14044, 14045, 14046 }; --俠客
+--turn2BaseSkills[ECareer.BaWang] = { 14038, 14039, 14040, 14041, 14042 }; --霸王
+--turn2BaseSkills[ECareer.XianShi] = { 14038, 14047, 14048, 14049, 14050 }; --賢士
+--turn2BaseSkills[ECareer.DiXian] = { 14038, 14051, 14052, 14053, 14054 }; --嫡仙
+
+--turn2BaseSkills[ECareer.XiaKe] = { 14038, 14043, 14044, 14045, 14046 }; --俠客
+--turn2BaseSkills[ECareer.BaWang] = { 14038, 14039, 14040, 14041, 14042 }; --霸王
+--turn2BaseSkills[ECareer.XianShi] = { 14038, 14047, 14048, 14049, 14050 }; --賢士
+--turn2BaseSkills[ECareer.DiXian] = { 14038, 14051, 14052, 14053, 14054 }; --嫡仙
 
 
 local turn2BaseSkills = {}
@@ -187,6 +243,7 @@ local mindSkillPerPage = 24; --一頁最多數量
 local transform_FrameRect;
 local transform_Selected;
 local transform_NpcSkill;
+local transform_SoulSkill;
 local transform_MindSkill;
 local transform_HeroSkill;
 local transform_HeroElement = {};
@@ -243,12 +300,22 @@ local totalSkillPoint = 0;
 
 local useTurn2Ball = 0;
 local totalBallCount = 0;
+local totalTurn2Ball = 0;
 
 local tagDatas = {};
 local skills = {};
 local learnSkills = {};
 
 function UISkillTree.Initialize(go)
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
   local uiController = go:GetComponent("UIController");
   this.uiController = uiController;
   this.uiController.onOpen = this.OnOpen;
@@ -261,6 +328,7 @@ function UISkillTree.Initialize(go)
 
   transform_Selected = uiController:FindGameObject("Image_Selected").transform;
   transform_NpcSkill = uiController:FindGameObject("NpcSkill").transform;
+  transform_SoulSkill = uiController:FindGameObject("SoulSkill").transform;
   transform_MindSkill = uiController:FindGameObject("MindSkill").transform;
   transform_HeroSkill = uiController:FindGameObject("HeroSkill").transform;
   transform_LightDarkSkill = uiController:FindGameObject("LightDarkSkill").transform;
@@ -357,6 +425,15 @@ function UISkillTree.Initialize(go)
 
   event_Change = uiController:FindEvent("Image_Change");
   event_Change:SetListener(EventTriggerType.PointerClick, this.OnClickChangeBtn);
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
 end
 
 function UISkillTree.CheckPlayerData()
@@ -364,7 +441,7 @@ function UISkillTree.CheckPlayerData()
   local skillPoint = Role.player:GetSkillLv(skillInfos[ESkillTag.Earth][1][1]) + Role.player:GetSkillLv(skillInfos[ESkillTag.Water][1][1]) +
     Role.player:GetSkillLv(skillInfos[ESkillTag.Fire][1][1]) + Role.player:GetSkillLv(skillInfos[ESkillTag.Wind][1][1]) + Role.player:GetAttribute(EAttribute.SkillPoint);
   if skillPoint == 0 then 
-    logError("玩家技能資料異常");
+    TLogError("玩家技能資料異常");
     Network.Send(8, 13, sendBuffer);
   end
 end
@@ -389,8 +466,46 @@ function UISkillTree.OnVisible(visible)
 end
 
 function UISkillTree.OnClose()
+  
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  
   RedDot.Remove(ERedDot.SkillPoint);
-  Hotkey.Close();
+  Hotkey.Close(EUseSource.UISkillTree);
 end
 
 --init
@@ -493,6 +608,15 @@ function UISkillTree.UpdateRole()
     end
   else
     tagDatas[1] = { string.Get(50311), nil };
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local area =  DemoCode.CalTriangleArea(100, 100)
+      area = area * 1 + 2;
+      if area > DemoCode.GetBitxor(20) then  --test avg
+        local avg = DemoCode.CalAvg(10, 20, 30);
+      end
+    end
+    --3----------------------------------------------------
   end
 
   if currentRole.kind == EHuman.Player then
@@ -506,13 +630,11 @@ function UISkillTree.UpdateRole()
   this.ClearAllAddLvData();
   this.UpdateUI(true);
 
-  Hotkey.SetCurrentSelectId(this.GetCurrentClick(), EHotkeyUI.Main);
   if currentFollowIndex == 0 then
-    Hotkey.SetCurrentRole(Role.player);
+    Hotkey.Show(Role.player, EHotkeyDisplayMode.SingleSkill, this.GetCurrentClick());
   else
-    Hotkey.SetCurrentRole(currentRole);
+    Hotkey.Show(currentRole, EHotkeyDisplayMode.SingleSkill, this.GetCurrentClick());    
   end
-  Hotkey.Show(EHotkeyMode.SkillTree);
 end
 
 function UISkillTree.GetSortOrder()
@@ -545,7 +667,50 @@ function UISkillTree.UpdateUI(reset)
     end
   
     transform_NpcSkill.gameObject:SetActive(currentTag == ESkillTag.Npc);
-  
+    transform_SoulSkill.gameObject:SetActive(currentTag == ESkillTag.Npc);
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------  --5-----------------------------------------------------
+    --  if LuaHelper.CheckDefine("DemoCode") then
+    --    --
+    --  end
+    --  --6-----------------------------------------------------
+    --  --5-----------------------------------------------------
+    --  if LuaHelper.CheckDefine("DemoCode") then
+    --    --
+    --  end
+    --  --6-----------------------------------------------------
+    --  --5-----------------------------------------------------
+    --  if LuaHelper.CheckDefine("DemoCode") then
+    --    --
+    --  end
+    --  --6-----------------------------------------------------  --5-----------------------------------------------------
+    --  if LuaHelper.CheckDefine("DemoCode") then
+    --    --
+    --  end
+    --  --6-----------------------------------------------------
+    --  --5-----------------------------------------------------
+    --  if LuaHelper.CheckDefine("DemoCode") then
+    --    --
+    --  end
+    --  --6-----------------------------------------------------
+    --  --5-----------------------------------------------------
+    --  if LuaHelper.CheckDefine("DemoCode") then
+    --    --
+    --  end
+    --  --6-----------------------------------------------------
     transform_MindSkill.gameObject:SetActive(ESkillTag.Mind == currentTag);
     event_MindSkillArrowL.gameObject:SetActive(ESkillTag.Mind == currentTag);
     event_MindSkillArrowR.gameObject:SetActive(ESkillTag.Mind == currentTag);
@@ -569,14 +734,60 @@ function UISkillTree.UpdateUI(reset)
     if currentTag == ESkillTag.Npc then
       for k, skillInfo in pairs(skillInfos[currentTag]) do
         local skillId = skillInfo[1];
-  
+
         local skillController = UISkillController.New(transform_NpcSkill, this.OnClick_Skill, skillInfo);
         skillController:SetSkill(skillId, currentRole:GetSkillLv(skillId) + this.GetAddLv(skillId), currentElement);
   
         table.insert(skills, skillController);
       end
+
+      --靈魂技
+      local soulData = Soul.GetEquippedSoul(currentRole.npcId);
+      if soulData ~= nil then
+        for i = 1, Role.maxSoulSkill do
+          local skillInfo = skillDatas[soulData.skill[i].id];
+          if skillInfo ~= nil then
+            local skillController = UISkillController.New(transform_SoulSkill, this.OnClick_Skill, skillInfo);
+            skillController:SetSkill(soulData.skill[i].id, soulData.skill[i].lv);
+            skillController:SetShowCost(false);
+
+            table.insert(skills, skillController);
+          end
+        end
+      end
   
     elseif currentTag == ESkillTag.Mind then
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      
       event_MindSkillArrowL.gameObject:SetActive(currentMindPage > 0);
       event_MindSkillArrowR.gameObject:SetActive(currentMindPage < math.floor((table.Count(skillInfos[currentTag]) / 24)));
       for i = 1, mindSkillPerPage do
@@ -660,6 +871,21 @@ function UISkillTree.UpdateUI(reset)
   this.UpdateSelect();
   this.UpdateSubmit();
   this.UpdateReset();
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function UISkillTree.TransferSummonID(skillId)
@@ -717,6 +943,21 @@ function UISkillTree.UpdateHint()
   else
     rawImage_HintIcon.texture = nil;
     rawImage_HintIcon.enabled = false;
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
 
     text_HintName.text = "";
     text_HintDescription.text = "";
@@ -769,6 +1010,21 @@ function UISkillTree.UpdateHintLv()
     text_HintLvValue.gameObject:SetActive(false);
     text_HintLv0.gameObject:SetActive(true);
     text_HintLv0.text = string.Get(21426);
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
     
     if skillData.learnPoint > 0 then
       local pointRate = 1;
@@ -803,7 +1059,7 @@ function UISkillTree.UpdateSelect()
     transform_Selected.localScale = Vector3.one;
 
     if UI.IsVisible(UIHotkey) then
-      Hotkey.SetCurrentSelectId(currentSkill.skillId, EHotkeyUI.Main);
+      UIHotkey.SelectedItem(currentSkill.skillId, EHotKeyType.Skill);
     end
   else
     transform_Selected.gameObject:SetActive(false);
@@ -821,6 +1077,21 @@ function UISkillTree.UpdateSelect()
   
   this.UpdateHint();
   this.UpdateSubmit();
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function UISkillTree.UpdateSubmit()
@@ -830,6 +1101,37 @@ function UISkillTree.UpdateSubmit()
   else
     event_Submit.gameObject:SetActive(useSkillPoint + useTurn2Ball > 0);
     event_Cancel.gameObject:SetActive(useSkillPoint + useTurn2Ball > 0);
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    
   end
 end
 
@@ -906,6 +1208,36 @@ function UISkillTree.GetCurrentClick()
   if currentSkill ~= nil then
     return currentSkill.skillId;
   else
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
     return 0;
   end
 end
@@ -929,6 +1261,12 @@ function UISkillTree.GetAddLv(skillId)
 end
 
 function UISkillTree.IsCurrentRole(role)
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
   return currentRole == role;
 end
 
@@ -948,11 +1286,23 @@ function UISkillTree.CheckElement(element, showMessage)
   if antiElement == element then
     if showMessage ~= false then
       if antiElement == ESkillTag.Earth then
+        --1--------------------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          local code = DemoCode.GetBitxor(20);
+          code = code * 10;
+        end
+        ---2--------------------------------------------------------------
         ShowCenterMessage(string.Get(20551));
       elseif antiElement == ESkillTag.Water then 
         ShowCenterMessage(string.Get(20552));
       elseif antiElement == ESkillTag.Fire then 
         ShowCenterMessage(string.Get(20553));
+        --1--------------------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          local code = DemoCode.GetBitxor(20);
+          code = code * 10;
+        end
+        ---2--------------------------------------------------------------
       elseif antiElement == ESkillTag.Wind then 
         ShowCenterMessage(string.Get(20554));
       end
@@ -974,6 +1324,8 @@ function UISkillTree.AddSkillLv(value)
 
   local addLv = this.GetAddLv(skillId);
 
+  if skillData == nil then return end
+
   if Contains(skillId, 14026, 14077) or Skill.IsSummonSkill(skillId) then return end
 
   if currentTag == ESkillTag.LightDark then 
@@ -989,6 +1341,18 @@ function UISkillTree.AddSkillLv(value)
     if currentTag == ESkillTag.Hero then
       if skillLv + addLv > 0 then
         ShowCenterMessage(string.Get(90085));
+        --1--------------------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          local code = DemoCode.GetBitxor(20);
+          code = code * 10;
+        end
+        ---2--------------------------------------------------------------
+        --1--------------------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          local code = DemoCode.GetBitxor(20);
+          code = code * 10;
+        end
+        ---2--------------------------------------------------------------
         return false;
       end
     end
@@ -1075,6 +1439,18 @@ function UISkillTree.AddSkillLv(value)
       if ballIndex > 0 then
         if not Role.playerData.turn2Balls[ballIndex] and not turn2Balls[ballIndex].learn then
           ShowCenterMessage(string.Get(90083));
+          --1--------------------------------------------------------------
+          if LuaHelper.CheckDefine("DemoCode") then
+            local code = DemoCode.GetBitxor(20);
+            code = code * 10;
+          end
+          ---2--------------------------------------------------------------
+          --1--------------------------------------------------------------
+          if LuaHelper.CheckDefine("DemoCode") then
+            local code = DemoCode.GetBitxor(20);
+            code = code * 10;
+          end
+          ---2--------------------------------------------------------------
           return;
         end
       end
@@ -1221,6 +1597,19 @@ function UISkillTree.AddSkillLv(value)
   this.UpdateSubmit();
   this.UpdateHintLv();
   this.UpdateHint();
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+  
 end
 
 function UISkillTree.SendPlayerSkill()
@@ -1269,6 +1658,43 @@ function UISkillTree.SendPlayerSkill()
 
   if table.Count(addSkills) == 0 and table.Count(addBalls) == 0 then
     ShowCenterMessage(string.Get(20571));
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+---  --1--------------------------------------------------------------
+    --  if LuaHelper.CheckDefine("DemoCode") then
+    --    local code = DemoCode.GetBitxor(20);
+    --    code = code * 10;
+    --  end
+    --  ---2--------------------------------------------------------------
+  
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+---  --1--------------------------------------------------------------
+    --  if LuaHelper.CheckDefine("DemoCode") then
+    --    local code = DemoCode.GetBitxor(20);
+    --    code = code * 10;
+    --  end
+    --  ---2--------------------------------------------------------------
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+---  --1--------------------------------------------------------------
+    --  if LuaHelper.CheckDefine("DemoCode") then
+    --    local code = DemoCode.GetBitxor(20);
+    --    code = code * 10;
+    --  end
+    --  ---2--------------------------------------------------------------
     return;
   end
   
@@ -1314,6 +1740,25 @@ function UISkillTree.SendNpcSkill()
       table.insert(addSkills, { skillId, this.GetSkillLv(ESkillTag.Npc, k) });
     end
   end
+  
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
 
   --C:028-002 <武將技能升級> +武將索引(1) <<+技能ID(2) +技能等級(1)>>
   sendBuffer:Clear();
@@ -1365,7 +1810,61 @@ function UISkillTree.OnClick_Tag(mainTag, subTag)
   this.UpdateUI(true);
   this.UpdateSubmit();
   this.UpdateSelect();
-
+  
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+---  --1--------------------------------------------------------------
+  --  if LuaHelper.CheckDefine("DemoCode") then
+  --    local code = DemoCode.GetBitxor(20);
+  --    code = code * 10;
+  --  end
+  --  ---2--------------------------------------------------------------
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+---  --1--------------------------------------------------------------
+  --  if LuaHelper.CheckDefine("DemoCode") then
+  --    local code = DemoCode.GetBitxor(20);
+  --    code = code * 10;
+  --  end
+  --  ---2--------------------------------------------------------------
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+---  --1--------------------------------------------------------------
+  --  if LuaHelper.CheckDefine("DemoCode") then
+  --    local code = DemoCode.GetBitxor(20);
+  --    code = code * 10;
+  --  end
+  --  ---2--------------------------------------------------------------
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+---  --1--------------------------------------------------------------
+  --  if LuaHelper.CheckDefine("DemoCode") then
+  --    local code = DemoCode.GetBitxor(20);
+  --    code = code * 10;
+  --  end
+  --  ---2--------------------------------------------------------------
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
   return true;
 end
 
@@ -1408,7 +1907,13 @@ end
 
 function UISkillTree.OnClick_SwitchMindSkill(uiEvent)
   currentMindPage = math.clamp(currentMindPage + uiEvent.parameter, math.floor((table.Count(skillInfos[ESkillTag.Mind]) / mindSkillPerPage)));
-
+  
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
   this.UpdateUI(true);
 end
 
@@ -1451,6 +1956,54 @@ function UISkillTree.OnClick_Skill(uiEvent)
     elseif Contains(skillController.index, 12, 13) then
       if this.GetSkillLv(ESkillTag.Turn2, 1) == 0 or this.GetSkillLv(ESkillTag.Turn2, 5) == 0 then
         ShowCenterMessage(string.Concat(string.Get(20581), skillDatas[skillInfos[ESkillTag.Turn2][1][1]].name, string.Get(90093), skillDatas[skillInfos[ESkillTag.Turn2][5][1]].name));
+        --1--------------------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          local code = DemoCode.GetBitxor(20);
+          code = code * 10;
+        end
+        ---2--------------------------------------------------------------
+---  --1--------------------------------------------------------------
+        --  if LuaHelper.CheckDefine("DemoCode") then
+        --    local code = DemoCode.GetBitxor(20);
+        --    code = code * 10;
+        --  end
+        --  ---2--------------------------------------------------------------
+        --1--------------------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          local code = DemoCode.GetBitxor(20);
+          code = code * 10;
+        end
+        ---2--------------------------------------------------------------
+---  --1--------------------------------------------------------------
+        --  if LuaHelper.CheckDefine("DemoCode") then
+        --    local code = DemoCode.GetBitxor(20);
+        --    code = code * 10;
+        --  end
+        --  ---2--------------------------------------------------------------
+        --1--------------------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          local code = DemoCode.GetBitxor(20);
+          code = code * 10;
+        end
+        ---2--------------------------------------------------------------
+---  --1--------------------------------------------------------------
+        --  if LuaHelper.CheckDefine("DemoCode") then
+        --    local code = DemoCode.GetBitxor(20);
+        --    code = code * 10;
+        --  end
+        --  ---2--------------------------------------------------------------
+        --1--------------------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          local code = DemoCode.GetBitxor(20);
+          code = code * 10;
+        end
+        ---2--------------------------------------------------------------
+---  --1--------------------------------------------------------------
+        --  if LuaHelper.CheckDefine("DemoCode") then
+        --    local code = DemoCode.GetBitxor(20);
+        --    code = code * 10;
+        --  end
+        --  ---2--------------------------------------------------------------
         return;
       end
     end
@@ -1465,8 +2018,9 @@ function UISkillTree.OnClick_Skill(uiEvent)
     this.AddSkillLv(1);
     return;
   end
-  
+
   currentSkill = skillController;
+  currentSkill.transform.localScale = Vector2.one;
   this.UpdateSelect();
 end
 
@@ -1500,6 +2054,30 @@ function UISkillTree.OnClick_Ball(uiEvent)
 
   if useTurn2Ball >= totalTurn2Ball then
     ShowCenterMessage(string.Get(90092));
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+---  --1--------------------------------------------------------------
+    --  if LuaHelper.CheckDefine("DemoCode") then
+    --    local code = DemoCode.GetBitxor(20);
+    --    code = code * 10;
+    --  end
+    --  ---2--------------------------------------------------------------
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+---  --1--------------------------------------------------------------
+    --  if LuaHelper.CheckDefine("DemoCode") then
+    --    local code = DemoCode.GetBitxor(20);
+    --    code = code * 10;
+    --  end
+    --  ---2--------------------------------------------------------------
     return;
   end
   
@@ -1531,6 +2109,36 @@ function UISkillTree.OnClick_Submit()
   --檢查是否被關監
   if SceneManager.sceneId == 10701 then  
     ShowCenterMessage(string.Get(40097));
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+---  --1--------------------------------------------------------------
+    --  if LuaHelper.CheckDefine("DemoCode") then
+    --    local code = DemoCode.GetBitxor(20);
+    --    code = code * 10;
+    --  end
+    --  ---2--------------------------------------------------------------
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+---  --1--------------------------------------------------------------
+    --  if LuaHelper.CheckDefine("DemoCode") then
+    --    local code = DemoCode.GetBitxor(20);
+    --    code = code * 10;
+    --  end
+    --  ---2--------------------------------------------------------------
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
     return;
   end
   

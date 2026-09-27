@@ -20,6 +20,47 @@ local maxLevel = 0;
 function FurnitureCollection.Initialize()
   this.CLear();
   maxLevel = table.Count(furnitureCollectLevelDatas);
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function FurnitureCollection.CLear()
@@ -27,6 +68,47 @@ function FurnitureCollection.CLear()
   attributes[EFurnitureCollectAttribute.Score] = 0;
   attributes[EFurnitureCollectAttribute.LevelScore] = furnitureCollectLevelDatas[1].score;
   attributes[EFurnitureCollectAttribute.FurnitureKindCount] = 0;
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function FurnitureCollection.SetCollectAttribute(attributeKind, number)
@@ -92,7 +174,47 @@ function FurnitureCollection.GetFurnitureCollectKindMaxCount(kind)
       count = count + 1;
     end
   end
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   return count;
 end
 
@@ -126,4 +248,45 @@ function FurnitureCollection.ResetScoreAndLv()
       break
     end
   end
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end

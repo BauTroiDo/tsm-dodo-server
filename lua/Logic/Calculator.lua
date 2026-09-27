@@ -38,6 +38,8 @@ local ran = 0;
 local pracExtraValue = 20 --修行加成值
 local pracMaxLv = 200; --最大修練等級
 local pracExpDatas = {}; --修煉經驗表
+local lastSummary = 0;
+local lastShineAtts = {};
 
 function Calc.Initialize(reader)
   w1 = reader:ReadDouble();
@@ -102,6 +104,7 @@ end
 
 function Calc.GetMaxHp(role, level, hpx, equipMaxHp, extraHp, turn, career, turn3Lv, isNpc)
   local result = 0;
+  local percent = 0;
 
   if role ~= nil then
     level = role:GetAttribute(EAttribute.Lv);
@@ -110,6 +113,7 @@ function Calc.GetMaxHp(role, level, hpx, equipMaxHp, extraHp, turn, career, turn
     extraHp = 0;
     turn = role:GetAttribute(EAttribute.Turn);
     career = role:GetAttribute(EAttribute.Career);
+    percent = role:GetAttribute(EAttribute.HpPercent);
 
     if turn >= 3 then
       turn3Lv = level - Role.playerMaxLv;
@@ -120,26 +124,26 @@ function Calc.GetMaxHp(role, level, hpx, equipMaxHp, extraHp, turn, career, turn
   end
 
   if role ~= nil and role.kind == EHuman.Player then
-    if BattleRoyale.GetBattleRoyaleState() then
-      hpx = hpx + BattleRoyale.GetPercentageFieldEffectValue(EAttribute.Hpx, hpx);
-      hpx = hpx + BattleRoyale.GetFixedFieldEffectValue(EAttribute.Hpx);
-    end
+    local shineAtts = Calc.GetCollectNFT();
     --BUFF加成
     hpx = hpx + role:GetAttribute(EAttribute.Buff, EAttribute.EquipHpx);
     --增益狀態加成
-    hpx = hpx + DrugBuff.GetTimeBuffValue(ETimeBuff.HpxUp);
+    hpx = hpx + DrugBuff.GetAttribute(EDrugAttribute.Hpx);    
     --七星命盤加成
     hpx = hpx + math.round(Astrolabe.GetAttribute(EAstrolabeAttribute.Hpx));
     --三轉加成
     if turn == 3 then
       hpx = hpx + math.min(turn3Lv, 70);
     end
-
     hpx = hpx + role:GetAttribute(EAttribute.Turn3Hpx);
     --收集測:時裝加成
     hpx = hpx + CollectStyle.GetAttribute(EAttribute.Hpx);
     --收集測:卡片加成
     hpx = hpx + CollectCard.GetAttribute(EAttribute.Hpx);
+    --NFT
+    if shineAtts[EAttribute.Hpx] ~= nil then
+      hpx = hpx + shineAtts[EAttribute.Hpx];
+    end
 
     --官階加成
     equipMaxHp = equipMaxHp + RankData.GetAttribute(role:GetAttribute(EAttribute.BattleHonor), EAttribute.EquipMaxHp);
@@ -217,17 +221,15 @@ function Calc.GetMaxHp(role, level, hpx, equipMaxHp, extraHp, turn, career, turn
       result = result + math.min((turn3Lv - 70), 20) * 25;
     end
   end
-
-  if BattleRoyale.GetBattleRoyaleState() then
-    result = result + BattleRoyale.GetPercentageFieldEffectValue(EAttribute.MaxHp, result);
-    result = result + BattleRoyale.GetFixedFieldEffectValue(EAttribute.MaxHp);
-  end
+  
+  result = math.floor(result * (100 + percent) * 0.01);
 
   return math.max(1, result);
 end
 
 function Calc.GetMaxSp(role, level, spx, equipMaxSp, extraSp, turn, career, turn3Lv, isNpc)
   local result = 0;
+  local percent = 0;
 
   if role ~= nil then
     level = role:GetAttribute(EAttribute.Lv);
@@ -236,6 +238,7 @@ function Calc.GetMaxSp(role, level, spx, equipMaxSp, extraSp, turn, career, turn
     spx = role:GetAttribute(EAttribute.Spx) + role:GetAttribute(EAttribute.EquipSpx);
     extraSp = 0;
     equipMaxSp = role:GetAttribute(EAttribute.EquipMaxSp);
+    percent = role:GetAttribute(EAttribute.SpPercent);
 
     if turn >= 3 then
       turn3Lv = level - Role.playerMaxLv;
@@ -246,24 +249,24 @@ function Calc.GetMaxSp(role, level, spx, equipMaxSp, extraSp, turn, career, turn
   end
 
   if role ~= nil and role.kind == EHuman.Player then
-    if BattleRoyale.GetBattleRoyaleState() then
-      spx = spx + BattleRoyale.GetPercentageFieldEffectValue(EAttribute.Spx, spx);
-      spx = spx + BattleRoyale.GetFixedFieldEffectValue(EAttribute.Spx);
-    end
+    local shineAtts = Calc.GetCollectNFT();
     --BUFF加成
     spx = spx + role:GetAttribute(EAttribute.Buff, EAttribute.EquipSpx);
     --增益狀態加成
-    spx = spx + DrugBuff.GetTimeBuffValue(ETimeBuff.SpxUp);
+    spx = spx + DrugBuff.GetAttribute(EDrugAttribute.Spx);
     --七星命盤加成
     spx = spx + math.round(Astrolabe.GetAttribute(EAstrolabeAttribute.Spx));
     --三轉加成
     if turn == 3 then
       spx = spx + turn3Lv;
     end
-
     spx = spx + role:GetAttribute(EAttribute.Turn3Spx);
     --收集測:卡片加成
     spx = spx + CollectCard.GetAttribute(EAttribute.Spx);
+    --NFT
+    if shineAtts[EAttribute.Spx] ~= nil then
+      spx = spx + shineAtts[EAttribute.Spx];
+    end
     --收集測:時裝加成
     spx = spx + CollectStyle.GetAttribute(EAttribute.Spx);    
     --官階加成
@@ -330,12 +333,9 @@ function Calc.GetMaxSp(role, level, spx, equipMaxSp, extraSp, turn, career, turn
       result = math.round(w38 * level + 3.5 * spx * math.pow(level, 0.25)) + 410 + equipMaxSp + extraSp;
     end
   end
-
-  if BattleRoyale.GetBattleRoyaleState() then
-    result = result + BattleRoyale.GetPercentageFieldEffectValue(EAttribute.MaxSp, result);
-    result = result + BattleRoyale.GetFixedFieldEffectValue(EAttribute.MaxSp);
-  end
-
+  
+  result = math.floor(result * (100 + percent) * 0.01);
+  
   return math.max(1, result);
 end
 
@@ -344,7 +344,47 @@ function Calc.GetNeedTExp(level, turn)
   for i = 1, level do
     result = result + this.GetUpExp(i, turn);
   end
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   return result;
 end
 
@@ -368,4 +408,32 @@ function Calc.GetUpExp(level, turn)
   else
     return math.trunc(SimpleRoundTo(math.pow(level, 3))) + extraExp;
   end
+end
+
+function Calc.GetCollectNFT()
+  local summary = UICollectBook.GetSummary();
+  local shineAtts = {};
+  
+  if lastSummary == summary then
+     return lastShineAtts;
+  end
+  
+  for k, v in pairs(collectStyleValueDatas)do
+    if v.nft == 1 and summary >= v.score then
+      for i = 1, 4 do
+        if v.attribute[i].kind > 0 then
+          if shineAtts[v.attribute[i].kind] ~= nil then
+            shineAtts[v.attribute[i].kind] = shineAtts[v.attribute[i].kind] + v.attribute[i].value;
+          else
+            shineAtts[v.attribute[i].kind] = v.attribute[i].value;
+          end
+        end
+      end
+    end
+  end
+  
+  lastSummary = summary;
+  lastShineAtts = shineAtts;
+  
+  return shineAtts;
 end

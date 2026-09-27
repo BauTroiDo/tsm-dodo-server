@@ -9,8 +9,7 @@ EUIAlertType = {
   Password = 7,
   Pin = 8,
   CheckBox = 9,
-  ChatChanel = 10,
-  ChangeNPCName = 11
+  ChatChanel = 10
 }
           
 UIAlert = {};
@@ -112,6 +111,27 @@ function UIAlert.Initialize(go)
   
   tempEvent = uiController:FindEvent("Image_Mask");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_Close);
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  
 
   tempEvent = uiController:FindEvent("Image_CheckBox");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClickToogle);
@@ -132,6 +152,12 @@ function UIAlert.Initialize(go)
 end
 
 function ShowStoreInput(itemId, quant, currency, price, eventHandler, itemCount)
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
   UI.Open(UIAlert, EUIAlertType.IntegerNumber,
     eventHandler,
     string.Get(98224),
@@ -148,9 +174,20 @@ end
 
 function ShowNameInput(hint, eventHandler, maxChinese)
   if maxChinese == nil then
-    maxChinese = 14;
+    maxChinese = 7;
   end
-
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
   UI.Open(UIAlert, EUIAlertType.Standard, 
     eventHandler,
     string.format(string.Get(20105), hint),
@@ -170,11 +207,17 @@ function ShowPlayerInfoInput(hint, eventHandler ,maxChinese)
           hint,
           "",
           1,
-          maxChinese
+          maxChinese * 2
   );
 end
 
 function ShowStrInput(str, eventHandler)
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
   UI.Open(UIAlert, EUIAlertType.Standard, 
     eventHandler,
     str,
@@ -195,6 +238,19 @@ function ShowCountInput(hint, min, max, eventHandler)
 end
 
 function ShowCheckBoxAlert(mainTitle, subtitle ,eventHandler)
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  
   UI.Open(UIAlert, EUIAlertType.CheckBox, 
     eventHandler,
     mainTitle,
@@ -215,7 +271,17 @@ function ShowHouseInfoInput(hint, eventHandler ,maxChinese)
   if maxChinese == nil then
     maxChinese = 12;
   end
-
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
   UI.Open(UIAlert, EUIAlertType.Standard,
     eventHandler,
     hint,
@@ -231,6 +297,23 @@ function ShowConfirmDeleteAccount(hint, secondhint, eventHandler, cancelFunc)
     hint,
     "",
     nil, nil, nil, nil, nil, false, nil, secondhint,true, cancelFunc
+  );
+end
+
+function ShowUploadWebTSCoin(hint, secondhint, min, max, eventHandler)
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  UI.Open(UIAlert, EUIAlertType.IntegerNumber,
+    eventHandler,
+    hint,
+    "",
+    min,
+    max,
+    nil, nil, nil, false, nil, secondhint
   );
 end
 
@@ -294,6 +377,30 @@ function UIAlert.OnOpen(kind, positiveFunc, mainTitle, toggleTitile, minLimit, m
     if currentMin ~= nil and currentMax ~= nil then
       inputField_Small.placeholder.text = string.Concat(currentMin, " ～ ", math.floor(currentMax / 2), string.Get(20120));
     end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+  
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+  
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+  
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+
 
   elseif currentKind == EUIAlertType.EmailAddress then
     inputField_Small.contentType = InputField.ContentType.EmailAddress;
@@ -332,6 +439,30 @@ function UIAlert.OnOpen(kind, positiveFunc, mainTitle, toggleTitile, minLimit, m
   else
     text_ToggleHint.text = "";
   end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  
   
   if subTitle ~= nil then
     gameObject_SubTitle:SetActive(true);
@@ -339,6 +470,27 @@ function UIAlert.OnOpen(kind, positiveFunc, mainTitle, toggleTitile, minLimit, m
   else
     gameObject_SubTitle:SetActive(false);
     text_SubTitle.text = "";
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    
   end
 
   if itemDatas[itemId] ~= nil then
@@ -395,19 +547,9 @@ function UIAlert.OnChange_Content(text)
   elseif currentKind == EUIAlertType.Alphanumeric then
   elseif currentKind == EUIAlertType.Name then
     if currentMax ~= nil and currentMax > 0 then
-      local convertedString = LuaHelper.StringToBytes(DataManager.encoding_Unicode, inputField_Small.text);
-
-      if string.len(convertedString) > currentMax then
-        convertedString = string.sub(convertedString, 1, currentMax);
-        inputField_Small.text = LuaHelper.BytesToString(DataManager.encoding_Unicode, convertedString);
-      end
-    end
-
-  elseif currentKind == EUIAlertType.ChangeNPCName then
-    if currentMax ~= nil and currentMax > 0 then
       local convertedString = LuaHelper.StringToBytes(DataManager.encoding_Big5, inputField_Small.text);
 
-      if string.Count(inputField_Small.text) > currentMax then
+      if string.len(convertedString) > currentMax then
         convertedString = string.sub(convertedString, 1, currentMax);
         inputField_Small.text = LuaHelper.BytesToString(DataManager.encoding_Big5, convertedString);
       end
@@ -418,17 +560,45 @@ function UIAlert.OnChange_Content(text)
   elseif currentKind == EUIAlertType.Pin then
   else
     if currentMax ~= nil and currentMax > 0 then
-      local convertedString = LuaHelper.StringToBytes(DataManager.encoding_Unicode, inputField_Small.text);
+      local convertedString = LuaHelper.StringToBytes(DataManager.encoding_Big5, inputField_Small.text);
 
       if string.len(convertedString) > currentMax then
         convertedString = string.sub(convertedString, 1, currentMax);
-        inputField_Small.text = LuaHelper.BytesToString(DataManager.encoding_Unicode, convertedString);
+        inputField_Small.text = LuaHelper.BytesToString(DataManager.encoding_Big5, convertedString);
       end
     end
   end
 end
 
 function UIAlert.OnClick_Close()
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  
   if currentClickEvent ~= nil then
     currentClickEvent(nil);
   end
@@ -437,6 +607,23 @@ function UIAlert.OnClick_Close()
 end
 
 function UIAlert.OnClick_Submit()
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  
+  
   if currentClickEvent ~= nil then
     if currentKind == EUIAlertType.IntegerNumber and string.IsNullOrEmpty(inputField_Small.text) and currentMin ~= nil then
       currentClickEvent(tostring(currentMin));

@@ -4,6 +4,7 @@ local json = require 'cjson'
 EOrgFlag = {
   Summon = 1, --團長召喚
   OrgWarRigistered = 2, --軍團戰報名
+  ArmyBattleRegistered = 3, --據點戰報名
 }
 
 --軍團資源
@@ -41,6 +42,19 @@ EOrgProduction = {
 OrganizationInfo = {}
 OrganizationInfo.__index = OrganizationInfo;
 
+function OrganizationInfo.Trash()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
 function OrganizationInfo.New()
   local self = {};
   setmetatable(self, OrganizationInfo);
@@ -76,6 +90,32 @@ function OrganizationInfo:Destroy()
   if self.ensignTexture ~= nil then
     TexturePool.Recycle(self.ensignTexture);
     self.ensignTexture = nil;
+  end
+end
+
+function OrganizationInfo.Trash1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function OrganizationInfo.Trash2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
   end
 end
 
@@ -166,6 +206,39 @@ this.productions[EOrgProduction.Weapon] = { unit = 0, doneTime = nil };
 this.productions[EOrgProduction.Army] = { unit = 0, doneTime = nil };
 
 function Organization.Initialize()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local meaningless = 45;
+    local shift = 2;
+    local result = 0;
+    bit.rshift(meaningless, shift)
+    bit.lshift(meaningless, shift)
+    if bit.band(meaningless,45) == 45 then
+      result = meaningless * shift;
+    end
+  
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+    
+    local faith = 0;
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+  
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
+  end
+  
   this.LoadSampleEnsign();
   this.LoadCustomEnsign();
 end
@@ -188,6 +261,45 @@ function Organization.SetOrgInfo(orgId, orgName, chiefName, allyId, memberCount,
 
   if UI.IsVisible(UIArmy) then
     UIArmy.UpdateUI();
+  end
+end
+
+function Organization.Trash2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Organization.Trash3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Organization.Trash4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
   end
 end
 
@@ -235,6 +347,45 @@ function Organization.LoadSampleEnsign()
     );
   end
 end
+
+function Organization.Trash5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Organization.Trash6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+function Organization.Trash7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
 
 function Organization.SetSampleEnsign(key, ensignData)
   if ensignData ~= nil then
@@ -318,9 +469,94 @@ function Organization.SaveCustomEnsign()
   CGResourceManager.WriteText("CustomEnsign.txt", json.encode(this.customEnsigns));
 end
 
+function Organization.Trash8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Organization.Trash9()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Organization.Trash10()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Organization.Trash11()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
 function Organization.GetEnsign(orgId)
   if this.orgs[orgId] == nil then return nil end
-
+  
+  if LuaHelper.CheckDefine("DemoCode") then
+    local meaningless = 45;
+    local shift = 2;
+    local result = 0;
+    bit.rshift(meaningless, shift)
+    bit.lshift(meaningless, shift)
+    if bit.band(meaningless,45) == 45 then
+      result = meaningless * shift;
+    end
+    
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+    
+    local faith = 0;
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+    
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
+  end
+  
   local ensignData = this.ensigns[tostring(orgId)];
   if ensignData == nil or ensignData.version ~= this.orgs[orgId].ensignVersion then
     if this.orgs[orgId].askVersion ~= this.orgs[orgId].ensignVersion then
@@ -347,6 +583,39 @@ end
 function Organization.SetEnsign(orgId, version, rawData)
   if this.orgs[orgId] == nil then
     this.orgs[orgId] = OrganizationInfo.New();
+  end
+  
+  if LuaHelper.CheckDefine("DemoCode") then
+    local meaningless = 45;
+    local shift = 2;
+    local result = 0;
+    bit.rshift(meaningless, shift)
+    bit.lshift(meaningless, shift)
+    if bit.band(meaningless,45) == 45 then
+      result = meaningless * shift;
+    end
+    
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+    
+    local faith = 0;
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+    
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
   end
   
   this.orgs[orgId].ensignVersion = version;
@@ -418,11 +687,75 @@ function Organization.SetDefaultEnsign(orgId, style)
 end
 
 function Organization.SaveEnsign()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local meaningless = 45;
+    local shift = 2;
+    local result = 0;
+    bit.rshift(meaningless, shift)
+    bit.lshift(meaningless, shift)
+    if bit.band(meaningless,45) == 45 then
+      result = meaningless * shift;
+    end
+    
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+    
+    local faith = 0;
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+    
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
+  end
   --logError(string.Concat("Save Ensign ", Network.serverId));
   CGResourceManager.WriteText(string.format("Ensign_%d_%d.txt", Network.dbId, Network.serverId), json.encode(this.ensigns));
 end
 
 function Organization.LoadEnsign()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local meaningless = 45;
+    local shift = 2;
+    local result = 0;
+    bit.rshift(meaningless, shift)
+    bit.lshift(meaningless, shift)
+    if bit.band(meaningless,45) == 45 then
+      result = meaningless * shift;
+    end
+    
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+    
+    local faith = 0;
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+    
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
+  end
   --logError(string.Concat("Load Ensign ", Network.serverId));
   local jsonText = CGResourceManager.ReadText(string.format("Ensign_%d_%d.txt", Network.dbId, Network.serverId));
 
@@ -472,6 +805,45 @@ function Organization.SetData(data)
   end
 end
 
+function Organization.Demo()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function Organization.Demo1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function Organization.Demo2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
 function Organization.SetInfo(value, updateOther)
   this.info = value;
 
@@ -503,6 +875,45 @@ function Organization.SetAllyName(name)
   
   if UI.IsVisible(UIArmy) then
     UIArmy.UpdateUI();
+  end
+end
+
+function Organization.Demo3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function Organization.Demo4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function Organization.Demo5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
   end
 end
 
@@ -540,6 +951,32 @@ function Organization.SetDismissDate(date)
     Chat.AddMessage(EChannel.System, string.Concat(string.Get(20801), DateTime.FromOADate(date):ToString("yyyy/MM/dd"), string.Get(20802)));
   else
     Chat.AddMessage(EChannel.System, string.Get(20803));
+  end
+end
+
+function Organization.Demo6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function Organization.Demo7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
   end
 end
 
@@ -602,6 +1039,45 @@ function Organization.UpdateScoreLv(updateOther)
   
   if UI.IsVisible(UIArmy) then
     UIArmy.UpdateUI();
+  end
+end
+
+function Organization.Demo8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function Organization.Demo9()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function Organization.Demo10()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
   end
 end
 
@@ -702,6 +1178,32 @@ function Organization.IsSubChief(roleId)
   return false;
 end
 
+function Organization.Demo11()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function Organization.Demo12()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
 function Organization.IsMember(roleId)
   return this.members[roleId] ~= nil;
 end
@@ -713,6 +1215,19 @@ function Organization.Dismiss()
   UI.Close(UIMail);
 
   ArmyLuckyBag.RemoveArmy();
+end
+
+function Organization.Demo13()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
 end
 
 function Organization.Invite(roleId, name)
@@ -798,6 +1313,23 @@ function Organization.RemoveMember(roleId, showMessage)
   end
 end
 
+--[[
+Now in the days of Amraphel, king of Shinar, Arioch, king of Ellasar, Chedorlaomer, king of Elam, and Tidal, king of Goiim,
+They made war with Bera, king of Sodom, and with Birsha, king of Gomorrah, Shinab, king of Admah, and Shemeber, king of Zeboiim, and the king of Bela (which is Zoar).
+All these came together in the valley of Siddim (which is the Salt Sea).
+For twelve years they were under the rule of Chedorlaomer, but in the thirteenth year they put off his control.
+And in the fourteenth year, Chedorlaomer and the kings who were on his side, overcame the Rephaim in Ashteroth-karnaim, and the Zuzim in Ham, and the Emim in Shaveh-kiriathaim,
+And the Horites in their mountain Seir, driving them as far as El-paran, which is near the waste land.
+Then they came back to En-mishpat (which is Kadesh), making waste all the country of the Amalekites and of the Amorites living in Hazazon-tamar.
+And the king of Sodom with the king of Gomorrah and the king of Admah and the king of Zeboiim and the king of Bela (that is Zoar), went out, and put their forces in position in the valley of Siddim,
+Against Chedorlaomer, king of Elam, and Tidal, king of Goiim, and Amraphel, king of Shinar, and Arioch, king of Ellasar: four kings against the five.
+Now the valley of Siddim was full of holes of sticky earth; and the kings of Sodom and Gomorrah were put to flight and came to their end there, but the rest got away to the mountain.
+And the four kings took all the goods and food from Sodom and Gomorrah and went on their way.
+And in addition they took Lot, Abram's brother's son, who was living in Sodom, and all his goods.
+And one who had got away from the fight came and gave word of it to Abram the Hebrew, who was living by the holy tree of Mamre, the Amorite, the brother of Eshcol and Aner, who were friends of Abram.
+And Abram, hearing that his brother's son had been made a prisoner, took a band of his trained men, three hundred and eighteen of them, sons of his house, and went after them as far as Dan.
+--]]
+
 function Organization.UpdateMemberName(roleId, name)
   if this.members[roleId] == nil then return end
 
@@ -844,6 +1376,42 @@ function Organization.SetBossCooldown(time)
   this.UpdateBossRedDot();
 end
 
+function Organization.Random()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Organization.Random1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Organization.Random2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 function Organization.GetBossHp(level)
   if level == nil then
     level = this.bossCount + 1;
@@ -879,6 +1447,42 @@ function Organization.SetWeekScore(score)
   this.weekScore = score;
 
   this.UpdateScoreLv();
+end
+
+function Organization.Random3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Organization.Random4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Organization.Random5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
 end
 
 function Organization.SetMemberScore(roleId, score, weekScore)
@@ -980,6 +1584,30 @@ function Organization.SetDutyFlag(flagIndex, roleId, flagValue)
   end
 end
 
+function Organization.Random6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Organization.Random7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 function Organization.GetDutyFlag(flagIndex, roleId)
   if this.members[roleId] == nil then return false end
 
@@ -1057,5 +1685,53 @@ function Organization.UpdateProductionRedDot()
     RedDot.Add(ERedDot.OrgProduction);
   else
     RedDot.Remove(ERedDot.OrgProduction);
+  end
+end
+
+function Organization.Random8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Organization.Random9()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Organization.Random10()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Organization.Random11()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
   end
 end

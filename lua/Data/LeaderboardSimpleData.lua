@@ -2,8 +2,16 @@ LeaderboardSimpleData = {};
 LeaderboardSimpleData.__index = LeaderboardSimpleData;
 local this = LeaderboardSimpleData;
 
+--enum
 EBoardKind = {
   ActivityModel = 1,
+}
+
+EBoardStatus ={
+  Display = 1,
+  Opening = 2,
+  Calculating = 3,
+  Reward = 4,
 }
 
 this.ActivityKind = 10; --模板版型10
@@ -67,18 +75,10 @@ function LeaderboardSimpleData.ReceiveData(data)
   end
 end
 
-function LeaderboardSimpleData.UpdateSelfScore(boardKind, boardId, score)
+function LeaderboardSimpleData.UpdateSelfData(boardKind, boardId, score, status)
   local board = this.GetSelfBoard(boardKind, boardId);
-
-  if table.Count(board) > 0 then
-    for _, v in pairs(board.players) do
-      if v.playerId == Role.playerId then
-        v.playerScore = score;
-        break;
-      end
-    end
-  end
   board.score = score;
+  board.status = status;
 end
 
 function LeaderboardSimpleData.GetSelfBoard(boardKind, boardId)
@@ -103,18 +103,8 @@ end
 
 function LeaderboardSimpleData.GetSelfScore(boardKind, boardId)
   local board = this.GetSelfBoard(boardKind, boardId);
-  if table.Count(board) > 0 then
-    for _, v in pairs(board.players) do
-      if v.playerId == Role.playerId then
-        return v.playerScore;
-      end
-    end
-
-    if board.score then
-      return board.score;
-    else
-      return 0;
-    end
+  if board.score then
+    return board.score;
   else
     return 0;
   end

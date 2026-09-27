@@ -137,6 +137,7 @@ function UIHouseBoard.Initialize(go)
 end
 
 function UIHouseBoard.OnOpen(playerInfo)
+  local playerLevel;
   local playerTurn;
 
   --玩家本身的資料
@@ -145,20 +146,22 @@ function UIHouseBoard.OnOpen(playerInfo)
     currentPlayerId = Role.playerId;
     this.uiController.usePreviousStack = false;
     RedDot.Remove(ERedDot.FriendGift);
+    playerLevel =currentPlayer:GetAttribute(EAttribute.Lv);
     playerTurn =currentPlayer:GetAttribute(EAttribute.Turn);
   --其他玩家的資料
   else
     currentPlayer = playerInfo;
     currentPlayerId = playerInfo.roleId;
     this.uiController.usePreviousStack = true;
+    playerLevel = currentPlayer.level;
     playerTurn = currentPlayer.turn;
   end
 
   currentTag = EUIHouseTag.HomePage;
 
-  image_GoSendGift.gameObject:SetActive(currentPlayerId ~= Role.playerId and Social.CheckTurnStatus(playerTurn));
-  image_GiftFeedback.gameObject:SetActive(UICharmFeedback.ActivityIsOpen() and Role.player:GetAttribute(EAttribute.Turn) >= 1);
-  image_CharmFeedback.gameObject:SetActive(Role.player:GetAttribute(EAttribute.Turn) >= 1);
+  image_GoSendGift.gameObject:SetActive(currentPlayerId ~= Role.playerId and Social.CheckTurnStatus(playerLevel, playerTurn));
+  image_GiftFeedback.gameObject:SetActive(UICharmFeedback.ActivityIsOpen() and (Role.player:GetAttribute(EAttribute.Lv) >= 60 or Role.player:GetAttribute(EAttribute.Turn) > 0));
+  image_CharmFeedback.gameObject:SetActive(Role.player:GetAttribute(EAttribute.Lv) >= 60 or Role.player:GetAttribute(EAttribute.Turn) > 0);
   image_Mask.enabled = currentPlayerId ~= Role.playerId;
   image_BG.enabled = currentPlayerId ~= Role.playerId;
   image_ChgSignature.enabled = currentPlayerId == Role.playerId;
@@ -185,6 +188,27 @@ function UIHouseBoard.OnClick_Tag(tag)
   if tag == EUIHouseTag.House then
     return false;
   end
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 
   currentTag = tag;
   this.UpdateUI();
@@ -193,8 +217,29 @@ function UIHouseBoard.OnClick_Tag(tag)
 end
 
 function UIHouseBoard.OnClick_Help(checkShow)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   if checkShow ~= true then
-    UI.Open(UITutorialHint, 0, this, string.Get(23356), string.Get(23616));
+    UI.Open(UITutorialHint, 0, this, string.Get(23356), string.Get(24127));
   end
 
   return true;
@@ -387,6 +432,27 @@ function UIHouseBoard.UpdateProfile()
     uiCareer:SetCareer(currentPlayer.turn, currentPlayer.element, currentPlayer.career, false, currentPlayer.turn3Info.element);
     default = "";
     signatureDefault = "";
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   end
 
   text_Title.text = currentPlayer.name;
@@ -449,7 +515,28 @@ function UIHouseBoard.UpdateFriend()
   if currentPlayer == nil then return end
 
   HouseBoard.SetFriendList(currentPlayerId);
-
+  
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   friendsData = HouseBoard.friendsData;
 
   --顯示在UI上的好友列表
@@ -492,6 +579,27 @@ function UIHouseBoard.RefreshProfileData(result)
 end
 
 function UIHouseBoard.OnClick_GiftShop()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   UI.Open(UISouvenirShop, currentPlayerId);
 end
 
@@ -511,10 +619,10 @@ function UIHouseBoard.OnClick_More()
   UIHouseBoardFunction.OpenGiftWall(currentPlayerId);
 end
 
-function UIHouseBoard.SendUserData(messageString, kind)
+function UIHouseBoard.OnClick_EditSignature()
   if currentPlayerId ~= Role.playerId then return end;
 
-  ShowPlayerInfoInput(string.Get(messageString),
+  ShowPlayerInfoInput(string.Get(23357),
     function(text)
       if string.IsNullOrEmpty(text) then return end;
 
@@ -525,26 +633,66 @@ function UIHouseBoard.SendUserData(messageString, kind)
         end
       end
 
-      --C:105-002 <設定玩家資料> +設定類型(1) +字串長度(1) +字串(?)
+      --C:105-002 <設定玩家資料> +設定類型(1) 1.個性簽名 +字串長度(1) +字串(?)
       sendBuffer:Clear();
-      sendBuffer:WriteByte(kind);
-      sendBuffer:WriteStringWithByteL(text, DataManager.encoding_Unicode);
+      sendBuffer:WriteByte(1);
+      sendBuffer:WriteByte(string.GetLength(text));
+      sendBuffer:WriteString(text);
       Network.Send(105, 2, sendBuffer);
+
     end,
-    20
+    7
   );
 end
 
-function UIHouseBoard.OnClick_EditSignature()
-  this.SendUserData(23357, 1);
-end
-
 function UIHouseBoard.OnClick_EditImpression()
-  this.SendUserData(23361, 2);
+  if currentPlayerId ~= Role.playerId then return end;
+
+  ShowPlayerInfoInput(string.Get(23361),
+    function(text)
+      if string.IsNullOrEmpty(text) then return end;
+
+      for k, v in pairs(tabooDatas) do
+        if string.match(text, string.GetNocase(v)) ~= nil then
+          ShowCenterMessage(string.Get(40327));
+          return;
+        end
+      end
+
+      --C:105-002 <設定玩家資料> +設定類型(1) 2.自訂印象 +字串長度(1) +字串(?)
+      sendBuffer:Clear();
+      sendBuffer:WriteByte(2);
+      sendBuffer:WriteByte(string.GetLength(text));
+      sendBuffer:WriteString(text);
+      Network.Send(105, 2, sendBuffer);
+
+    end
+  );
 end
 
 function UIHouseBoard.OnClick_EditFavorite()
-  this.SendUserData(23364, 3);
+  if currentPlayerId ~= Role.playerId then return end;
+
+  ShowPlayerInfoInput(string.Get(23364),
+    function(text)
+      if string.IsNullOrEmpty(text) then return end;
+
+      for k, v in pairs(tabooDatas) do
+        if string.match(text, string.GetNocase(v)) ~= nil then
+          ShowCenterMessage(string.Get(40327));
+          return;
+        end
+      end
+
+      --C:105-002 <設定玩家資料> +設定類型(1) 3.喜好 +字串長度(1) +字串(?)
+      sendBuffer:Clear();
+      sendBuffer:WriteByte(3);
+      sendBuffer:WriteByte(string.GetLength(text));
+      sendBuffer:WriteString(text);
+      Network.Send(105, 2, sendBuffer);
+
+    end
+  );
 end
 
 function UIHouseBoard.OnClick_Sign()
@@ -559,6 +707,27 @@ function UIHouseBoard.OnClick_Sign()
       sendBuffer:WriteByte(4);
       sendBuffer:WriteByte(index);
       Network.Send(105, 2, sendBuffer);
+      --3----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
 
     end,
     HouseBoard.profileInfo.sign          --目前設定的星座
@@ -587,11 +756,75 @@ function UIHouseBoard.OnClick_Birth()
 end
 
 function UIHouseBoard.OnClick_EditArea()
-  this.SendUserData(23365, 6);
+  if currentPlayerId ~= Role.playerId then return end;
+
+  ShowPlayerInfoInput(string.Get(23365),
+    function(text)
+      if string.IsNullOrEmpty(text) then return end;
+
+      for k, v in pairs(tabooDatas) do
+        if string.match(text, string.GetNocase(v)) ~= nil then
+          ShowCenterMessage(string.Get(40327));
+          return;
+        end
+      end
+
+      --C:105-002 <設定玩家資料> +設定類型(1) 6.居住地 +字串長度(1) +字串(?)
+      sendBuffer:Clear();
+      sendBuffer:WriteByte(6);
+      sendBuffer:WriteByte(string.GetLength(text));
+      sendBuffer:WriteString(text);
+      Network.Send(105, 2, sendBuffer);
+
+    end
+  );
 end
 
 function UIHouseBoard.OnClick_EditHobby()
-  this.SendUserData(23363, 7);
+  if currentPlayerId ~= Role.playerId then return end;
+  
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  ShowPlayerInfoInput(string.Get(23363),
+    function(text)
+      if string.IsNullOrEmpty(text) then return end;
+
+      for k, v in pairs(tabooDatas) do
+        if string.match(text, string.GetNocase(v)) ~= nil then
+          ShowCenterMessage(string.Get(40327));
+          return;
+        end
+      end
+
+      --C:105-002 <設定玩家資料> +設定類型(1) 7.興趣 +字串長度(1) +字串(?)
+      sendBuffer:Clear();
+      sendBuffer:WriteByte(7);
+      sendBuffer:WriteByte(string.GetLength(text));
+      sendBuffer:WriteString(text);
+      Network.Send(105, 2, sendBuffer);
+
+    end
+  );
 end
 
 function UIHouseBoard.OnClick_FriendlyRank()

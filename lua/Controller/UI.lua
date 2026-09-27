@@ -4,11 +4,11 @@ require "Controller/UIItemController"
 require "Controller/UISkillController"
 require "Controller/UICareerController"
 require "Controller/UIStatusDetail"
-require "Controller/UITreasureDetail"
 require "Controller/UICardController"
 require "Controller/UICardSmallController"
 require "Controller/UICityScrambleGroundController"
 require "Controller/UIEternalDungeonLayerController"
+require "Controller/UITreasureDetail"
 require "Controller/UITreasureCard"
 
 require "UI/UICenterMessage"
@@ -48,8 +48,9 @@ require "UI/UIMessageboard"
 require "UI/UICityStation"
 require "UI/UIMiniMap"
 require "UI/UIMall"
+require "UI/UIMallPaySelect"
 require "UI/UIMainFunction"
-require "UI/UIHotkey"
+require "UI/UIHotkey" 
 require "UI/UISkillTree"
 require "UI/UILoginAward"
 require "UI/UIAchievement"
@@ -59,6 +60,8 @@ require "UI/UIAction"
 require "UI/UIFrame"
 require "UI/UITeleport"
 require "UI/UICompound"
+require "UI/UIGodskin"
+require "UI/UIGodskinFilter"
 require "UI/UISocial"
 require "UI/UISocialFunction"
 require "UI/UIServerArea"
@@ -124,20 +127,71 @@ require "UI/UIHouseExpand"
 require "UI/UIHouseSetting"
 require "UI/UIHouseSettingFunction"
 require "UI/UIElf"
-require "UI/UIVIP"
-require "UI/UIAIChat"
 require "UI/UIHouseMap"
+require "UI/UISoul"
+require "UI/UISoulInfo"
+require "UI/UIMarket"
+require "UI/UIRequiem"
+require "UI/UIMine"
 require "UI/UIBattlePass"
 require "UI/UIMyCardInput"
-require "UI/UIUniqueBlood"
-require "UI/UIBattleRoyale"
+require "UI/UIArmyBattle"
+require "UI/UIArmyBattleFunction"
+require "UI/UIArmyBattleDefence"
+require "UI/UIArmyBattleAttack"
 require "UI/UIRelationship"
-require "UI/UITreasure"
 require "UI/UIActivityModel"
 require "UI/UIBingo"
 require "UI/UIActivityMonopoly"
-require "UI/UIAgeAlert"
 require "UI/UILeaderboardSimple"
+require "UI/UITreasure"
+
+--require "TempXQJ/UIGuildBuild_demo"
+--require "TempXQJ/UIHero_demo"
+
+--[[
+Now after two years had gone by, Pharaoh had a dream; and in his dream he was by the side of the Nile;
+And out of the Nile came seven cows, good-looking and fat, and their food was the river-grass.
+And after them seven other cows came out of the Nile, poor-looking and thin; and they were by the side of the other cows.
+And the seven thin cows made a meal of the seven fat cows. Then Pharaoh came out of his sleep.
+But he went to sleep again and had a second dream, in which he saw seven heads of grain, full and good, all on one stem.
+And after them came up seven other heads, thin and wasted by the east wind.
+And the seven thin heads made a meal of the good heads. And when Pharaoh was awake he saw it was a dream.
+And in the morning his spirit was troubled; and he sent for all the wise men of Egypt and all the holy men, and put his dream before them, but no one was able to give him the sense of it.
+Then the chief wine-servant said to Pharaoh, The memory of my sin comes back to me now;
+Pharaoh had been angry with his servants, and had put me in prison in the house of the captain of the army, together with the chief bread-maker;
+And we had a dream on the same night, the two of us, and the dreams had a special sense.
+And there was with us a young Hebrew, the captain's servant, and when we put our dreams before him, he gave us the sense of them.
+And it came about as he said: I was put back in my place, and the bread-maker was put to death by hanging.
+Then Pharaoh sent for Joseph, and they took him quickly out of prison; and when his hair had been cut and his dress changed, he came before Pharaoh.
+And Pharaoh said to Joseph, I have had a dream, and no one is able to give me the sense of it; now it has come to my ears that you are able to give the sense of a dream when it is put before you.
+Then Joseph said, Without God there will be no answer of peace for Pharaoh.
+Then Pharaoh said, In my dream I was by the side of the Nile:
+And out of the Nile came seven cows, fat and good-looking, and their food was the river-grass;
+Then after them came seven other cows, very thin and poor-looking, worse than any I ever saw in the land of Egypt;
+And the thin cows made a meal of the seven fat cows who came up first;
+And even with the fat cows inside them they seemed as bad as before. And so I came out of my sleep.
+And again in a dream I saw seven heads of grain, full and good, coming up on one stem:
+And then I saw seven other heads, dry, thin, and wasted by the east wind, coming up after them:
+And the seven thin heads made a meal of the seven good heads; and I put this dream before the wise men, but not one of them was able to give me the sense of it.
+Then Joseph said, These two dreams have the same sense: God has made clear to Pharaoh what he is about to do.
+The seven fat cows are seven years, and the seven good heads of grain are seven years: the two have the same sense.
+The seven thin and poor-looking cows who came up after them are seven years; and the seven heads of grain, dry and wasted by the east wind, are seven years when there will be no food.
+As I said to Pharaoh before, God has made clear to him what he is about to do.
+Seven years are coming in which there will be great wealth of grain in Egypt;
+And after that will come seven years when there will not be enough food; and the memory of the good years will go from men's minds; and the land will be made waste by the bad years;
+And men will have no memory of the good time because of the need which will come after, for it will be very bitter.
+And this dream came to Pharaoh twice, because this thing is certain, and God will quickly make it come about.
+And now let Pharaoh make search for a man of wisdom and good sense, and put him in authority over the land of Egypt.
+Let Pharaoh do this, and let him put overseers over the land of Egypt to put in store a fifth part of the produce of the land in the good years.
+And let them get together all the food in those good years and make a store of grain under Pharaoh's control for the use of the towns, and let them keep it.
+And let that food be kept in store for the land till the seven bad years which are to come in Egypt; so that the land may not come to destruction through need of food.
+And this seemed good to Pharaoh and to all his servants.
+Then Pharaoh said to his servants, Where may we get such a man as this, a man in whom is the spirit of God?
+And Pharaoh said to Joseph, Seeing that God has made all this clear to you, there is no other man of such wisdom and good sense as you:
+You, then, are to be over my house, and all my people will be ruled by your word: only as king will I be greater than you.
+And Pharaoh said to Joseph, See, I have put you over all the land of Egypt.
+]]--
 
 Color = {
   Alpha = LuaHelper.GetColor(0, 0, 0, 0),
@@ -172,11 +226,11 @@ Color = {
   DarkGray = LuaHelper.GetColor(80, 80, 80, 255);
   Coffee = LuaHelper.GetColor(224, 64, 240, 255);
   Coffee2 = LuaHelper.GetColor(77, 18, 18, 255);
-  Cyan = LuaHelper.GetColor(0, 255, 250, 255);
+  
   Goal = LuaHelper.GetColor(29, 169, 52, 255);
   DarkUnsatisfiedGoal = LuaHelper.GetColor(240, 80, 80, 255);
   UnsatisfiedGoal = LuaHelper.GetColor(240, 100, 100, 255);
-
+  
   Defend = LuaHelper.GetColor(80, 180, 255, 255); --守方
   Attack = LuaHelper.GetColor(255, 100, 88, 255); --攻方
   MissionNPC = LuaHelper.GetColor(255, 160, 255, 255); --任務NPC,可成長
@@ -190,6 +244,9 @@ Color = {
   HouseGrayBlue = LuaHelper.GetColor(66, 89, 133, 255);
   HouseDarkBlue = LuaHelper.GetColor(37, 55, 85, 255);
 
+  MountCollect = LuaHelper.GetColor(252, 247, 243, 255);
+  MountNotCollect = LuaHelper.GetColor(214, 208, 195, 255);
+  
   ItemQuality = {
     [0] = LuaHelper.GetColor(255, 255, 255, 255);
     [1] = LuaHelper.GetColor(60, 179, 79, 255);
@@ -317,7 +374,7 @@ Color = {
 
 AtlasName = {
   Common = "Common",
-  Common0 = "common0",
+  Common0 = "common0", 
   Common1 = "common1"
 }
 
@@ -377,6 +434,14 @@ this.showAllMission = false;
 local previusStack = Stack.New();
 local uiTable = {};
 
+function UI.GetLShift(bitlshift1, bitlshift2)
+  local lshiftN = 0;
+  bit.lshift(lshiftN, bitlshift1)
+  bit.lshift(lshiftN, bitlshift2)
+  
+  return lshiftN
+end
+
 function UI.Destroy()
   poolMgr:DestroyPool("BBaseUIEternalDungeonLayer");
   poolMgr:DestroyPool("BaseUICityGround");
@@ -404,14 +469,46 @@ function UI.Destroy()
   table.Clear(uiTable);
 end
 
+function UI.GetLShift1(bitlshift1, bitlshift2)
+  local lshiftN = 0;
+  bit.lshift(lshiftN, bitlshift1)
+  bit.lshift(lshiftN, bitlshift2)
+  
+  return lshiftN
+end
+
+function UI.GetLShift2(bitlshift1, bitlshift2)
+  local lshiftN = 0;
+  bit.lshift(lshiftN, bitlshift1)
+  bit.lshift(lshiftN, bitlshift2)
+  
+  return lshiftN
+end
+
+function UI.GetLShift3(bitlshift1, bitlshift2)
+  local lshiftN = 0;
+  bit.lshift(lshiftN, bitlshift1)
+  bit.lshift(lshiftN, bitlshift2)
+  
+  return lshiftN
+end
+
+function UI.GetLShift4(bitlshift1, bitlshift2)
+  local lshiftN = 0;
+  bit.lshift(lshiftN, bitlshift1)
+  bit.lshift(lshiftN, bitlshift2)
+  
+  return lshiftN
+end
+
 function UI.Initialize()
   this.gameObject = GameObject.FindGameObjectWithTag("UICamera");
   this.transform = this.gameObject.transform.parent;
   this.camera = this.gameObject:GetComponent("Camera");
   this.rectTransform = GameObject.Find("UI"):GetComponent("RectTransform");
-
+  
   this.height = Screen.height / Screen.width * this.width;
-  this.scale = this.height / 600;
+  this.scale = this.height / 600; 
   this.screenRatio = string.format("%.2f", Screen.width / Screen.height);
 end
 
@@ -427,6 +524,22 @@ function UI.LoadText()
       asset.material.mainTexture.filterMode = FilterMode.Point;
     end
   );
+end
+
+function UI.GetLShift5(bitlshift1, bitlshift2)
+  local lshiftN = 0;
+  bit.lshift(lshiftN, bitlshift1)
+  bit.lshift(lshiftN, bitlshift2)
+  
+  return lshiftN
+end
+
+function UI.GetLShift6(bitlshift1, bitlshift2)
+  local lshiftN = 0;
+  bit.lshift(lshiftN, bitlshift1)
+  bit.lshift(lshiftN, bitlshift2)
+  
+  return lshiftN
 end
 
 function UI.LoadSomething()
@@ -494,7 +607,7 @@ function UI.LoadSomething()
         this.loadCount = this.loadCount - 1;
       end
     );
-
+    
     this.loadCount = this.loadCount + 1;
     CGResourceManager.Load(
       "BaseCardSmall",
@@ -504,7 +617,7 @@ function UI.LoadSomething()
         this.loadCount = this.loadCount - 1;
       end
     );
-
+    
     this.loadCount = this.loadCount + 1;
     CGResourceManager.Load(
       "BaseUICityGround",
@@ -514,7 +627,7 @@ function UI.LoadSomething()
         this.loadCount = this.loadCount - 1;
       end
     );
-
+    
     this.loadCount = this.loadCount + 1;
     CGResourceManager.Load(
       "BaseUIEternalDungeonLayer",
@@ -524,7 +637,7 @@ function UI.LoadSomething()
         this.loadCount = this.loadCount - 1;
       end
     );
-
+  
   this.loadCount = this.loadCount + 1;
   CGResourceManager.Load(
     "BaseUIStatusDetail",
@@ -574,6 +687,38 @@ function UI.Update()
   end
 end
 
+function UI.GetLShift7(bitlshift1, bitlshift2)
+  local lshiftN = 0;
+  bit.lshift(lshiftN, bitlshift1)
+  bit.lshift(lshiftN, bitlshift2)
+  
+  return lshiftN
+end
+
+function UI.GetLShift8(bitlshift1, bitlshift2)
+  local lshiftN = 0;
+  bit.lshift(lshiftN, bitlshift1)
+  bit.lshift(lshiftN, bitlshift2)
+  
+  return lshiftN
+end
+
+function UI.GetLShift9(bitlshift1, bitlshift2)
+  local lshiftN = 0;
+  bit.lshift(lshiftN, bitlshift1)
+  bit.lshift(lshiftN, bitlshift2)
+  
+  return lshiftN
+end
+
+function UI.GetLShift10(bitlshift1, bitlshift2)
+  local lshiftN = 0;
+  bit.lshift(lshiftN, bitlshift1)
+  bit.lshift(lshiftN, bitlshift2)
+  
+  return lshiftN
+end
+
 function UI.ResetShow()
   this.showMainUI = true;
   this.showMiniMap = false;
@@ -596,13 +741,35 @@ function UI.Preload(ui, open, forceUseArgs, args)
   end
 end
 
+function UI.TrashA()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function UI.TrashB()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
 function UI.DownloadUI(ui, open, forceUseArgs, args)
   CGResourceManager.Load(
     string.Concat("UI_", string.sub(ui.name, 3, string.len(ui.name))),
     "UI",
     function(assetName, asset)
       if uiTable[ui] ~= nil then return end
-
+          
       if asset == nil then
         logError(string.Concat(ui.name, " Not Found !!"));
         return;
@@ -638,11 +805,55 @@ function UI.OpenAlwaysUseArgument(ui, ...)
   this.DoOpen(ui, true, ...);
 end
 
+function UI.TrashC()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function UI.TrashD()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function UI.TrashE()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function UI.TrashF()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
 function UI.DoOpen(ui, forceUseArgs, ...)
   if ui == nil then return end
-
+  
   local args = { ... }
-
+  
   if uiTable[ui] == nil then
     this.Preload(ui, true, forceUseArgs, args);
     return;
@@ -702,13 +913,13 @@ end
 --Close
 function UI.Close(ui, ...)
   if ui == nil then return end
-
+  
   local args = ...;
-
+  
   if uiTable[ui] == nil then return end
-
+  
   local currentUI = nil;
-
+  
   if previusStack:Count() > 0 then
     currentUI = previusStack:Peek();
 
@@ -718,7 +929,7 @@ function UI.Close(ui, ...)
       currentUI = nil;
     end
   end
-
+  
   ui.uiController:Close(args);
 
   this.RemoveUI(ui);
@@ -744,10 +955,27 @@ end
 function UI.CloseAllPreviousUI()
   while previusStack:Count() > 0 do
     local previousUI = previusStack:Pop();
-
+    
     previousUI[1].uiController:Close();
   end
 end
+
+--[[
+Now in the days of Amraphel, king of Shinar, Arioch, king of Ellasar, Chedorlaomer, king of Elam, and Tidal, king of Goiim,
+They made war with Bera, king of Sodom, and with Birsha, king of Gomorrah, Shinab, king of Admah, and Shemeber, king of Zeboiim, and the king of Bela (which is Zoar).
+All these came together in the valley of Siddim (which is the Salt Sea).
+For twelve years they were under the rule of Chedorlaomer, but in the thirteenth year they put off his control.
+And in the fourteenth year, Chedorlaomer and the kings who were on his side, overcame the Rephaim in Ashteroth-karnaim, and the Zuzim in Ham, and the Emim in Shaveh-kiriathaim,
+And the Horites in their mountain Seir, driving them as far as El-paran, which is near the waste land.
+Then they came back to En-mishpat (which is Kadesh), making waste all the country of the Amalekites and of the Amorites living in Hazazon-tamar.
+And the king of Sodom with the king of Gomorrah and the king of Admah and the king of Zeboiim and the king of Bela (that is Zoar), went out, and put their forces in position in the valley of Siddim,
+Against Chedorlaomer, king of Elam, and Tidal, king of Goiim, and Amraphel, king of Shinar, and Arioch, king of Ellasar: four kings against the five.
+Now the valley of Siddim was full of holes of sticky earth; and the kings of Sodom and Gomorrah were put to flight and came to their end there, but the rest got away to the mountain.
+And the four kings took all the goods and food from Sodom and Gomorrah and went on their way.
+And in addition they took Lot, Abram's brother's son, who was living in Sodom, and all his goods.
+And one who had got away from the fight came and gave word of it to Abram the Hebrew, who was living by the holy tree of Mamre, the Amorite, the brother of Eshcol and Aner, who were friends of Abram.
+And Abram, hearing that his brother's son had been made a prisoner, took a band of his trained men, three hundred and eighteen of them, sons of his house, and went after them as far as Dan.
+--]]
 
 local viewException = {
   UICenterMessage,
@@ -775,6 +1003,24 @@ function UI.InsertUI(ui)
   PluginManager.ViewUI(screenView[#screenView].name)
 end
 
+function UI.GetBitxorA(bitxor)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoXorN = 10;
+    DemoXorN = bit.bxor(DemoXorN, bitxor)
+    
+    return DemoXorN;
+  end
+end
+
+function UI.GetBitxorB(bitxor)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoXorN = 10;
+    DemoXorN = bit.bxor(DemoXorN, bitxor)
+    
+    return DemoXorN;
+  end
+end
+
 function UI.RemoveUI(ui)
   if table.Contains(viewException, ui) then return end
 
@@ -797,10 +1043,36 @@ function UI.GetCurrentUI()
   return screenView[#screenView];
 end
 
+function UI.GetBitxorC(bitxor)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoXorN = 10;
+    DemoXorN = bit.bxor(DemoXorN, bitxor)
+    
+    return DemoXorN;
+  end
+end
+
+function UI.GetBitxorD(bitxor)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoXorN = 10;
+    DemoXorN = bit.bxor(DemoXorN, bitxor)
+    
+    return DemoXorN;
+  end
+end
+
+function UI.GetBitxorE(bitxor)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoXorN = 10;
+    DemoXorN = bit.bxor(DemoXorN, bitxor)
+    
+    return DemoXorN;
+  end
+end
+
 local closeException = {
   UICenterMessage,
   UIMarqueeMessage,
-  UIAgeAlert,
 }
 
 function UI.CloseAll()
@@ -818,7 +1090,7 @@ local hidedUI = {};
 function UI.HideAll(hide, ...)
   if hide then
     local exceptUI = {...};
-
+    
     for k, v in pairs(uiTable) do
       if table.GetKey(exceptUI, v.name) == nil then
         this.Hide(v);
@@ -833,7 +1105,7 @@ function UI.HideAll(hide, ...)
   end
 end
 
-function UI.Hide(ui)
+function UI.Hide(ui)    
   if uiTable[ui] == nil then return end
   if uiTable[ui].uiController == nil then return end
   if uiTable[ui].uiController.canvas == nil then return end
@@ -847,13 +1119,49 @@ function UI.Hide(ui)
   table.insert(hidedUI, ui);
 end
 
+function UI.GetBitxorF(bitxor)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoXorN = 10;
+    DemoXorN = bit.bxor(DemoXorN, bitxor)
+    
+    return DemoXorN;
+  end
+end
+
+function UI.GetBitxorG(bitxor)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoXorN = 10;
+    DemoXorN = bit.bxor(DemoXorN, bitxor)
+    
+    return DemoXorN;
+  end
+end
+
+function UI.GetBitxorH(bitxor)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoXorN = 10;
+    DemoXorN = bit.bxor(DemoXorN, bitxor)
+    
+    return DemoXorN;
+  end
+end
+
+function UI.GetBitxorI(bitxor)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoXorN = 10;
+    DemoXorN = bit.bxor(DemoXorN, bitxor)
+    
+    return DemoXorN;
+  end
+end
+
 function UI.Unhide(ui)
   if uiTable[ui] == nil then return end
   if uiTable[ui].uiController == nil then return end
   if uiTable[ui].uiController.canvas == nil then return end
 
   uiTable[ui].uiController.canvas.enabled = true;
-
+  
   if uiTable[ui].uiController.visible and uiTable[ui].OnVisible ~= nil then
     uiTable[ui].OnVisible(true);
   end
@@ -865,7 +1173,7 @@ function UI.IsVisible(ui)
   if ui == nil then return false end
   if ui.uiController == nil then return false end
   if ui.uiController.visible == nil then return false end
-
+  
   return ui.uiController.visible or ui.uiController.gameObject.activeSelf;
 end
 
@@ -873,6 +1181,20 @@ function UI.UpdateStyle()
   for k, v in pairs(uiTable) do
     if v.uiController ~= nil then
       v.uiController:ChangeStyle(Setting.client.uiStyle);
+    end
+  end
+end
+
+function UI.AviodCov()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
     end
   end
 end
@@ -914,6 +1236,34 @@ function UI.ForIphoneXScreen(uiObject)
   elseif uiName == UILoading.name then
     uiObject.transform.offsetMin = Vector2.New(0, 0);
     uiObject.transform.offsetMax = Vector2.New(0, 0);
+  end
+end
+
+function UI.AviodCov1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function UI.AviodCov2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
   end
 end
 
@@ -1003,6 +1353,34 @@ function UI.GetSwitchSprite(switchOn)
   end
 end
 
+function UI.AviodCov3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function UI.AviodCov4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
 function UI.GetTagSprite(focus)
   if focus then
     return this.GetSprite("kin001L");
@@ -1016,6 +1394,48 @@ function UI.GetSubTagSprite(focus)
     return this.GetSprite("kin002L");
   else
     return this.GetSprite("kin002D");
+  end
+end
+
+function UI.AviodCov5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function UI.AviodCov6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function UI.AviodCov7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
   end
 end
 
@@ -1036,6 +1456,20 @@ function UI.GetCurrencySprite(currency)
     return this.GetSprite("icon137");
   elseif currency == ECurrency.Elf then
     return this.GetSprite("icon155");
+  elseif currency == ECurrency.TS then
+    return this.GetSprite("icon154");
+  elseif currency == ECurrency.Soul then
+    return this.GetSprite("icon158");
+  elseif currency == ECurrency.ColorSoul then
+    return this.GetSprite("icon161");
+  elseif currency == ECurrency.WarriorTicket then
+    return this.GetSprite("icon165");
+  elseif currency == ECurrency.CardTicket then
+    return this.GetSprite("icon164");
+  elseif currency == ECurrency.ExclusiveWeaponTicket then
+    return this.GetSprite("icon163");
+  elseif currency == ECurrency.OutfitTicket then
+    return this.GetSprite("icon162");
   elseif currency == ECurrency.Treasure then
     return this.GetSprite("icon202");
   else
@@ -1043,25 +1477,25 @@ function UI.GetCurrencySprite(currency)
   end
 end
 
-function UI.GetMallMemoSprite(memo)
-  if memo == 1 then
-    return this.GetSprite("com097");
-  elseif memo == 2 then
-    return this.GetSprite("com098");
-  elseif memo == 3 then
-    return this.GetSprite("com096");
-  elseif memo == 4 then
-    return this.GetSprite("com122");
+function UI.GetMallMemoSprite(memo) 
+  if memo == 1 then 
+    return this.GetSprite("com097"); 
+  elseif memo == 2 then 
+    return this.GetSprite("com098"); 
+  elseif memo == 3 then 
+    return this.GetSprite("com096"); 
+  elseif memo == 4 then 
+    return this.GetSprite("com122"); 
   elseif memo == 5 then
-    return this.GetSprite("com125");
+    return this.GetSprite("com125"); 
   elseif memo == 6 then
     return this.GetSprite("com131");
-  elseif memo ==7 then
+  elseif memo == 7 then
     return this.GetSprite("com134");
-  end
-
-  return nil;
-end
+  end 
+ 
+  return nil; 
+end 
 
 function UI.GetRankSprite(rank)
   if rank == 1 then
@@ -1075,12 +1509,41 @@ function UI.GetRankSprite(rank)
   return nil;
 end
 
+function UI.AviodCov8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+
+function UI.AviodCov9()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
 function UI.GetTeamStateSprite(state)
   if state == ETeamState.Leader then
     return this.GetSprite("com035");
   elseif state == ETeamState.Adviser then
     return this.GetSprite("com034");
-  else
+  else 
     return nil;
   end
 end
@@ -1110,6 +1573,28 @@ function UI.GetMissionStateSprite(state)
 end
 
 function UI.GetFirstIAPSprite(frequency)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local faith = 0;
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+    
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
+    
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      human = satan + haven;
+    else
+      human = satan - haven;
+    end
+  end
+  
   if frequency == 1 then
     return this.GetSprite("bod055");
   elseif frequency == 2 then

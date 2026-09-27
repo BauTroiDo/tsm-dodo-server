@@ -1,6 +1,39 @@
 LoginAwardTagData = {};
 LoginAwardTagData.__index = LoginAwardTagData;
 
+function LoginAwardTagData.Script()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function LoginAwardTagData.Script1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function LoginAwardTagData.Script2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
 function LoginAwardTagData.New(reader)
   local self = {};
   setmetatable(self, LoginAwardTagData);
@@ -18,6 +51,28 @@ function LoginAwardTagData.New(reader)
   return self;
 end
 
+function LoginAwardTagData.Script3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function LoginAwardTagData.Script4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
 function LoginAwardTagData.Add(kind, tag, tagString, sort, activityTime, actSort, title, isStop)
   local self = {};
   setmetatable(self, LoginAwardTagData);
@@ -32,4 +87,26 @@ function LoginAwardTagData.Add(kind, tag, tagString, sort, activityTime, actSort
   self.isStop = isStop;
 
   return self;
+end
+
+function LoginAwardTagData.Script5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function LoginAwardTagData.Script6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
 end

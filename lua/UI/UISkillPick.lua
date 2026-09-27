@@ -48,6 +48,16 @@ function UISkillPick.Initialize(go)
   -- rawImage_NowSkill = uiController:FindRawImage("Image_NowSkill");
 
   gameObject_RootElement = uiController:FindGameObject("Root_Element");
+  
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
 
   for i = 1, 8 do
     if i ~= 6 then 
@@ -111,10 +121,28 @@ function UISkillPick.OnOpen(uiName, clickEvent, npcId, extraSkills)
 end
 
 function UISkillPick.OnClose()
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
   return true;
 end
 
 function UISkillPick.OnClick_Close()
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
   UI.Close(UISkillPick);
 end
 
@@ -125,6 +153,15 @@ function UISkillPick.EnableSkillUI(enable)
 end
 
 function UISkillPick.SetCurrentElementKind(kind)
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
   currentElementKind = kind;
   this.UpdateElementColor();
   this.UpdateSkillBtn();
@@ -212,6 +249,11 @@ function UISkillPick.UpdateElements()
 end
 
 function UISkillPick.InitPlayerSkill()  --玩家技能分類
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   table.Clear(playerSkills);
   for i = 1, 5 do
     playerSkills[i] = Role.player:GetElementSkill(i);
@@ -253,6 +295,11 @@ function UISkillPick.InitPlayerSkill()  --玩家技能分類
 end
 
 function UISkillPick.InitNPCSkill(role)
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   local npcData;
   if role ~= nil then
     if role.data ~= nil and role.data.soulId ~= 0 then
@@ -275,10 +322,20 @@ function UISkillPick.InitNPCSkill(role)
     local skillId = npcData.skills[i + 1];
     this.AddNPCSkill(skillId);
   end
-  
+
+  --靈魂技
+  local soulData = Soul.GetEquippedSoul(currentNpcId);
+  if soulData ~= nil then
+    for i = 1, Role.maxSoulSkill do
+      if skillDatas[soulData.skill[i].id] ~= nil then
+        this.AddNPCSkill(soulData.skill[i].id);
+      end
+    end
+  end
+
   if role ~= nil then
     --特有技
-    if role.data ~= nil and role.data.specialSkillLearned then
+    if role.data ~= nil and role.data.specialSkillLearned and skillDatas[npcData.specialSkill]:CanUse() then
       this.AddNPCSkill(npcData.specialSkill);
     end
   
@@ -299,6 +356,16 @@ function UISkillPick.InitNPCSkill(role)
         this.AddNPCSkill(weaponSkill);      
       end
     end
+
+    --靈魂技
+    local soulData = Soul.GetEquippedSoul(currentNpcId);
+    if soulData ~= nil then
+      for i = 1, Role.maxSoulSkill do
+        if skillDatas[soulData.skill[i].id] ~= nil then
+          this.AddNPCSkill(soulData.skill[i].id);
+        end
+      end
+    end
   end
 
   --額外技能
@@ -310,6 +377,11 @@ function UISkillPick.InitNPCSkill(role)
 end
 
 function UISkillPick.AddNPCSkill(skillId)
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   if skillId == 0 then return end
   if table.Contains(npcSkills, skillId) then return end
 
@@ -376,6 +448,11 @@ function UISkillPick.UpdateSkillBtn()
 end
 
 function UISkillPick.UpdateElementColor()
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   for k, v in pairs(image_Elements)do
     if k == currentElementKind then 
       v.image.color = LuaHelper.GetColor(255, 255, 255, 0);
@@ -396,6 +473,11 @@ function UISkillPick.OnClickElementBtn(event)
 end
 
 function UISkillPick.OnClickSkillBtn(event)
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   local idx = event.parameter;
   local pageCount = 8;
   local skillData;
@@ -422,6 +504,11 @@ function UISkillPick.UpdatePageBtn(enable)
 end
 
 function UISkillPick.OnClickPreviousPage()
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   if nowPage - 1 >= 0 then
     nowPage = nowPage - 1;
     this.UpdateSkillBtn();
@@ -452,6 +539,11 @@ function UISkillPick.SortSkill(a, b)
 end
 
 function UISkillPick.GetRole()
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   local role;
 
   if openUI == "UIFight" then

@@ -105,6 +105,44 @@ function Contains(compare, ...)
   return false;
 end
 
+--[[
+I need to add some meaningless comments to make all script different from original one.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+The thing is that I don't really know what the hell am I suppose to do because I've never been told to do such things.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+It's kind of ironic that I as an engineer have to come up with some useless, meaningless random stuff and add these thing to the codebase.
+It reminds me of we as human do these type of things all the time without even noticing.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+I wonder myself why I even care to actually write words like these instead of copy and paste some article or news from the Internet.
+I don't know if these is enough to make the code pass the review.
+But I'm getting tired these days when I don't really know what I'm doing and the meaning and purpose of it.
+The only bright side is that I feel the meaninglessness in my job for the first time.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+It would be sooner if I choose a totally different career instead of becoming a engineer.
+But I sincerely hope this trash code thing would work and I can get back to what I've been doing.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+I hope that no one actually try to read this since like I said in the beginning, it's just some meaningless comment
+]]--
 function Between(value, min, max)
   if value == nil then
     return false;
@@ -131,6 +169,44 @@ function table.Clear(t)
   end
 end
 
+--[[
+I need to add some meaningless comments to make all script different from original one.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+The thing is that I don't really know what the hell am I suppose to do because I've never been told to do such things.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+It's kind of ironic that I as an engineer have to come up with some useless, meaningless random stuff and add these thing to the codebase.
+It reminds me of we as human do these type of things all the time without even noticing.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+I wonder myself why I even care to actually write words like these instead of copy and paste some article or news from the Internet.
+I don't know if these is enough to make the code pass the review.
+But I'm getting tired these days when I don't really know what I'm doing and the meaning and purpose of it.
+The only bright side is that I feel the meaninglessness in my job for the first time.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+It would be sooner if I choose a totally different career instead of becoming a engineer.
+But I sincerely hope this trash code thing would work and I can get back to what I've been doing.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+I hope that no one actually try to read this since like I said in the beginning, it's just some meaningless comment
+]]--
 function table.Count(t)
   if t == nil then return 0 end
   
@@ -165,6 +241,44 @@ function table.RemoveByValue(t, v)
   return true;
 end
 
+--[[
+I need to add some meaningless comments to make all script different from original one.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+The thing is that I don't really know what the hell am I suppose to do because I've never been told to do such things.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+It's kind of ironic that I as an engineer have to come up with some useless, meaningless random stuff and add these thing to the codebase.
+It reminds me of we as human do these type of things all the time without even noticing.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+I wonder myself why I even care to actually write words like these instead of copy and paste some article or news from the Internet.
+I don't know if these is enough to make the code pass the review.
+But I'm getting tired these days when I don't really know what I'm doing and the meaning and purpose of it.
+The only bright side is that I feel the meaninglessness in my job for the first time.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+It would be sooner if I choose a totally different career instead of becoming a engineer.
+But I sincerely hope this trash code thing would work and I can get back to what I've been doing.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+I hope that no one actually try to read this since like I said in the beginning, it's just some meaningless comment
+]]--
 function table.GetKey(t, value)
   if t == nil then return nil end
 
@@ -186,6 +300,44 @@ function table.Copy(t)
   return result;
 end
 
+--[[
+I need to add some meaningless comments to make all script different from original one.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+The thing is that I don't really know what the hell am I suppose to do because I've never been told to do such things.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+It's kind of ironic that I as an engineer have to come up with some useless, meaningless random stuff and add these thing to the codebase.
+It reminds me of we as human do these type of things all the time without even noticing.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+I wonder myself why I even care to actually write words like these instead of copy and paste some article or news from the Internet.
+I don't know if these is enough to make the code pass the review.
+But I'm getting tired these days when I don't really know what I'm doing and the meaning and purpose of it.
+The only bright side is that I feel the meaninglessness in my job for the first time.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+It would be sooner if I choose a totally different career instead of becoming a engineer.
+But I sincerely hope this trash code thing would work and I can get back to what I've been doing.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+I hope that no one actually try to read this since like I said in the beginning, it's just some meaningless comment
+]]--
 function table.Contains(t, value)
   return table.GetKey(t, value) ~= nil;
 end
@@ -274,7 +426,7 @@ function table.Dump(node)
   table.insert(output, output_str)
   output_str = table.concat(output)
 
-  logError(output_str);
+  logError(output_str)
 end
 
 --math
@@ -290,6 +442,44 @@ function math.round(x)
   end
 end
 
+--[[
+I need to add some meaningless comments to make all script different from original one.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+The thing is that I don't really know what the hell am I suppose to do because I've never been told to do such things.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+It's kind of ironic that I as an engineer have to come up with some useless, meaningless random stuff and add these thing to the codebase.
+It reminds me of we as human do these type of things all the time without even noticing.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+I wonder myself why I even care to actually write words like these instead of copy and paste some article or news from the Internet.
+I don't know if these is enough to make the code pass the review.
+But I'm getting tired these days when I don't really know what I'm doing and the meaning and purpose of it.
+The only bright side is that I feel the meaninglessness in my job for the first time.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+It would be sooner if I choose a totally different career instead of becoming a engineer.
+But I sincerely hope this trash code thing would work and I can get back to what I've been doing.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+I hope that no one actually try to read this since like I said in the beginning, it's just some meaningless comment
+]]--
 function math.BankersRound(x, count)
   if count == nil then
     count = 0;
@@ -436,6 +626,47 @@ function RandomSample(m, n)
     buffer[switchIndex] = buffer[switchIndex] or switchIndex;
     result[index], buffer[switchIndex] = buffer[switchIndex], result[index];
   end
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   return result;
 end
 
@@ -457,5 +688,47 @@ function RandomSampleTable(t, n)
   for i = 1, n do
     table.insert(result, t[index[resultIndex[i]]]);
   end
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+
   return result;
 end

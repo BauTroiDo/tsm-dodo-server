@@ -12,8 +12,44 @@ function CitySceneInfo.New()
   return self;
 end
 
+function CitySceneInfo.Random()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 CityNpcInfo = {}
 CityNpcInfo.__index = CityNpcInfo;
+
+function CityNpcInfo.Random()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function CityNpcInfo.Random1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
 
 function CityNpcInfo.New()
   local self = {};
@@ -27,6 +63,30 @@ end
 
 CityData = {}
 CityData.__index = CityData;
+
+function CityData.Random()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function CityData.Random1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
 
 function CityData.New()
   local self = {};
@@ -85,4 +145,28 @@ function CityData.New()
   end
 
   return self;
+end
+
+function CityData.Random2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function CityData.Random3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
 end

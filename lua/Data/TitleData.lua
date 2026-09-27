@@ -2,6 +2,48 @@
 TitleData = {}
 TitleData.__index = TitleData;
 
+function TitleData.GuessNumberD(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
+function TitleData.GuessNumberD1(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
 function TitleData.New(reader)
   local self = {};
   setmetatable(self, TitleData);
@@ -28,6 +70,27 @@ function TitleData.New(reader)
   self.effectOffset = reader:ReadInt16(); --特效高度位移
   
   return id, self;
+end
+
+function TitleData.GuessNumberD2(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
 end
 
 --[[

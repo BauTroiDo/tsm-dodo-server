@@ -19,35 +19,57 @@ function LightningStroke:Update()
     local  newPos = me:GetMagicPos();
     me:SetMoment(newPos.x, newPos.y, false);
     me.roleController:SetAnimationForceId(ERolePose.Magic);
-    local CirclePic = self:GetCirclePic();
-    FightField.attack[self.humIdx]:SetLightWithOrder(1, EEffectLightDis.Ground, CirclePic, 100, 1, 20, 20, EEffectLightTracer.StandAni, me.nowPos.x, me.nowPos.y, 20, true, 80);
+    FightField.attack[self.humIdx]:SetLightWithOrder(1, EEffectLightDis.Ground, 10078, 100, 1, 20, 20, EEffectLightTracer.StandAni, me.nowPos.x, me.nowPos.y, 20, true, 80);
     self.interval = 0.1;
     self.step = 2;
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif self.step == 2 then
     if self:CheckInterval() then 
       local newPos = target:RCtoSpot(target.colm, 0, EFightSpot.None, 0);
       local newPos1 = target:RCtoSpot(target.colm, 4, EFightSpot.None, 0);
-      local LightningPic = self:GetLightningPic();
-      local RockPic = self:GetRockPic();
       for i = 0, 1 do
-        self.flashLight[i] = EffectLight.New(LightningPic, 90, 1, 4, 4, EEffectLightTracer.Line, newPos.x + (i * 20), newPos.y - (i * 20), 30, true, 0, newPos1.x, newPos1.y, 0.32);
-        self.flashLight[i + 2] = EffectLight.New(LightningPic, 90, 1, 4, 4, EEffectLightTracer.Line, newPos1.x - (i * 20), newPos1.y + (i * 20), 30, true, 0, newPos.x, newPos.y, 0.32);
+        self.flashLight[i] = EffectLight.New(10069, 90, 1, 4, 4, EEffectLightTracer.Line, newPos.x + (i * 20), newPos.y - (i * 20), 30, true, 0, newPos1.x, newPos1.y, 0.32);
+        self.flashLight[i + 2] = EffectLight.New(10069, 90, 1, 4, 4, EEffectLightTracer.Line, newPos1.x - (i * 20), newPos1.y + (i * 20), 30, true, 0, newPos.x, newPos.y, 0.32);
         self.flashLight[i]:SetTimeScale(FightField.timeScale);  
         self.flashLight[i + 2]:SetTimeScale(FightField.timeScale);  
         self.flashLight[i]:SetSortingOrder(FightField.FIGHT_BODYLIGHT_ORDER);
         self.flashLight[i + 2]:SetSortingOrder(FightField.FIGHT_BODYLIGHT_ORDER);
 
-        self.rockLight[i] = EffectLight.New(RockPic, 33, 8, 15, 15, EEffectLightTracer.Line, newPos.x + (i * 20), newPos.y - (i * 20), 50, true, 0, newPos1.x, newPos1.y + 30, 0.32);
+        self.rockLight[i] = EffectLight.New(10008, 33, 8, 15, 15, EEffectLightTracer.Line, newPos.x + (i * 20), newPos.y - (i * 20), 50, true, 0, newPos1.x, newPos1.y + 30, 0.32);
         self.rockLight[i]:SetTimeScale(FightField.timeScale);  
         self.rockLight[i]:SetSortingOrder(FightField.FIGHT_BODYLIGHT_ORDER);
-        self.rockLight[i + 2] = EffectLight.New(RockPic, 33, 8, 15, 15, EEffectLightTracer.Line, newPos1.x - (i * 20), newPos1.y + (i * 20), 50, true, 0, newPos.x, newPos.y + 30, 0.32);
+        self.rockLight[i + 2] = EffectLight.New(10008, 33, 8, 15, 15, EEffectLightTracer.Line, newPos1.x - (i * 20), newPos1.y + (i * 20), 50, true, 0, newPos.x, newPos.y + 30, 0.32);
         self.rockLight[i + 2]:SetTimeScale(FightField.timeScale);  
         self.rockLight[i + 2]:SetSortingOrder(FightField.FIGHT_BODYLIGHT_ORDER);
       end
 
-      local SmokePic = self:GetSmokePic();
-      FightField.attack[self.humIdx]:SetLightWithOrder(4, EEffectLightDis.Body, SmokePic, 90, 1, 8, 16, EEffectLightTracer.Line, newPos.x + 20, newPos.y + 30, 30, true, 0, newPos1.x + 20, newPos1.y + 30, 0.32);
-      FightField.attack[self.humIdx]:SetLightWithOrder(5, EEffectLightDis.Body, SmokePic, 90, 1, 8, 16, EEffectLightTracer.Line, newPos1.x + 20, newPos1.y + 30, 30, true, 0, newPos.x + 20, newPos.y + 30, 0.32);
+      FightField.attack[self.humIdx]:SetLightWithOrder(4, EEffectLightDis.Body, 10133, 90, 1, 8, 16, EEffectLightTracer.Line, newPos.x + 20, newPos.y + 30, 30, true, 0, newPos1.x + 20, newPos1.y + 30, 0.32);
+      FightField.attack[self.humIdx]:SetLightWithOrder(5, EEffectLightDis.Body, 10133, 90, 1, 8, 16, EEffectLightTracer.Line, newPos1.x + 20, newPos1.y + 30, 30, true, 0, newPos.x + 20, newPos.y + 30, 0.32);
       self.step = 3;
     end
   elseif self.step == 3 then
@@ -80,39 +102,33 @@ function LightningStroke:Update()
     if self:CheckInterval() then 
       self.isLightEnd =true;
       self.step = 6;
+      --1--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        local code = DemoCode.GetBitxor(20);
+        code = code * 10;
+      end
+      ---2--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        --local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     end
-  end
-end
-
-function LightningStroke:GetCirclePic()
-  if self.showKind == ESkill_Kind.LightningStroke then
-    return 10078;
-  elseif self.showKind == ESkill_Kind.LightningBurst  then
-    return 11032;
-  end
-end
-
-function LightningStroke:GetLightningPic()
-  if self.showKind == ESkill_Kind.LightningStroke then
-    return 10069;
-  elseif self.showKind == ESkill_Kind.LightningBurst  then
-    return 11033;
-  end
-end
-
-function LightningStroke:GetRockPic()
-  if self.showKind == ESkill_Kind.LightningStroke then
-    return 10008;
-  elseif self.showKind == ESkill_Kind.LightningBurst  then
-    return 11034;
-  end
-end
-
-function LightningStroke:GetSmokePic()
-  if self.showKind == ESkill_Kind.LightningStroke then
-    return 10008;
-  elseif self.showKind == ESkill_Kind.LightningBurst  then
-    return 11034;
   end
 end
 

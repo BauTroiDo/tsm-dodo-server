@@ -6,7 +6,7 @@ local this = FieldEffectData;
 function FieldEffectData.New(reader)
   local self = {};
   setmetatable(self, FieldEffectData);
-
+  
   self.id = reader:ReadUInt16(); --狀態ID
   self.order = reader:ReadByte(); --順序
   self.effectId = reader:ReadUInt16(); --狀態編號
@@ -32,21 +32,21 @@ end
 
 function FieldEffectData:GetAttribute()
   if self.kind == 1 then
-    return EAttribute.Int
+      return EAttribute.Int
   elseif self.kind == 2 then
-    return EAttribute.Atk
+      return EAttribute.Atk
   elseif self.kind == 3 then
-    return EAttribute.Def
+      return EAttribute.Def
   elseif self.kind == 4 then
-    return EAttribute.Hpx
+      return EAttribute.Hpx
   elseif self.kind == 5 then
-    return EAttribute.Spx
+      return EAttribute.Spx
   elseif self.kind == 6 then
-    return EAttribute.Agi
+      return EAttribute.Agi
   elseif self.kind == 13 then
-    return EAttribute.MaxHp
+      return EAttribute.MaxHp
   elseif self.kind == 15 then
-    return EAttribute.MaxSp
+      return EAttribute.MaxSp
   end
 end
 

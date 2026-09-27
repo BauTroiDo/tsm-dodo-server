@@ -11,6 +11,18 @@ require "Data/Eve/Eve_FightData"
 EventData = {};
 EventData.__index = EventData
 
+function EventData.AddThree(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
 function EventData.New(reader) 
   local self = {};
   setmetatable(self, EventData);
@@ -26,6 +38,30 @@ function EventData.New(reader)
   self:ReadFight(reader);
 
   return self;
+end
+
+function EventData.AddThree1(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
+function EventData.AddThree2(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
 end
 
 function EventData:ReadNpc(reader)
@@ -46,12 +82,72 @@ function EventData:ReadGoods(reader)
   end
 end
 
+function EventData.AddThree3(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
+function EventData.AddThree4(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
 function EventData:ReadDoor(reader)
   self.Door = {};
   local count = reader:ReadUInt16();
   for i = 1, count do
     local door = DoorData.New(reader);
     self.Door[door.id] = door;
+  end
+end
+
+function EventData.AddThree5(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
+function EventData.AddThree6(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
+function EventData.AddThree7(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
   end
 end
 
@@ -73,12 +169,48 @@ function EventData:ReadSurface(reader)
   end
 end
 
+function EventData.AddThree8(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
+function EventData.AddThree9(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
 function EventData:ReadSceneInfo(reader)
   self.SceneInfo = {};
   local count = reader:ReadUInt16();
   for i = 1, count do
     local sceneInfo = SceneInfoData.New(reader);
     self.SceneInfo[sceneInfo.EveNo] = sceneInfo;		    
+  end
+end
+
+function EventData.AddThree10(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
   end
 end
 
@@ -106,6 +238,42 @@ function EventData:ReadFight(reader)
   for i = 1, count do
     local fight = FightData.New(reader);
     self.Fight[fight.EveNo] = fight;		
+  end
+end
+
+function EventData.AddThree11(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
+function EventData.AddThree12(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
+function EventData.AddThree13(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
   end
 end
 
@@ -143,3 +311,26 @@ function EventData.GetDoorToScene(eveData)
   return sceneDoorIdx;
 end
 
+function EventData.AddThree14(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
+function EventData.AddThree15(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end

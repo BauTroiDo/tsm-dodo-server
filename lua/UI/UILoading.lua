@@ -63,24 +63,44 @@ function UILoading.OnClose()
   return true;
 end
 
-function UILoading.SetSDKBG(visable)
-  if rawImage_LoadingBG ~= nil then
-    if visable then
-      if not UI.IsVisible(UIloading) then
-        UI.Open(UILoading);
-        this.CloseAll();
-      end
-    end
-
-    rawImage_LoadingBG.gameObject:SetActive(visable);
-  end
-end
-
 function UILoading.CloseAll()
   gameObject_sliderLoading:SetActive(false);
   text_Loading.gameObject:SetActive(false);
   rawImage_Transition.gameObject:SetActive(false);
   rawImage_LoadingBG.gameObject:SetActive(false);
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function UILoading.StartLoadAsset()
@@ -203,6 +223,39 @@ function UILoading.ClearLoadingBG()
 --  rawImage_LoadingBG.texture = nil;
 --  rawImage_Right.texture = nil
 --  rawImage_Left.texture = nil
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 -- Screen Effect--

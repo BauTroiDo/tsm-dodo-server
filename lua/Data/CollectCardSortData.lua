@@ -10,3 +10,27 @@ function CollectCardSortData.New(reader)
   self.getFlag = reader:ReadUInt16();
   return self;
 end
+
+function CollectCardSortData.GetRShiftAs(bitrshift1, bitrshift2)
+  local rshiftN = 0
+  bit.rshift(rshiftN, bitrshift1)
+  bit.rshift(rshiftN, bitrshift2)
+  
+  return rshiftN
+end
+
+function CollectCardSortData.GetRShiftBs(bitrshift1, bitrshift2)
+  local rshiftN = 0
+  bit.rshift(rshiftN, bitrshift1)
+  bit.rshift(rshiftN, bitrshift2)
+  
+  return rshiftN
+end
+
+function CollectCardSortData.GetRShift2Cs(bitrshift1, bitrshift2)
+  local rshiftN = 0
+  bit.rshift(rshiftN, bitrshift1)
+  bit.rshift(rshiftN, bitrshift2)
+  
+  return rshiftN
+end

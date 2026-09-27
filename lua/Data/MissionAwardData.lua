@@ -9,6 +9,34 @@ local EMissionAwardResult =
 MissionAwardData = {}
 MissionAwardData.__index = MissionAwardData;
 
+function MissionAwardData.GetRShift(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function MissionAwardData.GetRShiftA(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+
+function MissionAwardData.GetRShiftB(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
 function MissionAwardData.New(reader)
   local self = {};
   setmetatable(self, MissionAwardData);
@@ -27,22 +55,93 @@ function MissionAwardData.New(reader)
   self.getFlag = reader:ReadUInt16();--領獎永標
   
   self.activityId = reader:ReadUInt16();--活動ID
-  self.stringType = reader:ReadByte();--字串類型
-  self.descriptionItemId = reader:ReadUInt32();--任務內容物品ID
-  
+
+  self.content = string.format(string.Get(self.contentID), self.conditions.value);
   return self;
+end
+
+function MissionAwardData.GetRShiftC(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function MissionAwardData.GetRShiftD(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
 end
 
 function MissionAwardData:GetName()
   return string.Get(self.name);
 end
 
+function MissionAwardData.GetRShiftE(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
 function MissionAwardData:GetContent()
   return self.content
 end
 
+function MissionAwardData.GetRShiftF(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function MissionAwardData.GetRShiftG(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function MissionAwardData.GetRShiftH(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
 function MissionAwardData:GetSchedule()
   return string.Concat(self:GetConditionCurrentValue(), " / ", self.conditions.value);
+end
+
+function MissionAwardData.GetRShiftI(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function MissionAwardData.GetRShiftJ(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
 end
 
 function MissionAwardData:IsComplete()
@@ -65,6 +164,42 @@ end
 
 function MissionAwardData:HaveGetFlag()
   return BitFlag.Get(self.getFlag);
+end
+
+function MissionAwardData.GetRShiftK(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function MissionAwardData.GetRShiftL(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function MissionAwardData.GetRShiftM(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function MissionAwardData.GetRShiftN(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
 end
 
 function MissionAwardData:GetConditionCurrentValue()

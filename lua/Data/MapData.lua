@@ -69,3 +69,63 @@ function MapData.New(reader)
 
   return self;
 end
+
+function MapData.Random()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function MapData.RandomA()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function MapData.RandomB()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function MapData.RandomC()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function MapData.RandomD()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end

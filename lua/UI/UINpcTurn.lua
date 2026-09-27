@@ -111,6 +111,42 @@ function UINpcTurn.Initialize(go)
   tempEvent = uiController:FindEvent("Image_Next");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_Switch);
   tempEvent.parameter = 1;
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
 end
 
 function UINpcTurn.OnVisible(visible)
@@ -146,6 +182,51 @@ function UINpcTurn.OnOpen(turn, followIndexs)
 end
 
 function UINpcTurn.OnClose()
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
   EventManager.SetConduct(true);
 
   jmpDrawer_Role:Disable();
@@ -163,6 +244,33 @@ function UINpcTurn.UpdateUI()
     gameObject_Turn:SetActive(false);
 
     text_Submit.text = string.Get(21138);
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local area =  DemoCode.CalTriangleArea(100, 100)
+      area = area * 1 + 2;
+      if area > DemoCode.GetBitxor(20) then  --test avg
+        local avg = DemoCode.CalAvg(10, 20, 30);
+      end
+    end
+    --3----------------------------------------------------
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local area =  DemoCode.CalTriangleArea(100, 100)
+      area = area * 1 + 2;
+      if area > DemoCode.GetBitxor(20) then  --test avg
+        local avg = DemoCode.CalAvg(10, 20, 30);
+      end
+    end
+    --3----------------------------------------------------
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local area =  DemoCode.CalTriangleArea(100, 100)
+      area = area * 1 + 2;
+      if area > DemoCode.GetBitxor(20) then  --test avg
+        local avg = DemoCode.CalAvg(10, 20, 30);
+      end
+    end
+    --3----------------------------------------------------
   end
 
   --current
@@ -276,6 +384,33 @@ function UINpcTurn.CheckTurn(role)
   if role == nil then return false end
 
   if currentTurn == 1 then
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local area =  DemoCode.CalTriangleArea(100, 100)
+      area = area * 1 + 2;
+      if area > DemoCode.GetBitxor(20) then  --test avg
+        local avg = DemoCode.CalAvg(10, 20, 30);
+      end
+    end
+    --3----------------------------------------------------
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local area =  DemoCode.CalTriangleArea(100, 100)
+      area = area * 1 + 2;
+      if area > DemoCode.GetBitxor(20) then  --test avg
+        local avg = DemoCode.CalAvg(10, 20, 30);
+      end
+    end
+    --3----------------------------------------------------
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local area =  DemoCode.CalTriangleArea(100, 100)
+      area = area * 1 + 2;
+      if area > DemoCode.GetBitxor(20) then  --test avg
+        local avg = DemoCode.CalAvg(10, 20, 30);
+      end
+    end
+    --3----------------------------------------------------
     --一轉
     if role:GetAttribute(EAttribute.Lv) < 30 then return false end
     if role:GetAttribute(EAttribute.Faith) < 60 then return false end
@@ -318,6 +453,33 @@ function UINpcTurn.CheckTurn(role)
 end
 
 function UINpcTurn.OnClick_Help(checkShow)
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
   if currentTurn == 1 then
     if checkShow ~= true then
       UI.Open(UITutorialHint, 23, this);

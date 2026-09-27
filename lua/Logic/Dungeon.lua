@@ -108,23 +108,156 @@ function Dungeon.ClearRoomData()
   this.nowDungeonOwnerId = 0;  
   this.nowDungeonId = 0;
   this.nowDungeonPassword = "";
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function Dungeon.ClearTimeData()
   this.nowDungeonStartTime = 0;
   this.nowDungeonEndTime = 0;
+  CGTimer.RemoveListener(Dungeon.UpdateTime);
 end
 
 function Dungeon.Clear()  
   table.Clear(this.availableDungeonDatas);
   this.isSending = false;
-  CGTimer.RemoveListener(Dungeon.UpdateLimitTimeDungeonTime);
   Dungeon.ClearRoomData();
   Dungeon.ClearTimeData();
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function Dungeon.Initialize()
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   this.InitAvailableDungeonDatas();
+end
+
+function Dungeon.UpdateTime()
+  local sec = math.floor((this.nowDungeonEndTime:Subtract(CGTimer.serverTime)).TotalSeconds);
+  if sec > 0 then    
+    UIMain.UpdateDungeonTime(math.floor(sec / 60), sec % 60);    
+  else
+    --todo Trigger 
+    CGTimer.RemoveListener(Dungeon.UpdateTime);
+  end
 end
 
 function Dungeon.GetComboData(id)
@@ -143,7 +276,8 @@ function Dungeon.InitAvailableDungeonDatas()
   local allTable = {};
   for k, v in pairs(dungeonDatas) do
     if v.kind == 3 and allTable[v.kind] ~= nil then
-    else      
+    elseif v.kind == 5 and allTable[v.kind] ~= nil then
+    else
       if v.kind == 2 then
         if v.minLv <= lv and v.maxLv >= lv then
           if allTable[v.kind] == nil then
@@ -172,7 +306,47 @@ function Dungeon.InitAvailableDungeonDatas()
   for kind, value in pairs(allTable) do
     table.insert(this.availableDungeonDatas, value);
   end
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   this.CheckRedDot();
 end
 
@@ -194,10 +368,12 @@ function Dungeon.GetMainTagName(index)
       return string.Get(10125);
     elseif this.availableDungeonDatas[index][1].kind == 2 then 
       return string.Get(20147);
-    elseif this.availableDungeonDatas[index][1].kind == 4 then 
+    elseif this.availableDungeonDatas[index][1].kind == 3 then
+      return string.Get(22385);--周副本
+    elseif this.availableDungeonDatas[index][1].kind == 4 then
       return string.Get(23283);--節慶副本
     else
-      return string.Get(22385);--周副本
+      return string.Get(24100);--狂周副本
     end
   else
     return "";
@@ -205,16 +381,18 @@ function Dungeon.GetMainTagName(index)
 end
 
 function Dungeon.GetSubTagName(index, subIndex)
-  if this.availableDungeonDatas[index] ~= nil then   
+  if this.availableDungeonDatas[index] ~= nil then
     if this.availableDungeonDatas[index][1].kind == 3 then
       return string.Get(22386);--百戰天關
-    else 
-      if this.availableDungeonDatas[index][subIndex] ~= nil then 
-        return string.Get(this.availableDungeonDatas[index][subIndex].name);
+    elseif this.availableDungeonDatas[index][1].kind == 5 then
+      return string.Get(24099);--靈魂挑戰
+    else
+      if this.availableDungeonDatas[index][subIndex] ~= nil then
+    return string.Get(this.availableDungeonDatas[index][subIndex].name);
       else
-        return "";
-      end 
-    end 
+      return "";
+      end
+      end
   else
     return "";
   end
@@ -240,6 +418,7 @@ function Dungeon.OnClickText(roomId, locked)
   end
 end
 
+--C:013-004 <離開隊伍> +隊長玩家ID(8)
 function Dungeon.LeaveSinglePlayDungeon()
   sendBuffer:Clear()
   sendBuffer:WriteInt64(Role.playerId);
@@ -265,7 +444,7 @@ end
 
 function Dungeon.CheckForQualification(dungeonid)
   local dungeonData = this.GetData(dungeonid);
-  if dungeonData.kind ~= 3 then 
+  if dungeonData.kind ~= 3 or dungeonData.kind ~= 5 then
     -- 不是周副本都算符合
     return true;
   end
@@ -295,11 +474,23 @@ function Dungeon.CheckForQualification(dungeonid)
         end
       end 
     elseif v.kind == 4 then --只定技
-      if Role.fightNpc:GetSkillLv(v.parameter) <= 0 then
+      if Role.fightNpc:GetSkillLv(v.parameter) <= 0 or (Soul.GetEquippedSoul(Role.fightNpc.npcId) ~= nil and not Soul.HasSoulSkill(Role.fightNpc.npcId, v.parameter)) then
         return false;
       end
     elseif v.kind == 5 then --禁用技能
-      if Role.fightNpc:GetSkillLv(v.parameter) > 0 then
+      if Role.fightNpc:GetSkillLv(v.parameter) > 0 or (Soul.GetEquippedSoul(Role.fightNpc.npcId) ~= nil and Soul.HasSoulSkill(Role.fightNpc.npcId, v.parameter)) then
+        return false;
+      end
+    elseif v.kind == 8 then --靈魂屬性
+      if Soul.GetEquippedSoul(Role.fightNpc.npcId) == nil or Soul.GetEquippedSoul(Role.fightNpc.npcId).element ~= v.parameter then
+        return false;
+      end
+    elseif v.kind == 9 then --靈魂等級大於
+      if Soul.GetEquippedSoul(Role.fightNpc.npcId) == nil or Soul.GetEquippedSoul(Role.fightNpc.npcId).lv < v.parameter then
+        return false;
+      end
+    elseif v.kind == 10 then --靈魂等級小於
+      if Soul.GetEquippedSoul(Role.fightNpc.npcId) == nil or Soul.GetEquippedSoul(Role.fightNpc.npcId).lv > v.parameter then
         return false;
       end
     end
@@ -312,7 +503,7 @@ function Dungeon.SendCreateDungeon(id, usePassword, nowKind)
     return 
   end 
   local dungeonData = this.GetData(id);
-  if dungeonData.kind == 3 and dungeonData.maxPlayer == 1 then
+  if dungeonData.kind == 3 or dungeonData.kind == 5 and dungeonData.maxPlayer == 1 then
   --周副本單人關卡 C端先自行判斷有無資格
     if not this.CheckForQualification(id) then
       --顯示中央訊息 "不符合限制條件，無法進入關卡！
@@ -363,7 +554,47 @@ function Dungeon.SendJoinRoom(roomId, password)
   sendBuffer:WriteString(password);
 
   Network.Send(47, 3, sendBuffer);
-  
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   if this.dungeonRoomDatas[roomId] ~= nil then 
     local data = this.dungeonRoomDatas[roomId];
     this.nowDungeonRoom = data;
@@ -418,6 +649,47 @@ function Dungeon.SendRecurit(channel)   --channel: 1.公會 2.世界
   sendBuffer:Clear()    
   sendBuffer:WriteByte(channel);
   Network.Send(47, 9, sendBuffer);
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function Dungeon.SendLeaveTeam()
@@ -455,6 +727,47 @@ function Dungeon.SendGetWeekDungeonPrize(para)
   sendBuffer:Clear()
   sendBuffer:WriteByte(para);
   Network.Send(47, 22, sendBuffer);
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function Dungeon.ReciveCreateDungeon(data)
@@ -623,8 +936,8 @@ function Dungeon.ReciveSkipResult(data)
   --結果[0.成功 1.無此副本編號 2.等級不符 3.已在副本房間中 4.次數用盡 5.不可組隊 6.人數已滿 8.戰鬥中 9.無掃蕩標記]
   local result = data:ReadByte();
   if result == 0 then 
-    Dungeon.ReciveDungeonResult(data, result, true);
-  elseif result == 1 then
+    Dungeon.ReciveDungeonResult(data, true);
+  elseif result == 1 then 
     --無此副本編號
     ShowCenterMessage(string.Get(10327));
   elseif result == 2 then 
@@ -651,9 +964,6 @@ function Dungeon.ReciveSkipResult(data)
   elseif result == 9 then 
     --無掃蕩標記
     ShowCenterMessage(string.Get(10331));
-  elseif result == 10 then
-    --VIP等級不足
-    ShowCenterMessage(string.Get(25062));
   end  
 end
 
@@ -665,6 +975,47 @@ function Dungeon.RecivePlayerJoinRoom(data)
       UIDungeon.UpdateTeamRole()
     end
   end
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function Dungeon.ReciveChangeRoomOwner(data)
@@ -693,6 +1044,47 @@ function Dungeon.ReciveChangeRoomOwner(data)
     UIDungeon.UpdateTeamRole();
     UIDungeon.DisCountDown();
   end
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function Dungeon.RecivePlayerLeave(data)
@@ -756,13 +1148,11 @@ function Dungeon.ReciveSetRoomName(data)
   end
 end
 
-function Dungeon.ReciveDungeonResult(data, readResult, closeUIResult)
+function Dungeon.ReciveDungeonResult(data, readResult)
   --結果(1) +副本編號(2) +數量(1) <<+獎勵ID(2) +數量(4)>>
   local result = true;
-  if readResult == nil or readResult == false then
-    result = data:ReadByte();
-  else
-    result = readResult;
+  if readResult == nil or readResult == false then 
+   result = data:ReadByte();
   end
   local dungeonId = data:ReadUInt16();
   local dungeonData = this.GetData(dungeonId);
@@ -778,15 +1168,10 @@ function Dungeon.ReciveDungeonResult(data, readResult, closeUIResult)
       table.insert(reward, RewardItem.New(itemTitle, itemId ,itemDatas[itemId].iconId, quant));
     end
   end
-
-  if not closeUIResult then
-    UI.Open(UIResult, Role.player, title, "", "", reward, Dungeon.LeaveSinglePlayDungeon, result == 0);
-  end
-
+  UI.Open(UIResult, Role.player, title, "", reward, Dungeon.LeaveSinglePlayDungeon, result == 0);
   if UI.IsVisible(UIDungeon)then 
     UIDungeon.UpdateInfo();
   end
-
   Dungeon.ClearTimeData();
 end
 
@@ -877,8 +1262,8 @@ function Dungeon.ReciveEndTime(data)
 
   local dungeonData = this.GetData(this.nowDungeonId);
   if dungeonData ~= nil then 
-    this.nowDungeonEndTime = this.nowDungeonStartTime:AddMinutes(dungeonData.time);
-    UIMain.SetCountDownTime(this.nowDungeonEndTime);
+    this.nowDungeonEndTime = this.nowDungeonStartTime:AddMinutes(dungeonData.time);   
+    CGTimer.AddListener(Dungeon.UpdateTime, 1, true);
   end
 end
 
@@ -900,7 +1285,7 @@ function Dungeon.UpdateLimitTimeDungeonTime()
   
   if time > 0 then
     UIMain.UpdateDungeonTime(math.floor(time / 60), time % 60);
-    if(math.floor(time / 60) < 10)then
+    if(math.floor(time / 60)<10)then
       MachineBox.CheckLimitTimeDungeonItem();
     end
   else
@@ -924,6 +1309,47 @@ end
 
 function Dungeon.GetName(id)
   local dungeonData = this.GetData(id);
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   if dungeonData ~= nil then 
     return string.Get(dungeonData.name);
   else

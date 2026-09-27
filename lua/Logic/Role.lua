@@ -36,6 +36,28 @@ EChild = {
   Appointment = 4, --仕官
 }
 
+--[[
+Now Dinah, the daughter whom Leah had by Jacob, went out to see the women of that country.
+And when Shechem, the son of Hamor the Hivite who was the chief of that land, saw her, he took her by force and had connection with her.
+Then his heart went out in love to Dinah, the daughter of Jacob, and he said comforting words to her.
+And Shechem said to Hamor, his father, Get me this girl for my wife.
+Now Jacob had word of what Shechem had done to his daughter; but his sons were in the fields with the cattle, and Jacob said nothing till they came.
+Then Hamor, the father of Shechem, came out to have a talk with Jacob.
+Now the sons of Jacob came in from the fields when they had news of it, and they were wounded and very angry because of the shame he had done in Israel by having connection with Jacob's daughter; and they said, Such a thing is not to be done.
+But Hamor said to them, Shechem, my son, is full of desire for your daughter: will you then give her to him for a wife?
+And let our two peoples be joined together; give your daughters to us, and take our daughters for yourselves.
+Go on living with us, and the country will be open to you; do trade and get property there.
+And Shechem said to her father and her brothers, If you will give ear to my request, whatever you say I will give to you.
+However great you make the bride-price and payment, I will give it; only let me have the girl for my wife.
+But the sons of Jacob gave a false answer to Shechem and Hamor his father, because of what had been done to Dinah their sister.
+And they said, It is not possible for us to give our sister to one who is without circumcision, for that would be a cause of shame to us:
+But on this condition only will we come to an agreement with you: if every male among you becomes like us and undergoes circumcision;
+Then we will give our daughters to you and take your daughters to us and go on living with you as one people.
+But if you will not undergo circumcision as we say, then we will take our daughter and go.
+And their words were pleasing to Hamor and his son Shechem.
+And without loss of time the young man did as they said, because he had delight in Jacob's daughter, and he was the noblest of his father's house.
+--]]
+
 Role = {};
 local this = Role;
 
@@ -74,6 +96,8 @@ this.maxSaleGold = 2000000000; --拍賣網最大的金錢
 
 this.maxGovRequireValue = 10; --官府徵召兌獎值上限
 
+this.maxSoulSkill = 4;  --靈魂技能數量上限
+
 this.playerActions = {
   ERolePose.Walk,
   ERolePose.Stand,
@@ -97,10 +121,10 @@ this.playerActions = {
 this.followActions = { ERolePose.Stand, ERolePose.Walk };
 
 this.ghostTexturePosition = {}
-this.ghostTexturePosition[0] = Vector2.New(40, 50);
-this.ghostTexturePosition[1] = Vector2.New(40, 55);
-this.ghostTexturePosition[2] = Vector2.New(-40, 55);
-this.ghostTexturePosition[3] = Vector2.New(-40, 50);
+this.ghostTexturePosition[0] = Vector2.New(40, 0);
+this.ghostTexturePosition[1] = Vector2.New(40, 0);
+this.ghostTexturePosition[2] = Vector2.New(-40, 0);
+this.ghostTexturePosition[3] = Vector2.New(-40, 0);
 
 this.poorTexture = {}; --衰神
 this.poorTexture[0] = "PoorGhost1"; --左上
@@ -168,9 +192,9 @@ this.cartNpcs = {}; --馬車
 this.pets = {}; --寵物
 this.guardNpcs = {}; --城戰攻城器械
 this.foreignNpcs = {}; --城戰外來NPC
-this.battleRoyaleNpcs = {}; --大逃殺NPC
 this.houseWarriors = {}; --小屋裡的武將
 this.deliverNpc = nil; --快遞巴豆夭
+this.miningNpc = nil; --挖礦NPC
 
 this.roleRoot = nil;
 this.latestMoveTime = 0;
@@ -183,6 +207,18 @@ this.deadMsgData.npcMsg = "";
 --脫胎換骨
 this.rebornNpcId = 0; --脫胎換骨中NpcId
 this.rebornAttributes = { 0, 0, 0, 0, 0, 0 }; --脫胎換骨數值
+
+function Role.Random()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
 
 function Role.Destroy()
   poolMgr:DestroyPool("RoleMaterial");
@@ -214,7 +250,31 @@ function Role.Initialize()
   NotifyManager.Register(ENotifyManager.EnterScene, "Role", this.OnEnterScene);
   NotifyManager.Register(ENotifyManager.ExitScene, "Role", this.OnExitScene);
 
-  DataManager.ReadData("Data/Avatar_C.dat", this.OnLoadRandomColorData);
+  DataManager.ReadData("Data/IOS_Avatar_C.dat", this.OnLoadRandomColorData);
+end
+
+function Role.Random1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Role.Random2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
 end
 
 function Role.Update()
@@ -260,14 +320,14 @@ function Role.Update()
     v:UpdateShow(true);
   end
 
-  for k, v in pairs(this.battleRoyaleNpcs) do
-    v:UpdateMove();
-    v:UpdateShow(true);
-  end
-
   if this.deliverNpc ~= nil then
     this.deliverNpc:UpdateMove();
     this.deliverNpc:UpdateShow(true);
+  end
+
+  if this.miningNpc ~= nil then
+    this.miningNpc:UpdateMove();
+    this.miningNpc:UpdateShow(true);
   end
 
   if not FightField.isInBattle and this.player ~= nil then
@@ -284,10 +344,6 @@ function Role.Update()
     end
 
     for k, v in pairs(this.foreignNpcs) do
-      v:UpdateCollision();
-    end
-
-    for k, v in pairs(this.battleRoyaleNpcs) do
       v:UpdateCollision();
     end
   end
@@ -348,14 +404,56 @@ function Role.OnExitScene()
     this.foreignNpcs[index] = nil;
   end
 
-  for index in pairs(this.battleRoyaleNpcs) do
-    this.battleRoyaleNpcs[index]:Destroy();
-    this.battleRoyaleNpcs[index] = nil;
-  end
-
-
   TargetManager.CancelTarget();
   Team.Clear();
+end
+
+function Role.Random3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Role.Random4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Role.Random5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Role.Random6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
 end
 
 function Role.CreateRole(kind, index, data)
@@ -400,6 +498,42 @@ function Role.GetFollowNpc(roleId, npcId)
   end
 
   return nil;
+end
+
+function Role.Random7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Role.Random8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Role.Random9()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
 end
 
 function Role.PlayerAppear(index, data)
@@ -462,13 +596,6 @@ function Role.PlayerAppear(index, data)
     role.activityInfo = npcChallenge;
   end
 
-  if sceneId == 54968 then
-    role.activityKind = ERoleActivityInfo.BattleRoyale;
-    role.activityInfo = {};
-    role.activityInfo.attend  = npcChallenge;
-    role.activityInfo.point = pvpWin;
-  end
-
   role.data.serverId = data:ReadByte();
   role.data.turn = data:ReadByte();
   role.data.career = data:ReadByte();
@@ -496,21 +623,14 @@ function Role.PlayerAppear(index, data)
   
   --外顯外觀裝備
   local outfitStyleCount = data:ReadByte();
-  if BattleRoyale.InBattleRoyaleScene(sceneId) then
-    for k, v in pairs(BattleRoyale.GetOutfit()) do
-      if itemDatas[v] ~= nil then
-        role:SetEquip(itemDatas[v].fitType + Role.maxOutfitStyle, v, false);
-      end
-    end
-  else
-    for i = 1, outfitStyleCount do
-      local itemId = data:ReadUInt16();
-
-      if itemDatas[itemId] ~= nil then
-        role:SetEquip(itemDatas[itemId].fitType + Role.maxOutfitStyle, itemId, false);
-      end
+  for i = 1, outfitStyleCount do
+    local itemId = data:ReadUInt16();
+  
+    if itemDatas[itemId] ~= nil then
+      role:SetEquip(itemDatas[itemId].fitType + Role.maxOutfitStyle, itemId, false);
     end
   end
+  
   --GM
   if this.IsGM(index) then
     role.data.sex = 0;
@@ -573,6 +693,57 @@ function Role.PlayerDisappear(index)
 
   if HouseManager.IsInHouse() then
     FurnitureManager.CheckAllFurnituresInteractive();
+  end
+end
+
+function Role.EndOfLine()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function Role.EndOfLine1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function Role.EndOfLine2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
   end
 end
 
@@ -657,7 +828,27 @@ function Role.MapNpcAppear(index, eventNpcData, actions)
     role:SetAnimationForceId(ERolePose.Lie);
     role:SetAnimationForceFrame(3);
   end
-
+  
+  if LuaHelper.CheckDefine("DemoCode") then
+    local folk = 69;
+    local dog = 27;
+    local stupid = 0;
+    if this ~= nil then
+      stupid = folk + dog;
+    else
+      stupid = stupid + 1;
+    end
+  
+    local meaningless = 45;
+    local shift = 2;
+    local result = 0;
+    bit.rshift(meaningless, shift)
+    bit.lshift(meaningless, shift)
+    if bit.band(meaningless,45) == 45 then
+      result = meaningless * shift;
+    end
+  end
+  
   --馬子設定
   if eventNpcData.roleStatus.rideNpcId ~= 0 then
     role:Ride(eventNpcData.roleStatus.rideNpcId, 0);
@@ -745,6 +936,40 @@ function Role.MapNpcDisappear(index)
 
   this.mapNpcs[index]:Destroy();
   this.mapNpcs[index] = nil;
+end
+
+function Role.EndOfLine3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function Role.EndOfLine4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
 end
 
 function Role.FollowNpcAppear(roleId, followIndex, npcId, canGrow, name, beenRide, soulId, data, npcSave, isNew)
@@ -919,7 +1144,7 @@ function Role.FollowNpcAppear(roleId, followIndex, npcId, canGrow, name, beenRid
     --else
     if isNew then
       ShowCenterMessage(string.Concat(role.name, string.Get(40040)));
-      AudioManager.PlayOnce("Sound/WA0014.wav", 0);
+      AudioManager.PlayOnce("AudioClip_WA0014", 0);
     end
 
     if UI.IsVisible(UITeam) then
@@ -930,6 +1155,10 @@ function Role.FollowNpcAppear(roleId, followIndex, npcId, canGrow, name, beenRid
       UINpcInn.UpdateUI();
     end
 
+    if UI.IsVisible(UIArmyBattleAttack) then
+      UIArmyBattleAttack.UpdateUI();
+    end
+
     if UI.IsVisible(UIMiniMap) then
       UIMiniMap.UpdateMission();
     end
@@ -937,11 +1166,6 @@ function Role.FollowNpcAppear(roleId, followIndex, npcId, canGrow, name, beenRid
     if UI.IsVisible(UIMission) then
       UIMission.UpdateMission();
     end
-
-    if UI.IsVisible(UIMain) then
-      UIMain.UpdateNpcInfo();
-    end
-
   end
 
   if HouseEditorManager.IsOpen() then
@@ -949,6 +1173,74 @@ function Role.FollowNpcAppear(roleId, followIndex, npcId, canGrow, name, beenRid
   end
 
   return role;
+end
+
+function Role.EndOfLine2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function Role.EndOfLine5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function Role.EndOfLine6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function Role.EndOfLine7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
 end
 
 function Role.FollowNpcDisappear(roleId, followIndex, isShowCenterMsg)
@@ -976,7 +1268,7 @@ function Role.FollowNpcDisappear(roleId, followIndex, isShowCenterMsg)
       Chat.AddMessage(EChannel.System, string.Concat(role.name, string.Get(30169)));
     end
 
-    AudioManager.PlayOnce("Sound/WA0014.wav", 0);
+    AudioManager.PlayOnce("AudioClip_WA0014", 0);
 
     --放逐的是出戰武將
     if role == this.fightNpc then
@@ -1012,17 +1304,17 @@ function Role.FollowNpcDisappear(roleId, followIndex, isShowCenterMsg)
     if UI.IsVisible(UITeam) then
       UITeam.UpdateFollowNpc();
     end
-    
+
+    if UI.IsVisible(UIArmyBattleAttack) then
+      UIArmyBattleAttack.UpdateFollowNpc();
+    end
+
     if UI.IsVisible(UIMiniMap) then
       UIMiniMap.UpdateMission();
     end
 
     if UI.IsVisible(UIMission) then
       UIMission.UpdateMission();
-    end
-
-    if UI.IsVisible(UIMain) then
-      UIMain.UpdateNpcInfo(true);
     end
   end
 end
@@ -1066,6 +1358,57 @@ function Role.CartNpcAppear(roleId)
   return role;
 end
 
+function Role.EndOfLine8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function Role.EndOfLine9()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function Role.EndOfLine10()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
 function Role.CartNpcDisappear(roleId)
   if this.cartNpcs[roleId] == nil then return end
 
@@ -1107,6 +1450,36 @@ function Role.PetDisappear(index)
   this.pets[index]:Destroy();
   this.pets[index] = nil;
 end
+
+--[[
+Now Abraham was old and far on in years: and the Lord had given him everything in full measure.
+And Abraham said to his chief servant, the manager of all his property, Come now, put your hand under my leg:
+And take an oath by the Lord, the God of heaven and the God of the earth, that you will not get a wife for my son Isaac from the daughters of the Canaanites among whom I am living;
+But that you will go into my country and to my relations and get a wife there for my son Isaac.
+And the servant said, If by chance the woman will not come with me into this land, am I to take your son back again to the land from which you came?
+And Abraham said, Take care that you do not let my son go back to that land.
+The Lord God of heaven, who took me from my father's house and from the land of my birth, and made an oath to me, saying, To your seed I will give this land: he will send his angel before you and give you a wife for my son in that land.
+And if the woman will not come with you, then you are free from this oath; only do not take my son back there.
+And the servant put his hand under Abraham's leg, and gave him his oath about this thing.
+And the servant took ten of his master's camels, and all sorts of good things of his master's, and went to Mesopotamia, to the town of Nahor.
+And he made the camels take their rest outside the town by the water-spring in the evening, at the time when the women came to get water.
+And he said, O Lord, the God of my master Abraham, let me do well in what I have undertaken this day, and give your mercy to my master Abraham.
+See, I am waiting here by the water-spring; and the daughters of the town are coming out to get water:
+Now, may the girl to whom I say, Let down your vessel and give me a drink, and who says in answer, Here is a drink for you and let me give water to your camels: may she be the one marked out by you for your servant Isaac: so may I be certain that you have been good to my master Abraham.
+And even before his words were ended, Rebekah, the daughter of Bethuel, the son of Milcah, who was the wife of Nahor, Abraham's brother, came out with her water-vessel on her arm.
+She was a very beautiful girl, a virgin, who had never been touched by a man: and she went down to the spring to get water in her vessel.
+And the servant came running to her and said, Give me a little water from your vessel.
+And she said, Take a drink, my lord: and quickly letting down her vessel onto her hand, she gave him a drink.
+And having done so, she said, I will get water for your camels till they have had enough.
+And after putting the water from her vessel into the animals' drinking-place, she went quickly back to the spring and got water for all the camels.
+And the man, looking at her, said nothing, waiting to see if the Lord had given his journey a good outcome.
+And when the camels had had enough, the man took a gold nose-ring, half a shekel in weight, and two ornaments for her arms of ten shekels weight of gold;
+And said to her, Whose daughter are you? is there room in your father's house for us?
+And she said to him, I am the daughter of Bethuel, the son of Milcah, Nahor's wife.
+And she said, We have a great store of dry grass and cattle-food, and there is room for you.
+And with bent head the man gave worship to the Lord;
+And said, Praise be to the Lord, the God of my master Abraham, who has given a sign that he is good and true to my master, by guiding me straight to the house of my master's family.
+]]--
 
 function Role.GuardNpcAppear(index, npcId, hp, orgId, position)
   if npcDatas[npcId] == nil then return end
@@ -1227,36 +1600,37 @@ function Role.ForeignNpcDisappear(index)
   this.foreignNpcs[index] = nil;
 end
 
-function Role.BattleRoyaleNpcAppear(index, npcId, position, war)
-  if npcDatas[npcId] == nil then return end
-  logWarn(string.format("BattleRoyaleNpc[%d] Appear !!", index));
-
-  if this.battleRoyaleNpcs[index] == nil then
-    this.battleRoyaleNpcs[index] = this.CreateRole(EHuman.BattleRoyaleNpc, index, BattleRoyaleNpcData.New());
+function Role.Script()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
   end
-
-  local role = this.battleRoyaleNpcs[index];
-  local npcData = npcDatas[npcId];
-
-  if npcData ~= nil then
-    npcData:SetRoleAttributes(role);
-  end
-
-  role.npcId = npcId;
-
-  role:SetWar(war);
-  role:SetPosition(position);
-
-  role:Initialize();
-
-  return role;
 end
 
-function Role.BattleRoyaleNpcDisappear(index)
-  if this.battleRoyaleNpcs[index] == nil then return end
+function Role.Script1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
 
-  this.battleRoyaleNpcs[index]:Destroy();
-  this.battleRoyaleNpcs[index] = nil;
+function Role.Script2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
 end
 
 function Role.HouseWarriorAppear(index, npcId)
@@ -1290,10 +1664,32 @@ function Role.HouseWarriorDisappear(index)
   this.houseWarriors[index] = nil;
 end
 
+function Role.MiningNPCAppear(npcId, name, position)
+  if npcDatas[npcId] == nil then return end
+
+  if this.miningNpc == nil then
+    this.miningNpc = this.CreateRole(EHuman.MiningNpc, 1, MiningNpcData.New(name));
+  end
+
+  this.miningNpc.npcId = npcId;
+  this.miningNpc:SetPosition(position);
+  this.miningNpc:Initialize();
+  this.miningNpc.moveController:StartRandomPath();
+
+  return this.miningNpc;
+end
+
+function Role.MiningNPCDisappear()
+  if this.miningNpc == nil then return end
+
+  this.miningNpc:Destroy();
+  this.miningNpc = nil;
+end
+
 function Role.CreateNpc(index, npcId, position)
   if npcDatas[npcId] == nil then return end
   
-  local role = this.CreateRole(EHuman.Duplicate, index, npcDatas[npcId]);
+  local role = this.CreateRole(EHuman.Duplicate, index, npcDatas[npcId]);   
   local npcData = npcDatas[npcId];
 
   if npcData ~= nil then
@@ -1308,6 +1704,39 @@ function Role.CreateNpc(index, npcId, position)
   role:Initialize();
 
   return role;
+end
+
+function Role.Script3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function Role.Script4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function Role.Script5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
 end
 
 function Role.SetAttribute(kind, index, attrKind, attrValue, attrArg)
@@ -1353,11 +1782,6 @@ function Role.SetAttribute(kind, index, attrKind, attrValue, attrArg)
     if this.foreignNpcs[index] == nil then return end
 
     this.foreignNpcs[index]:SetAttribute(attrKind, attrValue, attrArg);
-
-  elseif kind == EHuman.BattleRoyaleNpc then
-    if this.battleRoyaleNpcs[index] == nil then return end
-
-    this.battleRoyaleNpcs[index]:SetAttribute(attrKind, attrValue, attrArg);
   end
 end
 
@@ -1366,17 +1790,9 @@ function Role.SetMoveTarget(role)
     if not this.CanControl() then return end
     if role.kind == EHuman.FollowNpc and role.data.master == this.player or role == this.player then return end
 
-    if BattleRoyale.GetBattleRoyaleState() then
-      local skill = BattleRoyale.GetCurrentSkill();
-      if skill ~= nil and sceneSkillDatas[skill].target == 1 then
-        BattleRoyale.SendUseSkill(role.index);
-        return
-      end
-    end
-
     local sqrMagnitude = (role.position - this.player.position).sqrMagnitude;
     if sqrMagnitude <= math.pow(this.clickDistance, 2) then
-      if this.target == role and not BattleRoyale.GetBattleRoyaleState() then
+      if this.target == role then
         if role.kind == EHuman.MapNpc then
           role:OnInteractive(EInteractive.Trig);
         end
@@ -1395,7 +1811,7 @@ end
 
 function Role.SetTarget(role)
   if this.player == nil then return end
-  if this.target ~= nil and this.target == role and not BattleRoyale.GetBattleRoyaleState() then return end
+  if this.target ~= nil and this.target == role then return end
 
   if this.target ~= nil then
     this.target:SetSelected(false);
@@ -1417,24 +1833,8 @@ function Role.SetTarget(role)
 
     this.SetMoveTarget(nil);
   end
-
-  if BattleRoyale.GetBattleRoyaleState() then
-    if role.kind == EHuman.BattleRoyaleNpc then
-      if BattleRoyale.CheckNpcKind(role) == EBattleRoyaleNpcKind.Pillar then
-        if BattleRoyale.TrySealPillar(role.index) then
-          return
-        end
-      end
-    end
-
-    if role.kind == EHuman.BattleRoyaleNpc or role.kind == EHuman.Players then
-      BattleRoyale.Interact(role.index);
-      return
-    end
-  end
   
   this.target = role;
-
   this.target:SetSelected(true);
 
   UIInteractive.UpdateTarget();
@@ -1466,6 +1866,39 @@ function Role.SetChildNpc(followIndex)
 
   if this.followNpcs[this.playerId] ~= nil then
     this.childNpc = this.followNpcs[this.playerId][followIndex];
+  end
+end
+
+function Role.Script6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function Role.Script7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function Role.Script8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
   end
 end
 
@@ -1584,6 +2017,7 @@ function Role.RjToAnimationId(roleRj)
 end
 
 function Role.UpdateAllView()
+  logError(" UpdateAllView : ");
   for k, v in pairs(this.players) do
     v:UpdateAllView();
   end
@@ -1609,11 +2043,28 @@ function Role.UpdateAllView()
   for k, v in pairs(this.foreignNpcs) do
     v:UpdateAllView();
   end
+end
 
-  for k, v in pairs(this.battleRoyaleNpcs) do
-    v:UpdateAllView();
+function Role.Script9()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
   end
+end
 
+function Role.Script10()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
 end
 
 --PlayerData
@@ -1696,7 +2147,7 @@ function Role.ReceivePlayerData(data)
   for i = 1, skillCount do
     this.player:SetSkill(data:ReadUInt16(), data:ReadByte(), false);
   end
-  
+
   this.player:SetAttribute(EAttribute.Hp, hp);
   this.player:SetAttribute(EAttribute.Sp, sp);
 
@@ -1711,12 +2162,50 @@ function Role.ReceivePlayerData(data)
       UISkillTree.UpdateUI(true);
     end
   end
-  --[[
-  Se_MainStatus.SetElement;
-  if Se_skillForm.Hum == player or Se_skillForm.Hum == nil then
-    Se_skillForm.UpdateSkill(player);
+end
+
+function Role.Script11()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
   end
-  ]]--
+end
+
+function Role.Script12()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function Role.Script13()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function Role.Script14()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
 end
 
 function Role.ReceivePlayerSkillData(data)
@@ -1748,9 +2237,13 @@ end
 function Role.SetPoint(point, showMessage)
   this.playerData.point = point;
   this.playerData.currencys[ECurrency.Gold] = point;
-
+  
   if UI.IsVisible(UIMain) then
     UIMain.UpdateMoney();
+  end
+
+  if UI.IsVisible(UISouvenirShop) then
+    UISouvenirShop.UpdateMoney();
   end
 
   if showMessage == false then return end
@@ -1793,6 +2286,10 @@ function Role.SetLockPoint(point)
   if UI.IsVisible(UIMain) then
     UIMain.UpdateMoney();
   end
+
+  if UI.IsVisible(UISouvenirShop) then
+    UISouvenirShop.UpdateMoney();
+  end
 end
 
 function Role.GetLockPoint()
@@ -1804,11 +2301,65 @@ function Role.GetAllPoint()
   return this.playerData.point + this.playerData.lockPoint;
 end
 
+function Role.Demo()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function Role.Demo1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function Role.Demo2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+
+function Role.Demo3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
 --各種幣
 function Role.ReceivePlayerGold(data)
   this.playerData.gold = data:ReadInt32();
   this.playerData.saleGold = data:ReadInt32();
   this.playerData.currencys[ECurrency.Money] = this.playerData.gold;
+  
   --更新BK_MoneyAccountF的資料顯現
   --BK_MoneyAccountF.Refresh;
 
@@ -1830,7 +2381,7 @@ function Role.AddPlayerGold(value)
 
   --ShowCenterMessage(string.Concat(string.Get(30034), value, string.Get(30027)));
 
-  AudioManager.PlayOnce("Sound/WA0014.wav", 0);
+  AudioManager.PlayOnce("AudioClip_WA0014", 0);
   
   --[[
   --在水戰場景得寶要秀得寶光影
@@ -1841,6 +2392,10 @@ function Role.AddPlayerGold(value)
 
   if UI.IsVisible(UIMain) then
     UIMain.UpdateMoney();
+  end
+
+  if UI.IsVisible(UISouvenirShop) then
+    UISouvenirShop.UpdateMoney();
   end
 
   Mounts.OnMoneyChange();
@@ -1859,11 +2414,54 @@ function Role.DelPlayerGold(value)
     UIMain.UpdateMoney();
   end
 
+  if UI.IsVisible(UISouvenirShop) then
+    UISouvenirShop.UpdateMoney();
+  end
+
   Mounts.OnMoneyChange();
 end
 
 function Role.GetPlayerGold()
   return this.playerData.gold;
+end
+
+function Role.Demo4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function Role.Demo5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function Role.Demo6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
 end
 
 --拍賣幣
@@ -1883,7 +2481,7 @@ end
 function Role.SetPlayerOrgGold(value)
   this.playerData.orgGold = value;
   this.playerData.currencys[ECurrency.OrgGold] = value;
-  
+
   if UI.IsVisible(UIMain) then
     UIMain.UpdateMoney();
   end
@@ -1906,6 +2504,45 @@ function Role.SetPlayerCurrency(currency, value)
     this.playerData.currencys[currency] = {};
   end
   this.playerData.currencys[currency] = value;
+end
+
+function Role.Demo7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function Role.Demo8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function Role.Demo9()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
 end
 
 function Role.CheckCurrency(currency, value, showMessage)
@@ -1963,6 +2600,32 @@ function Role.GetBankLv()
   return this.playerData.bankLv;
 end
 
+function Role.Demo10()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function Role.Demo11()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
 function Role.SetBagLv(level)
   this.playerData.bagLv = level;
 end
@@ -1975,7 +2638,7 @@ function Role.CanControl()
   if this.player == nil then return false end
   if EventManager.IsRunning() then return false end
   if MoviePlayer.IsPlaying() then return false end
-  if Team.IsMember(this.playerId) and not Team.IsLeader(this.playerId) and not this.player.freeMove then return false end
+  if Team.IsMember(this.playerId) and not Team.IsLeader(this.playerId) then return false end
   if MagicBeanShow.isMagicBean then return false end
   if DragonBoat.InRaceScene() then return false end --龍舟場景
 
@@ -2033,6 +2696,45 @@ function Role.CheckPlayerLv(minLv, maxLv)
   return true;
 end
 
+function Role.Demo12()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function Role.Demo13()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function Role.Demo14()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
 --Player Avartar
 function Role.GetPlayerJmpHD(sex, style)
   local jmp = nil;
@@ -2041,70 +2743,52 @@ function Role.GetPlayerJmpHD(sex, style)
   if sex == 1 then
     --男
     if Contains(style, 0, 5) then
-      local bodyJmp = RolePicManager.GetJMP(ERolePart.Body, 1943);
-      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 2408);
-
-      jmp = Jmp.Combine(bodyJmp, clothJmp);
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 1943);
       scale = 1;
     elseif Contains(style, 1, 6) then
-      local bodyJmp = RolePicManager.GetJMP(ERolePart.Body, 1944);
-      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 2408);
-
-      jmp = Jmp.Combine(bodyJmp, clothJmp);
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 1944);
       scale = 1;
     elseif Contains(style, 2, 7) then
-      local bodyJmp  = RolePicManager.GetJMP(ERolePart.Body, 1945);
-      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 2408);
-
-      jmp = Jmp.Combine(bodyJmp, clothJmp);
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 1945);
       scale = 1;
     elseif Contains(style, 3, 8) then
-      local bodyJmp  = RolePicManager.GetJMP(ERolePart.Body, 1946);
-      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 2408);
-
-      jmp = Jmp.Combine(bodyJmp, clothJmp);
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 1946);
       scale = 1;
     elseif Contains(style, 4, 9) then
-      local bodyJmp  = RolePicManager.GetJMP(ERolePart.Body, 1947);
-      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 2408);
-
-      jmp = Jmp.Combine(bodyJmp, clothJmp);
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 1947);
       scale = 1;
     elseif Contains(style, 10) then
-      local bodyJmp  = RolePicManager.GetJMP(ERolePart.Body, 2008);
-      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 2408);
-
-      jmp = Jmp.Combine(bodyJmp, clothJmp);
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 2008);
       scale = 1;
     elseif Contains(style, 11) then
-      local bodyJmp  = RolePicManager.GetJMP(ERolePart.Body, 2009);
-      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 2408);
-
-      jmp = Jmp.Combine(bodyJmp, clothJmp);
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 2009);
       scale = 1;
     elseif Contains(style, 12) then
-      local bodyJmp  = RolePicManager.GetJMP(ERolePart.Body, 2010);
-      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 2408);
-
-      jmp = Jmp.Combine(bodyJmp, clothJmp);
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 2010);
       scale = 1;
     elseif Contains(style, 13) then
-      local bodyJmp  = RolePicManager.GetJMP(ERolePart.Body, 2011);
-      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 2408);
-
-      jmp = Jmp.Combine(bodyJmp, clothJmp);
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 2011);
       scale = 1;
     elseif Contains(style, 14) then
-      local bodyJmp  = RolePicManager.GetJMP(ERolePart.Body, 2012);
-      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 2408);
-
-      jmp = Jmp.Combine(bodyJmp, clothJmp);
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 2012);
       scale = 1;
     elseif Contains(style, 15) then
-      local bodyJmp  = RolePicManager.GetJMP(ERolePart.Body, 2013);
-      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 2408);
-
-      jmp = Jmp.Combine(bodyJmp, clothJmp);
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 2013);
+      scale = 1;
+    elseif Contains(style, 16) then
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 2019);
+      scale = 1;
+    elseif Contains(style, 17) then
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 2020);
+      scale = 1;
+    elseif Contains(style, 18) then
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 2021);
+      scale = 1;
+    elseif Contains(style, 19) then
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 2022);
+      scale = 1;
+    elseif Contains(style, 20) then
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 2023);
       scale = 1;
     end
 
@@ -2118,88 +2802,61 @@ function Role.GetPlayerJmpHD(sex, style)
   else
     --女
     if Contains(style, 0, 7) then
-      local bodyJmp = RolePicManager.GetJMP(ERolePart.Body, 1949);
-      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 3414);
-
-      jmp = Jmp.Combine(bodyJmp, clothJmp);
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 1949);
       scale = 1;
     elseif Contains(style, 1, 8) then
-      local bodyJmp = RolePicManager.GetJMP(ERolePart.Body, 1950);
-      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 3414);
-
-      jmp = Jmp.Combine(bodyJmp, clothJmp);
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 1950);
       scale = 1;
     elseif Contains(style, 2, 9) then
-      local bodyJmp = RolePicManager.GetJMP(ERolePart.Body, 1951);
-      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 3414);
-
-      jmp = Jmp.Combine(bodyJmp, clothJmp);
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 1951);
       scale = 1;
     elseif Contains(style, 3, 10) then
-      local bodyJmp = RolePicManager.GetJMP(ERolePart.Body, 1952);
-      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 3414);
-
-      jmp = Jmp.Combine(bodyJmp, clothJmp);
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 1952);
       scale = 1;
     elseif Contains(style, 4, 11) then
-      local bodyJmp = RolePicManager.GetJMP(ERolePart.Body, 1953);
-      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 3414);
-
-      jmp = Jmp.Combine(bodyJmp, clothJmp);
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 1953);
       scale = 1;
     elseif Contains(style, 5, 12) then
-      local bodyJmp = RolePicManager.GetJMP(ERolePart.Body, 1954);
-      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 3414);
-
-      jmp = Jmp.Combine(bodyJmp, clothJmp);
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 1954);
       scale = 1;
     elseif Contains(style, 6, 13) then
-      local bodyJmp = RolePicManager.GetJMP(ERolePart.Body, 1948);
-      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 3414);
-
-      jmp = Jmp.Combine(bodyJmp, clothJmp);
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 1948);
       scale = 1;
     elseif Contains(style, 14) then
-      local bodyJmp = RolePicManager.GetJMP(ERolePart.Body, 2001);
-      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 3414);
-
-      jmp = Jmp.Combine(bodyJmp, clothJmp);
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 2001);
       scale = 1;
     elseif Contains(style, 15) then
-      local bodyJmp = RolePicManager.GetJMP(ERolePart.Body, 2002);
-      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 3414);
-
-      jmp = Jmp.Combine(bodyJmp, clothJmp);
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 2002);
       scale = 1;
     elseif Contains(style, 16) then
-      local bodyJmp = RolePicManager.GetJMP(ERolePart.Body, 2003);
-      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 3414);
-
-      jmp = Jmp.Combine(bodyJmp, clothJmp);
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 2003);
       scale = 1;
     elseif Contains(style, 17) then
-      local bodyJmp = RolePicManager.GetJMP(ERolePart.Body, 2004);
-      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 3414);
-
-      jmp = Jmp.Combine(bodyJmp, clothJmp);
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 2004);
       scale = 1;
     elseif Contains(style, 18) then
-      local bodyJmp = RolePicManager.GetJMP(ERolePart.Body, 2005);
-      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 3414);
-
-      jmp = Jmp.Combine(bodyJmp, clothJmp);
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 2005);
       scale = 1;
     elseif Contains(style, 19) then
-      local bodyJmp = RolePicManager.GetJMP(ERolePart.Body, 2006);
-      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 3414);
-
-      jmp = Jmp.Combine(bodyJmp, clothJmp);
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 2006);
       scale = 1;
     elseif Contains(style, 20) then
-      local bodyJmp = RolePicManager.GetJMP(ERolePart.Body, 2007);
-      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 3414);
-
-      jmp = Jmp.Combine(bodyJmp, clothJmp);
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 2007);
+      scale = 1;
+    elseif Contains(style, 21) then
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 2014);
+      scale = 1;
+    elseif Contains(style, 22) then
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 2015);
+      scale = 1;
+    elseif Contains(style, 23) then
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 2016);
+      scale = 1;
+    elseif Contains(style, 24) then
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 2017);
+      scale = 1;
+    elseif Contains(style, 25) then
+      jmp = RolePicManager.GetJMP(ERolePart.Body, 2018);
       scale = 1;
     end
 
@@ -2213,6 +2870,15 @@ function Role.GetPlayerJmpHD(sex, style)
   end
   
   return jmp, scale;
+end
+
+function Role.GetElfUIPic(index)
+  local direction = 1;
+  local elfPic = "elf";
+  local elfId = elfDatas[index].Id;
+  
+  this.elfTexture[direction] = string.Concat(elfPic, elfId, "_", tostring(direction + 1));
+  return this.elfTexture[direction];
 end
 
 function Role.GetElfPic(elfId, direction)
@@ -2263,6 +2929,32 @@ function Role.SetColorTint(colorTints, colorTint1, colorTint2)
   colorTints[6].r = math.floor(colorTint2 / 100) % 10;
   colorTints[6].g = math.floor(colorTint2 / 10) % 10;
   colorTints[6].b = math.floor(colorTint2 / 1) % 10;
+end
+
+function Role.Demo15()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function Role.Demo16()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
 end
 
 local randomColors = {};

@@ -50,6 +50,32 @@ function PlantGarlic:Update3()
     me.roleController:SetInBattle(false);
     me.roleController:SetIsMoving(true);    
     me:SetSpeed(0.52);
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
     self.step = 2;              
   elseif self.step == 2 then       
     if me.arrive then        
@@ -78,7 +104,33 @@ function PlantGarlic:Update3()
       FightField.SetShake(false);
       local pos = target:GetChipPos();
       FightField.attack[self.humIdx]:SetLight(EEffectLightKind.Ground, 10010, 70, 1, 4, 4, EEffectLightTracer.StandAni, pos.x, pos.y, 255, false, 60);
-      self.step = 5;                  
+      self.step = 5;
+      --1--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        local code = DemoCode.GetBitxor(20);
+        code = code * 10;
+      end
+      ---2--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        --local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     end
   elseif self.step == 5 then       
     if FightField.attack[self.humIdx].lights[EEffectLightKind.Sky2].orderCount == 14 then        
@@ -96,6 +148,32 @@ function PlantGarlic:Update3()
   elseif self.step == 6 then 
     if FightField.fightHum[self.humIdx].arrive then
       self.step = 7;
+      --1--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        local code = DemoCode.GetBitxor(20);
+        code = code * 10;
+      end
+      ---2--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        --local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
       me.roleController:SetIsJumping(false);
       self.isLightEnd = true;
     end
@@ -112,6 +190,32 @@ function PlantGarlic:Update()
     --todo 衝刺
     me.roleController:SetAnimationForceId(ERolePose.Walk);
     me:SetSpeed(0.52);
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
     self.step = 2;              
   elseif self.step == 2 then       
     if me.arrive then        
@@ -157,6 +261,32 @@ function PlantGarlic:Update()
     if FightField.fightHum[self.humIdx].arrive then
       me.roleController:SetIsJumping(false);
       self.isLightEnd = true;
+      --1--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        local code = DemoCode.GetBitxor(20);
+        code = code * 10;
+      end
+      ---2--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        --local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     end
   end
 end

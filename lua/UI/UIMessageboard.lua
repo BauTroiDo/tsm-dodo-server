@@ -32,6 +32,39 @@ function UIMessageboard.Initialize(go)
 
   event_Send = uiController:FindEvent("Image_Send");
   event_Send:SetListener(EventTriggerType.PointerClick, this.OnClick_Send);
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function UIMessageboard.OnOpen()
@@ -49,6 +82,39 @@ function UIMessageboard.OnVisible(visible)
 end
 
 function UIMessageboard.OnClose()
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   EventManager.SetConduct(true);
 
   return true;
@@ -117,6 +183,7 @@ function UIMessageboard.OnInitialize_ScrollContent_Message(scrollItems)
     scrollItems_Message[itemIndex].event_BG:SetListener(EventTriggerType.PointerClick, this.OnClick_Message);
     
     scrollItems_Message[itemIndex].icon = HeadIconController.New(scrollItems[itemIndex]:Find("Icon"));
+    scrollItems_Message[itemIndex].icon:ChangeBaseHeadIconOutlineAlpha();
     scrollItems_Message[itemIndex].text_Index = scrollItems[itemIndex]:Find("Text_Index"):GetComponent("Text");
     scrollItems_Message[itemIndex].text_Name = scrollItems[itemIndex]:Find("Text_Name"):GetComponent("Text");
     scrollItems_Message[itemIndex].text_Message = scrollItems[itemIndex]:Find("Text_Message"):GetComponent("Text");

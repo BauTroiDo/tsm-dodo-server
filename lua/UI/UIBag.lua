@@ -12,12 +12,15 @@ local gameObject_Category;
 local imageCategory = {};
 local text_Count;
 local image_Refresh;
+local image_Filter;
+local rawImage_Filter;
 
 --var
 local currentClickEvent = nil;
 local currentFilter = nil;
 local currentCategory = EThingsCategory.All;
 local interactable = true;
+local showGodskinFilter = true;
 local multiSelectCount = 0;
 local currentSelections = {};
 
@@ -29,6 +32,7 @@ local bagCategory = {};
 local currentBagKind = EThings.Bag;
 local cancelBlink = false;
 local showIndex = false;
+local forceShowFilter = false;
 
 function UIBag.Initialize(go)
   local uiController = go:GetComponent("UIController");
@@ -45,6 +49,10 @@ function UIBag.Initialize(go)
 
   image_Refresh = uiController:FindEvent("Image_Refresh");
   image_Refresh:SetListener(EventTriggerType.PointerClick, this.OnClick_Refresh);
+  
+  image_Filter = uiController:FindEvent("Image_Filter");
+  image_Filter:SetListener(EventTriggerType.PointerClick, this.OnClick_Filter);
+  rawImage_Filter = uiController:FindRawImage("Filter");
 
   event_Mask = uiController:FindEvent("Image_Mask");
   event_Mask:SetListener(EventTriggerType.PointerClick, this.OnClick_Close);
@@ -68,10 +76,15 @@ function UIBag.Initialize(go)
   event:SetListener(EventTriggerType.PointerClick, this.OnClick_Category);
   event.parameter = EThingsCategory.Material;
 
+  event = uiController:FindEvent("Image_Godskin");
+  event:SetListener(EventTriggerType.PointerClick, this.OnClick_Category);
+  event.parameter = EThingsCategory.GodSkin;
+  
   imageCategory[EThingsCategory.All] = uiController:FindImage("Image_All");
   imageCategory[EThingsCategory.Equip] = uiController:FindImage("Image_Equipment");
   imageCategory[EThingsCategory.Props] = uiController:FindImage("Image_Props");
   imageCategory[EThingsCategory.Material] = uiController:FindImage("Image_Material");
+  imageCategory[EThingsCategory.GodSkin] = uiController:FindImage("Image_Godskin");
 
   scrollContent_Collection = uiController:FindScrollContent("ScrollContent_Collection");
   scrollContent_Collection.onInitialize = this.OnInitialize_ScrollContent_Collection;
@@ -81,14 +94,56 @@ function UIBag.Initialize(go)
   isInitialize = true;
 end
 
-function UIBag.OnOpen(clickEvent, anchorPosition, showBG, selectCount, filter, showCategory, showRefresh, bagkind)
+function UIBag.OnOpen(clickEvent, anchorPosition, showBG, selectCount, filter, showCategory, showRefresh, bagkind, bShowGodskin)
   interactable = true;
-
   currentClickEvent = clickEvent;
   currentFilter = filter;
+  showGodskinFilter = bShowGodskin;
 
   if anchorPosition ~= nil then
     transform_Anchor.localPosition = anchorPosition;
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   else
     transform_Anchor.localPosition = Vector3.zero;
   end
@@ -96,6 +151,9 @@ function UIBag.OnOpen(clickEvent, anchorPosition, showBG, selectCount, filter, s
   image_BG.gameObject:SetActive(showBG ~= false);
   gameObject_Category.gameObject:SetActive(showCategory ~= false);
   image_Refresh.gameObject:SetActive(showRefresh ~= false);
+  imageCategory[EThingsCategory.GodSkin].gameObject:SetActive(bShowGodskin);
+  TextureManager.SetPng(ETextureUseType.UI, "Light_nft", rawImage_Filter);
+  rawImage_Filter:ShiftUV(1, 4, 0.5, -1);
 
   if showBG ~= false then
     if showCategory ~= false then
@@ -146,12 +204,12 @@ function UIBag.UpdateUI(refresh)
   
   local showCount;
   local slotCountInRow = 5;
-  if currentBagKind == EThings.UniqueBlood then
-    showCount = math.min((math.ceil(Item.currentUniqueBloodGrid / 5) + 1) * 5, Item.maxUniqueBloodBagGrid);
-  elseif currentBagKind ~= EThings.OutfitStyleInCollection then
-    showCount = math.min((math.ceil(Item.currentThingGrid / 5) + 1) * 5, Item.MaxThingGrid);
+  if currentBagKind == EThings.OutfitStyleInCollection then
+    showCount = CollectStyle.GetTotalCollectionDataCount() * slotCountInRow;
+  elseif currentBagKind == EThings.Soul then
+    showCount = Item.MaxSoulGrid + RoleCount.Get(823);
   else
-    showCount = CollectStyle.GetTotalCollectionDataCount()* slotCountInRow;
+    showCount = math.min((math.ceil(Item.currentThingGrid / 5) + 1) * 5, Item.MaxThingGrid);
   end
   
   if refresh ~= false then
@@ -161,12 +219,13 @@ function UIBag.UpdateUI(refresh)
   end
 
   this.UpdateCategoryIcon();
-  if currentBagKind == EThings.UniqueBlood then
-    text_Count.text = string.Concat(Item.GetBagCount(currentBagKind, 0), "/", Item.currentUniqueBloodGrid);
-  elseif currentBagKind ~= EThings.OutfitStyleInCollection then
-    text_Count.text = string.Concat(Item.GetBagCount(currentBagKind, 0), "/", Item.currentThingGrid);
-  else
+
+  if currentBagKind == EThings.OutfitStyleInCollection then
     text_Count.text = "";
+  elseif currentBagKind == EThings.Soul then
+    text_Count.text = string.Concat(Item.GetBagCount(currentBagKind, 0), "/", Item.MaxSoulGrid - 10 + RoleCount.Get(823));
+  else
+    text_Count.text = string.Concat(Item.GetBagCount(currentBagKind, 0), "/", Item.currentThingGrid);
   end
 end
 
@@ -191,6 +250,48 @@ function UIBag.ClearSelect(trigEvent)
 end
 
 function UIBag.OnClick_Close()
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   UI.Close(UIBag);
 end
 
@@ -252,12 +353,8 @@ end
 
 function UIBag.OnClick_UnLock(uiEvent)
   if not interactable then return end
-
-  if currentBagKind == EThings.UniqueBlood then
-    ShowCenterMessage(string.Get(24075));
-  else
-    UISell.Launch(3);
-  end
+  
+  UISell.Launch(3);
 end
 
 function UIBag.SetBlink(bagIndex, time)
@@ -298,7 +395,11 @@ end
 function UIBag.OnItemChange_ScrollContent_Collection(dataIndex, itemIndex)
   local itemSave = bagCategory[dataIndex + 1];
   local visualIndex = dataIndex + 1;
-
+  
+  if not cancelBlink then
+    this.SkidBlink();
+  end
+  
   if itemSave ~= nil then
     scrollItems_Collection[itemIndex]:SetItem(itemSave.Id, itemSave.quant, itemSave);
     scrollItems_Collection[itemIndex]:SetEvent(this.OnClick_Item, itemSave, visualIndex);
@@ -314,9 +415,7 @@ function UIBag.OnItemChange_ScrollContent_Collection(dataIndex, itemIndex)
     scrollItems_Collection[itemIndex]:SetSelect(false);
     scrollItems_Collection[itemIndex]:SetRedDot(false);
 
-    if (dataIndex + 1 > Item.currentThingGrid and currentBagKind ~= EThings.UniqueBlood) or
-      (dataIndex + 1 > Item.currentUniqueBloodGrid and currentBagKind == EThings.UniqueBlood)
-        and currentBagKind ~= EThings.OutfitStyleInCollection then
+    if dataIndex + 1 > Item.currentThingGrid and not Contains(currentBagKind, EThings.OutfitStyleInCollection, EThings.Soul) then
       scrollItems_Collection[itemIndex]:SetLock(true);
       scrollItems_Collection[itemIndex]:SetEvent(this.OnClick_UnLock);
     else
@@ -328,12 +427,62 @@ function UIBag.OnItemChange_ScrollContent_Collection(dataIndex, itemIndex)
   return true;
 end
 
+function UIBag.SetFilterActive(enable)
+  rawImage_Filter.gameObject:SetActive(enable);
+end
+
+function UIBag.GetcurrentCategory()
+  return currentCategory;
+end
+
 function UIBag.OnClick_Category(uiEvent)
   local index = uiEvent.parameter;
 
   if currentCategory == index then return end
 
   currentCategory = index;
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 
   if multiSelectCount > 0 then
     this.ClearSelect();
@@ -347,6 +496,7 @@ function UIBag.UpdateCategoryIcon()
   imageCategory[EThingsCategory.Equip].sprite = UI.GetSprite("but060D");
   imageCategory[EThingsCategory.Props].sprite = UI.GetSprite("but059D");
   imageCategory[EThingsCategory.Material].sprite = UI.GetSprite("but058D");
+  imageCategory[EThingsCategory.GodSkin].sprite = UI.GetSprite("but268D");
 
   if currentCategory == EThingsCategory.All then
     imageCategory[currentCategory].sprite = UI.GetSprite("but061L");
@@ -356,7 +506,27 @@ function UIBag.UpdateCategoryIcon()
     imageCategory[currentCategory].sprite = UI.GetSprite("but059L");
   elseif currentCategory == EThingsCategory.Material then
     imageCategory[currentCategory].sprite = UI.GetSprite("but058L");
+  elseif currentCategory == EThingsCategory.GodSkin then
+    imageCategory[currentCategory].sprite = UI.GetSprite("but268L");
   end
+  
+  image_Filter.gameObject:SetActive(forceShowFilter or (currentCategory == EThingsCategory.GodSkin));
+  
+  if Item.CheckGodskinFilter() then
+    rawImage_Filter.enabled = true;
+  else
+    rawImage_Filter.enabled = false;
+  end
+end
+
+function UIBag.ShowImageFilter(enable)
+  forceShowFilter = enable;
+  
+  this.UpdateCategoryIcon();
+end
+
+function UIBag.OnClick_Filter()
+  UI.Open(UIGodskinFilter);
 end
 
 function UIBag.OnClick_Refresh()
@@ -368,6 +538,34 @@ function UIBag.OnClick_Refresh()
   local stackable = {};
   local index = 0;
   local change = {};
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 
   for k, v in pairs(bag) do
     if not Item.IsTypeOfEquips(itemDatas[v.Id].fitType) then
@@ -399,13 +597,13 @@ function UIBag.OnClick_Refresh()
   local changeCount = table.Count(change);
 
   if changeCount > 0 then
-    --C:023-010 <移動背包物品> +原始背包索引(1) +數量(1) +目標背包索引(1)
+    --C:023-010 <移動背包物品> +原始背包索引(2) +數量(4) +目標背包索引(2)
     sendBuffer:Clear();
     sendBuffer:WriteByte(changeCount);
     for k, v in pairs(change) do
-      sendBuffer:WriteByte(change[k].from);
+      sendBuffer:WriteUInt16(change[k].from);
       sendBuffer:WriteInt32(change[k].quant);
-      sendBuffer:WriteByte(change[k].to);
+      sendBuffer:WriteUInt16(change[k].to);
     end
     Network.Send(23, 10, sendBuffer);
 

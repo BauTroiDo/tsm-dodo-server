@@ -50,6 +50,14 @@ function UISkill.Initialize(go)
   scrollContent_Skill.onInitialize = this.OnInitialize_ScrollContent_Skill;
   scrollContent_Skill.onItemChange = this.OnItemChange_ScrollContent_Skill;
   scrollContent_Skill:Initialize(1);
+  
+  
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 1;
+  end
+  ---2--------------------------------------------------------------
 
   local tempEvent;
 
@@ -76,6 +84,13 @@ function UISkill.OnOpen(role, clickEvent, anchorPosition, hint, showBG, showPoin
   currentRole = role;
   currentElement = currentRole:GetAttribute(EAttribute.Element);
   currentClickEvent = clickEvent;
+  
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 1;
+  end
+  ---2--------------------------------------------------------------
 
   if anchorPosition ~= nil then
     transform_Anchor.localPosition = anchorPosition;
@@ -116,6 +131,13 @@ function UISkill.OnClose()
   -- if UI.IsVisible(UIHotkey) then
   --   UIHotkey.Deselected();
   -- end
+  
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 1;
+  end
+  ---2--------------------------------------------------------------
 end
 
 function UISkill.ClearSkill()
@@ -214,6 +236,15 @@ function UISkill.UpdateUI()
 
   this.UpdateElement();
   
+  
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   -- if UI.IsVisible(UIHotkey) then
   --   UIHotkey.ChangeRole(currentRole, EUseSource.UISkillTree);
   -- end
@@ -249,6 +280,14 @@ function UISkill.UpdateElement()
 end
 
 function UISkill.OnClick_Close()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   UI.Close(UISkill);
 end
 
@@ -261,6 +300,14 @@ function UISkill.OnClick_SkillElement(uiEvent)
 end
 
 function UISkill.OnClick_Skill(uiEvent)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   transform_Selected.position = uiEvent.transform.position;
   local clickState = "none";
 
@@ -277,9 +324,9 @@ function UISkill.OnClick_Skill(uiEvent)
     this.SelectSkill(uiEvent.parameter);
     if(UI.IsVisible(UIHotkey)) then
       if this.IsLearned(skillDatas[uiEvent.parameter].id) then
-        Hotkey.SetCurrentSelectId(skillDatas[uiEvent.parameter].id, EHotkeyUI.Main);
+        UIHotkey.SelectedItem(skillDatas[uiEvent.parameter].id, EHotKeyType.Skill);
       else
-        Hotkey.SetCurrentSelectId(-1, EHotkeyUI.Main);
+        UIHotkey.SelectedItem(-1, EHotKeyType.Skill);
       end
     end
   elseif clickState == "SecondTouch" then
@@ -292,6 +339,14 @@ function UISkill.OnClick_Skill(uiEvent)
 end
 
 function UISkill.OnClick_HotKey(uiEvent)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   if Role.player.war ~= EWar.None then
     ShowCenterMessage(string.Get(80099));
     return;

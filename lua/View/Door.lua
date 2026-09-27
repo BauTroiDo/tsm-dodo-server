@@ -12,6 +12,30 @@ local tempVec = Vector2.New(0, 0);
 Door = {}
 Door.__index = Door;
 
+function Door.RandomA()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Door.RandomB()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 function Door.New(doorData)    
   local self = {};
   setmetatable(self, Door);
@@ -81,6 +105,18 @@ function Door.New(doorData)
   return self;  
 end
 
+function Door.RandomC()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 function Door:Destroy()
   poolMgr:Release("BaseDoor", self.gameObject);
 
@@ -89,3 +125,38 @@ function Door:Destroy()
   self.rawImage.texture = nil;
 end
 
+function Door.RandomD()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Door.RandomE()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Door.RandomF()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end

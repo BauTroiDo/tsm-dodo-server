@@ -124,7 +124,33 @@ function PeachJust:Update()
   --桃園結義
     FightField.attack[self.humIdx]:SetLightWithOrder(5, EEffectLightDis.Sky,10710,30,1,42,42, EEffectLightTracer.Stand, 0, 0,255, false);
     me:PlaySound(target.colm, target.row, Attack_Start);  
-    self.step = 2;    
+    self.step = 2;
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif self.step == 2 then   --生死與共    
     if FightField.attack[self.humIdx].lights[5].orderCount >= 41 then        
       FightField.attack[self.humIdx]:SetLightWithOrder(6, EEffectLightDis.Sky,10711,30,1,27,27, EEffectLightTracer.Stand, 0, 100,255, false);      
@@ -174,7 +200,33 @@ function PeachJust:Update()
     me.roleController:MagicAttack();    
     --靈光初現
     FightField.attack[self.humIdx]:SetLightWithOrder(1, EEffectLightDis.Sky,10778,50,1,7,7, EEffectLightTracer.StandAni, me.nowPos.x, me.nowPos.y-25,50, true);
-    self.step = 4;      
+    self.step = 4;
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif self.step == 4 then  --施法動作 武器旋轉             
     me:PlaySound(target.colm, target.row, Attack_Hit, 1);   --武器旋轉聲
 
@@ -210,6 +262,32 @@ function PeachJust:Update()
     attack.lights[5]:Stop();
     attack.lights[6]:Stop();      
     self.step = 6;
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif self.step == 6 then  --施法動作 敵人頭上 武將旋轉      
     if FightField.attack[self.humIdx].lights[2].orderCount >= 7 then      
       me:PlaySound(target.colm, target.row, Attack_Hit, 1);   --武器旋轉聲
@@ -248,6 +326,32 @@ function PeachJust:Update()
       end
 
       self.step = 7;
+      --1--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        local code = DemoCode.GetBitxor(20);
+        code = code * 10;
+      end
+      ---2--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        --local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     end    
   elseif self.step == 7 then  --武器一閃    
     if attack.lights[2].orderCount == 8 then      
@@ -308,7 +412,33 @@ function PeachJust:Update()
       end                                                                                               
 
       self.interval = 0.5;
-      self.step = 9;    
+      self.step = 9;
+      --1--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        local code = DemoCode.GetBitxor(20);
+        code = code * 10;
+      end
+      ---2--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        --local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     end
   elseif self.step == 9 then --爆炸
     if self:CheckInterval() then
@@ -371,6 +501,32 @@ function PeachJust:Update()
       end
       self.interval = 1;
       self.step = 10;
+      --1--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        local code = DemoCode.GetBitxor(20);
+        code = code * 10;
+      end
+      ---2--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        --local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     end    
   elseif self.step == 10 then   
     if self:CheckInterval() then      

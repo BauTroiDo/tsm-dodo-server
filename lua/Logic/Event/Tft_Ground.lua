@@ -3,6 +3,23 @@ Tft_Ground.__index = Tft_Ground;
 
 local tempVec = Vector2.zero;
 
+--[[
+Now in the days of Amraphel, king of Shinar, Arioch, king of Ellasar, Chedorlaomer, king of Elam, and Tidal, king of Goiim,
+They made war with Bera, king of Sodom, and with Birsha, king of Gomorrah, Shinab, king of Admah, and Shemeber, king of Zeboiim, and the king of Bela (which is Zoar).
+All these came together in the valley of Siddim (which is the Salt Sea).
+For twelve years they were under the rule of Chedorlaomer, but in the thirteenth year they put off his control.
+And in the fourteenth year, Chedorlaomer and the kings who were on his side, overcame the Rephaim in Ashteroth-karnaim, and the Zuzim in Ham, and the Emim in Shaveh-kiriathaim,
+And the Horites in their mountain Seir, driving them as far as El-paran, which is near the waste land.
+Then they came back to En-mishpat (which is Kadesh), making waste all the country of the Amalekites and of the Amorites living in Hazazon-tamar.
+And the king of Sodom with the king of Gomorrah and the king of Admah and the king of Zeboiim and the king of Bela (that is Zoar), went out, and put their forces in position in the valley of Siddim,
+Against Chedorlaomer, king of Elam, and Tidal, king of Goiim, and Amraphel, king of Shinar, and Arioch, king of Ellasar: four kings against the five.
+Now the valley of Siddim was full of holes of sticky earth; and the kings of Sodom and Gomorrah were put to flight and came to their end there, but the rest got away to the mountain.
+And the four kings took all the goods and food from Sodom and Gomorrah and went on their way.
+And in addition they took Lot, Abram's brother's son, who was living in Sodom, and all his goods.
+And one who had got away from the fight came and gave word of it to Abram the Hebrew, who was living by the holy tree of Mamre, the Amorite, the brother of Eshcol and Aner, who were friends of Abram.
+And Abram, hearing that his brother's son had been made a prisoner, took a band of his trained men, three hundred and eighteen of them, sons of his house, and went after them as far as Dan.
+--]]
+
 function Tft_Ground.New(reader)
   local self = {};
   setmetatable(self, Tft_Ground);
@@ -44,6 +61,32 @@ function Tft_Ground.New(reader)
   self.alpha = 0;
   
   return self;
+end
+
+function Tft_Ground.Demo()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function Tft_Ground.Demo1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
 end
 
 function Tft_Ground:Load()  
@@ -149,7 +192,32 @@ function Tft_Ground:Load()
   self:Update();
 end
 
-function Tft_Ground:Destroy() 
+function Tft_Ground.Demo2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function Tft_Ground.Demo3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+function Tft_Ground:Destroy()
   for k, v in pairs(self.movieBackGround.grid) do
     v.rawImage.texture = nil;
     poolMgr:Release("BaseScene", v.gameObject); 
@@ -161,6 +229,19 @@ function Tft_Ground:Destroy()
   self.movieBackGround.gameObject = nil;
   self.movieBackGround = nil; 
   --self.fadeImage = nil;
+end
+
+function Tft_Ground.Demo7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
 end
 
 function Tft_Ground:Update()
@@ -202,4 +283,43 @@ function Tft_Ground:NextStep()
   self.destination.x = self.destXY[self.nowStep].x;
   self.destination.y = self.destXY[self.nowStep].y;
   self.speedLevel = self.destXY[self.nowStep].speedLevel;
+end
+
+function Tft_Ground.Demo34()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function Tft_Ground.Demo5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function Tft_Ground.Demo6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
 end

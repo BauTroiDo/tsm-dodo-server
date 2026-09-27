@@ -46,10 +46,22 @@ EActivity = {
   OrganizationFight = 45, --軍團據點戰
   CityScramble = 111, --城鎮爭霸
   BattlePass = 128, --通行證
+  ArmyBattle = 133, --據點戰
 }
 
 ActivityInfo = {}
 ActivityInfo.__index = ActivityInfo;
+
+function ActivityInfo.Script()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
 
 function ActivityInfo.New(reader)
   local self = {};
@@ -76,12 +88,78 @@ function ActivityInfo.New(reader)
   return uiKind, mainKind, subKind, self;
 end
 
+function ActivityInfo.Script1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function ActivityInfo.Script2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function ActivityInfo.Script3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
 function ActivityInfo:GetMainTag()
   return string.Get(self.mainTag);
 end
 
+function ActivityInfo.Script4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
 function ActivityInfo:GetSubTag()
   return string.Get(self.subTag);
+end
+
+function ActivityInfo.Script5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function ActivityInfo.Script6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
 end
 
 function ActivityInfo:GetActivityName()
@@ -90,4 +168,15 @@ end
 
 function ActivityInfo:GetDescription()
   return string.Get(self.description);
+end
+
+function ActivityInfo.Script7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
 end

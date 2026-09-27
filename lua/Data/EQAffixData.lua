@@ -18,6 +18,27 @@ function EQAffixData.New(reader)
   return self.index, kind, self;
 end
 
+function EQAffixData.GuessNumberH(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
 function EQAffixData.GetMaxMinValue(fitType, attr, index)
   local max = 0;
   local min = 0;
@@ -46,6 +67,48 @@ function EQAffixData.GetMaxMinValue(fitType, attr, index)
   return max, min;
 end
 
+function EQAffixData.GuessNumberA(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
+function EQAffixData.GuessNumberB(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
 function EQAffixData.GetRangeValue(fitType, attr, lv, attrValue)
   local total = 0;
   local rangValue = 0;
@@ -61,4 +124,88 @@ function EQAffixData.GetRangeValue(fitType, attr, lv, attrValue)
   end
 
   return total, rangValue;
+end
+
+function EQAffixData.GuessNumberC(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
+function EQAffixData.GuessNumberD(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
+function EQAffixData.GuessNumberE(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
+function EQAffixData.GuessNumberF(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
 end

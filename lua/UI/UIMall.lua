@@ -11,7 +11,6 @@ local gameObject_Sale2Item;
 local gameObject_NTDItem;
 local gameObject_NTD2Item;
 local gameObject_CashItem;
-local gameObject_Input;
 
 local scrollContent_SaleItem;
 local scrollItems_SaleItem = {};
@@ -32,9 +31,6 @@ local scrollItems_NTD2Item = {};
 local scrollContent_CashItem;
 local scrollItems_CashItem = {};
 
-local inputField_Number;
-local inputField_Password;
-
 local currentStoreKind; --目前商店種類
 local currentMainPageIndex; --各種類商店販售主頁籤索引
 local mainPage;
@@ -49,6 +45,54 @@ local text_NoItem;
 local image_Recipt;
 
 local tagDatas = {};
+local gacha = false;
+local visibleMainPageToRealMainPage = {};
+local realMainPageToVisibleMainPage = {};
+
+local function IsHideGiftTabByChannel()
+  local channelId = tonumber(manifestChannelId) or 0;
+  if channelId < 0 then channelId = 0 end
+  
+  return channelId ~= 0;
+end
+
+local function IsGiftStoreKind(storeKind)
+  return storeKind == EStoreKind.NTD or storeKind == EStoreKind.NTD2;
+end
+
+local function AddVisibleMainTag(tagName, subTags, realMainPageIndex)
+  local visibleIndex = table.maxn(tagDatas) + 1;
+  tagDatas[visibleIndex] = { tagName, subTags };
+
+  if realMainPageIndex ~= nil then
+    visibleMainPageToRealMainPage[visibleIndex] = realMainPageIndex;
+    realMainPageToVisibleMainPage[realMainPageIndex] = visibleIndex;
+  end
+end
+
+local function GetVisibleMainPage(realMainPageIndex)
+  return realMainPageToVisibleMainPage[realMainPageIndex] or 1;
+end
+
+local function GetRealMainPage(visibleMainPageIndex)
+  return visibleMainPageToRealMainPage[visibleMainPageIndex] or visibleMainPageIndex;
+end
+
+local function EnsureCurrentMainPageVisible()
+  if gacha then return end
+
+  if realMainPageToVisibleMainPage[currentMainPage] ~= nil then
+    return;
+  end
+
+  if visibleMainPageToRealMainPage[1] ~= nil then
+    currentMainPage = visibleMainPageToRealMainPage[1];
+  else
+    currentMainPage = 1;
+  end
+
+  currentSubPage = 1;
+end
 
 function UIMall.Initialize(go)
   local uiController = go:GetComponent("UIController");
@@ -64,7 +108,6 @@ function UIMall.Initialize(go)
   gameObject_NTDItem = uiController:FindGameObject("GameObject_NTDItem");
   gameObject_NTD2Item = uiController:FindGameObject("GameObject_NTD2Item");
   gameObject_CashItem = uiController:FindGameObject("GameObject_CashItem");
-  gameObject_Input = uiController:FindGameObject("GameObject_Input");
   
 
   scrollContent_SaleItem = uiController:FindScrollContent("ScrollContent_SaleItem");
@@ -92,9 +135,6 @@ function UIMall.Initialize(go)
   scrollContent_CashItem.onItemChange = this.OnItemChange_ScrollContent_CashItem;
   scrollContent_CashItem:Initialize(1);
 
-  inputField_Number = uiController:FindInputField("InputField_Number");
-  inputField_Password = uiController:FindInputField("InputField_Password");
-
   text_NoItem = uiController:FindText("Text_NoItem");
   text_CurrencyVaule = uiController:FindText("Text_CurrencyVaule");
 
@@ -104,44 +144,86 @@ function UIMall.Initialize(go)
    
 
   local tempEvent;
-  tempEvent = uiController:FindEvent("Image_InputMask");
-  tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_InputMask);
-
-  tempEvent = uiController:FindEvent("Image_Send");
-  tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_Send);
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 
   tempEvent = uiController:FindEvent("Image_Recipt");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_Recipt); 
   
   image_SendRefresh = uiController:FindEvent("Image_SendRefresh"); 
   image_SendRefresh:SetListener(EventTriggerType.PointerClick, this.OnClick_SendRefresh); 
-  --tag
-  if Network.CheckServerSwitch(EServerSwitch.Review) then
-    tagDatas[1] = {};
-    tagDatas[1][1] = Mall.GetMainTagNameByKind(EStoreKind.NTD2);
-    tagDatas[1][2] = {};      
-
-    tagDatas[2] = {};
-    tagDatas[2][1] = Mall.GetMainTagNameByKind(EStoreKind.Cash);
-    tagDatas[2][2] = {};    
-  else
-    local totalMainPageCount = Mall.GetMainPageCount();
-
-    for i = 1, totalMainPageCount do
-      local subPageCount = Mall.GetSubPageCount(i);
-
-      tagDatas[i] = {};
-      tagDatas[i][1] = Mall.GetMainTagName(i);
-
-      tagDatas[i][2] = {};
-      for j = 1, subPageCount do
-        tagDatas[i][2][j] = Mall.GetSubTagName(i, j);
-      end
-    end
-  end
 end
 
 function UIMall.OnInitialize_ScrollContent_SaleItem(scrollItems)
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
   for itemIndex = 0, scrollItems.Length - 1 do
     scrollItems_SaleItem[itemIndex] = {};
     scrollItems_SaleItem[itemIndex].event = scrollItems[itemIndex]:Find("Image_BG"):GetComponent("UIEvent");
@@ -223,6 +305,35 @@ function UIMall.OnItemChange_ScrollContent_Sale2Item(dataIndex, itemIndex)
   local itemData = itemDatas[sellData.Id];
   if itemData == nil then
     logError("itemData == nil")
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    
     return false;
   end
 
@@ -276,6 +387,7 @@ function UIMall.OnInitialize_ScrollContent_NTDItem(scrollItems)
     scrollItems_NTDItem[itemIndex].item = UIItemController.New(scrollItems[itemIndex]:Find("Image_ItemBG"));
     scrollItems_NTDItem[itemIndex].box = scrollItems[itemIndex]:Find("RawImage_Box"):GetComponent("RawImage");
     scrollItems_NTDItem[itemIndex].dayCount = scrollItems[itemIndex]:Find("Text_DayCount"):GetComponent("Text");
+    scrollItems_NTDItem[itemIndex].limitTime = scrollItems[itemIndex]:Find("Text_LimitTIme"):GetComponent("Text");
     scrollItems_NTDItem[itemIndex].smallTagBG = scrollItems[itemIndex]:Find("Image_SmallTagBG"):GetComponent("Image");
     scrollItems_NTDItem[itemIndex].smallTag = scrollItems[itemIndex]:Find("Text_SmallTag"):GetComponent("Text");
     scrollItems_NTDItem[itemIndex].image_Gold = scrollItems[itemIndex]:Find("Image_Gold"):GetComponent("Image");
@@ -307,12 +419,96 @@ function UIMall.UpdateNTDScrollContent(dataIndex, itemIndex)
 
   if sellData == nil then
     logError("sellData == nil")
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
     return false;
   end
 
   local itemData = itemDatas[sellData.Id];
   if itemData == nil then
     logError("itemData == nil")
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
     return false;
   end
 
@@ -324,7 +520,8 @@ function UIMall.UpdateNTDScrollContent(dataIndex, itemIndex)
   scrollItems_NTDItem[itemIndex].name.text = itemData:GetName(true);
 
   scrollItems_NTDItem[itemIndex].dayCount.text = sellData:GetLimitString(RoleCount.Get(sellData.flag));
-
+  scrollItems_NTDItem[itemIndex].limitTime.text = sellData:GetSpecLimitTimeString();
+  
   scrollItems_NTDItem[itemIndex].image_Gold.gameObject:SetActive(sellData.currencyKind ~= 0);
   scrollItems_NTDItem[itemIndex].image_Gold.sprite = UI.GetCurrencySprite(sellData.currencyKind);
 
@@ -359,7 +556,7 @@ function UIMall.UpdateNTDScrollContent(dataIndex, itemIndex)
     scrollItems_NTDItem[itemIndex].price.text = string.format( string.Get(storeValueData.showText), storeValueData.showPrice * 0.01 );    
   end
 
-  if LuaHelper.CheckDefine("ThirdParty") and ( LuaHelper.CheckDefine("HK") or LuaHelper.CheckDefine("TW") ) then
+  if LuaHelper.CheckDefine("ThirdParty") then
     scrollItems_NTDItem[itemIndex].price.fontSize = 20;
   else
     scrollItems_NTDItem[itemIndex].price.fontSize = 25;
@@ -384,12 +581,96 @@ function UIMall.UpdateDoroScrollContent(dataIndex, itemIndex)
 
   if sellData == nil then
     logError("sellData == nil")
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
     return false;
   end
 
   local itemData = itemDatas[sellData.Id];
   if itemData == nil then
     logError("itemData == nil")
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
     return false;
   end
 
@@ -401,6 +682,7 @@ function UIMall.UpdateDoroScrollContent(dataIndex, itemIndex)
   scrollItems_NTDItem[itemIndex].name.text = itemData:GetName(true);
 
   scrollItems_NTDItem[itemIndex].dayCount.text = sellData:GetLimitString(RoleCount.Get(sellData.flag));
+  scrollItems_NTDItem[itemIndex].limitTime.text = sellData:GetSpecLimitTimeString();
 
   scrollItems_NTDItem[itemIndex].image_Gold.gameObject:SetActive(sellData.currencyKind ~= 0);
   scrollItems_NTDItem[itemIndex].image_Gold.sprite = UI.GetCurrencySprite(sellData.currencyKind);
@@ -430,7 +712,7 @@ function UIMall.UpdateDoroScrollContent(dataIndex, itemIndex)
 
   scrollItems_NTDItem[itemIndex].image_BonusTarget.gameObject:SetActive(false);
 
-  if Contains(sellData.currencyKind, ECurrency.furnitureAdvanced, ECurrency.furnitureNormal, ECurrency.Elf, ECurrency.Treasure) then
+  if Contains(sellData.currencyKind, ECurrency.furnitureAdvanced, ECurrency.furnitureNormal, ECurrency.Elf, ECurrency.Soul, ECurrency.ColorSoul, ECurrency.WarriorTicket, ECurrency.CardTicket, ECurrency.ExclusiveWeaponTicket, ECurrency.OutfitTicket, ECurrency.Treasure) then
     scrollItems_NTDItem[itemIndex].furniture.gameObject:SetActive(true);
     scrollItems_NTDItem[itemIndex].image_furniture.sprite = UI.GetCurrencySprite(sellData.currencyKind);
     scrollItems_NTDItem[itemIndex].text_furniture.text = Role.GetPlayerCurrency(sellData.currencyKind);
@@ -481,9 +763,41 @@ function UIMall.OnItemChange_ScrollContent_NTD2Item(dataIndex, itemIndex)
 
   if sellData == nil then
     logError("sellData == nil")
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
     return false;
   end
-
   local itemData = itemDatas[sellData.Id];
   
   if sellData.saleCredit ~= BattlePass.battlePassStorValueIndex then --通行證超值禮包頁面不檢查物品
@@ -664,21 +978,33 @@ function UIMall.OnItemChange_ScrollContent_CashItem(dataIndex, itemIndex)
   return true;
 end
 
-function UIMall.OnOpen(mainPage, subPage)
+function UIMall.OnOpen(mainPage, subPage, openGacha)
+  Network.Send(1, 16);
+  
+  this.UpdateTagData(openGacha);
+  
+  Mall.ClearDoro();
   StoreValue.Init();
-  this.CloseInput();
+  StoreValue.InitShow();
 
-  if mainPage == 0 or mainPage == nil then
-    currentMainPage = 1;    
-  else
-    currentMainPage = mainPage;
-  end
-
-  if subPage == 0 or subPage == nil then
+  if openGacha then
+    currentMainPage = EStoreKind.Doro - 1;
     currentSubPage = 1;
   else
-    currentSubPage = subPage;
+    if mainPage == 0 or mainPage == nil then
+      currentMainPage = 1;
+    else
+      currentMainPage = mainPage;
+    end
+  
+    if subPage == 0 or subPage == nil then
+      currentSubPage = 1;
+    else
+      currentSubPage = subPage;
+    end
   end
+
+  EnsureCurrentMainPageVisible();
 
   currentItemPage = 1;
 
@@ -687,7 +1013,91 @@ function UIMall.OnOpen(mainPage, subPage)
   return true;
 end
 
+function UIMall.UpdateTagData(openGacha)
+  gacha = openGacha;
+  
+  tagDatas = {};
+  visibleMainPageToRealMainPage = {};
+  realMainPageToVisibleMainPage = {};
+  local hideGiftTab = IsHideGiftTabByChannel();
+
+  if gacha then
+    if Network.CheckServerSwitch(EServerSwitch.Review) then
+      if not hideGiftTab then
+        AddVisibleMainTag(Mall.GetMainTagNameByKind(EStoreKind.NTD2), {});
+      end
+
+      AddVisibleMainTag(Mall.GetMainTagNameByKind(EStoreKind.Cash), {});
+    else
+      local tagName = Mall.GetGachaMainTagName();
+      tagDatas = {};
+      for k, v in pairs(tagName) do
+        tagDatas[k] = { v, nil };
+      end
+    end
+  
+    RedDot.Remove(ERedDot.Gacha);
+  else
+    if Network.CheckServerSwitch(EServerSwitch.Review) then
+      if not hideGiftTab then
+        AddVisibleMainTag(Mall.GetMainTagNameByKind(EStoreKind.NTD2), {}, 1);
+      end
+
+      AddVisibleMainTag(Mall.GetMainTagNameByKind(EStoreKind.Cash), {}, 2);
+    else
+      local totalMainPageCount = Mall.GetMainPageCount();
+      for realMainPageIndex = 1, totalMainPageCount do
+        local storeKind = Mall.GetMallKind(realMainPageIndex);
+
+        if not (hideGiftTab and IsGiftStoreKind(storeKind)) then
+          local subPageCount = Mall.GetSubPageCount(realMainPageIndex);
+          local subTags = {};
+
+          for j = 1, subPageCount do
+            subTags[j] = Mall.GetSubTagName(realMainPageIndex, j);
+          end
+
+          AddVisibleMainTag(Mall.GetMainTagName(realMainPageIndex), subTags, realMainPageIndex);
+        end
+      end
+    end
+  end
+end
+
 function UIMall.OnClose()
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   if UI.IsVisible(UIAlert) then
     UI.Close(UIAlert);
   end
@@ -695,7 +1105,12 @@ end
 
 function UIMall.OnVisible(visible)
   if visible then
-    UIFrame.Active(transform_FrameRect, string.Get(10085), this.OnClick_Close, nil, this.OnClick_Tag, tagDatas, currentMainPage, currentSubPage, this.UpdateRedot);
+    if gacha then
+      UIFrame.Active(transform_FrameRect, string.Get(10085), this.OnClick_Close, nil, this.OnClick_Tag, tagDatas, 1, 1, this.UpdateRedot);
+    else
+      local visibleMainPage = GetVisibleMainPage(currentMainPage);
+      UIFrame.Active(transform_FrameRect, string.Get(10085), this.OnClick_Close, nil, this.OnClick_Tag, tagDatas, visibleMainPage, currentSubPage, this.UpdateRedot);
+    end
 
     this.SetSaleItemData();
     this.UpdateItemPage();
@@ -703,18 +1118,22 @@ function UIMall.OnVisible(visible)
 end
 
 function UIMall.UpdateRedot(mainPageIndex, subPageIndex)
-  if mainPage == mainPageIndex then
-    return false;
-  else
-    mainPage = mainPageIndex;
-  end
+  if not gacha then
+    local realMainPage = GetRealMainPage(mainPageIndex);
 
-  if Mall.GetMallKind(mainPage) == EStoreKind.NTD2 then
-    return Mall.IsGSSavePointCanGet();
-  elseif Mall.GetMallKind(mainPage) == EStoreKind.Doro then
-    return not Mall.IsDoroCheck();
-  elseif Mall.GetMallKind(mainPage) == EStoreKind.Mall then
-    return not Mall.IsMallCheck();
+    if mainPage == realMainPage then
+      return false;
+    else
+      mainPage = realMainPage;
+    end
+  
+    if Mall.GetMallKind(mainPage) == EStoreKind.NTD2 then
+      return Mall.IsGSSavePointCanGet();
+    elseif Mall.GetMallKind(mainPage) == EStoreKind.Doro then
+      return not Mall.IsDoroCheck();
+    elseif Mall.GetMallKind(mainPage) == EStoreKind.Mall then
+      return not Mall.IsMallCheck();
+    end
   end
 
   return false;
@@ -783,26 +1202,107 @@ function UIMall.RefreshItemPage()
 end
 
 function UIMall.OnClick_Close()
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   UI.Close(UIMall);
 
   return true;
 end
 
 function UIMall.OnClick_Tag(mainTag, subTag)
-  currentMainPage = mainTag;
-  currentSubPage = subTag;
-  currentItemPage = 1;
-  currentItemIndex = 0;
-
-  this.SetSaleItemData()
-  this.UpdateItemPage();
-
-  if Mall.GetMallKind(currentMainPage) == EStoreKind.Doro then
-    Mall.SetDoroCheck();
-    Mall.IsRedDot();
-  elseif Mall.GetMallKind(currentMainPage) == EStoreKind.Mall then
-    Mall.SetMallCheck();
-    Mall.IsRedDot();
+  if gacha then
+    currentMainPage = EStoreKind.Doro - 1;
+    currentSubPage = mainTag;
+    currentItemPage = 1;
+    currentItemIndex = 0;
+  
+    this.SetSaleItemData()
+    this.UpdateItemPage();
+  
+    if Mall.GetMallKind(currentMainPage) == EStoreKind.Doro then
+      Mall.SetDoroCheck();
+      Mall.IsRedDot();
+    end
+  else
+    currentMainPage = GetRealMainPage(mainTag);
+    currentSubPage = subTag;
+    currentItemPage = 1;
+    currentItemIndex = 0;
+  
+    this.SetSaleItemData()
+    this.UpdateItemPage();
+  
+    if Mall.GetMallKind(currentMainPage) == EStoreKind.Doro then
+      Mall.SetDoroCheck();
+      Mall.IsRedDot();
+    elseif Mall.GetMallKind(currentMainPage) == EStoreKind.Mall then
+      Mall.SetMallCheck();
+      Mall.IsRedDot();
+    end
   end
 
   return true;
@@ -865,7 +1365,7 @@ function UIMall.BuyItem(index)
   this.Buy();
 end
 
-function UIMall.Buy()
+function UIMall.Buy(isDoro)
   UI.Close(UIItemInfo);
 
   local sellData = Mall.GetSellData(currentItemIndex);
@@ -879,10 +1379,17 @@ function UIMall.Buy()
 
   if sellData.buyLimitFlag ~= 0 and not BitFlag.Get(sellData.buyLimitFlag) then
     ShowCenterMessage( string.Get(22155) );
+    
     return;
   end
 
-  if Item.CheckBagIsFull() then return end
+  if Item.CheckBagIsFull() then
+    if UI.IsVisible(UIDoro) then
+      UIDoro.OnClick_Close();
+    end
+    
+    return;
+  end
 
   if not Mall.IsCanBuy(currentStoreKind, sellData) then return end
 
@@ -903,14 +1410,20 @@ function UIMall.Buy()
       end
     end
 
-    if itemSpare3 == Mall.EDoroKind.UniqueBlood then
-      if Item.GetBagLeftCount(EThings.UniqueBlood) < sellData.value then
-        ShowCenterMessage(string.Get(24049));
-        return
+    if Contains(itemSpare3, Mall.EDoroKind.Soul, Mall.EDoroKind.GoldSoul) and Item.CheckSoulBag() then
+      ShowCenterMessage(string.Get(23708));
+      if UI.IsVisible(UIDoro) then
+        UIDoro.OnClick_Close();
       end
+      
+      return;
     end
-
-    Mall.SendBuyItem(currentStoreKind, currentMainPageIndex, currentSubPage, currentItemIndex, 1, true);
+  
+    if isDoro ~= nil then
+      Mall.SendBuyItem(currentStoreKind, currentMainPageIndex, currentSubPage, currentItemIndex, 1, isDoro);
+    else
+      Mall.SendBuyItem(currentStoreKind, currentMainPageIndex, currentSubPage, currentItemIndex, 1, true);
+    end
 
   else
     local quant = 999;
@@ -969,6 +1482,11 @@ function UIMall.OnClick_BuyNTD(uiEvent)
 
   local sellData = Mall.GetSellData(index);
   if sellData  == nil then return end
+
+  if not sellData:IsInSaleTime() then
+    ShowCenterMessage( string.Get(22156) );
+    return;
+  end
 
   local itemData = itemDatas[sellData.Id];
   if itemData  == nil then return end
@@ -1040,25 +1558,6 @@ function UIMall.OnClick_GetAward(uiEvent)
       end
     end
   end
-end
-
-function UIMall.OnClick_InputMask(uiEvent)
-  this.CloseInput();
-end
-
-local currentPlatform;
-
-function UIMall.OpenInput(platform)
-  currentPlatform = platform;
-  gameObject_Input:SetActive(true);
-end
-
-function UIMall.CloseInput()
-  gameObject_Input:SetActive(false);
-end
-
-function UIMall.OnClick_Send()
-  StoreValue.BuyPointCard(currentPlatform, inputField_Number.text, inputField_Password.text);
 end
 
 function UIMall.OnClick_Recipt()

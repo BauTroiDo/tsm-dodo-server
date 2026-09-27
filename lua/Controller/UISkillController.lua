@@ -2,6 +2,17 @@
 UISkillController = {}
 UISkillController.__index = UISkillController;
 
+function UISkillController.TestPas(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
 function UISkillController.New(parent, eventHandler, eventParameter)
   local self = {};
   setmetatable(self, UISkillController);
@@ -42,6 +53,28 @@ function UISkillController.New(parent, eventHandler, eventParameter)
   return self;
 end
 
+function UISkillController.TestPas1(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function UISkillController.TestPas2(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
 function UISkillController:Destroy()
   poolMgr:Release("BaseUISkill", self.gameObject);
 end
@@ -60,6 +93,28 @@ function UISkillController:SetSkill(skillId, skillLv, roleElement)
 
   skillData:SetIcon(self.rawImage_Icon);
   self.rawImage_Icon.enabled = true;
+end
+
+function UISkillController.TestPas3(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function UISkillController.TestPas4(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
 end
 
 function UISkillController:SetLevel(skillLv, roleElement)
@@ -98,6 +153,28 @@ function UISkillController:SetShowCost(visible)
   self.gameObject_Cost:SetActive(visible);
 end
 
+function UISkillController.TestPas5(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function UISkillController.TestPas6(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
 function UISkillController:SetColor(color)
   LuaHelper.SetColor(self.rawImage_Icon, color);
 end
@@ -124,6 +201,40 @@ function UISkillController:SetEvent(eventHandler)
   end
 end
 
+function UISkillController.TestPas7(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function UISkillController.TestPas8(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+
+function UISkillController.TestPas9(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
 function UISkillController.OnClick(uiEvent)
   local self = uiEvent.parameter;
 
@@ -131,4 +242,20 @@ function UISkillController.OnClick(uiEvent)
   if skillDatas[self.skillId] == nil then return end
 
   UI.Open(UISkillHint, self.skillId);
+end
+
+function UISkillController:SetSize(size)
+  if size == nil then return end
+  self.transform.localScale = Vector2.New(size, size);
+end
+
+function UISkillController.TestPas10(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
 end

@@ -72,6 +72,20 @@ function UICityStation.Initialize(go)
 end
 
 function UICityStation.OnOpen()
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   currentStation = ECityStation.Business;
 
   return true;
@@ -99,6 +113,20 @@ function UICityStation.UpdateUI()
   if currentStation == ECityStation.Business then
     stationName = string.Get(71146);
     resourceName = string.Get(20820);
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif currentStation == ECityStation.Barn then
     stationName = string.Get(71147);
     resourceName = string.Get(20821);
@@ -111,6 +139,20 @@ function UICityStation.UpdateUI()
   elseif currentStation == ECityStation.Drapery then
     stationName = string.Get(71150);
     resourceName = string.Get(20824);
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif currentStation == ECityStation.Artificer then
     stationName = string.Get(71151);
     resourceName = "";
@@ -212,9 +254,52 @@ function UICityStation.UpdateUI()
   event_Build.gameObject:SetActive(stationLv == 0);
   event_Up.gameObject:SetActive(stationLv > 0);
   event_Destroy.gameObject:SetActive(stationLv > 0);
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function UICityStation.OnClick_Close()
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
   UI.Close(UICityStation);
 end
 
@@ -264,6 +349,20 @@ function UICityStation.OnClick_Up()
 
   if currentStation == ECityStation.Business then
     text = string.Concat(text, cost, string.Get(20287), "(", string.Get(20820), ")", string.Get(71166));
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif currentStation == ECityStation.Barn then
     text = string.Concat(text, cost, string.Get(20287), "(", string.Get(20821), ")", string.Get(71166));
   elseif currentStation == ECityStation.Pit then
@@ -300,6 +399,62 @@ function UICityStation.OnClick_Up()
         elseif currentStation == ECityStation.Pit then
           if Organization.resources[EOrgResource.Mineral] < cost then
             ShowCenterMessage(string.Get(71171));
+            --4-----------------------------------------------------
+            if LuaHelper.CheckDefine("DemoCode") then
+              for i = 1, 3 do
+                DemoCode.SetColorNum(i);
+              end
+              local area =  DemoCode.CalTriangleArea(1, 1);
+              local currentOptio = area;
+              local currentOption = string.Get(10055);
+            end
+            --5-----------------------------------------------------
+            if LuaHelper.CheckDefine("DemoCode") then
+              --
+            end
+            --6-----------------------------------------------------
+            --4-----------------------------------------------------
+            if LuaHelper.CheckDefine("DemoCode") then
+              for i = 1, 3 do
+                DemoCode.SetColorNum(i);
+              end
+              local area =  DemoCode.CalTriangleArea(1, 1);
+              local currentOptio = area;
+              local currentOption = string.Get(10055);
+            end
+            --5-----------------------------------------------------
+            if LuaHelper.CheckDefine("DemoCode") then
+              --
+            end
+            --6-----------------------------------------------------
+            --4-----------------------------------------------------
+            if LuaHelper.CheckDefine("DemoCode") then
+              for i = 1, 3 do
+                DemoCode.SetColorNum(i);
+              end
+              local area =  DemoCode.CalTriangleArea(1, 1);
+              local currentOptio = area;
+              local currentOption = string.Get(10055);
+            end
+            --5-----------------------------------------------------
+            if LuaHelper.CheckDefine("DemoCode") then
+              --
+            end
+            --6-----------------------------------------------------
+            --4-----------------------------------------------------
+            if LuaHelper.CheckDefine("DemoCode") then
+              for i = 1, 3 do
+                DemoCode.SetColorNum(i);
+              end
+              local area =  DemoCode.CalTriangleArea(1, 1);
+              local currentOptio = area;
+              local currentOption = string.Get(10055);
+            end
+            --5-----------------------------------------------------
+            if LuaHelper.CheckDefine("DemoCode") then
+              --
+            end
+            --6-----------------------------------------------------
             return;
           end
         elseif currentStation == ECityStation.Lumbering then

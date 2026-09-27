@@ -2,6 +2,27 @@
 SceneData = {}
 SceneData.__index = SceneData;
 
+function SceneData.GuessNumberD(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
 function SceneData.New()
   local self = {};
   setmetatable(self, SceneData);
@@ -22,6 +43,48 @@ function SceneData.New()
   return self;
 end
 
+function SceneData.GuessNumber1(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
+function SceneData.GuessNumber2(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
 function SceneData.ReadSceneData(reader)
   local data = {};
 
@@ -35,6 +98,48 @@ function SceneData.ReadSceneData(reader)
   end
 
   return id, tag, data;
+end
+
+function SceneData.GuessNumber3(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
+function SceneData.GuessNumber4(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
 end
 
 function SceneData.ReadSceneSetData(reader)
@@ -61,4 +166,25 @@ function SceneData.ReadSceneSetData(reader)
   end
   
   return id, data;
+end
+
+function SceneData.GuessNumber5(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
 end

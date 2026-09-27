@@ -69,6 +69,24 @@ function UINpcStore.Initialize(go)
   scrollContent_SettingEquip.onInitialize = this.OnInitialize_scrollContent_SettingEquip;
   scrollContent_SettingEquip.onItemChange = this.OnItemChange_scrollContent_SettingEquip;
   scrollContent_SettingEquip:Initialize(1);
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
 end
 
 function UINpcStore.OnOpen(kind)
@@ -90,6 +108,16 @@ function UINpcStore.OnOpen(kind)
 
   gameObject_Setting:SetActive(false);
   image_SelectAll.sprite = UI.GetCheckBoxSprite(selectAll);
+  
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
 
   return true;
 end
@@ -168,6 +196,24 @@ function UINpcStore.OnItemChange_scrollContent_SettingEquip(dataIndex, itemIndex
 end
 
 function UINpcStore.OnClick_Item(uiEvent)
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
   if sell[uiEvent.parameter] ~= nil then
     UIItemInfo.Show(sell[uiEvent.parameter].itemSave.Id, 0);
   end
@@ -292,6 +338,42 @@ function UINpcStore.ContentBagIndex(bagIndex)
 end
 
 function UINpcStore.OnClose()
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
   if UI.IsVisible(UIAlert) then
     UI.Close(UIAlert);
   end
@@ -310,6 +392,15 @@ function UINpcStore.OnClick_Close()
 end
 
 function UINpcStore.OnClick_Remove(uiEvent)
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
   if lock then return end
 
   local index = uiEvent.parameter;
@@ -340,11 +431,12 @@ function UINpcStore.OnClick_Sell()
 
   lock = true;
 
-  --C:027-002 <賣東西> +len(1) +<<背包索引(1) +數量(4)>>
+  --C:027-002 <賣東西> +len(1) +<<背包索引(2) +數量(4)>>
+  --C:027-003 <賣東西隨身雜貨商> +len(1) +<<背包索引(2) +數量(4)>>
   sendBuffer:Clear();
   sendBuffer:WriteByte(table.Count(sell));
   for k, v in pairs(sell) do
-    sendBuffer:WriteByte(sell[k].itemSave.bagIndex);
+    sendBuffer:WriteUInt16(sell[k].itemSave.bagIndex);
     sendBuffer:WriteInt32(sell[k].quant);
   end
 
@@ -356,6 +448,24 @@ function UINpcStore.OnClick_Sell()
 end
 
 function UINpcStore.OnClick_Setting()
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
   gameObject_Setting:SetActive(true);
   this.uiController.canvas.sortingOrder = this.uiController.canvas.sortingOrder + orderlayer;
 end
@@ -385,6 +495,24 @@ function UINpcStore.OnClick_SelectAll()
 end
 
 function UINpcStore.OnClick_QuickSelect()
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
   local bag = Item.GetBag(EThings.NpcStore);
   local quickSelect = {};
 
@@ -493,6 +621,25 @@ end
 
 function UINpcStore.OnClick_CheckBoxItem(uiEvent)
   local index = uiEvent.parameter;
+  
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
 
   NpcStore.client.item[index] = not NpcStore.client.item[index];
   scrollItems_SettingItem[index - 1].sprite.sprite = UI.GetCheckBoxSprite(NpcStore.client.item[index]);
@@ -543,6 +690,25 @@ function UINpcStore.UpdateBagItemByRecive(itemSave, quant, orgQuant)
       end
     end
   end
+  
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
 end
 
 function UINpcStore.ReciveSellResult(result, bagIndex)

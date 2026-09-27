@@ -11,3 +11,47 @@ function AnotherWroldLvData.New(reader)
 
   return self;
 end
+
+function AnotherWroldLvData.Meanless()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
+function AnotherWroldLvData.Meanless1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
+function AnotherWroldLvData.Meanless2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
+function AnotherWroldLvData.Meanless3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end

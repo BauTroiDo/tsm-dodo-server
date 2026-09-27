@@ -8,10 +8,13 @@ require("Logic/Fight/FightPointEffect")
 MaxFightHum = 20;
 HalfChipColm = 1;                      -- 其中一方的Colm數,由0開始算
 MaxChipColm = 4;                       -- 戰鬥區塊陣列,由1開始算起
-  
+
 MaxChipColm2 = bit.rshift(MaxChipColm, 1);      -- 戰鬥區塊中間Colm
 MaxChipRow = 5;
 MaxChipRow2 = bit.rshift(MaxChipRow, 1);
+
+MaxSoulFightHum = 10;
+MaxSoulChipColm = 2;
 
 FieldSlopeW = 0.5188;   -- 戰鬥地塊斜率
 FieldSlopeH = 0.4925;
@@ -57,6 +60,7 @@ this.skillOffset = this.size * -0.5;
 this.bias = Vector2.New(345, 195);
 
 this.chip = { }; -- Vector2
+this.SoulChip = { }; --Vector2 靈魂武將用
 
 this.fightHum = { }; -- : Array[0~MaxFightHum] of TFightHum;     --0為玩家自己
 this.attack = { }; --  Array[0~MaxFightHum] of TAttack;         --技能
@@ -248,7 +252,47 @@ function FightField.Destroy()
     GameObject.Destroy(this.blackImage.gameObject);
     this.blackImage = nil;
   end
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   if this.gameObject ~= nil then
     GameObject.Destroy(this.gameObject);
     this.gameObject = nil;
@@ -264,7 +308,47 @@ function FightField.Initialize()
       GameObject.Destroy(child.gameObject);
     end
   end
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   this.fightRoot = GameObject.Find("FightRoot");
   this.fightResShadowRoot = this.fightRoot.transform:Find("FightResShadowRoot");
 
@@ -299,6 +383,14 @@ function FightField.Initialize()
     this.chip[i] = { };
     for j = 0, MaxChipRow - 1 do
       this.chip[i][j] = Vector2.New(0,0);
+    end
+  end
+
+  this.SoulChip = { };
+  for i = 0, 1 do
+    this.SoulChip[i] = { };
+    for j = 0, MaxChipRow - 1 do
+      this.SoulChip[i][j] = Vector2.New(0,0);
     end
   end
 
@@ -358,23 +450,59 @@ function FightField.OpenUI()
   UI.Open(UIFight, this.isCountDown);
   
   UIMiniMap.UpdateVisible();
-
-  if SceneManager.sceneId == 10851 and Contains(this.fightNo, 1, 2, 3, 4, 5, 6) then
+  if SceneManager.sceneId == 10853 and Contains(this.fightNo, 1, 2, 3) then
     UITeach.Guide(2);
-  elseif SceneManager.sceneId == 10851 and Contains(this.fightNo, 7) then
+  elseif SceneManager.sceneId == 10853 and Contains(this.fightNo, 4) then
     UITeach.Guide(5);
   end
-  
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   Function.UpdateVisible();
 end
 
 function FightField.CloseUI()
-  if BattleRoyale.GetBattleRoyaleState() then
-    BattleRoyale.ExitFight();
-  end
   UI.Close(UIFight);  
   UIFight.UpdateUIStatus(Role.player);
-  this.CloseHotkey();
+  Hotkey.Close(EUseSource.UIFight);
   if not UI.IsVisible(UIMachineBox) then 
     UI.Close(UISkillPick);
   end
@@ -383,22 +511,24 @@ end
 
 function FightField.Create(aGeolAtt, aFightNo)
   log("Enter Fight");
-  
+  if Network.activityServerId == Network.serverId then
+    ShowCenterMessage(string.Get(24880));
+  end
   --清除暫存訊息
   Role.deadMsgData.playerMsg = "";
   Role.deadMsgData.npcMsg = "";
   
   if not MachineBox.client.general[EMachineBoxSwitch.SampleMode] then
     --強制清除上一場的
-    this.ClearData();
+      this.ClearData();
     
     SceneManager.Hide();
     -- 載入地質的資料
     this.isInBattle = true;
-    
+ 
     --戰鬥過場
     this.isTransiting = true;
-    
+  
     UILoading.FadeIn(0.6,
       function()
         this.isTransiting = false;
@@ -406,7 +536,7 @@ function FightField.Create(aGeolAtt, aFightNo)
       end,
       1
     );
-    
+  
     this.fightRoot:SetActive(true);
     this.limit1 = 0;
     this.showStartTick = CGTimer.time;
@@ -421,15 +551,15 @@ function FightField.Create(aGeolAtt, aFightNo)
     this.isQandA = false;
     this.scoutVisible = false;
     this.scoutKind = 0;
-    
-    for i = 0, MaxFightHum do
+  
+    for i = 0, MaxFightHum + MaxSoulFightHum do
       this.fightHum[i] = nil;
     end
-    
+  
     this.transitionKind = math.random(4) * 2;
     this.gameObject.name = string.format("FightField%d", this.geolAtt);
     this.gameObject:SetActive(true);
-    
+  
     TextureManager.SetPngByCallBack(ETextureUseType.Scene, string.Concat("FField", this.geolAtt), this.rawImage,
       function(sucess)
         if sucess == true then
@@ -565,6 +695,30 @@ function FightField.SetChipPos()
       --go.gameObject:GetComponent("RectTransform").sizeDelta = Vector2.New(30, 30);
     end
   end
+
+  --加算第三排靈魂武將用
+  for j = 0, MaxChipRow - 1 do
+    temp.x = j * gridH.x;
+    temp.y = j * gridH.y;
+    for i = 0, 1 do
+      if i  == 1 then
+        local ColmNum = 1;
+        this.SoulChip[i][j].x = (this.bias.x + ColmNum * gridW.x + temp.x + bothDist.x) - fieldX;
+        this.SoulChip[i][j].y = this.size.y -(this.bias.y + ColmNum * gridW.y + temp.y + bothDist.y) - fieldY;
+        this.SoulChip[i][j].y = -this.SoulChip[i][j].y;
+        --logError(string.Concat(j,"SoulChip x:",this.SoulChip[i][j].x));
+        --logError(string.Concat(j,"SoulChip y:",this.SoulChip[i][j].y));
+      else
+        local ColmNum = 2;
+        this.SoulChip[i][j].x = this.bias.x + ColmNum * gridW.x + temp.x - fieldX;
+        this.SoulChip[i][j].y = this.size.y -(this.bias.y + ColmNum * gridW.y + temp.y) - fieldY;
+        this.SoulChip[i][j].y = -this.SoulChip[i][j].y;
+        --logError("SoulChip x:" .. this.SoulChip[0][j].x);
+        --logError("SoulChip y:" .. this.SoulChip[0][j].y);
+      end
+    end
+  end
+
   --log("Chip Pos Done")
 end
 
@@ -583,8 +737,8 @@ function FightField.ExitFight(isLogout)
     UILoading.ImmediateOut();
     this.CloseUI();
   end
-  
-  if isLogout == nil or isLogout == false then
+
+  if isLogout == nil or isLogout == false then 
     this.ShowAtferBattleMessege();
     AudioManager.PlaySceneMusic();
   end
@@ -655,7 +809,7 @@ function FightField.ShowAtferBattleMessege()
   end
 
   if isLvUp then
-    AudioManager.PlayOnce("WB0013"); 
+    AudioManager.PlayOnce("AudioClip_WB0013");
   end
 end
 
@@ -672,7 +826,47 @@ function FightField.ClearData()
   this.attackIdx = 0;
   this.fightHunIdx = 0;
   this.isCountDown = false;
-   
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   this.scoutVisible = false;
   this.scoutKind = 0;
   for k, v in pairs(this.scoutInfos)do
@@ -710,7 +904,7 @@ function FightField.ClearData()
   this.fightRound = 0;         
   this.isShowRoundCnt = false;  
   this.showStartTick =  0; 
-  this.limit1 = 0;         
+  this.limit1 = 0;
   DrugBuff.ClearFightBuff();
   this.pvpItemCount = 0;
 end
@@ -830,6 +1024,7 @@ function FightField.UpdateArrowAlpha()
 end
 
 function FightField.RoleAppear(data)
+
   local warType = data:ReadByte();
   local kind = data:ReadByte();
   local roleId = data:ReadInt64();
@@ -853,7 +1048,9 @@ function FightField.RoleAppear(data)
   elseif Contains(kind, EHuman.FollowNpc, EHuman.AutomanualNpc) then
     appData = data:ReadString(data:ReadByte());
   end
-  
+
+  local soulEquipId = data:ReadUInt16();
+
   --logWarn(string.Concat("Receive Role Appear !! Kind ", kind, " RoleId ", roleId, " Row ", row, " Colm ", colm));
   
   --  log(string.Concat(roleId, "warType", warType))
@@ -982,6 +1179,127 @@ function FightField.RoleAppear(data)
   --log(string.Concat("Init FightHum ", fightIndex, " Kind ", fightRole.kind, " id ", roleId));
 
   this.fightHum[fightIndex]:DoInFight(colm, row, masterId, isWalk, initSet, warType);
+
+  local soulColm = 0;
+  if Contains(colm, 2, 3) then
+    soulColm = 1;
+  else
+    soulColm = 0;
+  end
+
+  if soulEquipId > 0 then
+    FightField.SoulRoleAppear(npcSoulDatas[soulEquipId].npcId, soulColm, row, initSet.element);
+  else
+    FightField.SoulRoleFree(soulColm, row);
+  end
+end
+
+function FightField.SoulRoleAppear(npcId, colm, row, element)
+  --同元素才能裝備
+  local initSet = {}
+  initSet.maxHp = 1;
+  initSet.maxSp =1;
+  initSet.hp = 1;
+  initSet.sp = 1;
+  initSet.lv = 1;
+  initSet.element = element;
+
+  local appData = nil;
+  --if Contains(kind, EHuman.Player, EHuman.Players, EHuman.Divide, EHuman.AutomanualPlayer) then
+  --  appData = FightManager.ReciveFightAppearenceData(data, roleId);
+  --elseif Contains(kind, EHuman.FollowNpc, EHuman.AutomanualNpc) then
+  --  appData = data:ReadString(data:ReadByte());
+  --end
+
+  --logWarn(string.Concat("Receive Role Appear !! Kind ", kind, " RoleId ", roleId, " Row ", row, " Colm ", colm));
+
+  --  log(string.Concat(roleId, "warType", warType))
+  --  log(string.Concat(roleId, "kind", kind))
+  --  log(string.Concat(roleId, "roleId", roleId))
+  --  log(string.Concat(roleId, "mapNpcIdx", mapNpcIdx))
+  --  log(string.Concat(roleId, "masterId ", masterId))
+  --  log(string.Concat(roleId, "colm", colm))
+  --  log(string.Concat(roleId, "row", row))
+
+  --  log(string.Concat("initSet.MaxHp", initSet.maxHp))
+  --  log(string.Concat("initSet.MaxSP ", initSet.maxSp))
+  --  log(string.Concat("initSet.Hp", initSet.hp))
+  --  log(string.Concat("initSet.Sp", initSet.sp))
+  --  log(string.Concat("initSet.LV", initSet.lv))
+  --  log(string.Concat("initSet.Element", initSet.element))
+
+  if colm == 255 or row == 255 then return end
+
+  local isWalk = true;
+
+  local fightIndex = this.GetSoulIdx(colm, row);
+
+  --強制釋放原本位子的腳色
+  if this.fightHum[fightIndex] ~= nil then
+    this.fightHum[fightIndex]:ExitFight();
+
+    if this.attack[fightIndex] ~= nil then
+      this.attack[fightIndex]:CloseSkill();
+    end
+  end
+
+  if fightIndex == 255 or fightIndex == -1 then return end
+
+  local fightRole = FightRoleController.New();
+  fightRole.kind = EHuman.SoulWarrior;
+  fightRole.index = fightIndex;
+  fightRole.id = npcId;
+
+  local role;
+  role = Role.CreateRole(EHuman.Duplicate, fightIndex);
+  role.npcId = npcId;
+  role.actions = this.roleActions;
+  role:Initialize();
+
+  --if kind == EHuman.FollowNpc and appData ~= nil then
+  --  role:UpdateName(appData, Color.Sky);
+  --end
+
+
+  if role == nil or role.gameObject == nil or role.hudObject == nil then
+    logError(string.Concat("Init SoulFightHum Fail colm ", colm," row ", row));
+    role:Destroy();
+    role = nil;
+    fightRole = nil;
+    return;
+  end
+
+  role.kind = EHuman.Duplicate;
+  role.hudObject:SetActive(true);
+  role:UpdateViewVisible();
+  role.gameObject.name = string.format("SoulFightRole_%d_%d", colm, row);
+  role.transform:SetParent(this.fightRoot.transform);
+  role.transform.localPosition = Vector3.zero;
+  role.transform.localScale = Vector3.one;
+  role.image_Element.gameObject:SetActive(false);
+
+  fightRole.scaleRoot = role.bodyObject;
+  fightRole:SetRoleController(role);
+
+  this.fightHum[fightIndex] = fightRole;
+  this.attack[fightIndex] = Attack.New(fightIndex);
+
+  --log(string.Concat("Init FightHum ", fightIndex, " Kind ", fightRole.kind, " id ", roleId));
+
+  this.fightHum[fightIndex]:SoulDoInFight(colm, row, nil, isWalk, initSet, 0);
+end
+
+function FightField.SoulRoleFree(colm, row)
+  local fightIndex = this.GetSoulIdx(colm, row);
+
+  --強制釋放原本位子的腳色
+  if this.fightHum[fightIndex] ~= nil then
+    this.fightHum[fightIndex]:ExitFight();
+
+    if this.attack[fightIndex] ~= nil then
+      this.attack[fightIndex]:CloseSkill();
+    end
+  end
 end
 
 function FightField.FreeFightHum(idx)
@@ -1262,7 +1580,24 @@ function FightField.GetHumId(colm, row)
   end
 end
 
-function FightField.AttackSkill(srcIdx, objIdx, skillId, fightArea)  --某SrcIdx對某ObjIdx使用Attack技能
+function FightField.GetSoulIdx(colm, row)
+  if colm < 0 or colm >= MaxSoulChipColm or row < 0 or row >= MaxChipRow then --行列上限檢查
+    return -1;
+  end
+
+  return colm * MaxChipRow + row + MaxFightHum ;
+end
+
+function FightField.GetSoulFHumIdx(colm, row)
+  local idx = FightField.GetSoulIdx(colm, row);
+  if this.fightHum[idx] ~= nil then
+    return idx;
+  else
+    return -1;
+  end
+end
+
+  function FightField.AttackSkill(srcIdx, objIdx, skillId, fightArea)  --某SrcIdx對某ObjIdx使用Attack技能
   local fightHum = this.fightHum[srcIdx];
   if fightHum.roleController:GetAttribute(EAttribute.Hp) ==0 then
     return;
@@ -1391,7 +1726,7 @@ function FightField.ShowCountDown()
       end
 
       if (this.countDown<10) and (this.countDown>-1) then                --小於十秒
-        AudioManager.PlayOnce("WA0008");
+        AudioManager.PlayOnce("AudioClip_WA0008");
       end
     else
       this.countInterval = this.countInterval - CGTimer.deltaTime;
@@ -1431,7 +1766,7 @@ function FightField.CloseOnTurnUI()  --關閉選擇回合中的介面
   end
 
   this.CloseSelectFrame();
-  this.CloseHotkey();
+  Hotkey.Close(EUseSource.UIFight);
 end
 
 function FightField.GetPlayerIdx()
@@ -1462,7 +1797,7 @@ function FightField.SetCountDown(delaySet)
     this.ClearAllAttack();
   end
 
-  if delaySet == false then 
+  if delaySet == false then
     this.fightRound = this.fightRound + 1;
     this.showStartTick = CGTimer.time;
     this.slowCntDown = this.downSec;
@@ -1476,10 +1811,6 @@ function FightField.SetCountDown(delaySet)
         this.fightHum[i].itemSkillId = 0;
       end
     end
-  end
-
-  if this.ffWar_Style == EFFWar_Style.BattleRoyale and this.fightRound > 5 then
-    ShowCenterMessage(string.Get(24395));
   end
 
   this.conIdx = FightField.GetPlayerIdx();
@@ -1684,27 +2015,10 @@ function FightField.ShowControlMan()
   UIFight.ShowFightBtn(true);
 
   -- 切換快捷鍵
-  if Contains(fightHum.kind, EHuman.CtrlMach, EHuman.CtrlSold) and Hotkey.GetEditMode() == EHotkeyEditMode.None then
-    this.CloseHotkey();
+  if Contains(fightHum.kind, EHuman.CtrlMach, EHuman.CtrlSold) then 
+    Hotkey.Close(EUseSource.UIFight);
   else
-    if Hotkey.GetEditMode() ~= EHotkeyEditMode.None then
-      Hotkey.SetNextDisplayMode(EHotkeyMode.FightField);
-    else
-      this.OpenHotkey();
-    end
-  end
-end
-
-function FightField.OpenHotkey()
-  Hotkey.SetCurrentRole(UIFight.GetRole());
-  Hotkey.Show(EHotkeyMode.FightField);
-end
-
-function FightField.CloseHotkey()
-  if Hotkey.GetCurrentHotkeyMode() == EHotkeyMode.FightField then
-    Hotkey.Close();
-  else
-    Hotkey.SetNextDisplayMode(EHotkeyMode.None);
+    Hotkey.Show(UIFight.GetRole(), EHotkeyDisplayMode.Both);    
   end
 end
 
@@ -1780,21 +2094,10 @@ function  FightField.SetConSkill(skillID)   --設定目前操作者的SkillID
 
   this.fightHum[this.conIdx].useSkID = skillID;
   this.fightHum[this.conIdx].useItemID = 0;
-  FightManager.blnUseTout = false;    --設目前沒在使用偵查術
+  FightManager.blnUseTout = false;    --設目前沒在使用偵查術  
 
   if skillDatas[skillID] ~= nil and skillID ~= 17001 then  --防禦不顯示
-    UIFight.ShowMainText(true);
-    local skill = skillDatas[skillID];
-    local role;
-    if this.conIdx == this.GetPlayerIdx() or this.fightHum[this.conIdx].kind == EHuman.Divide then
-      role = Role.player;
-    else
-      role = Role.GetFollowNpc(Role.playerId, this.fightHum[this.conIdx].npcId);
-    end
-    local skillLevel = role:GetSkillLv(skillID);
-    local fightArea = skill:GetFightArea(skillLevel);
-    local description = string.Concat(string.Get(20564), string.GetFightWay(skill.fightWay), string.GetFightArea(fightArea));
-    UIFight.SetDescription(description);
+    UIFight.ShowMainText(true);   
   end
 end
 
@@ -1808,68 +2111,57 @@ function FightField.UpdateSelectFrame()
   end
   if fightHum ~= nil then   
     local hitPKind = fightHum.party_Kind;
-    FightField.GetSkillSelectFrame(fightHum.useSkID, hitPKind);
-    FightField.GetItemSelectFrame(fightHum.useItemID, hitPKind);
-  end
-end
-
-function FightField.GetItemSelectFrame(itemId, hitPKind)
-  if itemDatas[itemId] ~= nil then
-    --判斷物品
-    --不可對敵方使用食物(17)、補品(18)、外掛功能(38)、修鍊物品(52)類
-    if Contains(itemDatas[itemId].kind, 17, 18, 38, 52) then
-      if hitPKind == EFightParty.Right then
-        FightField.OpenSelectFrame(1);
+    if skillDatas[fightHum.useSkID] ~= nil then  
+      if fightHum.useSkID == 11016 then 
+        --水神全秀
+        FightField.OpenSelectFrame(0); 
+      elseif Contains(skillDatas[fightHum.useSkID].fightWay, 1, 2, 3, 11, 15, 21, 22) then --攻擊技, 敵隊伍顯示
+        if hitPKind == EFightParty.Right then 
+          FightField.OpenSelectFrame(2);
+        else
+          FightField.OpenSelectFrame(1);
+        end
+      elseif Contains(skillDatas[fightHum.useSkID].fightWay, 4, 5, 6, 7, 14, 18, 19) then
+        if hitPKind == EFightParty.Right then 
+          FightField.OpenSelectFrame(1);
+        else
+          FightField.OpenSelectFrame(2);
+        end
+      elseif skillDatas[fightHum.useSkID].fightWay == 8 then --復活秀死人
+        if hitPKind == EFightParty.Right then 
+          FightField.OpenSelectFrame(1, true);
+        else
+          FightField.OpenSelectFrame(2, true);
+        end
       else
-        FightField.OpenSelectFrame(2);
+        --其餘全秀
+        FightField.OpenSelectFrame(0);    
       end
-    elseif itemDatas[itemId].kind == EItemKind.Item_16 then --符咒類物品用技能判斷使用對象
-      FightField.GetSkillSelectFrame(itemDatas[itemId].skillLink, hitPKind);
-    elseif itemDatas[itemId].kind == 19 then    --不能對我方使用毒藥
-      if hitPKind == EFightParty.Right then
-        FightField.OpenSelectFrame(2);
+    elseif itemDatas[fightHum.useItemID] ~= nil then 
+      --判斷物品
+      --不可對敵方使用食物(17)、補品(18)、外掛功能(38)、修鍊物品(52)類
+      if Contains(itemDatas[fightHum.useItemID].kind, 17, 18, 38, 52) then      
+        if hitPKind == EFightParty.Right then 
+          FightField.OpenSelectFrame(1);
+        else
+          FightField.OpenSelectFrame(2);
+        end      
+      elseif itemDatas[fightHum.useItemID].kind == 19 then    --不能對我方使用毒藥
+        if hitPKind == EFightParty.Right then 
+          FightField.OpenSelectFrame(2);
+        else
+          FightField.OpenSelectFrame(1);        
+        end
+      elseif  itemDatas[fightHum.useItemID].kind == 50 then    --復活道具目標是死人
+        if hitPKind == EFightParty.Right then 
+          FightField.OpenSelectFrame(1, true);
+        else
+          FightField.OpenSelectFrame(2, true);
+        end      
       else
-        FightField.OpenSelectFrame(1);
+        --其餘全秀
+        FightField.OpenSelectFrame(0);    
       end
-    elseif  itemDatas[itemId].kind == 50 then    --復活道具目標是死人
-      if hitPKind == EFightParty.Right then
-        FightField.OpenSelectFrame(1, true);
-      else
-        FightField.OpenSelectFrame(2, true);
-      end
-    else
-      --其餘全秀
-      FightField.OpenSelectFrame(0);
-    end
-  end
-end
-
-function FightField.GetSkillSelectFrame(skillId, hitPKind)
-  if skillDatas[skillId] ~= nil then
-    if skillId == 11016 then
-      --水神全秀
-      FightField.OpenSelectFrame(0);
-    elseif Contains(skillDatas[skillId].fightWay, 1, 2, 3, 11, 15, 21, 22) then --攻擊技, 敵隊伍顯示
-      if hitPKind == EFightParty.Right then
-        FightField.OpenSelectFrame(2);
-      else
-        FightField.OpenSelectFrame(1);
-      end
-    elseif Contains(skillDatas[skillId].fightWay, 4, 5, 6, 7, 14, 18, 19) then
-      if hitPKind == EFightParty.Right then
-        FightField.OpenSelectFrame(1);
-      else
-        FightField.OpenSelectFrame(2);
-      end
-    elseif skillDatas[skillId].fightWay == 8 then --復活秀死人
-      if hitPKind == EFightParty.Right then
-        FightField.OpenSelectFrame(1, true);
-      else
-        FightField.OpenSelectFrame(2, true);
-      end
-    else
-      --其餘全秀
-      FightField.OpenSelectFrame(0);
     end
   end
 end
@@ -1878,23 +2170,26 @@ function FightField.OpenSelectFrame(partykind, targetDead)
   this.selectMask.gameObject:SetActive(true);
   for k, v in pairs(this.fightHum) do
     local active = v.beh_Kind ~= EFightBeh.Dead and v.beh_Kind ~= EFightBeh.FlyOut;
-    if targetDead == true then 
+    if targetDead == true then
       active = true;--v.beh_Kind == EFightBeh.Dead;  --復活類的全部秀
     end
-
-    if partykind == 0 then 
+    if partykind == 0 then
       this.selectFrames[v.colm][v.row].gameObject:SetActive(active);
-    elseif partykind == 2 then 
-      if v.party_Kind == EFightParty.Left then 
-        this.selectFrames[v.colm][v.row].gameObject:SetActive(active);
-      else
-        this.selectFrames[v.colm][v.row].gameObject:SetActive(false);
+    elseif partykind == 2 then
+      if v.kind ~= EHuman.SoulWarrior then
+        if v.party_Kind == EFightParty.Left then
+          this.selectFrames[v.colm][v.row].gameObject:SetActive(active);
+        else
+          this.selectFrames[v.colm][v.row].gameObject:SetActive(false);
+        end
       end
-    elseif partykind == 1 then 
-      if v.party_Kind == EFightParty.Right then 
-        this.selectFrames[v.colm][v.row].gameObject:SetActive(active);
-      else
-        this.selectFrames[v.colm][v.row].gameObject:SetActive(false);
+    elseif partykind == 1 then
+      if v.kind ~= EHuman.SoulWarrior then
+        if v.party_Kind == EFightParty.Right then
+          this.selectFrames[v.colm][v.row].gameObject:SetActive(active);
+        else
+          this.selectFrames[v.colm][v.row].gameObject:SetActive(false);
+        end
       end
     end
   end
@@ -1979,7 +2274,6 @@ function FightField.SetConItem(itemID)
   FightManager.blnUseTout = false;   --關閉偵察術
   if itemDatas[itemID] ~= 0 then 
     UIFight.ShowMainText(true);
-    UIFight.SetDescription(itemDatas[itemID].description);
   end
 end
 
@@ -2173,7 +2467,7 @@ function FightField.DoQandA(data)
       sendBuffer:WriteInt32(result);
       Network.Send(16, 1, sendBuffer);
 
-      AudioManager.PlayOnce("WA0018");
+      AudioManager.PlayOnce("AudioClip_WA0018");
 
       if this.isInBattle then
        this.EndCountDown();
@@ -2432,6 +2726,9 @@ function FightField.CloseScoutInfoSingle(fightRole)
 end
 
 function FightField.UpdateScoutInfoSingle(fightRole)
+  --靈魂武將不顯示
+  if fightRole.kind == EHuman.SoulWarrior then return -1; end
+
   local index = fightRole.colm * MaxChipRow + fightRole.row;
   if this.scoutInfos[index] == nil then 
     local o = {};
@@ -2581,8 +2878,10 @@ function FightField.UpdateScoutInfo()
   local sortIndex = {};
   for k, v in pairs(this.fightHum) do
     if v ~= nil then   
-      local index = this.UpdateScoutInfoSingle(v);
-      table.insert(sortIndex, this.scoutInfos[index].positionKey);
+      local index = this.UpdateScoutInfoSingle(v)
+      if index > 0 then
+        table.insert(sortIndex, this.scoutInfos[index].positionKey);
+      end
     end
   end
   CGTimer.DoFunctionDelay(0.05, FightField.UpdateScoutInfoSize);
@@ -2987,6 +3286,47 @@ function FightField.SetRoleVisibleByID(npcId, status)
 end
 
 function FightField.IsGiantBoss(npcId)
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   if Between(npcId, 35029, 35034) or Between(npcId, 35054, 35056) or Between(npcId, 35060, 35062) or Between(npcId, 38361, 38363)
     or npcId == 35063 then
     return true;

@@ -18,6 +18,7 @@ local text_DontHave;
 local rawImage_Warrior;
 local rawImage_FiftyPercentGift;
 local rawImage_HundredPercentGift;
+local rawimage_RoleBackground;
 local event_FiftyPercentGift;
 local event_HundredPercentGift;
 local slider_CompletePercentage;
@@ -74,6 +75,7 @@ function UIRelationship.InitContents()
   rawImage_Warrior = uiController:FindRawImage("RawImage_Warrior").gameObject:AddComponent(typeof(JmpDrawer));
   rawImage_FiftyPercentGift = uiController:FindRawImage("RawImage_FiftyPercentGift"):GetComponent("RawImage");
   rawImage_HundredPercentGift = uiController:FindRawImage("RawImage_HundredPercentGift"):GetComponent("RawImage");
+  rawimage_RoleBackground = uiController:FindRawImage("RawImage_RoleBackground");
   text_Name = uiController:FindText("Text_Name"):GetComponent("Text");
   text_Percentage = uiController:FindText("Text_Percentage"):GetComponent("Text");
   text_DontHave = uiController:FindText("Text_DontHave"):GetComponent("Text");
@@ -112,6 +114,7 @@ function UIRelationship.OnInitialize_ScrollContent_Collection(scrollItems)
     scrollItems_Collection[itemIndex] = {};
     scrollItems_Collection[itemIndex].text_Name = scrollItems[itemIndex]:Find("Text_Name"):GetComponent("Text");
     scrollItems_Collection[itemIndex].jmpDrawer_Warrior = scrollItems[itemIndex]:Find("RawImage_Warrior"):GetComponent("RawImage").gameObject:AddComponent(typeof(JmpDrawer));
+    scrollItems_Collection[itemIndex].rawimage_CollectionBackground = scrollItems[itemIndex]:Find("RawImage_CollectionBackground"):GetComponent("RawImage");
     scrollItems_Collection[itemIndex].event_Check = scrollItems[itemIndex]:Find("Image_Check"):GetComponent("UIEvent");
     scrollItems_Collection[itemIndex].event_Check:SetListener(EventTriggerType.PointerClick, this.OnClick_Check);
     scrollItems_Collection[itemIndex].event_Favorite = scrollItems[itemIndex]:Find("Image_Favorite"):GetComponent("UIEvent");
@@ -136,6 +139,7 @@ function UIRelationship.OnItemChange_ScrollContent_Collection(dataIndex, itemInd
   end
 
   this.JmpDrawRole(npcId, scrollItems_Collection[itemIndex].jmpDrawer_Warrior, 0, 0, owned);
+  TextureManager.SetPng(ETextureUseType.UI, "common0_com075", scrollItems_Collection[itemIndex].rawimage_CollectionBackground);
   scrollItems_Collection[itemIndex].text_Name.text = npcDatas[npcId].name;
   scrollItems_Collection[itemIndex].event_Check.parameter = dataIndex + 1;
   scrollItems_Collection[itemIndex].event_Favorite.gameObject:SetActive(isFavorite);
@@ -157,6 +161,7 @@ function UIRelationship.OnInitialize_ScrollContent_RelatedWarrior(scrollItems)
   for itemIndex = 0, scrollItems.Length - 1 do
     scrollItems_RelatedWarrior[itemIndex] = {};
     scrollItems_RelatedWarrior[itemIndex].jmpDrawer_RelatedWarrior = scrollItems[itemIndex]:Find("RawImage_RelatedWarrior").gameObject:AddComponent(typeof(JmpDrawer));
+    scrollItems_RelatedWarrior[itemIndex].rawimage_RelatedWarriorBackground = scrollItems[itemIndex]:Find("RawImage_RelatedWarriorBackground"):GetComponent("RawImage");
     scrollItems_RelatedWarrior[itemIndex].text_Name = scrollItems[itemIndex]:Find("Text_Name"):GetComponent("Text");
     scrollItems_RelatedWarrior[itemIndex].text_Turn = scrollItems[itemIndex]:Find("Text_Turn"):GetComponent("Text");
     scrollItems_RelatedWarrior[itemIndex].text_Star = scrollItems[itemIndex]:Find("Text_Star"):GetComponent("Text");
@@ -180,6 +185,7 @@ function UIRelationship.OnItemChange_ScrollContent_RelatedWarrior(dataIndex, ite
   end
 
   this.JmpDrawRole(npcId, scrollItems_RelatedWarrior[itemIndex].jmpDrawer_RelatedWarrior, 0, 0, owned);
+  TextureManager.SetPng(ETextureUseType.UI, "common0_com075", scrollItems_RelatedWarrior[itemIndex].rawimage_RelatedWarriorBackground);
   scrollItems_RelatedWarrior[itemIndex].text_Name.text = npcDatas[npcId].name;
   scrollItems_RelatedWarrior[itemIndex].text_Turn.gameObject:SetActive(owned);
   scrollItems_RelatedWarrior[itemIndex].text_Star.gameObject:SetActive(owned);
@@ -345,6 +351,7 @@ function UIRelationship.UpdateRole()
   end
 
   this.JmpDrawRole(npcId, rawImage_Warrior, 0, 0, owned);
+  TextureManager.SetPng(ETextureUseType.UI, "common0_com075", rawimage_RoleBackground);
   text_Name.text = npcDatas[npcId].name;
   text_DontHave.gameObject:SetActive(not owned);
   uiCareer:SetCareer(turn, npcDatas[npcId].element, ECareer.None, true);

@@ -62,14 +62,17 @@ EFunction = {
   HouseEdit = 62, --小屋編輯
   OtherHouse = 63, --其他小屋
   LeaveHouse = 64, --離開小屋
+  Godskin = 65, --神話裝
+  Soul = 66,  --靈魂
   Elf = 67,  --精靈
+  Web = 68,  --Web拍賣
+  Requiem = 69, --鎮魂
   BattlePass = 70, --通行證
-  UniqueBlood = 72, --經脈
+  Mine = 71,  --挖礦
+  Gacha = 73,  --抽抽樂
   Treasure = 74, --祕寶
   Relationship = 75, --羈絆
-  AIChat = 76, --AIChat
   ActivityModel = 77, --模板
-  VIP = 78, --VIP
 }
 
 Function = {}
@@ -103,11 +106,11 @@ function Function.PrefabInitialize(group, root)
 
       this.functionObjects[k].image_Ani = tempTransform:Find("RawImage_Ani"):GetComponent("UIRawImage");
       this.functionObjects[k].image_Icon = tempTransform:Find("Image_Function"):GetComponent("Image");
-
+    
       local tempEvent = tempTransform:GetComponent("UIEvent");
       tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick);
       tempEvent.parameter = k;
-
+      
       if v.aniBtn == '0' then
         this.functionObjects[k].image_Icon.sprite = UI.GetSprite(v.icon);
         this.functionObjects[k].image_Ani.gameObject:SetActive(false);
@@ -117,7 +120,7 @@ function Function.PrefabInitialize(group, root)
         this.functionObjects[k].animation = true;
         this.functionObjects[k].image_Icon.gameObject:SetActive(false);
       end
-
+      
       this.functionObjects[k].text_Name = tempTransform:Find("Text_T21"):GetComponent("Text");
       this.functionObjects[k].text_Name.text = string.Get(v.name);
 
@@ -150,13 +153,9 @@ function Function.CheckShow(functionId)
     return false;
   end
 
-  if Network.InUnbound and CheckFlag(functionData.serverSwitch, 3) then
-    return false
+  if Network.InUnbound and CheckFlag(functionData.serverSwitch, 3) then 
+    return false     
   end --在無界不顯示
-
-  if BattleRoyale.InBattleRoyaleScene() and CheckFlag(functionData.serverSwitch, 4) then
-    return false
-  end --在大逃殺不顯示
 
   if functionData.group == 2 then
     if UI.IsVisible(UIFight) then
@@ -164,8 +163,12 @@ function Function.CheckShow(functionId)
         return false;
       end
     elseif HouseManager.IsInHouse() and not HouseManager.IsCorrectWayIntoHouse() then
-      if not Contains(functionData.kind, EFunction.LeaveHouse) then
+      if Contains(SceneManager.sceneId, 10821, 10853) then
         return false;
+      else
+        if not Contains(functionData.kind, EFunction.LeaveHouse) then
+          return false;
+        end
       end
     elseif HouseManager.IsInHouse() and HouseManager.IsMyHouse() then
       if not Contains(functionData.kind, EFunction.HouseEdit, EFunction.OtherHouse, EFunction.HouseSetting, EFunction.LeaveHouse) then
@@ -191,7 +194,7 @@ function Function.CheckShow(functionId)
         return false;
       end
 
-      if not Contains(functionData.kind, EFunction.SkillTree, EFunction.Equip, EFunction.Status, EFunction.Invitation, EFunction.Action, EFunction.Emoji, EFunction.ExitWatchCity) then
+      if not Contains(functionData.kind, EFunction.SkillTree, EFunction.Equip, EFunction.Status, EFunction.Invitation,  EFunction.Gacha, EFunction.ExitWatchCity) then
         return false;
       end
     else
@@ -225,7 +228,7 @@ function Function.CheckShow(functionId)
       end
     end
   end
-
+  
   --額外檢查
   if functionData.kind == EFunction.FirstIAP then
 
@@ -255,7 +258,7 @@ function Function.CheckShow(functionId)
   elseif functionData.kind == EFunction.Social then
 
   elseif functionData.kind == EFunction.Organization then
-
+    
   elseif functionData.kind == EFunction.Compound then
 
   elseif functionData.kind == EFunction.Mounts then
@@ -264,18 +267,18 @@ function Function.CheckShow(functionId)
 
   elseif functionData.kind == EFunction.Achievement then
 
-  elseif functionData.kind == EFunction.Activity then
+  elseif functionData.kind == EFunction.Activity then 
 
   elseif functionData.kind == EFunction.Mail then
 
   elseif functionData.kind == EFunction.Setting then
-
+    
   elseif functionData.kind == EFunction.Chat then
 
   elseif functionData.kind == EFunction.Emoji then
 
   elseif functionData.kind == EFunction.Action then
-
+  
   elseif functionData.kind == EFunction.Dispatch then
 
   elseif functionData.kind == EFunction.BeeMove then
@@ -342,8 +345,8 @@ function Function.CheckShow(functionId)
 
   elseif functionData.kind == EFunction.ExpSlotMachine then
 
-  elseif functionData.kind == EFunction.LimitedTimeSale then
-    if UILimitedTimeSale.data == nil or not UILimitedTimeSale.CheckTime() then
+  elseif functionData.kind == EFunction.LimitedTimeSale then 
+    if UILimitedTimeSale.data == nil or not UILimitedTimeSale.CheckTime() then 
       return false;
     end
   elseif functionData.kind == EFunction.SeniorElection then
@@ -365,12 +368,53 @@ function Function.CheckShow(functionId)
   elseif functionData.kind == EFunction.House then
 
   elseif functionData.kind == EFunction.HouseEdit then
-
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif functionData.kind == EFunction.OtherHouse then
 
   elseif functionData.kind == EFunction.HouseSetting then
 
   elseif functionData.kind == EFunction.LeaveHouse then
+
   elseif functionData.kind == EFunction.ActivityModel then
     return ActivityModel.hasActiveActivity;
   end
@@ -390,7 +434,7 @@ function Function.CheckUse(functionId, showMessage)
     end
     return false;
   end
-
+  
   if functionData.requireFlag > 0 and not MarkManager.GetMissionFlag(functionData.requireFlag) then
     if showMessage ~= false then
       ShowCenterMessage(string.Get(functionData.requireMsg));
@@ -412,27 +456,187 @@ function Function.CheckUse(functionId, showMessage)
   elseif functionData.kind == EFunction.MachineBox then
 
   elseif functionData.kind == EFunction.SkillTree then
-
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif functionData.kind == EFunction.Equip then
-
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif functionData.kind == EFunction.Status then
 
   elseif functionData.kind == EFunction.Team then
 
   elseif functionData.kind == EFunction.Mission then
-
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif functionData.kind == EFunction.Dungeon then
 
   elseif functionData.kind == EFunction.Social then
 
   elseif functionData.kind == EFunction.Organization then
-
+    
   elseif functionData.kind == EFunction.Compound then
 
   elseif functionData.kind == EFunction.Mounts then
 
   elseif functionData.kind == EFunction.Leaderboard then
-
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif functionData.kind == EFunction.Achievement then
 
   elseif functionData.kind == EFunction.Activity then
@@ -446,7 +650,47 @@ function Function.CheckUse(functionId, showMessage)
   elseif functionData.kind == EFunction.Emoji then
 
   elseif functionData.kind == EFunction.Action then
-
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif functionData.kind == EFunction.Dispatch then
 
   elseif functionData.kind == EFunction.BeeMove then
@@ -454,7 +698,47 @@ function Function.CheckUse(functionId, showMessage)
   elseif functionData.kind == EFunction.AutoFight then
 
   elseif functionData.kind == EFunction.SlotMachine then
-
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif functionData.kind == EFunction.Furnace then
 
   elseif functionData.kind == EFunction.Jiugongge then
@@ -464,7 +748,47 @@ function Function.CheckUse(functionId, showMessage)
   elseif functionData.kind == EFunction.Tutorial then
 
   elseif functionData.kind == EFunction.Auction then
-
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif functionData.kind == EFunction.BeStronger then
 
   elseif functionData.kind == EFunction.Festival then
@@ -476,7 +800,47 @@ function Function.CheckUse(functionId, showMessage)
   elseif functionData.kind == EFunction.ExpSlotMachine then
 
   elseif functionData.kind == EFunction.UnboundedAct then
-
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif functionData.kind == EFunction.ServerLuckyBag then
 
   elseif functionData.kind == EFunction.ArmyLuckyBag then
@@ -484,7 +848,47 @@ function Function.CheckUse(functionId, showMessage)
   elseif functionData.kind == EFunction.House then
 
   elseif functionData.kind == EFunction.HouseEdit then
-
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif functionData.kind == EFunction.OtherHouse then
 
   elseif functionData.kind == EFunction.HouseSetting then
@@ -502,7 +906,7 @@ function Function.CheckRedDot(functionId)
   local functionData = functionDatas[functionId];
 
   if functionData == nil then return false end
-
+  
   if functionData.kind == EFunction.FirstIAP then
 
   elseif functionData.kind == EFunction.Welfare then
@@ -512,7 +916,7 @@ function Function.CheckRedDot(functionId)
                         ERedDot.Exp, ERedDot.Furnace, ERedDot.Arena, ERedDot.Scratch, ERedDot.ConsumeScratch, ERedDot.Poke,
                         ERedDot.StagePass, ERedDot.ClassAward, ERedDot.ActLogin, ERedDot.ActAccLogin, ERedDot.ReturnLogin, ERedDot.Swimming,
                         ERedDot.Prize_1, ERedDot.Prize_2, ERedDot.Prize_3,ERedDot.Prize_4, ERedDot.Prize_5, ERedDot.Prize_6,
-                        ERedDot.ReUseAct_3, ERedDot.ReUseAct_4, ERedDot.ReUseAct_5, ERedDot.ReUseAct_6);
+                        ERedDot.ReUseAct_3, ERedDot.ReUseAct_4, ERedDot.ReUseAct_5, ERedDot.ReUseAct_6, ERedDot.SoulGacha);
 
   elseif functionData.kind == EFunction.Mall then
     return RedDot.Check(ERedDot.Mall);
@@ -540,13 +944,13 @@ function Function.CheckRedDot(functionId)
 
   elseif functionData.kind == EFunction.Dungeon then
     return RedDot.Check(ERedDot.Dungeon);
-
+    
   elseif functionData.kind == EFunction.Social then
     return RedDot.Check(ERedDot.FriendInvitation, ERedDot.FriendAdd, ERedDot.FriendGift);
 
   elseif functionData.kind == EFunction.Organization then
-    return RedDot.Check(ERedDot.OrgMemberInvitation, ERedDot.OrgSign, ERedDot.OrgProduction, ERedDot.OrgBoss, ERedDot.OrgProduction, ERedDot.ArmySupportInfo, ERedDot.ArmySupportPoke);
-
+    return RedDot.Check(ERedDot.OrgMemberInvitation, ERedDot.OrgSign, ERedDot.OrgBoss, ERedDot.OrgProduction, ERedDot.ArmySupportInfo, ERedDot.ArmySupportPoke);
+    
   elseif functionData.kind == EFunction.Compound then
 
   elseif functionData.kind == EFunction.Mounts then
@@ -562,8 +966,11 @@ function Function.CheckRedDot(functionId)
   elseif functionData.kind == EFunction.Mail then
     return RedDot.Check(ERedDot.Mail);
 
-  elseif functionData.kind == EFunction.Setting then
+  elseif functionData.kind == EFunction.Gacha then
+    return RedDot.Check(ERedDot.Gacha);
 
+  elseif functionData.kind == EFunction.Setting then
+    
   elseif functionData.kind == EFunction.Chat then
     return RedDot.Check(ERedDot.Whisper);
 
@@ -588,9 +995,10 @@ function Function.CheckRedDot(functionId)
 
   elseif functionData.kind == EFunction.Tutorial then
 
-  elseif functionData.kind == EFunction.CollectBook then
-    return RedDot.Check(ERedDot.CollectWarrior, ERedDot.CollectStyle, ERedDot.CollectCard, ERedDot.CollectCardSort);
-
+  elseif functionData.kind == EFunction.CollectBook then 
+    return RedDot.Check(ERedDot.CollectWarrior, ERedDot.CollectStyle, ERedDot.CollectCard, ERedDot.CollectCardSort,
+      ERedDot.NFTCollectWarrior, ERedDot.NFTCollectStyle, ERedDot.NFTCollectCard, ERedDot.NFTCollectMount, ERedDot.NFTCollectShineValue);
+    
   elseif functionData.kind == EFunction.Auction then
 
   elseif functionData.kind == EFunction.BeStronger then
@@ -604,7 +1012,7 @@ function Function.CheckRedDot(functionId)
 
   elseif functionData.kind == EFunction.ExpSlotMachine then
 
-  elseif functionData.kind == EFunction.LimitedTimeSale then
+  elseif functionData.kind == EFunction.LimitedTimeSale then 
     return RedDot.Check(ERedDot.LimitedTimeSale);
 
   elseif functionData.kind == EFunction.ArmyLuckyBag then
@@ -628,23 +1036,24 @@ function Function.CheckRedDot(functionId)
 
   elseif functionData.kind == EFunction.LeaveHouse then
 
+  elseif functionData.kind == EFunction.Requiem then
+    return RedDot.Check(ERedDot.Requiem);
+  elseif functionData.kind == EFunction.Mine then
+
+  
   elseif functionData.kind == EFunction.BattlePass then
     return RedDot.Check(ERedDot.BattlePass);
-
   elseif functionData.kind == EFunction.ActivityModel then
     return RedDot.Check(ERedDot.ActivityModelHasAct);
-
-  elseif functionData.kind == EFunction.VIP then
-    return RedDot.Check(ERedDot.VIP);
   end
   return false;
 end
 
 function Function.CheckNeedPlayAniBtn(functionId)
   local functionData = functionDatas[functionId];
-
+  
   if Role.player == nil then return false end
-
+    
   if functionData.kind == EFunction.BeeMove then
     return MachineBox.autoMove;
 
@@ -660,7 +1069,7 @@ function Function.CheckNeedPlayAniBtn(functionId)
   else
     return this.CheckRedDot(functionId); --play rule by reddot
   end
-
+  
   return false;
 end
 
@@ -677,8 +1086,11 @@ function Function.Use(functionId, param1, param2)
   elseif functionData.kind == EFunction.Welfare then
     UILoginAward.GetServerExpDatas();
 
+  elseif functionData.kind == EFunction.Gacha then
+    UI.Open(UIMall, 1, 1, true);
+
   elseif functionData.kind == EFunction.Mall then
-    UI.Open(UIMall, param1, param2);
+    UI.Open(UIMall, param1, param2, false);
 
   elseif functionData.kind == EFunction.Invitation then
     UI.Open(UIInvitation, false);
@@ -689,7 +1101,7 @@ function Function.Use(functionId, param1, param2)
         ShowCenterMessage(string.Get(71208));
         return;
       end
-
+      
       Mounts.Mount();
     else
       Mounts.Dismount();
@@ -709,7 +1121,47 @@ function Function.Use(functionId, param1, param2)
 
   elseif functionData.kind == EFunction.Team then
     UI.Open(UITeam);
-
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif functionData.kind == EFunction.Mission then
     UI.Open(UIMission);
 
@@ -718,11 +1170,10 @@ function Function.Use(functionId, param1, param2)
       ShowCenterMessage(string.Get(10325));
       return;
     end
-    UI.Open(UIDungeon, param1, param2);
+    UI.Open(UIDungeon, param1, param2);        
 
   elseif functionData.kind == EFunction.Social then
     UI.Open(UISocial);
-
   elseif functionData.kind == EFunction.Organization then
     if Organization.Id ~= 0 then
       UI.Open(UIArmy);
@@ -730,13 +1181,13 @@ function Function.Use(functionId, param1, param2)
       ShowOptionMessage(
         function(result)
           if result == 1 then
-            UI.Open(UIArmyList);
+            UI.Open(UIArmyList);         
           elseif result == 2 then
             ShowNameInput(string.Get(20287),
               function(text)
                 if text == nil then return end
                 if not string.CheckName(text) then return end
-
+                
                 if not Role.CheckPlayerLv(Organization.requireLv) then
                   ShowCenterMessage(string.format(string.Get(10138), Organization.requireLv));
                   return;
@@ -746,7 +1197,7 @@ function Function.Use(functionId, param1, param2)
                   ShowCenterMessage(string.format(string.Get(10268), Organization.createMoney));
                   return;
                 end
-
+  
                 --C:039-001 <創立軍團> +軍團名稱(?)
                 sendBuffer:Clear();
                 sendBuffer:WriteString(text);
@@ -760,19 +1211,65 @@ function Function.Use(functionId, param1, param2)
         Role.player
       );
     end
-
+    
   elseif functionData.kind == EFunction.Compound then
     UI.Open(UICompound);
+    
+  elseif functionData.kind == EFunction.Godskin then
+    UI.Open(UIGodskin);
+
+  elseif functionData.kind == EFunction.Soul then
+    UI.Open(UISoul);
 
   elseif functionData.kind == EFunction.Elf then
     UI.Open(UIElf);
 
-  elseif functionData.kind == EFunction.VIP then
-    UI.Open(UIVIP);
+  elseif functionData.kind == EFunction.Web then
+    UI.Open(UIMarket);
 
   elseif functionData.kind == EFunction.Mounts then
     UI.Open(UIMounts);
-
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif functionData.kind == EFunction.Leaderboard then
     UI.Open(UILeaderboard);
 
@@ -784,18 +1281,98 @@ function Function.Use(functionId, param1, param2)
 
   elseif functionData.kind == EFunction.Mail then
     UI.Open(UIMail);
-
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif functionData.kind == EFunction.Setting then
     UI.Open(UISetting);
 
   elseif functionData.kind == EFunction.Chat then
 
   elseif functionData.kind == EFunction.Emoji then
-    UI.Open(UIEmotion);
+    UI.Open(UIEmotion); 
 
   elseif functionData.kind == EFunction.Action then
     UI.Open(UIAction);
-
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif functionData.kind == EFunction.Dispatch then
     Dispatch.OpenUI();
 
@@ -819,7 +1396,7 @@ function Function.Use(functionId, param1, param2)
 
   elseif functionData.kind == EFunction.Tutorial then
     UI.Open(UITutorial);
-
+    
   elseif functionData.kind == EFunction.CollectBook then
     UI.Open(UICollectBook);
 
@@ -850,8 +1427,8 @@ function Function.Use(functionId, param1, param2)
       19026
     );
   elseif functionData.kind == EFunction.ExpSlotMachine then
-    UI.Open(UIExpSlotMachine);
-  elseif functionData.kind == EFunction.LimitedTimeSale then
+    UI.Open(UIExpSlotMachine, ESlotMachineKind.EXP);
+  elseif functionData.kind == EFunction.LimitedTimeSale then 
     UI.Open(UILimitedTimeSale);
   elseif functionData.kind == EFunction.SeniorElection then
     UI.Open(UISeniorElection, EElectionActivityID.SISTER);
@@ -880,6 +1457,12 @@ function Function.Use(functionId, param1, param2)
   elseif functionData.kind == EFunction.LeaveHouse then
     --C:106-012 <離開小屋>
     Network.Send(106, 12);
+  elseif functionData.kind == EFunction.Requiem then
+    UI.Open(UIRequiem);
+  elseif functionData.kind == EFunction.Mine then
+    sendBuffer:Clear();
+    sendBuffer:WriteByte(0);
+    Network.Send(170, 1, sendBuffer);
   elseif functionData.kind == EFunction.BattlePass then
     BattlePass.RequireCheckBattlePassFunction(EBattlePassReuireState.OpenUI);
   elseif functionData.kind == EFunction.UniqueBlood then
@@ -889,12 +1472,11 @@ function Function.Use(functionId, param1, param2)
       UI.Open(UIUniqueBlood);
     end
   elseif functionData.kind == EFunction.Treasure then
+    UI.Open(UITreasure);
     Network.Send(123, 1);
     Treasure.sendOpenRequest = true;
   elseif functionData.kind == EFunction.Relationship then
     UI.Open(UIRelationship);
-  elseif functionData.kind == EFunction.AIChat then
-    UI.Open(UIAIChat);
   elseif functionData.kind == EFunction.ActivityModel then
     UI.Open(UIActivityModel);
   end
@@ -927,7 +1509,7 @@ end
 
 function Function.UpdateRedDot()
   UIMainFunction.showRedDot = false;
-
+  
   for k, v in pairs(this.functionObjects) do
     if this.CheckRedDot(k) then
       v.image_RedDot.gameObject:SetActive(true);
@@ -939,12 +1521,12 @@ function Function.UpdateRedDot()
           end
         end
       end
-
+      
     else
       v.image_RedDot.gameObject:SetActive(false);
     end
   end
-
+  
   UIMainFunction.UpdateRedDot();
   this.UpdateAniBtn();
 end

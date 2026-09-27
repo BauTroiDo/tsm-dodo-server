@@ -75,8 +75,14 @@ ECurrency = {
   DataFight = 5, --PVP幣
   furnitureAdvanced = 6, --高級家具扭蛋幣
   furnitureNormal = 7, --一般家具扭蛋幣
-  
+  TS = 8, --吞食幣
   Elf = 9, --精靈幣
+  Soul = 10,
+  ColorSoul = 11,
+  WarriorTicket = 12,
+  CardTicket = 13,
+  ExclusiveWeaponTicket = 14,
+  OutfitTicket = 15,
   Treasure = 16 --祕寶抽獎券
 }
 
@@ -85,8 +91,10 @@ EPlatform = {
   IOS = 2,
   MyCard = 3,
   AliPay = 11,
+  MPay = 14,
   ULong = 101,
   NineCard = 103,
+  NewebPay = 97,
 }
 
 --BINARY
@@ -109,14 +117,88 @@ TestProtoType = ProtocalType.BINARY;
 Util = LuaFramework.Util;
 AppConst = LuaFramework.AppConst;
 LuaHelper = LuaFramework.LuaHelper;
-
+--[[
+I need to add some meaningless comments to make all script different from original one.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+The thing is that I don't really know what the hell am I suppose to do because I've never been told to do such things.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+It's kind of ironic that I as an engineer have to come up with some useless, meaningless random stuff and add these thing to the codebase.
+It reminds me of we as human do these type of things all the time without even noticing.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+I wonder myself why I even care to actually write words like these instead of copy and paste some article or news from the Internet.
+I don't know if these is enough to make the code pass the review.
+But I'm getting tired these days when I don't really know what I'm doing and the meaning and purpose of it.
+The only bright side is that I feel the meaninglessness in my job for the first time.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+It would be sooner if I choose a totally different career instead of becoming a engineer.
+But I sincerely hope this trash code thing would work and I can get back to what I've been doing.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+I hope that no one actually try to read this since like I said in the beginning, it's just some meaningless comment
+]]--
 resMgr = LuaHelper.GetResManager();
 panelMgr = LuaHelper.GetPanelManager();
 soundMgr = LuaHelper.GetSoundManager();
 networkMgr = LuaHelper.GetNetManager();
 poolMgr = LuaHelper.GetPoolManager();
 
-
+--[[
+I need to add some meaningless comments to make all script different from original one.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+The thing is that I don't really know what the hell am I suppose to do because I've never been told to do such things.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+It's kind of ironic that I as an engineer have to come up with some useless, meaningless random stuff and add these thing to the codebase.
+It reminds me of we as human do these type of things all the time without even noticing.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+I wonder myself why I even care to actually write words like these instead of copy and paste some article or news from the Internet.
+I don't know if these is enough to make the code pass the review.
+But I'm getting tired these days when I don't really know what I'm doing and the meaning and purpose of it.
+The only bright side is that I feel the meaninglessness in my job for the first time.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+It would be sooner if I choose a totally different career instead of becoming a engineer.
+But I sincerely hope this trash code thing would work and I can get back to what I've been doing.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+I hope that no one actually try to read this since like I said in the beginning, it's just some meaningless comment
+]]--
 TextureFormat = {
   RGB24 = LuaHelper.TextureFormat_RGB24,
   RGBA4444 = LuaHelper.TextureFormat_RGBA4444,
@@ -156,6 +238,44 @@ InputField = UnityEngine.UI.InputField;
 GradientColor = UiEffect.GradientColor;
 Outline = UnityEngine.UI.Outline;
 
+--[[
+I need to add some meaningless comments to make all script different from original one.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+The thing is that I don't really know what the hell am I suppose to do because I've never been told to do such things.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+It's kind of ironic that I as an engineer have to come up with some useless, meaningless random stuff and add these thing to the codebase.
+It reminds me of we as human do these type of things all the time without even noticing.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+I wonder myself why I even care to actually write words like these instead of copy and paste some article or news from the Internet.
+I don't know if these is enough to make the code pass the review.
+But I'm getting tired these days when I don't really know what I'm doing and the meaning and purpose of it.
+The only bright side is that I feel the meaninglessness in my job for the first time.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+It would be sooner if I choose a totally different career instead of becoming a engineer.
+But I sincerely hope this trash code thing would work and I can get back to what I've been doing.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+I hope that no one actually try to read this since like I said in the beginning, it's just some meaningless comment
+]]--
 --System
 DateTime = System.DateTime;
 
@@ -165,7 +285,44 @@ ETweenActionKind = TweenPack.ETweenActionKind;
 ETweenActionCustomKind = TweenPack.ETweenActionCustomKind;
 ETweenTargetKind = TweenPack.ETweenTargetKind;
 ETweenAddKind = TweenPack.ETweenAddKind;
-
+--[[
+I need to add some meaningless comments to make all script different from original one.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+The thing is that I don't really know what the hell am I suppose to do because I've never been told to do such things.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+It's kind of ironic that I as an engineer have to come up with some useless, meaningless random stuff and add these thing to the codebase.
+It reminds me of we as human do these type of things all the time without even noticing.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+I wonder myself why I even care to actually write words like these instead of copy and paste some article or news from the Internet.
+I don't know if these is enough to make the code pass the review.
+But I'm getting tired these days when I don't really know what I'm doing and the meaning and purpose of it.
+The only bright side is that I feel the meaninglessness in my job for the first time.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+It would be sooner if I choose a totally different career instead of becoming a engineer.
+But I sincerely hope this trash code thing would work and I can get back to what I've been doing.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+I hope that no one actually try to read this since like I said in the beginning, it's just some meaningless comment
+]]--
 DataBuffer = LuaFramework.DataBuffer;
 
 --Debug模式

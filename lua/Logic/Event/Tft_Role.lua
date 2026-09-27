@@ -15,6 +15,21 @@ local AlphaTable = { 255, 200, 160, 120, 80, 40, ["Default"] = 255 };
 Tft_Role = {};
 Tft_Role.__index = Tft_Role;
 
+function Tft_Role.DoNothing(reader)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
 function Tft_Role.New(reader)
   local self = {};
   setmetatable(self, Tft_Role);
@@ -95,6 +110,29 @@ function Tft_Role:Destroy()
   self.roleController = nil;
 end
 
+--[[
+Now Dinah, the daughter whom Leah had by Jacob, went out to see the women of that country.
+And when Shechem, the son of Hamor the Hivite who was the chief of that land, saw her, he took her by force and had connection with her.
+Then his heart went out in love to Dinah, the daughter of Jacob, and he said comforting words to her.
+And Shechem said to Hamor, his father, Get me this girl for my wife.
+Now Jacob had word of what Shechem had done to his daughter; but his sons were in the fields with the cattle, and Jacob said nothing till they came.
+Then Hamor, the father of Shechem, came out to have a talk with Jacob.
+Now the sons of Jacob came in from the fields when they had news of it, and they were wounded and very angry because of the shame he had done in Israel by having connection with Jacob's daughter; and they said, Such a thing is not to be done.
+But Hamor said to them, Shechem, my son, is full of desire for your daughter: will you then give her to him for a wife?
+And let our two peoples be joined together; give your daughters to us, and take our daughters for yourselves.
+Go on living with us, and the country will be open to you; do trade and get property there.
+And Shechem said to her father and her brothers, If you will give ear to my request, whatever you say I will give to you.
+However great you make the bride-price and payment, I will give it; only let me have the girl for my wife.
+But the sons of Jacob gave a false answer to Shechem and Hamor his father, because of what had been done to Dinah their sister.
+And they said, It is not possible for us to give our sister to one who is without circumcision, for that would be a cause of shame to us:
+But on this condition only will we come to an agreement with you: if every male among you becomes like us and undergoes circumcision;
+Then we will give our daughters to you and take your daughters to us and go on living with you as one people.
+But if you will not undergo circumcision as we say, then we will take our daughter and go.
+And their words were pleasing to Hamor and his son Shechem.
+And without loss of time the young man did as they said, because he had delight in Jacob's daughter, and he was the noblest of his father's house.
+--]]
+
+
 function Tft_Role:Show(isResidual, aIdx, aKind)
   local alpha = AlphaTable.Default;
   local flag = EResidual.None;
@@ -172,6 +210,51 @@ function Tft_Role:Show(isResidual, aIdx, aKind)
   self.roleController:UpdateShow(false);
 end
 
+function Tft_Role.DoNothing1(reader)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
+function Tft_Role.DoNothing2(reader)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
+function Tft_Role.DoNothing6(reader)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
 function Tft_Role:ShowResidual(kind, value)
   local tempX = self.position.x;
   local tempY = self.position.y;
@@ -226,6 +309,21 @@ function Tft_Role:UpdatePosition()
   return true;
 end
 
+function Tft_Role.DoNothing3(reader)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
 function Tft_Role:NextStep()
   self.nowStep = math.min(self.nowStep + 1, self.totalStep);
 
@@ -264,5 +362,35 @@ function Tft_Role:NextStep()
     self.destination.y = self.position.y;
 
     self.destXY[self.nowStep].frame = self.destXY[self.nowStep - 1].frame;
+  end
+end
+
+function Tft_Role.DoNothing4(reader)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
+function Tft_Role.DoNothing5(reader)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
   end
 end

@@ -1,5 +1,24 @@
 local bit = require("bit")
 
+--[[
+And Abraham went on his way from there to the land of the South, and was living between Kadesh and Shur, in Gerar.
+And Abraham said of Sarah, his wife, She is my sister: and Abimelech, king of Gerar, sent and took Sarah.
+But God came to Abimelech in a dream in the night, and said to him, Truly you are a dead man because of the woman whom you have taken; for she is a man's wife.
+Now Abimelech had not come near her; and he said, Lord, will you put to death an upright nation?
+Did he not say to me himself, She is my sister? and she herself said, He is my brother: with an upright heart and clean hands have I done this.
+And God said to him in the dream, I see that you have done this with an upright heart, and I have kept you from sinning against me: for this reason I did not let you come near her.
+So now, give the man back his wife, for he is a prophet, and let him say a prayer for you, so your life may be safe: but if you do not give her back, be certain that death will come to you and all your house.
+So Abimelech got up early in the morning and sent for all his servants and gave them word of these things, and they were full of fear.
+Then Abimelech sent for Abraham, and said, What have you done to us? what wrong have I done you that you have put on me and on my kingdom so great a sin? You have done to me things which are not to be done.
+And Abimelech said to Abraham, Why did you do this thing?
+And Abraham said, Because it seemed to me that there was no fear of God in this place, and that they might put me to death because of my wife.
+And, in fact, she is my sister, the daughter of my father, but not the daughter of my mother; and she became my wife:
+And when God sent me wandering from my father's house, I said to her, Let this be the sign of your love for me; wherever we go, say of me, He is my brother.
+Then Abimelech gave to Abraham sheep and oxen and men-servants and women-servants, and gave him back his wife Sarah.
+And Abimelech said, See, all my land is before you; take whatever place seems good to you.
+And he said to Sarah, See, I have given to your brother a thousand bits of silver so that your wrong may be put right; now your honour is clear in the eyes of all.
+]]--
+
 FightInfo = { };-- 戰鬥前所要備份的資料
 function FightInfo.New()
   local self = { };
@@ -10,7 +29,61 @@ function FightInfo.New()
   return self;
 end
 
+function FightInfo.GetRShifts(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function FightInfo.GetRShifts1(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function FightInfo.GetRShifts2(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
 FightEffect = { };  -- 戰鬥效果
+
+function FightEffect.Trash()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function FightEffect.TrashA()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
 function FightEffect.New()
   local self = { };
   self.skillID = 0;
@@ -39,6 +112,33 @@ function FightEffect.New()
   return self;
 end
 
+function FightEffect.TrashC()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+
+function FightEffect.TrashD()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
 FlyTreasure = { };  -- 儲存各自噴寶時的特效
 function FlyTreasure.New(fColm, fRow, colm, row, itemId)
   local self = { };
@@ -48,6 +148,28 @@ function FlyTreasure.New(fColm, fRow, colm, row, itemId)
   self.dRow = row;
   self.thingID = itemId;
   return self;
+end
+
+function FlyTreasure.MeanlessF()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
+function FlyTreasure.MeanlessD()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
 end
 
 FightRoleController = { }
@@ -165,6 +287,18 @@ function FightRoleController.New()
   return self;
 end
 
+function FightRoleController.Random()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 function FightRoleController:Clear()
   self:ThrowTreasure();
   self:ResetSquelch();
@@ -199,6 +333,54 @@ function FightRoleController:Clear()
     self.roleController:Destroy();
     self.roleController = nil;
   end  
+end
+
+function FightRoleController.Random1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function FightRoleController.Random2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function FightRoleController.Random3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function FightRoleController.Random4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
 end
 
 function FightRoleController:DoInFight(aColm, aRow, aMasterID, isWalk, aInitSet, warType)
@@ -312,6 +494,19 @@ function FightRoleController:DoInFight(aColm, aRow, aMasterID, isWalk, aInitSet,
     end
   end
   
+  --[[
+This is the book of the generations of Adam. In the day when God made man, he made him in the image of God;
+Male and female he made them, naming them Man, and giving them his blessing on the day when they were made.
+Adam had been living for a hundred and thirty years when he had a son like himself, after his image, and gave him the name of Seth:
+And after the birth of Seth, Adam went on living for eight hundred years, and had sons and daughters:
+And all the years of Adam's life were nine hundred and thirty: and he came to his end.
+And Seth was a hundred and five years old when he became the father of Enosh:
+And he went on living after the birth of Enosh for eight hundred and seven years, and had sons and daughters:
+And all the years of Seth's life were nine hundred and twelve: and he came to his end.
+And Enosh was ninety years old when he became the father of Kenan:
+--]]
+  
+  
   self:ResetPosition();
   
   local selectFrame = FightField.selectFrames[self.colm][self.row];  
@@ -321,12 +516,162 @@ function FightRoleController:DoInFight(aColm, aRow, aMasterID, isWalk, aInitSet,
   selectFrame.gameObject.transform.localPosition = Vector3.New(self.nowPos.x, -self.nowPos.y + 35, 0);
 end
 
-function FightRoleController:ResetPosition()  
-  self.nowPos = Vector2.New(FightField.chip[self.colm][self.row].x, FightField.chip[self.colm][self.row].y);  
+function FightRoleController:SoulDoInFight(aColm, aRow, aMasterID, isWalk, aInitSet, warType)
+  -- todo return warType
+  local aIdx;
+  local aBasePlayer = nil;
+  --[[In the beginning God created the heaven and the earth.At the first God made the heaven and the earth.
+And the earth was without form, and void; and darkness was upon the face of the deep. And the Spirit of God moved upon the face of the waters.
+At the first God made the heaven and the earth.And the earth was waste and without form; and it was dark on the face of the deep: and the Spirit of God was moving on the face of the waters.And God said, Let there be light: and there was light.
+And God, looking on the light, saw that it was good: and God made a division between the light and the dark,
+Naming the light, Day, and the dark, Night. And there was evening and there was morning, the first day.
+And God said, Let there be a solid arch stretching over the waters, parting the waters from the waters.
+And God made the arch for a division between the waters which were under the arch and those which were over it: and it was so.
+And God gave the arch the name of Heaven. And there was evening and there was morning, the second day.
+And God said, Let the waters under the heaven come together in one place, and let the dry land be seen: and it was so.
+And God gave the dry land the name of Earth; and the waters together in their place were named Seas: and God saw that it was good.
+And God said, Let grass come up on the earth, and plants producing seed, and fruit-trees giving fruit, in which is their seed, after their sort: and it was so.
+And grass came up on the earth, and every plant producing seed of its sort, and every tree producing fruit, in which is its seed, of its sort: and God saw that it was good.
+And there was evening and there was morning, the third day.
+And God said, Let there be lights in the arch of heaven, for a division between the day and the night, and let them be for signs, and for marking the changes of the year, and for days and for years:
+And let them be for lights in the arch of heaven to give light on the earth: and it was so.
+And God made the two great lights: the greater light to be the ruler of the day, and the smaller light to be the ruler of the night: and he made the stars.
+And God put them in the arch of heaven, to give light on the earth;
+To have rule over the day and the night, and for a division between the light and the dark: and God saw that it was good.
+And there was evening and there was morning, the fourth day.
+And God said, Let the waters be full of living things, and let birds be in flight over the earth under the arch of heaven.
+And God made great sea-beasts, and every sort of living and moving thing with which the waters were full, and every sort of winged bird: and God saw that it was good.
+And God gave them his blessing, saying, Be fertile and have increase, making all the waters of the seas full, and let the birds be increased in the earth.--]]
+  
+  if warType == EWar.Join then
+    self.blnFirst = true;
+    if self.kind == EHuman.Player then
+      ShowCenterMessage(string.Get(40328),2000); --//請等待回合開始
+    end
+  end
+
+  if warType == EWar.OldJoin then
+    -- 舊參戰100,設回參戰6  ,判斷是否第一次進戰鬥用
+    warType = EWar.Join;
+  end
+
+  self.colm = aColm;
+  self.row = aRow;
+
+  self.party_Kind = FightRoleController.GetSoulParty(self.colm);
+
+  self.masterID = aMasterID;
+  self.roleController:SetAttribute(EAttribute.Lv, aInitSet.lv);
+  self.roleController:SetAttribute(EAttribute.MaxHp, aInitSet.maxHp);
+  self.roleController:SetAttribute(EAttribute.MaxSp, aInitSet.maxSp);
+  self.roleController:SetAttribute(EAttribute.Hp, aInitSet.hp);
+  self.roleController:SetAttribute(EAttribute.Sp, aInitSet.sp);
+  self.roleController:SetAttribute(EAttribute.Element, aInitSet.element);
+  self.roleController:SetAttribute(EAttribute.UpgradeLv, aInitSet.upgradeLv);
+  self:UpdateUIInfo();
+  self.roleController:SetDirection(self:GetDirection());
+  self.roleController:SetInBattle(true);
+
+  self.blnActSetOK = true;
+  -- 030718-1J  秀烏龜
+  self.fightActInfo.pose_Kind = self.roleController.animationId;
+  -- 姿勢備份
+  self.fightActInfo.speed = self.speed;            --速度 .
+  self.fightActInfo.direction = self.roleController.direction;
+  -- 方向 .
+  self.fightActInfo.beh_Kind = self.beh_Kind;
+  -- 行為 .
+
+  self.statusActInfo.pose_Kind = self.roleController.animationId;
+  -- 姿勢備份
+  self.statusActInfo.speed = self.speed;           --速度 .
+  self.statusActInfo.direction = self.roleController.direction;
+  -- 方向 .
+  self.statusActInfo.beh_Kind = self.beh_Kind;
+  -- 行為 .
+
+  --if isWalk then
+    --FightField.SetSkillKind(self.index, ESkill_Kind.EnterFight, self.index)
+  --else
+  --  if self.roleController:GetAttribute(EAttribute.Hp) == 0 then
+  --    self.roleController:SetIsDead(true)
+  --  end
+  --end
+
+  self:ResetPosition();
+
+
+  self:SetAlpha(100);
+
+  --local selectFrame = FightField.selectFrames[self.colm][self.row];
+  --selectFrame.uiEvent:ClearListener();
+  --selectFrame.uiEvent:SetListener(EventTriggerType.PointerClick, self.DoClick);
+  --selectFrame.uiEvent.parameter = self;
+  --selectFrame.gameObject.transform.localPosition = Vector3.New(self.nowPos.x, -self.nowPos.y + 35, 0);
+end
+
+function FightRoleController:ResetPosition()
+  if self.kind == EHuman.SoulWarrior  then
+    self.nowPos = Vector2.New(FightField.SoulChip[self.colm][self.row].x, FightField.SoulChip[self.colm][self.row].y);
+  else
+    self.nowPos = Vector2.New(FightField.chip[self.colm][self.row].x, FightField.chip[self.colm][self.row].y);
+  end
+
   self.startPos = self.nowPos;
   self.goal = self.nowPos;
   self:SetPosition(self.nowPos)
 end
+
+function FightRoleController.Meanlessas()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
+function FightRoleController.Meanlessav()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
+function FightRoleController.Meanlessac()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
+function FightRoleController.Meanlessad()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
+--function FightRoleController:SoulResetPosition()
+--  self.nowPos = Vector2.New(FightField.SoulChip[self.colm][self.row].x, FightField.SoulChip[self.colm][self.row].y);
+--  self.startPos = self.nowPos;
+--  self.goal = self.nowPos;
+--  self:SetPosition(self.nowPos)
+--end
 
 -- function FightRoleController:SetMaterial(kind)  -- 1: role  2: light
 --   if self.materialKind == kind then
@@ -351,6 +696,17 @@ function FightRoleController:SetAlpha(alpha)
     self.roleController.material:SetInt("_Invisible", 1);
     self.roleController.material:SetFloat("_InvisibleAlpha", alpha / 255);
   end
+  
+  if LuaHelper.CheckDefine("DemoCode") then
+    local folk = 69;
+    local dog = 27;
+    local stupid = 0;
+    if stupid ~= nil then
+      stupid = folk + dog;
+    else
+      stupid = stupid + 1;
+    end
+  end
 end
 
 function FightRoleController:SetOutline(visible)
@@ -360,6 +716,17 @@ function FightRoleController:SetOutline(visible)
   else
     self.roleController.material:SetFloat("_Outline", 0);
     self.roleController.material:SetColor("_Color", Color.Alpha);
+  end
+  
+  if LuaHelper.CheckDefine("DemoCode") then
+    local meaningless = 45;
+    local shift = 2;
+    local result = 0;
+    bit.rshift(meaningless, shift)
+    bit.lshift(meaningless, shift)
+    if bit.band(meaningless,45) == 45 then
+      result = meaningless * shift;
+    end
   end
 end
 
@@ -400,6 +767,39 @@ function FightRoleController:SetPosition(pos)
   self.roleController.canvas.sortingOrder = sceneOrder  + self.nowPos.y - self.scaleRoot.transform.localPosition.y;
 end
 
+function FightRoleController.Script11()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function FightRoleController.Script12()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function FightRoleController.Script13()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
 function FightRoleController:GetDirection()
   if self.party_Kind == EFightParty.Left then
     return 4
@@ -414,6 +814,72 @@ function FightRoleController.GetParty(aColm)
   if aColm == 0 or aColm == 1 then
     result = EFightParty.Left;
   elseif aColm == 2 or aColm == 3 then
+    result = EFightParty.Right;
+  end
+  return result;
+end
+
+function FightRoleController.Script14()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function FightRoleController.Script15()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function FightRoleController.Script16()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function FightRoleController.Script17()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function FightRoleController.Script18()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function FightRoleController.GetSoulParty(aColm)
+  -- 傳入colm,得到其Party
+  local result = Party_None;
+  if aColm == 0 then
+    result = EFightParty.Left;
+  elseif aColm == 1 then
     result = EFightParty.Right;
   end
   return result;
@@ -587,6 +1053,36 @@ function FightRoleController:FDodge(initial)
   self.behOldTime = CGTimer.time;
 end
 
+--[[
+Now Abraham was old and far on in years: and the Lord had given him everything in full measure.
+And Abraham said to his chief servant, the manager of all his property, Come now, put your hand under my leg:
+And take an oath by the Lord, the God of heaven and the God of the earth, that you will not get a wife for my son Isaac from the daughters of the Canaanites among whom I am living;
+But that you will go into my country and to my relations and get a wife there for my son Isaac.
+And the servant said, If by chance the woman will not come with me into this land, am I to take your son back again to the land from which you came?
+And Abraham said, Take care that you do not let my son go back to that land.
+The Lord God of heaven, who took me from my father's house and from the land of my birth, and made an oath to me, saying, To your seed I will give this land: he will send his angel before you and give you a wife for my son in that land.
+And if the woman will not come with you, then you are free from this oath; only do not take my son back there.
+And the servant put his hand under Abraham's leg, and gave him his oath about this thing.
+And the servant took ten of his master's camels, and all sorts of good things of his master's, and went to Mesopotamia, to the town of Nahor.
+And he made the camels take their rest outside the town by the water-spring in the evening, at the time when the women came to get water.
+And he said, O Lord, the God of my master Abraham, let me do well in what I have undertaken this day, and give your mercy to my master Abraham.
+See, I am waiting here by the water-spring; and the daughters of the town are coming out to get water:
+Now, may the girl to whom I say, Let down your vessel and give me a drink, and who says in answer, Here is a drink for you and let me give water to your camels: may she be the one marked out by you for your servant Isaac: so may I be certain that you have been good to my master Abraham.
+And even before his words were ended, Rebekah, the daughter of Bethuel, the son of Milcah, who was the wife of Nahor, Abraham's brother, came out with her water-vessel on her arm.
+She was a very beautiful girl, a virgin, who had never been touched by a man: and she went down to the spring to get water in her vessel.
+And the servant came running to her and said, Give me a little water from your vessel.
+And she said, Take a drink, my lord: and quickly letting down her vessel onto her hand, she gave him a drink.
+And having done so, she said, I will get water for your camels till they have had enough.
+And after putting the water from her vessel into the animals' drinking-place, she went quickly back to the spring and got water for all the camels.
+And the man, looking at her, said nothing, waiting to see if the Lord had given his journey a good outcome.
+And when the camels had had enough, the man took a gold nose-ring, half a shekel in weight, and two ornaments for her arms of ten shekels weight of gold;
+And said to her, Whose daughter are you? is there room in your father's house for us?
+And she said to him, I am the daughter of Bethuel, the son of Milcah, Nahor's wife.
+And she said, We have a great store of dry grass and cattle-food, and there is room for you.
+And with bent head the man gave worship to the Lord;
+And said, Praise be to the Lord, the God of my master Abraham, who has given a sign that he is good and true to my master, by guiding me straight to the house of my master's family.
+]]--
+
 function FightRoleController:FMagicalEye(init)
   self:FResidual(init, 60);
   if init == true then 
@@ -696,6 +1192,90 @@ function FightRoleController:FDivide(init, colm, row)
       self:SetBeh(EFightBeh.None);
     end
     self.behOldTime = CGTimer.time;
+  end
+end
+
+function FightRoleController.GuessNumberG8(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
+function FightRoleController.GuessNumberG9(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
+function FightRoleController.GuessNumberG10(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
+function FightRoleController.GuessNumberG11(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
   end
 end
 
@@ -816,6 +1396,48 @@ function FightRoleController:FFlyOut(initial)
   end
 end
 
+function FightRoleController.GuessNumberG12(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
+function FightRoleController.GuessNumberG13(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
 function FightRoleController:RCtoSpot(colm, row, spotKind, dist)
   if spotKind == nil then 
     spotKind = 0;
@@ -877,6 +1499,132 @@ function FightRoleController:RCtoSpot(colm, row, spotKind, dist)
   return goal;
 end
 
+function FightRoleController.GuessNumberG14(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
+function FightRoleController.GuessNumberG15(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
+function FightRoleController.GuessNumberG16(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
+function FightRoleController.GuessNumberG17(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
+function FightRoleController.GuessNumberG18(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
+function FightRoleController.GuessNumberG19(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
 function FightRoleController:GetSpotOfRc(aSpotKind, aDist)
   local fixedW, fixedH, goal;
   -- TPoint 移到下一個格子長和寬的x,y差值
@@ -890,11 +1638,12 @@ function FightRoleController:GetSpotOfRc(aSpotKind, aDist)
   fixedH.x = math.round(aDist * FieldSinSitaH);
   fixedH.y = math.round(aDist * FieldCosSitaH);
 
-  x = FightField.chip[self.colm][self.row].x;
-  y = FightField.chip[self.colm][self.row].y;
+  local chipPos = self:GetChipPos();
+  x = chipPos.x;
+  y = chipPos.y;
 
   goal = {};
-  if Contains(self.colm, 2, 3) then
+  if self.party_Kind == EFightParty.Right then
     if aSpotKind == EFightSpot.Front then
       goal.x = x - fixedW.x;
       goal.y = y - fixedW.y;
@@ -960,7 +1709,34 @@ function FightRoleController:GetSpotOfTar(aTarX, aTarY, aDist)
 end
 
 function FightRoleController:GetChipPos()
-  return Vector2.New(FightField.chip[self.colm][self.row].x, FightField.chip[self.colm][self.row].y);
+  if self.kind == EHuman.SoulWarrior  then
+    --return FightField.SoulChip[self.colm][self.row];
+    return Vector2.New(FightField.SoulChip[self.colm][self.row].x, FightField.SoulChip[self.colm][self.row].y);
+  else
+    --return FightField.chip[self.colm][self.row];
+    return Vector2.New(FightField.chip[self.colm][self.row].x, FightField.chip[self.colm][self.row].y);
+  end
+end
+
+function FightRoleController.GuessNumberG20(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
 end
 
 function FightRoleController:GetMagicPos()
@@ -1136,6 +1912,69 @@ function FightRoleController:SetJump(x, y, isChanageDir)
 
   if self.totalDist == 0 then
     self.jumpStart = false;
+  end
+end
+
+function FightRoleController.GuessNumberG21(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
+function FightRoleController.GuessNumberG22(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
+function FightRoleController.GuessNumberG23(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
   end
 end
 
@@ -1449,6 +2288,19 @@ function FightRoleController:WhirelTrace()
   end
 end
 
+--[[
+And Isaac answering said, But I have made him your master, and have given him all his brothers for servants; I have made him strong with grain and wine: what then am I to do for you, my son?
+And Esau said to his father, Is that the only blessing you have, my father? give a blessing to me, even me! And Esau was overcome with weeping.
+Then Isaac his father made answer and said to him, Far from the fertile places of the earth, and far from the dew of heaven on high will your living-place be:
+By your sword will you get your living and you will be your brother's servant; but when your power is increased his yoke will be broken from off your neck.
+So Esau was full of hate for Jacob because of his father's blessing; and he said in his heart, The days of weeping for my father are near; then I will put my brother Jacob to death.
+Then Rebekah, hearing what Esau had said, sent for Jacob, her younger son, and said to him, It seems that your brother Esau is purposing to put you to death.
+So now, my son, do what I say: go quickly to Haran, to my brother Laban;
+And be there with him for a little time, till your brother's wrath is turned away;
+Till the memory of what you have done to him is past and he is no longer angry: then I will send word for you to come back; are the two of you to be taken from me in one day?
+Then Rebekah said to Isaac, My life is a weariness to me because of the daughters of Heth: if Jacob takes a wife from among the daughters of Heth, such as these, the women of this land, of what use will my life be to me?
+--]]
+
 function FightRoleController:SetSpeed(sp)
   self.speed = sp;
   self.totalMoveTime = self.totalDist / (self.speed * 1000 * FightField.timeScale);
@@ -1486,6 +2338,17 @@ function FightRoleController:GetFightEffect(aColm, aRow)
   return nil;
 end
 
+--[[
+This is the book of the generations of Adam. In the day when God made man, he made him in the image of God;
+Male and female he made them, naming them Man, and giving them his blessing on the day when they were made.
+Adam had been living for a hundred and thirty years when he had a son like himself, after his image, and gave him the name of Seth:
+And after the birth of Seth, Adam went on living for eight hundred years, and had sons and daughters:
+And all the years of Adam's life were nine hundred and thirty: and he came to his end.
+And Seth was a hundred and five years old when he became the father of Enosh:
+And he went on living after the birth of Enosh for eight hundred and seven years, and had sons and daughters:
+And all the years of Seth's life were nine hundred and twelve: and he came to his end.
+And Enosh was ninety years old when he became the father of Kenan:
+--]]
 
 function FightRoleController:PlayEffect(aColm, aRow, aDefPose, aTotalCount)
   -- 播目標跳血
@@ -1557,7 +2420,7 @@ function FightRoleController:RunEffect(target, effct, aDefPose, aTotalCount)
     for i = 1, aEffect.attr_Count do
       --log(string.Concat("Att Kind:", aEffect.attr_Kind[i]))
 
-      if Contains(aEffect.attr_Kind[i], EAttribute.Seal, EAttribute.Vary, EAttribute.Faint, EAttribute.Spec, EAttribute.Strong, EAttribute.Passive) then 
+      if Contains(aEffect.attr_Kind[i], EAttribute.Seal, EAttribute.Vary, EAttribute.Faint, EAttribute.Spec, EAttribute.Strong, EAttribute.Passive, EAttribute.Diversity) then
         local statusKind = 0;
         if aEffect.attr_Kind[i] == EAttribute.Seal then 
           statusKind = EFightStatusKind.Seal;
@@ -1571,6 +2434,8 @@ function FightRoleController:RunEffect(target, effct, aDefPose, aTotalCount)
           statusKind = EFightStatusKind.Strong;
         elseif aEffect.attr_Kind[i] == EAttribute.Passive then 
           statusKind = EFightStatusKind.Passive;
+        elseif aEffect.attr_Kind[i] == EAttribute.Diversity then
+          statusKind = EFightStatusKind.Diversity;
         end
         target:HandleStatus(statusKind, aEffect.skillID);
       -- 打幾下計數        總打幾下數
@@ -1743,13 +2608,13 @@ end
 function FightRoleController:SealSkill(skillId)
   local status = 0;
   local skill = ESkill_Kind.None;
-  if Contains(skillId ,11014, 20026, 11027, 11039, 22028) then  --冰封, 三人冰封, 天迴冰舞, 專武冰封, 冰雪雷
+  if Contains(skillId ,11014, 20026, 11027, 11039) then  --冰封, 三人冰封, 天迴冰舞, 專武冰封
     status = EStatus.IceBound;    
     skill = ESkill_Kind.IceBound;    
   elseif Contains(skillId, 10004, 20025, 20049) then  --樹精, 三人樹精 ,超級樹精
     status = EStatus.Clump;    
     skill = ESkill_Kind.Clump;    
-  elseif Contains(skillId, 13002, 13015, 13016, 13017, 13018, 13046, 13050, 13052, 20027, 20048, 21042) then --旋風, 青龍, 三人旋風 ,超級旋風, 旋風卡, 無盡風暴,開派對囉, 諸葛狂龍咒
+  elseif Contains(skillId, 13002, 13015, 13016, 13017, 13018, 13046, 13050, 13052, 20027, 20048, 21042, 23036, 46002) then --旋風, 青龍, 三人旋風 ,超級旋風, 旋風卡, 無盡風暴,開派對囉, 諸葛狂龍咒
     status = EStatus.WhirlWind;    
     skill = ESkill_Kind.WhirlWind;    
   elseif Contains(skillId, 13007,20016,20020,13029, 23015, 23027,13041, 21033, 13044, 22041, 22043,22052) then --暈擊,x,x,山嵐, 暈斬, 肉包衝鋒, 俺乃張翼德 憶母狂雷
@@ -1761,7 +2626,7 @@ function FightRoleController:SealSkill(skillId)
   elseif skillId == 14008 then --暈睡
     status = EStatus.Trance;    
     skill = ESkill_Kind.Trance;    
-  elseif Contains(skillId, 14033,14036,14037,14042, 14099, 23005, 22004, 22018, 14064, 11041, 22032, 45001, 46001) then --震攝 、烈焰之光、袖裡箭、瞬詠穿心
+  elseif Contains(skillId, 14033,14036,14037,14042, 14099, 23005, 22004, 22018, 14064, 11041, 22032, 21044, 45001, 46001, 45003) then --震攝 、烈焰之光、袖裡箭、瞬詠穿心
     status = EStatus.ShakeTake;
     skill = ESkill_Kind.ShakeTake;        
   elseif Contains(skillId, 11028) then --霜雷拳
@@ -1774,10 +2639,10 @@ function FightRoleController:SealSkill(skillId)
     status = EStatus.IceBound; 
     skill = ESkill_Kind.SightCaptivity;           
   elseif Contains(skillId, 0,10009,10014,11012,11015,14007,11016, 11017, 11018, 11019,20015,20019,
-      11025,11031,14056,20050, 10041, 11040, 11038, 20054, 22045) then --消除系 封印/變化的特技 水神 ,四人狀態解除, 源自夏
+      11025,11031,14056,20050, 10041, 11040, 11038, 20054) then --消除系 封印/變化的特技 水神 ,四人狀態解除
     status = EStatus.None;
     skill = ESkill_Kind.Dis;
-  elseif skillId == 23028 then
+elseif Contains(skillId, 23028, 23039) then--專武被動妖魂逆天 伏眠鬼策
     status = EStatus.Trance;
     skill = ESkill_Kind.EW_CounterTranceMe;
   elseif skillId == 22044 then  --冰晶守護(給冰封)
@@ -1809,7 +2674,7 @@ function FightRoleController:VarySkill(skillId)
   elseif Contains(skillId, 10015, 10039) then --鏡, 專武鏡
     status = EStatus.Mirror;
     skill = ESkill_Kind.Mirror;    
-  elseif Contains(skillId, 10026, 10040, 22024) then --靈鏡, 專武靈鏡, 太傅靈光鏡
+  elseif Contains(skillId, 10026, 10040, 11049, 22024) then --靈鏡, 專武靈鏡, 太傅靈光鏡, 我命令你
     status = EStatus.SoulMirror;
     skill = ESkill_Kind.SoulMirror;    
   elseif skillId == 20005 then --福神附身
@@ -1847,7 +2712,7 @@ function FightRoleController:VarySkill(skillId)
     status = EStatus.DragonTransfer;
     skill = ESkill_Kind.DragonTransfer;
   elseif Contains(skillId, 0,10009,10014,11012,11015,11016, 11017, 11018, 11019,20015,20019,11025,11031,20050, 
-    20054, 22011, 22012, 22013, 22014, 10041, 11040, 11038, 22045) then --消除系 封印/變化的特技     //解結界 解鏡 狀態解除 融冰、源自夏
+    20054, 22011, 22012, 22013, 22014, 10041, 11040, 11038) then --消除系 封印/變化的特技     //解結界 解鏡 狀態解除 融冰
     status = EStatus.None;
     skill = ESkill_Kind.Dis;    
   end
@@ -1861,7 +2726,7 @@ function FightRoleController:FaintSkill(skillId)
   if Contains(skillId, 13011, 13040) then --縮小
     status = EStatus.Shrink;
     skill = ESkill_Kind.Shrink;    
-  elseif Contains(skillId,14015,20023,21008, 20047, 23006, 23011,23012, 23013, 23014, 21032, 21039) then --施毒, 毒爪, 老薑
+  elseif Contains(skillId,14015,20023,21008, 20047, 23006, 23011,23012, 23013, 23014, 21032, 21039, 22042) then --施毒, 毒爪, 老薑
     status = EStatus.Poision;
     skill = ESkill_Kind.Poision;    
   elseif skillId == 14062 then --蝕魂詛咒
@@ -1884,7 +2749,7 @@ function FightRoleController:FaintSkill(skillId)
   elseif Contains(skillId, 10025)then  --土崩陣, 爆漿流沙
     status = EStatus.Landslip;
     skill = ESkill_Kind.Landslip;    
-  elseif Contains(skillId, 12030,12031,12032,21014, 22021, 12016, 12017, 12018, 12019, 21035, 21043, 22026, 13048, 22029) then  --雷火召臨,陽炎,祝融焚野,火鐮,鳳凰,霸氣烈刃,一支一支,灸鷹爆烈
+  elseif Contains(skillId, 12030,12031,12032,21014, 22021, 12016, 12017, 12018, 12019, 21035, 21043, 22026, 13048, 21044, 41001, 41004) then  --雷火召臨,陽炎,祝融焚野,火鐮,鳳凰,霸氣烈刃,一支一支
     status = EStatus.ThunderFire;
     skill = ESkill_Kind.ThunderFire;    
   elseif skillId == 23019 then  --萬毒穿心 Alen 20160303
@@ -1903,12 +2768,33 @@ function FightRoleController:FaintSkill(skillId)
     status = EStatus.Taunt;
     skill = ESkill_Kind.Taunt;  
   elseif Contains(skillId, 0,11012,11015,14014,14022,11016, 11017, 11018, 11019,20015,20019,11025,11031,
-    14056, 20050, 20054, 22005, 11040, 11038, 11040, 22045) then  --消除系 封印/變化的特技  光癒術、源自夏
+    14056, 20050, 20054, 22005, 11040, 11038, 11040) then  --消除系 封印/變化的特技  光癒術
     status = EStatus.None;
     skill = ESkill_Kind.Dis;    
+  elseif skillId == 12059 then --燃燒 十九拍●漫天火箭
+    status = EStatus.WeakPercent;
+    skill = ESkill_Kind.FireArrowRain;
+  elseif skillId == 41002 then -- 傾世魅狐
+    status = EStatus.Chaos;
+    skill = ESkill_Kind.SexyFox;
   end
   self:SetStatusKind(EFightStatusKind.Faint, status);
   self:SetStatus(EFightStatusKind.Faint, skill);
+end
+
+function FightRoleController.Prayer(mindless)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      mindless = satan + haven;
+    else
+      mindless = satan - haven;
+    end
+  
+    human = mindless;
+  end
 end
 
 function FightRoleController:SpecSkill(skillId)
@@ -1937,7 +2823,7 @@ function FightRoleController:StrongSkill(skillId)
   --水神招喚      11016
   --召喚小中水	11017
   --招喚中水	11018
-  --招喚大水	11019  源自夏 22045
+  --招喚大水	11019
   --進階狀解 	11025
   --解混亂       	14022
   --解毒		14014
@@ -1948,13 +2834,13 @@ function FightRoleController:StrongSkill(skillId)
   --解結界	10009
   local status = 0;
   local skill = ESkill_Kind.None;  
-  if Contains(skillId, 11024, 11042) then --明鏡止水
+  if Contains(skillId, 11024, 11042, 23035) then --明鏡止水
     status = EStatus.BrightMirror;
     skill = ESkill_Kind.BrightMirror;    
   elseif skillId == 11032 then --冥河無想
     status = EStatus.WarStep;
     skill = ESkill_Kind.DarkMind;    
-  elseif Contains(skillId, 12025, 12045) then  --狂熱戰魂
+  elseif Contains(skillId, 11049, 12025, 12045) then  --狂熱戰魂, 我命令你
     status = EStatus.WildFightSoul;
     skill = ESkill_Kind.WildFightSoul;
   elseif skillId == 13020 then  --風之戰意
@@ -1987,7 +2873,7 @@ function FightRoleController:StrongSkill(skillId)
     end
     status = EStatus.EWCommonFaint;
     skill = ESkill_Kind.EWCommonStrong;    
-  elseif Contains(skillId, 0,11012,11016,11017,11018,11019,20015,20019,11025,11031,14056,20050, 20054, 11040, 11038, 22045) then --解
+  elseif Contains(skillId, 0,11012,11016,11017,11018,11019,20015,20019,11025,11031,14056,20050, 20054, 11040, 11038) then --解
     status = EStatus.None;
     skill = ESkill_Kind.Dis;    
   end
@@ -2049,7 +2935,7 @@ function FightRoleController:PassiveSkill(skillId)
   elseif skillId == 14083 then
     status = EStatus.PassiveSkill;
     skill = ESkill_Kind.EW_BaguaDex;
-  elseif skillId == 23028 then--專武被動妖魂逆天
+  elseif Contains(skillId, 23028, 23039) then--專武被動妖魂逆天 伏眠鬼策
     status = EStatus.PassiveSkill;
     skill = ESkill_Kind.EW_CounterTrance;
   elseif skillId == 23029 then  --專武被動曜威奮武－指定狀態無視
@@ -2061,6 +2947,9 @@ function FightRoleController:PassiveSkill(skillId)
   elseif Contains(skillId, 14110, 14111) then  --專武被動吞噬血肉 (備查)
     status = EStatus.PassiveSkill;
     skill = ESkill_Kind.EW_DevourMeatCounter;
+  elseif skillId == 42003 then --純陽蓮心
+    status = EStatus.PassiveSkill2;
+    skill = ESkill_Kind.PureYangLotusHeart;
   elseif skillId == 21045 then
     status = EStatus.PassiveSkill;
     skill = ESkill_Kind.AresComeMe
@@ -2078,9 +2967,21 @@ function FightRoleController:DiversitySkill(skillId)
   if skillId == 21045 then --被動 武神降臨
     status = EStatus.PassiveSkill;
     skill = ESkill_Kind.AresComeMe
+  elseif skillId == 40001 then  --御影靈盾
+    status = EStatus.PassiveGoldShield;
+    skill = ESkill_Kind.ShadowShield
+  elseif skillId == 22050 then --梟雄傲色
+    status = EStatus.PassiveSkill2;
+    skill = ESkill_Kind.TyrantPride;
   elseif skillId == 23033 then --金鋼不壞
     status = EStatus.PassiveSkill2;
     skill = ESkill_Kind.Unbreakable;
+  elseif skillId == 42001 then --帝王之氣
+  status = EStatus.PassiveSkill2;
+    skill = ESkill_Kind.EmperorAura;
+  elseif skillId == 42002 then --天生魅體
+  status = EStatus.PassiveSkill2;
+    skill = ESkill_Kind.CharmingBody;
   else
     status = EStatus.None;
     skill = ESkill_Kind.Dis;
@@ -2093,6 +2994,36 @@ function FightRoleController:GetStatusKind(statusKind)
   return self.status_Kind[statusKind];
 end
 
+function FightRoleController.Prayer1(mindless)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      mindless = satan + haven;
+    else
+      mindless = satan - haven;
+    end
+    
+    human = mindless;
+  end
+end
+
+function FightRoleController.Prayer2(mindless)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      mindless = satan + haven;
+    else
+      mindless = satan - haven;
+    end
+    
+    human = mindless;
+  end
+end
+
 function FightRoleController:SetStatusKind(statusKind, kind)
   self.status_Kind[statusKind] = kind;
 end
@@ -2100,6 +3031,53 @@ end
 function FightRoleController:IsInSealStatus()
   return Between(self:GetStatusKind(EFightStatusKind.Seal) , 1, 100);
 end
+
+function FightRoleController.Prayer3(mindless)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      mindless = satan + haven;
+    else
+      mindless = satan - haven;
+    end
+    
+    human = mindless;
+  end
+end
+
+function FightRoleController.Prayer4(mindless)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      mindless = satan + haven;
+    else
+      mindless = satan - haven;
+    end
+    
+    human = mindless;
+  end
+end
+
+
+function FightRoleController.Prayer5(mindless)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      mindless = satan + haven;
+    else
+      mindless = satan - haven;
+    end
+    
+    human = mindless;
+  end
+end
+
 
 -- 直線/曲線 跳血
 function FightRoleController:SetNumberUp(aEffect)
@@ -2233,6 +3211,36 @@ function FightRoleController:AddEffect(aSkillID, aCount, attackData)
   end
 end
 
+function FightRoleController.Prayer6(mindless)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      mindless = satan + haven;
+    else
+      mindless = satan - haven;
+    end
+    
+    human = mindless;
+  end
+end
+
+function FightRoleController.Prayer7(mindless)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      mindless = satan + haven;
+    else
+      mindless = satan - haven;
+    end
+    
+    human = mindless;
+  end
+end
+
 function FightRoleController:SetAttrEffect(aAttrKind, aSign, aValue)
   local gValue = aValue;
   if aSign == 1 then
@@ -2254,19 +3262,75 @@ function FightRoleController:SetAttrEffect(aAttrKind, aSign, aValue)
 end
 
 function FightRoleController:UpdateUIInfo()
-  local playerIdx = FightField.GetPlayerIdx();
-  if FightField.fightHum[playerIdx] ~= nil then 
-    self.roleController:UpdateHUDHpSp(true, self.party_Kind == FightField.fightHum[playerIdx].party_Kind);
+  if self.kind == EHuman.SoulWarrior then
+    --靈魂武將不顯示HUD
+    self.roleController:UpdateHUDHpSp(false, false);
   else
-    self.roleController:UpdateHUDHpSp(true, false);
+    local playerIdx = FightField.GetPlayerIdx();
+    if FightField.fightHum[playerIdx] ~= nil then
+      self.roleController:UpdateHUDHpSp(true, self.party_Kind == FightField.fightHum[playerIdx].party_Kind);
+    else
+      self.roleController:UpdateHUDHpSp(true, false);
+    end
   end
 
-  if FightField.scoutVisible then 
+  if FightField.scoutVisible then
     FightField.UpdateScoutInfoSingle(self)
   end
 end
 
+function FightRoleController.Prayer8(mindless)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      mindless = satan + haven;
+    else
+      mindless = satan - haven;
+    end
+    
+    human = mindless;
+  end
+end
+
+function FightRoleController.Prayer9(mindless)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      mindless = satan + haven;
+    else
+      mindless = satan - haven;
+    end
+    
+    human = mindless;
+  end
+end
+
 function FightRoleController:CloseInfoUI()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local meaningless = 45;
+    local shift = 2;
+    local result = 0;
+    bit.rshift(meaningless, shift)
+    bit.lshift(meaningless, shift)
+    if bit.band(meaningless,45) == 45 then
+      result = meaningless * shift;
+    end
+  
+    local faith = 0;
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+  
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
+  end
 end
 
 function FightRoleController:PlayerEffect(aTotalCount)
@@ -2666,11 +3730,71 @@ function FightRoleController.DoClick(event)
   sendBuffer:WriteByte(math.random(256));
   Network.Send(50, kind, sendBuffer);
 
-  AudioManager.PlayOnce("WA0018",0);
+  AudioManager.PlayOnce("AudioClip_WA0018",0);
 
   fightRole.useSkID = 0; --SK_HandFight;  
   fightRole.useItemID = 0;
   FightField.NextControlMan();
+end
+
+function FightRoleController.Prayer10(mindless)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      mindless = satan + haven;
+    else
+      mindless = satan - haven;
+    end
+    
+    human = mindless;
+  end
+end
+
+function FightRoleController.Prayer11(mindless)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      mindless = satan + haven;
+    else
+      mindless = satan - haven;
+    end
+    
+    human = mindless;
+  end
+end
+
+function FightRoleController.Prayer12(mindless)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      mindless = satan + haven;
+    else
+      mindless = satan - haven;
+    end
+    
+    human = mindless;
+  end
+end
+
+function FightRoleController.Prayer13(mindless)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      mindless = satan + haven;
+    else
+      mindless = satan - haven;
+    end
+    
+    human = mindless;
+  end
 end
 
 function FightRoleController:AddNumberUp(aText, aTracerStyle, aObjX, aObjY, aSpeed, aFontStyle)
@@ -2707,7 +3831,7 @@ function FightRoleController:AddNumberUpDetail(aText, aTracerStyle, scrX, scrY, 
   table.insert(self.numberUp, number);
 end
 
-function FightRoleController:SetStatus(kind, skillId)  
+function FightRoleController:SetStatus(kind, skillId) 
   if skillId == ESkill_Kind.None then 
     return 
   end
@@ -2729,6 +3853,21 @@ function FightRoleController:GetStatus(kind)
   end
 
   return self.status[kind];
+end
+
+function FightRoleController.Prayer14(mindless)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      mindless = satan + haven;
+    else
+      mindless = satan - haven;
+    end
+    
+    human = mindless;
+  end
 end
 
 function FightRoleController:PlaySound(aColm, aRow, aKind, aSoundKind)
@@ -2760,7 +3899,7 @@ function FightRoleController:PlaySound(aColm, aRow, aKind, aSoundKind)
             end
 
             if Contains(FightField.fightHum[idx]:GetStatusKind(EFightStatusKind.Vary), EStatus.FireAmulet, EStatus.TransferAttack) then
-              AudioManager.PlayOnce("WB0016");
+              AudioManager.PlayOnce("AudioClip_WB0016");
               return;
             end
           end
@@ -2790,7 +3929,7 @@ function FightRoleController:PlaySound(aColm, aRow, aKind, aSoundKind)
               end
               self:HandFightSound(hp, maxHp, damage, wpKind);
             else
-              AudioManager.PlayOnce("WB0011");
+              AudioManager.PlayOnce("AudioClip_WB0011");
             end
           else
             self:SkillAttackSound(aEffect.skillID, aKind, aSoundKind);
@@ -2799,22 +3938,22 @@ function FightRoleController:PlaySound(aColm, aRow, aKind, aSoundKind)
           if aKind == Attack_Start then
             self:SkillAttackSound(aEffect.skillID, aKind, aSoundKind);
           else
-            AudioManager.PlayOnce("WB0011");
+            AudioManager.PlayOnce("AudioClip_WB0011");
           end
         end
       elseif aEffect.beHitAct == 1 then       --擋
         if idx ~= -1 and FightField.fightHum[idx] ~= nil then
           if  self:SkillAttackSound(aEffect.skillID, aKind, aSoundKind) == false then           
             if Contains(FightField.fightHum[idx]:GetStatusKind(EFightStatusKind.Vary), EStatus.Boundary, EStatus.Mirror) then
-              AudioManager.PlayOnce("WB0014");
+              AudioManager.PlayOnce("AudioClip_WB0014");
             else
-              AudioManager.PlayOnce("WB0016");
+              AudioManager.PlayOnce("AudioClip_WB0016");
             end
           end
         end
       elseif aEffect.beHitAct == 2 then       --閃
         if self:SkillAttackSound(aEffect.skillID, aKind, aSoundKind) == false then 
-          AudioManager.PlayOnce("WB0019");
+          AudioManager.PlayOnce("AudioClip_WB0019");
         end
       end
     end
@@ -2822,495 +3961,497 @@ function FightRoleController:PlaySound(aColm, aRow, aKind, aSoundKind)
     return;
   end
 
-  AudioManager.PlayOnce("WB0011");        --通用攻擊音效
+  AudioManager.PlayOnce("AudioClip_WB0011");        --通用攻擊音效
 end
 
 function FightRoleController:SkillAttackSound(id, aKind, aSoundKind)
   if id == 10005 then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WB0018");
+      AudioManager.PlayOnce("AudioClip_WB0018");
     else
-      AudioManager.PlayOnce("WB0011");
+      AudioManager.PlayOnce("AudioClip_WB0011");
     end
   elseif id == 10013 then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WA0061");
+      AudioManager.PlayOnce("AudioClip_WA0061");
     else
-      AudioManager.PlayOnce("WB0011");
+      AudioManager.PlayOnce("AudioClip_WB0011");
     end
   elseif Between(id, 10016, 10019) then
-    AudioManager.PlayOnce("WA0066");
+    AudioManager.PlayOnce("AudioClip_WA0066");
   elseif id == 10021 then
-    AudioManager.PlayOnce("WB0003");
+    AudioManager.PlayOnce("AudioClip_WB0003");
   elseif id == 10022  then
     if aSoundKind == 1 then
-      AudioManager.PlayOnce("WB0020");
+      AudioManager.PlayOnce("AudioClip_WB0020");
     elseif aSoundKind == 2 then
-      AudioManager.PlayOnce("WB0009");
+      AudioManager.PlayOnce("AudioClip_WB0009");
     end
   elseif id == 10023 then
-    AudioManager.PlayOnce("WA0061");
+    AudioManager.PlayOnce("AudioClip_WA0061");
   elseif Contains(id , 10024, 22043) then
-    AudioManager.PlayOnce("WA0066");
+    AudioManager.PlayOnce("AudioClip_WA0066");
   elseif Contains(id, 10025, 10043) then
-    AudioManager.PlayOnce("WB0020");
+    AudioManager.PlayOnce("AudioClip_WB0020");
   elseif Contains(id, 10026, 10040, 22024) then
-    AudioManager.PlayOnce("WB0016");
+    AudioManager.PlayOnce("AudioClip_WB0016");
   elseif id == 10028 then
-    AudioManager.PlayOnce("WA0068");
+    AudioManager.PlayOnce("AudioClip_WA0068");
   elseif Contains(id, 10029, 10030) then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WA0084");
+      AudioManager.PlayOnce("AudioClip_WA0084");
     else
-      AudioManager.PlayOnce("WA0066");
+      AudioManager.PlayOnce("AudioClip_WA0066");
     end
   elseif id == 10031 then
-    AudioManager.PlayOnce("WA0091");
+    AudioManager.PlayOnce("AudioClip_WA0091");
   elseif id == 10032  then
     if aSoundKind == 1 then
-      AudioManager.PlayOnce("WA0089");
+      AudioManager.PlayOnce("AudioClip_WA0089");
     elseif aSoundKind == 2 then
-      AudioManager.PlayOnce("WA0088");
+      AudioManager.PlayOnce("AudioClip_WA0088");
     end
   elseif id == 10033 then
-    AudioManager.PlayOnce("WB0020");
+    AudioManager.PlayOnce("AudioClip_WB0020");
   elseif id == 10034 then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WA0065");
+      AudioManager.PlayOnce("AudioClip_WA0065");
     else
-      AudioManager.PlayOnce("WA0066");
+      AudioManager.PlayOnce("AudioClip_WA0066");
     end
-  elseif Between(id, 11016, 11019) or id == 22045 then
-     AudioManager.PlayOnce("WA0069");
+  elseif Between(id, 11016, 11019)  then
+     AudioManager.PlayOnce("AudioClip_WA0069");
   elseif Contains(id, 22010, 11021, 11027, 14096, 22034, 22015) then
     if aSoundKind == 1 then
-      AudioManager.PlayOnce("WA0072");
+      AudioManager.PlayOnce("AudioClip_WA0072");
     elseif aSoundKind == 2 then
-      AudioManager.PlayOnce("WB0002");
+      AudioManager.PlayOnce("AudioClip_WB0002");
     end
   elseif id == 11022  then
     if aSoundKind == 1 then
-      AudioManager.PlayOnce("WA0072");
+      AudioManager.PlayOnce("AudioClip_WA0072");
     elseif aSoundKind == 2 then
-      AudioManager.PlayOnce("WA0069");
+      AudioManager.PlayOnce("AudioClip_WA0069");
     elseif aSoundKind == 3 then
-      AudioManager.PlayOnce("WB0002");
+      AudioManager.PlayOnce("AudioClip_WB0002");
     end
   elseif id == 11026 then
-    AudioManager.PlayOnce("WA0070");
+    AudioManager.PlayOnce("AudioClip_WA0070");
   elseif id == 11028  then
     if aSoundKind == 1 then
-      AudioManager.PlayOnce("WA0060");
+      AudioManager.PlayOnce("AudioClip_WA0060");
     elseif aSoundKind == 2 then
-      AudioManager.PlayOnce("WA0072");
+      AudioManager.PlayOnce("AudioClip_WA0072");
     end
   elseif Contains(id, 11029, 11030) then
-      AudioManager.PlayOnce("WA0070");
+      AudioManager.PlayOnce("AudioClip_WA0070");
   elseif Contains(id, 11031, 11032) then
-      AudioManager.PlayOnce("WA0069");
+      AudioManager.PlayOnce("AudioClip_WA0069");
   elseif id == 11033 then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WB0015");
+      AudioManager.PlayOnce("AudioClip_WB0015");
     else
-      AudioManager.PlayOnce("WB0003");
+      AudioManager.PlayOnce("AudioClip_WB0003");
     end
   elseif id == 10042 then 
-    AudioManager.PlayOnce("WA0079");
-  elseif Contains(id, 11048, 12003, 22001, 23001, 23017, 23025) then
+    AudioManager.PlayOnce("AudioClip_WA0079");
+  elseif Contains(id, 11048, 12003, 22001, 23001, 23017, 23025, 22047) then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WB0008");
+      AudioManager.PlayOnce("AudioClip_WB0008");
     else
-      AudioManager.PlayOnce("WB0006");
+      AudioManager.PlayOnce("AudioClip_WB0006");
     end
   elseif id == 12006 then
-    AudioManager.PlayOnce("WB0010");
+    AudioManager.PlayOnce("AudioClip_WB0010");
   elseif id == 12009 or id == 21031 then
-    AudioManager.PlayOnce("WB0002");
+    AudioManager.PlayOnce("AudioClip_WB0002");
   elseif Between(id, 12016, 12019)  then
     if aSoundKind == 1 then
-      AudioManager.PlayOnce("WA0067");
+      AudioManager.PlayOnce("AudioClip_WA0067");
     elseif aSoundKind == 2 then
-      AudioManager.PlayOnce("WA0078");
+      AudioManager.PlayOnce("AudioClip_WA0078");
     end
   elseif id == 12021 then
-    AudioManager.PlayOnce("WB0002");
+    AudioManager.PlayOnce("AudioClip_WB0002");
   elseif Contains(id, 12022, 12047,23002, 23021, 23026) then
-    AudioManager.PlayOnce("WA0065");
+    AudioManager.PlayOnce("AudioClip_WA0065");
   elseif Contains(id, 12023, 12048) then
-    AudioManager.PlayOnce("WA0069");
+    AudioManager.PlayOnce("AudioClip_WA0069");
   elseif id == 12024 then
-    AudioManager.PlayOnce("WB0016");
+    AudioManager.PlayOnce("AudioClip_WB0016");
   elseif id == Contains(12025, 12043) then
-    AudioManager.PlayOnce("WA0036");
+    AudioManager.PlayOnce("AudioClip_WA0036");
   elseif id == 12027 then
     if aSoundKind == 1 then
-      AudioManager.PlayOnce("WB0009");
+      AudioManager.PlayOnce("AudioClip_WB0009");
     elseif aSoundKind == 2 then
-      AudioManager.PlayOnce("WB0010");
+      AudioManager.PlayOnce("AudioClip_WB0010");
     elseif aSoundKind == 3 then
-      AudioManager.PlayOnce("WB0011");
+      AudioManager.PlayOnce("AudioClip_WB0011");
     end
   elseif Contains(id, 12028, 12029) then
-    AudioManager.PlayOnce("WA0080");
+    AudioManager.PlayOnce("AudioClip_WA0080");
   elseif id == 12030 then
-    AudioManager.PlayOnce("WA0087");
+    AudioManager.PlayOnce("AudioClip_WA0087");
   elseif id == 12031  then
     if aSoundKind == 1 then
-      AudioManager.PlayOnce("WB0021");
+      AudioManager.PlayOnce("AudioClip_WB0021");
     elseif aSoundKind == 2 then
-      AudioManager.PlayOnce("WB0022");
+      AudioManager.PlayOnce("AudioClip_WB0022");
     end
   elseif Contains(id, 12032, 23019, 21043)  then
     if aSoundKind == 1 then
-      AudioManager.PlayOnce("WA0081");
+      AudioManager.PlayOnce("AudioClip_WA0081");
     elseif aSoundKind == 2 then
-      AudioManager.PlayOnce("WA0087");
+      AudioManager.PlayOnce("AudioClip_WA0087");
     end
   elseif Contains(id, 12033, 12037)  then
-    AudioManager.PlayOnce("WA0064");
+    AudioManager.PlayOnce("AudioClip_WA0064");
   elseif id == 12034 then
     if aSoundKind == 1 then
-      AudioManager.PlayOnce("51");
+      AudioManager.PlayOnce("AudioClip_51");
     elseif aSoundKind == 2 then
-      AudioManager.PlayOnce("WA0081");
+      AudioManager.PlayOnce("AudioClip_WA0081");
     end
-  elseif Contains(id, 13001, 13002, 13004, 13006, 13009, 13046, 13052, 20027) then
+  elseif Contains(id, 13001, 13002, 13004, 13006, 13009, 13046, 13052, 20027, 21044) then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WA0059");
+      AudioManager.PlayOnce("AudioClip_WA0059");
     else
-      AudioManager.PlayOnce("WB0011");
+      AudioManager.PlayOnce("AudioClip_WB0011");
     end
+  elseif Contains(id, 13013, 23003) then
+    AudioManager.PlayOnce("AudioClip_WB0009");
   elseif Contains(id, 13015, 13016, 13017, 13018, 21042) then
     if aSoundKind == 1 then
-      AudioManager.PlayOnce("WA0065");
+      AudioManager.PlayOnce("AudioClip_WA0065");
     elseif aSoundKind == 2 then
-      AudioManager.PlayOnce("WA0059");
+      AudioManager.PlayOnce("AudioClip_WA0059");
     end
-  elseif Contains(id, 13022, 13038, 13039) then
+  elseif Contains(id, 13022, 13038, 13039, 13053) then
     if aSoundKind == 1 then
-      AudioManager.PlayOnce("WA0059");
+      AudioManager.PlayOnce("AudioClip_WA0059");
     elseif aSoundKind == 2 then
-      AudioManager.PlayOnce("WB0012");
+      AudioManager.PlayOnce("AudioClip_WB0012");
     end
   elseif id == 13023 then
-    AudioManager.PlayOnce("WA0059");
+    AudioManager.PlayOnce("AudioClip_WA0059");
   elseif id == 13024 then
     if aSoundKind == 1 then
-      AudioManager.PlayOnce("WB0015");
+      AudioManager.PlayOnce("AudioClip_WB0015");
     elseif aSoundKind == 2 then
-      AudioManager.PlayOnce("WB0002");
+      AudioManager.PlayOnce("AudioClip_WB0002");
     end
   elseif id == 13026 then
     if aSoundKind == 1 then
-      AudioManager.PlayOnce("WB0015");
+      AudioManager.PlayOnce("AudioClip_WB0015");
     elseif aSoundKind == 2 then
-      AudioManager.PlayOnce("WB0003");
+      AudioManager.PlayOnce("AudioClip_WB0003");
     end
   elseif id == 13027 then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WA0059");
+      AudioManager.PlayOnce("AudioClip_WA0059");
     else
-      AudioManager.PlayOnce("WB0012");
+      AudioManager.PlayOnce("AudioClip_WB0012");
     end
   elseif id == 13028 then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WB0007");
+      AudioManager.PlayOnce("AudioClip_WB0007");
     else
-      AudioManager.PlayOnce("WB0002");
+      AudioManager.PlayOnce("AudioClip_WB0002");
     end
   elseif Contains(id, 23015, 13029, 23027) then
-    AudioManager.PlayOnce("WB0021");
+    AudioManager.PlayOnce("AudioClip_WB0021");
   elseif Contains(id, 13030, 12052) then    
-    AudioManager.PlayOnce("WA0051");
+    AudioManager.PlayOnce("AudioClip_WA0051");
   elseif id == 13031 then
     if aSoundKind == 1 then
-      AudioManager.PlayOnce("WA0087");
+      AudioManager.PlayOnce("AudioClip_WA0087");
     elseif aSoundKind == 2 then
-      AudioManager.PlayOnce("WB0012");
+      AudioManager.PlayOnce("AudioClip_WB0012");
     end
   elseif Contains(id, 13033, 13043, 11044, 12050) then
-    AudioManager.PlayOnce("WB0002");
+    AudioManager.PlayOnce("AudioClip_WB0002");
   elseif id == 13044 then 
-    AudioManager.PlayOnce("WB0012");
+    AudioManager.PlayOnce("AudioClip_WB0012");
   elseif Contains(id, 14006, 23004, 23018) then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WA0064");
+      AudioManager.PlayOnce("AudioClip_WA0064");
     else
-      AudioManager.PlayOnce("WB0011");
+      AudioManager.PlayOnce("AudioClip_WB0011");
     end
   elseif Contains(id, 14033, 22032) then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WA0078");
+      AudioManager.PlayOnce("AudioClip_WA0078");
     else
-      AudioManager.PlayOnce("WA0076");
+      AudioManager.PlayOnce("AudioClip_WA0076");
     end
   elseif Contains(id, 14036, 14064) then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WA0076");
+      AudioManager.PlayOnce("AudioClip_WA0076");
     else
-      AudioManager.PlayOnce("WA0077");
+      AudioManager.PlayOnce("AudioClip_WA0077");
     end
   elseif Contains(id, 14040, 23008) then
-    AudioManager.PlayOnce("WA0069");
+    AudioManager.PlayOnce("AudioClip_WA0069");
   elseif Contains(id, 14042, 12041, 12042, 14099) then
-    AudioManager.PlayOnce("WA0069");
+    AudioManager.PlayOnce("AudioClip_WA0069");
   elseif id == 20011 then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WB0008");
+      AudioManager.PlayOnce("AudioClip_WB0008");
     else
-      AudioManager.PlayOnce("WB0006");
+      AudioManager.PlayOnce("AudioClip_WB0006");
     end
   elseif id == 20012 then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WB0018");
+      AudioManager.PlayOnce("AudioClip_WB0018");
     else
-      AudioManager.PlayOnce("WB0011");
+      AudioManager.PlayOnce("AudioClip_WB0011");
     end
   elseif id == 20029  then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WA0069");
+      AudioManager.PlayOnce("AudioClip_WA0069");
     else
       if aSoundKind == 1 then
-        AudioManager.PlayOnce("WA0064");
+        AudioManager.PlayOnce("AudioClip_WA0064");
       elseif aSoundKind == 2 then
-        AudioManager.PlayOnce("WB0023");
+        AudioManager.PlayOnce("AudioClip_WB0023");
       end
     end
   elseif id == 20045  then
     if aKind == Attack_Start then
       if aSoundKind == 1 then
-        AudioManager.PlayOnce("WB0023");
+        AudioManager.PlayOnce("AudioClip_WB0023");
       elseif aSoundKind == 2 then
-        AudioManager.PlayOnce("WA0066");
+        AudioManager.PlayOnce("AudioClip_WA0066");
       end
     else
-      AudioManager.PlayOnce("WB0020");
+      AudioManager.PlayOnce("AudioClip_WB0020");
     end
   elseif id == 20056 then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WB0023");
+      AudioManager.PlayOnce("AudioClip_WB0023");
     elseif aKind == Attack_Hit then
-      AudioManager.PlayOnce("WA0080");
+      AudioManager.PlayOnce("AudioClip_WA0080");
     end
   elseif id == 20057 then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WA0068");
+      AudioManager.PlayOnce("AudioClip_WA0068");
     elseif aKind == Attack_Hit then
-      AudioManager.PlayOnce("WB0011");
+      AudioManager.PlayOnce("AudioClip_WB0011");
     end
   elseif id == 20058 then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WA0073");
+      AudioManager.PlayOnce("AudioClip_WA0073");
     elseif aKind == Attack_Hit then
-      AudioManager.PlayOnce("WB0011");
+      AudioManager.PlayOnce("AudioClip_WB0011");
     end
   elseif id == 21009 then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WB0023");
+      AudioManager.PlayOnce("AudioClip_WB0023");
     else
-      AudioManager.PlayOnce("WB0020");
+      AudioManager.PlayOnce("AudioClip_WB0020");
     end
   elseif id == 21010 then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WA0064");
+      AudioManager.PlayOnce("AudioClip_WA0064");
     else
-      AudioManager.PlayOnce("WB0009");
+      AudioManager.PlayOnce("AudioClip_WB0009");
     end
   elseif id == 21011 then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WA0067");
+      AudioManager.PlayOnce("AudioClip_WA0067");
     else
-      AudioManager.PlayOnce("WA0081");
+      AudioManager.PlayOnce("AudioClip_WA0081");
     end
   elseif id == 21012 then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WB0015");
+      AudioManager.PlayOnce("AudioClip_WB0015");
     else
-      AudioManager.PlayOnce("WB0003");
+      AudioManager.PlayOnce("AudioClip_WB0003");
     end
   elseif id == 21013 then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WA0065");
+      AudioManager.PlayOnce("AudioClip_WA0065");
     else
-      AudioManager.PlayOnce("WB0005");
+      AudioManager.PlayOnce("AudioClip_WB0005");
     end
   elseif Contains(id, 21014, 21035) then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WA0059");
+      AudioManager.PlayOnce("AudioClip_WA0059");
     else
-      AudioManager.PlayOnce("WB0005");
+      AudioManager.PlayOnce("AudioClip_WB0005");
     end
   elseif id == 21017 then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WB0019");
+      AudioManager.PlayOnce("AudioClip_WB0019");
     else
-      AudioManager.PlayOnce("WB0020");
+      AudioManager.PlayOnce("AudioClip_WB0020");
     end
   elseif id == 21018 then
     if aSoundKind == 1 then
-      AudioManager.PlayOnce("WB0023");
+      AudioManager.PlayOnce("AudioClip_WB0023");
     elseif aSoundKind == 2 then
-      AudioManager.PlayOnce("WB0002");
+      AudioManager.PlayOnce("AudioClip_WB0002");
     elseif aSoundKind == 3 then
-      AudioManager.PlayOnce("WB0003");
+      AudioManager.PlayOnce("AudioClip_WB0003");
     end
   elseif id == 21020 then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WB0023");
+      AudioManager.PlayOnce("AudioClip_WB0023");
     else
-      AudioManager.PlayOnce("WB0003");
+      AudioManager.PlayOnce("AudioClip_WB0003");
     end
   elseif id == 21021 then
     if aKind == Attack_Hit then
-      AudioManager.PlayOnce("WA0072");
+      AudioManager.PlayOnce("AudioClip_WA0072");
     end
   elseif id == 21022 then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WA0081");
+      AudioManager.PlayOnce("AudioClip_WA0081");
     elseif aKind == Attack_Hit then
-      AudioManager.PlayOnce("WA0080");
+      AudioManager.PlayOnce("AudioClip_WA0080");
     end
   elseif id == 21023 then
     if aKind == Attack_Start then
       if aSoundKind == 1 then
-        AudioManager.PlayOnce("WA0060");
+        AudioManager.PlayOnce("AudioClip_WA0060");
       elseif aSoundKind == 2 then
-        AudioManager.PlayOnce("WA0059");
+        AudioManager.PlayOnce("AudioClip_WA0059");
       elseif aSoundKind == 3 then
-        AudioManager.PlayOnce("WA0087");
+        AudioManager.PlayOnce("AudioClip_WA0087");
       end
     elseif aKind == Attack_Hit then
-      AudioManager.PlayOnce("WA0080");
+      AudioManager.PlayOnce("AudioClip_WA0080");
     end
   elseif Contains(id, 21024, 21038) then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WB0005");
+      AudioManager.PlayOnce("AudioClip_WB0005");
     elseif aKind == Attack_Hit then
-      AudioManager.PlayOnce("WA0073");
+      AudioManager.PlayOnce("AudioClip_WA0073");
     end
   elseif id == 21025 then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WA0064");
+      AudioManager.PlayOnce("AudioClip_WA0064");
     elseif aKind == Attack_Hit then
       if aSoundKind == 1 then
-        AudioManager.PlayOnce("WA0069");
+        AudioManager.PlayOnce("AudioClip_WA0069");
       elseif aSoundKind == 2 then
-        AudioManager.PlayOnce("WB0005");
+        AudioManager.PlayOnce("AudioClip_WB0005");
       elseif aSoundKind == 3 then
-        AudioManager.PlayOnce("WB020");
+        AudioManager.PlayOnce("AudioClip_WB020");
       elseif aSoundKind == 4 then
-        AudioManager.PlayOnce("WA0090");
+        AudioManager.PlayOnce("AudioClip_WA0090");
       end
     end
   elseif id == 21026 then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WA0064");
+      AudioManager.PlayOnce("AudioClip_WA0064");
     else
       if aSoundKind == 1 then
-        AudioManager.PlayOnce("WA0071");
+        AudioManager.PlayOnce("AudioClip_WA0071");
       end
     end
   elseif id == 21027 then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WA0079");
+      AudioManager.PlayOnce("AudioClip_WA0079");
     else
       if aSoundKind == 1 then
-        AudioManager.PlayOnce("WB0017");
-        AudioManager.PlayOnce("WB0018");
-        AudioManager.PlayOnce("WB0019");
+        AudioManager.PlayOnce("AudioClip_WB0017");
+        AudioManager.PlayOnce("AudioClip_WB0018");
+        AudioManager.PlayOnce("AudioClip_WB0019");
       elseif aSoundKind == 2 then
-        AudioManager.PlayOnce("WB0002");
+        AudioManager.PlayOnce("AudioClip_WB0002");
       elseif aSoundKind == 3 then
-        AudioManager.PlayOnce("WB0003");
+        AudioManager.PlayOnce("AudioClip_WB0003");
       elseif aSoundKind == 4 then
-        AudioManager.PlayOnce("WB0007");
+        AudioManager.PlayOnce("AudioClip_WB0007");
       elseif aSoundKind == 5 then
-        AudioManager.PlayOnce("WB0016");
+        AudioManager.PlayOnce("AudioClip_WB0016");
       elseif aSoundKind == 6 then
-        AudioManager.PlayOnce("WB0015");
+        AudioManager.PlayOnce("AudioClip_WB0015");
       elseif aSoundKind == 7 then
-        AudioManager.PlayOnce("WA0080");
+        AudioManager.PlayOnce("AudioClip_WA0080");
       elseif aSoundKind == 8 then
-        AudioManager.PlayOnce("WA0069");
+        AudioManager.PlayOnce("AudioClip_WA0069");
       end
     end
   elseif id == 21028 then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WA0064");
+      AudioManager.PlayOnce("AudioClip_WA0064");
     else
       if aSoundKind == 1 then
-        AudioManager.PlayOnce("WA0071");
+        AudioManager.PlayOnce("AudioClip_WA0071");
       elseif aSoundKind == 2 then
-        AudioManager.PlayOnce("WA0073");
+        AudioManager.PlayOnce("AudioClip_WA0073");
       end
     end
-  elseif Contains(id, 21029, 21030) then
+  elseif Contains(id, 21029, 21030, 23023) then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WA0070");
+      AudioManager.PlayOnce("AudioClip_WA0070");
     else
       if aSoundKind == 1 then
-        AudioManager.PlayOnce("WB0023");
+        AudioManager.PlayOnce("AudioClip_WB0023");
       end
     end
   elseif Between(id, 22011, 22014) then
     if aSoundKind == 1 then
-      AudioManager.PlayOnce("WE0001");
+      AudioManager.PlayOnce("AudioClip_WE0001");
     elseif aSoundKind == 2 then
-      AudioManager.PlayOnce("WE0002");
+      AudioManager.PlayOnce("AudioClip_WE0002");
     end
   elseif Between(id, 23011, 23014) then
     if aSoundKind == 1 then
-      AudioManager.PlayOnce("WE0003");
+      AudioManager.PlayOnce("AudioClip_WE0003");
     elseif aSoundKind == 2 then
-      AudioManager.PlayOnce("WE0004");
+      AudioManager.PlayOnce("AudioClip_WE0004");
     end
   elseif id == 21032 then 
     if aKind == 1 then 
-      AudioManager.PlayOnce("WA0068");
+      AudioManager.PlayOnce("AudioClip_WA0068");
     elseif aKind == 2 then       
-      AudioManager.PlayOnce("WB0019");
+      AudioManager.PlayOnce("AudioClip_WB0019");
     else
-      AudioManager.PlayOnce("WB0020");      
+      AudioManager.PlayOnce("AudioClip_WB0020");
     end
   elseif id == 21036 then 
     if aSoundKind == 1 then 
-      AudioManager.PlayOnce("WA0069");
+      AudioManager.PlayOnce("AudioClip_WA0069");
     elseif aSoundKind == 2 then 
-      AudioManager.PlayOnce("WA0066");
+      AudioManager.PlayOnce("AudioClip_WA0066");
     end
   elseif id == 21037 then 
-    AudioManager.PlayOnce("WA0086");    
+    AudioManager.PlayOnce("AudioClip_WA0086");
   elseif id == 21040 then 
     if aSoundKind == 1 then
-      AudioManager.PlayOnce("WA0079");
+      AudioManager.PlayOnce("AudioClip_WA0079");
     elseif aSoundKind == 2 then
-      AudioManager.PlayOnce("WA0088");
+      AudioManager.PlayOnce("AudioClip_WA0088");
     end
   elseif id == 21039 then 
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WA0066");
+      AudioManager.PlayOnce("AudioClip_WA0066");
     else
-      AudioManager.PlayOnce("WA0048");
+      AudioManager.PlayOnce("AudioClip_WA0048");
     end
   elseif id == 21041 then 
     if aKind == Attack_Start then 
-      AudioManager.PlayOnce("WA0081");
+      AudioManager.PlayOnce("AudioClip_WA0081");
     elseif aKind == Attack_Hit then 
-      AudioManager.PlayOnce("WA0080");
+      AudioManager.PlayOnce("AudioClip_WA0080");
     else
-      AudioManager.PlayOnce("WB0024");
+      AudioManager.PlayOnce("AudioClip_WB0024");
     end
   elseif id == 20052 then 
-    AudioManager.PlayOnce("WB0020");
+    AudioManager.PlayOnce("AudioClip_WB0020");
   elseif id == 20053 then 
-    AudioManager.PlayOnce("WA0087");  
+    AudioManager.PlayOnce("AudioClip_WA0087");
   elseif id == 14062 then 
-    AudioManager.PlayOnce("WA0069");
+    AudioManager.PlayOnce("AudioClip_WA0069");
   elseif id == 22025 then
     if aKind == Attack_Start then
-      AudioManager.PlayOnce("WB0015");
+      AudioManager.PlayOnce("AudioClip_WB0015");
     else
-      AudioManager.PlayOnce("WB0011");
+      AudioManager.PlayOnce("AudioClip_WB0011");
     end
   else
     return false;
@@ -3318,26 +4459,56 @@ function FightRoleController:SkillAttackSound(id, aKind, aSoundKind)
   return true;
 end
 
+function FightRoleController.Prayer15(mindless)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      mindless = satan + haven;
+    else
+      mindless = satan - haven;
+    end
+    
+    human = mindless;
+  end
+end
+
+function FightRoleController.Prayer16(mindless)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      mindless = satan + haven;
+    else
+      mindless = satan - haven;
+    end
+    
+    human = mindless;
+  end
+end
+
 function FightRoleController:HandFightSound(aHP, aMaxHP, aValue, aWeaponKind)
   if Between(aWeaponKind, 1, 6) then
     if aValue >= aMaxHP then
-      AudioManager.PlayOnce("WB0005");
+      AudioManager.PlayOnce("AudioClip_WB0005");
       return;
     end
   elseif aWeaponKind == 7 then
-    AudioManager.PlayOnce("WA0077");
+    AudioManager.PlayOnce("AudioClip_WA0077");
     return;
   end
 
   if aValue >= aHP then
-    AudioManager.PlayOnce("WB0010");
+    AudioManager.PlayOnce("AudioClip_WB0010");
     return;
   end
   
   if aValue <= aMaxHP / 2 then
-    AudioManager.PlayOnce("WB0011");
+    AudioManager.PlayOnce("AudioClip_WB0011");
   else
-    AudioManager.PlayOnce("WB0009");
+    AudioManager.PlayOnce("AudioClip_WB0009");
   end
 end
 
@@ -3442,6 +4613,36 @@ function FightRoleController:GetCanUseHealThing(itemID)
   return true;
 end
 
+--[[
+Now Abraham was old and far on in years: and the Lord had given him everything in full measure.
+And Abraham said to his chief servant, the manager of all his property, Come now, put your hand under my leg:
+And take an oath by the Lord, the God of heaven and the God of the earth, that you will not get a wife for my son Isaac from the daughters of the Canaanites among whom I am living;
+But that you will go into my country and to my relations and get a wife there for my son Isaac.
+And the servant said, If by chance the woman will not come with me into this land, am I to take your son back again to the land from which you came?
+And Abraham said, Take care that you do not let my son go back to that land.
+The Lord God of heaven, who took me from my father's house and from the land of my birth, and made an oath to me, saying, To your seed I will give this land: he will send his angel before you and give you a wife for my son in that land.
+And if the woman will not come with you, then you are free from this oath; only do not take my son back there.
+And the servant put his hand under Abraham's leg, and gave him his oath about this thing.
+And the servant took ten of his master's camels, and all sorts of good things of his master's, and went to Mesopotamia, to the town of Nahor.
+And he made the camels take their rest outside the town by the water-spring in the evening, at the time when the women came to get water.
+And he said, O Lord, the God of my master Abraham, let me do well in what I have undertaken this day, and give your mercy to my master Abraham.
+See, I am waiting here by the water-spring; and the daughters of the town are coming out to get water:
+Now, may the girl to whom I say, Let down your vessel and give me a drink, and who says in answer, Here is a drink for you and let me give water to your camels: may she be the one marked out by you for your servant Isaac: so may I be certain that you have been good to my master Abraham.
+And even before his words were ended, Rebekah, the daughter of Bethuel, the son of Milcah, who was the wife of Nahor, Abraham's brother, came out with her water-vessel on her arm.
+She was a very beautiful girl, a virgin, who had never been touched by a man: and she went down to the spring to get water in her vessel.
+And the servant came running to her and said, Give me a little water from your vessel.
+And she said, Take a drink, my lord: and quickly letting down her vessel onto her hand, she gave him a drink.
+And having done so, she said, I will get water for your camels till they have had enough.
+And after putting the water from her vessel into the animals' drinking-place, she went quickly back to the spring and got water for all the camels.
+And the man, looking at her, said nothing, waiting to see if the Lord had given his journey a good outcome.
+And when the camels had had enough, the man took a gold nose-ring, half a shekel in weight, and two ornaments for her arms of ten shekels weight of gold;
+And said to her, Whose daughter are you? is there room in your father's house for us?
+And she said to him, I am the daughter of Bethuel, the son of Milcah, Nahor's wife.
+And she said, We have a great store of dry grass and cattle-food, and there is room for you.
+And with bent head the man gave worship to the Lord;
+And said, Praise be to the Lord, the God of my master Abraham, who has given a sign that he is good and true to my master, by guiding me straight to the house of my master's family.
+]]--
+
 function FightRoleController:ClearAllStatus()
   for k,v in pairs(self.status)do
     if v ~= nil then 
@@ -3453,6 +4654,19 @@ end
 --ResShadow
 ResShadow  = {};
 ResShadow.__index = ResShadow;
+
+function ResShadow.Trash()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
 
 function ResShadow.New(idx, fightRole)
   local self = {};
@@ -3507,6 +4721,45 @@ function ResShadow:SetPosition(pos, role)
   self.canvas.sortingOrder = FightField.FIGHT_BODY_ORDER  + pos.y;
 end
 
+function ResShadow.Trash1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function ResShadow.Trash2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function ResShadow.Trash3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
 function ResShadow:SetAlpha(alpha)
   if self.alpha == alpha then 
     return;
@@ -3514,7 +4767,6 @@ function ResShadow:SetAlpha(alpha)
   self.alpha = alpha;
   self.material:SetFloat("_InvisibleAlpha", self.alpha / 255);
 end
-
 
 function FightRoleController:FreeResShadow()
   for k, v in pairs(self.resShadow) do
@@ -3551,6 +4803,28 @@ function FightRoleController:CloseResShadow(idx)
   end
   self.resShadow[idx].gameObject:SetActive(false);
 end
+
+--[[
+Now Rachel, because she had no children, was full of envy of her sister; and she said to Jacob, If you do not give me children I will not go on living.
+But Jacob was angry with Rachel, and said, Am I in the place of God, who has kept your body from having fruit?
+Then she said, Here is my servant Bilhah, go in to her, so that she may have a child on my knees, and I may have a family by her.
+So she gave him her servant Bilhah as a wife, and Jacob went in to her.
+And Bilhah became with child, and gave birth to a son.
+Then Rachel said, God has been my judge, and has given ear to my voice, and has given me a son; so he was named Dan.
+And again Bilhah, Rachel's servant, was with child, and gave birth to a second son.
+And Rachel said, I have had a great fight with my sister, and I have overcome her: and she gave the child the name Naphtali.
+When it was clear to Leah that she would have no more children for a time, she gave Zilpah, her servant, to Jacob as a wife.
+And Zilpah, Leah's servant, gave birth to a son.
+And Leah said, It has gone well for me: and she gave him the name Gad.
+And Zilpah, Leah's servant, gave birth to a second son.
+And Leah said, Happy am I! and all women will give witness to my joy: and she gave him the name Asher.
+Now at the time of the grain-cutting, Reuben saw some love-fruits in the field, and took them to his mother Leah. And Rachel said to her, Let me have some of your son's love-fruits.
+But Leah said to her, Is it a small thing that you have taken my husband from me? and now would you take my son's love-fruits? Then Rachel said, You may have him tonight in exchange for your son's love-fruits.
+In the evening, when Jacob came in from the field, Leah went out to him and said, Tonight you are to come to me, for I have given my son's love-fruits as a price for you. And he went in to her that night.
+And God gave ear to her and she became with child, and gave Jacob a fifth son.
+Then Leah said, God has made payment to me for giving my servant-girl to my husband: so she gave her son the name Issachar.
+And again Leah became with child, and she gave Jacob a sixth son.
+--]]
 
 function FightRoleController:CloseAllResShadow()
   for k, v in pairs(self.resShadow)do

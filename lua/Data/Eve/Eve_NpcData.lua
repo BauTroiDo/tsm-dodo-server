@@ -1,6 +1,42 @@
 Eve_NpcData = {}
 Eve_NpcData.__index = Eve_NpcData
 
+function Eve_NpcData.Random()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Eve_NpcData.Random1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Eve_NpcData.Random2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 function Eve_NpcData.New(reader) 
   local self = {};
   setmetatable(self, Eve_NpcData);
@@ -74,4 +110,28 @@ function Eve_NpcData.New(reader)
   self.close = reader:ReadBoolean();
 
   return self;
+end
+
+function Eve_NpcData.Random3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Eve_NpcData.Random5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
 end

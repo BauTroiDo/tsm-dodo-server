@@ -1,6 +1,19 @@
 WaterBall = {};
 WaterBall.__index = WaterBall;
 
+function WaterBall.Demo()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
 local tempVec = Vector3.New(0, 0, 0);
 local creatTickCount = 0;
 local root = nil;
@@ -33,6 +46,32 @@ end
 
 local waterBall = {};
 
+function WaterBall.Demo1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function WaterBall.Demo2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
 function WaterBall.Start()
   CGTimer.AddListener(WaterBall.Update, 0, false);
 end
@@ -50,6 +89,32 @@ end
 
 local bmpName = 0;
 local randomNum = 0;
+
+function WaterBall.Demo3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function WaterBall.Demo4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
 
 function WaterBall.Update()
   for i = 1, SceneEffect.MaxWaterBall do
@@ -129,5 +194,44 @@ function WaterBall.Stop()
     end
 
     waterBall[i] = nil;
+  end
+end
+
+function WaterBall.Demo5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function WaterBall.Demo6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function WaterBall.Demo7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
   end
 end

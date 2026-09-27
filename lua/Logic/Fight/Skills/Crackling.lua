@@ -1,0 +1,169 @@
+Crackling = InheritsFromBaseAttackSkill();
+
+function Crackling:InitExtraParameters()
+
+  self.frame = 0;
+  self.finishCount = 0;
+  self.fireLight = {};
+
+  self.ballNum = 0;
+  self.tailNum = 0;
+  self.ctrlPoints = {};
+  self.paths = {};
+  self.dirs = {};
+  self.ballAy = {};
+end
+
+function Crackling:ExtraClose()
+  for k, v in pairs(self.fireLight) do
+    if v ~= nil then
+      v:Stop();
+    end
+  end
+  table.Clear(self.fireLight);
+
+  for k, v in pairs(self.ballAy) do
+    if v ~= nil then
+      v.rawImage.texture = nil;
+      poolMgr:Release("LightMaterial", v.material)         
+      v.material = nil;
+      v.rawImage.material = nil;      
+      poolMgr:Release("BaseLight", v.gameObject)
+    end
+  end
+  table.Clear(self.ballAy);
+
+  self.isLightEnd = true;
+end
+
+function Crackling:Update()
+  self:UpdateStep();
+  self:Show();
+end
+
+function Crackling:Show()
+  local me = FightField.fightHum[self.humIdx];
+  local target = FightField.fightHum[self.tarIdx];
+  local status;
+  local hitCount = 0;
+  self.finishCount = 0;
+
+  if target == nil then 
+    self.isLightEnd = true;
+  end
+  
+  for i = 0, self.ballNum - 1 do
+    if self.ballAy[i] ~= nil and self.ballAy[i].rawImage ~= nil and self.ballAy[i].rawImage.texture ~= nil then
+      status = FightPointEffect.PlayFightEffectA(self.ballAy[i].rawImage, self.ballAy[i].width, self.ballAy[i].height, self.frame - i * 5, self.paths[i].point, self.dirs[i].dirs, 22, self.tailNum);
+      self.ballAy[i].canvas.sortingOrder = -self.ballAy[i].gameObject.transform.localPosition.y + FightField.FIGHT_BODYLIGHT_ORDER;
+      if not table.Contains(status, EFightPointStatus.Processing) and table.Contains(status, EFightPointStatus.Hited) then
+        me:PlaySound(target.colm, target.row);
+        hitCount = hitCount + 1;
+      end
+
+      if table.Contains(status, EFightPointStatus.Finished) then
+        self.ballAy[i].gameObject:SetActive(false);
+        self.finishCount = self.finishCount + 1;
+      end
+    end
+  end
+
+  if hitCount > 0 then
+    local aLight = EffectLight.New(10104, 50, 1, 10, 10, EEffectLightTracer.StandAni, target.nowPos.x - 16, target.nowPos.y + math.random(40), 27, true, 82);
+    aLight:SetTimeScale(FightField.timeScale);   
+    aLight:SetSortingOrder(FightField.FIGHT_BODYLIGHT_ORDER);
+    table.insert(self.fireLight, aLight);
+    me:PlayEffect(target.colm, target.row, ERolePose.Hit, 5);
+    local newPos = target:GetSpot(EFightSpot.Back, 5);
+    target:SetWalk(newPos.x, newPos.y, false);
+    target:SetBeh(EFightBeh.Quake);
+  end
+end
+
+function Crackling:UpdateStep()
+  local me = FightField.fightHum[self.humIdx];
+  local newPos;
+
+  if self.step == 1 then
+    newPos = me:GetMagicPos();
+    me:SetMoment(newPos.x, newPos.y, false);
+    me.roleController:MagicAttack();
+    FightField.attack[self.humIdx]:SetLight(EEffectLightKind.Ground ,10078, 50, 1, 20, 20, EEffectLightTracer.StandAni, me.nowPos.x + 5, me.nowPos.y, 20, true, 80);
+    self.interval = 0.8;
+    self.step = 2;
+  elseif self.step == 2 then
+    if self:CheckInterval() then 
+      self:SetCrackling("fireBall3", 8);
+      self.interval = 0;
+      self.step = 3;
+    end
+  elseif self.step == 3 then
+    if self:CheckInterval() then 
+      self.frame = self.frame + 1;
+      if self.frame == 50 then
+        self.frame = 0;
+        self:GenerateBezier(10);
+      end
+
+      if self.finishCount == self.ballNum then
+        self.isLightEnd = true;
+        self.step = 4;
+      end
+    end
+  end
+end
+
+function Crackling:SetCrackling(fireName, num)
+  self.ballNum = num;
+  self.tailNum = 3;
+
+  for i = 0, num - 1 do
+    self.ballAy[i] = {};
+    if self.ballAy[i].gameObject == nil then 
+      self.ballAy[i].gameObject = poolMgr:Get("BaseLight")
+      self.ballAy[i].gameObject.name = fireName
+      self.ballAy[i].gameObject.transform:SetParent(EffectLight.light_root.transform);
+      self.ballAy[i].gameObject.transform.localPosition = Vector3.New(-1000, 0, 0);
+      self.ballAy[i].gameObject.transform.localScale = Vector3.one;
+
+      self.ballAy[i].rawImage = self.ballAy[i].gameObject:GetComponent("RawImage");
+      self.ballAy[i].canvas = self.ballAy[i].gameObject:GetComponent("Canvas");
+
+      self.ballAy[i].rectTransform = self.ballAy[i].gameObject:GetComponent("RectTransform");
+      self.ballAy[i].rectTransform.localScale = Vector3.New(3.375, 3.375, 1);
+    end  
+    TextureManager.SetPng(ETextureUseType.EffectLight, fireName, self.ballAy[i].rawImage);
+
+    if self.ballAy[i].rawImage.texture ~= nil then    
+      self.ballAy[i].width = math.floor(self.ballAy[i].rawImage.texture.width / 8);
+      self.ballAy[i].height = math.floor(self.ballAy[i].rawImage.texture.height / 3);
+      self.ballAy[i].rectTransform.sizeDelta = Vector2.New(self.ballAy[i].width, self.ballAy[i].height);          
+      self.ballAy[i].rawImage.uvRect = Rect.New(0, 0, 1 / 8, 1 / 3);     
+    end
+    self.ballAy[i].material = poolMgr:Get("LightMaterial")
+    self.ballAy[i].material.shader = UnityEngine.Shader.Find("Custom/LightShader");
+    self.ballAy[i].rawImage.material = self.ballAy[i].material;
+
+    self.ctrlPoints[i] = {};
+    self.ctrlPoints[i].point = {};
+    self.ctrlPoints[i].point[0] = {};
+    self.ctrlPoints[i].point[1] = {};
+    self.ctrlPoints[i].point[2] = {};
+    self.ctrlPoints[i].point[0].x = FightField.fightHum[self.humIdx].nowPos.x - 200;
+    self.ctrlPoints[i].point[0].y = FightField.fightHum[self.humIdx].nowPos.y - 100;
+    self.ctrlPoints[i].point[2].x = FightField.fightHum[self.tarIdx].nowPos.x - 200;
+    self.ctrlPoints[i].point[2].y = FightField.fightHum[self.tarIdx].nowPos.y - 100;
+  end
+
+  self:GenerateBezier(10);
+  self.frame = 0;
+end
+
+function Crackling:GenerateBezier(frameNum)
+  for i = 0, table.Count(self.ctrlPoints) - 1  do
+    self.ctrlPoints[i].point[1].x = FightField.skillOffset.x + 400 - (math.random(3) - 1) * 100;
+    self.ctrlPoints[i].point[1].y = FightField.skillOffset.y - 100 + (math.random(7) - 1) * 100;
+    self.paths[i] = FightPointEffect.GenerateBezierPath(self.ctrlPoints[i], frameNum);
+    self.dirs[i] = FightPointEffect.GenerateDirection(self.paths[i].point);
+  end
+end

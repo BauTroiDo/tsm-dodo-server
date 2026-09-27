@@ -95,6 +95,27 @@ function UIHouseBoardFunction.Initialize(go)
 
   --禮物牆詳細資料
   gameObject_GiftWall = uiController:FindGameObject("GiftWall");
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 
   scrollContent_ReceiveGifts = uiController:FindScrollContent("ScrollContent_ReceiveGifts");
   scrollContent_ReceiveGifts.onInitialize = this.OnInitialize_ScrollContent_ReceiveGifts;
@@ -397,12 +418,33 @@ function UIHouseBoardFunction.OnItemChange_ScrollContent_Leaderboard(dataIndex, 
   scrollItems_Leaderboard[itemIndex].event_AddFriend.parameter = rankInfo;
   scrollItems_Leaderboard[itemIndex].event_AddFriend.gameObject:SetActive(rankInfo.roleId ~= "0" and rankInfo.roleId ~= Role.playerId and not Social.IsFriend(rankInfo.roleId));
   scrollItems_Leaderboard[itemIndex].event_SendGift.parameter = rankInfo;
-  scrollItems_Leaderboard[itemIndex].event_SendGift.gameObject:SetActive(rankInfo.roleId ~= "0" and rankInfo.roleId ~= Role.playerId and Social.IsFriend(rankInfo.roleId) and Social.CheckTurnStatus(rankInfo.turn));
+  scrollItems_Leaderboard[itemIndex].event_SendGift.gameObject:SetActive(rankInfo.roleId ~= "0" and rankInfo.roleId ~= Role.playerId and Social.IsFriend(rankInfo.roleId) and Social.CheckTurnStatus(rankInfo.level, rankInfo.turn));
 
   return true;
 end
 
 function UIHouseBoardFunction.OnInitialize_ScrollContent_SignButton(scrollItems)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   for itemIndex = 0, scrollItems.Length - 1 do
     scrollItems_SignButton[itemIndex] = {};
     scrollItems_SignButton[itemIndex].image_Button = {};
@@ -451,6 +493,28 @@ function UIHouseBoardFunction.UpdateUI(type)
   if type == EHouseBoardFunctionOpenType.Wall then
     transform_FrameRect = gameObject_GiftWall.transform:Find("Image_BG").transform;
     frameTitle = string.Get(23373);
+  
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
 
     this.UpdateGiftWall();
 
@@ -585,6 +649,27 @@ end
 
 --region onclick functions
 function UIHouseBoardFunction.OnClick_Close()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   if settingEvent ~= nil then
     settingEvent(nil);
   end
@@ -626,6 +711,27 @@ function UIHouseBoardFunction.OnClick_Submit()
 end
 
 function UIHouseBoardFunction.OnClick_Month(uiEvent)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   local parent = uiEvent.parameter;
   inputType = EBirthInputType.Month;
   monthNumber = 0;
@@ -634,6 +740,27 @@ function UIHouseBoardFunction.OnClick_Month(uiEvent)
 end
 
 function UIHouseBoardFunction.OnClick_Date(uiEvent)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   local parent = uiEvent.parameter;
   inputType = EBirthInputType.Date;
   dateNumber = 0;
@@ -642,6 +769,27 @@ function UIHouseBoardFunction.OnClick_Date(uiEvent)
 end
 
 function UIHouseBoardFunction.OnClick_Number(uiEvent)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   inputNumber = tonumber(numberButton.text[uiEvent.parameter]);
   this.UpdateBirth();
 end
@@ -679,6 +827,27 @@ function UIHouseBoardFunction.OnClick_Cancel()
     monthNumber = 0;
   elseif inputType == EBirthInputType.Date then
     dateNumber = 0;
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   end
 
   inputNumber = 0;

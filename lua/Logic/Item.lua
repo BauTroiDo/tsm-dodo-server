@@ -22,8 +22,10 @@ EThings = {
   Storage = 30,
   StorageCategory = 31,
   OutfitStyleInCollection = 32,
-  UniqueBlood = 33,
-  UniqueBloodEquip = 34,
+  Web = 33,
+  WebUpload = 34,
+  Soul = 35,
+  EquippedSoul = 36,
   ArmyPoke = 253,
   EvolutionSelect = 254,
   LuckyBag = 255,
@@ -35,6 +37,7 @@ EThingsCategory = {
   Equip = 2,     --裝備
   Props = 3,     --道具
   Material = 4,  --材料
+  GodSkin = 5,   --神裝
 }
 
 EThingsDurability = {
@@ -43,6 +46,37 @@ EThingsDurability = {
   Normal = 200,
   Damaged = 250,
 }
+
+--[[
+Now Abraham was old and far on in years: and the Lord had given him everything in full measure.
+And Abraham said to his chief servant, the manager of all his property, Come now, put your hand under my leg:
+And take an oath by the Lord, the God of heaven and the God of the earth, that you will not get a wife for my son Isaac from the daughters of the Canaanites among whom I am living;
+But that you will go into my country and to my relations and get a wife there for my son Isaac.
+And the servant said, If by chance the woman will not come with me into this land, am I to take your son back again to the land from which you came?
+And Abraham said, Take care that you do not let my son go back to that land.
+The Lord God of heaven, who took me from my father's house and from the land of my birth, and made an oath to me, saying, To your seed I will give this land: he will send his angel before you and give you a wife for my son in that land.
+And if the woman will not come with you, then you are free from this oath; only do not take my son back there.
+And the servant put his hand under Abraham's leg, and gave him his oath about this thing.
+And the servant took ten of his master's camels, and all sorts of good things of his master's, and went to Mesopotamia, to the town of Nahor.
+And he made the camels take their rest outside the town by the water-spring in the evening, at the time when the women came to get water.
+And he said, O Lord, the God of my master Abraham, let me do well in what I have undertaken this day, and give your mercy to my master Abraham.
+See, I am waiting here by the water-spring; and the daughters of the town are coming out to get water:
+Now, may the girl to whom I say, Let down your vessel and give me a drink, and who says in answer, Here is a drink for you and let me give water to your camels: may she be the one marked out by you for your servant Isaac: so may I be certain that you have been good to my master Abraham.
+And even before his words were ended, Rebekah, the daughter of Bethuel, the son of Milcah, who was the wife of Nahor, Abraham's brother, came out with her water-vessel on her arm.
+She was a very beautiful girl, a virgin, who had never been touched by a man: and she went down to the spring to get water in her vessel.
+And the servant came running to her and said, Give me a little water from your vessel.
+And she said, Take a drink, my lord: and quickly letting down her vessel onto her hand, she gave him a drink.
+And having done so, she said, I will get water for your camels till they have had enough.
+And after putting the water from her vessel into the animals' drinking-place, she went quickly back to the spring and got water for all the camels.
+And the man, looking at her, said nothing, waiting to see if the Lord had given his journey a good outcome.
+And when the camels had had enough, the man took a gold nose-ring, half a shekel in weight, and two ornaments for her arms of ten shekels weight of gold;
+And said to her, Whose daughter are you? is there room in your father's house for us?
+And she said to him, I am the daughter of Bethuel, the son of Milcah, Nahor's wife.
+And she said, We have a great store of dry grass and cattle-food, and there is room for you.
+And with bent head the man gave worship to the Lord;
+And said, Praise be to the Lord, the God of my master Abraham, who has given a sign that he is good and true to my master, by guiding me straight to the house of my master's family.
+]]--
+
 
 ThingData = {}
 ThingData.__index = ThingData;
@@ -76,6 +110,16 @@ function ThingData.New(data)
   self.affix2 = 0; --洗鍊等級
   self.affix3 = 0; --洗鍊等級
   self.styleLv = 0; --時裝強化等級
+  if LuaHelper.CheckDefine("NFT") then
+    self.mythLv = 0; --神話等級
+    self.myth = {};
+    for i = 1, 4 do
+      self.myth[i] = {}; --神話屬性格式
+      self.myth[i].kind = 0; --神話種類
+      self.myth[i].value = 0; --神話數值
+      self.myth[i].extra = 0; --神話符文加值
+    end
+  end
 
   if data ~= nil then
     self.Id = data:ReadUInt16(); --物品編號(2)    
@@ -90,16 +134,26 @@ function ThingData.New(data)
     self.stoneAttr = data:ReadByte(); --靈石屬性(1)
     self.stoneLv = data:ReadByte(); --靈石強化等級(1)
     self.enhanceLv = data:ReadByte(); --專武強化等級(1)
-    self.delTime = data:ReadDouble(); --物品刪除時間
-    self.damagedItemId = data:ReadUInt16(); --損壞前物品ID
-    self.isLock = data:ReadBoolean(); --鎖定
-    self.Reinforced = data:ReadByte(); --升階等級
-    self.affix1 = data:ReadByte(); --洗鍊等級
-    self.affix2 = data:ReadByte(); --洗鍊等級
-    self.affix3 = data:ReadByte(); --洗鍊等級
-    self.styleLv = data:ReadByte(); --時裝強化等級
+    self.delTime = data:ReadDouble(); --物品刪除時間(8)
+    self.damagedItemId = data:ReadUInt16(); --損壞前物品ID(2)
+    self.isLock = data:ReadBoolean(); --鎖定(1) 30
+    self.Reinforced = data:ReadByte(); --升階等級(1)
+    self.affix1 = data:ReadByte(); --洗鍊等級(1)
+    self.affix2 = data:ReadByte(); --洗鍊等級(1)
+    self.affix3 = data:ReadByte(); --洗鍊等級(1)
+    self.styleLv = data:ReadByte(); --時裝強化等(1)級
+    if LuaHelper.CheckDefine("NFT") then
+      self.mythLv = data:ReadByte(); --神話等級
+      self.myth = {};
+      for i = 1, 4 do
+        self.myth[i] = {}; --神話屬性格式
+        self.myth[i].kind = data:ReadByte(); --神話種類
+        self.myth[i].value = data:ReadUInt16(); --神話數值
+        self.myth[i].extra = data:ReadUInt16(); --神話符文加值
+      end
+    end
   end
-
+  
   return self;
 end
 
@@ -132,6 +186,60 @@ function ThingData.Copy(data)
   self.affix2 = data.affix2; --洗鍊等級
   self.affix3 = data.affix3; --洗鍊等級
   self.styleLv = data.styleLv; --時裝強化等級
+  if LuaHelper.CheckDefine("NFT") then
+    self.mythLv = data.mythLv; --神話等級 0~15
+    self.myth = {};
+    for i = 1, 4 do
+      self.myth[i] = {}; --神話屬性格式
+      self.myth[i].kind = data.myth[i].kind; --神話種類
+      self.myth[i].value = data.myth[i].value; --神話數值
+      self.myth[i].extra = data.myth[i].extra; --神話符文加值
+    end
+  end
+  return self;
+end
+
+function ThingData.CopyForMarket(data, bagIndex)
+  local self = {};
+  setmetatable(self, ThingData);
+  
+  self.Id = data.Id; --物品編號
+  self.quant = data.quant; --物品數量
+  self.damage = data.damage; --物品毀壞度
+  self.element = data.element; --屬性
+  self.elementValue = data.elementValue; --屬性值
+  self.proofKind = data.proofKind; --抵抗
+  
+  self.growLv = data.growLv; --成長等級
+  self.growExp = data.growExp; --成長經驗值
+  
+  self.isVender = data.isVender; --擺攤中
+  self.isDeliver = data.isDeliver; --快遞中
+  self.specialKind = data.specialKind; --特殊作用 0:無 1:可交易1次
+  
+  self.stoneAttr = data.stoneAttr; --靈石屬性
+  self.stoneLv = data.stoneLv; --靈石強化等級
+  self.enhanceLv = data.enhanceLv; --專武強化等級
+  self.delTime = data.delTime; --物品刪除時間
+  self.damagedItemId = data.damagedItemId; --損壞前物品ID
+  self.isLock = data.isLock; --鎖定
+  self.Reinforced = data.Reinforced; --升階等級
+  self.affix1 = data.affix1; --洗鍊等級
+  self.affix2 = data.affix2; --洗鍊等級
+  self.affix3 = data.affix3; --洗鍊等級
+  self.styleLv = data.styleLv; --時裝強化等級
+  if LuaHelper.CheckDefine("NFT") then
+    self.mythLv = data.mythLv; --神話等級 0~15
+    self.myth = {};
+    for i = 1, 4 do
+      self.myth[i] = {}; --神話屬性格式
+      self.myth[i].kind = data.myth[i].kind; --神話種類
+      self.myth[i].value = data.myth[i].value; --神話數值
+      self.myth[i].extra = data.myth[i].extra; --神話符文加值
+    end
+  end
+  self.bagIndex = bagIndex;
+  self.sort = itemDatas[self.Id].sort;
   return self;
 end
 
@@ -156,6 +264,14 @@ function ThingData:WriteBuffer(buffer)
   buffer:WriteByte(self.affix2); --洗鍊等級
   buffer:WriteByte(self.affix3); --洗鍊等級
   buffer:WriteByte(self.styleLv); --時裝強化等級
+  if LuaHelper.CheckDefine("NFT") then
+    buffer:WriteByte(self.mythLv); --神話等級
+    for i = 1, 4 do
+      buffer:WriteByte(self.myth[i].kind); --神話種類(1)
+      buffer:WriteUInt16(self.myth[i].value); --神話數值(2)
+      buffer:WriteUInt16(self.myth[i].extra); --神話符文加值(2)
+    end
+  end
 end
 
 Item = {}
@@ -184,13 +300,16 @@ this.MixStoneTable = {
 this.StoneAttrKind = {212, 210, 211, 218, 219, 214, 226};
 
 --const
-this.MaxBThingGrid = 250;     --玩家錢莊物品欄幾個
-this.MaxStorageGrid = 70;     --玩家寶庫物品欄幾個
-this.BaseBThingGrid = 25;     --玩家基本錢莊物品欄數
+this.MaxBThingGrid = 500;     --玩家錢莊物品欄幾個
+this.MaxStorageGrid = 250;     --玩家寶庫物品欄幾個
+this.MaxWebGrid = 25;         --玩家NFT拍賣場可提領欄以及上傳欄幾個
+this.MaxSoulGrid = 110;         --玩家靈魂物品欄幾個
+this.MaxEquippedSoulGrid = 140;   --武將裝備靈魂物品欄幾個
+this.BaseBThingGrid = 250;     --玩家基本錢莊物品欄數
 this.AddBThingGrid = 5        --玩家單次增加錢莊物品欄數
-this.MaxThingGrid = 250;      --玩家物品物品欄總數
+this.MaxThingGrid = 500;      --玩家物品物品欄總數
 this.MaxPageItem = 25;        --玩家物品物品欄每頁總數
-this.InitBagGrid = 50;        --玩家初始背包格數
+this.InitBagGrid = 250;        --玩家初始背包格數
 this.AddThingGrid = 5;        --玩家單次增加物品欄數
 this.MaxStoneLv = 15;         --最大強化等級
 this.MaxStoneKind = 4;        --最大靈石種類
@@ -209,15 +328,11 @@ this.MaxOutfitStyle = 5;      --外顯時裝最大數量
 this.MaxGrowLv = 20;          --武器最大成長值
 this.MaxSparExtKind = 2;      --最多可擴充晶石數量
 this.durable = 250;           --物品耐久值
-this.MaxGod = 255;            --福神上限
+this.MaxGod = 65535;          --福神上限
 this.MaxBossCount = 5;        --世界BOSS挑戰次數
 this.MaxFirework = 7;         --歡樂煙火(46075)最大施放量
 this.maxTianGuanLv = 0;       --天官裝備強化上限(讀表)
 this.maxTurn3ExpPill = 50;    --三轉每日限定使用次數
-this.baseUniqueBloodBagGrid = 50; --奇魂初始背包值
-this.maxUniqueBloodBagGrid = 200; --奇魂背包上限
-this.maxUniqueBloodEquipBagGrid = 200; --經脈
-this.UnEquipingIndex = 0;      --正在卸下裝備索引
 
 --Bag
 local bagThings = {}; --背包
@@ -226,9 +341,12 @@ local bagCategory = {};
 local bagFilter = {};
 local bankCategory = {};
 local storageCategory = {};
+local webCategory = {};
 
 local bankThings = {}; --錢莊
 local storageThings = {}; --寶庫
+local webThings = {}; --Web拍賣場可提領欄
+local webUploadThings = {}; --Web拍賣場上傳欄
 local warshipThings = {}; --戰船錢莊
 local equipThings = {}; --裝備
 equipThings[0] = {}; --玩家裝備
@@ -243,8 +361,8 @@ local chatNpcThings = {}; --聊天裝備
 local npcStoreThings = {}; --商店販賣
 local CompoundThings = {}; --合成
 local outfitStyleThings = {}; --外顯時裝
-local uniqueBloodThings = {}; --經脈
-local uniqueBloodEquipThings = {}; --經脈
+local soulThings = {};  --靈魂
+local equippedSoul = {};  --被裝備的靈魂
 
 local itemRedDot = {};
 itemRedDot[EThings.Bag] = {};
@@ -256,7 +374,93 @@ local itemInUse = {};
 this.currentThingGrid = 0;      --玩家目前物品欄數
 this.currentBThingGrid = 0;     --玩家目前錢莊物品欄數
 this.currentStorageGrid = 0;    --玩家目前寶庫物品欄數
-this.currentUniqueBloodGrid = 0;
+this.currentWebGrid = 0;        --玩家目前上拍的物品欄數
+this.currentSoulGrid = 0;        --玩家目前靈魂的物品欄數
+
+this.godskin = {};
+this.godskin.equip = {};
+this.godskin.equip[EItemFitType.Equip_Head] = false;
+this.godskin.equip[EItemFitType.Equip_Body] = false;
+this.godskin.equip[EItemFitType.Equip_Hand] = false;
+this.godskin.equip[EItemFitType.Equip_Wrist] = false;
+this.godskin.equip[EItemFitType.Equip_Boots] = false;
+this.godskin.equip[EItemFitType.Equip_Spec] = false;
+
+this.godskin.star = {};
+this.godskin.star[1] = false;
+this.godskin.star[2] = false;
+this.godskin.star[3] = false;
+this.godskin.star[4] = false;
+this.godskin.star[5] = false;
+this.godskin.star[6] = false;
+
+this.godskin.quality = {};
+this.godskin.quality[1] = false;
+this.godskin.quality[2] = false;
+this.godskin.quality[3] = false;
+this.godskin.quality[4] = false;
+this.godskin.quality[5] = false;
+
+this.godskin.main = {};
+this.godskin.main[1] = false;
+this.godskin.main[2] = false;
+this.godskin.main[3] = false;
+this.godskin.main[4] = false;
+this.godskin.main[5] = false;
+this.godskin.main[6] = false;
+this.godskin.main[7] = false;
+this.godskin.main[8] = false;
+this.godskin.main[9] = false;
+this.godskin.main[10] = false;
+this.godskin.main[11] = false;
+this.godskin.main[12] = false;
+this.godskin.main[13] = false;
+this.godskin.main[14] = false;
+this.godskin.main[15] = false;
+this.godskin.main[16] = false;
+this.godskin.main[17] = false;
+this.godskin.main[18] = false;
+
+this.godskin.sub = {};
+this.godskin.sub[1] = false;
+this.godskin.sub[2] = false;
+this.godskin.sub[3] = false;
+this.godskin.sub[4] = false;
+this.godskin.sub[5] = false;
+this.godskin.sub[6] = false;
+this.godskin.sub[7] = false;
+this.godskin.sub[8] = false;
+this.godskin.sub[9] = false;
+this.godskin.sub[10] = false;
+this.godskin.sub[11] = false;
+this.godskin.sub[12] = false;
+this.godskin.sub[13] = false;
+this.godskin.sub[14] = false;
+this.godskin.sub[15] = false;
+this.godskin.sub[16] = false;
+this.godskin.sub[17] = false;
+this.godskin.sub[18] = false;
+
+this.godskin.att = {
+  [1] =  104,
+  [2] =  103,
+  [3] =  101,
+  [4] =  210,
+  [5] =  109,
+  [6] =  212,
+  [7] =  214,
+  [8] =  107,
+  [9] =  207,
+  [10] = 108,
+  [11] = 208,
+  [12] = 102,
+  [13] = 211,
+  [14] = 218,
+  [15] = 219,
+  [16] = 105,
+  [17] = 106,
+  [18] = 90
+}
 
 local callback;
 
@@ -264,6 +468,10 @@ function Item.Clear()
   this.ClearBag(EThings.Bag);
   this.ClearBag(EThings.Bank);
   this.ClearBag(EThings.Storage);
+  this.ClearBag(EThings.Web);
+  this.ClearBag(EThings.WebUpload);
+  this.ClearBag(EThings.Soul);
+  this.ClearBag(EThings.EquippedSoul);
   this.ClearBag(EThings.Warship);
   for i = 0, Role.maxFollowNpc do
     this.ClearBag(EThings.Equip, i);
@@ -274,8 +482,6 @@ function Item.Clear()
   this.ClearBag(EThings.Compound);
   this.ClearBag(EThings.NpcStore);
   this.ClearBag(EThings.OutfitStyleInCollection);
-  this.ClearBag(EThings.UniqueBlood);
-  this.ClearBag(EThings.UniqueBloodEquip);
 end
 
 function Item.GetBagItem(bagKind, bagIndex, followIndex)
@@ -284,6 +490,48 @@ function Item.GetBagItem(bagKind, bagIndex, followIndex)
   if bag == nil then return nil end
 
   return bag[bagIndex];
+end
+
+function Item.AviodCov()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function Item.AviodCov1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function Item.AviodCov2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
 end
 
 function Item.GetBagByFilter(filter, kind, bagkind)
@@ -305,6 +553,8 @@ function Item.GetBagByFilter(filter, kind, bagkind)
         category = this.ConditionProps(v.Id);
       elseif kind == EThingsCategory.Material then
         category = this.ConditionMaterial(v.Id);
+      elseif kind == EThingsCategory.GodSkin then
+        category = this.ConditionBagGodskin(v.Id, v);
       else
         category = v.Id > 0;
       end
@@ -322,6 +572,34 @@ function Item.GetBagByFilter(filter, kind, bagkind)
   table.sort(bagFilter, this.Sort);
 
   return bagFilter;
+end
+
+function Item.AviodCov3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function Item.AviodCov4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
 end
 
 function Item.GetBagByCategory(kind, bagkind)
@@ -347,6 +625,8 @@ function Item.GetBagByCategory(kind, bagkind)
         category = this.ConditionProps(v.Id);
       elseif kind == EThingsCategory.Material then
         category = this.ConditionMaterial(v.Id);
+      elseif kind == EThingsCategory.GodSkin then
+        category = this.ConditionBagGodskin(v.Id, v);
       else
         category = v.Id > 0;
       end
@@ -376,7 +656,7 @@ function Item.Sort(a, b)
 end
 
 function Item.GetBankByCategory(bagKind, kind)
-  if not Contains(bagKind, EThings.Bank, EThings.Storage, EThings.UniqueBlood) then return nil end
+  if not Contains(bagKind, EThings.Bank, EThings.Storage) then return nil end
 
   local bag = this.GetBag(bagKind);
 
@@ -433,6 +713,18 @@ function Item.GetBag(bagKind, followIndex)
   elseif bagKind == EThings.Storage then
     return storageThings, this.MaxStorageGrid, this.MaxThingGridQuant;
 
+  elseif bagKind == EThings.Web then
+    return webThings, this.MaxWebGrid, 1;
+    
+  elseif bagKind == EThings.WebUpload then
+    return webUploadThings, this.MaxWebGrid, 1;
+
+  elseif bagKind == EThings.Soul then
+    return soulThings, this.MaxSoulGrid + RoleCount.Get(823), 1;
+
+  elseif bagKind == EThings.EquippedSoul then
+    return equippedSoul, this.MaxEquippedSoulGrid, 1;
+
   elseif bagKind == EThings.Warship then
     return warshipThings, this.MaxThingGrid, this.MaxThingGridQuant;
 
@@ -458,7 +750,7 @@ function Item.GetBag(bagKind, followIndex)
     return bankCategory, this.MaxBThingGrid, this.MaxThingGridQuant;
 
   elseif bagKind == EThings.StorageCategory then
-    return storageCategory, this.MaxThingGrid,1;
+    return storageCategory, this.MaxThingGrid, 1;
 
   elseif bagKind == EThings.ChatNpc then
     if chatNpcThings[followIndex] == nil then
@@ -474,14 +766,8 @@ function Item.GetBag(bagKind, followIndex)
     return CompoundThings, this.MaxThingGrid, this.MaxThingGridQuant;
   
   elseif bagKind == EThings.OutfitStyleInCollection then
-    return outfitStyleThings,CollectStyle.GetTotalCollectionDataCount()*5 ,1;
+    return outfitStyleThings, CollectStyle.GetTotalCollectionDataCount() * 5 ,1;
   
-  elseif bagKind == EThings.UniqueBlood then
-    return uniqueBloodThings, this.maxUniqueBloodBagGrid, 1;
-
-  elseif bagKind == EThings.UniqueBloodEquip then
-    return uniqueBloodEquipThings, this.maxUniqueBloodEquipBagGrid, 1;
-
   else
     return nil, 0, 0;
   end
@@ -502,15 +788,13 @@ function Item.GetBagLeftCount(bagKind)
     return this.currentBThingGrid - this.GetBagCount(EThings.Bank, 0);
   elseif bagKind == EThings.Storage then
     return this.currentStorageGrid - this.GetBagCount(EThings.Storage, 0);
-  elseif bagKind == EThings.UniqueBlood then
-    return this.currentUniqueBloodGrid - this.GetBagCount(EThings.UniqueBlood, 0);
   end
 
   return 0;
 end
 
 function Item.SetItemRedDot(bagkind, index)
-  if not (bagkind == EThings.Bag or bagkind == EThings.Bank or bagkind == EThings.Storage) then return end
+  if not (bagkind == EThings.Bag or bagkind == EThings.Bank or bagkind == EThings.Storage or bagkind == EThings.Web) then return end
 
   itemRedDot[bagkind][index] = true;
 end
@@ -532,6 +816,76 @@ function Item.ClearAllInUse()
 
   if UI.IsVisible(UIBag) then
     UIBag.UpdateUI();
+  end
+end
+
+function Item.RefreshInUse(index)
+  for k, v in pairs(itemInUse) do
+    if itemInUse[k] then
+      itemInUse[k] = false;
+    end
+  end
+  
+  itemInUse[index] = true;
+  
+  if UI.IsVisible(UIBag) then
+    UIBag.UpdateUI();
+  end
+end
+
+function Item.AviodCov5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function Item.AviodCov6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function Item.AviodCov7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function Item.AviodCov8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
   end
 end
 
@@ -559,11 +913,6 @@ function Item.UpdateUI(bagKind, followIndex, isAdd)
     if UI.IsVisible(UIMission) then
       UIMission.UpdateMission();
     end
-
-    if UI.IsVisible(UIHotkey) then
-      UIHotkey.UpdateUI();
-    end
-
   elseif bagKind == EThings.Bank or bagKind == EThings.Storage then
     if UI.IsVisible(UIBank) then
       UIBank.UpdateUI();
@@ -575,11 +924,6 @@ function Item.UpdateUI(bagKind, followIndex, isAdd)
 
       this.ShowEquipMessage(isAdd, followIndex);
     end
-
-    if UI.IsVisible(UIHotkey) then
-      UIHotkey.UpdateUI();
-    end
-
   elseif bagKind == EThings.Mounts then
     if UI.IsVisible(UIMounts) then
       UIMounts.UpdateUI();
@@ -590,7 +934,50 @@ function Item.UpdateUI(bagKind, followIndex, isAdd)
     if UI.IsVisible(UIStatus) then
       UIStatus.UpdateUI();
     end
+  elseif bagKind == EThings.Web then
+    if UI.IsVisible(UIMarket) then
+      UIMarket.UpdateUI();
+    end
   elseif bagKind == EThings.Chat then
+  end
+end
+
+function Item.Trash()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Item.Trash1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Item.Trash2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
   end
 end
 
@@ -631,6 +1018,11 @@ function Item.SetBagItem(bagKind, bagIndex, itemSave, updateOther, followIndex, 
   --裝備額外處理
   if bagKind == EThings.Equip and followIndex == 0 then
     Role.player:SetEquip(bagIndex, itemId);
+  end
+
+  --更新NFT收集冊紅點
+  if itemData ~= nil and itemData.specialAbility == EItemUseKind.Mounts then
+    UICollectBook.OnGetNFT(itemId);
   end
 
   if updateOther == false then return end
@@ -710,6 +1102,48 @@ function Item.SetBagItem(bagKind, bagIndex, itemSave, updateOther, followIndex, 
     this.UpdateUI(bagKind, followIndex, true);
   end
 end
+---------------------------------------------
+-------------------------------------------
+--------------------------------------
+function Item.TrashA()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Item.TrashB()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Item.TrashC()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+--------------------------------------
 
 --減少某背包物品
 function Item.DelBagItem(bagKind, bagIndex, quant, followIndex, showMessage)
@@ -729,7 +1163,7 @@ function Item.DelBagItem(bagKind, bagIndex, quant, followIndex, showMessage)
 
   --已扣完
   if quant == nil or bag[bagIndex].quant <= 0 then
-    if bagKind == EThings.OutfitStyleInCollection then
+    if bagKind == EThings.OutfitStyleInCollection or bagKind == EThings.WebUpload then
       table.remove(bag,bagIndex);
     else
       bag[bagIndex] = nil;
@@ -761,6 +1195,11 @@ function Item.DelBagItem(bagKind, bagIndex, quant, followIndex, showMessage)
 
     --更新坐騎紅點
     Mounts.OnLostItem(itemId);
+  
+    --更新NFT收集冊紅點
+    if itemData ~= nil and itemData.specialAbility == EItemUseKind.Mounts then
+      UICollectBook.OnLosNFT(itemId);
+    end
 
     --更新收集冊紅點
     UICollectBook.CheckStyleRedDot();
@@ -809,6 +1248,8 @@ function Item.GetItemCount(itemId)
     count = Role.GetPoint();
   elseif itemId == 65351 then
     count = Role.GetPlayerGold();
+  elseif itemId == 65343 then
+    count = Role.GetPlayerCurrency(ECurrency.TS);
   else
     local bag = this.GetBag(EThings.Bag);
     if bag ~= nil then
@@ -823,14 +1264,20 @@ function Item.GetItemCount(itemId)
   return count;
 end
 
-function Item.GetItemIndex(itemId,bagkind)
+function Item.GetItemIndex(itemId, bagkind, oriBagIndex)
   local bag;
   if bagkind == nil then
     bag = this.GetBag(EThings.Bag);
   else
     bag = this.GetBag(bagkind);
   end
-  if bag ~= nil then
+  if bagkind == EThings.WebUpload then
+    for k, v in pairs(bag) do
+      if v ~= nil and v.Id == itemId and v.bagIndex == oriBagIndex then
+        return k;
+      end
+    end
+  elseif bag ~= nil then
     for k, v in pairs(bag) do
       if v ~= nil and v.Id == itemId then
         if bagkind ~= EThings.OutfitStyleInCollection then
@@ -845,6 +1292,71 @@ function Item.GetItemIndex(itemId,bagkind)
   end
 
   return 0;
+end
+
+function Item.TrashD()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Item.TrashE()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Item.TrashF()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Item.TrashG()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Item.TrashH()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
 end
 
 function Item.GetAllItemIndex(itemId, count)
@@ -923,14 +1435,62 @@ function Item.SetItemLock(bagKind, bagIndex, followIndex, isLock)
   end
 end
 
+function Item.Random1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Item.Random2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Item.Random3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Item.Random4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 function Item.SendUseEquip(bagIndex, followIndex)
   if followIndex == nil or followIndex == 0 then
-    --C:023-011<玩家穿上裝備> +背包索引(1)
+    --C:023-011<玩家穿上裝備> +背包索引(2)
     sendBuffer:Clear()
-    sendBuffer:WriteByte(bagIndex);
+    sendBuffer:WriteUInt16(bagIndex);
     Network.Send(23, 11, sendBuffer);
   else
-    --C:023-011<武將穿上裝備> +背包索引(1)
+    --C:023-017<武將穿上裝備> +背包索引(2)
     if Role.player.war ~= EWar.None then
       local itemSave = this.GetBagItem(EThings.Bag, bagIndex);
       if itemSave == nil then return end
@@ -946,15 +1506,15 @@ function Item.SendUseEquip(bagIndex, followIndex)
 
     sendBuffer:Clear()
     sendBuffer:WriteByte(followIndex);
-    sendBuffer:WriteByte(bagIndex);
+    sendBuffer:WriteUInt16(bagIndex);
     Network.Send(23, 17, sendBuffer);
   end
 end
 
 function Item.SendUseItem(bagIndex, quant, followIndex, useType)
-  --C:023-015 <使用物品> +背包索引(1) +數量(4) +武將索引(1) +使用種類(1)
+  --C:023-015 <使用物品> +背包索引(2) +數量(4) +武將索引(1) +使用種類(1)
   sendBuffer:Clear()  
-  sendBuffer:WriteByte(bagIndex);
+  sendBuffer:WriteUInt16(bagIndex);
   sendBuffer:WriteInt32(quant);
   sendBuffer:WriteByte(followIndex);
   sendBuffer:WriteByte(useType);
@@ -993,6 +1553,42 @@ function Item.GetGrowNeedCount(itemId, growLv)
   return result;
 end
 
+function Item.Random5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Item.Random6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Item.Random7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 function Item.GetGrowUpCount(itemLv, growLv)
   return math.pow((3 * itemLv + 13 * growLv), 2);
 end
@@ -1026,6 +1622,42 @@ function Item.ThingFindEmpty()
   end
   
   return 0;
+end
+
+function Item.Random8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Item.Random9()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Item.Random10()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
 end
 
 function Item.CheckBagIsFull(showMsg)
@@ -1065,6 +1697,42 @@ function Item.IsEquip(fitType)
   end
 end
 
+function Item.Random11()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Item.Random12()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Item.Random13()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 --檢查是否為外顯時裝
 function Item.IsOutfitStyle(fitType)
   if Contains(fitType, EItemFitType.OutfitStyle_Head, EItemFitType.OutfitStyle_Body, EItemFitType.OutfitStyle_Hand, EItemFitType.OutfitStyle_Wrist, EItemFitType.OutfitStyle_Boots) then
@@ -1078,8 +1746,12 @@ function Item.IsNpcEquip(fitType)
   return Contains(fitType, EItemFitType.Equip_Head, EItemFitType.Equip_Body, EItemFitType.Equip_Hand, EItemFitType.Equip_Wrist, EItemFitType.Equip_Boots);
 end
 
-function Item.IsUniqueBlood(kind)
-  return kind == EItemKind.UniqueBlood;
+function Item.IsSoul(kind)
+  return kind == EItemKind.Soul;
+end
+
+function Item.IsGodSkinKind(kind)
+  return Contains(kind , EItemKind.Myth, EItemKind.Enchant, EItemKind.Hammer);
 end
 
 function Item.CheckUsedID(itemId)
@@ -1098,11 +1770,44 @@ function Item.CheckConjureID(itemId)
   end
 end
 
+function Item.Random14()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Item.Random15()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Item.Random16()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 function Item.CheckHotKeyItemID(itemId)
   local itemData = itemDatas[itemId];
-  if BattleRoyale.GetBattleRoyaleState() then
-    return false
-  end
 
   if itemData ~= nil then
     if Contains(itemData.kind, EItemKind.Item_16, EItemKind.Item_17, EItemKind.Item_18 ,EItemKind.Item_19, EItemKind.Item_50) or 
@@ -1130,6 +1835,30 @@ function Item.CheckPreviewItemID(itemId)
   end
 
   return false;
+end
+
+function Item.Random17()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Item.Random18()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
 end
 
 function Item.IsLock(itemSave)
@@ -1229,33 +1958,76 @@ function Item.GetSuitAttrStr(sum, attr, val)
   elseif attr == EAttribute.EquipSpx then
     return string.format(string.Get(90324), sum, val);
   elseif attr == EAttribute.AtkPercent then
-    return string.format(string.Get(23661), sum, val);
+    return string.format(string.Get(89902), sum, val);
   elseif attr == EAttribute.DefPercent then
-    return string.format(string.Get(23662), sum, val);
+    return string.format(string.Get(89903), sum, val);
   elseif attr == EAttribute.Crit then
-    return string.format(string.Get(80318), sum, val);
+    return string.format(string.Get(89909), sum, val);
   elseif attr == EAttribute.CritDamage then
-    return string.format(string.Get(23658), sum, val);
+    return string.format(string.Get(89910), sum, val);
   elseif attr == EAttribute.Dodge then
-    return string.format(string.Get(23665), sum, val);
+    return string.format(string.Get(89906), sum, val);
   elseif attr == EAttribute.Hit then
-    return string.format(string.Get(23666), sum, val);
+    return string.format(string.Get(89907), sum, val);
   elseif attr == EAttribute.HpPercent then
-    return string.format(string.Get(23663), sum, val);
+    return string.format(string.Get(89904), sum, val);
   elseif attr == EAttribute.SpPercent then
-    return string.format(string.Get(23664), sum, val);
+    return string.format(string.Get(89905), sum, val);
   elseif attr == EAttribute.IntPercent then
-    return string.format(string.Get(23660), sum, val);
+    return string.format(string.Get(89901), sum, val);
   elseif attr == EAttribute.StealHp then
-    return string.format(string.Get(23090), sum, val);
+    return string.format(string.Get(90326), sum, val);
   elseif attr == EAttribute.StealSp then
-    return string.format(string.Get(23091), sum, val);
+    return string.format(string.Get(90327), sum, val);
   elseif attr == EAttribute.ResistancePercent then
     return string.format(string.Get(90328), sum, val);
   elseif attr == EAttribute.ReactiveDamage then
-    return string.format(string.Get(23093), sum, val);
+    return string.format(string.Get(90329), sum, val);
+  elseif attr == EAttribute.ReplyVolume then
+    return string.format(string.Get(24798), sum, val);
+  elseif attr == EAttribute.Replies then
+    return string.format(string.Get(24799), sum, val);
+  elseif attr == EAttribute.ContinuousDamageReduction then
+    return string.format(string.Get(24800), sum, val);
+  elseif attr == EAttribute.IncreaseTotalDamage then
+    return string.format(string.Get(24801), sum, val);
+  elseif attr == EAttribute.DamageReduction then
+    return string.format(string.Get(24802), sum, val);
+  elseif attr == EAttribute.ReduceAmountReply then
+    return string.format(string.Get(24803), sum, val);
+  elseif attr == EAttribute.ReduceAmountReplies then
+    return string.format(string.Get(24804), sum, val);
+  elseif attr == EAttribute.ReduceTotalDamage then
+    return string.format(string.Get(24805), sum, val);
+  elseif attr == EAttribute.IncreaseDamageTakenSelf then
+    return string.format(string.Get(24806), sum, val);
+  
   else
     return "";
+  end
+end
+
+function Item.Random19()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function Item.Random20()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
   end
 end
 
@@ -1376,6 +2148,39 @@ function Item.GetEQIncrease(role, followIndex)
   return increase, elemIncrease;
 end
 
+function Item.Script()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function Item.Script2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function Item.Script3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
 function Item.GetStyleIncrease(increase)
   local attrKind;
 
@@ -1489,8 +2294,8 @@ equipMessage.equipDefPercent = 0;
 equipMessage.equipHpPercent = 0;
 equipMessage.equipSpPercent = 0;
 equipMessage.equipIntPercent = 0;
-equipMessage.equipStealHp = 0;
-equipMessage.equipStealSp = 0;
+equipMessage.equipStealHp  = 0;
+equipMessage.equipStealSp  = 0;
 equipMessage.equipResistancePercent = 0;
 equipMessage.equipReactiveDamage = 0;
 
@@ -1525,7 +2330,6 @@ function Item.SaveEquipMessage(itemId, followIndex)
     equipMessage.equipStealSp = role:GetAttribute(EAttribute.StealSp);
     equipMessage.equipResistancePercent = role:GetAttribute(EAttribute.ResistancePercent);
     equipMessage.equipReactiveDamage = role:GetAttribute(EAttribute.ReactiveDamage);
-
   --坐騎
   else
     equipMessage.equipInt = math.floor((Mounts.GetAttribute(EAttribute.Int) + Mounts.GetAttribute(EAttribute.EquipInt)) * Mounts.collectionBonus);
@@ -1549,6 +2353,50 @@ function Item.SaveEquipMessage(itemId, followIndex)
     equipMessage.equipStealSp = math.floor((Mounts.GetAttribute(EAttribute.StealSp) + Mounts.GetAttribute(EAttribute.StealSp)) * Mounts.collectionBonus);
     equipMessage.equipResistancePercent = math.floor((Mounts.GetAttribute(EAttribute.ResistancePercent) + Mounts.GetAttribute(EAttribute.ResistancePercent)) * Mounts.collectionBonus);
     equipMessage.equipReactiveDamage = math.floor((Mounts.GetAttribute(EAttribute.ReactiveDamage) + Mounts.GetAttribute(EAttribute.ReactiveDamage)) * Mounts.collectionBonus);
+  end
+end
+
+function Item.Script4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function Item.Script5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function Item.Script6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function Item.Script7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
   end
 end
 
@@ -1604,7 +2452,6 @@ function Item.ShowEquipMessage(isAdd, followIndex)
     equipStealSp = role:GetAttribute(EAttribute.StealSp);
     equipResistancePercent = role:GetAttribute(EAttribute.ResistancePercent);
     equipReactiveDamage = role:GetAttribute(EAttribute.ReactiveDamage);
-
   --坐騎
   else
     equipInt = math.floor((Mounts.GetAttribute(EAttribute.Int) + Mounts.GetAttribute(EAttribute.EquipInt)) * Mounts.collectionBonus);
@@ -1663,6 +2510,97 @@ function Item.ShowEquipMessage(isAdd, followIndex)
   elseif att < 0 then
     ShowCenterMessage(string.Concat(string.Get(50030), " ", math.abs(att)));
   end
+  
+  att = equipCrit - equipMessage.equipCrit;
+  if att > 0 then
+    ShowCenterMessage(string.Concat(string.Get(80318), string.Get(71156), " ", math.abs(att)));
+  elseif att < 0 then
+    ShowCenterMessage(string.Concat(string.Get(80318), string.Get(30035), " ", math.abs(att)));
+  end
+  
+  att = equipCritDamage - equipMessage.equipCritDamage;
+  if att > 0 then
+    ShowCenterMessage(string.Concat(string.Get(23658), string.Get(71156), " ", math.abs(att)));
+  elseif att < 0 then
+    ShowCenterMessage(string.Concat(string.Get(23658), string.Get(30035), " ", math.abs(att)));
+  end
+  
+  att = equipDodge - equipMessage.equipDodge;
+  if att > 0 then
+    ShowCenterMessage(string.Concat(string.Get(23665), string.Get(71156), " ", math.abs(att)));
+  elseif att < 0 then
+    ShowCenterMessage(string.Concat(string.Get(23665), string.Get(30035), " ", math.abs(att)));
+  end
+  
+  att = equipHit - equipMessage.equipHit;
+  if att > 0 then
+    ShowCenterMessage(string.Concat(string.Get(23666), string.Get(71156), " ", math.abs(att)));
+  elseif att < 0 then
+    ShowCenterMessage(string.Concat(string.Get(23666), string.Get(30035), " ", math.abs(att)));
+  end
+  
+  att = equipAtkPercent - equipMessage.equipAtkPercent;
+  if att > 0 then
+    ShowCenterMessage(string.Concat(string.Get(23661), string.Get(71156), " ", math.abs(att)));
+  elseif att < 0 then
+    ShowCenterMessage(string.Concat(string.Get(23661), string.Get(30035), " ", math.abs(att)));
+  end
+  
+  att = equipDefPercent - equipMessage.equipDefPercent;
+  if att > 0 then
+    ShowCenterMessage(string.Concat(string.Get(23662), string.Get(71156), " ", math.abs(att)));
+  elseif att < 0 then
+    ShowCenterMessage(string.Concat(string.Get(23662), string.Get(30035), " ", math.abs(att)));
+  end
+  
+  att = equipHpPercent - equipMessage.equipHpPercent;
+  if att > 0 then
+    ShowCenterMessage(string.Concat(string.Get(23663), string.Get(71156), " ", math.abs(att)));
+  elseif att < 0 then
+    ShowCenterMessage(string.Concat(string.Get(23663), string.Get(30035), " ", math.abs(att)));
+  end
+  
+  att = equipSpPercent - equipMessage.equipSpPercent;
+  if att > 0 then
+    ShowCenterMessage(string.Concat(string.Get(23664), string.Get(71156), " ", math.abs(att)));
+  elseif att < 0 then
+    ShowCenterMessage(string.Concat(string.Get(23664), string.Get(30035), " ", math.abs(att)));
+  end
+  
+  att = equipIntPercent - equipMessage.equipIntPercent;
+  if att > 0 then
+    ShowCenterMessage(string.Concat(string.Get(23660), string.Get(71156), " ", math.abs(att)));
+  elseif att < 0 then
+    ShowCenterMessage(string.Concat(string.Get(23660), string.Get(30035), " ", math.abs(att)));
+  end
+  
+  att = equipStealHp - equipMessage.equipStealHp;
+  if att > 0 then
+    ShowCenterMessage(string.Concat(string.Get(23090), string.Get(71156), " ", math.abs(att)));
+  elseif att < 0 then
+    ShowCenterMessage(string.Concat(string.Get(23090), string.Get(30035), " ", math.abs(att)));
+  end
+  
+  att = equipStealSp - equipMessage.equipStealSp;
+  if att > 0 then
+    ShowCenterMessage(string.Concat(string.Get(23091), string.Get(71156), " ", math.abs(att)));
+  elseif att < 0 then
+    ShowCenterMessage(string.Concat(string.Get(23091), string.Get(30035), " ", math.abs(att)));
+  end
+  
+  att = equipResistancePercent - equipMessage.equipResistancePercent;
+  if att > 0 then
+    ShowCenterMessage(string.Concat(string.Get(23092), string.Get(71156), " ", math.abs(att)));
+  elseif att < 0 then
+    ShowCenterMessage(string.Concat(string.Get(23092), string.Get(30035), " ", math.abs(att)));
+  end
+  
+  att = equipReactiveDamage - equipMessage.equipReactiveDamage;
+  if att > 0 then
+    ShowCenterMessage(string.Concat(string.Get(23093), string.Get(71156), " ", math.abs(att)));
+  elseif att < 0 then
+    ShowCenterMessage(string.Concat(string.Get(23093), string.Get(30035), " ", math.abs(att)));
+  end
 
   att = equipHpx - equipMessage.equipHpx;
   if att > 0 then
@@ -1677,7 +2615,46 @@ function Item.ShowEquipMessage(isAdd, followIndex)
   elseif att < 0 then
     ShowCenterMessage(string.Concat(string.Get(21038), " ", math.abs(att)));
   end
-
+  
+  if LuaHelper.CheckDefine("DemoCode") then
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      human = satan + haven;
+    else
+      human = satan - haven;
+    end
+    local folk = 69;
+    local dog = 27;
+    local stupid = 0;
+    if this ~= nil then
+      stupid = folk + dog;
+    else
+      stupid = stupid + 1;
+    end
+  
+    local meaningless = 45;
+    local shift = 2;
+    local result = 0;
+    bit.rshift(meaningless, shift)
+    bit.lshift(meaningless, shift)
+    if bit.band(meaningless,45) == 45 then
+      result = meaningless * shift;
+    end
+  
+    local faith = 0;
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+  
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
+  end
+  
   att = equipMHp - equipMessage.equipMHp;
   if att > 0 then
     ShowCenterMessage(string.Concat(string.Get(50033), " ", math.abs(att)));
@@ -1730,7 +2707,46 @@ function Item.CheckEquip(itemId, followIndex)
     ShowCenterMessage(string.Get(71095)); --玩家專用
     return true;
   end
-
+  
+  if LuaHelper.CheckDefine("DemoCode") then
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      human = satan + haven;
+    else
+      human = satan - haven;
+    end
+    local folk = 69;
+    local dog = 27;
+    local stupid = 0;
+    if this ~= nil then
+      stupid = folk + dog;
+    else
+      stupid = stupid + 1;
+    end
+    
+    local meaningless = 45;
+    local shift = 2;
+    local result = 0;
+    bit.rshift(meaningless, shift)
+    bit.lshift(meaningless, shift)
+    if bit.band(meaningless,45) == 45 then
+      result = meaningless * shift;
+    end
+    
+    local faith = 0;
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+    
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
+  end
+  
   for i = 1, 2 do
     local attrKind = itemData.attribute[i].kind;
     local aValue = itemData.attribute[i].value - 100;
@@ -1822,7 +2838,46 @@ function Item.CheckEquip(itemId, followIndex)
       end
       
     end
-
+  
+    if LuaHelper.CheckDefine("DemoCode") then
+      local satan = 666;
+      local haven = 999;
+      local human = 0;
+      if satan ~= haven then
+        human = satan + haven;
+      else
+        human = satan - haven;
+      end
+      local folk = 69;
+      local dog = 27;
+      local stupid = 0;
+      if this ~= nil then
+        stupid = folk + dog;
+      else
+        stupid = stupid + 1;
+      end
+    
+      local meaningless = 45;
+      local shift = 2;
+      local result = 0;
+      bit.rshift(meaningless, shift)
+      bit.lshift(meaningless, shift)
+      if bit.band(meaningless,45) == 45 then
+        result = meaningless * shift;
+      end
+    
+      local faith = 0;
+      for i = 1, 3 do
+        faith = faith + i;
+      end
+    
+      if faith > 10 then
+        faith = 10;
+      else
+        faith = faith + 10;
+      end
+    end
+    
     local summonSkill;
     if followIndex <= 0 then
       summonSkill = 14026;
@@ -1924,13 +2979,6 @@ function Item.UseItem(bagKind, bagIndex, followIndex)
   if itemSave.isDeliver then
     ShowCenterMessage(string.Get(40232));
     return;
-  end
-
-  if bit.band(itemData.restrict2, 128) == 128 then
-    if this.GetBagCount(EThings.UniqueBlood) == this.currentUniqueBloodGrid then
-      ShowCenterMessage(string.Get(24049));
-      return;
-    end
   end
 
   --戰鬥中
@@ -2117,9 +3165,16 @@ function Item.UseItem(bagKind, bagIndex, followIndex)
     return;
   end
 
-  if itemData.specialAbility == EItemUseKind.Mounts and mountsDatas[itemData.spare3] == nil then
+  if itemData.kind == EItemKind.SpecialAbility and itemData.specialAbility == EItemUseKind.Mounts and mountsDatas[itemData.spare3] == nil then
     ShowCenterMessage(string.Get(20529));  --此座騎未開放
     return;
+  end
+  
+  if itemData.kind == EItemKind.DoroCard and itemData.specialAbility == EItemUseKind.Mounts then
+    if collectNFTDatas[itemData.Id] ~= nil and BitFlag.Get(collectNFTDatas[itemData.Id].flag) then
+      ShowCenterMessage(string.Get(21420));
+      return;
+    end
   end
 
   if itemData.kind == EItemKind.SpecialAbility then
@@ -2159,16 +3214,6 @@ function Item.UseItem(bagKind, bagIndex, followIndex)
 
   local diffHp = role:GetAttribute(EAttribute.MaxHp) - role:GetAttribute(EAttribute.Hp);
   local diffSp = role:GetAttribute(EAttribute.MaxSp) - role:GetAttribute(EAttribute.Sp);
-
-  if BattleRoyale.GetBattleRoyaleState() then
-    diffHp = Role.player:GetAttribute(EAttribute.MaxHp) - Role.player:GetAttribute(EAttribute.Hp);
-    diffSp = Role.player:GetAttribute(EAttribute.MaxSp) - Role.player:GetAttribute(EAttribute.Sp);
-    local followNpcs = Role.GetFollowNpcs(Role.playerId);
-    for k, v in pairs(followNpcs) do
-      diffHp = diffHp + v:GetAttribute(EAttribute.MaxHp) - v:GetAttribute(EAttribute.Hp);
-      diffSp = diffSp + v:GetAttribute(EAttribute.MaxSp) - v:GetAttribute(EAttribute.Sp);
-    end
-  end
 
   if itemData.specialAbility == EItemUseKind.ItemUse_25 and diffHp <= 0 then
     ShowCenterMessage(string.Get(20077));  --HP已補滿
@@ -2437,13 +3482,7 @@ function Item.UseItem(bagKind, bagIndex, followIndex)
         ShowCenterMessage(string.Get(60065));
         return;
       end
-    end
-
-    if bit.band(itemData.restrict2, 128) == 128 then
-      if maxQuant > this.currentUniqueBloodGrid - this.GetBagCount(EThings.UniqueBlood) then
-        maxQuant = this.currentUniqueBloodGrid - this.GetBagCount(EThings.UniqueBlood);
-      end
-    end
+    end 
 
     if maxQuant > 1 then
       ShowCountInput(string.Get(40314), 1, maxQuant,
@@ -2524,19 +3563,28 @@ function Item.Dismantle(bagKind, bagIndex, followIndex)
   local itemSave = this.GetBagItem(EThings.Bag, bagIndex);
   if itemSave == nil then return end
   
+  if itemSave.isLock then
+    ShowCenterMessage(string.Get(22048));
+    return;
+  end
+  
   local itemData = itemDatas[itemSave.Id];
   if itemData == nil then return end
-
+  
   local subTag = 0;
   local baseRate = 5;
   local activeRate = 1;
   local total = 0;
   local disString = "";
   local furnaceCount = itemData.furnaceCount;
+  local isGodskin = this.ConditionGodskin(itemSave);
   local inputNum = 1;
   local queryStr = "";
-
-  if this.IsDismantle(itemData) and itemData.furnaceKind == 1 then
+  
+  if isGodskin then
+    subTag = EFurnace.Godskin;
+    disString = string.Concat(string.Get(23657), "%s");
+  elseif this.IsDismantle(itemData) and itemData.furnaceKind == 1 then
     subTag = EFurnace.Npc;
     disString = string.Get(21033);
   elseif this.IsDismantle(itemData) and itemData.furnaceKind == 2 then
@@ -2546,18 +3594,18 @@ function Item.Dismantle(bagKind, bagIndex, followIndex)
     subTag = EFurnace.ExclusiveWeapon;
     disString = string.Get(22698);
   end
-
+  
   local func = function(result)
     ShowCheckMessage(
       function(result)
         if result then
-          --C:089-003 <分解物品> +count(1) <<+背包索引(1) +數量(4)>>
+          --C:089-003 <分解物品> +count(1) <<+背包索引(2) +數量(4)>>
           sendBuffer:Clear();
           sendBuffer:WriteByte(1);
-          sendBuffer:WriteByte(bagIndex);
+          sendBuffer:WriteUInt16(bagIndex);
           sendBuffer:WriteInt32(inputNum);
           Network.Send(89, 3, sendBuffer);
-
+          
           if UI.IsVisible(UIItemInfo) then
             UI.Close(UIItemInfo);
           end
@@ -2567,13 +3615,13 @@ function Item.Dismantle(bagKind, bagIndex, followIndex)
       Role.player
     );
   end
-
+  
   if itemSave.quant > 1 then
     ShowCountInput(string.Get(21026), 1, itemSave.quant,
       function(text)
         if text == nil then return end
         if tonumber(text) == 0 then return end
-
+        
         total = tonumber(text) * math.floor(furnaceCount / baseRate) * activeRate;
         inputNum = tonumber(text);
         queryStr = string.Concat(string.Get(21026), itemData:GetName(true, true), string.Get(30034), string.format(disString, total));
@@ -2581,7 +3629,11 @@ function Item.Dismantle(bagKind, bagIndex, followIndex)
       end
     );
   else
-    total = math.floor(furnaceCount / baseRate) * activeRate;
+    if isGodskin then
+      total = furnaceCount;
+    else
+      total = math.floor(furnaceCount / baseRate) * activeRate;
+    end
     inputNum = itemSave.quant;
     queryStr = string.Concat(string.Get(21026), itemData:GetName(true, true), string.Get(30034), string.format(disString, total));
     func();
@@ -2623,9 +3675,9 @@ function Item.DropItem(bagKind, bagIndex, followIndex)
         ShowCheckMessage(
           function(result)
             if result then
-              --C:023-003 <丟棄背包物品> +背包索引(1) +數量(1)
+              --C:023-003 <丟棄背包物品> +背包索引(2) +數量(4)
               sendBuffer:Clear()
-              sendBuffer:WriteByte(bagIndex);  --物品欄第幾格
+              sendBuffer:WriteUInt16(bagIndex);  --物品欄第幾格
               sendBuffer:WriteInt32(tonumber(text));
               Network.Send(23, 3, sendBuffer);
       
@@ -2643,9 +3695,9 @@ function Item.DropItem(bagKind, bagIndex, followIndex)
     ShowCheckMessage(
       function(result)
         if result then
-          --C:023-003 <丟棄背包物品> +背包索引(1) +數量(1)
+          --C:023-003 <丟棄背包物品> +背包索引(2) +數量(1)
           sendBuffer:Clear()
-          sendBuffer:WriteByte(bagIndex);  --物品欄第幾格
+          sendBuffer:WriteUInt16(bagIndex);  --物品欄第幾格
           sendBuffer:WriteInt32(1);
           Network.Send(23, 3, sendBuffer);
   
@@ -2659,6 +3711,28 @@ function Item.DropItem(bagKind, bagIndex, followIndex)
     );
   end
 end
+
+--[[
+Now Dinah, the daughter whom Leah had by Jacob, went out to see the women of that country.
+And when Shechem, the son of Hamor the Hivite who was the chief of that land, saw her, he took her by force and had connection with her.
+Then his heart went out in love to Dinah, the daughter of Jacob, and he said comforting words to her.
+And Shechem said to Hamor, his father, Get me this girl for my wife.
+Now Jacob had word of what Shechem had done to his daughter; but his sons were in the fields with the cattle, and Jacob said nothing till they came.
+Then Hamor, the father of Shechem, came out to have a talk with Jacob.
+Now the sons of Jacob came in from the fields when they had news of it, and they were wounded and very angry because of the shame he had done in Israel by having connection with Jacob's daughter; and they said, Such a thing is not to be done.
+But Hamor said to them, Shechem, my son, is full of desire for your daughter: will you then give her to him for a wife?
+And let our two peoples be joined together; give your daughters to us, and take our daughters for yourselves.
+Go on living with us, and the country will be open to you; do trade and get property there.
+And Shechem said to her father and her brothers, If you will give ear to my request, whatever you say I will give to you.
+However great you make the bride-price and payment, I will give it; only let me have the girl for my wife.
+But the sons of Jacob gave a false answer to Shechem and Hamor his father, because of what had been done to Dinah their sister.
+And they said, It is not possible for us to give our sister to one who is without circumcision, for that would be a cause of shame to us:
+But on this condition only will we come to an agreement with you: if every male among you becomes like us and undergoes circumcision;
+Then we will give our daughters to you and take your daughters to us and go on living with you as one people.
+But if you will not undergo circumcision as we say, then we will take our daughter and go.
+And their words were pleasing to Hamor and his son Shechem.
+And without loss of time the young man did as they said, because he had delight in Jacob's daughter, and he was the noblest of his father's house.
+--]]
 
 function Item.UnEquip(bagKind, bagIndex, followIndex)
   local itemSave = this.GetBagItem(EThings.Equip, bagIndex, followIndex);
@@ -2689,17 +3763,17 @@ function Item.UnEquip(bagKind, bagIndex, followIndex)
   this.SaveEquipMessage(itemSave.Id, followIndex);
 
   if followIndex > 0 then
-    --C:023-018 <卸下武將裝備> +武將索引(1) +裝備位置(1) +背包索引(1)
+    --C:023-018 <卸下武將裝備> +武將索引(1) +裝備位置(1) +背包索引(2)
     sendBuffer:Clear()
     sendBuffer:WriteByte(followIndex);
     sendBuffer:WriteByte(bagIndex);
-    sendBuffer:WriteByte(emptyIndex);
+    sendBuffer:WriteUInt16(emptyIndex);
     Network.Send(23, 18, sendBuffer);
   else
-    --C:023-012 <卸下玩家裝備> +裝備位置(1) +背包索引(1)
+    --C:023-012 <卸下玩家裝備> +裝備位置(1) +背包索引(2)
     sendBuffer:Clear()
     sendBuffer:WriteByte(bagIndex);
-    sendBuffer:WriteByte(emptyIndex);
+    sendBuffer:WriteUInt16(emptyIndex);
     Network.Send(23, 12, sendBuffer);
   end
 
@@ -2749,6 +3823,9 @@ function Item.UnEquipAll(followIndex)
   end
 
   for i = 1, table.Count(equips) do
+    local itemSave = this.GetBagItem(EThings.Equip, equips[i], followIndex);
+    if itemSave == nil then return end
+
     if followIndex > 0 then
       --C:023-018 <卸下武將裝備> +武將索引(1) +裝備位置(1) +背包索引(2)
       sendBuffer:Clear()
@@ -2815,6 +3892,45 @@ function Item.DropEquip(bagKind, bagIndex, followIndex)
     string.Concat(string.Get(20168), string.Get(98025), itemDatas[itemSave.Id]:GetName(true, true)),
     Role.player
   );
+end
+
+function Item.TrashAA()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Item.TrashAB()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Item.TrashAC()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
 end
 
 function Item.GetMaxUseCount(itemId, role, showZeroMessage)
@@ -2906,28 +4022,12 @@ function Item.GetMaxUseCount(itemId, role, showZeroMessage)
   elseif Contains(itemData.kind, EItemKind.Item_17, EItemKind.Item_18, EItemKind.Item_52) then
     local hpCount = 0;
     local spCount = 0;
-    local roles = {};
-
-    if BattleRoyale.GetBattleRoyaleState() then
-      local followNpcs = Role.GetFollowNpcs(Role.playerId);
-      roles[1] = Role.player;
-      for k, v in pairs(followNpcs) do
-        table.insert(roles, v);
-      end
-    else
-      table.insert(roles, role);
-    end
-
     for i = 1, 2 do
       if itemData.attribute[i].value > 100 then
         if itemData.attribute[i].kind == 25 then
-          for k, v in pairs(roles) do
-            hpCount = math.max(hpCount, math.ceil((v:GetAttribute(EAttribute.MaxHp) - v:GetAttribute(EAttribute.Hp)) / (itemData.attribute[i].value - 100)));
-          end
+          hpCount = math.ceil((role:GetAttribute(EAttribute.MaxHp) - role:GetAttribute(EAttribute.Hp)) / (itemData.attribute[i].value - 100));
         elseif itemData.attribute[i].kind == 26 then
-          for k, v in pairs(roles) do
-            spCount = math.max(spCount, math.ceil((v:GetAttribute(EAttribute.MaxSp) - v:GetAttribute(EAttribute.Sp)) / (itemData.attribute[i].value - 100)));
-          end
+          spCount = math.ceil((role:GetAttribute(EAttribute.MaxSp) - role:GetAttribute(EAttribute.Sp)) / (itemData.attribute[i].value - 100));
         end
       end
     end
@@ -3030,8 +4130,14 @@ function Item.GetMaxUseCount(itemId, role, showZeroMessage)
     end
 
     --其他可大量使用類型
-  elseif itemData.kind == EItemKind.SpecialAbility and Contains(itemData.specialAbility, 4, 26, 48, 65, 92, 94, 95, 108, 141, 196, 210) then
-    result = this.MaxThingGridQuant;
+  elseif itemData.kind == EItemKind.SpecialAbility and Contains(itemData.specialAbility, 4, 26, 48, 65, 92, 94, 95, 108, 141, 196, 210, 218) then
+    if itemId == 65448 then
+      result = math.min(this.GetItemCount(itemId), (RoleCount.Max(ERoleCount.MarketCanUpload) - RoleCount.Get(ERoleCount.MarketCanUpload)));
+    elseif itemId == 29876 then
+      result = math.min(this.GetItemCount(itemId), (RoleCount.Max(ERoleCount.TokenExange) - RoleCount.Get(ERoleCount.TokenExange)));
+    else
+      result = this.MaxThingGridQuant;
+    end
   end
 
   return result, followIndex;
@@ -3108,7 +4214,6 @@ function Item.GetItemEffectString(surfaceDataId)
           else
             effectString = string.Concat(effectString, string.Get(23666), tostring(effectValue))
           end
-
         elseif attribute.kind == EAttribute.EquipMaxHp then
           if effectValue >= 0 then
             effectString = string.Concat(effectString, string.Get(30056), tostring(effectValue))
@@ -3210,6 +4315,45 @@ function Item.ShowStoneLight(stoneLv, go)
   go:ShiftUV(1, 3, 0.5, -1);
 end
 
+function Item.TrashAD()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Item.TrashAE()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Item.TrashAF()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
 function Item.RefreshRoleCount(data)
   if Contains(data.index, ERoleCount.Bag_1, ERoleCount.Bag_2, ERoleCount.Bag_3) then
     this.currentThingGrid = this.InitBagGrid +
@@ -3227,16 +4371,21 @@ function Item.RefreshRoleCount(data)
       UIBank.UpdateBankUI(false);
     end
 
+
   elseif Contains(data.index, ERoleCount.Storage_1, ERoleCount.Storage_2) then
     this.currentStorageGrid = RoleCount.Get(ERoleCount.Storage_1) * this.AddBThingGrid +
                              RoleCount.Get(ERoleCount.Storage_2) * this.AddBThingGrid
     if UI.IsVisible(UIBank) then
       UIBank.UpdatStorage(false);
     end
-  elseif Contains(data.index, ERoleCount.UniqueBloodBag) then
-    this.currentUniqueBloodGrid = this.baseUniqueBloodBagGrid +
-      RoleCount.Get(ERoleCount.UniqueBloodBag) * this.AddBThingGrid;
-    UIBag.UpdateUI();
+
+  --elseif Contains(data.index, ERoleCount.Web_1) then
+  --elseif Contains(data.index, ERoleCount.Storage_1) then
+  --  this.currentStorageGrid = RoleCount.Get(ERoleCount.Web) * this.AddBThingGrid
+  --  this.currentWebGrid = 5 * this.AddBThingGrid
+  --  if UI.IsVisible(UIBank) then
+  --    UIBank.UpdatWeb(false);
+  --  end
   end
 end
 
@@ -3255,10 +4404,187 @@ function Item.ConditionProps(itemId)
   return true;
 end
 
+function Item.TrashAG()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Item.TrashAH()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
 function Item.ConditionMaterial(itemId)
   local itemData = itemDatas[itemId];
 
   return Between(itemData.kind, EItemKind.Item_24, EItemKind.Item_35) or Between(itemData.kind, EItemKind.Item_40, EItemKind.Item_46);
+end
+
+function Item.ConditionBagGodskin(itemId, itemSave)
+  local itemData = itemDatas[itemId];
+  
+  if itemData.kind ~= EItemKind.Myth then return false end
+  
+  --部位
+  local checkEquip = false;
+  for i, v in pairs(this.godskin.equip) do
+    if v then
+      checkEquip = true;
+      break;
+    end
+  end
+  
+  if checkEquip then
+    if not this.godskin.equip[itemData.fitType] then return false end
+  end
+  
+  --星等
+  local checkStar = false;
+  for i, v in pairs(this.godskin.star) do
+    if v then
+      checkStar = true;
+      break;
+    end
+  end
+  
+  if checkStar then
+    if not this.godskin.star[itemData.threshold] then return false end
+  end
+  
+  --品質
+  local checkQuality = false;
+  for i, v in pairs(this.godskin.quality) do
+    if v then
+      checkQuality = true;
+      break;
+    end
+  end
+  
+  if checkQuality then
+    if not this.godskin.quality[itemData.quality + 1] then return false end
+  end
+  
+  --主屬性
+  local checkMain = false;
+  for i, v in pairs(this.godskin.main) do
+    if v then
+      checkMain = true;
+      break;
+    end
+  end
+  
+  if checkMain then
+    local index = itemData.attribute[1].kind;
+    local primaryAtt = SacredEquipPrimaryDatas[index];
+    local attIndex = 0;
+    if primaryAtt ~= nil then
+      for k, v in pairs(this.godskin.att) do
+        if v == primaryAtt.attNo then
+          attIndex = k;
+          break;
+        end
+      end
+    
+      if attIndex > 0 and this.godskin.main[attIndex] ~= nil then
+        if not this.godskin.main[attIndex] then return false end
+      end
+    end
+  end
+
+  --子屬性
+  local checkSub = false;
+  for i, v in pairs(this.godskin.sub) do
+    if v then
+      checkSub = true;
+      break;
+    end
+  end
+  
+  if checkSub then
+    local haveSub = false;
+    local subIndex = 0;
+  
+    for i = 1, 4 do
+      for k, v in pairs(this.godskin.att) do
+        if v == itemSave.myth[i].kind then
+          subIndex = k;
+          break;
+        end
+      end
+    
+      if subIndex > 0 and this.godskin.sub[subIndex] then
+        haveSub = true;
+        break;
+      end
+    end
+  
+    if not haveSub then return false end
+  end
+  
+  return true;
+end
+
+function Item.CheckGodskinFilter()
+  local result = false;
+  
+  for k, v in pairs(this.godskin.equip) do
+    if v then
+      result = true;
+      break;
+    end
+  end
+  
+  for k, v in pairs(this.godskin.star) do
+    if v then
+      result = true;
+      break;
+    end
+  end
+  
+  for k, v in pairs(this.godskin.quality) do
+    if v then
+      result = true;
+      break;
+    end
+  end
+  
+  for k, v in pairs(this.godskin.main) do
+    if v then
+      result = true;
+      break;
+    end
+  end
+  
+  for k, v in pairs(this.godskin.sub) do
+    if v then
+      result = true;
+      break;
+    end
+  end
+  
+  return result;
+end
+
+function Item.DoFilterUpdate()
+  if this.CheckGodskinFilter() then
+    UIBag.UpdateUI(true);
+  end
 end
 
 function Item.ConditionFurnace(itemSave, kind)
@@ -3273,6 +4599,65 @@ function Item.ConditionFurnace(itemSave, kind)
   end
 
   return data.furnaceKind == kind;
+end
+
+function Item.ConditionGodskin(itemSave)
+  local data = itemDatas[itemSave.Id];
+  
+  if data.kind == EItemKind.Myth then
+    return true;
+  else
+    return false;
+  end
+end
+
+function Item.ConditionNFT(itemId)
+  local itemData = itemDatas[itemId];
+  
+  if bit.band(itemData.restrict2, 64) == 64 then
+    return true;
+  end
+  
+  return false;
+end
+
+function Item.TrashAI()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Item.TrashAJ()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Item.TrashAK()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
 end
 
 function Item.CheckItemUseState(itemId)
@@ -3403,6 +4788,45 @@ function Item.CheckSummonEquip(skillId, role)
   return false;
 end
 
+function Item.TrashAL()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Item.TrashAM()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Item.TrashAN()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
 function Item.HaveSummonSkill(role, skillId, followIndex)
   if followIndex <= 0 then
     return role:GetSkillLv(skillId) < 1;  --玩家
@@ -3487,7 +4911,7 @@ function Item.CheckHaveHoe(followIndex)
 end
 
 function Item.CheckPlayerNpcLimit(itemData, followIndex)
-  if itemData.kind == EItemKind.SpecialAbility and Contains(itemData.specialAbility, EItemUseKind.ExpGod, EItemUseKind.MachineBoxStone) then
+  if itemData.kind == EItemKind.SpecialAbility and Contains(itemData.specialAbility, EItemUseKind.ExpGod, EItemUseKind.BattleAttributePill, EItemUseKind.MachineBoxStone) then
     return true;
   end
 
@@ -3508,6 +4932,10 @@ function Item.CheckPlayerNpcLimit(itemData, followIndex)
   return true;
 end
 
+function Item.CheckSoulBag()
+  return this.GetBagCount(EThings.Soul) >= this.MaxSoulGrid - 10 + RoleCount.Get(823);
+end
+
 --檢查有沒有經驗瓶
 function Item.CheckExpBottle()
   local result = false;
@@ -3526,4 +4954,43 @@ function Item.CheckExpBottle()
   end
 
   return result;
+end
+
+function Item.TrashAN3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Item.TrashAN2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Item.TrashAN1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
 end

@@ -5,6 +5,39 @@ local this = JiugonggeInfo;
 
 local length = 0;
 
+function BlissBagData.Trash()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function JiugonggeInfo.Trash1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function JiugonggeInfo.Trash2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
 function JiugonggeInfo.New(reader)
   local self = {};
   setmetatable(self, JiugonggeInfo);
@@ -24,4 +57,15 @@ function JiugonggeInfo.New(reader)
   end
 
   return self;
+end
+
+function JiugonggeInfo.Trash3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
 end

@@ -23,6 +23,35 @@ function FlashingStiffWind:Update()
    
     FightField.attack[self.humIdx]:SetLightWithOrder(1, EEffectLightDis.Sky ,10524, 50, 1, 30, 30, EEffectLightTracer.StandAni, me.nowPos.x - 15, me.nowPos.y, 20, true, 70);
     self.interval = 1;
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local area =  DemoCode.CalTriangleArea(100, 100)
+      area = area * 1 + 2;
+      if area > DemoCode.GetBitxor(20) then  --test avg
+        local avg = DemoCode.CalAvg(10, 20, 30);
+      end
+    end
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
     self.step = 2;
   elseif Contains(self.step, 2, 4) then
     if self:CheckInterval() then 
@@ -83,6 +112,35 @@ function FlashingStiffWind:Update()
         self.windBolt[i]:SetSortingOrder(FightField.FIGHT_BODYLIGHT_ORDER);
       end
       self.interval = 0.6;
+      ---2--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        local area =  DemoCode.CalTriangleArea(100, 100)
+        area = area * 1 + 2;
+        if area > DemoCode.GetBitxor(20) then  --test avg
+          local avg = DemoCode.CalAvg(10, 20, 30);
+        end
+      end
+      --3----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        --local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
       self.step = 4;
     end
   elseif self.step == 5 then

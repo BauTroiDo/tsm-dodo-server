@@ -12,6 +12,32 @@ function StormFlashingBall:Update()
     FightField.attack[self.humIdx]:SetLightWithOrder(2, EEffectLightDis.Sky, 10137, 50, 1, 15, 15, EEffectLightTracer.StandAni, me.nowPos.x, me.nowPos.y, 30, true, 60);
     self.interval = 0.6;
     self.step = 2;
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      --local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif self.step == 2 then
     if self:CheckInterval() then 
       me:PlaySound(target.colm, target.row, Attack_Start);
@@ -26,6 +52,32 @@ function StormFlashingBall:Update()
       target.roleController:SetAnimationForceId(ERolePose.Hit);
       self.interval = 0.5;
       self.step = 4;
+      --1--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        local code = DemoCode.GetBitxor(20);
+        code = code * 10;
+      end
+      ---2--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        --local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        --local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     end
   elseif self.step == 4 then
     if self:CheckInterval() then 

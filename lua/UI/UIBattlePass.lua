@@ -16,6 +16,7 @@ local text_Time;
 local text_SpotlightText;
 local text_Switch;
 local text_BuyPass;
+local gameObject_BuyPass;
 local image_PaidBlockMask;
 local image_WithdrawRedDot;
 local image_SwitchRedDot;
@@ -46,6 +47,13 @@ local tookImage = "but136D";
 local spotlightItem = {};
 local missionList = {};
 local warningItem = {};
+
+local function IsHideBuyPassByChannel()
+  local channelId = tonumber(manifestChannelId) or 0;
+  if channelId < 0 then channelId = 0 end
+
+  return channelId ~= 0;
+end
 
 function UIBattlePass.Initialize(go)
   uiController = go:GetComponent("UIController");
@@ -89,7 +97,22 @@ function UIBattlePass.Initialize(go)
   tempEvent = uiController:FindEvent("Image_WithdrawAll");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_WithdrawAll);
   
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   tempEvent = uiController:FindEvent("Image_BuyPass");
+  gameObject_BuyPass = tempEvent.gameObject;
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_BuyPass);
   
   tempEvent = uiController:FindEvent("Image_Switch");
@@ -114,6 +137,48 @@ function UIBattlePass.Initialize(go)
   
   tempEvent = uiController:FindEvent("Image_Checked");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_Checked);
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function UIBattlePass.OnOpen()
@@ -154,6 +219,8 @@ end
 
 function UIBattlePass.UpdateBattlePass(reset)
   if currentPage ~= EUIBattlePassPage.Pass then return end;
+  gameObject_BuyPass:SetActive(not IsHideBuyPassByChannel());
+
   local currentPassLv = BattlePass.GetCurrentPassLv();
   local currentPassExp = BattlePass.GetCurrentPassExp();
   local expLimit = BattlePass.GetCurrentExpLimit();
@@ -180,15 +247,9 @@ function UIBattlePass.UpdateBattlePass(reset)
       text_BuyPass.text = string.Get(23855);
     end
     local totalLv = BattlePass.GetTotalLv();
-    local maxShowInScreen = 5;
+
     if reset then
-      if currentPassLv > totalLv - maxShowInScreen then
-        scrollContent_BattleReward:Reset(totalLv,totalLv - 4);
-      elseif currentPassLv > 1 then
-        scrollContent_BattleReward:Reset(totalLv,currentPassLv - 1);
-      else
-        scrollContent_BattleReward:Reset(totalLv);
-      end
+      scrollContent_BattleReward:Reset(totalLv, currentPassLv - 1);
     else
       scrollContent_BattleReward:Refresh();
     end
@@ -203,6 +264,34 @@ function UIBattlePass.UpdateMission()
   if not BattlePass.CheckHavePass() then return end;
   scrollContent_MissionAward:Reset(MissionAward.GetMissionCountById(BattlePass.GetCurrentPassId()));
   this.UpdateMissionPage();
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function UIBattlePass.UpdateTime()
@@ -338,6 +427,10 @@ function UIBattlePass.OnClick_WithdrawAll()
 end
 
 function UIBattlePass.OnClick_BuyPass()
+  if IsHideBuyPassByChannel() then
+    return
+  end
+
   if not BattlePass.CheckHavePass() or not BattlePass.IsInTime() then
     ShowCenterMessage(string.Get(20377));
     UI.Close(this);
@@ -351,6 +444,21 @@ function UIBattlePass.OnClick_BuyPass()
     return
   end
   
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
   local storeValueData = BattlePass.GetStoreValueData(sellData);
 
   if storeValueData  == nil then
@@ -363,7 +471,6 @@ end
 
 function UIBattlePass.OnClick_Switch()
   if currentPage == EUIBattlePassPage.Pass then
-    MissionAward.SetContent();
     if not BattlePass.CheckHavePass() or not BattlePass.IsInTime() then
       ShowCenterMessage(string.Get(20377));
       UI.Close(this);
@@ -379,6 +486,48 @@ function UIBattlePass.OnClick_Switch()
 end
 
 function UIBattlePass.OnClick_Help()
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   UI.Open(UITutorialHint, 70, this);
   
   return true;
@@ -462,6 +611,35 @@ function UIBattlePass.OnClick_BattlePassItem(uiEvent)
   local itemData = uiEvent.parameter;
   if itemData == nil then return end;
   UIItemInfo.Show(itemData.Id, itemData)
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
 end
 --endregion
 
@@ -527,6 +705,48 @@ function UIBattlePass.SendCompleteMission(missionID)
   sendBuffer:WriteByte(129);
   sendBuffer:WriteUInt16(missionID);
   Network.Send(77, 11, sendBuffer);
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 --endregion
 
@@ -598,6 +818,35 @@ function UIBattlePass.OnClickWarningItem(uiEvent)
   local itemData = uiEvent.parameter;
   if itemData == nil then return end;
   UIItemInfo.Show(itemData.Id, itemData)
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
 end
 
 function UIBattlePass.OnClick_Checked()
@@ -611,3 +860,4 @@ function UIBattlePass.CheckShowWarning()
   end
 end
 --endregion
+

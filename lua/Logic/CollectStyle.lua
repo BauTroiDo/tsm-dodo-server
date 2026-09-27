@@ -17,6 +17,7 @@ local this = CollectStyle;
 local MAX_EQUIPCOUNT = 5;
 local equipedData = {};
 local nowPoint = 0;
+local nowNFT = 0;
 local attributes = {};
 local storeStyleId = 0;
 local dataCount;
@@ -24,8 +25,50 @@ local dataCount;
 function CollectStyle.Clear()
   table.Clear(equipedData);
   nowPoint = 0;
+  nowNFT = 0;
   storeStyleId = 0;
   table.Clear(attributes);
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function CollectStyle.InitData(data)
@@ -47,33 +90,59 @@ function CollectStyle.CheckEquiped(id, index) --index = 部位
 end
 
 function CollectStyle.InitNowPoint(showMessage)
-  if showMessage == nil then 
+  if showMessage == nil then
     showMessage = true;
   end
 
   local lastPoint = nowPoint;
+  local lastNFT = nowNFT;
   nowPoint = 0;
-  for k, v in pairs(equipedData)do 
-    local allGet = true;
-    for i = 1, MAX_EQUIPCOUNT do 
-      if collectStyleDatas[v.id] ~= nil and collectStyleDatas[v.id].itemId[i] ~= 0 then 
-        if v.equiped[i] == true then 
-          nowPoint = nowPoint + collectStyleDatas[v.id].itemScore[i];
-        else
-          allGet = false;
+  nowNFT = 0;
+  
+  for k, v in pairs(equipedData)do
+    local getAll = true;
+    local getAllNFT = 0;
+    for i = 1, MAX_EQUIPCOUNT do
+      if collectStyleDatas[v.id] ~= nil and collectStyleDatas[v.id].itemId[i] ~= 0 then
+        if collectStyleDatas[v.id].nft == 0 then
+          if v.equiped[i] == true then
+            nowPoint = nowPoint + collectStyleDatas[v.id].itemScore[i];
+          else
+            getAll = false;
+          end
+        elseif collectStyleDatas[v.id].nft == 1 then
+          getAll = false;
+          if v.equiped[i] == true then
+            nowNFT = nowNFT + collectStyleDatas[v.id].itemScore[i];
+            getAllNFT = getAllNFT + 1;
+            if getAllNFT >= MAX_EQUIPCOUNT then
+              nowNFT = nowNFT + collectStyleDatas[v.id].itemScore[6];
+            end
+          end
         end
       end
     end
-    if allGet then  --全蒐集加成
+
+    if getAll then  --全蒐集加成
       nowPoint = nowPoint + collectStyleDatas[v.id].itemScore[6];
     end
   end
   
-  if showMessage then 
-    if lastPoint > nowPoint then 
-      ShowCenterMessage(string.format(string.Get(21417), lastPoint-nowPoint));
-    else
-      ShowCenterMessage(string.format(string.Get(21412), nowPoint-lastPoint));
+  if showMessage then
+    if lastPoint ~= nowPoint then
+      if lastPoint > nowPoint  then
+        ShowCenterMessage(string.format(string.Get(21417), lastPoint - nowPoint));
+      else
+        ShowCenterMessage(string.format(string.Get(21412), nowPoint - lastPoint));
+      end
+    end
+  
+    if lastNFT ~= nowNFT then
+      if lastNFT > nowNFT then
+        ShowCenterMessage(string.format(string.Get(23826), lastNFT - nowNFT));
+      else
+        ShowCenterMessage(string.format(string.Get(23825), nowNFT - lastNFT));
+      end
     end
   end
 
@@ -94,8 +163,12 @@ function CollectStyle.UpdateData(data)
   UICollectBook.CheckStyleRedDot();
 end
 
-function CollectStyle.GetNowPoint()  
+function CollectStyle.GetNowPoint()
   return nowPoint;
+end
+
+function CollectStyle.GetNowNFT()
+  return nowNFT;
 end
 
 function CollectStyle.GetAttribute(kind)
@@ -138,16 +211,16 @@ end
 function CollectStyle.UpdateAttribute()
   table.Clear(attributes);
   for k, v in pairs(collectStyleValueDatas)do
-    if v.score <= nowPoint then 
-      for i = 1, 4 do 
-        if attributes[v.attribute[i].kind] == nil then 
+    if v.nft == 0 and v.score <= nowPoint then
+      for i = 1, 4 do
+        if attributes[v.attribute[i].kind] == nil then
           attributes[v.attribute[i].kind] = 0;
         end
         attributes[v.attribute[i].kind] = attributes[v.attribute[i].kind] + v.attribute[i].value;
-      end      
-    end    
+      end
+    end
   end
-
+  
   if Role.player ~= nil then
     Role.player:SetAttribute(EAttribute.MaxHp, Calc.GetMaxHp(Role.player));
     Role.player:SetAttribute(EAttribute.MaxSp, Calc.GetMaxSp(Role.player));
@@ -166,6 +239,7 @@ function CollectStyle.SendStoreStyle(id, index) --時裝id, 部位
     return;
   end
 
+  --C:095-002 <儲存外觀裝備> +收集冊外觀編號(2) +外觀部位(1)
   sendBuffer:Clear();
   sendBuffer:WriteUInt16(id);  
   sendBuffer:WriteByte(index);  
@@ -189,6 +263,7 @@ function CollectStyle.SendTakeStyleOut(id, index) --時裝id, 部位
     return;
   end
 
+  --C:095-003 <取出外觀裝備> +收集冊外觀編號(2) +外觀部位(1)
   sendBuffer:Clear();
   sendBuffer:WriteUInt16(id);  
   sendBuffer:WriteByte(index);  
@@ -196,6 +271,47 @@ function CollectStyle.SendTakeStyleOut(id, index) --時裝id, 部位
   storeStyleId = collectStyleDatas[id].itemId[index];
 
   UI.Close(UIItemInfo);
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function CollectStyle.ReciveTakeStyleOut()
@@ -259,4 +375,45 @@ function CollectStyle.SendEquipOutfitStyle(id, index) --收集冊ID, 部位
   sendBuffer:WriteUInt16(id);
   sendBuffer:WriteByte(index);
   Network.Send(23, 124, sendBuffer);
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end

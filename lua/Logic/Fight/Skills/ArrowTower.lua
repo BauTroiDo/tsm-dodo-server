@@ -19,6 +19,50 @@ function ArrowTower:Update()
 
     FightField.attack[self.humIdx].lights[EEffectLightKind.Sky1].isShade = false;
     self.interval = 0.1;
+  
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local area =  DemoCode.CalTriangleArea(100, 100)
+      area = area * 1 + 2;
+      if area > DemoCode.GetBitxor(20) then  --test avg
+        local avg = DemoCode.CalAvg(10, 20, 30);
+      end
+    end
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local area =  DemoCode.CalTriangleArea(100, 100)
+      area = area * 1 + 2;
+      if area > DemoCode.GetBitxor(20) then  --test avg
+        local avg = DemoCode.CalAvg(10, 20, 30);
+      end
+    end
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    
     self.step = 2;
   elseif self.step == 2 then
     self:ArrowMove(EEffectLightKind.Sky1);

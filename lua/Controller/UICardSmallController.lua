@@ -1,6 +1,24 @@
 UICardSmallController = {}
 UICardSmallController.__index = UICardSmallController;
 
+function UICardSmallController.GetRShift(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function UICardSmallController.GetRShiftA(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
 function UICardSmallController.New(parent)
   local self = {};
   setmetatable(self, UICardSmallController);
@@ -36,6 +54,42 @@ end
 function UICardSmallController:OnClick()
   if self.clickEvent ~= nil then 
     self.clickEvent(self.cardData.id);
+  end
+end
+
+function UICardSmallController.GetRShiftB(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function UICardSmallController.GetRShiftC(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function UICardSmallController.GetRShiftD(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function UICardSmallController.GetRShiftE(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
   end
 end
 
@@ -84,6 +138,33 @@ function UICardSmallController:SetShow(isVisible)
   self.root_Content.gameObject:SetActive(isVisible);
   if not isVisible then   
     TextureManager.SetPng(ETextureUseType.UI, "CardSmallBG", self.image_BG);
+  end
+end
+
+function UICardSmallController.GetRShiftF(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function UICardSmallController.GetRShiftG(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function UICardSmallController.GetRShiftH(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
   end
 end
 

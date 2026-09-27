@@ -14,6 +14,32 @@ function WaterGod1:Update()
     attack:SetLightWithOrder(4,EEffectLightDis.Sky,10170,150,1,9,9, EEffectLightTracer.Standani, me.nowPos.x+10, me.nowPos.y,20, true, 80);
     self.interval = 0.9;
     self.step = 2;
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif self.step == 2 then             
     if self:CheckInterval() then
       attack:SetLightWithOrder(2, EEffectLightDis.Sky, 10172, 90, 1, 18, 18, EEffectLightTracer.StandAni, 0, 27, 25, false, 160);
@@ -68,6 +94,32 @@ function WaterGod1:Update()
 
     if attack.lights[2].alpha == 1 then
       self.step = 8;
+      --1--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        local code = DemoCode.GetBitxor(20);
+        code = code * 10;
+      end
+      ---2--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        --local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     end
   elseif self.step == 8 then 
       self.isLightEnd=true;
@@ -91,7 +143,33 @@ function WaterGod2:Update()
     --召喚陣聚氣
     attack:SetLightWithOrder(3,EEffectLightDis.Sky,10170,150,1,9,9,EEffectLightTracer.Standani, me.nowPos.x+10, me.nowPos.y,20, true, 80);
     self.interval = 0.9;
-    self.step = 2;    
+    self.step = 2;
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif self.step == 2 then 
     if self:CheckInterval() then    
       newPos = Vector2.New(-10, 107);
@@ -137,6 +215,32 @@ function WaterGod2:Update()
     if attack.lights[1].picId == 0 then              
       self.interval = 0.06;
       self.step = 7;
+      --1--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        local code = DemoCode.GetBitxor(20);
+        code = code * 10;
+      end
+      ---2--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        --local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     end
   elseif self.step == 7 then       
     if self:CheckInterval() then        
@@ -174,7 +278,33 @@ function WaterGod3:Update()
     attack:SetLightWithOrder(3,EEffectLightDis.Sky,10170,150,1,9,9,EEffectLightTracer.Standani, me.nowPos.x+10, me.nowPos.y,20, true, 80);
     
     self.interval = 0.9;
-    self.step = 2;    
+    self.step = 2;
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif self.step == 2 then 
     if self:CheckInterval() then          
       --小水神起手姿勢
@@ -211,6 +341,32 @@ function WaterGod3:Update()
         end          
       end
       self.step = 6
+      --1--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        local code = DemoCode.GetBitxor(20);
+        code = code * 10;
+      end
+      ---2--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        --local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     end
   elseif self.step == 6 then
     if attack.lights[1].picId == 0 then              

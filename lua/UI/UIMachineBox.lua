@@ -50,7 +50,6 @@ local expBottleUI = {};
 local expBottlInfo = {};
 local skillUI = {};
 local slider_exp;
-local image_DontAsk;
 
 --var
 local previousNpcId = 0;
@@ -59,7 +58,6 @@ local currentNpcId = 0;
 local currentRole = nil;
 local currentFightSetting = nil;
 local currentExpBottle = 0;
-local dontAsk = false;
 
 local rectTransform_General;
 local tagDatas = {};
@@ -81,6 +79,39 @@ function UIMachineBox.Initialize(go)
   this.uiController.onVisible = this.OnVisible;
 
   local tempEvent;
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 
   transform_FrameRect = uiController:FindGameObject("FrameRect").transform;
 
@@ -252,10 +283,6 @@ function UIMachineBox.Initialize(go)
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_GetExp);
   tempEvent.parameter = EExpBottle.Gold;
 
-  tempEvent = uiController:FindEvent("Image_DontAsk");
-  tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_DontAsk);
-  image_DontAsk = tempEvent:GetComponent("Image");
-
   text_Time = uiController:FindText("Text_Time");
   text_Exp = uiController:FindText("Text_Exp");
   text_Fight = uiController:FindText("Text_Fight");
@@ -295,6 +322,39 @@ function UIMachineBox.OnOpen(tag)
 
   if tag ~= nil then
     currentTag = tag;
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   else
     currentTag = EUIMachineBoxTag.General;
   end
@@ -305,6 +365,39 @@ function UIMachineBox.OnOpen(tag)
 end
 
 function UIMachineBox.OnClose()
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   MachineBox.Save();
 
   if currentTag == EUIMachineBoxTag.Fight then
@@ -386,26 +479,6 @@ function UIMachineBox.UpdateUI()
   this.UpdateExp();
 end
 
-function UIMachineBox.UpdateDontAsk()
-  dontAsk = Setting.client.expBottleIDontAsk;
-  image_DontAsk.sprite = UI.GetSwitchSprite(dontAsk);
-  UISell.SetAsk(49, dontAsk);
-  UISell.SetAsk(50, dontAsk);
-end
-
-function UIMachineBox.OnClick_DontAsk()
-  dontAsk = not dontAsk;
-  image_DontAsk.sprite = UI.GetSwitchSprite(dontAsk);
-
-  Setting.client.expBottleIDontAsk = dontAsk;
-
-  CGTimer.DoCountdown(this.SaveSetting, 3);
-end
-
-function UIMachineBox.SaveSetting()
-  Setting.Save();
-end
-
 function UIMachineBox.UpdateGeneral()
   if currentTag ~= EUIMachineBoxTag.General then return end
 
@@ -437,16 +510,16 @@ function UIMachineBox.UpdateFight()
 
   dropdown_Att.value = currentFightSetting.fightMode - 1;
   dropdown_Count.value = currentFightSetting.aoeThreshold - 1;
-  dropdown_Exit.value = currentFightSetting.exitThreshold;
+  dropdown_Exit.value =  currentFightSetting.exitThreshold;
 
-  if currentFightSetting.singleSkill ~= nil and currentRole:GetSkillLv(currentFightSetting.singleSkill) > 0 then
-    this.SetSkillIcon(1, currentFightSetting.singleSkill, currentRole:GetSkillLv(currentFightSetting.singleSkill));
+  if currentFightSetting.singleSkill ~= nil and currentRole:GetSkillLv(currentFightSetting.singleSkill, true) > 0 then
+    this.SetSkillIcon(1, currentFightSetting.singleSkill, currentRole:GetSkillLv(currentFightSetting.singleSkill, true));
   else
     this.SetSkillIcon(1);
   end
 
-  if currentFightSetting.aoeSkill ~= nil and currentRole:GetSkillLv(currentFightSetting.aoeSkill) > 0 then
-    this.SetSkillIcon(2, currentFightSetting.aoeSkill, currentRole:GetSkillLv(currentFightSetting.aoeSkill));
+  if currentFightSetting.aoeSkill ~= nil and currentRole:GetSkillLv(currentFightSetting.aoeSkill, true) > 0 then
+    this.SetSkillIcon(2, currentFightSetting.aoeSkill, currentRole:GetSkillLv(currentFightSetting.aoeSkill, true));
   else
     this.SetSkillIcon(2);
   end
@@ -532,6 +605,39 @@ end
 
 function UIMachineBox.UpdateHp()
   text_Hp.text = string.Concat(math.modf(currentRole:GetAttribute(EAttribute.MaxHp) * (currentFightSetting.hp / 100)), "(", currentFightSetting.hp, "%)");
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function UIMachineBox.UpdateSp()
@@ -611,6 +717,39 @@ end
 function UIMachineBox.OnClick_Tag(mainTag, subTag)
   if currentTag == EUIMachineBoxTag.Fight then
     MachineBox.SaveNpcSetting(currentNpcId, currentFightSetting);
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   end
 
   currentTag = mainTag;
@@ -660,6 +799,39 @@ function UIMachineBox.OnClick_ChaseElement(uiEvent)
     MachineBox.client.chaseFilter[uiEvent.parameter] = false;
   else
     MachineBox.client.chaseFilter[uiEvent.parameter] = true;
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   end
 
   this.UpdateGeneral();
@@ -698,7 +870,41 @@ function UIMachineBox.OnClick_Hp(uiEvent)
   if uiEvent.parameter < 0 and currentFightSetting.hp <= slider_Hp.minValue then return end
 
   currentFightSetting.hp = slider_Hp.value + uiEvent.parameter;
-
+  
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   this.UpdateFight();
 end
 
@@ -787,6 +993,39 @@ function UIMachineBox.OnClick_Spar(uiEvent)
 end
 
 function UIMachineBox.OnClick_RemoveSpar(uiEvent)
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   UISell.Launch(14, this.UpdateSparUI, MachineBox.spar[uiEvent.parameter].Id);
 end
 
@@ -801,6 +1040,11 @@ function UIMachineBox.OnClick_Skill(uiEvent)
       local skillData = skillDatas[skillId];
 
       if skillData == nil then return end
+
+      if Contains(skillId, 22046, 22005) then --22046 偶像光環、22005光癒術
+        ShowCenterMessage(string.Get(21972));
+        return;
+      end
 
       if skillData.fightWay == 19 and skillData:Except() then --強化技能不可設定
         ShowCenterMessage(string.Get(21972));
@@ -840,8 +1084,6 @@ end
 function UIMachineBox.UpdateExp()
   if currentTag ~= EUIMachineBoxTag.Exp then return end
 
-  this.UpdateDontAsk();
-
   this.UpdateExpBottle();
 
   this.UpdateBag();
@@ -859,7 +1101,7 @@ function UIMachineBox.UpdateExpBottle()
   for i = 1, MachineBox.MaxExpBottle do
     if i > MachineBox.BaseExpBottle + MachineBox.expExtendNum then
       expBottleUI[i].item:SetLock(true);
-      expBottleUI[i].text_Name.text = string.GetColorText(string.Get(22728), Color.Gray);
+      expBottleUI[i].text_Name.text =  string.GetColorText(string.Get(22728), Color.Gray);
 
       expBottleUI[i].useImage.gameObject:SetActive(false);
     else
@@ -873,9 +1115,9 @@ function UIMachineBox.UpdateExpBottle()
         expBottleUI[i].item:SetItem(0);
 
         if Item.CheckExpBottle() then
-          expBottleUI[i].text_Name.text = string.GetColorText(string.Get(22720), Color.DarkBlue);
+          expBottleUI[i].text_Name.text =  string.GetColorText(string.Get(22720), Color.DarkBlue);
         else
-          expBottleUI[i].text_Name.text = string.GetColorText(string.Get(22729), Color.Gray);
+          expBottleUI[i].text_Name.text =  string.GetColorText(string.Get(22729), Color.Gray);
         end
       end
 
@@ -995,10 +1237,43 @@ end
 
 --C:065-006 <移除經驗瓶> +索引(1)
 function UIMachineBox.OnClick_RemoveExpBottle()
-  if currentExpBottle <= 0 and currentExpBottle > MachineBox.MaxExpBottle then return end
+  if currentExpBottle <= 0  and currentExpBottle > MachineBox.MaxExpBottle then return end
 
   if MachineBox.bottle[currentExpBottle] == nil then return end
-
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   ShowCheckMessage(
   function(result)
     if result then
@@ -1033,6 +1308,39 @@ function UIMachineBox.OnClick_UseExpBottle(uiEvent)
 
   if MachineBox.bottle[idx].exp >= itemData.threshold then
     ShowCenterMessage(string.Get(22736));
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
     return;
   end
 
@@ -1064,11 +1372,9 @@ function UIMachineBox.OnClick_GetExp(uiEvent)
   if uiEvent.parameter == EExpBottle.Free then
     UISell.Launch(51, this.ReciveUISell, currentExpBottle);
   elseif uiEvent.parameter == EExpBottle.Money then
-    UISell.SetAsk(49, dontAsk);
     UISell.Launch(49, this.ReciveUISell, currentExpBottle);
   elseif uiEvent.parameter == EExpBottle.Gold then
-    UISell.SetAsk(50, dontAsk);
-    UISell.Launch(50, this.ReciveUISell, currentExpBottle);
+    UISell.Launch(50,  this.ReciveUISell, currentExpBottle);
   end
 end
 

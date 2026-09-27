@@ -116,9 +116,13 @@ function BattlePass.UpdateRedDot()
     Network.Send(1, 16)
     isAskedTime = true;
   end;
+  
   local currentId = PassAwardData.GetCurrentPassId();
   
-  if activityTimes[currentId] == nil or currentId == 0 then return end
+  if activityTimes[currentId] == nil or currentId == 0 then --無資料
+    RedDot.Remove(ERedDot.BattlePass);
+    return;
+  end
   
   if activityTimes[currentId][1].serverStartTime == 0 or DateTime.Compare(CGTimer.serverTime, activityTimes[currentId][1].serverStartTime) < 0 then --不在時間內
     RedDot.Remove(ERedDot.BattlePass);
@@ -238,6 +242,47 @@ function BattlePass.GetLvExpLimit(lv)
 end
 
 function BattlePass.Clear()
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   table.Clear(awardDatas);
   isAskedTime = false;
   isHavePass = false;
@@ -383,11 +428,13 @@ end
 
 function BattlePass.CheckCrossDay()
   if not this.IsInTime() then
-    UI.Close(UIBattlePass);
-  else
-    RedDot.Remove(ERedDot.BattlePass);
     if UI.IsVisible(UIBattlePass) then
-      BattlePass.UpdateRedDot();
+      UI.Close(UIBattlePass);
+    end
+    RedDot.Remove(ERedDot.BattlePass);
+  else
+    BattlePass.UpdateRedDot();
+    if UI.IsVisible(UIBattlePass) then
       UIBattlePass.UpdateUI();
     end
   end

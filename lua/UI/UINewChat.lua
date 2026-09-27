@@ -34,6 +34,7 @@ local selectChannel = false;
 local scrollValue = 0;
 local scrollTime = 0;
 local nextSpeakTime = 0;
+local originOrder = 0;
 
 local items = {};
 local npcs = {};
@@ -76,6 +77,8 @@ function UINewChat.Initialize(go)
 
   tempEvent = uiController:FindEvent("Image_Send");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_Send);
+
+  originOrder = this.uiController.canvas.sortingOrder;
 end
 
 function UINewChat.OnOpen()
@@ -93,6 +96,39 @@ function UINewChat.OnOpen()
 end
 
 function UINewChat.OnClose()
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   return true;
 end
 
@@ -128,7 +164,7 @@ function UINewChat.UpdateMessage()
     local messageInfo = Chat.lastMessages[i];
     if Setting.client.channelEnable[messageInfo.channel] then
       tempMessage = "";
-      if Contains(messageInfo.channel, EChannel.World, EChannel.Scene, EChannel.GM, EChannel.Whisper, EChannel.Team, EChannel.Organization, EChannel.Ally, EChannel.AI) then
+      if Contains(messageInfo.channel, EChannel.World, EChannel.Scene, EChannel.GM, EChannel.Whisper, EChannel.Team, EChannel.Organization, EChannel.Ally) then
         if not string.IsNullOrEmpty(messageInfo.name) then
           if messageInfo.roleId ~= nil and messageInfo.roleId ~= Role.playerId then
             tempMessage = string.Concat("<url=Role_", messageInfo.roleId, ">[", string.Get(Chat.chanelTittle[messageInfo.channel]), "]", messageInfo.name, "</url>：", messageInfo.message);
@@ -295,6 +331,39 @@ end
 
 function UINewChat.OnClick_Emoji()
   UI.Open(UIStatus, EUIStatusTag.ChatPaste);
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function UINewChat.OnClick_Send()
@@ -314,6 +383,39 @@ function UINewChat.OnClick_Send()
   if length <= 0 then return end
   if length > 60 then
     ShowCenterMessage(string.Get(21185));
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
     return;
   end
 
@@ -346,34 +448,10 @@ function UINewChat.OnClick_Send()
 
     sendBuffer:WriteInt64(roleId);
     sendBuffer:WriteStringWithByteL(inputField_Name.text);
-  elseif currentChannel == EChannel.AI then
-    if UIAIChat.bNextTalk then
-      ShowCenterMessage(string.Get(24876));
-      return;
-    end
-    
-    if Network.InUnbound then
-      ShowCenterMessage(string.Get(24881));
-      return;
-    end
-    
-    if UIAIChat.GetFirstCurrentTalk() <= 0 then
-      logError(" UIAIChat.currentTalk : " .. UIAIChat.currentTalk);
-      ShowCenterMessage("no string have no talk AI");
-      return;
-    end
-  
-    local npcId = UIAIChat.GetCurrentTalk();
-    sendBuffer:WriteUInt16(npcId);
-    sendBuffer:WriteStringWithByteL(message, DataManager.encoding_Unicode);
-    Chat.AddMessage(EChannel.AI, message, Role.playerId, Role.player.name, items, npcs);
-    UIAIChat.AddMessage(1, npcId, message);
-    UIAIChat.bNextTalk = true;
-    CGTimer.DoCountdown(UIAIChat.ResetNextTalk , 120);
     
   elseif currentChannel == EChannel.World then
     --全頻檢查號角
-    if Chat.hornCount <= 0 and not Network.InUnbound then
+    if Chat.hornCount <= 0 then
       ShowCenterMessage(string.Get(80466));
       return;
     end
@@ -472,5 +550,13 @@ function UINewChat.OnClick_Send()
 
   if Contains(currentChannel, EChannel.World, EChannel.Scene) then
     nextSpeakTime = CGTimer.time + nextSpeakInterval;
+  end
+end
+
+function UINewChat.SetOrder(order)
+  if order == nil or order == 0 then
+    this.uiController.canvas.sortingOrder = originOrder;
+  else
+    this.uiController.canvas.sortingOrder = order;
   end
 end

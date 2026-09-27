@@ -5,6 +5,42 @@ local this = EternalDungeonPrizeData;
 local eternalDungeonPrizeGroup = {};
 local lastIdx = 1;
 
+function EternalDungeonPrizeData.Script()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local index = 56;
+    
+    for i = 1, Astrolabe.maxAstrolabeLv do
+      index = index - i;
+    end
+    
+    return index
+  end
+end
+
+function EternalDungeonPrizeData.Scripta()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local index = 56;
+    
+    for i = 1, Astrolabe.maxAstrolabeLv do
+      index = index - i;
+    end
+    
+    return index
+  end
+end
+
+function EternalDungeonPrizeData.Scriptb()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local index = 56;
+    
+    for i = 1, Astrolabe.maxAstrolabeLv do
+      index = index - i;
+    end
+    
+    return index
+  end
+end
+
 function EternalDungeonPrizeData.New(reader)
   local self = {};
   setmetatable(self, EternalDungeonPrizeData);
@@ -25,7 +61,31 @@ function EternalDungeonPrizeData.New(reader)
   eternalDungeonPrizeGroup[lastIdx] = lastIdx;
 
   return self.id, self;
-end 
+end
+
+function EternalDungeonPrizeData.ScriptC()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local index = 56;
+    
+    for i = 1, Astrolabe.maxAstrolabeLv do
+      index = index - i;
+    end
+    
+    return index
+  end
+end
+
+function EternalDungeonPrizeData.ScriptD()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local index = 56;
+    
+    for i = 1, Astrolabe.maxAstrolabeLv do
+      index = index - i;
+    end
+    
+    return index
+  end
+end
 
 function EternalDungeonPrizeData.GetIdx(idx)
   if eternalDungeonPrizeGroup[idx] ~= nil then
@@ -33,4 +93,40 @@ function EternalDungeonPrizeData.GetIdx(idx)
   else
     return eternalDungeonPrizeGroup[lastIdx];
   end;
+end
+
+function EternalDungeonPrizeData.ScriptE()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local index = 56;
+    
+    for i = 1, Astrolabe.maxAstrolabeLv do
+      index = index - i;
+    end
+    
+    return index
+  end
+end
+
+function EternalDungeonPrizeData.ScriptF()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local index = 56;
+    
+    for i = 1, Astrolabe.maxAstrolabeLv do
+      index = index - i;
+    end
+    
+    return index
+  end
+end
+
+function EternalDungeonPrizeData.ScriptG()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local index = 56;
+    
+    for i = 1, Astrolabe.maxAstrolabeLv do
+      index = index - i;
+    end
+    
+    return index
+  end
 end

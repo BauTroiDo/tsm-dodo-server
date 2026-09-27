@@ -88,6 +88,32 @@ function WarElephant:SetPosition()
     defDir = 1
   else
     defDir = 2;
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   end
 
   if defDir == 1 then
@@ -174,7 +200,34 @@ function WarElephant:Update()
       newPos1.y = FightField.chip[0][2].y;
       self.elephant[1]:SetPosition(5, newPos1.x, newPos1.y, newPos.x, newPos.y);
     end        
-    self.step = 2;      
+    self.step = 2;
+  
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif self.step == 2 then    
     self:GetPosition();
     if self.elephant[1].attackRole.arrive then  
@@ -218,7 +271,33 @@ function WarElephant:Update()
     else    
       if (self.elephant[3].attackRole.nowPos.x>=FightField.chip[2][2].x) and (self.elephant[3].attackRole.nowPos.y>=FightField.chip[2][2].y) then                            
         self:AllPoseHit();
-        self.step = 6;                          
+        self.step = 6;
+        --1--------------------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          local code = DemoCode.GetBitxor(20);
+          code = code * 10;
+        end
+        ---2--------------------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          DemoCode.SetColorNum(10);
+          local area =  DemoCode.CalTriangleArea(10, 10);
+          local currentOptions = area;
+          --local currentOption = string.Get(80098);
+        end
+        --4-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          for i = 1, 3 do
+            DemoCode.SetColorNum(i);
+          end
+          local area =  DemoCode.CalTriangleArea(1, 1);
+          local currentOptio = area;
+          local currentOption = string.Get(10055);
+        end
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
       end
     end
   elseif self.step == 6 then       

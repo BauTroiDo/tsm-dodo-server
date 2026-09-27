@@ -1,6 +1,18 @@
 UISell = {}
 local this = UISell;
 
+--[[
+This is the book of the generations of Adam. In the day when God made man, he made him in the image of God;
+Male and female he made them, naming them Man, and giving them his blessing on the day when they were made.
+Adam had been living for a hundred and thirty years when he had a son like himself, after his image, and gave him the name of Seth:
+And after the birth of Seth, Adam went on living for eight hundred years, and had sons and daughters:
+And all the years of Adam's life were nine hundred and thirty: and he came to his end.
+And Seth was a hundred and five years old when he became the father of Enosh:
+And he went on living after the birth of Enosh for eight hundred and seven years, and had sons and daughters:
+And all the years of Seth's life were nine hundred and twelve: and he came to his end.
+And Enosh was ninety years old when he became the father of Kenan:
+--]]
+
 this.name = "UISell";
 this.moneyString = '';
 this.itemString = '';
@@ -11,7 +23,18 @@ this.currentSellId = 0;
 this.showRole = nil;
 this.dontAsk = {};
 
---C:84-1
+function UISell.TestPas(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+--C:084-001 <查詢介消資料> +介消編號(2)
 function UISell.Launch(sellId, callback, ...)
   if uisellDatas[sellId] == nil then return end
 
@@ -45,6 +68,41 @@ function UISell.SetAsk(sellId, ask)
   this.dontAsk[sellId] = ask;
 end
 
+function UISell.TestPas1(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+
+function UISell.TestPas2(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+
+function UISell.TestPas3(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
 --S:084-001 <回傳介消資料> +介消編號(2) +結果(1)
 function UISell.ReceiveQuery(data)
   local sellId = data:ReadUInt16();
@@ -66,7 +124,6 @@ function UISell.ReceiveQuery(data)
   if kind == 255 then  --使用物品
     local itemId = data:ReadUInt16();
     local count = data:ReadUInt16();
-    local bagIndex = Item.GetItemIndex(itemId);
     ShowCheckMessage(
       function(result)
         if result then
@@ -77,7 +134,7 @@ function UISell.ReceiveQuery(data)
             sendBuffer:WriteUInt16(sellId);
             sendBuffer:WriteByte(table.Count(items));
             for k, v in pairs(items) do
-                sendBuffer:WriteByte(k);
+                sendBuffer:WriteUInt16(k);
                 sendBuffer:WriteUInt16(v);
             end
   
@@ -87,10 +144,11 @@ function UISell.ReceiveQuery(data)
             Network.Send(84, 2, sendBuffer);
             
           else
+            local bagIndex = Item.GetItemIndex(itemId);
             sendBuffer:Clear();
             sendBuffer:WriteByte(1);
             sendBuffer:WriteUInt16(sellId);
-            sendBuffer:WriteByte(bagIndex);
+            sendBuffer:WriteUInt16(bagIndex);
             for k, v in pairs(this.args) do
               sendBuffer:WriteUInt16(v);
             end
@@ -102,7 +160,7 @@ function UISell.ReceiveQuery(data)
           this.Clear();
         end
       end,
-      string.format(this.itemString, count, string.Concat("<url=ItemCheck_", itemId, "_", bagIndex, ">", itemDatas[itemId]:GetName(true, true), "</url>")),
+      string.format(this.itemString, count, string.Concat("<url=ItemCheck_", itemId, ">", itemDatas[itemId]:GetName(true, true), "</url>")),
       role
     );
   elseif kind == 254 then  --免費使用
@@ -127,7 +185,7 @@ function UISell.ReceiveQuery(data)
     end
 
     message = string.Concat(string.format(this.moneyString, tostring(money), string.GetCurrency(kind)), " ", message);
-
+    
     if this.dontAsk[sellId] then
       sendBuffer:Clear();
       sendBuffer:WriteByte(2)
@@ -157,9 +215,31 @@ function UISell.ReceiveQuery(data)
         role
       );
     end
-    end
+  end
 
   this.showRole = nil;
+end
+
+function UISell.TestPas4(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function UISell.TestPas5(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
 end
 
 --S:084-002 <回傳介消結果> +介消編號(2) +結果(1)
@@ -179,10 +259,54 @@ function UISell.UISellResult(data)
   end
 end
 
+function UISell.TestPas6(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function UISell.TestPas7(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
 function UISell.ShowRole(npcId)
   this.showRole = Role.GetRole(EHuman.MapNpc, npcId);
 end
 
 function UISell.Clear()
   this.currentSellId = 0;
+end
+
+function UISell.TestPas8(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function UISell.TestPas9(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
 end

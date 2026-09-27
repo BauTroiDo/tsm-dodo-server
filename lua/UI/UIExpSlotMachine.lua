@@ -1,16 +1,25 @@
 UIExpSlotMachine = {}
-local this = UIExpSlotMachine;
+ESlotMachineKind = {
+  EXP = 1,
+  Sacrifice = 2
+}
 
+local this = UIExpSlotMachine;
 this.name = "UIExpSlotMachine";
 this.uiController = nil;
-
+local currentKind;
 local transform_FrameRect;
 local transform_Result;
+local transform_AwardSet;
 local rawImage_Machine;
 local rawImage_Drawbar;
+local rawImage_SacrificeLever;
+local rawImage_SacrificeEyeBlink;
 local text_Exp;
 local text_FollowNpc;
 local event_Stop;
+local event_Sacrifice;
+local image_AutoSwitch;
 local scrollContent_Award;
 local scrollItems_Award = {};
 local scrollContent_Result;
@@ -21,6 +30,21 @@ local slider_Exp;
 local text_NpcExp;
 local text_FullExp;
 local text_LvValue;
+local text_Content;
+local text_Result;
+local text_SacrificeSpend;
+local text_SacrificeMultiply;
+local text_SacrificePoints;
+local text_Congrats;
+local text_AwardContent;
+
+local functionGameObject = {};
+local gameObject_EXP;
+local gameObject_Sacrifice;
+local gameObject_Prev;
+local gameObject_Next;
+local gameObject_AwardBG;
+local gameObject_AwardSetBG;
 
 local awardsCount = 0;
 local followNpcName = {};
@@ -31,12 +55,21 @@ local stopTime = 0;
 local rollingState = false;
 local stopRolling = false;
 local slotTransforms;
-local stopStates = {false, false, false};
+local stopStates = { false, false, false };
 
-local awardsIcon = {"icon015","icon016","icon017","icon018","icon022","icon024","icon025","icon026","icon055"};
-local result = {};
-local total = {};
+local awardsIcon = { "icon015", "icon016", "icon017", "icon018", "icon022", "icon024", "icon025", "icon026", "icon055" };
+local lotteryResult = {};
+local record = {};
+local awardContent;
+local sacrificeResultText = {};
 local animTime = 2;
+local coolDown = 1;
+local slotRollOffset = -40;
+local slotRollDiff = -3;
+local stopReactTime = 0.5;
+local stopReactDiff = 0.2;
+local autoRoll = false;
+local iconPos = Vector3.New(-26, 0, 0);
 
 function UIExpSlotMachine.Initialize(go)
   local uiController = go:GetComponent("UIController");
@@ -44,19 +77,80 @@ function UIExpSlotMachine.Initialize(go)
   this.uiController.onOpen = this.OnOpen;
   this.uiController.onVisible = this.OnVisible;
 
+  gameObject_EXP = uiController:FindGameObject("GameObject_EXP");
+  gameObject_Sacrifice = uiController:FindGameObject("GameObject_Sacrifice");
+
+  table.insert(functionGameObject, ESlotMachineKind.EXP, gameObject_EXP);
+  table.insert(functionGameObject, ESlotMachineKind.Sacrifice, gameObject_Sacrifice);
+
   transform_FrameRect = uiController:FindGameObject("FrameRect").transform;
   transform_Result = uiController:FindGameObject("Result").transform;
 
   rawImage_Machine = uiController:FindRawImage("RawImage_Machine");
   rawImage_Drawbar = uiController:FindRawImage("RawImage_Drawbar");
+  rawImage_SacrificeEyeBlink = uiController:FindRawImage("RawImage_SacrificeEyeBlink");
+  rawImage_SacrificeLever = uiController:FindRawImage("RawImage_SacrificeLever");
+
+  rawImage_Drawbar:SetLoopEndCallBack(this.DrawbarCallBack);
+  rawImage_SacrificeLever.shiftCount = 6;
+  rawImage_SacrificeLever:SetLoopEndCallBack(this.GetRawImageCallBack(rawImage_SacrificeLever, 6, 5));
+  rawImage_SacrificeEyeBlink.shiftCount = 8;
+  rawImage_SacrificeEyeBlink:SetLoopEndCallBack(this.GetRawImageCallBack(rawImage_SacrificeEyeBlink, 8, 7));
+
+  transform_AwardSet = uiController:FindGameObject("AwardSet").transform;
+  gameObject_AwardSetBG = uiController:FindGameObject("GameObject_AwardSetBG");
 
   text_Exp = uiController:FindText("Text_Exp");
   text_FollowNpc = uiController:FindText("Text_FollowNpc");
   text_NpcExp = uiController:FindText("Text_T5_ExpValue");
   text_FullExp = uiController:FindText("Text_T5_ExpFullValue");
   text_LvValue = uiController:FindText("Text_LvValue");
+  text_Content = uiController:FindText("Text_Content");
+  text_Result = uiController:FindText("Text_Result");
 
   slider_Exp = uiController:FindSlider("Slider_Exp");
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 
   event_Stop = uiController:FindEvent("Image_Stop");
   event_Stop:SetListener(EventTriggerType.PointerClick, this.OnClick_Stop);
@@ -78,6 +172,20 @@ function UIExpSlotMachine.Initialize(go)
   tempEvent = uiController:FindEvent("Image_Close");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_CloseResult);
 
+  event_Sacrifice = uiController:FindEvent("Image_NormalButton");
+  event_Sacrifice:SetListener(EventTriggerType.PointerClick, this.OnClick_Sacrifice);
+
+  tempEvent = uiController:FindEvent("Image_Auto");
+  tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_AutoSwitch);
+
+  tempEvent = uiController:FindEvent("Image_Prev");
+  tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_ChangeMultiply);
+  tempEvent.parameter = -1;
+
+  tempEvent = uiController:FindEvent("Image_Next");
+  tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_ChangeMultiply);
+  tempEvent.parameter = 1;
+
   scrollContent_Award = uiController:FindScrollContent("ScrollContent_Award");
   scrollContent_Award.onInitialize = this.OnInitialize_ScrollContent_Award;
   scrollContent_Award.onItemChange = this.OnItemChange_ScrollContent_Award;
@@ -93,20 +201,48 @@ function UIExpSlotMachine.Initialize(go)
     scrollContent_Items[i] = uiController:FindScrollContent(string.Concat("ScrollContent_Item (", i, ")"));
     scrollItems_Items[i] = {};
     scrollContent_Items[i].onInitialize = this.OnInitialize_ScrollContent_Items;
-    if i == 1 then
-      scrollContent_Items[i].onItemChange = this.OnItemChange_ScrollContent_Items_Slot1;
-    elseif i == 2 then
-      scrollContent_Items[i].onItemChange = this.OnItemChange_ScrollContent_Items_Slot2;
-    else
-      scrollContent_Items[i].onItemChange = this.OnItemChange_ScrollContent_Items_Slot3;
-    end
+    scrollContent_Items[i].onItemChange = this.GetSlotItemChangeFunction(i);
     scrollContent_Items[i]:Initialize(1);
   end
 
-  rawImage_Drawbar:SetLoopEndCallBack(this.DrawbarCallBack);
+  text_SacrificeSpend = uiController:FindText("Text_SacrificeSpend");
+  text_SacrificeMultiply = uiController:FindText("Text_SacrificeMultiply");
+  text_SacrificePoints = uiController:FindText("Text_SacrificePoints");
+
+  gameObject_AwardBG = uiController:FindGameObject("GameObject_AwardBG");
+  text_Congrats = uiController:FindText("Text_Congrats");
+  text_AwardContent = uiController:FindText("Text_AwardContent");
+
+  gameObject_Prev = uiController:FindGameObject("Image_Prev");
+  gameObject_Next = uiController:FindGameObject("Image_Next");
+
+  image_AutoSwitch = uiController:FindImage("Image_Auto");
+  image_AutoSwitch.sprite = UI.GetSwitchSprite(false);
+
 end
 
 function UIExpSlotMachine.OnInitialize_ScrollContent_Award(scrollItems)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   for itemIndex = 0, scrollItems.Length - 1 do
     scrollItems_Award[itemIndex] = {};
     scrollItems_Award[itemIndex].items = {}
@@ -114,16 +250,31 @@ function UIExpSlotMachine.OnInitialize_ScrollContent_Award(scrollItems)
       scrollItems_Award[itemIndex].items[i] = scrollItems[itemIndex]:Find(string.Concat("Image_Item (", i, ")")):GetComponent("Image");
     end
 
-    scrollItems_Award[itemIndex].text_Exp = scrollItems[itemIndex]:Find("Text_Exp"):GetComponent("Text");
+    scrollItems_Award[itemIndex].text_Content = scrollItems[itemIndex]:Find("Text_Content"):GetComponent("Text");
   end
 end
 
 function UIExpSlotMachine.OnItemChange_ScrollContent_Award(dataIndex, itemIndex)
-  for i = 1, 3 do
-      scrollItems_Award[itemIndex].items[i].sprite = UI.GetSprite(awardsIcon[fNpcSlotDatas[dataIndex + 1].icons[i]]);
+  local data;
+  local content;
+  if currentKind == ESlotMachineKind.EXP then
+    data = fNpcSlotDatas[dataIndex + 1];
+    content = data.exp;
+    scrollItems_Award[itemIndex].text_Content.alignment = TextAnchor.MiddleCenter;
+  elseif currentKind == ESlotMachineKind.Sacrifice then
+    data = sacrificeSlotDatas[dataIndex + 1];
+    local award = data:GetAwardText(1);
+    if award ~= nil then
+      content = award;
+    end
+    scrollItems_Award[itemIndex].text_Content.alignment = TextAnchor.MiddleLeft;
   end
-  
-  scrollItems_Award[itemIndex].text_Exp.text = fNpcSlotDatas[dataIndex + 1].exp;
+
+  for i = 1, 3 do
+    scrollItems_Award[itemIndex].items[i].sprite = UI.GetSprite(awardsIcon[data.icons[i]]);
+  end
+
+  scrollItems_Award[itemIndex].text_Content.text = content;
 
   return true;
 end
@@ -131,106 +282,197 @@ end
 function UIExpSlotMachine.OnInitialize_ScrollContent_Result(scrollItems)
   for itemIndex = 0, scrollItems.Length - 1 do
     scrollItems_Result[itemIndex] = {};
-    scrollItems_Result[itemIndex].items = {}
+    scrollItems_Result[itemIndex].items = {};
     for i = 1, 3 do
       scrollItems_Result[itemIndex].items[i] = scrollItems[itemIndex]:Find(string.Concat("Image_Item (", i, ")")):GetComponent("Image");
     end
 
-    scrollItems_Result[itemIndex].text_Exp = scrollItems[itemIndex]:Find("Text_Exp"):GetComponent("Text");
+    scrollItems_Result[itemIndex].text_Content = scrollItems[itemIndex]:Find("Text_Content"):GetComponent("Text");
   end
 end
 
 function UIExpSlotMachine.OnItemChange_ScrollContent_Result(dataIndex, itemIndex)
-  for i = 1, 3 do
-      scrollItems_Result[itemIndex].items[i].sprite = UI.GetSprite(awardsIcon[total[itemIndex + 1].awardImages[i]]);
-  end
-  
-  scrollItems_Result[itemIndex].text_Exp.text = total[itemIndex + 1].exp;
+  local content;
+  local tempRecord;
 
+  if currentKind == ESlotMachineKind.Sacrifice then
+    local sacrificeRecord = Requiem.GetRecord();
+    tempRecord = sacrificeRecord[table.Count(sacrificeRecord) - dataIndex];
+    if tempRecord == nil then
+      return false
+    end
+    content = tempRecord.awardContent;
+    scrollItems_Result[itemIndex].text_Content.alignment = TextAnchor.MiddleLeft;
+  elseif currentKind == ESlotMachineKind.EXP then
+    tempRecord = record[itemIndex + 1];
+    content = tempRecord.exp;
+    scrollItems_Result[itemIndex].text_Content.alignment = TextAnchor.MiddleRight;
+  end
+
+  for i = 1, 3 do
+    scrollItems_Result[itemIndex].items[i].gameObject:SetActive(awardsIcon[tempRecord.icons[i]] ~= nil);
+    scrollItems_Result[itemIndex].items[i].sprite = UI.GetSprite(awardsIcon[tempRecord.icons[i]]);
+  end
+
+  scrollItems_Result[itemIndex].text_Content.text = content;
   return true;
 end
 
 function UIExpSlotMachine.OnInitialize_ScrollContent_Items(scrollItems)
   for itemIndex = 0, scrollItems.Length - 1 do
     scrollItems_Items[currentSlot][itemIndex] = {};
-    scrollItems_Items[currentSlot][itemIndex].items = scrollItems[itemIndex]:Find(string.Concat("Image_Item")):GetComponent("Image");
+    scrollItems_Items[currentSlot][itemIndex].items = scrollItems[itemIndex]:Find("Image_Item"):GetComponent("Image");
   end
 end
 
-function UIExpSlotMachine.OnItemChange_ScrollContent_Items_Slot1(dataIndex, itemIndex)
-  dataIndex = math.abs(dataIndex);
+function UIExpSlotMachine.GetSlotItemChangeFunction(slotIndex)
+  local resultFunction = function(dataIndex, itemIndex, index)
+    if index == nil then
+      index = slotIndex;
+    end
 
-  local count = math.fmod(dataIndex, awardsCount) + 1;
-  scrollItems_Items[1][itemIndex].items.sprite = UI.GetSprite(awardsIcon[count]);
-  if stopRolling and math.fmod(count + awardsCount - 3, awardsCount) + 1 == result[1] and DateTime.Subtract(CGTimer.serverTime, stopTime).TotalSeconds > 1 then
-    stopStates[1] = true;
+    dataIndex = math.abs(dataIndex);
+    local reactTime = stopReactTime + index * stopReactDiff;
+    local count = math.fmod(dataIndex, awardsCount) + 1;
+    scrollItems_Items[index][itemIndex].items.sprite = UI.GetSprite(awardsIcon[count]);
+    if stopRolling and math.fmod(count + awardsCount - 3, awardsCount) + 1 == lotteryResult[index] and DateTime.Subtract(CGTimer.serverTime, stopTime).TotalSeconds > reactTime then
+      stopStates[index] = true;
+    end
+
+    return true;
   end
-
-  return true;
+  return resultFunction
 end
 
-function UIExpSlotMachine.OnItemChange_ScrollContent_Items_Slot2(dataIndex, itemIndex)
-  dataIndex = math.abs(dataIndex);
-
-  local count = math.fmod(dataIndex, awardsCount) + 1;
-  scrollItems_Items[2][itemIndex].items.sprite = UI.GetSprite(awardsIcon[count]);
-  if stopRolling and math.fmod(count + awardsCount - 3, awardsCount) + 1 == result[2] and DateTime.Subtract(CGTimer.serverTime, stopTime).TotalSeconds > 1.5 then
-    stopStates[2] = true;
+function UIExpSlotMachine.OnOpen(kind)
+  currentKind = kind;
+  if currentKind == ESlotMachineKind.EXP then
+    TextureManager.SetPng(ETextureUseType.UI, "ExpSlotMachine01", rawImage_Machine);
+    TextureManager.SetPng(ETextureUseType.UI, "icon_Pull", rawImage_Drawbar);
+    gameObject_AwardSetBG:SetActive(false);
+    gameObject_AwardBG:SetActive(false);
+    text_Content.text = string.Get(20185);
+    text_Result.text = string.Get(21947);
+  elseif currentKind == ESlotMachineKind.Sacrifice then
+    --local open = Requiem.TryOpen(ERequiemFunctionKind.Sacrifice);
+    --if open == false then
+    --  return open
+    --end
+    TextureManager.SetPng(ETextureUseType.UI, "sacrifice01", rawImage_Machine);
+    TextureManager.SetPng(ETextureUseType.UI, "sacrifice02", rawImage_SacrificeEyeBlink);
+    TextureManager.SetPng(ETextureUseType.UI, "sacrifice03", rawImage_SacrificeLever);
+    gameObject_AwardSetBG:SetActive(true);
+    text_Content.text = string.Get(23806);
+    text_Result.text = string.Get(23807);
   end
 
-  return true;
-end
+  this.SetAutoRoll(false);
 
-function UIExpSlotMachine.OnItemChange_ScrollContent_Items_Slot3(dataIndex, itemIndex)
-  dataIndex = math.abs(dataIndex);
-
-  local count = math.fmod(dataIndex, awardsCount) + 1;
-  scrollItems_Items[3][itemIndex].items.sprite = UI.GetSprite(awardsIcon[count]);
-  if stopRolling and math.fmod(count + awardsCount - 3, awardsCount) + 1 == result[3] and DateTime.Subtract(CGTimer.serverTime, stopTime).TotalSeconds > 2 then
-    stopStates[3] = true;
-  end
-
-  return true;
-end
-
-function UIExpSlotMachine.OnOpen()
-  TextureManager.SetPng(ETextureUseType.UI, "ExpSlotMachine01",  rawImage_Machine);
-  TextureManager.SetPng(ETextureUseType.UI, "icon_Pull",  rawImage_Drawbar);
-
-  slotTransforms = {scrollContent_Items[1].gameObject.transform, scrollContent_Items[2].gameObject.transform, scrollContent_Items[3].gameObject.transform};
+  slotTransforms = { scrollContent_Items[1].gameObject.transform, scrollContent_Items[2].gameObject.transform, scrollContent_Items[3].gameObject.transform };
 
   rawImage_Drawbar.uvRect = Rect.New(0, 0.75, 1, 0.25);
   rawImage_Drawbar:StopShiftUV();
 
-  currentfollowNpcIndex = 1;
+  rawImage_SacrificeEyeBlink.uvRect = Rect.New(0, 7 / 8, 1, 1 / 8);
+  rawImage_SacrificeEyeBlink:StopShiftUV();
+
+  rawImage_SacrificeLever.uvRect = Rect.New(0, 0, 1, 1 / 6);
+  rawImage_SacrificeLever:StopShiftUV();
+
   awardsCount = table.Count(awardsIcon);
   this.OnClick_CloseResult();
+
+  for i = 1, table.Count(functionGameObject) do
+    functionGameObject[i]:SetActive(i == kind);
+  end
+
+  this.UpdateItemsPage();
+  this.UpdateAwardPage();
+
+  if kind == ESlotMachineKind.Sacrifice then
+    this.UpdateMultiply();
+    Requiem.UpdateSacrificePoints();
+    this.ShowAwardContent(false);
+    return true;
+  end
+
+  currentfollowNpcIndex = 1;
   this.GetFollowNpc();
   this.SetFollowNpc(0);
   this.UpdateTotalExp();
-  this.UpdateAwardPage();
-  this.UpdateItemsPage();
+  
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+
   return true;
 end
 
 function UIExpSlotMachine.OnVisible(visible)
   if visible then
-    UIFrame.Active(transform_FrameRect, string.Get(21945), this.OnClose, this.OnClick_Help);
+    if currentKind == ESlotMachineKind.EXP then
+      UIFrame.Active(transform_FrameRect, string.Get(21945), this.OnClose, this.OnClick_Help);
+    elseif currentKind == ESlotMachineKind.Sacrifice then
+      UIFrame.Active(transform_FrameRect, string.Get(23790), this.OnClose, this.OnClick_Help);
+    end
   end
 end
 
 function UIExpSlotMachine.OnClick_Help(checkShow)
-  if checkShow ~= true then
+  if checkShow ~= true and currentKind == ESlotMachineKind.EXP then
     UI.Open(UITutorialHint, 53, this);
+  end
+
+  if checkShow ~= true and currentKind == ESlotMachineKind.Sacrifice then
+    UI.Open(UITutorialHint, 68, this);
   end
 
   return true;
 end
 
 function UIExpSlotMachine.OnClose()
-  if rollingState then 
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  if rollingState then
     ShowCenterMessage(string.Get(71218));
-    return;
+    return ;
   end
 
   UI.Close(this);
@@ -238,7 +480,30 @@ function UIExpSlotMachine.OnClose()
 end
 
 function UIExpSlotMachine.OnClick_Tenfold()
-  if this.CheckPull() then return end
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  if this.CheckPull() then
+    return
+  end
 
   if followNpcName[currentfollowNpcIndex].turn >= 2 then
     UISell.Launch(66, nil, followNpcName[currentfollowNpcIndex].fIndex, followNpcName[currentfollowNpcIndex].npcId);
@@ -248,7 +513,9 @@ function UIExpSlotMachine.OnClick_Tenfold()
 end
 
 function UIExpSlotMachine.OnClick_One()
-  if this.CheckPull() then return end
+  if this.CheckPull() then
+    return
+  end
 
   if followNpcName[currentfollowNpcIndex].turn >= 2 then
     UISell.Launch(65, nil, followNpcName[currentfollowNpcIndex].fIndex, followNpcName[currentfollowNpcIndex].npcId);
@@ -268,7 +535,8 @@ function UIExpSlotMachine.CheckPull()
     return true;
   end
 
-  if Role.fightNpc ~= nil then  --出戰武將不可選取
+  if Role.fightNpc ~= nil then
+    --出戰武將不可選取
     if followNpcName[currentfollowNpcIndex].npcId == Role.fightNpc.npcId then
       ShowCenterMessage(string.Get(80434));
       return true;
@@ -282,7 +550,8 @@ function UIExpSlotMachine.CheckPull()
   end
 
   local npcData = npcDatas[followNpcName[currentfollowNpcIndex].npcId];
-  if npcData ~= nil and npcData.kind == 53 then  --養成武將不可選取
+  if npcData ~= nil and npcData.kind == 53 then
+    --養成武將不可選取
     ShowCenterMessage(string.Get(80433));
     return true;
   end
@@ -301,8 +570,29 @@ end
 function UIExpSlotMachine.OnClick_Left()
   if rollingState then
     ShowCenterMessage(string.Get(71218));
-    return;
+    return ;
   end
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 
   this.SetFollowNpc(-1);
 end
@@ -310,7 +600,7 @@ end
 function UIExpSlotMachine.OnClick_Right()
   if rollingState then
     ShowCenterMessage(string.Get(71218));
-    return;
+    return ;
   end
 
   this.SetFollowNpc(1);
@@ -323,9 +613,18 @@ end
 function UIExpSlotMachine.Pull()
   rawImage_Drawbar:ShiftUV(1, 4, 0.1, 0);
 
+  event_Sacrifice.clickScale = false;
+  event_Sacrifice:SetColor(Color.LightGray);
   event_Stop.gameObject:SetActive(true);
   startTime = CGTimer.serverTime;
   rollingState = true;
+  if currentKind == ESlotMachineKind.Sacrifice then
+    this.ShowAwardContent(false);
+    rawImage_SacrificeLever:ShiftUV(1, 6, 0.1, 0);
+    rawImage_SacrificeEyeBlink:ShiftUV(1, 8, 0.25, 0);
+  elseif currentKind == ESlotMachineKind.EXP then
+    rawImage_Drawbar:ShiftUV(1, 4, 0.1, 0);
+  end
 
   CGTimer.AddListener(this.Rolling, 0.001);
 end
@@ -335,16 +634,34 @@ function UIExpSlotMachine.DrawbarCallBack()
   rawImage_Drawbar.uvRect = Rect.New(0, 0.75, 1, 0.25);
 end
 
+function UIExpSlotMachine.GetRawImageCallBack(rawImage, imageCount, default)
+  local resultFunction = function()
+    local interval = 1 / imageCount;
+    rawImage.enabled = true;
+    rawImage.uvRect = Rect.New(0, interval * default, 1, interval);
+  end
+  return resultFunction
+end
+
 function UIExpSlotMachine.UpdateAwardPage()
-  scrollContent_Award:Reset(table.Count(fNpcSlotDatas));
+  if currentKind == ESlotMachineKind.EXP then
+    scrollContent_Award:Reset(table.Count(fNpcSlotDatas));
+  elseif currentKind == ESlotMachineKind.Sacrifice then
+    scrollContent_Award:Reset(table.Count(sacrificeSlotDatas));
+  end
 end
 
 function UIExpSlotMachine.UpdateResultPage()
-  scrollContent_Result:Reset(table.Count(total));
+  if currentKind == ESlotMachineKind.EXP then
+    scrollContent_Result:Reset(table.Count(record));
+  end
+  if currentKind == ESlotMachineKind.Sacrifice then
+    scrollContent_Result:Reset(table.Count(Requiem.GetRecord()));
+  end
 end
 
 function UIExpSlotMachine.UpdateItemsPage()
-  for i = 1, 3 do 
+  for i = 1, 3 do
     currentSlot = i;
     scrollContent_Items[i]:Reset(awardsCount);
   end
@@ -354,7 +671,7 @@ end
 
 function UIExpSlotMachine.UpdateTotalExp()
   --C:076-005 <拉拉更新彩金>
-    Network.Send(76, 5);
+  Network.Send(76, 5);
 end
 
 function UIExpSlotMachine.GetFollowNpc()
@@ -366,18 +683,20 @@ function UIExpSlotMachine.GetFollowNpc()
 
     if followNpc ~= nil then
       index = index + 1;
-      followNpcName[index] = {name = followNpc.name,
-                              npcId = followNpc.npcId,
-                              fIndex = i,
-                              canGrow = followNpc.data.canGrow,
-                              turn = followNpc:GetAttribute(EAttribute.Turn)};
+      followNpcName[index] = { name = followNpc.name,
+                               npcId = followNpc.npcId,
+                               fIndex = i,
+                               canGrow = followNpc.data.canGrow,
+                               turn = followNpc:GetAttribute(EAttribute.Turn) };
     end
   end
 end
 
 function UIExpSlotMachine.SetFollowNpc(index)
   text_FollowNpc.text = "";
-  if followNpcName[currentfollowNpcIndex] == nil then return end
+  if followNpcName[currentfollowNpcIndex] == nil then
+    return
+  end
 
   if currentfollowNpcIndex + index < 1 then
     currentfollowNpcIndex = table.Count(followNpcName);
@@ -393,12 +712,38 @@ function UIExpSlotMachine.SetFollowNpc(index)
 end
 
 function UIExpSlotMachine.OnClick_Stop()
+  if stopRolling then
+    return
+  end
   stopRolling = true;
   stopTime = CGTimer.serverTime;
+  event_Stop.clickScale = false;
+  
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function UIExpSlotMachine.SetStopState(state)
-  for i = 1, 3 do 
+  for i = 1, 3 do
     stopStates[i] = state;
   end
 end
@@ -408,38 +753,30 @@ function UIExpSlotMachine.Rolling()
     this.SetStopState(true);
   end
 
-  if not stopStates[1] then
-    slotTransforms[1].localPosition = Vector3.New(-26, slotTransforms[1].localPosition.y - 40, 0);
-  else
-    slotTransforms[1].localPosition = Vector3.New(-26, result[1] * 50 - 24, 0);
-  end
-
-  if not stopStates[2] then
-    slotTransforms[2].localPosition = Vector3.New(-26, slotTransforms[2].localPosition.y - 43, 0);
-  else
-    slotTransforms[2].localPosition = Vector3.New(-26, result[2] * 50 - 24, 0);
-  end
-
-  if not stopStates[3] then
-    slotTransforms[3].localPosition = Vector3.New(-26, slotTransforms[3].localPosition.y - 47, 0);
-  else
-    slotTransforms[3].localPosition = Vector3.New(-26, result[3] * 50 - 24, 0);
+  for i = 1, 3 do
+    this.RollSlot(i);
   end
 
   if stopStates[1] and stopStates[2] and stopStates[3] then
     CGTimer.RemoveListener(this.Rolling);
     this.UpdateResultPage();
-    CGTimer.DoFunctionDelay(1,
-      function()
-        rollingState = false;
-        this.SetStopState(false);
-        stopRolling = false;
-        transform_Result.gameObject:SetActive(true);
-        this.UpdateItemsPage();
-        this.UpdateTotalExp();
-      end
-    );
+    scrollContent_Result:Refresh();
+    if currentKind == ESlotMachineKind.Sacrifice then
+      this.ShowAwardContent(true);
+    end
+    transform_Result.gameObject:SetActive(true);
+    CGTimer.DoFunctionDelay(coolDown, this.EndRolling);
   end
+end
+
+function UIExpSlotMachine.RollSlot(index)
+  local yPos;
+  if not stopStates[index] then
+    yPos = slotTransforms[index].localPosition.y - slotRollOffset + slotRollDiff * index;
+  else
+    yPos = lotteryResult[index] * 50 - 24;
+  end
+  slotTransforms[index].localPosition = iconPos + Vector3.New(0, yPos, 0);
 end
 
 function UIExpSlotMachine.ReceiveExp(data)
@@ -459,16 +796,16 @@ end
 function UIExpSlotMachine.SetExpSlider()
   if followNpcName[currentfollowNpcIndex] == nil then
     this.ResetSlider();
-    return;
+    return ;
   end
-  
+
   local followNpc = Role.GetRole(EHuman.FollowNpc, Role.playerId, followNpcName[currentfollowNpcIndex].fIndex);
-  
+
   if followNpc == nil then
     this.ResetSlider();
-    return;
+    return ;
   end
- 
+
   local turn = followNpc:GetAttribute(EAttribute.Turn);
   local level = followNpc:GetAttribute(EAttribute.Lv);
   local exp = followNpc:GetAttribute(EAttribute.Exp);
@@ -504,8 +841,8 @@ function UIExpSlotMachine.SetExpSlider()
 end
 
 function UIExpSlotMachine.OpenLottery(data)
-  result = {};
-  total = {}
+  lotteryResult = {};
+  record = {};
   local count = data:ReadByte();
   local maxExp = 0;
 
@@ -513,21 +850,137 @@ function UIExpSlotMachine.OpenLottery(data)
     local award = {};
     award.kind = data:ReadByte();
     award.exp = data:ReadInt32();
-    award.awardImages = {};
+    award.icons = {};
     for i = 1, 3 do
-      award.awardImages[i] = data:ReadByte();
+      award.icons[i] = data:ReadByte();
     end
 
     if award.exp >= maxExp then
       for i = 1, 3 do
-        result[i] = award.awardImages[i];
+        lotteryResult[i] = award.icons[i];
       end
 
       maxExp = award.exp;
     end
-    
-    table.insert(total, award);
+
+    table.insert(record, award);
+  end
+  this.Pull();
+end
+
+function UIExpSlotMachine.OnClick_Sacrifice()
+  if rollingState then
+    return
+  end
+  Requiem.Sacrifice();
+end
+
+function UIExpSlotMachine.ReceiveSacrifice(result, text)
+  if not UI.IsVisible(UIExpSlotMachine) then
+    UIExpSlotMachine.ShowAwardContent(true);
+    return
+  end
+  lotteryResult = result.icons;
+  awardContent = result.awardContent;
+  sacrificeResultText = text;
+  this.Pull();
+end
+
+function UIExpSlotMachine.OnClick_ChangeMultiply(uiEvent)
+  local change;
+  if rollingState or autoRoll then
+    return
+  end
+  if uiEvent == nil then
+    change = 0;
+  else
+    change = uiEvent.parameter;
   end
 
-  this.Pull();
+  Requiem.ChangeMultiply(change);
+  this.UpdateMultiply();
+end
+
+function UIExpSlotMachine.UpdateMultiply()
+  local prev, next, outcome = Requiem.GetMultiply();
+  gameObject_Prev:SetActive(prev);
+  gameObject_Next:SetActive(next);
+  text_SacrificeMultiply.text = outcome;
+  text_SacrificeSpend.text = outcome;
+end
+
+function UIExpSlotMachine.EndRolling()
+  rollingState = false;
+  this.SetStopState(false);
+  stopRolling = false;
+  event_Stop.clickScale = true;
+  event_Sacrifice:SetColor(Color.White);
+  event_Sacrifice.clickScale = false;
+  if autoRoll then
+    this.OnClick_Sacrifice();
+  end
+end
+
+function UIExpSlotMachine.OnClick_AutoSwitch(uiEvent)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  this.SetAutoRoll(uiEvent.parameter);
+end
+
+function UIExpSlotMachine.SetAutoRoll(state)
+  if state == nil then
+    autoRoll = not autoRoll;
+  else
+    autoRoll = state;
+  end
+  if rollingState and autoRoll then
+    autoRoll = false;
+  end
+  image_AutoSwitch.sprite = UI.GetSwitchSprite(autoRoll);
+end
+
+function UIExpSlotMachine.UpdateSacrificePoints(value)
+  if currentKind ~= ESlotMachineKind.Sacrifice then
+    return
+  end
+  text_SacrificePoints.text = string.format(string.Get(23776), value);
+end
+
+function UIExpSlotMachine.ShowAwardContent(flag)
+  gameObject_AwardBG:SetActive(flag);
+  if flag and currentKind == ESlotMachineKind.Sacrifice then
+    text_Congrats.text = string.Get(30098);
+    text_AwardContent.text = awardContent;
+    Requiem.ShowSacrificeMessage(sacrificeResultText);
+  else
+    text_Congrats.text = "";
+    text_AwardContent.text = "";
+  end
+end
+
+function UIExpSlotMachine.GetCurrentKind()
+  return currentKind
+end
+
+function UIExpSlotMachine.Sacrificing()
+  return UI.IsVisible(this) and currentKind == ESlotMachineKind.Sacrifice
 end

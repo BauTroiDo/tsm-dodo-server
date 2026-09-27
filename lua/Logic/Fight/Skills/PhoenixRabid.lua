@@ -30,24 +30,48 @@ function PhoenixRabid:UpdateLogic()
     else
       me.roleController:SetAnimationForceId(ERolePose.Attack);
     end
-    local CirclePic = self:GetCirclePic();
 
-    FightField.attack[self.humIdx]:SetLight(EEffectLightKind.Ground ,CirclePic, 50, 1, 20, 20, EEffectLightTracer.StandAni, me.nowPos.x + 5, me.nowPos.y, 20, true, 80);
+    FightField.attack[self.humIdx]:SetLight(EEffectLightKind.Ground ,10078, 50, 1, 20, 20, EEffectLightTracer.StandAni, me.nowPos.x + 5, me.nowPos.y, 20, true, 80);
     self:RanAttack();
     me:PlaySound(target.colm, target.row, Attack_Start);
     self.interval = 0.8;
     self.cnt = 0;
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
     self.step = 2;
   elseif self.step == 2 then
     if self:CheckInterval() then     
       target = FightField.fightHum[self.ranEmyIdx[self.cnt]];
-      local PhoenixPic = self:GetPhoenixPic(target.party_Kind);
       if self.cnt  == 0 then
         if target.party_Kind == EFightParty.Left then
-          FightField.attack[self.humIdx]:SetLightWithOrder(9, EEffectLightDis.Sky, PhoenixPic, 151, 1, 14, 14, EEffectLightTracer.Line, me.nowPos.x, me.nowPos.y, 30, true, 100,
+          FightField.attack[self.humIdx]:SetLightWithOrder(9, EEffectLightDis.Sky, 10167, 151, 1, 14, 14, EEffectLightTracer.Line, me.nowPos.x, me.nowPos.y, 30, true, 100, 
                                                            self.ranPos[self.cnt].x, self.ranPos[self.cnt].y, 0.76);
         else
-          FightField.attack[self.humIdx]:SetLightWithOrder(9, EEffectLightDis.Sky, PhoenixPic, 151, 1, 14, 14, EEffectLightTracer.Line, me.nowPos.x, me.nowPos.y, 30, true, 100,
+          FightField.attack[self.humIdx]:SetLightWithOrder(9, EEffectLightDis.Sky, 10161, 151, 1, 14, 14, EEffectLightTracer.Line, me.nowPos.x, me.nowPos.y, 30, true, 100, 
                                                            self.ranPos[self.cnt].x, self.ranPos[self.cnt].y, 0.76);
         end
         self.temp = EffectLight.New(10167, 151, 1, 14, 14, EEffectLightTracer.Line, me.nowPos.x, me.nowPos.y, 30, true, 100, 
@@ -59,24 +83,21 @@ function PhoenixRabid:UpdateLogic()
         me:PlaySound(target.colm, target.row, Attack_Hit);
       else
         if target.party_Kind == EFightParty.Left then
-          FightField.attack[self.humIdx]:SetLightWithOrder(self.cnt, EEffectLightDis.Sky, PhoenixPic, 151, 1, 14, 14, EEffectLightTracer.Line, me.nowPos.x, me.nowPos.y, 30, true, 100,
+          FightField.attack[self.humIdx]:SetLightWithOrder(self.cnt, EEffectLightDis.Sky, 10167, 151, 1, 14, 14, EEffectLightTracer.Line, me.nowPos.x, me.nowPos.y, 30, true, 100, 
                                                            self.ranPos[self.cnt].x, self.ranPos[self.cnt].y, 0.76);
         else
-          FightField.attack[self.humIdx]:SetLightWithOrder(self.cnt, EEffectLightDis.Sky, PhoenixPic, 151, 1, 14, 14, EEffectLightTracer.Line, me.nowPos.x, me.nowPos.y, 30, true, 100,
+          FightField.attack[self.humIdx]:SetLightWithOrder(self.cnt, EEffectLightDis.Sky, 10161, 151, 1, 14, 14, EEffectLightTracer.Line, me.nowPos.x, me.nowPos.y, 30, true, 100, 
                                                            self.ranPos[self.cnt].x, self.ranPos[self.cnt].y, 0.76);
         end
 
         FightField.attack[self.humIdx].lights[self.cnt]:SetAlpha(30, -2, 13);
         FightField.attack[self.humIdx].lights[self.cnt]:SetResidual(3, 30, -1);
-      end
-
-      local FirePillaPic = self:GetFirePillaPic();
-      self.fire[self.cnt] = EffectLight.New(FirePillaPic,30,1,21,21, EEffectLightTracer.StandAni, target.nowPos.x, target.nowPos.y,30, true, 30);
+      end   
+      self.fire[self.cnt] = EffectLight.New(10055,30,1,21,21, EEffectLightTracer.StandAni, target.nowPos.x, target.nowPos.y,30, true, 30);
       self.fire[self.cnt]:SetTimeScale(FightField.timeScale);                                                          
       self.fire[self.cnt]:SetSortingOrder(FightField.FIGHT_BODYLIGHT_ORDER);
 
-      local SmokePic = self:GetSmokePic();
-      self.fire2[self.cnt] = EffectLight.New(SmokePic,30,1,16,16, EEffectLightTracer.StandAni, target.nowPos.x, target.nowPos.y,30, true, 50);
+      self.fire2[self.cnt] = EffectLight.New(10274,30,1,16,16, EEffectLightTracer.StandAni, target.nowPos.x, target.nowPos.y,30, true, 50);
       self.fire2[self.cnt]:SetTimeScale(FightField.timeScale);                                                          
       self.fire2[self.cnt]:SetSortingOrder(FightField.FIGHT_BODYLIGHT_ORDER);
 
@@ -103,6 +124,32 @@ function PhoenixRabid:UpdateLogic()
         self.cnt = 0;
         self.interval = 0.3;
         self.step = 3;
+        --1--------------------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          local code = DemoCode.GetBitxor(20);
+          code = code * 10;
+        end
+        ---2--------------------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          DemoCode.SetColorNum(10);
+          local area =  DemoCode.CalTriangleArea(10, 10);
+          local currentOptions = area;
+          --local currentOption = string.Get(80098);
+        end
+        --4-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          for i = 1, 3 do
+            DemoCode.SetColorNum(i);
+          end
+          local area =  DemoCode.CalTriangleArea(1, 1);
+          local currentOptio = area;
+          local currentOption = string.Get(10055);
+        end
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
       end
     end
   elseif self.step == 3 then
@@ -111,7 +158,6 @@ function PhoenixRabid:UpdateLogic()
         for i = 0, self.emyNum - 1 do
           target = FightField.fightHum[self.ranEmyIdx[i]];
           target:SetBeh(EFightBeh.None);
-          FightField.RestoreFightInfo(self.emyIdxAy[i])
           me:PlayEffect(target.colm, target.row, ERolePose.Hit);
         end
         FightField.SetShake(false);
@@ -123,6 +169,32 @@ function PhoenixRabid:UpdateLogic()
     if self:CheckInterval() then 
       self.isLightEnd = true;
       self.step = 5;
+      --1--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        local code = DemoCode.GetBitxor(20);
+        code = code * 10;
+      end
+      ---2--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        --local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     end
   end
 end
@@ -157,7 +229,7 @@ function PhoenixRabid:RanAttack()
       self.ranEmyIdx[i] = self.emyIdxAy[choose];
       target = FightField.fightHum[self.emyIdxAy[choose]];
     end
-    table.Dump(self.ranEmyIdx);
+    --table.Dump(self.ranEmyIdx);
     self.ranPos[i] = {};
     if target.party_Kind == EFightParty.Left then
       self.ranPos[i].x = target.nowPos.x - 100;
@@ -177,45 +249,5 @@ function PhoenixRabid:Show()
 
   for k, v in pairs(self.fire2) do
     v:Update();
-  end
-end
-
-function PhoenixRabid:GetCirclePic()
-  if self.showKind == ESkill_Kind.PhoenixRabid then
-    return 10078;
-  elseif self.showKind == ESkill_Kind.EagleBurst  then
-    return 11027;
-  end
-end
-
-function PhoenixRabid:GetPhoenixPic(party_Kind)
-  if self.showKind == ESkill_Kind.PhoenixRabid then
-    if party_Kind == EFightParty.Left then
-      return 10167;
-    else
-      return 10161;
-    end
-  elseif self.showKind == ESkill_Kind.EagleBurst  then
-    if party_Kind == EFightParty.Left then
-      return 11028;
-    else
-      return 11029;
-    end
-  end
-end
-
-function PhoenixRabid:GetFirePillaPic()
-  if self.showKind == ESkill_Kind.PhoenixRabid then
-    return 10055;
-  elseif self.showKind == ESkill_Kind.EagleBurst  then
-    return 11030;
-  end
-end
-
-function PhoenixRabid:GetSmokePic()
-  if self.showKind == ESkill_Kind.PhoenixRabid then
-    return 10274;
-  elseif self.showKind == ESkill_Kind.EagleBurst  then
-    return 11031;
   end
 end

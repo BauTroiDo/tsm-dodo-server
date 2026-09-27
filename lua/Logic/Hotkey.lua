@@ -1,13 +1,19 @@
 local json = require 'cjson'
-EHotkeyType =
-{
-  PlayerMain = 1,
-  PlayerSub = 2,
-  NpcSkill = 3,
-  SceneBattleMain = 4,
-  SceneBattleSub = 5,
-  Equip = 6,
-  CurrentEquip = 7
+
+EHotKeyType = {
+  None = 0,
+  Skill = 1,
+  Item = 2,
+  Fight = 3
+}
+
+-- 入口來源
+EUseSource = {
+  None = 0,
+  SkillStree = 1,
+  UIItemInfo = 2,
+  UIFight = 3,
+  CloseOnTurnUI = 4
 }
 
 -- 顯示模式
@@ -18,57 +24,21 @@ EHotkeyDisplayMode = {
   Both = 3
 }
 
-EHotkeyEditMode =
-{
-  None = 0,
-  Setting = 1,
-  Clear = -1
-}
-
-EHotkeyMode =
-{
-  None = 0,
-  FightField = 1,
-  SkillTree = 2,
-  ItemInfo = 3,
-  SceneBattle = 4,
-  Equip = 5
-}
-
-EHotKeyIdType = {
-  Mixed = 0,
-  Skill = 1,
-  Item = 2,
-  Equip = 3
-}
-
-EHotkeyUI =
-{
-  Main = 1,
-  Sub = 2
-}
-
 HotkeyData = {};
 HotkeyData.__index = HotkeyData;
 
-function HotkeyData.New(pageCount, btnCount, keyType)
+function HotkeyData.New(pageCount, btnCount)
   local self = {};
   setmetatable(self, HotkeyData);
 
   self.maxPages = pageCount;
-  self.maxKeys = btnCount;
-  self.count = pageCount * btnCount;
-  self.keys = {};
-  for p = 1, self.maxPages do
-    for k = 1 , self.maxKeys do
-      local key = {};
-      key.useId = -1;
-      key.pageIndex = p;
-      key.keyIndex = k;
-      table.insert(self.keys, key);
+  self.maxElements = btnCount;
+  self.ids = {};
+  for i = 1, self.maxPages do 
+    for j = 1 , self.maxElements do
+      self.ids[(i-1) * self.maxElements + j] = -1;
     end
   end
-  self.keyType = keyType;
   return self;
 end
 
@@ -76,359 +46,439 @@ Hotkey = {}
 Hotkey.__index = Hotkey;
 
 local this = Hotkey;
+this.playerSkills = {};
+this.items = {};
+this.npcSkills = {};
+this.currentRole = nil;
+this.nextRole = nil;
 this.currentDisplayMode = EHotkeyDisplayMode.None;
+this.nextDisplayMode = EHotkeyDisplayMode.None;
+this.isClearMode = false;
+this.currentItemPage = 0;
+this.currentSkillPage = 0;
 
-local currentRole = nil;
-local hotkeyData = {};
-local currentHotkey = {};
-local currentDisplay = {};
-local currentSelectId = {};
-local currentPage = {};
-local currentHotkeyMode;
-local currentEditMode = EHotkeyEditMode.None;
-local nextHotkeyMode;
-local followIndex = 0;
-local directUse = true;
+function Hotkey.InitViewData(hotkeyData)
+  -- logError("* Hotkey.InitViewData *");
+  this.playerSkills = HotkeyData.New(hotkeyData[EHotKeyType.Skill].maxPages, hotkeyData[EHotKeyType.Skill].maxElements);
+  this.playerSkills.ids = hotkeyData[EHotKeyType.Skill].ids;
+  this.items = HotkeyData.New(hotkeyData[EHotKeyType.Item].maxPages, hotkeyData[EHotKeyType.Item].maxElements);
+  this.items.ids = hotkeyData[EHotKeyType.Item].ids;
+  this.npcSkills = HotkeyData.New(1, 5);
+  this.UpdateNpcSkill();
+end
 
---region control
-function Hotkey.Show(mode)
-  if mode == EHotkeyMode.FightField then
-    this.SetCurrentHotkey(EHotkeyUI.Sub, EHotkeyType.PlayerSub);
-    this.SetCurrentDisplayUI(EHotkeyUI.Main, true);
-    this.SetCurrentDisplayUI(EHotkeyUI.Sub, true);
-    this.SwitchEditMode(EHotkeyEditMode.None);
-    this.currentDisplayMode = EHotkeyDisplayMode.Both;
-    UIHotkey.SetSortOrder(UIFight.GetSortOrder());
-
-  elseif mode == EHotkeyMode.SkillTree then
-    this.SetCurrentHotkey(EHotkeyUI.Main, EHotkeyType.PlayerMain);
-    this.SetCurrentDisplayUI(EHotkeyUI.Main, true);
-    this.SetCurrentDisplayUI(EHotkeyUI.Sub, false);
-    this.SwitchEditMode(EHotkeyEditMode.Setting);
-    this.currentDisplayMode = EHotkeyDisplayMode.SingleSkill;
-    UIHotkey.SetSortOrder(UISkillTree.GetSortOrder());
-    Hotkey.UpdateRoleSkill();
-
-  elseif mode == EHotkeyMode.ItemInfo then
-    this.SetCurrentHotkey(EHotkeyUI.Sub, EHotkeyType.PlayerSub);
-    this.SetCurrentDisplayUI(EHotkeyUI.Main, false);
-    this.SetCurrentDisplayUI(EHotkeyUI.Sub, true);
-    this.SwitchEditMode(EHotkeyEditMode.Setting);
-    this.currentDisplayMode = EHotkeyDisplayMode.SingleItem;
-    UIHotkey.SetSortOrder(UIItemInfo.GetSortOrder());
-
-  elseif mode == EHotkeyMode.SceneBattle then
-    this.SetCurrentHotkey(EHotkeyUI.Sub, EHotkeyType.SceneBattleSub);
-    this.SetCurrentDisplayUI(EHotkeyUI.Main, true);
-    this.SetCurrentDisplayUI(EHotkeyUI.Sub, true);
-    this.SwitchEditMode(EHotkeyEditMode.None);
-    this.currentDisplayMode = EHotkeyDisplayMode.Both;
-
-  elseif mode == EHotkeyMode.Equip then
-    this.SetCurrentHotkey(EHotkeyUI.Main, EHotkeyType.Equip);
-    this.SetCurrentHotkey(EHotkeyUI.Sub, EHotkeyType.CurrentEquip);
-    this.SetCurrentDisplayUI(EHotkeyUI.Main, true);
-    this.SetCurrentDisplayUI(EHotkeyUI.Sub, true);
-    this.SwitchEditMode(EHotkeyEditMode.None);
-    this.currentDisplayMode = EHotkeyDisplayMode.Both;
-  else
-    return
+function Hotkey.Show(nextRole, nextMode, defaultid)
+  local sortOrder = 0;
+  if defaultid == nil then 
+    defaultid = -1
   end
+  -- logError("* Hotkey.Show * : "..nextRole.name..", currentMode"..tostring(this.currentDisplayMode)..", nextMode : "..tostring(nextMode));
 
-  currentHotkeyMode = mode;
-  if UI.IsVisible(UIHotkey) then
-    UIHotkey.UpdateUI(true);
+  if this.IsNeedToWait(nextMode) then
+    -- logError("Hotkey.Show is NeedToWait");
+    this.nextRole = nextRole;
+    this.nextDisplayMode = nextMode;
   else
-    if not MachineBox.client.general[EMachineBoxSwitch.SampleMode] then
-      UI.Open(UIHotkey);
+    -- logError("Hotkey.Show Not NeedToWait");
+    if nextMode == EHotkeyDisplayMode.Both then
+      sortOrder = UIFight.GetSortOrder();
+      this.currentDisplayMode = nextMode;
+      this.ChangeRole(nextRole, EUseSource.UIFight);
+      
+      if UI.IsVisible(UIHotkey) then
+        UIHotkey.UpdateUI(true, sortOrder);
+      else
+        if not MachineBox.client.general[EMachineBoxSwitch.SampleMode] then
+          UI.Open(UIHotkey, defaultid, sortOrder);
+        end
+      end
+    elseif nextMode == EHotkeyDisplayMode.SingleItem then
+      -- logError("*Hotkey.Show NextMode : EHotkeyDisplayMode.SingleItem *");
+      sortOrder = UIItemInfo.GetSortOrder();
+      this.currentDisplayMode = nextMode;
+      this.ChangeRole(nextRole);
+      
+      if UI.IsVisible(UIHotkey) then
+        UIHotkey.UpdateUI(true, sortOrder);
+      else
+        UI.Open(UIHotkey, defaultid, sortOrder);
+      end 
+    elseif nextMode == EHotkeyDisplayMode.SingleSkill then
+      -- logError("*Hotkey.Show NextMode : EHotkeyDisplayMode.SingleSkill *");
+      sortOrder = UISkillTree.GetSortOrder();
+      this.currentDisplayMode = nextMode;
+      this.ChangeRole(nextRole, EUseSource.UISkillTree);
+  
+      if UI.IsVisible(UIHotkey) then
+        UIHotkey.UpdateUI(true, sortOrder);
+      else
+        UI.Open(UIHotkey, UISkillTree.GetCurrentClick(), sortOrder);
+      end
     end
   end
 end
 
-function Hotkey.Close()
-  if nextHotkeyMode == EHotkeyMode.FightField then
-    nextHotkeyMode = nil;
-    FightField.OpenHotkey();
-  else
-    nextHotkeyMode = nil;
-    currentEditMode = EHotkeyEditMode.None;
-    UI.Close(UIHotkey);
+function Hotkey.IsNeedToWait(nextMod)
+  -- logError("* IsNeedToWait * : this.currentDisplayMode = "..tostring(this.currentDisplayMode).." , nextMod : "..tostring(nextMod));
+  if this.currentDisplayMode == EHotkeyDisplayMode.SingleItem or this.currentDisplayMode == EHotkeyDisplayMode.SingleSkill then
+    if nextMod == EHotkeyDisplayMode.Both then
+      return true;
+    end
+  end
+   return false;
+end
+
+function Hotkey.Close(who)
+  -- logError("* Hotkey.Close *"..", Who : "..tostring(who));
+  if not UI.IsVisible(UIHotkey) then return end;
+  
+  if who ~= EUseSource.UIFight then
+    if this.currentDisplayMode == EHotkeyDisplayMode.SingleSkill or this.currentDisplayMode == EHotkeyDisplayMode.SingleItem then
+      -- 當開技能快捷 or 物品快捷進戰鬥時，需再次打開給戰鬥快捷用
+      if this.nextRole ~= nil then
+        this.currentDisplayMode = EHotkeyDisplayMode.None;
+        this.Show(this.nextRole, this.nextDisplayMode);
+        this.nextRole = nil;
+        this.nextDisplayMode = EHotkeyDisplayMode.None;
+      else
+        this.currentDisplayMode = EHotkeyDisplayMode.None;
+        UI.Close(UIHotkey);
+      end
+    else
+       -- 已經被戰鬥徵用，不需要在關一次
+      --  logError("已經被戰鬥徵用，不需要在關一次");
+    end
+  elseif who == EUseSource.UIFight then
+    -- 戰鬥結束
+    this.nextRole = nil
+
+    if this.currentDisplayMode == EHotkeyDisplayMode.Both then
+      this.currentDisplayMode = EHotkeyDisplayMode.None;
+      UI.Close(UIHotkey);
+    else return end;
+  elseif who == EUseSource.CloseOnTurnUI then
+    -- 戰鬥回合
+    if this.currentDisplayMode == EHotkeyDisplayMode.Both then
+      this.currentDisplayMode = EHotkeyDisplayMode.None;
+      UI.Close(UIHotkey);
+    else return end;
+  end
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+end
+
+function Hotkey.UpdateNpcSkill()
+  if this.currentRole == nil or this.currentRole.kind == EHuman.Player then return end;
+
+  local data = HotkeyData.New(2, 5);
+  local i = 0;
+  local skills = this.currentRole:GetElementSkill(0);
+
+  for k, v in pairs(skills) do
+    local skilldata = skillDatas[v.Id];
+    if skilldata ~= nil and skilldata:CanUse() then 
+      i = i + 1;
+      data.ids[i] = v.Id;
+    end
+  end
+  
+  this.npcSkills = data;
+end
+
+function Hotkey.ChangeRole(nextRole, useSource)
+  
+  -- logError("* Hotkey.ChangeRole * : "..tostring(nextRole.name));
+
+  if nextRole == nil then return end;
+
+  this.currentRole = nextRole;
+  this.UpdateNpcSkill();
+  
+  if UI.IsVisible(UIHotkey) then
+    UIHotkey.UpdateUI(true);
   end
 end
 
-function Hotkey.SetNextDisplayMode(nextMode)
-  nextHotkeyMode = nextMode;
+function Hotkey.GetLv(id)
+  if this.currentRole ~= nil then
+    -- 分身上沒有技能等級，要從玩家身上拿資料
+      if this.currentDisplayMode == EHotkeyDisplayMode.Both then
+        if this.CheckIsDivide(this.currentRole.kind) or this.CheckKindIsPlayer(this.currentRole.kind) then
+          return Role.player:GetSkillLv(id);
+        else
+          return this.currentRole:GetSkillLv(id, true);
+          --return Role.fightNpc:GetSkillLv(id);
+        end
+      else
+        return this.currentRole:GetSkillLv(id, true);
+      end
+  else
+    return 0;
+  end
 end
 
-function Hotkey.GetCurrentHotkeyMode()
-  return currentHotkeyMode
+function Hotkey.CanBeSet(id, hotKeyType)
+  -- logError("* Hotkey.CanBeSet *, id : "..id..", hotKeyType : "..tostring(hotKeyType));
+
+  if id > -1 then
+    if hotKeyType == EHotKeyType.Skill and this.currentDisplayMode == EHotkeyDisplayMode.SingleSkill then
+      if this.currentRole.kind == EHuman.Player then
+        -- 只有玩家才能使用設定 or 清除功能
+        if this.isClearMode then
+          return true;
+        else
+          if this.IsSummonSkill(id) then
+            return this.currentRole ~= nil and skillDatas[id] ~= nil and this.currentRole:GetSkillLv(id) > 0;
+          else
+            return this.currentRole ~= nil and skillDatas[id] ~= nil and this.currentRole:GetSkillLv(id) > 0 and skillDatas[id]:CanUse();
+          end
+        end
+      end
+    elseif hotKeyType == EHotKeyType.Item and this.currentDisplayMode == EHotkeyDisplayMode.SingleItem then
+      if this.isClearMode then
+        return true;
+      else
+        return Item.CheckHotKeyItemID(id);
+      end
+    end
+  end
+
+  return false;
 end
 
-function Hotkey.OnSettingFinish()
+function Hotkey.CanBeClear(pageIndex, btnIndex, id, hotKeyType)
+  if hotKeyType == EHotKeyType.Skill then
+    return this.playerSkills.ids[this.GetDataIndex(pageIndex, this.playerSkills.maxElements, btnIndex)] > 0;
+  elseif hotKeyType == EHotKeyType.Item then
+    return  this.items.ids[this.GetDataIndex(pageIndex, this.items.maxElements, btnIndex)] > 0;
+  else
+    return false;
+  end
+end
+
+function Hotkey.OnSettingHotkey(pageIndex, btnIndex, id, hotKeyType)
+  -- logError("* Hotkey.OnSettingHotkey * 不能使用:-1 清除技能:0");
+
+  if this.isClearMode then
+    if Hotkey.CanBeClear(pageIndex, btnIndex, id, hotKeyType) then
+      id = 0;
+    else
+      id = -1
+    end
+  end
+  
+  if this.CanBeSet(id, hotKeyType) then
+    -- 2: 設定快捷列 <SubKind(1)[1.技能快捷 2.物品快捷] + 技能頁(1) + 位置索引(1) + ID(2)>
+    sendBuffer:Clear();
+    sendBuffer:WriteByte(hotKeyType);
+    sendBuffer:WriteByte(pageIndex);
+    sendBuffer:WriteByte(btnIndex);
+    sendBuffer:WriteUInt16(id);
+    Network.Send(40, 2, sendBuffer);
+    
+    -- 延遲關閉
+    if hotKeyType == EHotKeyType.Item and this.isClearMode == false then
+      CGTimer.DoFunctionDelay(0.2, this.WaitToCloseUI);
+    end
+  end
+end
+
+function Hotkey.WaitToCloseUI()
+  if UI.IsVisible(UIHotkey) then
+    this.Close(EUseSource.None);
+  end
+end
+
+function Hotkey.OnSettingFinsh()
+
   if UI.IsVisible(UIHotkey) then
     UIHotkey.UpdateUI();
   end
 
-  if UI.IsVisible(UIItemInfo) and currentEditMode == EHotkeyEditMode.Setting then
+  if UI.IsVisible(UIItemInfo) and this.isClearMode == false then
     UI.Close(UIItemInfo);
   end
+
 end
 
-function Hotkey.GetEditMode()
-  return currentEditMode
+-- 招換技能 
+function Hotkey.IsSummonSkill(id)
+  return Contains(id , 14026, 14077);
 end
 
-function Hotkey.SwitchEditMode(mode)
-  if mode == nil then
-    currentEditMode = currentEditMode * -1;
-  else
-    currentEditMode = mode;
-  end
-end
-
-function Hotkey.UpdateRoleSkill()
-  if currentRole == nil then return end
-  if currentRole.kind == EHuman.Player or this.CheckIsDivide(currentRole.kind) then
-    Hotkey.SetCurrentHotkey(EHotkeyUI.Main, EHotkeyType.PlayerMain);
-  else
-
-    local skills = currentRole:GetElementSkill(0);
-    if BattleRoyale.GetBattleRoyaleState() then
-      this.CreateHotkeyData(EHotkeyType.NpcSkill, 1, table.Count(skills) + hotkeyData[EHotkeyType.PlayerMain].count);
-    else
-      this.CreateHotkeyData(EHotkeyType.NpcSkill, 1, 5);
-    end
-
-    for k, v in pairs(skills) do
-      local skilldata = skillDatas[v.Id];
-      if skilldata ~= nil and skilldata:CanUse() then
-        this.SetHotkeyUseId(EHotkeyType.NpcSkill, 1, k, v.Id);
-        this.SetHotkeyUseType(EHotkeyType.NpcSkill, 1, k, EHotKeyIdType.Skill);
-      end
-    end
-
-    if BattleRoyale.GetBattleRoyaleState() then
-      for k, v in pairs(battleRoyaleHotkeyDatas[EHotkeyType.PlayerMain]) do
-        this.SetHotkeyUseId(EHotkeyType.NpcSkill, 1, table.Count(skills) + k, v);
-        this.SetHotkeyUseType(EHotkeyType.NpcSkill, 1, table.Count(skills) + k, EHotKeyIdType.Item);
-      end
-      Hotkey.SetHotkeyIdType(EHotkeyType.NpcSkill, EHotKeyIdType.Mixed);
-    else
-      Hotkey.SetHotkeyIdType(EHotkeyType.NpcSkill, EHotKeyIdType.Skill);
-    end
-
-    Hotkey.SetCurrentHotkey(EHotkeyUI.Main, EHotkeyType.NpcSkill);
-  end
-  if UI.IsVisible(UIHotkey) then
-    UIHotkey.UpdateUI(true);
-  end
-end
-
-function Hotkey.UpdateRoleEquip()
-  if currentRole == nil then return end
-  this.CreateHotkeyData(EHotkeyType.CurrentEquip, 1, 5);
-
-  for i = 1, 5 do
-    local equip = Item.GetBagItem(EThings.Equip, i, followIndex)
-    if equip ~= nil and itemDatas[equip.Id] ~= nil then
-      this.SetHotkeyUseId(EHotkeyType.CurrentEquip, 1, i, equip.Id);
-    else
-      this.SetHotkeyUseId(EHotkeyType.CurrentEquip, 1, i, 0);
-    end
-  end
-  Hotkey.SetHotkeyIdType(EHotkeyType.CurrentEquip, EHotKeyIdType.Equip);
-  Hotkey.SetCurrentHotkey(EHotkeyUI.Sub, EHotkeyType.CurrentEquip);
-end
-
-function Hotkey.SetCurrentHotkey(uiIndex, hotkeyDataIndex)
-  if hotkeyDataIndex ~= nil then
-    currentHotkey[uiIndex] = hotkeyDataIndex;
-  end
-end
---endregion
-
---region Data
-function Hotkey.CreateHotkeyData(dataIndex, pageCount, keyCount)
-  hotkeyData[dataIndex] = HotkeyData.New(pageCount, keyCount);
-end
-
-function Hotkey.ReceiveHotKeyData(index, data)
-  local pageCount = data:ReadByte();
-  local keyCount = data:ReadByte();
-  local totalCount = pageCount * keyCount;
-
-  if totalCount > 0 then
-    this.CreateHotkeyData(index, pageCount, keyCount);
-  end
-
-  for p = 1, pageCount do
-    for k = 1 , keyCount do
-      this.SetHotkeyUseId(index, p, k, data:ReadUInt16());
-    end
-  end
-end
-
-function Hotkey.SetCurrentRole(role)
-  if role == nil then return end;
-  currentRole = role;
-  this.UpdateRoleSkill();
-
-  if UI.IsVisible(UIHotkey) then
-    UIHotkey.UpdateUI(true);
-  end
-end
-
-function Hotkey.GetFollowIndex()
-  return followIndex
-end
-
-function Hotkey.SetFollowIndex(index)
-  followIndex = index;
-end
-
-function Hotkey.SetHotkeyIdType(index, type)
-  hotkeyData[index].keyType = type;
-end
-
-function Hotkey.GetHotkeyIdType(uiIndex)
-  return this.GetCurrentHotkeyData(uiIndex).keyType;
-end
-
-function Hotkey.GetCurrentHotkeyData(uiIndex)
-  return hotkeyData[currentHotkey[uiIndex]]
-end
-
-function Hotkey.GetHotkey(uiIndex, keyIndex)
-  return this.GetCurrentHotkeyData(uiIndex).keys[keyIndex]
-end
-
-function Hotkey.GetHotkeyUseId(uiIndex, keyIndex)
-  return this.GetCurrentHotkeyData(uiIndex).keys[keyIndex].useId
-end
-
-function Hotkey.GetHotkeyUseType(uiIndex, keyIndex)
-  local type = this.GetCurrentHotkeyData(uiIndex).keyType;
-  if type == EHotKeyIdType.Mixed or type == nil then
-    return this.GetCurrentHotkeyData(uiIndex).keys[keyIndex].useType
-  else
-    return type
-  end
-end
-
-function Hotkey.SetHotkeyUseId(dataIndex, pageIndex, keyIndex, useId)
-  local index = this.GetHotkeyIndex(pageIndex, keyIndex, hotkeyData[dataIndex].maxKeys);
-  hotkeyData[dataIndex].keys[index].useId = useId;
-end
-
-function Hotkey.SetHotkeyUseType(dataIndex, pageIndex, keyIndex, useType)
-  local index = this.GetHotkeyIndex(pageIndex, keyIndex, hotkeyData[dataIndex].maxKeys);
-  hotkeyData[dataIndex].keys[index].useType = useType;
-end
-
-function Hotkey.GetHotkeyIndex(pageIndex, keyIndex, keyCount)
-  return keyIndex + (pageIndex - 1) * keyCount
-end
---endregion
-
---region Edit
-function Hotkey.SetCurrentSelectId(useId, uiIndex)
-  currentSelectId[uiIndex] = useId;
-  if UI.IsVisible(UIHotkey) then
-    UIHotkey.UpdateHotkey(uiIndex);
-  end
-end
-
-function Hotkey.IsHotkeyEmpty(uiIndex, keyIndex)
-  if this.GetHotkeyUseType(uiIndex, keyIndex) == EHotKeyIdType.Equip then
-    return false
-  else
-    local useId = this.GetHotkeyUseId(uiIndex, keyIndex);
-    return useId == nil or useId <= 0
-  end
-end
-
-function Hotkey.IsHotkeyIdDataEmpty(uiIndex, keyIndex)
-  if this.IsHotkeyEmpty(uiIndex, keyIndex) then
-    return true
-  end
-  local keyUseType = this.GetHotkeyUseType(uiIndex, keyIndex);
-  local useId = this.GetHotkeyUseId(uiIndex, keyIndex);
-  if keyUseType == EHotKeyIdType.Skill then
-    return skillDatas[useId] == nil
-  elseif keyUseType == EHotKeyIdType.Item then
-    return itemDatas[useId] == nil
-  elseif keyUseType == EHotKeyIdType.Equip then
-    local equip = Item.GetBagItem(EThings.Equip, keyIndex, followIndex);
-    return equip == nil or itemDatas[equip.Id] == nil
-  end
-end
-
-function Hotkey.CheckEditPermission(uiIndex, keyIndex)
-  if currentEditMode == EHotkeyEditMode.None then
-    return false
-  elseif currentEditMode == EHotkeyEditMode.Clear then
-    return true
-  elseif currentEditMode == EHotkeyEditMode.Setting then
-    local keyUseType = this.GetHotkeyUseType(uiIndex, keyIndex);
-    local selectId = currentSelectId[uiIndex];
-    if keyUseType == EHotKeyIdType.Skill and currentRole.kind == EHuman.Player then
-      if this.IsSummonSkill(selectId) then
-        return currentRole ~= nil and skillDatas[selectId] ~= nil and currentRole:GetSkillLv(selectId) > 0;
+-- 招換技能 使用
+function Hotkey.GetUseSummonSkill(id)
+  if this.IsSummonSkill (id) then
+    if this.CheckIsDivide(this.currentRole.kind) or this.CheckKindIsPlayer(this.currentRole.kind) then
+      -- 分身 or Player
+      if not ItemData.IsSummonItem(Role.player.data.equips[EItemFitType.Equip_Spec]) then --沒裝紋章的話
+        return id;
       else
-        return currentRole ~= nil and skillDatas[selectId] ~= nil and currentRole:GetSkillLv(selectId) > 0 and skillDatas[selectId]:CanUse();
+        if id == 14026 then 
+          return Skill.GetSummonSkill(Role.player:GetAttribute(EAttribute.Element));
+        else
+          if ItemData.IsLightDarkSummonItem(Role.player.data.equips[EItemFitType.Equip_Spec]) then
+            if Role.player:GetAttribute(EAttribute.Turn3Element) == 7 then 
+              if Contains(Role.player.data.equips[EItemFitType.Equip_Spec], 23361, 23367) then          
+                return Skill.GetSummonSkill(Role.player:GetAttribute(EAttribute.Turn3Element));
+              end
+            else            
+              if Contains(Role.player.data.equips[EItemFitType.Equip_Spec], 23362, 23368) then          
+                return Skill.GetSummonSkill(Role.player:GetAttribute(EAttribute.Turn3Element));
+              end        
+            end          
+            return 14077;          
+          end
+        end
       end
-    elseif keyUseType == EHotKeyIdType.Item then
-      return Item.CheckHotKeyItemID(selectId);
-    end
-  end
-
-  return false
-end
---endregion
-
---region Use Hotkey
-function Hotkey.UseHotkey(uiIndex, keyIndex)
-  local useId = this.GetHotkeyUseId(uiIndex, keyIndex);
-  local hotKeyType = this.GetHotkeyUseType(uiIndex, keyIndex);
-  local key = this.GetHotkey(uiIndex, keyIndex);
-
-  if currentEditMode == EHotkeyEditMode.None then
-    if hotKeyType == EHotKeyIdType.Skill then
-      this.UseSkill(useId);
-    elseif hotKeyType == EHotKeyIdType.Item then
-      this.UseItem(useId);
-    elseif hotKeyType == EHotKeyIdType.Equip then
-      if not Hotkey.IsHotkeyIdDataEmpty(uiIndex, keyIndex) then
-        this.UnEquip(keyIndex);
+    else
+      if not ItemData.IsSummonItem(this.currentRole.data.equips[EItemFitType.Equip_Spec]) then --沒裝紋章的話
+        return id;
+      else
+        return Skill.GetSummonSkill(this.currentRole:GetAttribute(EAttribute.Element));
       end
     end
-  elseif currentEditMode == EHotkeyEditMode.Setting then
-    if this.CheckEditPermission(uiIndex, keyIndex) then
-      this.SendEditHotkey(currentHotkey[uiIndex], key, currentSelectId[uiIndex]);
+  else
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
     end
-  elseif currentEditMode == EHotkeyEditMode.Clear then
-    if not this.IsHotkeyEmpty(uiIndex, keyIndex) then
-      this.SendEditHotkey(currentHotkey[uiIndex], key, 0);
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
     end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    return id;
   end
 end
 
-function Hotkey.SetDirectUse(state)
-  directUse = state;
+function Hotkey.CheckSkillElement(skillId, inUI)
+  local skill = skillDatas[skillId];
+  if skill ~= nil then 
+    local role = nil;
+    if inUI then 
+      role = this.currentRole;
+    else    
+      role = UIFight.GetRole();
+      if role == nil then 
+        return false;
+      end
+    end
+
+    --判斷光暗
+    if Contains(role.kind, EHuman.Player, EHuman.Players) and Contains(skill.element, 7, 8) then 
+      if role:GetAttribute(EAttribute.Turn3Element) ~= skill.element then 
+        return false;
+      end
+    end
+  end
+  
+  return true;
 end
 
-function Hotkey.UseSkill(useId)
-  if FightField.isInBattle then
-    if this.GetSkillLevel(useId) > 0 then
+function Hotkey.CheckCanUseSkill(skillId)  
+  local skill = skillDatas[skillId];
+  if skill ~= nil then 
+    local role = UIFight.GetRole();
+    if role == nil then 
+      return false;
+    end
+
+    if skill.requireSp <= role:GetAttribute(EAttribute.Sp) then 
+      return true;      
+    end
+  end
+  
+  return false;
+end
+
+function Hotkey.OnUseHotKey(id, hotKeyType)
+  -- logError("* Hotkey.OnUseHotKey * ".. "id : "..tostring(id)..", HotkeyType : "..tostring(hotKeyType));
+  if id == -1 then return end
+  if hotKeyType == EHotKeyType.Skill then
+
+    if this.GetLv(id) > 0 then
+
       -- 如果是招換技需要轉換skillid
-      useId = this.GetUseSummonSkill(useId);
+      id = this.GetUseSummonSkill(id);
 
-      if not this.CheckSkillElement(useId) then
+      if not this.CheckSkillElement(id) then         
         return;
       end
 
-      if this.CheckCanUseSkill(useId) then
-        FightField.SetConSkill(useId);
+      if this.CheckCanUseSkill(id) then
+        FightField.SetConSkill(id);
       else
         ShowCenterMessage(string.Get(40032));
       end
@@ -436,158 +486,57 @@ function Hotkey.UseSkill(useId)
     else
       ShowCenterMessage(string.Get(20888));
     end
-  end
-end
-
-function Hotkey.UseItem(useId)
-  if FightField.isInBattle then
-    if Item.GetItemCount(useId) > 0 then
-      FightField.SetConItem(useId);
+  else 
+    if Item.GetItemCount(id) > 0 then
+      FightField.SetConItem(id);
     else
       ShowCenterMessage(string.Get(20363));
     end
-  else
-    if directUse then
-      Item.UseItem(EThings.Bag, Item.GetItemIndex(useId), followIndex);
-    else
-      if Item.GetItemCount(useId) > 0 then
-        local funName;
-        if Item.IsTypeOfEquips(itemDatas[useId].fitType) then
-          funName = string.Get(20165); --裝備
-        else
-          funName = string.Get(40314); --使用
-        end
-
-        UI.Open(UIItemInfo, EThings.Bag, Item.GetItemIndex(useId), followIndex, string.Get(98025), Item.DropItem,
-                funName,
-                function()
-                  Item.UseItem(EThings.Bag, Item.GetItemIndex(useId), followIndex);
-                  UI.Close(UIItemInfo);
-                end);
-      else
-        UIItemInfo.Show(useId);
-      end
-    end
   end
-end
-
-function Hotkey.UnEquip(keyIndex)
-  if directUse then
-    Item.UnEquip(EThings.Equip, keyIndex, followIndex);
-  else
-    UI.Open(UIItemInfo, EThings.Equip, keyIndex, followIndex, string.Get(98025), Item.DropEquip, string.Get(98003), Item.UnEquip);
-  end
-end
-
-function Hotkey.SendEditHotkey(dataIndex, key, newUseId)
-  sendBuffer:Clear();
-  sendBuffer:WriteByte(dataIndex);
-  sendBuffer:WriteByte(key.pageIndex);
-  sendBuffer:WriteByte(key.keyIndex);
-  sendBuffer:WriteUInt16(newUseId);
-  Network.Send(40, 2, sendBuffer);
-end
---endregion
-
---region skill
-function Hotkey.IsSummonSkill(id)
-  return Contains(id , 14026, 14077);
-end
-
-function Hotkey.GetUseSummonSkill(id)
-  if this.IsSummonSkill (id) then
-    if this.CheckIsDivide(currentRole.kind) or this.CheckKindIsPlayer(currentRole.kind) then
-      -- 分身 or Player
-      if not ItemData.IsSummonItem(Role.player.data.equips[EItemFitType.Equip_Spec]) then --沒裝紋章的話
-        return id;
-      else
-        if id == 14026 then
-          return Skill.GetSummonSkill(Role.player:GetAttribute(EAttribute.Element));
-        else
-          if ItemData.IsLightDarkSummonItem(Role.player.data.equips[EItemFitType.Equip_Spec]) then
-            if Role.player:GetAttribute(EAttribute.Turn3Element) == 7 then
-              if Contains(Role.player.data.equips[EItemFitType.Equip_Spec], 23361, 23367) then
-                return Skill.GetSummonSkill(Role.player:GetAttribute(EAttribute.Turn3Element));
-              end
-            else
-              if Contains(Role.player.data.equips[EItemFitType.Equip_Spec], 23362, 23368) then
-                return Skill.GetSummonSkill(Role.player:GetAttribute(EAttribute.Turn3Element));
-              end
-            end
-            return 14077;
-          end
-        end
-      end
-    else
-      if not ItemData.IsSummonItem(currentRole.data.equips[EItemFitType.Equip_Spec]) then --沒裝紋章的話
-        return id;
-      else
-        return Skill.GetSummonSkill(currentRole:GetAttribute(EAttribute.Element));
-      end
-    end
-  else
-    return id;
-  end
-end
-
-function Hotkey.CheckSkillElement(skillId, inUI)
-  local skill = skillDatas[skillId];
-  if skill ~= nil then
-    local role;
-    if inUI then
-      role = currentRole;
-    else
-      role = UIFight.GetRole();
-      if role == nil then
-        return false;
-      end
-    end
-
-    --判斷光暗
-    if Contains(role.kind, EHuman.Player, EHuman.Players) and Contains(skill.element, 7, 8) then
-      if role:GetAttribute(EAttribute.Turn3Element) ~= skill.element then
-        return false;
-      end
-    end
-  end
-
-  return true;
-end
-
-function Hotkey.GetSkillLevel(id)
-  if currentRole ~= nil then
-    -- 分身上沒有技能等級，要從玩家身上拿資料
-    if this.currentDisplayMode == EHotkeyDisplayMode.Both then
-      if this.CheckIsDivide(currentRole.kind) or this.CheckKindIsPlayer(currentRole.kind) then
-        return Role.player:GetSkillLv(id);
-      else
-        return currentRole:GetSkillLv(id);
-      end
-    else
-      return currentRole:GetSkillLv(id);
-    end
-  else
-    return 0;
-  end
-end
-
-function Hotkey.CheckCanUseSkill(skillId)
-  local skill = skillDatas[skillId];
-  if skill ~= nil then
-    local role = UIFight.GetRole();
-    if role == nil then
-      return false;
-    end
-
-    if skill.requireSp <= role:GetAttribute(EAttribute.Sp) then
-      return true;
-    end
-  end
-
-  return false;
 end
 
 function Hotkey.CheckIsDivide(kind)
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   return kind == EHuman.Divide or kind == EHuman.Duplicate;
 end
 
@@ -595,117 +544,111 @@ function Hotkey.CheckKindIsPlayer(kind)
   return kind == EHuman.Player;
 end
 
-function Hotkey.IsPlayer()
-  if currentRole ~= nil and currentRole.kind == EHuman.Player then
-    return true;
-  end
+function Hotkey.GetViewData(hotKeyType)
+  -- logError("* Hotkey.GetViewData *");
 
-  return false;
-end
---endregion
-
---region UI
-function Hotkey.GetDisplayFlag(uiIndex)
-  return currentDisplay[uiIndex]
-end
-
-function Hotkey.GetCurrentKeyCount(uiIndex)
-  return this.GetCurrentHotkeyData(uiIndex).count
-end
-
-function Hotkey.SetCurrentDisplayUI(uiIndex, displayFlag)
-  if displayFlag ~= nil then
-    currentDisplay[uiIndex] = displayFlag;
-  end
-end
-
-function Hotkey.SetCurrentPage(uiIndex, page)
-  currentPage[uiIndex] = page;
-end
-
-function Hotkey.GetCurrentPage(uiIndex)
-  return currentPage[uiIndex]
-end
-
-function Hotkey.GetNumberText(uiIndex, keyIndex)
-  local keyUseType = this.GetHotkeyUseType(uiIndex, keyIndex);
-  local useId = this.GetHotkeyUseId(uiIndex, keyIndex);
-  if keyUseType == EHotKeyIdType.Skill then
-    return this.GetSkillLevel(useId);
-  elseif keyUseType == EHotKeyIdType.Item then
-    return Item.GetItemCount(useId);
-  end
-end
-
-function Hotkey.SetIcon(uiIndex, keyIndex, rawImage)
-  local keyUseType = this.GetHotkeyUseType(uiIndex, keyIndex);
-  local useId = this.GetHotkeyUseId(uiIndex, keyIndex);
-  if keyUseType == EHotKeyIdType.Skill then
-    skillDatas[useId]:SetIcon(rawImage);
-  elseif keyUseType == EHotKeyIdType.Item then
-    itemDatas[useId]:SetIcon(rawImage);
-  elseif keyUseType == EHotKeyIdType.Equip then
-    local equip = Item.GetBagItem(EThings.Equip, keyIndex, followIndex)
-    if equip ~= nil and itemDatas[equip.Id] ~= nil then
-      itemDatas[equip.Id]:SetIcon(rawImage);
-    end
-  end
-end
-
-function Hotkey.SetEquipIcon(keyIndex, image)
-  if keyIndex == EItemFitType.Equip_Head then
-    image.sprite = UI.GetSprite("but263D");
-  elseif keyIndex == EItemFitType.Equip_Body then
-    image.sprite = UI.GetSprite("but060D");
-  elseif keyIndex == EItemFitType.Equip_Hand then
-    image.sprite = UI.GetSprite("but265D");
-  elseif keyIndex == EItemFitType.Equip_Wrist then
-    image.sprite = UI.GetSprite("but262D");
-  elseif keyIndex == EItemFitType.Equip_Boots then
-    image.sprite = UI.GetSprite("but264D");
-  elseif keyIndex == EItemFitType.Equip_Spec then
-    image.sprite = UI.GetSprite("but151D");
-  end
-end
-
-function Hotkey.GetColor(uiIndex, keyIndex)
-  local keyUseType = this.GetHotkeyUseType(uiIndex, keyIndex);
-  local useId = this.GetHotkeyUseId(uiIndex, keyIndex);
-  if keyUseType == EHotKeyIdType.Item then
-    if Item.GetItemCount(useId) > 0 or Hotkey.currentDisplayMode == EHotkeyDisplayMode.SingleItem then
-      return Color.White
-    else
-      return Color.Gray
-    end
-  elseif keyUseType == EHotKeyIdType.Skill then
-    if Hotkey.GetSkillLevel(useId) > 0 then
-      if Hotkey.currentDisplayMode == EHotkeyDisplayMode.SingleSkill then
-        if not Hotkey.CheckSkillElement(useId, true) then
-          return Color.Gray
-        else
-          return Color.White
-        end
-      elseif Hotkey.currentDisplayMode == EHotkeyDisplayMode.Both then
-        if not Hotkey.CheckSkillElement(useId) then
-          return Color.Gray
-        elseif Hotkey.CheckCanUseSkill(useId) then
-          return Color.White
-        else
-          return Color.Gray
-        end
+  if hotKeyType == EHotKeyType.Skill then
+    if this.currentRole ~= nil then
+      -- 分身 跟 玩家使用同一份資料
+      if this.CheckKindIsPlayer(this.currentRole.kind) or this.CheckIsDivide(this.currentRole.kind) then
+        return this.playerSkills;
       else
-        return Color.White
+        return this.npcSkills;
       end
     else
-      return Color.Gray
+      -- Skill資料有問題時給一筆空的
+      return HotkeyData.New(1, 5);
     end
-  elseif keyUseType == EHotKeyIdType.Equip then
-    local equip = Item.GetBagItem(EThings.Equip, keyIndex, followIndex)
-    if equip ~= nil and itemDatas[equip.Id] ~= nil then
-      return Color.White
-    else
-      return Color.Gray
+  elseif hotKeyType == EHotKeyType.Item then
+    return this.items;
+  end
+  
+  -- item資料有問題時給一筆空的
+  return HotkeyData.New(1, 3);
+end
+
+function Hotkey.GetDataIndex(pageIndx, maxElements, btnIndex)
+  return (pageIndx - 1) * maxElements + btnIndex;
+end
+
+function Hotkey.SetPage(type, pageIndex)
+  if type == EHotKeyType.Item then
+    this.currentItemPage = pageIndex;
+  elseif type == EHotKeyType.Skill then
+    if this.currentRole ~= nil and this.currentRole.kind == EHuman.Player then
+      this.currentSkillPage = pageIndex;
     end
   end
 end
---endregion
+
+function Hotkey.GetPage(type)
+  if type == EHotKeyType.Item then
+   return this.currentItemPage;
+  elseif type == EHotKeyType.Skill then
+    if this.currentRole ~= nil and this.currentRole.kind == EHuman.Player then
+      return this.currentSkillPage;
+    else
+      return 0;
+    end
+  end
+
+  return 0;
+end
+
+function Hotkey.UseClearMode(setTrigger)
+  if setTrigger ~= nil then
+    this.isClearMode = setTrigger;
+  else
+    this.isClearMode = not this.isClearMode;
+  end
+end
+
+function Hotkey.IsPlayer()
+  if this.currentRole ~= nil and this.currentRole.kind == EHuman.Player then
+    return true;
+  end
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  return false;
+end
+
+

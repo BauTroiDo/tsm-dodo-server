@@ -12,7 +12,33 @@ function LightningDestroy:Update()
       attack:SetLightWithOrder(1, EEffectLightDis.Sky,10356,60,1,15, 15,EEffectLightTracer.Line,me.nowPos.x+10, me.nowPos.y ,30,true, 40);
     end
     attack:SetLightWithOrder(2, EEffectLightDis.Sky,10593,60,1,4, 4,EEffectLightTracer.Line,me.nowPos.x+10, me.nowPos.y ,30,true, 40);
-    self.step = 2;             
+    self.step = 2;
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif self. step == 2 then 
     me:SetSpeed(0.40);
     me:SetWalk(target.nowPos.x ,target.nowPos.y, true);
@@ -56,7 +82,33 @@ function LightningDestroy:Update()
       newPos.x = FightField.chip[target.colm][target.row].x;
       newPos.y = FightField.chip[target.colm][target.row].y;
       target:SetWalk(newPos.x ,newPos.y, true);
-      self.step = 5;        
+      self.step = 5;
+      --1--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        local code = DemoCode.GetBitxor(20);
+        code = code * 10;
+      end
+      ---2--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        --local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     end
   elseif self.step == 5 then 
     if target.arrive then      

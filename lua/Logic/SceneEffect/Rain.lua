@@ -5,6 +5,36 @@ local tempVec = Vector3.New(0, 0, 0);
 local tickCount = 0;
 local root = nil;
 
+function Rain.GetNothing()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
+function Rain.GetNothingA()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
 function Rain.New(i)
   local self = {};
   setmetatable(self, Rain);
@@ -100,6 +130,36 @@ function Rain.Update()
     end
 end
 
+function Rain.GetNothing1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
+function Rain.GetNothing2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
 function Rain.Stop()
   CGTimer.RemoveListener(Rain.Update);
 
@@ -107,6 +167,51 @@ function Rain.Stop()
     if rain[i] ~= nil then
       poolMgr:Release("BaseSceneEffect", rain[i].gameObject);
       rain[i] = nil;
+    end
+  end
+end
+
+function Rain.GetNothing4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
+function Rain.GetNothing5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
+function Rain.GetNothing6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
     end
   end
 end

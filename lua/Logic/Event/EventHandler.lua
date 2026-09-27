@@ -1,3 +1,26 @@
+--[[
+And God kept Noah in mind, and all the living things and the cattle which were with him in the ark: and God sent a wind over the earth, and the waters went down.
+And the fountains of the deep and the windows of heaven were shut, and the rain from heaven was stopped.
+And the waters went slowly back from the earth, and at the end of a hundred and fifty days the waters were lower.
+And on the seventeenth day of the seventh month the ark came to rest on the mountains of Ararat.
+And still the waters went on falling, till on the first day of the tenth month the tops of the mountains were seen.
+Then, after forty days, through the open window of the ark which he had made,
+Noah sent out a raven, which went this way and that till the waters were gone from the earth.
+And he sent out a dove, to see if the waters had gone from the face of the earth;
+But the dove saw no resting-place for her foot, and came back to the ark, for the waters were still over all the earth; and he put out his hand, and took her into the ark.
+And after waiting another seven days, he sent the dove out again;
+And the dove came back at evening, and in her mouth was an olive-leaf broken off: so Noah was certain that the waters had gone down on the earth.
+And after seven days more, he sent the dove out again, but she did not come back to him.
+And in the six hundred and first year, on the first day of the first month, the waters were dry on the earth: and Noah took the cover off the ark and saw that the face of the earth was dry.
+And on the twenty-seventh day of the second month the earth was dry.
+And God said to Noah,
+Go out of the ark, you and your wife and your sons and your sons' wives.
+Take out with you every living thing which is with you, birds and cattle and everything which goes on the earth, so that they may have offspring and be fertile and be increased on the earth.
+And Noah went out with his sons and his wife and his sons' wives;
+And every beast and bird and every living thing of every sort which goes on the earth, went out of the ark.
+And Noah made an altar to the Lord, and from every clean beast and bird he made burned offerings on the altar.
+--]]
+
 EventHandler = {}
 
 EventHandler[0] = function(eventInfo, eventManager, surfaceDatas)
@@ -79,6 +102,29 @@ EventHandler[0] = function(eventInfo, eventManager, surfaceDatas)
   end  
 end
 
+--[[
+Now Dinah, the daughter whom Leah had by Jacob, went out to see the women of that country.
+And when Shechem, the son of Hamor the Hivite who was the chief of that land, saw her, he took her by force and had connection with her.
+Then his heart went out in love to Dinah, the daughter of Jacob, and he said comforting words to her.
+And Shechem said to Hamor, his father, Get me this girl for my wife.
+Now Jacob had word of what Shechem had done to his daughter; but his sons were in the fields with the cattle, and Jacob said nothing till they came.
+Then Hamor, the father of Shechem, came out to have a talk with Jacob.
+Now the sons of Jacob came in from the fields when they had news of it, and they were wounded and very angry because of the shame he had done in Israel by having connection with Jacob's daughter; and they said, Such a thing is not to be done.
+But Hamor said to them, Shechem, my son, is full of desire for your daughter: will you then give her to him for a wife?
+And let our two peoples be joined together; give your daughters to us, and take our daughters for yourselves.
+Go on living with us, and the country will be open to you; do trade and get property there.
+And Shechem said to her father and her brothers, If you will give ear to my request, whatever you say I will give to you.
+However great you make the bride-price and payment, I will give it; only let me have the girl for my wife.
+But the sons of Jacob gave a false answer to Shechem and Hamor his father, because of what had been done to Dinah their sister.
+And they said, It is not possible for us to give our sister to one who is without circumcision, for that would be a cause of shame to us:
+But on this condition only will we come to an agreement with you: if every male among you becomes like us and undergoes circumcision;
+Then we will give our daughters to you and take your daughters to us and go on living with you as one people.
+But if you will not undergo circumcision as we say, then we will take our daughter and go.
+And their words were pleasing to Hamor and his son Shechem.
+And without loss of time the young man did as they said, because he had delight in Jacob's daughter, and he was the noblest of his father's house.
+--]]
+
+
 EventHandler[1] = function(eventInfo, eventManager, surfaceDatas)
   local role = Role.mapNpcs[eventInfo.parameter];
 
@@ -157,6 +203,23 @@ EventHandler[2] = function(eventInfo, eventManager, surfaceDatas)
   ]]--
 end
 
+--[[
+And these two had a dream on the same night; the chief wine-servant and the chief bread-maker of the king of Egypt, who were in prison, the two of them had dreams with a special sense.
+And in the morning when Joseph came to them he saw that they were looking sad.
+And he said to the servants of Pharaoh who were in prison with him, Why are you looking so sad?
+Then they said to him, We have had a dream, and no one is able to give us the sense. And Joseph said, Does not the sense of dreams come from God? what was your dream?
+Then the chief wine-servant gave Joseph an account of his dream, and said, In my dream I saw a vine before me;
+And on the vine were three branches; and it seemed as if it put out buds and flowers, and from them came grapes ready for cutting.
+And Pharaoh's cup was in my hand, and I took the grapes and crushing them into Pharaoh's cup, gave the cup into Pharaoh's hand.
+Then Joseph said, This is the sense of your dream: the three branches are three days;
+After three days Pharaoh will give you honour, and put you back into your place, and you will give him his cup as you did before, when you were his wine-servant.
+But keep me in mind when things go well for you, and be good to me and say a good word for me to Pharaoh and get me out of this prison:
+For truly I was taken by force from the land of the Hebrews; and I have done nothing for which I might be put in prison.
+Now when the chief bread-maker saw that the first dream had a good sense, he said to Joseph, I had a dream; and in my dream there were three baskets of white bread on my head;
+And in the top basket were all sorts of cooked meats for Pharaoh; and the birds were taking them out of the baskets on my head.
+Then Joseph said, This is the sense of your dream: the three baskets are three days;
+--]]
+
 EventHandler[3] = function(eventInfo, eventManager, surfaceDatas)
   eventManager.SetSession(true);
   --[[
@@ -166,6 +229,36 @@ EventHandler[3] = function(eventInfo, eventManager, surfaceDatas)
   FConnect.SedMessage(11, 1);
   ]]--
 end
+
+--[[
+Now Abraham was old and far on in years: and the Lord had given him everything in full measure.
+And Abraham said to his chief servant, the manager of all his property, Come now, put your hand under my leg:
+And take an oath by the Lord, the God of heaven and the God of the earth, that you will not get a wife for my son Isaac from the daughters of the Canaanites among whom I am living;
+But that you will go into my country and to my relations and get a wife there for my son Isaac.
+And the servant said, If by chance the woman will not come with me into this land, am I to take your son back again to the land from which you came?
+And Abraham said, Take care that you do not let my son go back to that land.
+The Lord God of heaven, who took me from my father's house and from the land of my birth, and made an oath to me, saying, To your seed I will give this land: he will send his angel before you and give you a wife for my son in that land.
+And if the woman will not come with you, then you are free from this oath; only do not take my son back there.
+And the servant put his hand under Abraham's leg, and gave him his oath about this thing.
+And the servant took ten of his master's camels, and all sorts of good things of his master's, and went to Mesopotamia, to the town of Nahor.
+And he made the camels take their rest outside the town by the water-spring in the evening, at the time when the women came to get water.
+And he said, O Lord, the God of my master Abraham, let me do well in what I have undertaken this day, and give your mercy to my master Abraham.
+See, I am waiting here by the water-spring; and the daughters of the town are coming out to get water:
+Now, may the girl to whom I say, Let down your vessel and give me a drink, and who says in answer, Here is a drink for you and let me give water to your camels: may she be the one marked out by you for your servant Isaac: so may I be certain that you have been good to my master Abraham.
+And even before his words were ended, Rebekah, the daughter of Bethuel, the son of Milcah, who was the wife of Nahor, Abraham's brother, came out with her water-vessel on her arm.
+She was a very beautiful girl, a virgin, who had never been touched by a man: and she went down to the spring to get water in her vessel.
+And the servant came running to her and said, Give me a little water from your vessel.
+And she said, Take a drink, my lord: and quickly letting down her vessel onto her hand, she gave him a drink.
+And having done so, she said, I will get water for your camels till they have had enough.
+And after putting the water from her vessel into the animals' drinking-place, she went quickly back to the spring and got water for all the camels.
+And the man, looking at her, said nothing, waiting to see if the Lord had given his journey a good outcome.
+And when the camels had had enough, the man took a gold nose-ring, half a shekel in weight, and two ornaments for her arms of ten shekels weight of gold;
+And said to her, Whose daughter are you? is there room in your father's house for us?
+And she said to him, I am the daughter of Bethuel, the son of Milcah, Nahor's wife.
+And she said, We have a great store of dry grass and cattle-food, and there is room for you.
+And with bent head the man gave worship to the Lord;
+And said, Praise be to the Lord, the God of my master Abraham, who has given a sign that he is good and true to my master, by guiding me straight to the house of my master's family.
+]]--
 
 EventHandler[4] = function(eventInfo, eventManager, surfaceDatas)
   local role = Role.mapNpcs[eventInfo.parameter];
@@ -187,6 +280,31 @@ EventHandler[5] = function(eventInfo, eventManager, surfaceDatas)
   --eventManager.SetConduct(true);  
   MoviePlayer.PlayMovie(eventInfo.resultValue);  
 end
+
+--[[
+In the beginning God created the heaven and the earth.At the first God made the heaven and the earth.
+And the earth was without form, and void; and darkness was upon the face of the deep. And the Spirit of God moved upon the face of the waters.
+At the first God made the heaven and the earth.And the earth was waste and without form; and it was dark on the face of the deep: and the Spirit of God was moving on the face of the waters.And God said, Let there be light: and there was light.
+And God, looking on the light, saw that it was good: and God made a division between the light and the dark,
+Naming the light, Day, and the dark, Night. And there was evening and there was morning, the first day.
+And God said, Let there be a solid arch stretching over the waters, parting the waters from the waters.
+And God made the arch for a division between the waters which were under the arch and those which were over it: and it was so.
+And God gave the arch the name of Heaven. And there was evening and there was morning, the second day.
+And God said, Let the waters under the heaven come together in one place, and let the dry land be seen: and it was so.
+And God gave the dry land the name of Earth; and the waters together in their place were named Seas: and God saw that it was good.
+And God said, Let grass come up on the earth, and plants producing seed, and fruit-trees giving fruit, in which is their seed, after their sort: and it was so.
+And grass came up on the earth, and every plant producing seed of its sort, and every tree producing fruit, in which is its seed, of its sort: and God saw that it was good.
+And there was evening and there was morning, the third day.
+And God said, Let there be lights in the arch of heaven, for a division between the day and the night, and let them be for signs, and for marking the changes of the year, and for days and for years:
+And let them be for lights in the arch of heaven to give light on the earth: and it was so.
+And God made the two great lights: the greater light to be the ruler of the day, and the smaller light to be the ruler of the night: and he made the stars.
+And God put them in the arch of heaven, to give light on the earth;
+To have rule over the day and the night, and for a division between the light and the dark: and God saw that it was good.
+And there was evening and there was morning, the fourth day.
+And God said, Let the waters be full of living things, and let birds be in flight over the earth under the arch of heaven.
+And God made great sea-beasts, and every sort of living and moving thing with which the waters were full, and every sort of winged bird: and God saw that it was good.
+And God gave them his blessing, saying, Be fertile and have increase, making all the waters of the seas full, and let the birds be increased in the earth.
+--]]
 
 EventHandler[6] = function(eventInfo, eventManager, surfaceDatas)
   local role = Role.mapNpcs[eventInfo.parameter];

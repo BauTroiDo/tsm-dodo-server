@@ -46,6 +46,44 @@ function UILeaderboard.Initialize(go)
   text_NameInfo = uiController:FindText("Text_NameInfo");
   text_ScoreInfo = uiController:FindText("Text_ScoreInfo");
   text_Empty = uiController:FindText("Text_Empty");
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------     --5-----------------------------------------------------
+  --      if LuaHelper.CheckDefine("DemoCode") then
+  --        --
+  --      end
+  --      --6-----------------------------------------------------
+  --      --4-----------------------------------------------------
+  --      if LuaHelper.CheckDefine("DemoCode") then
+  --        for i = 1, 3 do
+  --          DemoCode.SetColorNum(i);
+  --        end
+  --        local area =  DemoCode.CalTriangleArea(1, 1);
+  --        local currentOptio = area;
+  --        local currentOption = string.Get(10055);
+  --      end
+  --      --5-----------------------------------------------------
+  --      if LuaHelper.CheckDefine("DemoCode") then
+  --        --
+  --      end
+  --      --6-----------------------------------------------------
 
   scrollContent_Leaderboard = uiController:FindScrollContent("ScrollContent_Leaderboard");
   scrollContent_Leaderboard.onInitialize = this.OnInitialize_ScrollContent_Leaderboard;
@@ -102,6 +140,26 @@ function UILeaderboard.OnOpen(leaderboardId)
   text_Empty.gameObject:SetActive(true);
 
   scrollContent_Leaderboard:Reset(0);
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 
   return true;
 end
@@ -163,6 +221,25 @@ function UILeaderboard.UpdateUI(leaderboardId, page, maxPage, myRank, myScoreInf
 end
 
 function UILeaderboard.OnClick_Close()
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   UI.Close(UILeaderboard);
 
   return true;
@@ -193,6 +270,26 @@ function UILeaderboard.OnClick_Info(uiEvent)
     sendBuffer:Clear();
     sendBuffer:WriteInt64(rankInfo.roleId);
     Network.Send(14, 9, sendBuffer);
+  
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   end
 end
 

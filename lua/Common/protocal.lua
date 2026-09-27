@@ -34,7 +34,9 @@ protocolTable[0][0] = function(data)
 
   local message = "";
   local quit = false;
-
+  
+  local messageString = data:ReadInt32();
+  
   if cause == 1 then
     message = string.Get(10001); --'封包資料太多斷線';
     quit = true;
@@ -213,7 +215,7 @@ protocolTable[0][0] = function(data)
     message = string.Get(20889); --'伺服器關機維護';
     quit = false;
   elseif cause == 61 then
-    message = string.Get(data:ReadUInt32());
+    message = string.Get(messageString);
     quit = false;
   elseif cause == 90 then
     message = string.Get(23280); --'登入太頻繁';
@@ -223,10 +225,16 @@ protocolTable[0][0] = function(data)
     quit = false;
     cause = 255;
   end
-
+  
+  local NetworkDisconnectMessage = data:ReadInt32();
+  
   Network.disconnectQuit = quit;
   Network.disconnectCause = cause;
-  Network.disconnectMessage = message;
+  if NetworkDisconnectMessage > 0 then
+    Network.disconnectMessage = string.Concat(message, "_", Network.networkDisMsg, "_", tostring(NetworkDisconnectMessage));
+  else
+    Network.disconnectMessage = message;
+  end
   Network.OnSocket(Protocal.Disconnect, nil);
 end
 
@@ -241,7 +249,7 @@ C:001-003 <帳號綁定> +綁定方式(1)
   綁定方式 1:FB +L(1) +UserId(L) +L(1) +AccessToken(L)
 C:001-016 <查Server時間>
 C:001-051 <註銷帳號>
-C:001-052 <記錄使用VtcMod> +玩家ID(8) +kind(1)
+C:001-100 <玩家換分流> GSID(2)
 ]]--
 protocolTable[1] = {};
 
@@ -357,7 +365,7 @@ protocolTable[1][2] = function(data)
   Setting.client.lastLoginKind = UILogin.loginKind;
   Setting.client.lastLoginToken = UILogin.loginToken;
   Setting.Save();
-  Network.loginKind = ELogin.VNSDK;
+  Network.loginKind = ELogin.AccPwd;
   Network.account = data:ReadString(data:ReadByte());
   Network.password = data:ReadString(data:ReadByte());
   --綁定方式
@@ -371,12 +379,19 @@ protocolTable[1][2] = function(data)
     Setting.Save();
   end
   Game.ClearAll();
+  
+  local NetworkDisconnectMessage = data:ReadInt32();
+  
+  if NetworkDisconnectMessage > 0 then
+    UISetting.networkDisMsg = NetworkDisconnectMessage;
+  end
 
   --加入心跳包
   CGTimer.AddListener(Network.CheckConnect, Network.jumpHeartTime, false);
 
-  if not Network.VtcMod or not CGResourceManager.ReadText(Network.recordTxt) == "" then
-    Network.CheckVTCMod();
+  if Network.isConnectingToActivityServer == true then
+    Network.isConnectingToActivityServer = false;
+    UIActivity.TeleportToActivityScene();
   end
 end
 
@@ -506,8 +521,80 @@ protocolTable[1][13] = function(data)
   Game.OnLogin();
   Network.ResetAutoLoginInfo();
 
-  CGSDK.TrackEvent("vtc_complete_load_role");
-  CGSDK.trackRoleLogin(tostring(Network.serverId), tostring(Role.playerId), tostring(Role.player.data.name));
+  --[[
+  Chk_Show_FDisc1 = false;   --登入遊戲後第一次移動顯示
+  Chk_Show_FDisc2 = false;   --換場遇黑頻
+  Chk_Show_FDisc3 = false;   --秀人物有問題  --  92/11/19-1F
+
+  if LogPic~=nil then
+    LogPic.Free;
+    LogPic = nil;
+  end
+
+  GameEnd = false;
+  GameStart = true;      --遊戲開始
+
+  Form1.CheckHPOldTime = GetTickCount;   --判斷自動補血用
+  for i =  1 to MaxGarDamage do
+    HumManage.DamageAry[i] = 0;
+  end
+
+  --模擬伺服器啟動
+  BKSimServer = TBKSimServer.Create;
+
+  MR_FlyScrollSForm.ReSet;
+
+  Se_MainStatus.reset;
+  Se_MainStatus.appear;
+  Se_InputBar.reset;
+  Se_InputBar.appear;
+  Se_HotKeyForm.Reset;
+  Se_HotKeyForm.appear;
+  Se_ChatMsgForm.reset;
+  Se_ChatMsgForm.appear;
+  MR_BuffForm.appear;
+
+  Se_SystemForm.LoadData;
+  Se_EmotiomForm.LoadData;
+  Se_BlockMsgList.Loadlist;
+  JK_mansel1.reset;
+
+  {$ifdef Free}
+  JC_GSForm1.Init;
+  {$endif}
+
+  AC_shortMsgForm.setPic('panel4',100,20,300,145,true,0,0,50,50);
+  form1.TriggerTransition(2);
+
+  if VenderMenu ~= nil then  --只在登入時清空
+  VenderMenu.LoginInit;
+
+  LH_DragonBoat.isDragonBoatFestival = False; --登入時先清成False
+  Player.DragonBoatWinNum = 0; --登入時清成0
+  AL_WorldBossRankForm.Init;
+  FNpcUpgradeManage.Init;  --武強將化 Alen 20140801
+
+  LH_ApparatusMenu.LoadSetinfo;
+  FMixStoneMenu.GameStartDo;  --靈石強化
+  Player.InX_Mas_DoorOpen = False;  --聖誕節傳點活動光圈預設關
+  Player.IsCookingTime =  False;      --煮年菜活動傳點開關
+  FSaleRoomForm.GameStartDo;   --拍賣場
+
+  if FExpSlotForm ~= nil then
+    FExpSlotForm.GameStartDo;    --武將拉霸
+  end
+
+  --人物增益介面
+  if FHumanBuffForm ~= nil then
+    FHumanBuffForm.GameStartDo;
+  end
+
+  LH_ActGovRequireManage.Init;
+  AL_ActSwapItemManage.Init;
+  AL_ActEpicBattleManage.Init;
+  Se_EquipForm.Page = 0;
+  Se_EquipForm.ReNewPage;
+  ]]--
 end
 
 --[[ 要求送重連協定
@@ -586,8 +673,7 @@ protocolTable[1][21] = function(data)
   if Network.serverId ~= aSID then
     -- 不是原本的GS.... 我也不能幹嘛@@
   end
-  CGTimer.RemoveListener(MoveController.SendRolePosition);
-  Network.loginKind = ELogin.VNSDK;
+  Network.loginKind = ELogin.AccPwd;
   Network.serverId = Setting.client.lastServerId;
   Network.account = Setting.client.lastAccount;
   Network.password = Setting.client.lastPassword;
@@ -596,16 +682,117 @@ protocolTable[1][21] = function(data)
 end
 
 --[[
-S: 001-051 <註銷帳號> +res(1)   res 1: 成功  0:失敗(密碼錯誤)
+S: 001-051 <註銷帳號> +kind(1) +res(1)
+    kind(1)
+      0: 刪角等待時間
+          res(1)
+            0:還沒有刪角時間
+            1:有刪角時間 +時間(8)
+      1: 確認刪角
+          res(1)
+            0:失敗(密碼錯誤)
+            1:刪角成功
+            2:開始倒數
+            3:時間還沒到 +時間(8)
+      2: 取消刪角
+          res(1)
+            1:重置時間成功
 ]]--
 protocolTable[1][51] = function(data)
+  local kind = data:ReadByte();
   local result = data:ReadByte();
-  if result == 1 then
-    ShowCenterMessage(string.Get(23678));
-    Setting.client.lastAccount = "";
-    Setting.client.lastPassword = "";
-    Setting.Save();
-    Game.Logout();
+  local time;
+  if kind == 0 then
+    if result == 0 then
+      ShowConfirmDeleteAccount(string.Get(23709),string.GetColorText(string.Get(23710), Color.Red),
+        function(text)
+          if text == "1234" then
+            UISetting.OnClick_ConfirmDeleteAccount();
+          else
+            ShowCenterMessage(string.Get(23711));
+          end
+        end);
+    else
+      time = DateTime.FromOADate(data:ReadDouble());
+      if DateTime.Compare(CGTimer.serverTime, time) >= 0 then
+        ShowConfirmDeleteAccount(string.Get(24091),string.GetColorText(string.Get(24092), Color.Red),
+          function(text)
+            if text == "1234" then
+              UISetting.OnClick_ConfirmDeleteAccount();
+            elseif text == "取消刪除" then
+              UISetting.OnClick_CheckCancelDeletAccount();
+            else
+              ShowCenterMessage(string.Get(23711));
+            end
+          end);
+      else
+        local leftTime = DateTime.Subtract(time, CGTimer.serverTime);
+        ShowCheckMessage(
+          function(result)
+            if result then
+              UISetting.OnClick_CheckCancelDeletAccount();
+            end
+          end,
+          string.Concat(string.Get(24093), string.GetSecondText(math.ceil(leftTime.TotalSeconds))," ， ", string.Get(24094)),
+          Role.player
+        );
+      end
+    end
+  elseif kind == 1 then
+    if result == 0 then
+      ShowCenterMessage(string.Get(24095));
+    elseif result == 1 then
+      ShowCenterMessage(string.Get(23678));
+      Setting.client.lastAccount = "";
+      Setting.client.lastPassword = "";
+      Setting.Save();
+      Game.Logout();
+    elseif result == 2 then
+      ShowCenterMessage(string.Get(24096));
+    elseif result == 3 then
+      time = DateTime.FromOADate(data:ReadDouble());
+      local leftTime = DateTime.Subtract(time, CGTimer.serverTime);
+      ShowCheckMessage(
+        function(result)
+          if result then
+            UI.Close(UICheck);
+          end
+        end,
+        string.Concat(string.Get(24093), string.GetSecondText(math.ceil(leftTime.TotalSeconds))),
+        Role.player
+      );
+    else
+      logError("001-051 out of known result : " ..tostring(result));
+    end
+  elseif kind == 2 then
+    if result == 1 then
+      ShowCenterMessage(string.Get(24097));
+    end
+  end
+end
+
+--[[
+S:001-100 <玩家換分流結果> res(1) +GSID(2)+VerifyCode(4)
+                          res    1:成功，執行換分流動作
+                                  2:失敗，分流人數已滿
+                                  0:失敗
+]]--
+
+protocolTable[1][100] = function(data)
+  local result = data:ReadByte();
+  local gsId = data:ReadUInt16();
+  local verifyCode = data:ReadUInt32();
+  if result == 0 then
+    ShowCenterMessage(string.Get(80012));
+  elseif result == 1 then
+    Network.verifyCode = verifyCode;
+    UIServerArea.DoConnect(verifyCode, gsId);
+  elseif result == 2 then
+    ShowCenterMessage(string.Get(10330));
+  elseif result == 3 then
+    ShowCenterMessage(string.Get(40322));
+  else
+    logError(" result : " .. result);
   end
 end
 
@@ -617,7 +804,6 @@ C:002-004 <GM頻發話> +L(1) +內容(L) +物品數量(1) <<+物品資料(?)>> +
 C:002-005 <隊頻發話> +L(1) +內容(L) +物品數量(1) <<+物品資料(?)>> +武將數量(1) <<+武將資料(?)>>
 C:002-006 <團頻發話> +L(1) +內容(L) +物品數量(1) <<+物品資料(?)>> +武將數量(1) <<+武將資料(?)>>
 C:002-007 <盟頻發話> +L(1) +內容(L) +物品數量(1) <<+物品資料(?)>> +武將數量(1) <<+武將資料(?)>>
-C:002-008 <AI聊天>  npcId(2)+L(1) +內容(L)
 ]]--
 protocolTable[2] = {}
 
@@ -677,19 +863,11 @@ protocolTable[2][7] = function(data)
   Chat.ReceiveMessage(EChannel.Ally, data);
 end
 
---[[ AI聊天訊息
-S:002-008 <AI聊天訊息> +玩家ID(8) +稱號(2) +L(1) +名字(L) +L(1) +內容(L)
+--[[ 系統公告暫時禁言
+S:002-008 <系統公告暫時禁言>
 ]]--
 protocolTable[2][8] = function(data)
-  Chat.ReceiveMessage(EChannel.AI, data);
-  --UIAIChat.ReceiveMessage(data);
-end
-
---[[ AI聊天訊息
-S:002-009 <AI聊天訊息> +玩家ID(8) +稱號(2) +L(1) +名字(L) +L(1) +內容(L)
-]]--
-protocolTable[2][9] = function(data)
-  Chat.ReceiveMessage(EChannel.AI, data);
+  --Se_InputBar.SetSystemSpeakTick;
 end
 
 --[[ 廣播訊息
@@ -846,6 +1024,11 @@ end
 S:005-004 <資料傳完可秀人物>
 ]]--
 protocolTable[5][4] = function(data)
+  --[[
+  HumManage.isShowHum = True;
+  Player.MoveOldTime = GetTickCount;
+  MouseInfo.SetNowCursor(curDefault);
+  ]]--
 end
 
 --[[ 玩家變身
@@ -855,6 +1038,7 @@ protocolTable[5][5] = function(data)
   while data.length > 0 do
     local roleId = data:ReadInt64();
     local npcId = data:ReadUInt16();
+
     if Role.players[roleId] ~= nil then
       if npcDatas[npcId] ~= nil then
         Role.players[roleId].npcId = npcId;
@@ -863,7 +1047,7 @@ protocolTable[5][5] = function(data)
       end
 
       Role.players[roleId]:UpdateAll();
-      Role.players[roleId]:UpdateFieldEffect();
+
       --若是玩家,更新裝備和狀態欄
       if roleId == Role.playerId then
         --[[
@@ -923,7 +1107,7 @@ protocolTable[5][10] = function(data)
   Role.players[roleId]:PlayUpEffect("LevelUP", 0);
 
   if roleId == Role.playerId then
-    AudioManager.PlayOnce("WA0013", 0);
+    AudioManager.PlayOnce("AudioClip_WA0013", 0);
   end
 end
 
@@ -1044,18 +1228,10 @@ S:007-000 <玩家瞬移> +玩家ID(8) +場景編號(2) +座標X(2) +座標Y(2)
 ]]--
 protocolTable[7][0] = function(data)
   local roleId = data:ReadInt64();
-  local sceneId = data:ReadUInt16();
+
   if Role.players[roleId] == nil then return end
 
-  if BattleRoyale.InBattleRoyaleScene(sceneId) then
-    for k, v in pairs(BattleRoyale.GetOutfit()) do
-      if itemDatas[v] ~= nil then
-        Role.players[roleId]:SetEquip(itemDatas[v].fitType + Role.maxOutfitStyle, v, false);
-      end
-    end
-  end
-
-  Role.players[roleId]:ChangeScene(sceneId, Vector2.New(data:ReadUInt16(), data:ReadUInt16()), nil ,Role.player.data.instanceId);
+  Role.players[roleId]:ChangeScene(data:ReadUInt16(), Vector2.New(data:ReadUInt16(), data:ReadUInt16()), nil ,Role.player.data.instanceId);
 end
 
 --[[ 分區列表
@@ -1063,11 +1239,6 @@ S:007-001 <分區列表> +數量(1) <<+區號(2)>>
 ]]--
 protocolTable[7][1] = function(data)
   local count = data:ReadByte();
-
-  if count <= 0 then
-    ShowCenterMessage(string.Get(10135));
-    return;
-  end
 
   table.Clear(UIServerArea.instances);
 
@@ -1124,7 +1295,6 @@ C:008-011 <脫胎換骨確認> +武將索引(1) +結果(1)
   結果 1:同意 2:取消
 C:008-014 <設定3轉人物光暗屬性> +結果(1)
   結果 1:同意 2:取消
-C:008-016 <無界重置配點>
 ]]--
 protocolTable[8] = {}
 
@@ -1336,14 +1506,6 @@ protocolTable[8][15] = function(data)
   end
 end
 
---[[
-S:008-016<無界重置配點> 結果(1) [1:成功 2:失敗 3:冷卻中 255:功能未開放]
-]]--
-protocolTable[8][16] = function(data)
-  local result = data:ReadByte();
-  Status.ReceiveResetUnboundAttribute(result);
-end
-
 --[[ 選角色
 C:009-001 <創角> +性別(1) +臉圖(1) +頭型(1) +體型(1) +調色盤1(4) +調色盤5(4) +屬性(1) +數值(1)*6 +密碼L(1) +密碼(密碼L) +暗碼L(1) +暗碼(暗碼L)
 C:009-002 <檢查名字> +名字(?)
@@ -1358,8 +1520,6 @@ protocolTable[9][1] = function(data)
 
   --C:003 <選擇角色>
   Network.Send(3);
-
-  CGSDK.TrackEvent("vtc_complete_create_role");
 end
 
 --[[ 檢查名字
@@ -1367,6 +1527,8 @@ S:009-003 <檢查名字> +結果(1)
   結果 0:可用
   結果 1:重複
   結果 2:非法
+  結果 8:確認角色是否存在其他伺服器中
+  結果 9:其他伺服器已有角色
 ]]--
 protocolTable[9][3] = function(data)
   local result = data:ReadByte();
@@ -1377,6 +1539,10 @@ protocolTable[9][3] = function(data)
     ShowCenterMessage(string.Get(50041));
   elseif result == 3 then
     ShowCenterMessage(string.Get(50053));
+  elseif result == 8 then
+    ShowCenterMessage(string.Get(23958));
+  elseif result == 9 then
+    ShowCenterMessage(string.Get(23959));
   end
 end
 
@@ -1449,10 +1615,6 @@ S:011-000 <結束戰鬥> + 結束的玩家ID(8) + 結束的NPCIndex(2)
 ]]--
 protocolTable[11][0] = function(data)
   FightManager.FightOver(data:ReadInt64(), data:ReadUInt16());
-
-  --if not Network.VtcMod then
-  --  Network.CheckVTCMod();
-  --end
 end
 
 --[[ 角色離開戰鬥
@@ -1462,7 +1624,17 @@ protocolTable[11][1] = function(data)
   local colm = data:ReadByte();
   local row = data:ReadByte();
   FightManager.RevExitFight(colm, row);
-  --log("Exit Fight 11 1 "..colm.." "..row);
+
+  local  idx = FightField.GetFHumIdx(colm, row);
+  if FightField.fightHum[idx] ~= nil then
+    FightField.fightHum[idx].blnActSetOK = true;
+
+    if idx == FightField.GetPlayerIdx() or FightField.fightHum[idx].masterID == Role.playerId then
+      FightField.NextControlMan();
+    end
+
+    FightField.ShowSlowTurtle();
+  end
 end
 
 --[[ 戰鬥錯誤訊息
@@ -1501,11 +1673,6 @@ protocolTable[11][4] = function(data)
       if Role.foreignNpcs[index2] == nil then return end
 
       Role.foreignNpcs[index2]:SetWar(warKind);
-
-    elseif kind == EHuman.BattleRoyaleNpc then
-      if Role.battleRoyaleNpcs[index2] == nil then return end
-
-      Role.battleRoyaleNpcs[index2]:SetWar(warKind);
     end
   end
 end
@@ -1618,20 +1785,11 @@ protocolTable[12][0] = function(data)
 
   --外顯外觀裝備
   local outfitStyleCount = data:ReadByte();
-
-  if BattleRoyale.InBattleRoyaleScene(sceneId) then
-    for k, v in pairs(BattleRoyale.GetOutfit()) do
-      if itemDatas[v] ~= nil then
-        Role.players[roleId]:SetEquip(itemDatas[v].fitType + Role.maxOutfitStyle, v, false);
-      end
-    end
-  else
-    for i = 1, outfitStyleCount do
-      local itemId = data:ReadUInt16();
-
-      if itemDatas[itemId] ~= nil then
-        Role.players[roleId]:SetEquip(itemDatas[itemId].fitType + Role.maxOutfitStyle, itemId, false);
-      end
+  
+  for i = 1, outfitStyleCount do
+    local itemId = data:ReadUInt16();
+    if itemDatas[itemId] ~= nil then
+      Role.players[roleId]:SetEquip(itemDatas[itemId].fitType + Role.maxOutfitStyle, itemId, false);
     end
   end
 
@@ -1656,7 +1814,6 @@ C:013-008 <回覆邀請組隊> +結果(1) +玩家ID(8)
   結果 3:無回應
 C:013-009 <換隊長> +玩家ID(8)
 C:013-010 <踼隊員> +玩家ID(8)
-C:013-015 <組隊中換移動狀態> +玩家ID(8) +狀態(1)
 ]]--
 protocolTable[13] = {}
 
@@ -1855,27 +2012,6 @@ protocolTable[13][14] = function(data)
   end
 end
 
---[[
-S:013-015 <組隊中換移動狀態> +玩家ID(8) +狀態(1)
-]]--
-protocolTable[13][15] = function(data)
-  local playerId = data:ReadInt64();
-  local status = data:ReadByte();
-  Role.players[playerId]:ChangeFreeMove(status);
-
-  if Team.IsLeader(playerId) and Role.player.freeMove then
-    ShowCheckMessage(
-            function(result)
-              if result then
-                  UIMiniMap.FreeMove();
-              end ;
-            end,
-            "隊長請求歸隊",
-            nil
-    );
-  end
-end
-
 --[[ 好友
 C:014-001 <玩家寄信> +玩家ID(8) +信件種類(1) +內容(?)
 C:014-004 <刪除好友> +玩家ID(8)
@@ -2031,16 +2167,7 @@ protocolTable[14][14] = function(data)
     local itemId = data:ReadUInt16();
     otherInfo.equips[itemDatas[itemId].fitType + Role.maxOutfitStyle] = itemDatas[itemId];
   end
-
-  if BattleRoyale.InBattleRoyaleScene() then
-    for k, v in pairs(BattleRoyale.GetOutfit()) do
-      local item = itemDatas[v];
-      if item ~= nil then
-        otherInfo.equips[item.fitType + Role.maxOutfitStyle] = item;
-      end
-    end
-  end
-
+  
   otherInfo.titleId = data:ReadUInt16();
   otherInfo.marriage = data:ReadByte();
 
@@ -2758,7 +2885,7 @@ end
 S:020-019 <事件儲值成功> +點數(2)
 ]]--
 protocolTable[20][19] = function(data)
-  AudioManager.PlayOnce("WA0014", 0);
+  AudioManager.PlayOnce("AudioClip_WA0014", 0);
   ShowCenterMessage(tostring(data:ReadUInt16())..string.Get(40367)..string.Get(30069), 2);
 end
 
@@ -2803,7 +2930,7 @@ end
 S:020-022 <獲得屬性點數訊息> +點數(1)
 ]]--
 protocolTable[20][22] = function(data)
-  AudioManager.PlayOnce("WA0014", 0);
+  AudioManager.PlayOnce("AudioClip_WA0014", 0);
   ShowCenterMessage(string.Get(30075)..tostring(data:ReadByte())..string.Get(30077), 2);
 end
 
@@ -2811,7 +2938,7 @@ end
 S:020-023 <獲得技能點數訊息> +點數(1)
 ]]--
 protocolTable[20][23] = function(data)
-  AudioManager.PlayOnce("WA0014", 0);
+  AudioManager.PlayOnce("AudioClip_WA0014", 0);
   ShowCenterMessage(string.Get(30076)..tostring(data:ReadByte())..string.Get(30077), 2);
 end
 
@@ -3361,7 +3488,7 @@ protocolTable[22][1] = function(data)
 end
 
 --[[ MapNpc移動
-S:022-002 <MapNpc 顯示 + 移動> +索引(2) +座標X(2) +座標Y(2)
+S:022-002 <MapNpc移動> +索引(2) +座標X(2) +座標Y(2) 
 ]]--
 protocolTable[22][2] = function(data)
   local index = data:ReadUInt16();
@@ -3481,144 +3608,19 @@ protocolTable[22][10] = function(data)
   --MapNpc[aIdx].AssignMove( FConnect.CharToWord(Copy(Data, 4, 2)), FConnect.CharToWord(Copy(Data, 6, 2)) );
 end
 
---[[ BattleRoyaleNpc圖序
-S:022-021 <BattleRoyaleNpc圖序> +索引(8) +圖序(1)
-]]--
-protocolTable[22][21] = function(data)
-  local index = data:ReadInt64();
-
-  if Role.battleRoyaleNpcs[index] == nil then return end
-
-  Role.battleRoyaleNpcs[index]:SetAnimationForceFrame(data:ReadByte());
-end
-
---[[ 大逃殺NPC移動
-S:022-022 <大逃殺NPC顯示 + 移動> +索引(8) +座標X(2) +座標Y(2)
-]]--
-protocolTable[22][22] = function(data)
-  local index = data:ReadInt64();
-
-  if Role.battleRoyaleNpcs[index] == nil then return end
-  Role.battleRoyaleNpcs[index]:SetVisible(ERoleVisible.Visible);
-  Role.battleRoyaleNpcs[index]:Move(Vector2.New(data:ReadUInt16(), data:ReadUInt16()));
-end
-
---[[ BattleRoyaleNpc隱形
-S:022-023 <BattleRoyaleNpc隱形> +索引(8) +消失時間(2)
-]]--
-protocolTable[22][23] = function(data)
-  local index = data:ReadInt64();
-
-  if Role.battleRoyaleNpcs[index] == nil then return end
-
-  Role.battleRoyaleNpcs[index]:SetVisible(ERoleVisible.Hide, data:ReadUInt16());
-end
-
---[[ 大逃殺NPC出現
-S:022-024 <大逃殺NPC出現> +數量(2)<<+索引(8) +NpcID(4) +座標X(2) +座標Y(2) +戰鬥形式(1)>>
-]]--
-protocolTable[22][24] = function(data)
-  local count = data:ReadUInt16();
-  for i = 1, count do
-    Role.BattleRoyaleNpcAppear(data:ReadInt64(), data:ReadInt32(), Vector2.New(data:ReadUInt16(), data:ReadUInt16()), data:ReadByte());
-  end
-end
-
---[[ BattleRoyaleNpc瞬移
-S:022-025 <BattleRoyaleNpc瞬移> +索引(8) +座標X(2) +座標Y(2)
-]]--
-protocolTable[22][25] = function(data)
-  local index = data:ReadInt64();
-
-  if Role.battleRoyaleNpcs[index] == nil then return end
-
-  Role.battleRoyaleNpcs[index]:Teleport(Vector2.New(data:ReadUInt16(), data:ReadUInt16()));
-end
-
---[[ BattleRoyaleNpc是否顯示
-S:022-026 <BattleRoyaleNpc是否顯示> +索引(8) +顯示種類(1)
-]]--
-protocolTable[22][26] = function(data)
-  local index = data:ReadInt64();
-
-  if Role.battleRoyaleNpcs[index] == nil then return end
-
-  Role.battleRoyaleNpcs[index]:SetVisible(data:ReadByte());
-end
-
---[[ BattleRoyaleNpc做表情
-S:022-027 <BattleRoyaleNpc做表情> +索引(8) +表情(1)
-]]--
-protocolTable[22][27] = function(data)
-  local index = data:ReadInt64();
-
-  if Role.battleRoyaleNpcs[index] == nil then return end
-
-  Role.battleRoyaleNpcs[index]:PlayEmoji(data:ReadByte() + 100);
-end
-
---[[ BattleRoyaleNpc做動作
-S:022-028 <BattleRoyaleNpc做動作> +索引(8) +動作(1)
-]]--
-protocolTable[22][28] = function(data)
-  local index = data:ReadInt64();
-  local action = data:ReadByte();
-
-  if Role.battleRoyaleNpcs[index] == nil then return end
-
-  Role.battleRoyaleNpcs[index]:SetAnimationForceId(action);
-end
-
---[[ ANPC對著BNPC做動作(大逃殺)
-S:022-029 <ANPC對著BNPC做動作> +索引A(8) +動作(1) +索引B(8)
-]]--
-protocolTable[22][29] = function(data)
-  local indexA = data:ReadInt64();
-  local action = data:ReadByte();
-  local indexB = data:ReadInt64();
-
-  if Role.battleRoyaleNpcs[indexA] == nil then return end
-  if Role.battleRoyaleNpcs[indexB] == nil then return end
-  if not Role.battleRoyaleNpcs[indexA]:CheckAction(action) then return end
-
-  Role.battleRoyaleNpcs[indexA]:FaceTo(Role.battleRoyaleNpcs[indexB]);
-  Role.battleRoyaleNpcs[indexA]:SetAnimationForceId(action);
-end
-
---[[ BattleRoyaleNpc移動
-S:022-030 <BattleRoyaleNpc直線移動> +索引(8) +座標X(2) +座標Y(2)
-]]--
-protocolTable[22][30] = function(data)
-  local index = data:ReadInt64();
-
-  if Role.battleRoyaleNpcs[index] == nil then return end
-
-  Role.battleRoyaleNpcs[index]:Move(Vector2.New(data:ReadUInt16(), data:ReadUInt16()), nil, true);
-  --不知道跟一般移動有什麼不一樣 Alfie
-  --MapNpc[aIdx].AssignMove( FConnect.CharToWord(Copy(Data, 4, 2)), FConnect.CharToWord(Copy(Data, 6, 2)) );
-end
-
---[[ BattleRoyaleNpc刪除
-S:022-031 <BattleRoyaleNpc刪除> +索引(8)
-]]
-protocolTable[22][31] = function(data)
-  local index = data:ReadInt64();
-  Role.BattleRoyaleNpcDisappear(index);
-end
-
 --[[ 物品
 C:023-002 <拾取場景物品> +索引(1)
-C:023-003 <丟棄背包物品> +背包索引(1) +數量(1)
-C:023-010 <移動背包物品> +原始背包索引(1) +數量(1) +目標背包索引(1)
-C:023-011 <穿上玩家裝備> +背包索引(1)
-C:023-012 <卸下玩家裝備> +裝備位置(1) +背包索引(1)
+C:023-003 <丟棄背包物品> +背包索引(2) +數量(4)
+C:023-010 <移動背包物品> +原始背包索引(2) +數量(4) +目標背包索引(2)
+C:023-011 <穿上玩家裝備> +背包索引(2)
+C:023-012 <卸下玩家裝備> +裝備位置(1) +背包索引(2)
 C:023-013 <丟棄玩家裝備> +背包索引(1)
-C:023-014 <合成物品> <<+背包索引(1) +數量(4)>>*3 +合成種類(1)
+C:023-014 <合成物品> <<+背包索引(2) +數量(4)>>*3 +合成種類(1)
   合成種類 1:合成 2:精煉 3:鑲嵌
-C:023-015 <使用物品> +批次使用數量(1) +背包索引(1) +數量(1) +武將索引(1) +使用種類(1)
+C:023-015 <使用物品> +批次使用數量(1) +背包索引(2) +數量(4) +武將索引(1) +使用種類(1)
 C:023-016 <丟棄金錢> +數量(4)
-C:023-017 <穿上武將裝備> +武將索引(1) +背包索引(1)
-C:023-018 <卸下武將裝備> +武將索引(1) +裝備位置(1) +背包索引(1)
+C:023-017 <穿上武將裝備> +武將索引(1) +背包索引(2)
+C:023-018 <卸下武將裝備> +武將索引(1) +裝備位置(1) +背包索引(2)
 C:023-019 <丟棄武將裝備> +武將索引(1) +裝備位置(1)
 C:023-020 <對他人使用物品或技能> +熱鍵種類(1) +熱鍵ID(2) +對象種類(1) +對象索引(1) +對象玩家ID(8)
 C:023-030 <開始擺攤> +L(1) +攤販名稱(L) +商品數量(1) <<+背包索引(1) +價格(4)>>
@@ -3629,11 +3631,11 @@ C:023-034 <城池寶庫存物品> <<+索引(1)>>
 C:023-035 <城池寶庫領物品> <<+索引(1)>>
 C:023-036 <巴豆背包存物品> <<+索引(1)>>
 C:023-037 <巴豆背包領物品> <<+索引(1)>>
-C:023-038 <變換頭型> +頭型(1) +顏色R(1) +顏色G(1) +顏色B(1)
+C:023-038 <變換髮色 or 膚色> +背包索引(2) +顏色R(1) +顏色G(1) +顏色B(1)
 C:023-039 <儲值卡> +L(1) +卡號(L) +L(1) +密碼(L) +金額(4)
 C:023-045 <魔豆已爬上豆苗>
 C:023-046 <第一次轉生> +頭型(1) +調色盤1(4) +調色盤5(4)
-C:023-047 <變換頭型> +背包索引(1) +頭型(1)
+C:023-047 <變換頭型> +背包索引(2) +頭型(1)
 C:023-048 <取消蜜蜂丸>
 C:023-049 <開啟寶物介面>
 C:023-050 <購買寶物> +索引(1) +寶物ID(2) +點數(4)
@@ -3648,27 +3650,27 @@ C:023-058 <水戰穿上裝備> +索引(1)
 C:023-059 <水戰卸下裝備> +索引(1)
 C:023-060 <開始轉蛋>
 C:023-073 <記憶傳送符> +kind(1) +傳送索引(1) 1:使用 2:記憶
-C:023-075 <屬性轉換符> +背包索引(1) +屬性(1)
-C:023-076 <職業轉換符> +背包索引(1) +職業(1)
+C:023-075 <屬性轉換符> +背包索引(2) +屬性(1)
+C:023-076 <職業轉換符> +背包索引(2) +職業(1)
 C:023-077 <暫時交易符> +背包索引(1) +目標索引(1)
-C:023-078 <靈石強化> +靈石背包索引(1) +裝備背包索引(1) +符背包索引(1)
-C:023-079 <裝備修理> +裝備背包索引(1) +羽毛背包索引(1) +羽毛數量(1)
+C:023-078 <靈石強化> +靈石背包索引(2) +裝備背包索引(2) +符背包索引(2)
+C:023-079 <裝備修理> +裝備背包索引(2) +羽毛背包索引(2) +羽毛數量(2)
 C:023-080 <神煉化> +石頭種類(1) +背包索引(1)
 C:023-081 <第三次轉生> +頭型(1) +調色盤1(4) +調色盤5(4) +職業(1)
 C:023-082 <隨身背包存物品> <<+索引(1)>>
 C:023-083 <隨身背包領物品> <<+索引(1)>>
 C:023-084 <禮物箱領物品> <<+索引(1)>>
 C:023-085 <時裝強化> +背包索引(1) +背包索引(1) +背包索引(1)
-C:023-086 <天官強化> +符背包索引(1) +裝備背包索引(1) +祝福背包索引(1)
-C:023-087 <物品鎖定> 物品背包總類(1) +物品背包索引(1) +武將索引(1) +鎖定(1)[true:不能刪除 false:可以刪除]
-C:023-088 <靈石珍珠消除> +背包索引(1) +消除令背包索引(1)
-C:023-089 <鑰匙開啟寶箱功能> +寶箱背包索引(1) +鑰匙背包索引(1) +開啟數量(2)
-C:023-090 <物品進化功能> +進化物品ID(2) +材料1背包索引(1) +材料2背包索引(1) +機率背包索引(1) +防爆背包索引(1)
-C:023-091 <專武強化> +功能(1) +專武背包索引(1) +專武材料背包索引(1)
-C:023-092 <升階功能> 背包索引(1) +L(1) +<<背包索引(1) )>> +卷軸背包索引(1) +符背包索引(1)
-C:023-093 <洗鍊功能> 背包索引(1) +符背包索引(1) + indx(1)
-C:023-094 <洗鍊決定> +是否洗鍊(1) 1:確定洗鍊  + 背包索引(1) + indx(1) + 表的Indx(1)
-C:023-095 <時裝進化>  +材料1背包索引(1) +材料2背包索引(1) +機率背包索引(1)
+C:023-086 <天官強化> +符背包索引(2) +裝備背包索引(2) +祝福背包索引(2)
+C:023-087 <物品鎖定> 物品背包總類(1) +物品背包索引(2) +武將索引(1) +鎖定(1)[true:不能刪除 false:可以刪除]
+C:023-088 <靈石珍珠消除> +背包索引(2) +消除令背包索引(2)
+C:023-089 <鑰匙開啟寶箱功能> +寶箱背包索引(2) +鑰匙背包索引(2) +開啟數量(2)
+C:023-090 <物品進化功能> +進化物品ID(2) +材料1背包索引(2) +材料2背包索引(2) +機率背包索引(2) +防爆背包索引(2)
+C:023-091 <專武強化> +功能(1) +專武背包索引(2) +專武材料背包索引(2)
+C:023-092 <升階功能> 背包索引(1) +L(1) +<<背包索引(2)>> +卷軸背包索引(2) +符背包索引(2)
+C:023-093 <洗鍊功能> 背包索引(2) +符背包索引(2) + indx(1)
+C:023-094 <洗鍊決定> +是否洗鍊(1) 1:確定洗鍊  + 背包索引(2) + indx(1) + 表的Indx(1)
+C:023-095 <時裝進化>  +材料1背包索引(2) +材料2背包索引(2) +機率背包索引(2)
 C:023-124 <穿顯示時裝外觀>+ 收集冊ID(2) + 部位索引(1)
 C:023-125 <脫顯示時裝外觀>+ 部位索引(1)
 C:023-126 <從背包直接穿顯示時裝外觀>+ 收集冊ID(2) + 部位索引(1)
@@ -3715,14 +3717,14 @@ protocolTable[23][4] = function(data)
 end
 
 --[[ 背包所有物品
-S:023-005 <背包所有物品> 是否獲得新物品(1)[0.否 1.是]+數量(2) <<+索引(1) +物品資料(18)>>
+S:023-005 <背包所有物品> 是否獲得新物品(1)[0.否 1.是]+數量(2) <<+索引(2) +物品資料(18)>>
 ]]--
 protocolTable[23][5] = function(data)
   local refresh = data:ReadByte();
   local count = data:ReadUInt16();
 
   for i = 1, count do
-    Item.SetBagItem(EThings.Bag, data:ReadByte(), ThingData.New(data), false);
+    Item.SetBagItem(EThings.Bag, data:ReadUInt16(), ThingData.New(data), false);
   end
 
   Mounts.OnGetItem();
@@ -3733,24 +3735,24 @@ protocolTable[23][5] = function(data)
 end
 
 --[[ 背包設定物品
-S:023-008 <背包設定物品> +索引(1) +物品資料(18) +顯示訊息(1)
+S:023-008 <背包設定物品> +索引(2) +物品資料(18) +顯示訊息(1)
 ]]--
 protocolTable[23][8] = function(data)
-  Item.SetBagItem(EThings.Bag, data:ReadByte(), ThingData.New(data), true, 0, data:ReadBoolean());
+  Item.SetBagItem(EThings.Bag, data:ReadUInt16(), ThingData.New(data), true, 0, data:ReadBoolean());
 end
 
 --[[ 背包減少物品
-S:023-009 <背包減少物品> +索引(1) +數量(4)
+S:023-009 <背包減少物品> +索引(2) +數量(4)
 ]]--
 protocolTable[23][9] = function(data)
-  Item.DelBagItem(EThings.Bag, data:ReadByte(), data:ReadInt32());
+  Item.DelBagItem(EThings.Bag, data:ReadUInt16(), data:ReadInt32());
 end
 
 --[[ 背包移動物品
-S:023-010 <背包移動物品> ＋原始索引(1) +數量(4) +目標索引(1)
+S:023-010 <背包移動物品> ＋原始索引(2) +數量(4) +目標索引(2)
 ]]--
 protocolTable[23][10] = function(data)
-  Item.MoveBagItem(data:ReadByte(), data:ReadInt32(), data:ReadByte());
+  Item.MoveBagItem(data:ReadUInt16(), data:ReadInt32(), data:ReadUInt16());
 end
 
 --[[ 所有裝備
@@ -3773,13 +3775,13 @@ protocolTable[23][12] = function(data)
 end
 
 --[[ 合成物品
-S:023-013 <合成物品> +物品ID(2) +數量(4) +索引(1)
+S:023-013 <合成物品> +物品ID(2) +數量(4) +背包索引(2)
 ]]--
 protocolTable[23][13] = function(data)
   while data.length > 0 do
     local itemId = data:ReadUInt16();
     local quant = data:ReadInt32();
-    local bagIndex = data:ReadByte();
+    local bagIndex = data:ReadUInt16();
     local sec = 2;
 
     if UI.IsVisible(UIBag) then
@@ -3804,7 +3806,7 @@ end
 S:023-015 <使用物品成功> 物品ID(2) +物品數量(4) +是否顯示(1)[0.不顯示 1.顯示]
 ]]--
 protocolTable[23][15] = function(data)
-  AudioManager.PlayOnce("WA0014", 0);
+  AudioManager.PlayOnce("AudioClip_WA0014", 0);
   local itemId = data:ReadUInt16();
   local count = data:ReadInt32();
   local showMessage = data:ReadBoolean();
@@ -3824,25 +3826,21 @@ protocolTable[23][15] = function(data)
 end
 
 --[[ 卸下裝備
-S:023-016 <卸下裝備> +裝備部位(1) +背包索引(1)
+S:023-016 <卸下裝備> +裝備部位(1) +背包索引(2)
 ]]--
 protocolTable[23][16] = function(data)
   local fitType = data:ReadByte();
-  local bagIndex = data:ReadByte();
-
+  local bagIndex = data:ReadUInt16();
+  
   Item.SetBagItem(EThings.Bag, bagIndex, Item.GetBagItem(EThings.Equip, fitType, 0), true);
   Item.DelBagItem(EThings.Equip, fitType);
-
-  if Item.UnEquipingIndex ~= 0 then
-    Item.UnEquipAll();
-  end
 end
 
 --[[ 穿上裝備
-S:023-017 <穿上裝備> +背包索引(1)
+S:023-017 <穿上裝備> +背包索引(2)
 ]]--
 protocolTable[23][17] = function(data)
-  local bagIndex = data:ReadByte();
+  local bagIndex = data:ReadUInt16();
   local bagItem = Item.GetBagItem(EThings.Bag, bagIndex, 0);
 
   if bagItem == nil then return end
@@ -3905,27 +3903,23 @@ protocolTable[23][21] = function(data)
 end
 
 --[[ 武將卸下裝備
-S:023-022 <武將卸下裝備到背包> +武將索引(1) +裝備部位(1) +背包索引(1)
+S:023-022 <武將卸下裝備到背包> +武將索引(1) +裝備部位(1) +背包索引(2)
 ]]--
 protocolTable[23][22] = function(data)
   local followIndex = data:ReadByte();
   local fitType = data:ReadByte();
-  local bagIndex = data:ReadByte();
+  local bagIndex = data:ReadUInt16();
 
   Item.SetBagItem(EThings.Bag, bagIndex, Item.GetBagItem(EThings.Equip, fitType, followIndex), true);
   Item.DelBagItem(EThings.Equip, fitType, nil, followIndex);
-
-  if Item.UnEquipingIndex ~= 0 then
-    Item.UnEquipAll();
-  end
 end
 
 --[[ 武將穿上裝備
-S:023-023 <武將穿上裝備> +武將索引(1) +背包索引(1)
+S:023-023 <武將穿上裝備> +武將索引(1) +背包索引(2)
 ]]--
 protocolTable[23][23] = function(data)
   local followIndex = data:ReadByte();
-  local bagIndex = data:ReadByte();
+  local bagIndex = data:ReadUInt16();
   local bagItem = Item.GetBagItem(EThings.Bag, bagIndex, 0);
 
   if bagItem == nil then return end
@@ -4027,7 +4021,7 @@ protocolTable[23][28] = function(data)
 end
 
 --[[ 開始擺攤
-S:023-030 <開始擺攤> +L(1) +店名(L) +樣式(1) <<+背包索引(1) +價格(4)>>
+S:023-030 <開始擺攤> +L(1) +店名(L) +樣式(1) <<+背包索引(2) +價格(4)>>
 ]]--
 protocolTable[23][30] = function(data)
   --[[
@@ -4035,7 +4029,7 @@ protocolTable[23][30] = function(data)
   local venderId = data:ReadByte();
 
   while data.length > 0 do
-    local bagIndex = data:ReadByte();
+    local bagIndex = data:ReadUInt16();
     local price = data:ReadInt32();
 
     local thingItem = this.GetBagItem(EThings.Bag, bagIndex);
@@ -4133,7 +4127,7 @@ end
 S:023-036 <使用物品音效>
 ]]--
 protocolTable[23][36] = function(data)
-  AudioManager.PlayOnce("WA0014", 0);
+  AudioManager.PlayOnce("AudioClip_WA0014", 0);
 end
 
 --[[ 補血補魔訊息
@@ -5050,8 +5044,8 @@ end
 
 --[[ 天官強化結果
 S:023-086 <天官強化結果> +結果(1)
-  結果 1:成功 +背包索引(1) +現在階數(1)
-  結果 2:失敗 +背包索引(1) +原本階數(1) +現在階數(1)
+  結果 1:成功 +背包索引(2) +現在階數(1)
+  結果 2:失敗 +背包索引(2) +原本階數(1) +現在階數(1)
   結果 3: 物品索引錯誤
   結果 4: 無強化資料
   結果 5: 天官物品錯誤
@@ -5066,7 +5060,7 @@ protocolTable[23][86] = function(data)
   local result = data:ReadByte();
 
   if Contains(result, 1) then
-    local itemSave = Item.GetBagItem(EThings.Bag, data:ReadByte());
+    local itemSave = Item.GetBagItem(EThings.Bag, data:ReadUInt16());
     if itemSave == nil then return end
 
     itemSave.stoneLv = data:ReadByte();
@@ -5089,7 +5083,7 @@ protocolTable[23][86] = function(data)
       UICompound.StartMixEffect(ECompoundEffect.Success);
     end
   elseif Contains(result, 2) then
-    local itemSave = Item.GetBagItem(EThings.Bag, data:ReadByte());
+    local itemSave = Item.GetBagItem(EThings.Bag, data:ReadUInt16());
     if itemSave == nil then return end
 
     local beforeLv = data:ReadByte();
@@ -5132,13 +5126,13 @@ end
 
 --[[ 物品鎖定結果
 S:023-087 <物品鎖定結果> +結果(1)
-   結果 1:成功 +背包種類(1) +背包索引(1) +武將索引(1) +鎖定(1)[true:不能刪除 false:可以刪除]
-   失敗 2:失敗 +背包種類(1) +背包索引(1) +武將索引(1)
+   結果 1:成功 +背包種類(1) +背包索引(2) +武將索引(1) +鎖定(1)[true:不能刪除 false:可以刪除]
+   失敗 2:失敗 +背包種類(1) +背包索引(2) +武將索引(1)
 ]]--
 protocolTable[23][87] = function(data)
   local result = data:ReadByte();
   if result == 1 then
-    Item.SetItemLock(data:ReadByte(), data:ReadByte(), data:ReadByte(), data:ReadBoolean());
+    Item.SetItemLock(data:ReadByte(), data:ReadUInt16(), data:ReadByte(), data:ReadBoolean());
   elseif result == 2 then
   end
 end
@@ -5189,10 +5183,10 @@ end
 
 --[[ 物品進化結果
 S:023-090 <物品進化結果> +結果(1)
-  結果 1:成功 +背包索引(1) +進化前物品ID(2) +進化後物品ID(2)
+  結果 1:成功 +背包索引(2) +進化前物品ID(2) +進化後物品ID(2)
   結果 2:失敗 +進化前物品ID(2) +失敗種類(1)
     失敗種類 1:無損
-    失敗種類 2:降級 +進化後物品ID(2) +背包索引(1)
+    失敗種類 2:降級 +進化後物品ID(2) +背包索引(2)
     失敗種類 3:爆炸
   結果 3:材料不足
   結果 4:背包已滿
@@ -5201,7 +5195,7 @@ protocolTable[23][90] = function(data)
   local result = data:ReadByte();
 
   if result == 1 then
-    local bagIndex = data:ReadByte();
+    local bagIndex = data:ReadUInt16();
     local oriItemId = data:ReadUInt16();
     local evoItemId = data:ReadUInt16();
 
@@ -5228,8 +5222,8 @@ protocolTable[23][90] = function(data)
         message = string.format(string.Get(22299), itemDatas[oriItemId]:GetName(true));
       end
     elseif failCode == 2 then
-      evoItemId = data:ReadUInt16();
-      bagIndex = data:ReadByte();
+      local evoItemId = data:ReadUInt16();
+      bagIndex = data:ReadUInt16();
       if itemDatas[oriItemId] ~= nil and itemDatas[evoItemId] ~= nil then
         message = string.format(string.Get(22301), itemDatas[oriItemId]:GetName(true), itemDatas[evoItemId]:GetName(true));
       end
@@ -5274,8 +5268,8 @@ end
 
 --[[ 升階功能結果
 S:023-092 <升階功能結果> +結果(1)
-   結果 1:成功 + 背包索引(1) +強化等級(1)      (或者直接跳成功就好 不用傳bagIndex)
-   失敗 2:失敗 + 背包索引(1) +強化等級(1)
+   結果 1:成功 + 背包索引(2) +強化等級(1)      (或者直接跳成功就好 不用傳bagIndex)
+   失敗 2:失敗 + 背包索引(2) +強化等級(1)
    失敗 3:失敗
 ]]--
 protocolTable[23][92] = function(data)
@@ -5284,7 +5278,7 @@ end
 
 --[[ 洗鍊功能
 S:023-093 <洗鍊功能> +結果(1)
-   結果 1:成功 + 背包索引(1) + indx(1) + 表的Indx(1)
+   結果 1:成功 + 背包索引(2) + indx(1) + 表的Indx(1)
    失敗 2:失敗
 ]]--
 protocolTable[23][93] = function(data)
@@ -5300,8 +5294,8 @@ protocolTable[23][94] = function(data)
 end
 
 --[[S:023-095 <時裝強化結果>+結果(1)
-  結果 1:成功 +背包索引(1)
-      2:失敗 +背包索引(1)
+  結果 1:成功 +背包索引(2)
+      2:失敗 +背包索引(2)
       3:材料不足
       4:背包已滿
       0:亂送物品過來
@@ -5530,19 +5524,19 @@ end
 
 --[[ 靈石強化結果
 S:023-119 <靈石強化結果> +結果(1)
-  結果 1:成功 +背包索引(1)
-  結果 2:失敗 +背包索引(1)
+  結果 1:成功 +背包索引(2)
+  結果 2:失敗 +背包索引(2)
   結果 3:功能未開放
   結果 4:功能開關 +強化開關(1) +神煉化開關(1)
-  結果 6:神煉化成功 +背包索引(1)
-  結果 7:神煉化失敗 +背包索引(1)
+  結果 6:神煉化成功 +背包索引(2)
+  結果 7:神煉化失敗 +背包索引(2)
   結果 8:神煉化功能未開放
 ]]--
 protocolTable[23][119] = function(data)
   local result = data:ReadByte();
 
   if Contains(result, 1, 6) then --成功
-    local itemSave = Item.GetBagItem(EThings.Bag, data:ReadByte());
+    local itemSave = Item.GetBagItem(EThings.Bag, data:ReadUInt16());
     if itemSave == nil then return end
 
     if itemSave.stoneLv == 1 then
@@ -5563,7 +5557,7 @@ protocolTable[23][119] = function(data)
       UICompound.StartMixEffect(ECompoundEffect.Success);
     end
   elseif Contains(result, 2, 7) then --失敗
-    local itemSave = Item.GetBagItem(EThings.Bag, data:ReadByte());
+    local itemSave = Item.GetBagItem(EThings.Bag, data:ReadUInt16());
     if itemSave == nil then return end
 
     local beforeLv = data:ReadByte();
@@ -5948,21 +5942,30 @@ protocolTable[23][148] = function(data)
 end
 
 --[[玩家獲得物品訊息
-S:023-149 <獲得物品訊息> +數量(2) <<+索引(1) +物品ID(2) +物品數量(4)>>
+S:023-149 <獲得物品訊息> +數量(2) <<+索引(2) +物品ID(2) +物品數量(4)>>
 ]]--
 protocolTable[23][149] = function(data)
   local count = data:ReadUInt16();
   local itemData, quant;
 
   for i = 1, count do
-    Item.SetItemRedDot(EThings.Bag, data:ReadByte());
+    Item.SetItemRedDot(EThings.Bag, data:ReadUInt16());
 
     itemData = itemDatas[data:ReadUInt16()];
     quant = data:ReadUInt32();
 
     if itemData ~= nil then
-      ShowCenterMessage(string.Concat(string.Get(40049), quant, string.Get(40050), itemData:GetName(true)));
-      Chat.AddMessage(EChannel.System, string.format(string.Get(21179), itemData:GetName(true), quant));
+      local messageText = string.Concat(string.Get(40049), quant, string.Get(40050), itemData:GetName(true));
+      local chatText = string.format(string.Get(21179), itemData:GetName(true), quant);
+      if UIExpSlotMachine.Sacrificing() then
+        local text = {};
+        text.messageText = messageText;
+        text.chatText = chatText;
+        Requiem.AppendMessage(text);
+      else
+        ShowCenterMessage(messageText);
+        Chat.AddMessage(EChannel.System, chatText);
+      end
     end
   end
 
@@ -6008,12 +6011,25 @@ protocolTable[23][152] = function(data)
       Role.AddPlayerGold(quant);
     end
 
-    if itemData ~= nil then
-      ShowCenterMessage(string.format(string.Get(21391), itemData:GetName(true), quant));
-      Chat.AddMessage(EChannel.System, string.format(string.Get(21391), itemData:GetName(true), quant));
+    local unit = itemData.attribute[1];
+    if itemData ~= nil and unit ~= nil then
+      ShowCenterMessage(string.format(string.Get(21391), itemData:GetName(true), quant * unit.value));
+      Chat.AddMessage(EChannel.System, string.format(string.Get(21391), itemData:GetName(true), quant * unit.value));
     end
   end
 end
+
+--[[玩家獲得獎勵訊息
+S:023-153 <獲得獎勵> +活動種類(1) +ID(2) +數量(2) <<+物品ID(2) +物品數量(4)>>
+                     活動種類 1 : 祭祀
+]]
+protocolTable[23][153] = function(data)
+  local awardKind = data:ReadByte();
+  if awardKind == 1 then
+    Requiem.ReceiveSacrificeAward(data);
+  end
+end
+
 
 
 --[[ 標記
@@ -6073,7 +6089,7 @@ protocolTable[24][7] = function(data)
 end
 
 --[[ 設定衰神福神
-S:024-008 <設定衰神福神> +玩家ID(8) +種類(1) +次數(1)
+S:024-008 <設定衰神福神> +玩家ID(8)  +小精靈種類(2) +次數(4)
 ]]--
 protocolTable[24][8] = function(data)
   local roleId = data:ReadInt64();
@@ -6089,7 +6105,7 @@ end
 
 --[[ 交易
 C:025-001 <交易物品> +玩家ID(8)
-C:025-002 <交易物品上傳> +交易金額(4) <<+交易物品背包索引(1)>>
+C:025-002 <交易物品上傳> +交易金額(4) <<+交易物品背包索引(2)>>
 C:025-003 <交易物品確認> +結果(1)
   結果 1:同意
   結果 2:拒絕
@@ -6498,8 +6514,8 @@ end
 
 --[[ NPC買賣
 C:027-001 <買東西> +索引(1) +數量(4)
-C:027-002 <賣東西> +len(1) +<<背包索引(1) +數量(4)>>
-C:027-003 <賣東西> +數量(4) <<+背包索引(1)>>
+C:027-002 <賣東西> +len(1) +<<背包索引(2) +數量(4)>>
+C:027-003 <賣東西隨身雜貨商> +len(1) +<<背包索引(2) +數量(4)>>
 ]]--
 protocolTable[27] = {}
 
@@ -6525,7 +6541,7 @@ protocolTable[27][1] = function(data)
 end
 
 --[[ 賣東西相關訊息
-S:027-002 <賣東西相關訊息> ) 種類(1) +len(1) +<<背包索引(1)>>
+S:027-002 <賣東西相關訊息> ) 種類(1) +len(1) +<<背包索引(2)>>
 ]]--
 protocolTable[27][2] = function(data)
   local result, bagIndex;
@@ -6557,7 +6573,7 @@ protocolTable[27][2] = function(data)
 
   local count = data:ReadByte();
   for i = 1, count do
-    bagIndex = data:ReadByte();
+    bagIndex = data:ReadUInt16();
 
     if UI.IsVisible(UINpcStore) then
       UINpcStore.ReciveSellResult(result, bagIndex);
@@ -6592,7 +6608,7 @@ end
 --[[ 技能升級
 C:028-001 <玩家技能升級> <<+技能ID(2) +技能等級(1)>>
 C:028-002 <武將技能升級> +武將索引(1) +技能ID(2) +技能等級(1)
-C:028-005 <二轉寄能升級> +長度(4) <<+還不知道是啥(1)>> +長度(4) <<+技能ID(2) +技能等級(1)>> +長度(4) <<+不知道是啥索引(1) +技能ID(2)>>
+C:028-005 <二轉技能升級> +長度(4) <<+還不知道是啥(1)>> +長度(4) <<+技能ID(2) +技能等級(1)>> +長度(4) <<+不知道是啥索引(1) +技能ID(2)>>
 ]]--
 
 --[[ 錢莊相關
@@ -6626,8 +6642,8 @@ protocolTable[29][9] = function(data)
 end
 
 --[[ 錢莊物品
-C:030-001 <錢莊領物品> <<+索引(1) +數量(4)>>
-C:030-002 <錢莊存物品> <<+索引(1) +數量(4)>>
+C:030-001 <錢莊領物品> <<+索引(2) +數量(4)>>
+C:030-002 <錢莊存物品> <<+索引(2) +數量(4)>>
 C:030-003 <錢莊升級>
 C:030-004 <錢莊2存物品> <<+索引(1)>>
 C:030-005 <錢莊2領物品> <<+索引(1)>>
@@ -6638,26 +6654,26 @@ C:030-008 <關閉錢莊>
 protocolTable[30] = {}
 
 --[[ 錢莊1物品
-S:030-001 <錢莊1物品> <<+索引(1) +物品資料(18)>>
+S:030-001 <錢莊1物品> <<+索引(2) +物品資料(18)>>
 ]]--
 protocolTable[30][1] = function(data)
   while data.length > 0 do
-    Item.SetBagItem(EThings.Bank, data:ReadByte(), ThingData.New(data), false);
+    Item.SetBagItem(EThings.Bank, data:ReadUInt16(), ThingData.New(data), false);
   end
 end
 
 --[[ 錢莊1物品
-S:030-004 <錢莊1物品> +索引(1) +物品資料(18)
+S:030-004 <錢莊1物品> +索引(2) +物品資料(18)
 ]]--
 protocolTable[30][4] = function(data)
-  Item.SetBagItem(EThings.Bank, data:ReadByte(), ThingData.New(data));
+  Item.SetBagItem(EThings.Bank, data:ReadUInt16(), ThingData.New(data));
 end
 
 --[[ 錢莊1減少物品
-S:030-005 <錢莊1減少物品> +索引(1) +減少數量(4)
+S:030-005 <錢莊1減少物品> +索引(2) +減少數量(4)
 ]]--
 protocolTable[30][5] = function(data)
-  Item.DelBagItem(EThings.Bank, data:ReadByte(), data:ReadInt32());
+  Item.DelBagItem(EThings.Bank, data:ReadUInt16(), data:ReadInt32());
 end
 
 --[[ 不知道幹嘛的
@@ -6840,8 +6856,8 @@ protocolTable[31][9] = function(data)
 end
 
 --[[ 休息演出
-S:031-010 <休息演出> +種類(1) 
-  種類 1:客棧 2:行軍帳
+S:031-010 <休息演出> +種類(1)
+  種類 1:客棧 2:行軍帳
 ]]--
 protocolTable[31][10] = function(data)
   local kind = data:ReadByte();
@@ -7259,6 +7275,10 @@ S:035-050 <更新數值貨幣> +貨幣種類(1)+值(4)
 ]]--
 protocolTable[35][50] = function(data)
   Role.SetPlayerCurrency(data:ReadByte(), data:ReadUInt32())
+  
+  if UI.IsVisible(UIMain) then
+    UIMain.UpdateMoney();
+  end
 end
 
 --[[ SERVER啟動型介面
@@ -7668,7 +7688,7 @@ C:039-014 <回應擔任副團長> +玩家ID(8) +結果(1)
   結果 1:是
   結果 2:否
   結果 3:無回應
-C:039-015 <捐獻資源> +資源數(4) <<+背包索引(1)>>
+C:039-015 <捐獻資源> +資源數(4) <<+背包索引(2)>>
 C:039-016 <設定軍團權限> +權限索引(1) +玩家ID(8) +權限開關(1)
 C:039-017 <設定同盟開關> +開關(1)
 C:039-018 <團徽上傳> +團徽資料(?)
@@ -7676,7 +7696,7 @@ C:039-019 <要求更新團徽> <<+軍團ID(4)>>
 --C:039-050 <停止生產>
 --C:039-051 <停止製造>
 C:039-052 <取出武器> <<+武器索引(1) +取出數量(1)>>
-C:039-053 <存入武器> <<+背包索引(1)>>
+C:039-053 <存入武器> <<+背包索引(2)>>
 --C:039-054 <停止製毛>
 C:039-055 <升級建築> +建築索引(1)
 C:039-056 <拆毀建築> +建築索引(1)
@@ -7701,6 +7721,11 @@ C:039-111 <軍團製造取消> +製造種類(1)
 C:039-112 <軍團製造完成> +製造種類(1)
   製造種類 1:器械 2:兵種
 C:039-119 <軍團BOSS戰入場>
+C:039-160 <問支援戰軍團資料>
+C:039-161 <問支援戰個人積分>    //不確定有沒有需要這條(是不是會需要傳rolecount)
+C:039-162 <戳洞洞樂>
+C:039-163 <問洞洞樂資料>
+C:039-165 <支援戰領獎> +獎勵idx(1)
 ]]--
 protocolTable[39] = {}
 
@@ -8969,7 +8994,6 @@ protocolTable[39][163] = function(data)
 
   if UI.IsVisible(UIArmy) then
     UIArmy.UpdateAwardHistory(true);
-    UIArmy.UpdateSupportPoke();
   end
 end
 
@@ -9026,26 +9050,50 @@ protocolTable[40] = {}
 S:040-001 <查詢熱鍵資料> +<<總頁數(1) + 按鈕數(1)+<<ID(2)>>>>
 ]]--
 protocolTable[40][1] = function(data)
-  Hotkey.ReceiveHotKeyData(EHotkeyType.PlayerMain, data);
-  Hotkey.SetHotkeyIdType(EHotkeyType.PlayerMain, EHotKeyIdType.Skill);
-  Hotkey.ReceiveHotKeyData(EHotkeyType.PlayerSub, data);
-  Hotkey.SetHotkeyIdType(EHotkeyType.PlayerSub, EHotKeyIdType.Item);
+  local hotkeyData = {};
+  local index = -1;
+
+  for k = 1, 2 do
+    hotkeyData[k] = {};
+    hotkeyData[k].maxPages =  data:ReadByte();
+    hotkeyData[k].maxElements = data:ReadByte();
+    hotkeyData[k].ids = {};
+
+    for i = 1, hotkeyData[k].maxPages do
+      for j = 1, hotkeyData[k].maxElements do 
+        index = Hotkey.GetDataIndex(i, hotkeyData[k].maxElements, j);
+        hotkeyData[k].ids[index] = data:ReadUInt16();
+      end
+    end
+  end
+  Hotkey.InitViewData(hotkeyData);
 end
 
 --[[ 設定熱鍵資料
 S:040-002 <設定熱鍵資料> +結果(1)
 ]]--
 protocolTable[40][2] = function(data)
-  local result = data:ReadByte();
+local result = data:ReadByte();
   if result == 0 then
-    local dataIndex = data:ReadByte();
-    local pageIndex = data:ReadByte();
-    local keyIndex = data:ReadByte();
-    local useId = data:ReadUInt16();
+    local save = {};
 
-    Hotkey.SetHotkeyUseId(dataIndex, pageIndex, keyIndex, useId);
-    Hotkey.OnSettingFinish();
+    save.type = data:ReadByte();
+    save.page = data:ReadByte();
+    save.index = data:ReadByte();
+    save.id = data:ReadUInt16();
+    
+    local index;
+    
+    if save.type == 1 then
+      index = Hotkey.GetDataIndex(save.page, Hotkey.playerSkills.maxElements, save.index);
+      Hotkey.playerSkills.ids[index] = save.id;
+    elseif save.type == 2 then
+      index = Hotkey.GetDataIndex(save.page, Hotkey.items.maxElements, save.index);
+      Hotkey.items.ids[index] = save.id;
+    end
 
+    Hotkey.OnSettingFinsh();
+    
     ShowCenterMessage(string.Get(10307)); --設定成功
   elseif result == 1 then
     ShowCenterMessage(string.Get(10308)); --分頁錯誤
@@ -9519,7 +9567,7 @@ protocolTable[42][1] = function(data)
 
   if result == 0 then
     ShowCenterMessage(string.Get(30079));
-    AudioManager.PlayOnce("WA0014", 0);
+    AudioManager.PlayOnce("AudioClip_WA0014", 0);
   elseif Contains(result, 1, 2, 3, 5, 6, 255) then
     ShowCenterMessage(string.Get(30080));
   elseif result == 4 then
@@ -9537,7 +9585,7 @@ protocolTable[42][2] = function(data)
 
   if result == 0 then
     ShowCenterMessage(string.Get(30079));
-    AudioManager.PlayOnce("WA0014", 0);
+    AudioManager.PlayOnce("AudioClip_WA0014", 0);
   elseif Contains(result, 1, 3, 4, 255) then
     ShowCenterMessage(string.Get(30080));
   elseif result == 2 then
@@ -10357,11 +10405,8 @@ S:048-001 <開戰> + 開戰結果(1)
 ]]--
 protocolTable[48][1] = function(data)
   local result = data:ReadByte();
-
   if result == 3 then
     ShowCenterMessage(string.Get(21971));  --組隊中，無法入場！
-  elseif result == 4 then
-    ShowCenterMessage(string.Get(24463));  --條件不符，無法進入
   else
     UI.Close(UIEternalDungeon);
   end
@@ -10405,6 +10450,7 @@ S:050-001 <戰鬥使用特技> <<+長度(2) +攻擊者行(1) +攻擊者列(1) +�
 ]]--
 protocolTable[50][1] = function(data)
   FightField.DecShowStartTick(3.1);
+  FightManager.AllSoulWarriorVisible(ERoleVisible.Hide);
   FightManager.RevAttackSkill(data);
 end
 
@@ -10433,6 +10479,7 @@ S:052-001 <戰鬥開始倒數計時>
 --]]
 protocolTable[52][1] = function(data)
   FightField.SetCountDown();
+  FightManager.AllSoulWarriorVisible(ERoleVisible.Visible);
 end
 
 --[[ 戰鬥軍師回魔
@@ -10453,7 +10500,7 @@ protocolTable[53][1] = function(data)
 end
 
 --[[ 戰鬥被打扒(不用做事)
-]]--
+]]--    
 protocolTable[53][2] = function(data)
 end
 
@@ -11538,9 +11585,9 @@ end
 
 --[[ 機關盒
 C:065-001 <啟動機關盒> +玩家HP%下限(1) +玩家SP%下限(1) +武將HP%下限(1) +武將SP%下限(1) +HP補品不足回城(1) +SP補品不足回城(1) +玩家死亡回城(1) +武將死亡回城(1) +自動行走(1) +自動使用經驗物品(1)+出戰武將自動換鉛錘(1)
-C:065-002 <暫停機關盒>
-C:065-003 <確認時數>
-C:065-004 <移除晶石> +晶石ID(2) +背包索引(1)
+C:065-002 <暫停機關盒> 
+C:065-003 <確認時數> 
+C:065-004 <移除晶石> +晶石ID(2) +背包索引(2)
 C:065-005 <飛回紀錄點>
 C:065-006 <移除經驗瓶> +索引(1)
 C:065-007 <設定經驗瓶順序> +索引(1)
@@ -11690,11 +11737,15 @@ protocolTable[66][3] = function(data)
 --  Role.SetPoint(data:ReadInt32());
 
   local result = data:ReadByte();
-
   if result == 1 then
     UIMall.RefreshItemPage();
+    Mall.ClearDoro();
   elseif result == 2 then
     ShowCenterMessage(string.Get(90152)..itemDatas[itemId]:GetName(true)..string.Get(90153));
+    
+    if UI.IsVisible(UIDoro) then
+      UIDoro.OnClick_Close();
+    end
   end
 end
 
@@ -11712,6 +11763,7 @@ S:066-004 <虛寶相關訊息> +種類(1)
                           種類 10.物品關閉
                           種類 11.購買標記不符
                           種類 12.時間不符
+                          種類 255.功能關閉
 ]]--
 protocolTable[66][4] = function(data)
   local kind = data:ReadByte();
@@ -11728,6 +11780,9 @@ protocolTable[66][4] = function(data)
     ShowCenterMessage(string.Get(90150), 2);
   elseif kind == 6 then
     ShowCenterMessage(string.Get(90147), 2);
+    if UI.IsVisible(UIDoro) then
+      UIDoro.ReopenBuyMore();
+    end
   elseif kind == 7 then
     ShowCenterMessage(string.Get(20709), 2);
   elseif kind == 8 then
@@ -11740,6 +11795,8 @@ protocolTable[66][4] = function(data)
     ShowCenterMessage(string.Get(22155), 2);
   elseif kind == 12 then
     ShowCenterMessage(string.Get(22156), 2);
+  elseif kind == 255 then
+    ShowCenterMessage(string.Get(71278), 2);
   end
 
   Mall.ClearDoro();
@@ -11883,7 +11940,7 @@ end
 
 --[[ 天行異能
 C:068-001 <使用晶石天行異能> +場景ID(2) +NO(1)
-C:068-002 <使用卷軸天行異能> +場景ID(2) +NO(1) +背包索引(1)
+C:068-002 <使用卷軸天行異能> +場景ID(2) +NO(1) +背包索引(2)
 ]]--
 protocolTable[68] = {}
 
@@ -12057,10 +12114,10 @@ protocolTable[69][6] = function(data)
 
   if skillDatas[skillId] ~= nil then
     if skillLv == 1 then
-      AudioManager.PlayOnce("WA0014", 0);
+      AudioManager.PlayOnce("AudioClip_WA0014", 0);
       ShowCenterMessage(string.Get(50042)..skillDatas[skillId].name..string.Get(50043), 4);
     elseif skillLv > 1 then
-      AudioManager.PlayOnce("WA0014", 0);
+      AudioManager.PlayOnce("AudioClip_WA0014", 0);
       ShowCenterMessage(skillDatas[skillId].name..string.Get(20461), 4);
     end
   end
@@ -12571,46 +12628,6 @@ protocolTable[74][3] = function(data)
   ]]--
 end
 
---[[ VIP系統
-C:075-001 <領取VIP獎勵> Lv(1)
-]]--
-protocolTable[75] = {}
-
---[[ 取VIP獎勵結果
-S:075_001 <領取VIP獎勵結果> res(1);
-res   0: 未知錯誤  1:成功  2:等級不足  3:以領過獎
-]]--
-protocolTable[75][1] = function(data)
-  --UIVIP.RecAward(data);
-  local result = data:ReadByte();
-  if result == 0 then
-    ShowCenterMessage(string.Get(10144));
-  elseif result == 1 then
-    ShowCenterMessage(string.Get(23201));
-    if UIVIP.CheckRedDot() then
-      RedDot.Add(ERedDot.VIP);
-    else
-      RedDot.Remove(ERedDot.VIP);
-    end
-    if UI.IsVisible(UIVIP) then
-      UIVIP.UpdateUI();
-    end
-  elseif result == 2 then
-    ShowCenterMessage(string.Get(25061));
-  elseif result == 3 then
-    ShowCenterMessage(string.Get(98017));
-  else
-    logError(" S:075-001 result : " .. result);
-  end
-end
-
---[[ VIP exp
-S:075_002 <vip exp> exp(4);
-]]--
-protocolTable[75][2] = function(data)
-  UIVIP.SetVIPExp(data);
-end
-
 --[[ 武將經驗拉拉
 C:076-001 <拉拉投代幣>
 C:076-002 <拉拉開獎> +注數(1) +武將索引(1) +NPCID(2)
@@ -12714,6 +12731,12 @@ protocolTable[77][2] = function(data)
       BattlePass.UpdateRedDot();
     end
   end
+
+  if state == 2 then  --活動結束
+    if Contains(activityId, 82, 95) then  --數來寶(軍團紅包), 分紅紅包
+      ArmyLuckyBag.UpdateOpen();
+    end
+  end
 end
 
 --[[ 入場結果
@@ -12724,7 +12747,8 @@ S:077-003 <入場結果> +結果(1)
   結果 3:目的場景錯誤
   結果 4.活動尚未開始
   結果 5.組隊中傳送失敗
-]]--
+  結果 6.沒有一轉不能入場
+]] --
 protocolTable[77][3] = function(data)
   local result = data:ReadByte();
 
@@ -12736,13 +12760,15 @@ protocolTable[77][3] = function(data)
 
     MarkManager.StartNavigation(0, sceneId, 1, position);
   elseif result == 2 then
+    ShowCenterMessage(string.Get(40167));
   elseif result == 3 then
+    ShowCenterMessage(string.Get(40167));
   elseif result == 4 then
-    ShowCenterMessage(string.Get(22173));
+    ShowCenterMessage(string.Get(22004));
   elseif result == 5 then
     ShowCenterMessage(string.Get(20518));
   elseif result == 6 then
-    ShowCenterMessage(string.Get(24535));
+    ShowCenterMessage(string.Get(24463));
   end
 end
 
@@ -12778,6 +12804,7 @@ S:077-011 <活動協定> + 活動種類(1)
         1=成功 + 任務ID(2)
         2=未符合資格 + 任務ID(2)
         3=以領過 + 任務ID(2)
+        255=功能未開啟
   種類128:<通行證相關> +結果(1)+種類(1)
     結果 0=失敗
         1=成功
@@ -12959,10 +12986,10 @@ end
 --[[ 座騎
 C:079-001 <上座騎>
 C:079-002 <下座騎>
-C:079-003 <座騎升級> +背包索引(1)
-C:079-004 <座騎投點> +種類(1) +背包索引(1)
-C:079-005 <座騎穿裝> +背包索引(1)
-C:079-006 <座騎脫裝> +裝備部位(1) +背包索引(1)
+C:079-003 <座騎升級> +背包索引(2)
+C:079-004 <座騎投點> +種類(1) +背包索引(2)
+C:079-005 <座騎穿裝> +背包索引(2)
+C:079-006 <座騎脫裝> +裝備部位(1) +背包索引(2)
 C:079-007 <座騎切換> +NPCID(2)
 ]]--
 protocolTable[79] = {}
@@ -12989,10 +13016,10 @@ protocolTable[79][3] = function(data)
 end
 
 --[[ 穿上座騎裝備
-S:079-004 <穿上座騎裝備> +背包索引(1)
+S:079-004 <穿上座騎裝備> +背包索引(2)
 ]]--
 protocolTable[79][4] = function(data)
-  local bagIndex = data:ReadByte();
+  local bagIndex = data:ReadUInt16();
   local bagItem = Item.GetBagItem(EThings.Bag, bagIndex, 0);
 
   if bagItem == nil then return end
@@ -13013,12 +13040,12 @@ protocolTable[79][4] = function(data)
 end
 
 --[[ 卸下座騎裝備
-S:079-005 <卸下座騎裝備> +裝備部位(1) +背包索引(1)
+S:079-005 <卸下座騎裝備> +裝備部位(1) +背包索引(2)
 ]]--
 protocolTable[79][5] = function(data)
   local fitType = data:ReadByte();
-  local bagIndex = data:ReadByte();
-
+  local bagIndex = data:ReadUInt16();
+  
   Item.SetBagItem(EThings.Bag, bagIndex, Item.GetBagItem(EThings.Mounts, fitType), true);
   Item.DelBagItem(EThings.Mounts, fitType);
 
@@ -13215,6 +13242,9 @@ end
 --[[ 介面消費相關
 C:084-001 <查詢介消資料> +介消編號(2)
 C:084-002 <使用介消> +總類(1) +介消編號(2) 總類1:物品 2:點數 +L(1) +<<背包引(1) + 數量(2)>> +arg
+C:084-002 <使用介消> +總類(1)1 +介消編號(2) +L(1) +<<背包索引(1) + 數量(2)>> +<<arg(2)>> * ?
+C:084-002 <使用介消> +總類(1)1 +介消編號(2) 背包索引(1) +<<arg(2)>> * ?
+C:084-002 <使用介消> +總類(1)2 +介消編號(2) +<<arg(2)>> * ?
 ]]--
 protocolTable[84] = {}
 
@@ -13249,16 +13279,19 @@ protocolTable[85][1] = function(data)
   for i = 1, count do
     RoleCount.Set(data:ReadUInt16(), data:ReadInt32(), data:ReadInt32(), i == count);
   end
+
   --跨日時會更新資料、介面有開要重新刷新
   if UI.IsVisible(UIMall) then
     UIMall.RefreshItemPage();
   end
 
   if UI.IsVisible(UIActivity) then
-    UIActivity.UpdateOpenTime();
+    UIArmy.UpdateSupportPoke();
   end
 
-  ArmyLuckyBag.UpdateOpen();
+  if UI.IsVisible(UIArmy) then
+    UIArmy.UpdateSupportPoke();
+  end
 end
 
 --[[ 回傳多個玩家計數資料
@@ -13414,7 +13447,7 @@ protocolTable[87][2] = function(data)
 end
 
 --[[ 離線經驗資料結果
-S:087-002 <離線經驗資料結果> 數量(1) +<<倍率(2) +金錢](4)>>
+S:087-003 <離線經驗資料結果> 數量(1) +<<倍率(2) +金錢](4)>>
 ]]--
 protocolTable[87][3] = function(data)
   UILoginAward.ReciveExpData(data);
@@ -13533,7 +13566,7 @@ end
 --[[ 熔爐
 C:089-001 <查詢熔爐商品資料>
 C:089-002 <購買商品>  +購買種類(1) +格子(1) +物品ID(2)   購買種類 1.武將2.裝備
-C:089-003 <分解物品>  +count(1) <<+bagIndex(1) +數量(4) >>  種類 1.武將2.裝備
+C:089-003 <分解物品>  +count(1) <<+背包索引(2) +數量(4) >>  種類 1.武將2.裝備
 ]]--
 protocolTable[89] = {}
 
@@ -13642,20 +13675,20 @@ end
 
 
 --[[ 九宮格
-C:91-2 完成任務 數量(1) + <<種類(1)+ 索引(1) +任務ID(2)>>
-C:91-3 領取獎勵 九宮格ID(2)+ 索引(1)[1.橫一, 2.橫二, 3.橫三, 4.直一, 5.直二, 6.直三, 7.全部] +任務ID(2)
+C:091-002 完成任務 數量(1) + <<種類(1)+ 索引(1) +任務ID(2)>>
+C:091-003 領取獎勵 九宮格ID(2)+ 索引(1)[1.橫一, 2.橫二, 3.橫三, 4.直一, 5.直二, 6.直三, 7.全部] +任務ID(2)
 --]]
 protocolTable[91] = {}
 
 --[[ 九宮格資料
-S:91-1 九宮格資料 數量(1) + <<九宮格ID(2)+ 難度(1) +9*<<任務ID(2)+ 任務參數(DWord) +  是否完成(1)[0.否 1.是]>>>>
+S:091-001 九宮格資料 數量(1) + <<九宮格ID(2)+ 難度(1) +9*<<任務ID(2)+ 任務參數(DWord) +  是否完成(1)[0.否 1.是]>>>>
 --]]
 protocolTable[91][1] = function(data)
   Jiugongge.SetJiugongge(data);
 end
 
 --[[ 完成任務回應
-S:91-2 完成任務回應 結果(1)[0.失敗 1.成功 +九宮格ID(2) +索引(1)]
+S:091-002 完成任務回應 結果(1)[0.失敗 1.成功 +九宮格ID(2) +索引(1)]
 --]]
 protocolTable[91][2] = function(data)
   local result = data:ReadByte();
@@ -13666,7 +13699,7 @@ protocolTable[91][2] = function(data)
 end
 
 --[[ 領取獎勵回應
-S:91-3 領取獎勵回應 結果(1)[0.失敗 1.成功 +九宮格ID(2)+索引(1)]
+S:091-003 領取獎勵回應 結果(1)[0.失敗 1.成功 +九宮格ID(2)+索引(1)]
 --]]
 protocolTable[91][3] = function(data)
   local result = data:ReadByte();
@@ -13687,14 +13720,14 @@ protocolTable[91][3] = function(data)
 end
 
 --[[ 九宮格單筆資料
-S:91-4 九宮格單筆資料 九宮格ID(2)+ 索引(1)+ 任務ID(2 + 任務參數(DWord))+ 是否完成(1)[0.否 1.是]
+S:091-004 九宮格單筆資料 九宮格ID(2)+ 索引(1)+ 任務ID(2 + 任務參數(DWord))+ 是否完成(1)[0.否 1.是]
 ]]--
 protocolTable[91][4] = function(data)
   Jiugongge.SetJiugonggeSingle(data);
 end
 
 --[[ 戳戳樂
-C:92-003 <戳戳樂領獎> +格子位置(1)
+C:092-003 <戳戳樂領獎> +格子位置(1)
 ]]--
 protocolTable[92] = {}
 
@@ -13784,7 +13817,7 @@ end
                       5.時間未到
 ]]--
 protocolTable[93][1] = function(data)
-  Monopoly.ReceiveRollDiceResult(data);
+  Monopoly.ReceiveRollDiceResult(data)
 end
 
 
@@ -13796,6 +13829,11 @@ C:095-006 <升級卡片組合> +卡片組合編號(1)
 C:095-007 <裝備卡片組合> +卡片組合編號(1)
 C:095-007 <卸下卡片組合> +卡片組合編號(1)
 C:095-011 <領多個收集武將獎勵> +數量(1) +收集冊武將編號(2)
+C:095-012 <NFT卡片放入> +卡片物品編號(2)
+C:095-013 <NFT卡片取出> +卡片物品編號(2)
+C:095-014 <NFT坐騎放入> +坐騎npc編號(2)
+C:095-015 <NFT坐騎取出> +坐騎物品編號(2)
+C:095-021 <NFT閃耀值更新> +閃耀值(2)
 ]]--
 protocolTable[95] = {}
 
@@ -13832,7 +13870,7 @@ protocolTable[95][2] = function(data)
   if result == 1 then
     CollectStyle.ReciveStoreStyle();
   else
-    logError("Protocol 95-2 fail");
+    logError("Protocol 95-2 fail : " .. result);
   end
 end
 
@@ -13873,10 +13911,11 @@ end
 S:095-006 <卡片升級> +結果(1)
 ]]--
 protocolTable[95][6] = function(data)
-  if data:ReadByte() == 1 then
+  local result = data:ReadByte();
+  if result == 1 then
     CollectCard.OnReciveLvUp(data);
   else
-    logError("Protocol 95-6 fail");
+    logError("Protocol 95-6 fail : " .. result);
   end
 end
 
@@ -13884,10 +13923,11 @@ end
 S:095-007 <裝備卡片組合> +結果(1)
 ]]--
 protocolTable[95][7] = function(data)
-  if data:ReadByte() == 1 then
+  local result = data:ReadByte();
+  if result == 1 then
     ShowCenterMessage(string.format(string.Get(21493), string.Get(collectCardDatas[data:ReadByte()].name)));
   else
-    logError("Protocol 95-7 fail");
+    logError("Protocol 95-7 fail : " .. result);
   end
 end
 
@@ -13895,10 +13935,11 @@ end
 S:095-008 <卸下卡片組合> +結果(1)
 ]]--
 protocolTable[95][8] = function(data)
-  if data:ReadByte() == 1 then
+  local result = data:ReadByte();
+  if result == 1 then
     ShowCenterMessage(string.format(string.Get(21494), string.Get(collectCardDatas[data:ReadByte()].name)));
   else
-    logError("Protocol 95-8 fail");
+    logError("Protocol 95-8 fail : " .. result);
   end
 end
 
@@ -13938,9 +13979,81 @@ protocolTable[95][11] = function(data)
   end
 end
 
+--[[ NFT卡片放入
+S:095-012 <NFT卡片放入> +結果(1) 0.失敗 1.成功 + 卡片ID(2)
+]]--
+protocolTable[95][12] = function(data)
+  local result = data:ReadByte();
+  
+  if result == 1 then
+    local cardId = data:ReadUInt16();
+    if UI.IsVisible(UICollectBook) then
+      UICollectBook.UpdateInfo();
+    end
+    UICollectBook.ShowShineShine(cardId, true);
+  else
+    logError(" 095-012 : " .. result);
+  end
+end
+
+--[[ NFT卡片取出
+S:095-013 <NFT卡片取出> +結果(1) 0.失敗 1.成功卡片ID(2)
+]]--
+protocolTable[95][13] = function(data)
+  local result = data:ReadByte();
+  if result == 1 then
+    local cardId = data:ReadUInt16();
+    if UI.IsVisible(UICollectBook) then
+      UICollectBook.UpdateInfo();
+      UICollectBook.ShowShineShine(cardId, false);
+    end
+  else
+    logError(" 095-013 : " .. result);
+  end
+end
+
+--[[ NFT坐騎放入
+S:095-014 <NFT坐騎放入> +結果(1) 0.失敗 1.成功+ 坐騎NpcID(2)
+]]--
+protocolTable[95][14] = function(data)
+  local result = data:ReadByte();
+  if result == 1 then
+    local mountId = data:ReadUInt16();
+    if UI.IsVisible(UICollectBook) then
+      UICollectBook.UpdateInfo();
+    end
+    UICollectBook.ShowShineShine(mountId, true);
+  else
+    logError(" 095-014 : " .. result);
+  end
+end
+
+--[[ NFT坐騎取出
+S:095-015 <NFT坐騎取出> +結果(1) 0.失敗 1.成功 坐騎NpcID(2)
+]]--
+protocolTable[95][15] = function(data)
+  local result = data:ReadByte();
+  if result == 1 then
+    local mountId = data:ReadUInt16();
+    if UI.IsVisible(UICollectBook) then
+      UICollectBook.UpdateInfo();
+      UICollectBook.ShowShineShine(mountId, false);
+    end
+  else
+    logError(" 095-15 : " .. result);
+  end
+end
+
+--[[ NFT閃耀值更新
+S:095-021 <NFT閃耀值更新> +閃耀值(2)
+]]--
+protocolTable[95][21] = function(data)
+  UICollectBook.SetSummary(data:ReadUInt16());
+end
+
 --[[ 拍賣場
 C:096-001 <上架商品> +商品種類(1)
-  商品種類 1:物品 +背包索引(1) +數量(2) +價格(4)
+  商品種類 1:物品 +背包索引(2) +數量(2) +價格(4)
   商品種類 2:武將 +武將索引(1) +價格(4)
 C:096-002 <下架商品> +商品序號(4)
 C:096-003 <購買商品> +商品序號(4)
@@ -14273,6 +14386,10 @@ protocolTable[99][4] = function(data)
   if UI.IsVisible(UIDataFight) then
     UIDataFight.ShowTeamList(npcInfos);
   end
+
+  if UI.IsVisible(UIArmyBattleFunction) then
+    ArmyBattle.GetNpcList(npcInfos);
+  end
 end
 
 --[[ 出戰隊伍
@@ -14364,6 +14481,9 @@ C:100-031 <裝備損壞> +玩家ID(8) +武將索引(4) +裝備索引(4) +設定�
 C:100-032 <設定九宮格> +玩家ID(8) +九宮格種類(4) +九宮格流水號(4)
 C:100-033 <點擊觸發事件> +玩家ID(8) +Npc索引(4) +地塊索引(4)
 
+C:100-60 <清空靈魂背包> +玩家ID(8)
+C:100-61 <以指定數值新增靈魂(不指定填0)> +玩家ID(8) +物品ID(4) +等級(4) +星等(4) +知力(4) +攻擊力(4) +防禦力(4) +敏捷(4) +HP上升(4) +SP上升(4)+技能ID(4) +技能ID(4) +技能ID(4) +技能ID(4)
+
 C:100-101 <賽亞人> +玩家ID(8)
 C:100-102 <血魔全滿> +玩家ID(8)
 C:100-103 <進戰鬥> +玩家ID(8)
@@ -14403,6 +14523,17 @@ protocolTable[100][45] = function(data)
   end
 end
 
+--[[
+S:100-060: 結果(1) 1:成功
+]]--
+protocolTable[100][60] = function(data)
+  local result = data:ReadByte();
+  if result == 1 then
+    Item.ClearBag(EThings.Soul);
+    Item.ClearBag(EThings.EquippedSoul);
+  end
+end
+
 --[[ SERVER清資料
 ]]--
 protocolTable[101] = {}
@@ -14429,7 +14560,7 @@ end
 
 --[[ 寶庫物品
 C:102-001 <寶庫領物品> <<+索引(1) +數量(4)>>
-C:102-002 <寶庫存物品> <<+索引(1) +數量(4)>>
+C:102-002 <寶庫存物品> <<+索引(2) +數量(4)>>
 ]]--
 protocolTable[102] = {}
 
@@ -14476,6 +14607,58 @@ S:102-008 <清空寶庫物品>
 ]]--
 protocolTable[102][8] = function(data)
   Item.ClearBag(EThings.Storage)
+end
+
+----
+--[[ 上拍物品
+C:103-001 <上拍領物品> <<+索引(1) +數量(4)>>
+C:103-002 <上拍存物品> <<+索引(1) +數量(4)>>
+]]--
+protocolTable[103] = {}
+
+--[[ 上拍物品
+S:103-001 <上拍物品> <<+索引(1) +物品資料(18)>>
+]]--
+protocolTable[103][1] = function(data)
+  while data.length > 0 do
+    Item.SetBagItem(EThings.Web, data:ReadByte(), ThingData.New(data), false);
+  end
+end
+
+--[[ 上拍物品
+S:103-004 <上拍物品品> +索引(1) +物品資料(18)
+]]--
+protocolTable[103][4] = function(data)
+  Item.SetBagItem(EThings.Web, data:ReadByte(), ThingData.New(data));
+end
+
+--[[ 上拍減少物品
+S:103-005 <上拍減少物品> +索引(1) +減少數量(4)
+]]--
+protocolTable[103][5] = function(data)
+  Item.DelBagItem(EThings.Web, data:ReadByte(), data:ReadInt32());
+end
+
+--[[上拍操作失敗
+S:103-007 <上拍操作失敗> +失敗結果(1)[3.存入上拍失敗, 13上拍已滿]
+]]--
+protocolTable[103][7] = function(data)
+  local kind = data:ReadByte();
+  
+  if kind == 3 then
+    ShowCenterMessage(string.Get(80359));  --物品欄已滿
+  elseif kind == 13 then
+    ShowCenterMessage("upload item is full");  --上拍已滿
+  elseif kind == 14 then
+    ShowCenterMessage(string.Get(22870));  --非可堆疊的物品
+  end
+end
+
+--[[ 清空上拍物品
+S:103-008 <清上拍庫物品>
+]]--
+protocolTable[103][8] = function(data)
+  Item.ClearBag(EThings.Web)
 end
 
 --[[
@@ -14722,7 +14905,7 @@ protocolTable[106][2] = function(data)
   local result = data:ReadByte();
   local house = data:ReadByte();
   local floor = data:ReadByte();
-
+  
   if result == 1 then
     HouseManager.SetCurrentHouseAndFloor(house, floor);
     HouseManager.ReceiveEnterHouse();
@@ -14807,7 +14990,6 @@ end
 S:106-007 <小屋分數資料> +小屋數量(1) + <<小屋編號(1) +樓層(1) +分數(2) +<<小屋武將ID(2)>> * 4>>
 --]]
 protocolTable[106][7] = function(data)
-  HouseManager.InitBuilding();
   local count = data:ReadByte();
   for i = 1, count do
     local house = data:ReadByte();
@@ -14888,9 +15070,7 @@ protocolTable[106][11] = function(data)
     ShowCenterMessage(string.Get(23620));
   elseif result ~= 1 then
     ShowCenterMessage(string.Get(23614));
-  end
-
-  UIHouseFunction.ReceiveResult();
+  end  
 end
 
 --[[
@@ -14994,248 +15174,344 @@ protocolTable[107][6] = function(data)
   UIElf.UpdateElfSave(data);
 end
 
---[[
-C:110-002 <進大逃殺排隊>
-C:110-003 <離開大逃殺排隊>
-C:110-004 <選擇大逃殺職業> 職業ID(2)
-C:110-005 <選擇封印能力> 索引(8) + 能力ID(2)
-C:110-006 <使用技能> 技能ID(2) + 索引(8)
-C:110-007 <大逃殺互動> 索引(8)
-C:110-008 <進傳送門> +場景編號(2) +區號(2) +傳送門ID(1)
-]]
-protocolTable[110] = {}
+--[[ 神話裝相關
+C:108-001 <神話裝升級> 背包索引(2) +L(1) +<<背包索引(2))>>
+C:108-002 <神話裝裝符文> 背包索引(2) + 背包索引(2)
+C:108-003 <神話裝重置> 背包索引(2) + 背包索引(2)
+--]]
+
+protocolTable[108] = {}
 
 --[[
-S:110-000 <校正開始時間> 大逃殺開始時間(8)
-]]
-protocolTable[110][0] = function(data)
-  local time = DateTime.FromOADate(data:ReadDouble());
-  BattleRoyale.SetTimer(time);
+S:108-001<神話裝升級> +結果(1)
+--]]
+protocolTable[108][1] = function(data)
+  UIGodskin.RecUpgradeResult(data);
 end
 
---[[ 剩餘時間
-S:110-001 <剩餘時間> 種類(1) + 結束時間(8)
-          種類1:撮合倒數
-          種類2:PK倒數
-          種類3:禁賽倒數
-]]
-protocolTable[110][1] = function(data)
-  local kind = data:ReadByte();
-  local time = DateTime.FromOADate(data:ReadDouble());
-  if kind == 1 then
-    BattleRoyale.SetMatchCountDown(time);
-  elseif kind == 2 then
-    BattleRoyale.SetPKCountDownTime(time);
-  end
+--[[
+S:108-002<神話裝符文> +結果(1)
+                          1:成功 +神話裝背包索引(2) +符文背包索引(2) +子屬性*4
+                          2:符文星級高於物品
+                          3:錢不夠
+                          4:找不到對應提升的子屬性
+--]]
+protocolTable[108][2] = function(data)
+  UIGodskin.RecEnchantResult(data);
 end
 
---[[回傳結果
-S:110-002 <回傳結果> 種類(1) + 結果(1)
-          1:撮合
-          2:選擇職業
-            +職業ID(2)
-          3:選擇封印能力
-            +封印石柱索引(8)
-          4:撿物品
-]]
-protocolTable[110][2] = function(data)
-  local kind = data:ReadByte();
+--[[
+S:108-003<神話裝重製> +結果(1)
+                          1:成功 +神話裝背包索引(2) +子屬性*4
+                          2:槌子的星級不足
+                          3:槌子數量不足
+--]]
+protocolTable[108][3] = function(data)
+  UIGodskin.RecRemakeResult(data);
+end
+
+--[[ Web市場相關
+C:109-000 <詢問可上傳格數>
+C:109-001 <詢問拍賣資訊>
+C:109-002 <物品封存至Web> 數量(1)<<+種類(1)+Data(?)>>
+C:109-003 <領取web物品> 拍賣SN(8) --寄0為全部領取
+--]]
+
+protocolTable[109] = {}
+--[[
+S:109-000 <更新可上傳格數> 結果(1) +數量(4)
+結果 1: 成功
+結果 2: 失敗(等待web)
+結果 252: 失敗(網頁被鎖)
+結果 253: 失敗(功能未開放 or 自創帳號無法使用市集)
+結果 255: 傳送太頻繁
+--]]
+protocolTable[109][0] = function(data)
   local result = data:ReadByte();
-  if kind == 1 then
-    if result == 1 then
-      BattleRoyale.SetBattleRoyaleState(true);
-      local battleId = data:ReadInt32();
-      BattleRoyale.SetBattleId(battleId);
+  if result == 1 then
+    local limit = data:ReadInt32();
+    Market.UpdateWebSlotLimit(limit)
+  elseif result == 2 then
+    logError("Waiting for web response")
+  elseif result == 252 then
+    ShowCenterMessage(string.Get(23969));
+    if UI.IsVisible(UIMarket) and not UI.IsVisible(UITeach) then
+      UI.Close(UIMarket);
     end
-  elseif kind == 2 then
-    if result == 1 then
-      local select = data:ReadUInt16();
-      local unlock = {};
-      table.insert(unlock, 1);
-      BattleRoyale.SetVocation(select, unlock, true);
-      BattleRoyale.StartQueue();
+    return;
+  elseif result == 253 then
+    ShowCenterMessage(string.Get(71336));
+    if UI.IsVisible(UIMarket) and not UI.IsVisible(UITeach) then
+      UI.Close(UIMarket);
     end
-  elseif kind == 3 then
-    local index = data:ReadInt64();
-    if result == 2 then
-      BattleRoyale.ClearSealSkill(index);
-    end
-    UI.Close(UIBattleRoyale);
-  elseif kind == 4 then
-    if result == 2 then
-      ShowCenterMessage(string.Get(40007));
-    elseif result == 3 then
-      ShowCenterMessage(string.Get(30038));
-    end
+    return;
+  elseif result == 255 then
+    logError("Sending request too frequently")
+    local refrshCountTime = 5; --詢問上傳數量太頻繁重新顯示數字時間;
+    CGTimer.DoFunctionDelay(refrshCountTime, function() Market.UpdateWebSlotLimit(nil) end);
+  else
+    logError("109-0 out of known result : ".. tostring(result))
+  end
+  
+  if UI.IsVisible(UIMarket) then
+    UIMarket.UpdateUI(true);
+  else
+    UI.Open(UIMarket);
   end
 end
 
 --[[
-S:110-003 <更新大逃殺資訊> 種類(1) + 資訊(1)
-          1:總人數
-          2:(剩餘/列隊)人數
-          3:勝場數
-          4:封印數
-]]
-protocolTable[110][3] = function(data)
-  local kind = data:ReadByte();
-  local info = data:ReadByte();
-  if kind == 1 then
-    BattleRoyale.SetMaxParticipant(info);
-  elseif kind == 2 then
-    BattleRoyale.SetParticipantCount(info);
-  elseif kind == 3 then
-    BattleRoyale.SetWinsInfo(info);
-  elseif kind == 4 then
-    BattleRoyale.SetSealInfo(info);
-  end
-end
-
---[[職業選項
-S:110-004 <職業選項> 數量(1)<<職業ID(2)>>
-]]
-protocolTable[110][4] = function(data)
-  local count = data:ReadByte();
-  local vocation = {}
-  for index = 1,count do
-    table.insert(vocation, data:ReadUInt16());
-  end
-  BattleRoyale.ReceiveVocationOption(vocation);
-end
-
---[[封印能力選項
-S:110-005 <能力選項> 封印NpcIndex(8) +數量(1)<<能力ID(2)>>
-]]
-protocolTable[110][5] = function(data)
-  local npcIndex = data:ReadInt64();
-  local count = data:ReadByte();
-  local skill = {}
-  for index = 1,count do
-    table.insert(skill, data:ReadUInt16());
-  end
-  BattleRoyale.ReceiveSealSkillOption(npcIndex, skill);
-end
-
---[[技能冷卻時間
-S:110-006 <技能冷卻時間> 技能ID(2) + 結束時間(8) + 施放結果(1)
-          [0:成功 1:cd未到 2:找不到技能 3:被擋掉不給用(?) 4:距離太遠]
-]]
-protocolTable[110][6] = function(data)
-  local skillID = data:ReadUInt16();
-  local endTime = DateTime.FromOADate(data:ReadDouble());
-  BattleRoyale.SetVocationSkillCoolDown(skillID, endTime);
+S:109-001 <詢問拍賣資訊> 結果(1) +數量(1)<<種類(1)+拍賣SN(8)+Data(?)>>
+結果 0: 失敗
+結果 1: 成功
+結果 252: 失敗(網頁被鎖)
+結果 253: 失敗(功能未開放 or 自創帳號無法使用市集)
+結果 254: 等待Web回應
+結果 255: 傳送太頻繁
+種類 1: NFT幣&點數 +NFT幣(4) +點數(4)
+種類 2: 背包物品 +背包物品資料(?)
+種類 3: 靈魂 +靈魂資料(?)
+種類 4: NPC +NPC資料(?)
+--]]
+protocolTable[109][1] = function(data)
   local result = data:ReadByte();
-  if result ~= 0 then
-    logError("Use Scene Skill Error : "..result);
+  if result == 1 then
+    Market.ClearWithdraw();
+    local count = data:ReadByte();
+    local tsGold;
+    local kind;
+    local webSN;
+    local bagCount;
+    local itemSave;
+    local npcData;
+    for i = 1, count do
+      kind = data:ReadByte();
+      webSN = data:ReadInt64();
+      if kind == EWebMarketKind.Currency then
+        tsGold = data:ReadInt32();
+        Market.SetGold(tsGold)
+    
+      elseif kind == EWebMarketKind.BagItem then
+        itemSave = ThingData.New(data)
+        UIMarket.SetWithdrawCategory(kind, itemSave);
+        itemSave.webSN = webSN;
+        bagCount = Item.GetBagCount(EThings.Web);
+        Item.SetBagItem(EThings.Web, bagCount + 1, itemSave, false);
+    
+      elseif kind == EWebMarketKind.Soul then
+        UIMarket.SetWithdrawCategory(kind);
+        itemSave = SoulThing.New(data);
+        itemSave.webSN = webSN;
+        bagCount = Item.GetBagCount(EThings.Web);
+        Item.SetBagItem(EThings.Web, bagCount + 1, itemSave, false);
+    
+      elseif kind == EWebMarketKind.Npc then
+        npcData = NpcWebInfo.New(data);
+        npcData.webSN = webSN;
+        UIMarket.SetWithdrawCategory(kind);
+        Market.ReceiveWebNpcData(npcData);
+        
+      else
+        logError("109-1 out of known kind : ".. tostring(kind))
+      end
+    end
+    
+    if UI.IsVisible(UIMarket) then
+      UIMarket.UpdateUI(true);
+    end
+
+  elseif result == 252 then
+    ShowCenterMessage(string.Get(23969));
+    if UI.IsVisible(UIMarket) and not UI.IsVisible(UITeach) then
+      UI.Close(UIMarket);
+    end
+    return;
+  elseif result == 253 then
+    if UI.IsVisible(UIMarket) and not UI.IsVisible(UITeach) then
+      UI.Close(UIMarket);
+    end
+  elseif result == 255 then
+    logError("Sending request too frequently")
+  else
+    logError("109-1 out of known result : ".. tostring(result))
   end
 end
 
---[[傳送失敗
-S:110-008 <傳送失敗>
-]]
-protocolTable[110][8] = function(data)
-  BattleRoyale.TeleportFail();
+--[[
+S:109-002 <物品封存至Web> +結果(1) <<+失敗在第幾筆(1)>>
+結果 1: 成功
+結果 2: 失敗(已滿最大封存數量)
+結果 3: 失敗(物品錯誤) +失敗在第幾筆(1)
+結果 4: 失敗(金額錯誤 or 還在處理上筆金額)
+結果 5: 失敗(Rolecount不夠)
+結果 252: 失敗(網頁被鎖)
+結果 253: 失敗(功能未開放 or 自創帳號無法使用市集)
+結果 254: 等待Web回應
+結果 255: 傳送太頻繁
+--]]
+protocolTable[109][2] = function(data)
+  local result = data:ReadByte();
+  if result == 1 then
+    Market.UploadSuccess();
+  elseif result == 2 then
+    if UI.IsVisible(UIMarket) then
+      UIMarket.OpenWarning(string.Get(23733), string.GetColorText(string.Get(23734), Color.Red));
+    end
+  elseif result == 3 then
+    local failIndex = data:ReadByte();
+    Market.UploadFail(failIndex);
+  elseif result == 4 then
+    if UI.IsVisible(UIMarket) then
+      UIMarket.OpenWarning(string.Get(23902), string.GetColorText(string.Get(23903), Color.Red));
+    end
+  elseif result == 5 then
+    if UI.IsVisible(UIMarket) then
+      UIMarket.OpenWarning(string.Get(23899), string.GetColorText(string.Get(23884), Color.Red));
+    end
+  elseif result == 252 then
+    ShowCenterMessage(string.Get(23969));
+    if UI.IsVisible(UIMarket) and not UI.IsVisible(UITeach) then
+      UI.Close(UIMarket);
+    end
+    return;
+  elseif result == 253 then
+    if UI.IsVisible(UIMarket) and not UI.IsVisible(UITeach)then
+      UI.Close(UIMarket);
+    end
+  elseif result == 254 then
+    if UI.IsVisible(UIMarket) then
+      UIMarket.OpenWarning(string.Get(23727), string.GetColorText(string.Get(23751), Color.Red));
+    end
+  elseif result == 255 then
+    if UI.IsVisible(UIMarket) then
+      UIMarket.OpenWarning(string.Get(23727), string.GetColorText(string.Get(23728), Color.Red));
+    end
+  else
+    logError("109-2 out of known result : ".. tostring(result))
+  end
 end
 
---[[重置戰場效果
-S:110-009 <重置戰場效果> 玩家ID(8) +數量(1) <<效果ID(2) +層數(1)>>
+--[[
+S:109-003 <從Web領取物品> +結果(1)
+結果 1: 成功
+結果 2: 失敗
+結果 3: 失敗(背包已滿)
+結果 4: 失敗(重複NPC)
+結果 250: 失敗(資料回傳中)
+結果 252: 失敗(網頁被鎖)
+結果 253: 失敗(功能未開放 or 自創帳號無法使用市集)
+結果 255: 傳送太頻繁
+--]]
+protocolTable[109][3] = function(data)
+  local result = data:ReadByte();
+  
+  if result == 1 then
+    if UI.IsVisible(UIMarket) then
+      UIMarket.OpenWarning(string.Get(23731),string.GetColorText(string.Get(23732), Color.Red));
+    end
+  elseif result == 250 then
+    if UI.IsVisible(UISeaMarket) then
+      UISeaMarket.OpenWarning(string.Get(25085), string.GetColorText(string.Get(25086), Color.Red));
+    end
+  elseif result == 252 then
+    ShowCenterMessage(string.Get(23969));
+    if UI.IsVisible(UIMarket) and not UI.IsVisible(UITeach) then
+      UI.Close(UIMarket);
+    end
+    return;
+  elseif result == 253 then
+    if UI.IsVisible(UIMarket) and not UI.IsVisible(UITeach) then
+      UI.Close(UIMarket);
+    end
+  elseif result == 255 then
+    logError("Sending request too frequently")
+  else
+    if UI.IsVisible(UIMarket) then
+      UIMarket.OpenWarning(string.Get(23725), string.GetColorText(string.Get(23726), Color.Red));
+    end
+  end
+end
+--[[鎮魂&祭祀
+C:111-000 <確認功能開啟>
+C:111-002 <刷新Boss> Boss位置(1)
+C:111-004 <鎮魂> Boss位置(1)
+C:111-005 <祭祀> 倍率/消耗(1) + 數量(1)
 ]]
-protocolTable[110][9] = function(data)
-  local playerID = data:ReadInt64();
-  BattleRoyale.ResetFieldEffect(playerID);
+protocolTable[111] = {}
+
+--[[
+S:111-000 <鎮魂功能開關> +功能開關(1) [0:關 1:開]
+]]--
+protocolTable[111][0] = function(data)
+  local switch = data:ReadBoolean();
+  Requiem.ReceiveOpenUIResult(switch);
+end
+
+--[[
+S:111-001 <刷新鎮魂Boss> +數量(1) <<位置(1) + ID(2)>>
+]]
+protocolTable[111][1] = function(data)
   local count = data:ReadByte();
-  for index = 1, count do
-    local effectID = data:ReadUInt16();
-    local layer = data:ReadByte();
-    BattleRoyale.ReceiveFieldEffect(playerID, effectID, layer, true);
+
+  for i = 1, count do
+    local slot = data:ReadByte();
+    local id = data:ReadUInt16();
+    Requiem.ReceiveBoss(slot, id);
   end
-
-  if playerID == Role.playerId then
-    BattleRoyale.UpdateDisplayEffects();
-  end
-
-  BattleRoyale.UpdateFieldEffect(playerID);
-
-  SceneManager.IsPkSecne(SceneManager.sceneId);
+  UIRequiem.UpdateBossInfo();
+  Requiem.UpdateRedDot();
 end
 
 --[[
-S:110-010 <更新單一戰場效果> 玩家ID(8) +效果ID(2) + 層數(1)
+S:111-002 <刷新結果> 種類(1)
+              1:成功
+              2:魂點不足
+              3:不可刷新
+              4:位置錯誤
+              255:功能關閉
 ]]
-protocolTable[110][10] = function(data)
-  local playerID = data:ReadInt64();
-  local effectId = data:ReadUInt16();
-  local layer = data:ReadByte();
-  BattleRoyale.ReceiveFieldEffect(playerID, effectId, layer);
-  if playerID == Role.playerId then
-    BattleRoyale.UpdateDisplayEffects();
-  end
-  BattleRoyale.UpdateFieldEffect(playerID);
+protocolTable[111][2] = function(data)
+  local result = data:ReadByte();
+  Requiem.ReceiveRefreshBossResult(result);
 end
 
 --[[
-S:110-011 <排名積分結算> 排名(1) + 積分(4)
-]]--
-protocolTable[110][11] = function(data)
-  local rank = data:ReadByte();
-  local points = data:ReadInt32();
-  BattleRoyale.SetBattleRoyaleState(false);
-  BattleRoyale.SetRank(rank, points);
-end
-
---[[
-S:110-012 <使用場景技能結果> 使用者ID(8) +技能目標ID(8) +技能ID(2)
-]]--
-protocolTable[110][12] = function(data)
-  local casterID = data:ReadInt64();
-  local targetID = data:ReadInt64();
-  local skillID = data:ReadUInt16();
-  BattleRoyale.ShowSceneSkillEffect(casterID, targetID, skillID);
-end
-
---[[
-S:110-013 <大逃殺廣播訊息> 種類(1)
-              種類1 : 擊殺廣播 + 結果(1)[1戰勝 2平手] + 玩家 +玩家
-              種類2 : 封印廣播 + 玩家 + 能力ID(2)
-              種類3 : Npc擊殺廣播 + 結果(1)[1:玩家勝 2:玩家敗] + L(1) + 玩家名(L) + NpcID(2)
+S:111-003 <更新魂點> 魂點(2)
 ]]
-protocolTable[110][13] = function(data)
-  local kind = data:ReadByte();
-  if kind == 1 then
-    local fightResult = data:ReadByte();
-    local player1 = data:ReadString(data:ReadByte());
-    local player2 = data:ReadString(data:ReadByte());
-    Chat.AddMessage(EChannel.BattleRoyale, string.format(string.Get(24369), player1, player2));
-    if fightResult == 2 then
-      Chat.AddMessage(EChannel.BattleRoyale, string.format(string.Get(24369), player2, player1));
-    end
-  elseif kind == 2 then
-    local player = data:ReadString(data:ReadByte());
-    local sealId = data:ReadUInt16();
-    Chat.AddMessage(EChannel.BattleRoyale, string.format(string.Get(24370), player));
-  elseif kind == 3 then
-    local fightResult = data:ReadByte();
-    local player = data:ReadString(data:ReadByte());
-    local npcId = data:ReadUInt16();
-    local npc = npcDatas[npcId]:GetName();
-    if fightResult == 1 then
-      Chat.AddMessage(EChannel.BattleRoyale, string.format(string.Get(24369), player, npc));
-    elseif fightResult == 2 then
-      Chat.AddMessage(EChannel.BattleRoyale, string.format(string.Get(24369), npc, player));
-    end
-  end
+protocolTable[111][3] = function(data)
+  Requiem.UpdateSoulPoints(data:ReadUInt16());
 end
 
 --[[
-S:110-014 <更新玩家顯示積分> 玩家ID(8) + 參加場數(1) + 積分(2)
-]]--
-protocolTable[110][014] = function(data)
-  local playerID = data:ReadInt64();
-  local attend = data:ReadByte();
-  local point = data:ReadUInt16();
-  if Role.players[playerID] == nil then return end
+S:111-004 <鎮魂結果> 種類(1)
+                    0: 未知錯誤
+                    1: 成功
+                    2: 等級不夠
+                    3: 未出戰武將
+                    4: 組隊中
+                    5: 背包滿
+                    6: 該地圖無法挑戰
+                    7: 沒有Boss存在
+                    8: 戰鬥中
+                    255:功能關閉
+]]
 
-  Role.players[playerID]:SetBattleRoyale(attend, point);
+protocolTable[111][4] = function(data)
+  local result = data:ReadByte();
+  Requiem.ReceiveRequiemResult(result);
+end
+
+--[[
+S:111-005 <祭祀結果> 種類(1)
+	                1:成功
+	                2:祭祀次數不足
+	                3:背包滿
+	                4:倍率錯誤
+	                255:功能關閉
+]]
+protocolTable[111][5] = function(data)
+  local result = data:ReadByte();
+  Requiem.ReceiveSacrificeResult(result);
 end
 
 --[[
@@ -15278,203 +15554,267 @@ protocolTable[112][2] = function(data)
   end
 end
 
---[[
-C:121-001 <裝備/卸下> Kind(1) + 武將ID(2) + 跟隨武將索引(1) + SN(8) [Kind=1.裝備 2.卸下]
-C:121-002 <分解> + SN(8)
-C:121-003 <升星> 主要SN(8) + 材料SN(8)
-C:121-004 <等級升級> 要升的等級(1) + SN(8)
-C:121-005 <上鎖/解鎖> + Kind(1) + SN(8) [Kind=0.不鎖 1.鎖]
+--[[  靈魂
+C:120-001 <裝備靈魂> Kind(1) + 武將ID(2) + 跟隨武將索引(1) + SN(8) Kind=1.裝備 2.卸下
+C:120-002 <合成靈魂> SN1(8) + SN2(8) + SN3(8)
+C:120-003 <強化靈魂> 使用次數(1) + SN(8)
+C:120-004 <突破靈魂> 主靈魂SN(8) + 材料SN(8)
+C:120-005 <技能等級靈魂> 主靈魂SN(8) + 材料SN(8)
+C:120-006 <洗鋉靈魂> Kind(1) +
+                            1.洗鋉數值 + SN(8)
+                            2.確定洗鍊 + SN(8)
+C:120-007 <鎖頭> Lock(1) + SN(8) Lock = 0不鎖 1.鎖
+C:120-008 <靈魂背包>
+C:120-009 <刪除靈魂背包>
+C:120-010 送它去挖礦 +SoulSN(8);
 ]]--
-protocolTable[121] = {}
+protocolTable[120] = {}
 
 --[[
-S:121-001 <裝備/卸下> + Kind(1) + 武將ID(2) + SN(8) + SN(8) [Kind=1.裝備 2.卸下 3.交換]
+S:120-001 <裝備> + Kind(1) + WID(2) + SN(8)
+                  1.裝備
+                  2.卸下
 ]]--
-protocolTable[121][1] = function(data)
+protocolTable[120][1] = function(data)
   local kind = data:ReadByte();
   local npcId = data:ReadUInt16();
   local sn = data:ReadInt64();
 
   if kind == 1 then
-    UIUniqueBlood.ReceiveEquip(npcId, sn);
+    UISoul.ReceiveEquip(npcId, sn);
   elseif kind == 2 then
-    UIUniqueBlood.ReceiveTakeOff(npcId, sn);
-  elseif kind == 3 then
-    local sn2 = data:ReadInt64();
-    UIUniqueBlood.ReceiveExchange(npcId, sn, sn2);
+    UISoul.ReceiveTakeOff(npcId, sn);
   end
 end
 
 --[[
-S:121-002 <分解>
+S:120-002 <合成> + rSoul(?)
 ]]--
-protocolTable[121][2] = function(data)
-  UIUniqueBlood.ReceiveDecompose();
+protocolTable[120][2] = function(data)
+  local soulData = SoulThing.New(data);
+  UISoul.ReceiveCompound(soulData);
 end
 
 --[[
-S:121-003 <升星> + SN(8) + 星等(1)
+S:120-003 <強化> + rSoul(?)
 ]]--
-protocolTable[121][3] = function(data)
+protocolTable[120][3] = function(data)
+  local soulData = SoulThing.New(data);
+  UISoul.ReceiveIntensify(soulData);
+end
+
+--[[
+S:120-004 <突破> + SN(8) + 星數(1)
+]]--
+protocolTable[120][4] = function(data)
   local sn = data:ReadInt64();
-  local star = data:ReadByte();
+  local starLv = data:ReadByte();
 
-  UIUniqueBlood.ReceiveUpgrade(sn, star);
+  UISoul.ReceiveBreakThrough(sn, starLv);
 end
 
 --[[
-S:121-004 <等級升級> + SN(8) + 上升等級(1)
+S:120-005 <技能等級> + rSoul(?)
 ]]--
-protocolTable[121][4] = function(data)
+protocolTable[120][5] = function(data)
+  local soulData = SoulThing.New(data);
+  UISoul.ReceiveSkillLv(soulData);
+end
+
+--[[
+S:120-006 <洗鋉> + Kind(1) + SN(8) + SoulValues(?)
+                1.洗鋉數值
+                2.確定洗鍊
+                3.保留
+]]--
+protocolTable[120][6] = function(data)
+  local kind = data:ReadByte();
+
+  if kind == 3 then
+    UISoul.UpdateStayAff();
+    return;
+  end
+
   local sn = data:ReadInt64();
-  local lv = data:ReadByte();
+  local temp = {};
 
-  UIUniqueBlood.ReceiveStrength(sn, lv);
+  for i = 1, 6 do
+    temp[i] = data:ReadUInt16();
+  end
+
+  UISoul.ReceiveAffination(kind, sn, temp);
 end
 
 --[[
-S:121-005 <上鎖/解鎖> + Kind(1) + SN(8) [Kind=0.不鎖 1.鎖]
+S:120-007 <鎖頭> + Flag(1) + SN(8)
 ]]--
-protocolTable[121][5] = function(data)
+protocolTable[120][7] = function(data)
   local kind = data:ReadByte();
   local sn = data:ReadInt64();
 
-  UniqueBlood.SetLock(kind, sn);
+  UISoulInfo.SetLock(kind, sn);
 end
 
 --[[
-S:121-100 <新增> + Count(4) + <<rMeridianSave(?)>> + 結果(1) 1.登入 2.使用物品 3.金手指
+S:120-008 <靈魂背包> + Count(2) + <<rSoul(?)>> + 結果(1)
+                                                1.登入
+                                                2.鈕蛋
+                                                3.信件
+                                                4.金手指
+                                                5.Web取商品
 ]]--
-protocolTable[121][100] = function(data)
-  local count = data:ReadInt32();
-  local meridianList = {};
+protocolTable[120][8] = function(data)
+  local count = data:ReadUInt16();
+  local soulList = {};
 
   for i = 1, count do
-    local meridianData = Meridian.New(data);
+    local soulData = SoulThing.New(data);
 
-    table.insert(meridianList, meridianData);
+    table.insert(soulList, soulData);
   end
 
   local result = data:ReadByte();
   local equipIndex = 1;
-  local index = 1;
+  local soulIndex = 1;
 
   for i = 1, count do
     if result == 1 then
-      if meridianList[i].equipId ~= 0 then
-        Item.SetBagItem(EThings.UniqueBloodEquip, equipIndex, meridianList[i], false);
+      if soulList[i].equipId ~= 0 then
+        Item.SetBagItem(EThings.EquippedSoul, equipIndex, soulList[i], false);
         equipIndex = equipIndex + 1;
       else
-        Item.SetBagItem(EThings.UniqueBlood, index, meridianList[i], false);
-        index = index + 1;
+        Item.SetBagItem(EThings.Soul, soulIndex, soulList[i], false);
+        soulIndex = soulIndex + 1;
       end
     else
       local index = 1;
 
-      while Item.GetBagItem(EThings.UniqueBlood, index) ~= nil do
+      while Item.GetBagItem(EThings.Soul, index) ~= nil do
         index = index + 1;
       end
 
-      Item.SetBagItem(EThings.UniqueBlood, index, meridianList[i], false);
+      Item.SetBagItem(EThings.Soul, index, soulList[i], false);
 
-      local message = string.format(string.Get(21179), itemDatas[meridianList[i].Id]:GetName(true), 1);
+      local message = string.format(string.Get(21179), itemDatas[soulList[i].Id]:GetName(true), 1);
       ShowCenterMessage(message);
       Chat.AddMessage(EChannel.System, message);
 
-      if UI.IsVisible(UIBag) then
-        UIBag.UpdateUI();
+      if UI.IsVisible(UISoul) then
+        UISoul.UpdateUI();
       end
     end
   end
 end
 
 --[[
-S:121-101 <刪除> + Count(4) + <<SN(8)>> + 結果(1) 1.分解 2.升星 3.金手指
+S:120-009 <刪除靈魂背包> + Count(2) + <<SN(8)>> + 來源(1)
+                                               17.Web封存物品
 ]]--
-protocolTable[121][101] = function(data)
-  local count = data:ReadInt32();
-  local delList = {};
-
+protocolTable[120][9] = function(data)
+  local count = data:ReadUInt16();
+  local bag = Item.GetBag(EThings.Soul);
   for i = 1, count do
-    delList[i] = data:ReadInt64();
+    local sn = data:ReadInt64();
+    for k, v in pairs(bag) do
+      if v.sn == sn then
+        Item.DelBagItem(EThings.Soul, k, nil, 0, false);
+      end
+    end
   end
-
+  
   local result = data:ReadByte();
-
-  Item.ClearAllInUse();
-
-  if result == 1 then
-    for i = 1, count do
-      UIUniqueBlood.ShowDecomposeMessage(delList[i]);
-    end
-  elseif result == 2 then
-    for i = 1, count do
-      UniqueBlood.DeleteMeridian(delList[i], result);
-    end
-  elseif result == 3 then
-    for i = 1, count do
-      UniqueBlood.DeleteMeridian(delList[i], result);
-    end
+  
+  if result == 17 then -- Web封存刪靈魂
   end
 end
 
 --[[
-S:121-255 <錯誤訊息> + 結果(4)
-				1.無此玩家
-				2.無此經脈
-				3.無此武將
-				4.裝備位置錯誤
-				5.設定失敗
-				6.武將未裝備
-				7.刪除失敗
-				8.最大星等
-				9.資料錯誤
-				10.最大等級
-				11.經脈不一樣不能升
-				12.碎片不足
-				13.數量錯誤
-				14.等級已滿
-				15.功能未開啟
-				16.背包已滿
-				255.協定錯誤
+S:120-255 <錯誤訊息> + 結果(1)
+                     1.無此玩家
+                     2.無此靈魂
+                     3.靈魂上鎖
+                     4.挖礦中
+                     5.洗鍊中不能使用
+                     6.已達裝備上限
+                     7.武將ID錯誤
+                     8.武將有裝備靈魂
+                     9.裝備/卸下錯誤
+                     10.元素不同
+                     11.靈魂編號錯誤
+                     12.無此武將
+                     13.靈魂材料重覆
+                     14.靈魂品質不同
+                     15.刪除失敗
+                     16.次數有誤
+                     17.超過等級上限
+                     18.物品不足
+                     19.吞食幣不足
+                     20.靈魂編號不同
+                     21.靈魂等級達上限
+                     22.無相同技能
+                     23.無洗鍊SN
+                     24.跟之前洗鍊SN不同
+                     25.無此功能
+                     26.戰鬥中
+                     255.錯誤
 ]]--
-protocolTable[121][255] = function(data)
+protocolTable[120][255] = function(data)
   local result = data:ReadByte();
 
   if result == 1 then
-    logError("無此玩家")
+    logError("無此靈魂")
   elseif result == 2 then
-    logError("無此經脈")
+    logError("無此靈魂")
   elseif result == 3 then
-    logError("無此武將")
+    ShowCenterMessage(string.Get(23712));
   elseif result == 4 then
-    logError("裝備位置錯誤")
+    logError("挖礦中")
   elseif result == 5 then
-    logError("設定失敗")
+    logError("洗鍊中不能使用")
   elseif result == 6 then
-    logError("武將未裝備")
+    logError("已達裝備上限")
   elseif result == 7 then
-    logError("刪除失敗")
+    logError("武將ID錯誤")
   elseif result == 8 then
-    logError("最大星等")
+    logError("武將有裝備靈魂")
   elseif result == 9 then
-    logError("資料錯誤")
+    logError("裝備/卸下錯誤")
   elseif result == 10 then
-    logError("最大等級")
+    logError("元素不同")
   elseif result == 11 then
-    ShowCenterMessage(string.Get(24024));
+    logError("靈魂編號錯誤")
   elseif result == 12 then
-    ShowCenterMessage(string.Get(21180));
+    logError("無此武將")
   elseif result == 13 then
-    logError("數量錯誤")
+    logError("靈魂材料重覆")
   elseif result == 14 then
-    ShowCenterMessage(string.Get(20582));
+    logError("靈魂品質不同")
   elseif result == 15 then
-    ShowCenterMessage(string.Get(71336));
+    logError("刪除失敗")
   elseif result == 16 then
-    ShowCenterMessage(string.Get(24049));
+    logError("次數有誤")
+  elseif result == 17 then
+    logError("超過等級上限")
+  elseif result == 18 then
+    logError("物品不足")
+  elseif result == 19 then
+    ShowCenterMessage(string.Get(23686));
+  elseif result == 20 then
+    logError("靈魂編號不同")
+  elseif result == 21 then
+    ShowCenterMessage(string.Get(20582));
+  elseif result == 22 then
+    logError("無相同技能")
+  elseif result == 23 then
+    logError("無洗鍊SN")
+  elseif result == 24 then
+    logError("跟之前洗鍊SN不同")
+  elseif result == 25 then
+    ShowCenterMessage(string.Get(71336));
+  elseif result == 26 then
+    ShowCenterMessage(string.Get(21806));
   elseif result == 255 then
-    logError("協定錯誤")
+    logError("Error");
   end
 end
 
@@ -15517,7 +15857,7 @@ end
 
 --[[
 S:122-003<取出結果> 結果(1)
-Res 1:成功
+Res 1:成功 
 ]]--
 protocolTable[122][3] = function(data)
   local result = data:ReadByte();
@@ -15531,6 +15871,11 @@ protocolTable[122][3] = function(data)
 end
 
 --[[  祕寶
+
+
+P.S. 由於N版尚未實裝，實裝時請取消註解
+
+
 C: 123-001 <問祕寶資料>
 C: 123-002 <升階> +祕寶ID(2) +Count(4) +素材背包Idx(2)
 C: 123-003 <升星> +祕寶ID(2) +Count(4) +素材背包Idx(2)
@@ -15541,9 +15886,11 @@ protocolTable[123] = {}
 S: 123-001 <更新祕寶資料> +Count(4) +<<祕寶ID(2) +祕寶數量(4) +Level(1) +Star(1) +StarExp(1)>>
 ]]--
 protocolTable[123][1] = function(data)
+
   if table.Count(Treasure.treasureItems) == 0 then
     Treasure.Initialize();
   end
+
 
   local count = data:ReadInt32();
 
@@ -15553,14 +15900,17 @@ protocolTable[123][1] = function(data)
     local level = data:ReadByte();
     local star = data:ReadByte();
     local exp = data:ReadByte();
-
+    id = Treasure.GetKeyById(id);
+ 
     if Treasure.treasureItems[id] ~= nil then
       Treasure.treasureItems[id].level = level;
       Treasure.treasureItems[id].count = quant;
       Treasure.treasureItems[id].star = star;
       Treasure.treasureItems[id].exp = exp;
     end
+
   end
+
 
   for i = 1, table.Count(Treasure.treasureCombination) do
     Treasure.GetCombinationLv(i);
@@ -15570,6 +15920,7 @@ protocolTable[123][1] = function(data)
     UI.Open(UITreasure);
     Treasure.sendOpenRequest = false;
   end
+
 end
 
 --[[
@@ -15580,11 +15931,13 @@ S: 123-002 <升階結果> +Kind(1)
   種類4: 數量不足
   種類5: Fighting
 ]]--
+
 protocolTable[123][2] = function(data)
   local result = data:ReadByte();
 
   if result == 1 then
     local id = data:ReadUInt16();
+    id = Treasure.GetKeyById(id);
     if Treasure.treasureItems[id] ~= nil then
       Treasure.treasureItems[id].level = data:ReadByte();
       ShowCenterMessage(string.format(string.Get(24593), Treasure.treasureItems[id].name));
@@ -15594,7 +15947,9 @@ protocolTable[123][2] = function(data)
       end
     end
 
-    UITreasure.UpdateUI();
+    UITreasure.UpdateStrength();
+    UITreasure.UpdateCardPage();
+
   elseif result == 2 then
     ShowCenterMessage(string.Get(24591));
   elseif result == 3 then
@@ -15608,6 +15963,7 @@ protocolTable[123][2] = function(data)
   end
 end
 
+
 --[[
 S: 123-003 <升星結果> +Kind(1) +祕寶ID(2) +目前Star(1) +目前Exp(1)
   種類1: 成功
@@ -15617,11 +15973,12 @@ S: 123-003 <升星結果> +Kind(1) +祕寶ID(2) +目前Star(1) +目前Exp(1)
   //種類5: 已滿等
   //種類6: 扣物品失敗
 ]]--
+
 protocolTable[123][3] = function(data)
   local result = data:ReadByte();
 
   local id = data:ReadUInt16();
-
+  id = Treasure.GetKeyById(id);
   if result == 2 then
     ShowCenterMessage(string.Get(24592));
   elseif result == 3 then
@@ -15640,8 +15997,637 @@ protocolTable[123][3] = function(data)
     ShowCenterMessage(string.format(string.Get(24594), Treasure.treasureItems[id].name));
   end
 
-  UITreasure.UpdateUI();
+  UITreasure.UpdateUpgrade();
+  UITreasure.UpdateCardPage();
 end
+
+
+--[[ 活動
+]]--
+protocolTable[172] = {}
+
+--[[
+S:172-001 活動SERVER + ServerID(4) + ServerPort(4) + ServerIP()
+]]--
+protocolTable[172][1] = function(data)
+  Network.activityServerId = data:ReadInt32();
+  local activityServerPort = data:ReadInt32();
+  local activityServerIp = data:ReadString(data.length, DataManager.encoding_Big5);
+
+  for key, value in pairs(Network.servers) do
+    if value.id == Network.activityServerId then
+      Network.activityServerIp = value.host;
+      break;
+    end
+  end
+end
+
+--[[ 挖礦場
+C:170-001 <礦場資訊> +礦場編號(1)
+C:170-002 <進礦場> +礦場編號(1)
+C:170-010 <填充礦機耐久> +背包索引(2) +ItemID(2) +使用數量(1) +礦機Indx(1)
+C:170-011 <設定挖礦狀態> +礦場編號(1)
+]]--
+protocolTable[170] = {}
+
+--[[
+S:170-001 礦場資訊  +res(1) +礦場編號(1)+總剩餘礦量(8)+最後設定的時間(8)+<<礦機資訊(?)>>*4 +已達今日上限(1)
+]]--
+protocolTable[170][1] = function(data)
+  local res = data:ReadByte();
+  if res == 1 then
+    if UI.IsVisible(UIMine) then
+      UIMine.UpdateUI();
+    else
+      UI.Open(UIMine);
+    end
+
+    local type = data:ReadByte();
+    local lastMining = data:ReadInt64();
+    local setTime = data:ReadDouble();
+
+    local machinesData = {};
+
+    for i = 4, 1, -1 do
+      machinesData[i] = {};
+      machinesData[i].full = data:ReadUInt16();
+      machinesData[i].skin = data:ReadUInt16();
+    end
+
+    local dateLimit = data:ReadByte();
+
+    if dateLimit == 1 then
+      dateLimit = true;
+    elseif dateLimit == 0 then
+      dateLimit = false;
+    end
+
+    UIMine.SetData(type, lastMining, setTime, machinesData, dateLimit);
+  elseif res == 255 then
+    ShowCenterMessage(string.Get(71336));
+  end
+end
+
+--[[
+S:170-002 礦場資訊  +res(1) +礦場編號(1)+總剩餘礦量(8)+挖礦人數(4) +是否挖礦(1)
+]]--
+protocolTable[170][2] = function(data)
+  local res = data:ReadByte();
+  if res == 1 then
+    local type = data:ReadByte();
+    local lastMining = data:ReadInt64();
+    local people = data:ReadInt32();
+    local mine = data:ReadByte();
+
+    UIMine.SetMining(mine);
+
+    UIMain.UpdateMiningPercent(type, lastMining);
+  elseif res == 255 then
+    ShowCenterMessage(string.Get(71336));
+  end
+end
+
+--[[
+S:170-010 <填充礦機耐久> +res(1) + index(1) +full(2)
+                        0=失敗
+                        1=成功
+                        255=功能未開啟
+]]--
+protocolTable[170][10] = function(data)
+  UIMine.Mining(data);
+end
+
+--[[
+S:170-011 <設定挖礦狀態> +res(1)
+                        res 1:成功
+                        res 255:功能未開啟
+]]--
+protocolTable[170][11] = function(data)
+  local result = data:ReadByte();
+  if result == 1 then
+    ShowCenterMessage(string.Get(23800));
+  elseif result == 255 then
+    ShowCenterMessage(string.Get(71336));
+  else
+    logError("回收錯誤");
+  end
+end
+
+--[[  據點戰
+C:171-001 <取得玩家資訊>
+C:171-002 <查詢可用武將>
+C:171-003 <設定防守隊伍> +數量(1) <<+位置索引(1) +NPCID(2) +技能(2)*5>>
+C:171-004 <查對戰紀錄>
+C:171-005 <取得防守隊伍>
+C:171-006 <選擇對手 or 加入防守> +對像種類(1) +城池ID(1) +替換ID(8) +對手位置or被替換位置(1) +根據對象種類的內容(?)
+C:171-007 <報名 or 進入地圖(戰場資訊)>
+C:171-008 <選擇城池> +城池ID(1)
+C:171-009 <取得戰令>
+C:171-010 <取得戰果>
+C:171-019 <使用戰令> +戰令index(1)
+C:171-027 <離開活動>
+C:171-029 <刷新戰令> +戰令ID(1)
+C:171-101 <排行榜>
+]]--
+protocolTable[171] = {}
+
+--[[
+S:171-001 <玩家資訊> +攻擊的次數(1) +攻擊次數時間(8) +累積積分(2) + 防守據點(1) +數量(1) <<+NPCID(2) +NPC使用次數(1)>>
+]]--
+protocolTable[171][1] = function(data)
+  ArmyBattle.SetPlayerData(data);
+end
+
+--[[
+S:171-002 <可用武將> +數量(1) <<+NPCID(2) +等級(1) +HP(4) +覺醒技等級(1) +強化技等級(1) +專武技數量(1) <<+專武技能ID(2)>> >>
+]]--
+protocolTable[171][2] = function(data)
+  local npcInfos = {};
+  local count = data:ReadByte();
+
+  for i = 1, count do
+    local npcInfo = {};
+    npcInfo.npcId = data:ReadUInt16();
+    npcInfo.level = data:ReadByte();
+    npcInfo.hp = data:ReadUInt32();
+
+    local npcData = npcDatas[npcInfo.npcId];
+
+    npcInfo.extraSkills = {};
+    local specialSkillLv = data:ReadByte();
+    if specialSkillLv > 0 and npcData ~= nil then
+      table.insert(npcInfo.extraSkills, npcData.specialSkill);
+    end
+
+    local upgradeSkillLv = data:ReadByte();
+    if upgradeSkillLv > 0 and npcData ~= nil then
+      table.insert(npcInfo.extraSkills, npcData.upgradeSkill);
+    end
+
+    local weaponSkillCount = data:ReadByte();
+    for j = 1, weaponSkillCount do
+      table.insert(npcInfo.extraSkills, data:ReadUInt16());
+    end
+
+    table.insert(npcInfos, npcInfo);
+  end
+
+  ArmyBattle.GetNpcList(npcInfos);
+end
+
+--[[
+S:171-004 <對戰記錄> +數量(1) <<+對戰時間(8) +種類(1) +隊伍(1) +編號(1) +血量(1) +據點所屬隊伍(1)<< +玩家名片(?)>> >>
+					                                                  kind=1(戰鬥)	據點編號
+					                                                  kind=2(戰令)	戰令編號(後面就沒有了)
+]]--
+protocolTable[171][4] = function(data)
+  local count = data:ReadByte();
+
+  local history = {};
+  for i = 1, count do
+    local temp = {};
+
+    temp.time = data:ReadDouble();
+    temp.kind = data:ReadByte();
+    temp.moral = data:ReadByte();
+
+    if temp.kind == 1 then
+      temp.id = data:ReadByte();
+      temp.life = data:ReadByte();
+      temp.pointMoral = data:ReadByte();
+
+      temp.playerInfo = {};
+      for j = 1, 2 do
+        temp.playerInfo[j] = {};
+        temp.playerInfo[j].name = data:ReadString(data:ReadByte());
+        temp.playerInfo[j].level = data:ReadByte();
+        temp.playerInfo[j].element = data:ReadByte();
+        temp.playerInfo[j].career = data:ReadByte();
+        temp.playerInfo[j].turn = data:ReadByte();
+        temp.playerInfo[j].turn3Element = data:ReadByte();
+
+        if temp.playerInfo[j].turn >= 3 then
+          temp.playerInfo[j].level = temp.playerInfo[j].level + Role.playerMaxLv;
+        end
+      end
+    elseif temp.kind == 2 then
+      temp.order = data:ReadByte();
+    end
+
+    table.insert(history, temp);
+  end
+
+  local reverse = {};
+
+  for i = 1, count do
+    table.insert(reverse, history[table.Count(history)]);
+    table.remove(history, table.Count(history));
+  end
+
+  UI.Open(UIArmyBattleFunction, EArmyBattleFunction.History, reverse);
+end
+
+--[[
+S:171-005 <防守隊伍>+數量(1)<<+位置索引(1) +NPCID(2) +等級(1) +HP(4) +覺醒技等級(1) +強化技等級(1) +專武技數量(1) <<+專武技能ID(2)>> +技能(2)*5 >>
+]]--
+protocolTable[171][5] = function(data)
+  local count = data:ReadByte();
+
+  ArmyBattle.ResetDefenceTeamInfos();
+
+  for i = 1, count do
+    local index = data:ReadByte();
+    local npcId = data:ReadUInt16();
+    local level = data:ReadByte();
+    local hp = data:ReadUInt32();
+
+    local npcData = npcDatas[npcId];
+
+    local extraSkills = {};
+    local specialSkillLv = data:ReadByte();
+    if specialSkillLv > 0 and npcData ~= nil then
+      table.insert(extraSkills, npcData.specialSkill);
+    end
+
+    local upgradeSkillLv = data:ReadByte();
+    if upgradeSkillLv > 0 and npcData ~= nil then
+      table.insert(extraSkills, npcData.upgradeSkill);
+    end
+
+    local weaponSkillCount = data:ReadByte();
+    for j = 1, weaponSkillCount do
+      table.insert(extraSkills, data:ReadUInt16());
+    end
+
+    local skills = {};
+    for j = 1, DataFight.maxTeamSkill do
+      table.insert(skills, data:ReadUInt16());
+    end
+
+    ArmyBattle.SetDefenceTeam(index, npcId, level, hp, extraSkills, skills);
+  end
+
+  if UI.IsVisible(UIArmyBattleFunction) then
+    UIArmyBattleFunction.UpdateTeam(true);
+    ShowCenterMessage(string.Get(24462));
+  else
+    UI.Open(UIArmyBattleFunction, EArmyBattleFunction.Team);
+  end
+end
+
+--[[
+S:171-006 <進戰鬥or加入防守結果> +結果(1)
+                               (0->進戰鬥成功 1->換防成功 2->進戰鬥失敗 3->換防失敗)
+]]--
+protocolTable[171][6] = function(data)
+  local result = data:ReadByte();
+
+  if result == 0 then
+    UI.Close(UIArmyBattleAttack);
+    UI.Close(UIArmyBattleDefence);
+    UI.Close(UIArmyBattle);
+  elseif result == 1 then
+    UIArmyBattle.UpdateUI();
+    UIArmyBattleDefence.UpdateUI(true);
+  elseif result == 2 then
+    ShowCenterMessage(string.Get(24530));
+
+    sendBuffer:Clear();
+    sendBuffer:WriteByte(ArmyBattle.nowChoosePoint);
+    Network.Send(171, 8, sendBuffer);
+  elseif result == 3 then
+    UI.Close(UIArmyBattleAttack);
+    UI.Close(UIArmyBattleDefence);
+    ShowCenterMessage(string.Get(24529));
+  else
+  end
+end
+
+--[[
+S:171-007 <進活動結果> + eOrgRankSignUpResult(1)
+                                            0,    //報名成功
+                                            1,     //已經報名過了
+                                            2,  //非報名時間
+                                            3,  //非團長副團長不能報名
+                                            4, //軍團等級不夠
+                                            5,//無軍團資料
+                                            99     //未知錯誤
+]]--
+protocolTable[171][7] = function(data)
+  local result = data:ReadByte();
+
+  if result == 0 then
+    if UI.IsVisible(UIActivity) then
+      UIActivity.UpdateUI();
+    end
+  elseif result == 1 then
+    ShowCenterMessage(string.Get(21813));
+  elseif result == 2 then
+
+  elseif result == 3 then
+    ShowCenterMessage(string.Get(21791));
+  elseif result == 4 then
+    ShowCenterMessage(string.Get(24235));
+  elseif result == 5 then
+
+  elseif result == 99 then
+    ShowCenterMessage("error");
+  end
+end
+
+--[[
+S:171-008 <城池資訊> +防守數量(1) << +玩家ID(8) +剩餘星星(1) +是否戰鬥中(1) +是否NPC(1) +內容(?) >>
+                                                                	  kind = 0  +玩家名片(?) +防守人員數量(1) <<+武將名片(?)>> >>
+                                                                	  kind = 1  >>
+]]--
+protocolTable[171][8] = function(data)
+  local count = data:ReadByte();
+
+  for i = 1, count do
+    ArmyBattle.cityInfo[ArmyBattle.nowChoosePoint].idList[i] = data:ReadInt64();
+    ArmyBattle.cityInfo[ArmyBattle.nowChoosePoint].nowLife[i] = data:ReadByte();
+
+    if data:ReadByte() == 0 then
+      ArmyBattle.cityInfo[ArmyBattle.nowChoosePoint].isFight[i] = false;
+    else
+      ArmyBattle.cityInfo[ArmyBattle.nowChoosePoint].isFight[i] = true;
+    end
+
+    if data:ReadByte() == 0 then
+      ArmyBattle.cityInfo[ArmyBattle.nowChoosePoint].isNpc[i] = false;
+    else
+      ArmyBattle.cityInfo[ArmyBattle.nowChoosePoint].isNpc[i] = true;
+    end
+
+    table.Clear(ArmyBattle.cityInfo[ArmyBattle.nowChoosePoint].npcList[i]);
+    if not ArmyBattle.cityInfo[ArmyBattle.nowChoosePoint].isNpc[i] then
+      table.insert(ArmyBattle.cityInfo[ArmyBattle.nowChoosePoint].npcList[i], ArmyBattle.cityInfo[ArmyBattle.nowChoosePoint].idList[i]);
+
+      local info = {};
+      info.name = data:ReadString(data:ReadByte());
+      info.level = data:ReadByte();
+      info.element = data:ReadByte();
+      info.career = data:ReadByte();
+      info.turn = data:ReadByte();
+
+      if info.turn >= 3 then
+        info.level = info.level + Role.playerMaxLv;
+      end
+
+      info.turn3Element = data:ReadByte();
+      ArmyBattle.cityInfo[ArmyBattle.nowChoosePoint].playerInfo[i] = info;
+
+      local teamCount = data:ReadByte();
+      for j = 1, teamCount do
+        local info = {};
+        info.name = data:ReadString(data:ReadByte());
+        info.level = data:ReadByte();
+        info.element = data:ReadByte();
+        info.career = data:ReadByte();
+        info.turn = data:ReadByte();
+        info.turn3Element = data:ReadByte();
+
+        table.insert(ArmyBattle.cityInfo[ArmyBattle.nowChoosePoint].npcList[i], info);
+      end
+    else
+      ArmyBattle.ResetDefenceList(ArmyBattle.nowChoosePoint, i);
+    end
+  end
+
+  if UI.IsVisible(UIArmyBattleAttack) then
+    UI.Close(UIArmyBattleAttack);
+  end
+
+  if UI.IsVisible(UIArmyBattleDefence) then
+    UIArmyBattleDefence.UpdateUI(true);
+    return;
+  end
+
+  if UI.IsVisible(UIArmyBattle) then
+    UIArmyBattle.UpdateChoose();
+  end
+end
+
+--[[
+171-009 <戰令資訊> +戰鼓數量(1) +戰鼓CD時間(8) +戰令CD時間(8) +元寶戰令CD時間(8) +戰令數量(1) << +戰令id(1) +是否使用中(1) +結束時間(8) >>
+]]--
+protocolTable[171][9] = function(data)
+  ArmyBattle.nowDrumCount = data:ReadByte();
+
+  local datas = {};
+  datas.orders = {};
+  datas.drumTime = DateTime.FromOADate(data:ReadDouble());
+  datas.orderTime = DateTime.FromOADate(data:ReadDouble());
+  datas.goldOrderTime = DateTime.FromOADate(data:ReadDouble());
+  local count = data:ReadByte();
+  ArmyBattle.playerOrderCount = 0;
+
+  for i = 1, count do
+    local temp = {};
+    temp.id = data:ReadByte();
+    temp.use = data:ReadByte();
+    temp.time = DateTime.FromOADate(data:ReadDouble());
+
+    if strongholdWarDatas[temp.id].sellId == 0 then
+      ArmyBattle.playerOrderCount = ArmyBattle.playerOrderCount + 1;
+    end
+
+    table.insert(datas.orders, temp);
+  end
+
+  if UI.IsVisible(UIArmyBattleFunction) then
+    UIArmyBattleFunction.ChangeOrdersAndTime(datas);
+    UIArmyBattleFunction.UpdateUI(true);
+  else
+    UI.Open(UIArmyBattleFunction, EArmyBattleFunction.Order, datas);
+  end
+end
+
+--[[
+S:171-010 <戰果資訊> +code(1)[eOrgRankFightResult]
+          eOrgRankFightResult = (
+                       eORFR_Win = 0,              // 贏
+                       eORFR_Lose = 1,             // 輸
+                       eORFR_Draw = 2,             // 平手
+                       eORFR_WrongState = 3,       // 不是結算階段
+                       eORFR_Unknow = 99           // 未知錯誤
+          );
+]]--
+protocolTable[171][10] = function(data)
+  ArmyBattle.playerResult = data:ReadByte();
+
+  if UI.IsVisible(UIArmyBattle) then
+    UIArmyBattleFunction.UpdateUI();
+  else
+    UI.Open(UIArmyBattleFunction, EArmyBattleFunction.Result);
+  end
+end
+
+--[[
+S:171-017 <對戰資訊> +階段時間(8) +code(1) [eOrgRankState] +對戰ID(1) +軍團數量(1) << +軍團ID(4) +L(1) +軍團名稱(L) +累積分數(2) +戰令數量(1) << +使用中戰令編號(1) >> >> +城池數量(1) << +城池ID(1) +占領隊伍(1) +占領人數量(1) +剩餘星星(1) +是否有人戰鬥中(1) +轉換時間(8) >>
+eOrgRankState = (
+    eOR_None = 0,       //沒事
+    eOR_SignUp = 1,     //報名
+    eOR_Setting = 2,    //設定
+    eOR_Fighting = 3,   //戰鬥
+    eOR_Reward = 4,     //結算
+    eOR_Finish =5       //結束
+  );
+]]--
+protocolTable[171][17] = function(data)
+  ArmyBattle.SetBattleData(data);
+end
+
+--[[
+S:171-019 <使用戰令結果> +code(1)[eOrgRankBattleOrderResult]
+eOrgRankBattleOrderResult = (
+                  eORBOR_Success = 0,         // 成功
+                  eORBOR_DrumsNotEnough = 1,  // 戰鼓不足
+                  eORBOR_InUsedTime = 2,      // 戰令使用中
+                  eORBOR_Unknow = 99          // 未知錯誤
+    );
+]]--
+protocolTable[171][19] = function(data)
+  local result = data:ReadByte();
+
+  if result == 1 then
+    ShowCenterMessage(string.Get(24358));
+  elseif result == 2 then
+    ShowCenterMessage(string.Get(99661));
+  elseif result == 99 then
+    ShowCenterMessage("Error");
+  end
+end
+
+--[[
+S:171-029 <使用戰令結果> +code(1)[eOrgRankBattleOrderResult] +戰令ID(1)
+eOrgRankBattleOrderResult = (
+                  eORBOR_Success = 0,         // 成功      +新戰令ID(1) +是否使用中(1) +結束時間(8)
+                  eORBOR_DrumsNotEnough = 1,  // 戰鼓不足
+                  eORBOR_InUsedTime = 2,      // 戰令使用中
+                  eORBOR_Unknow = 99          // 未知錯誤
+    );
+]]--
+protocolTable[171][29] = function(data)
+  local result = data:ReadByte();
+
+  if result == 1 then
+    ShowCenterMessage(string.Get(24358));
+  elseif result == 2 then
+    ShowCenterMessage(string.Get(99661));
+  elseif result == 99 then
+    ShowCenterMessage("Error");
+  end
+end
+
+--[[
+S:171-030 <踢出玩家>
+]]--
+protocolTable[171][30] = function(data)
+  ArmyBattle.CloseAllUI();
+end
+
+--[[
+S:171-101 <接收排行榜> +code(1) +目前排名(2) +數量(1) << +名次(1) +L(1) +敵方軍團名稱(L) +累積積分(2) +名片(?)>>
+                                                                                              名字(?) +等級(1) +屬性(1) +職業(1) +轉生(1) +三轉屬性(1)
+]]--
+protocolTable[171][101] = function(data)
+  ArmyBattle.playerResult = data:ReadByte();
+  ArmyBattle.playerRank = data:ReadUInt16();
+
+  local board = {};
+  local count = data:ReadByte();
+
+  for i = 1, count do
+    local temp = {};
+    temp.rank = data:ReadByte();
+    temp.name = data:ReadString(data:ReadByte());
+    temp.score = data:ReadUInt16();
+
+    temp.playerInfo = {};
+    temp.playerInfo.name = data:ReadString(data:ReadByte());
+    temp.playerInfo.level = data:ReadByte();
+    temp.playerInfo.element = data:ReadByte();
+    temp.playerInfo.career = data:ReadByte();
+    temp.playerInfo.turn = data:ReadByte();
+    temp.playerInfo.turn3Element = data:ReadByte();
+
+    if temp.playerInfo.turn >= 3 then
+      temp.playerInfo.level = temp.playerInfo.level + Role.playerMaxLv;
+    end
+
+    table.insert(board, temp);
+  end
+
+  UI.Open(UIArmyBattleFunction, EArmyBattleFunction.Result, board);
+end
+
+--[[
+S:171-090 <通知訊息> +kind(1)
+		      kind = 1 +城池ID(1) -> %s號%d 被奪走！
+		      kind = 2 +城池ID(1) -> %s號%d 已佔領，請盡速加入防守位置！
+		      kind = 3 +戰令ID(1) -> 敵方開起戰令－%s
+		      kind = 4 +戰令ID(1) -> 我方開起戰令－%s
+		      kind = 5 +戰令ID(1) +城池ID(1) -> 敵方開起戰令－%s－選中%d號據點
+		      kind = 6 +戰令ID(1) +城池ID(1) -> 我方開起戰令－%s－選中%d號據點
+		      kind = 7 +戰令ID(1) +戰令ID(1) -> 敵方開起戰令－%s－取消%d號戰令
+		      kind = 8 +戰令ID(1) +戰令ID(1) -> 我方開起戰令－%s－取消%d號戰令
+]]--
+protocolTable[171][90] = function(data)
+  local kind = data:ReadByte();
+  local id = data:ReadByte();
+
+  if kind == 1 then
+    local temp = strongholdDatas[id];
+    Chat.AddMessage(EChannel.Organization, string.format(string.Get(24354), id, string.Get(temp.nameString)));
+  elseif kind == 2 then
+    local temp = strongholdDatas[id];
+    Chat.AddMessage(EChannel.Organization, string.format(string.Get(24355), id, string.Get(temp.nameString)));
+  elseif kind == 3 then
+    local temp = strongholdWarDatas[id];
+    Chat.AddMessage(EChannel.Organization, string.format(string.Get(24357), string.Get(temp.name)));
+  elseif kind == 4 then
+    local temp = strongholdWarDatas[id];
+    Chat.AddMessage(EChannel.Organization, string.format(string.Get(24356), string.Get(temp.name)));
+  elseif kind == 5 then
+    local temp = strongholdWarDatas[id];
+    local point = data:ReadByte();
+
+    Chat.AddMessage(EChannel.Organization,
+      string.Concat(string.format(string.Get(24357), string.Get(temp.name)),
+        (string.format(string.Get(24623), point))));
+  elseif kind == 6 then
+    local temp = strongholdWarDatas[id];
+    local point = data:ReadByte();
+
+    Chat.AddMessage(EChannel.Organization,
+      string.Concat(string.format(string.Get(24356), string.Get(temp.name)),
+        (string.format(string.Get(24623), point))));
+  elseif kind == 7 then
+    local temp = strongholdWarDatas[id];
+    local cancelId = data:ReadByte();
+    local cancelName = "";
+    if strongholdWarDatas[cancelId] ~= nil then
+      cancelName = string.Get(strongholdWarDatas[cancelId].name);
+    end
+
+    Chat.AddMessage(EChannel.Organization,
+      string.Concat(string.format(string.Get(24357), string.Get(temp.name)),
+        (string.format(string.Get(24622), cancelName))));
+  elseif kind == 8 then
+    local temp = strongholdWarDatas[id];
+    local cancelId = data:ReadByte();
+    local cancelName = "";
+    if strongholdWarDatas[cancelId] ~= nil then
+      cancelName = string.Get(strongholdWarDatas[cancelId].name);
+    end
+
+    Chat.AddMessage(EChannel.Organization,
+      string.Concat(string.format(string.Get(24356), string.Get(temp.name)),
+        (string.format(string.Get(24622), cancelName))));
+  end
+end
+
 
 --[[  營運模板
 C: 124-001 <更新玩家任務條件行為>
@@ -15693,7 +16679,7 @@ protocolTable[124][1] = function(data)
     UIActivityModel.UpdateUI(true);
     if UIBingo.IsVisible() then
       UIBingo.SetProgressBar();
-      UIBingo.UpdateProgressBarCount();
+      UIBingo.UpdateProgressCount();
       UIBingo.UpdateBoard();
       UIBingo.CheckChangeBoard();
     end
@@ -15721,25 +16707,17 @@ S:124-003 <領獎結果> +數量(4) +<<結果(1)>>[0:成功 1:無此活動 2:未
 ]]--
 protocolTable[124][3] = function(data)
   local count = data:ReadUInt32();
-  local successCount = 0;
 
   for i = 1, count do
     local result = data:ReadByte();
     ActivityModel.ReceiveResult(result);
-    if result == 0 then
-      successCount = successCount + 1;
-    end
   end
 
   if UI.IsVisible(UIActivityModel) then
     UIActivityModel.UpdateActivity();
     if UIBingo.IsVisible() then
       UIBingo.UpdateBoard();
-    elseif UIActivityMonopoly.openUI then
-      if successCount ~= 0 then
-        UIActivityMonopoly.ShowProgressRewardMessage();
-      end
-		end
+    end
   end
 end
 
@@ -15762,7 +16740,6 @@ protocolTable[124][4] = function(data)
     UIActivityModel.UpdateUI(true);
   end
 end
-
 
 --[[
   C:124-005 <進行特殊玩法> +活動ID(1) +Kind(1)
@@ -15812,7 +16789,7 @@ protocolTable[124][10] = function(data)
 end
 
 --[[
-S:124-011 <更新玩家活動貨幣> +數量(4) +<<活動貨幣ID(2) +數值(4)>> +是否顯示訊息(1)
+S:124-011 <更新玩家活動貨幣> +數量(4) +<<活動貨幣ID(2) +數值(4)>>
 ]]--
 protocolTable[124][11] = function(data)
   local count = data:ReadUInt32();
@@ -15864,13 +16841,14 @@ protocolTable[126][0] = function(data)
 end
 
 --[[
-S:126-001 <分組排行榜分數> +排行榜Kind(1) +排行榜ID(2) +目前分數(4)
+S:126-001 <分組排行榜分數> +排行榜Kind(1) +排行榜ID(2) +目前分數(4) +排行榜狀態(1)[1:展示 2:進行中 3:結算中 4:可領獎]
 ]]--
 protocolTable[126][1] = function(data)
   local kind = data:ReadByte();
   local boardId = data:ReadUInt16();
   local score = data:ReadUInt32();
-  LeaderboardSimpleData.UpdateSelfScore(kind, boardId, score)
+  local status = data:ReadByte();
+  LeaderboardSimpleData.UpdateSelfData(kind, boardId, score, status);
 
   local myRank = LeaderboardSimpleData.GetRank(kind, boardId);
   local maxPage = math.ceil( LeaderboardSimpleData.GetBoardPlayersCount(kind, boardId) / UILeaderboardSimple.pageRawAmount);
@@ -15906,5 +16884,6502 @@ protocolTable[199][6] = function(data)
 
   Chat.AddMessage(EChannel.World, message, roleId);
 
-  AudioManager.PlayOnce("WA0033", 0);
+  AudioManager.PlayOnce("AudioClip_WA0033", 0);
+end
+
+protocolTable[400] = {}
+
+--[[
+S:400-001 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][001] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-002 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][002] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-003 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][003] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-004 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][004] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-005 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][005] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-006 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][006] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-007 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][007] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-008 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][008] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-009 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][009] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-010 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][010] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-011 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][011] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-012 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][012] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-013 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][013] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-014 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][014] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-015 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][015] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-016 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][016] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-017 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][017] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-018 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][018] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-019 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][019] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-020 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][020] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-021 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][021] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-022 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][022] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-023 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][023] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-024 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][024] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-025 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][025] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-026 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][026] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-027 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][027] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-028 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][028] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-029 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][029] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-030 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][030] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-031 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][031] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-032 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][032] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-033 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][033] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-034 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][034] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-035 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][035] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-036 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][036] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-037 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][037] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-038 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][038] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-039 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][039] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-040 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][040] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-041 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][041] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-042 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][042] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-043 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][043] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-044 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][044] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-045 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][045] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-046 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][046] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-047 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][047] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-048 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][048] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-049 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][049] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-050 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][050] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-051 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][051] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-052 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][052] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-053 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][053] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-054 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][054] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-055 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][055] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-056 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][056] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-057 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][057] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-058 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][058] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-059 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][059] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-060 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][060] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-061 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][061] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-062 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][062] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-063 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][063] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-064 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][064] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-065 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][065] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-066 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][066] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-067 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][067] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-068 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][068] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-069 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][069] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-070 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][070] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-071 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][071] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-072 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][072] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-073 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][073] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-074 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][074] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-075 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][075] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-077 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][077] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-078 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][078] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-079 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][079] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-080 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][080] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-081 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][081] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-082 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][082] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-083 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][083] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-084 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][084] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-085 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][085] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-086 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][086] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-087 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][087] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-088 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][088] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-089 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][089] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-090 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][090] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-091 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][091] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-092 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][092] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-093 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][093] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-094 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][094] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-095 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][095] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-096 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][096] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-097 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][097] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-098 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][098] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-099 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][099] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:400-100 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[400][100] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+protocolTable[500] = {}
+
+--[[
+S:500-001 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][001] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-002 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][002] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-003 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][003] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-004 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][004] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-005 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][005] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-006 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][006] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-007 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][007] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-008 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][008] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-009 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][009] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-010 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][010] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-011 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][011] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-012 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][012] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-013 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][013] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-014 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][014] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-015 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][015] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-016 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][016] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-017 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][017] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-018 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][018] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-019 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][019] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-020 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][020] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-021 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][021] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-022 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][022] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-023 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][023] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-024 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][024] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-025 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][025] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-026 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][026] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-027 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][027] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-028 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][028] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-029 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][029] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-030 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][030] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-031 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][031] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-032 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][032] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-033 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][033] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-034 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][034] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-035 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][035] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-036 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][036] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-037 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][037] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-038 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][038] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-039 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][039] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-040 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][040] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-041 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][041] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-042 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][042] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-043 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][043] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-044 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][044] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-045 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][045] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-046 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][046] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-047 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][047] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-048 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][048] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-049 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][049] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-050 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][050] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-051 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][051] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-052 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][052] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-053 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][053] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-054 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][054] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-055 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][055] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-056 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][056] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-057 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][057] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-058 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][058] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-059 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][059] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-060 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][060] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-061 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][061] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-062 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][062] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-063 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][063] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-064 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][064] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-065 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][065] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-066 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][066] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-067 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][067] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-068 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][068] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-069 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][069] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-070 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][070] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-071 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][071] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-072 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][072] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-073 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][073] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-074 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][074] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-075 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][075] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-076 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][076] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-077 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][077] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-078 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][078] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-079 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][079] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-080 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][080] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-081 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][081] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-082 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][082] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-083 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][083] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-084 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][084] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-085 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][085] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-086 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][086] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-087 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][087] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-088 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][088] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-089 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][089] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-090 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][090] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-091 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][091] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-092 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][092] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-093 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][093] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-094 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][094] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-095 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][095] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-096 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][096] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-097 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][097] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-098 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][098] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-099 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][099] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:500-100 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[500][100] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+protocolTable[600] = {}
+
+--[[
+S:600-001 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][001] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-002 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][002] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-003 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][003] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-004 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][004] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-005 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][005] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-006 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][006] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-007 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][007] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-008 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][008] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-009 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][009] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-010 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][010] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-011 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][011] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-012 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][012] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-013 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][013] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-014 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][014] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-015 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][015] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-016 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][016] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-017 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][017] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-018 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][018] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-019 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][019] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-020 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][020] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-021 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][021] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-022 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][022] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-023 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][023] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-024 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][024] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-025 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][025] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-026 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][026] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-027 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][027] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-028 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][028] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-029 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][029] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-030 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][030] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-031 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][031] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-032 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][032] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-033 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][033] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-034 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][034] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-035 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][035] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-036 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][036] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-037 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][037] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-038 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][038] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-039 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][039] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-040 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][040] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-041 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][041] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-042 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][042] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-043 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][043] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-044 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][044] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-045 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][045] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-046 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][046] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-047 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][047] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-048 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][048] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-049 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][049] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-050 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][050] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-051 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][051] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-052 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][052] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-053 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][053] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-054 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][054] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-055 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][055] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-056 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][056] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-057 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][057] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-058 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][058] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-059 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][059] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-060 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][060] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-061 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][061] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-062 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][062] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-063 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][063] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-064 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][064] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-065 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][065] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-066 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][066] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-067 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][067] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-068 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][068] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-069 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][069] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-070 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][070] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-071 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][071] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-072 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][072] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-073 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][073] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-074 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][074] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-075 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][075] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-076 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][076] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-077 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][077] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-078 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][078] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-079 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][079] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-080 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][080] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-081 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][081] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-082 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][082] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-083 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][083] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-084 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][084] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-085 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][085] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-086 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][086] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-087 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][087] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-088 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][088] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-089 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][089] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-090 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][090] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-091 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][091] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-092 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][092] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-093 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][093] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-094 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][094] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-095 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][095] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-096 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][096] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-097 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][097] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-098 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][098] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-099 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][099] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:600-100 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[600][100] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+protocolTable[700] = {}
+
+--[[
+S:700-001 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][001] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-002 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][002] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-003 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][003] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-004 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][004] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-005 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][005] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-006 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][006] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-007 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][007] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-008 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][008] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-009 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][009] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-010 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][010] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-011 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][011] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-012 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][012] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-013 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][013] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-014 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][014] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-015 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][015] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-016 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][016] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-017 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][017] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-018 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][018] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-019 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][019] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-020 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][020] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-021 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][021] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-022 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][022] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-023 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][023] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-024 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][024] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-025 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][025] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-026 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][026] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-027 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][027] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-028 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][028] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-029 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][029] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-030 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][030] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-031 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][031] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-032 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][032] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-033 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][033] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-034 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][034] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-035 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][035] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-036 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][036] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-037 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][037] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-038 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][038] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-039 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][039] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-040 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][040] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-041 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][041] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-042 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][042] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-043 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][043] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-044 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][044] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-045 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][045] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-046 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][046] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-047 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][047] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-048 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][048] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-049 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][049] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-050 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][050] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-051 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][051] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-052 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][052] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-053 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][053] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-054 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][054] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-055 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][055] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-056 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][056] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-057 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][057] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-058 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][058] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-059 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][059] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-060 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][060] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-061 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][061] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-062 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][062] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-063 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][063] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-064 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][064] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-065 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][065] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-066 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][066] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-067 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][067] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-068 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][068] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-069 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][069] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-070 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][070] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-071 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][071] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-072 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][072] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-073 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][073] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-074 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][074] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-075 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][075] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-076 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][076] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-077 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][077] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-078 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][078] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-079 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][079] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-080 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][080] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-081 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][081] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-082 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][082] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-083 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][083] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-084 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][084] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-085 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][085] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-086 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][086] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-087 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][087] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-088 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][088] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-089 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][089] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-090 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][090] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-091 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][091] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-092 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][092] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-093 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][093] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-094 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][094] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-095 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][095] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-096 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][096] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-097 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][097] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-098 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][098] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-099 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][099] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:700-100 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[700][100] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+protocolTable[800] = {}
+
+--[[
+S:800-001 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][001] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-002 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][002] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-003 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][003] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-004 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][004] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-005 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][005] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-006 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][006] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-007 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][007] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-008 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][008] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-009 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][009] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-010 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][010] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-011 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][011] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-012 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][012] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-013 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][013] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-014 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][014] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-015 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][015] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-016 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][016] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-017 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][017] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-018 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][018] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-019 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][019] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-020 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][020] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-021 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][021] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-022 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][022] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-023 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][023] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-024 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][024] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-025 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][025] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-026 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][026] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-027 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][027] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-028 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][028] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-029 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][029] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-030 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][030] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-031 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][031] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-032 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][032] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-033 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][033] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-034 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][034] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-035 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][035] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-036 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][036] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-037 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][037] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-038 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][038] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-039 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][039] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-040 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][040] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-041 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][041] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-042 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][042] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-043 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][043] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-044 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][044] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-045 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][045] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-046 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][046] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-047 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][047] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-048 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][048] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-049 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][049] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-050 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][050] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-051 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][051] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-052 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][052] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-053 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][053] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-054 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][054] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-055 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][055] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-056 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][056] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-057 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][057] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-058 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][058] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-059 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][059] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-060 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][060] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-061 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][061] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-062 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][062] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-063 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][063] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-064 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][064] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-065 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][065] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-066 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][066] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-067 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][067] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-068 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][068] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-069 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][069] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-070 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][070] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-071 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][071] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-072 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][072] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-073 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][073] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-074 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][074] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-075 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][075] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-076 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][076] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-077 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][077] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-078 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][078] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-079 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][079] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-080 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][080] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-081 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][081] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-082 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][082] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-083 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][083] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-084 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][084] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-085 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][085] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-086 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][086] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-087 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][087] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-088 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][088] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-089 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][089] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-090 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][090] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-091 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][091] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-092 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][092] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-093 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][093] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-094 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][094] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-095 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][095] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-096 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][096] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-097 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][097] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-098 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][098] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-099 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][099] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
+end
+
+--[[
+S:800-100 <useless> +data(1) +data(2) +data(4) +data(8) +時間(8) +開關(1) +L(1) +字串(L)
+]]--
+protocolTable[800][100] = function(data)
+  local data1 = data:ReadByte();
+  local data2 = data:ReadUInt16();
+  local data3 = data:ReadInt32();
+  local data4 = data:ReadInt64();
+  local time = data:ReadDouble();
+  local switch = data:ReadBoolean();
+  local stringData = data:ReadString(data:ReadByte());
 end

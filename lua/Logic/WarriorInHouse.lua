@@ -4,6 +4,23 @@ local this = WarriorInHouse;
 this.allNpc = {};
 this.totalCombination = 0;
 
+--[[
+Now at that time, Judah went away from his brothers and became the friend of a man of Adullam named Hirah.
+And there he saw the daughter of a certain man of Canaan named Shua, and took her as his wife.
+And she gave birth to a son, and he gave him the name Er.
+And again she gave birth to a son, and he gave him the name Onan.
+Then she had another son, to whom she gave the name Shelah; she was at Chezib when the birth took place.
+And Judah took a wife for his first son Er, and her name was Tamar.
+Now Er, Judah's first son, did evil in the eyes of the Lord, so that he put him to death.
+Then Judah said to Onan, Go in to your brother's wife and do what it is right for a husband's brother to do; make her your wife and get offspring for your brother.
+But Onan, seeing that the offspring would not be his, went in to his brother's wife, but let his seed go on to the earth, so that he might not get offspring for his brother.
+And what he did was evil in the eyes of the Lord, so that he put him to death, like his brother.
+Then Judah said to Tamar, his daughter-in-law, Go back to your father's house and keep yourself as a widow till my son Shelah becomes a man: for he had in his mind the thought that death might come to him as it had come to his brothers. So Tamar went back to her father's house.
+And after a time, Bath-shua, Judah's wife, came to her end; and after Judah was comforted for her loss, he went to Timnah, where they were cutting the wool of his sheep, and his friend Hirah of Adullam went with him.
+And when Tamar had news that her father-in-law was going up to Timnah to the wool-cutting,
+She took off her widow's clothing, and covering herself with her veil, she took her seat near Enaim on the road to Timnah; for she saw that Shelah was now a man, but she had not been made his wife.
+--]]
+
 local npcInHouse = {};
 local serHouseWarriors = {};
 
@@ -48,6 +65,39 @@ function WarriorInHouse.CloseEditor(chosenBlock, change)
   end
 end
 
+function WarriorInHouse.Script()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function WarriorInHouse.Script2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function WarriorInHouse.Script3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
 function WarriorInHouse.CheckScore()
   if blockSendData == nil then return end
   local house = HouseManager.GetCurrentBuilding();
@@ -84,6 +134,39 @@ function WarriorInHouse.ReceiveHouseWarrior(houseWarriors)
   this.CreateHouseWarriorByServer();
 end
 
+function WarriorInHouse.Script4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function WarriorInHouse.Script5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function WarriorInHouse.Script6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
 function WarriorInHouse.CreateHouseWarriorByServer()
   for k, v in pairs(Role.houseWarriors) do
     Role.HouseWarriorDisappear(k);
@@ -91,6 +174,17 @@ function WarriorInHouse.CreateHouseWarriorByServer()
 
   for k, v in pairs(serHouseWarriors) do
     Role.HouseWarriorAppear(k, v);
+  end
+end
+
+function WarriorInHouse.Script7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
   end
 end
 
@@ -206,6 +300,40 @@ function WarriorInHouse.SetPreNpcData()
   this.GetFloorCombinationAttribute(blockSendData);
 end
 
+function WarriorInHouse.Script8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function WarriorInHouse.Script9()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+
+function WarriorInHouse.Script10()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
 function WarriorInHouse.TransformHouseToBlock(house, floor)
   if floor % 2 == 0 then
     return floor * house;
@@ -244,6 +372,50 @@ function WarriorInHouse.ExchangeNpc(chosenBlock, npcId, index)
   npcInHouse[chosenBlock].npcIds[index] = npcId;
 end
 
+function WarriorInHouse.Script11()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function WarriorInHouse.Script12()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function WarriorInHouse.Script13()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function WarriorInHouse.Script14()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
 function WarriorInHouse.GetHouseNpcId(chosenBlock, index)
   return npcInHouse[chosenBlock].npcIds[index];
 end
@@ -260,6 +432,19 @@ function WarriorInHouse.GetNpcCount(house, floor)
   return this.GetBlockNpcCount(this.TransformHouseToBlock(house, floor));
 end
 
+function WarriorInHouse.Demo()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
 function WarriorInHouse.GetBlockNpcCount(chosenBlock)
   local count = 0;
   for i = 1, npcMaxCount do
@@ -269,6 +454,19 @@ function WarriorInHouse.GetBlockNpcCount(chosenBlock)
   end
 
   return count;
+end
+
+function WarriorInHouse.Demo2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
 end
 
 function WarriorInHouse.GetBlockMaxCount(chosenBlock)
@@ -321,6 +519,45 @@ function WarriorInHouse.CheckCombination(index, chosenBlock)
 
 end
 
+function WarriorInHouse.Demo3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function WarriorInHouse.Demo4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function WarriorInHouse.Demo5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
 function WarriorInHouse.GetSortedCombination()
   local data = {};
 
@@ -363,6 +600,32 @@ function WarriorInHouse.GetCombinationAttribute(index)
   else
     return string.Concat(ItemData.GetAttrText(data.values.kind), "+", data.values.value);
   end;
+end
+
+function WarriorInHouse.Demo6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function WarriorInHouse.Demo7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
 end
 
 function WarriorInHouse.GetFloorCombinationAttribute(chosenBlock)

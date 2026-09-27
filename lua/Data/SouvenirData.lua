@@ -1,6 +1,15 @@
 SouvenirData = {}
 SouvenirData.__index = SouvenirData
 
+function SouvenirData.GetRShiftB(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
 function SouvenirData.New(reader)
   local self = {};
   setmetatable(self, SouvenirData);
@@ -35,6 +44,24 @@ function SouvenirData:GetQualityColor()
   return result;
 end
 
+function SouvenirData.GetRShift1B(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function SouvenirData.GetRShift2B(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
 function SouvenirData:GetCurrencySprite()
   local result;
 
@@ -47,6 +74,15 @@ function SouvenirData:GetCurrencySprite()
   return result;
 end
 
+function SouvenirData.GetRShift3B(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
 function SouvenirData:CanNamed()
   if self.naming == 1 then
     return true;
@@ -55,10 +91,46 @@ function SouvenirData:CanNamed()
   end
 end
 
+function SouvenirData.GetRShiftF(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function SouvenirData.GetRShiftE(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function SouvenirData.GetRShiftW(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
 function SouvenirData:CanBroadcast()
   if self.broadcast == 1 then
     return true;
   elseif self.broadcast == 0 then
     return false;
+  end
+end
+
+function SouvenirData.GetRShift99B(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
   end
 end

@@ -1,6 +1,29 @@
 FurnaceSlotData = {};
 FurnaceSlotData.__index = FurnaceSlotData;
 
+function FurnaceSlotData.TrashB()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function FurnaceSlotData.TrashC()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+
 function FurnaceSlotData.New(reader)
   local self = {};
   setmetatable(self, FurnaceSlotData);
@@ -18,6 +41,50 @@ function FurnaceSlotData.New(reader)
   self.CloseDay = reader:ReadByte();
 
   return self;
+end
+
+function FurnaceSlotData.TrashD()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function FurnaceSlotData.TrashE()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function FurnaceSlotData.TrashF()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function FurnaceSlotData.TrashG()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
 end
 
 function FurnaceSlotData.IsInTime(data)

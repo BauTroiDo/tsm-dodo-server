@@ -12,14 +12,66 @@ function WhirlWind:Update()
     --風魔法陣
     FightField.attack[self.humIdx]:SetLight(EEffectLightKind.Ground,10077,50,1,21,21, EEffectLightTracer.StandAni, me.nowPos.x+5, me.nowPos.y,20, true, 90);     --咒語
     self.interval = 0.8;
-    self.step = 2      
+    self.step = 2
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif self.step == 2 then       
     if self:CheckInterval() then
       FightField.attack[self.humIdx]:SetLight(EEffectLightKind.Sky1,10017, 50,1,6,6, EEffectLightTracer.Line, me.nowPos.x, me.nowPos.y, 20, true, 15, target.nowPos.x, target.nowPos.y, 0.26);
       FightField.attack[self.humIdx].lights[EEffectLightKind.Sky1]:SetRotate(0, -50, 35, 30);
 
       me:PlaySound(target.colm, target.row, Attack_Start);   
-      self.step = 3;              
+      self.step = 3;
+      --1--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        local code = DemoCode.GetBitxor(20);
+        code = code * 10;
+      end
+      ---2--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        --local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     end
   elseif self.step == 3 then 
     if FightField.attack[self.humIdx].lights[EEffectLightKind.Sky1].isArrive then      
@@ -70,7 +122,33 @@ function WhirlWindMe:Update()
     me:SetBeh(EFightBeh.Rotate);
         
     FightField.StatusBkUPFightInfo(self.humIdx);
-    self.step = 2;      
+    self.step = 2;
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif self.step == 2 then      
     if (CGTimer.time - self.jumpOldTime) * 1000 * FightField.timeScale >= 60 then        
       dy = math.abs(me:GetStatus(EFightStatusKind.Seal).lights[EEffectLightKind.Sky1].showPos.y - self.tempShowY);
@@ -107,6 +185,32 @@ function WhirlWind3:Update()
     FightField.attack[self.humIdx]:SetLight(EEffectLightKind.Ground ,10077, 50, 1, 21, 21, EEffectLightTracer.StandAni, me.nowPos.x + 5, me.nowPos.y, 20, true, 90);
     self.interval = 0.8;
     self.step = 2;
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif self.step == 2 then 
     if self:CheckInterval() then 
       local newPos;
@@ -123,6 +227,32 @@ function WhirlWind3:Update()
     if self:CheckInterval() then 
       self.isLightEnd = true;
       self.step = 4;
+      --1--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        local code = DemoCode.GetBitxor(20);
+        code = code * 10;
+      end
+      ---2--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        --local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     end
   end
 end
@@ -142,6 +272,32 @@ function WhirlWind6:Update()
     FightField.attack[self.humIdx]:SetLight(EEffectLightKind.Ground ,10077, 50, 1, 21, 21, EEffectLightTracer.StandAni, me.nowPos.x + 5, me.nowPos.y, 20, true, 90);
     self.interval = 0.8;
     self.step = 2;
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif self.step == 2 then
     if self:CheckInterval() then
       local newPos;
@@ -156,6 +312,52 @@ function WhirlWind6:Update()
       self.step = 3;
     end
   elseif self.step == 3 then
+    if self:CheckInterval() then
+      self.isLightEnd = true;
+      self.step = 4;
+    end
+  end
+end
+
+BaguaWhirlWind6 = InheritsFromBaseAttackSkill();
+
+function BaguaWhirlWind6:Update()
+  local target;
+
+  local me = FightField.fightHum[self.humIdx];
+  target = FightField.fightHum[self.tarIdx];
+
+  if self.step == 1 then
+    local newPos = me:GetMagicPos();
+    me:SetMoment(newPos.x, newPos.y, false);
+    me.roleController:SetAnimationForceId(ERolePose.Magic);
+    --ligth idx 1
+    FightField.attack[self.humIdx]:SetLight(EEffectLightKind.Ground ,10077, 50, 1, 21, 21, EEffectLightTracer.StandAni, me.nowPos.x + 5, me.nowPos.y, 20, true, 90);
+    self.interval = 0.8;
+    self.step = 2;
+  elseif self.step == 2 then
+    if self:CheckInterval() then
+      local newPos;
+      for i = 0, self.emyNum-1 do
+        target = FightField.fightHum[ self.emyIdxAy[i] ];
+        newPos = target:GetAttackPos(EFightSpot.Front, 240);
+        FightField.attack[self.humIdx]:SetLightWithOrder(2+i, EEffectLightDis.Sky, 10079, 40, 8, 22, 14, EEffectLightTracer.Line, newPos.x, newPos.y, 25, true, 0, target.nowPos.x, target.nowPos.y, 0.4);
+      end
+      me:PlaySound(target.colm, target.row, Attack_Start);
+      self.interval = 1;
+      self.step = 3;
+    end
+  elseif self.step == 3 then
+    if FightField.attack[self.humIdx].lights[2].isArrive then
+      for i = 0, self.emyNum-1 do
+        target = FightField.fightHum[ self.emyIdxAy[i] ];
+        me:PlaySound(target.colm, target.row, Attack_Hit);
+        me:PlayEffect(target.colm, target.row, ERolePose.Hit);
+      end
+      self.interval = 0.8;
+      self.step = 4;
+    end
+  elseif self.step == 4 then
     if self:CheckInterval() then
       self.isLightEnd = true;
       self.step = 4;
@@ -181,6 +383,32 @@ function WhirlWindParty:Update()
     FightField.attack[self.humIdx]:SetLight(EEffectLightKind.Ground ,10077, 50, 1, 21, 21, EEffectLightTracer.StandAni, me.nowPos.x + 5, me.nowPos.y, 20, true, 90);
     self.interval = 0.8;
     self.step = 2;
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
 
   elseif self.step ==2 then
     if self:CheckInterval() then
@@ -204,6 +432,32 @@ function WhirlWindParty:Update()
       end
       self.interval =0.8;
       self.step = 4;
+      --1--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        local code = DemoCode.GetBitxor(20);
+        code = code * 10;
+      end
+      ---2--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        --local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     end
   elseif self.step == 4 then
     if self:CheckInterval() then

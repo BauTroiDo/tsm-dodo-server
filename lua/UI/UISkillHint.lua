@@ -17,6 +17,7 @@ local text_Description;
 
 local currentRole = nil;
 local currentSkillId = 0;
+local WithoutCondition = nil;
 
 function UISkillHint.Initialize(go)
   local uiController = go:GetComponent("UIController");
@@ -38,13 +39,23 @@ function UISkillHint.Initialize(go)
 
   tempEvent = uiController:FindEvent("Image_Mask");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_Close);
+  
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
 end
 
-function UISkillHint.OnOpen(skillId, role)
+function UISkillHint.OnOpen(skillId, role, withoutCondition)
   if skillDatas[skillId] == nil then return false end
 
   currentSkillId = skillId;
   currentRole = role;
+  WithoutCondition = withoutCondition;
 
   this.UpdateUI();
 
@@ -52,6 +63,15 @@ function UISkillHint.OnOpen(skillId, role)
 end
 
 function UISkillHint.IsCurrentRole(role)
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
   return role == currentRole;
 end
 
@@ -84,10 +104,19 @@ function UISkillHint.UpdateUI()
 
   text_Level0.gameObject:SetActive(skillLv == 0);
 
-  text_Description.text = skillData:GetDescription();
+  text_Description.text = skillData:GetDescription(currentRole, WithoutCondition);
 end
 
 function UISkillHint.OnClick_Close()
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
   UI.Close(UISkillHint);
 end
 

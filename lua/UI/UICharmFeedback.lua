@@ -81,6 +81,27 @@ function UICharmFeedback.Initialize(go)
   text_LevelNumber = uiController:FindText("Text_LVnumber");
 
   slider_Exp = uiController:FindSlider("Slider_Exp");
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 
   scrollContent_GiftFeedback = uiController:FindScrollContent("ScrollContent_GiftFeedback");
   scrollContent_GiftFeedback.onInitialize = this.OnInitialize_ScrollContent_GiftFeedback;
@@ -143,6 +164,27 @@ end
 
 --region scrollContent functions
 function UICharmFeedback.OnInitialize_ScrollContent_GiftFeedback(scrollItems)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   for itemIndex = 0, scrollItems.Length - 1 do
     scrollItems_GiftFeedback[itemIndex] = {};
     scrollItems_GiftFeedback[itemIndex].item = UIItemController.New(scrollItems[itemIndex]:Find("Image_ItemBG"));
@@ -261,6 +303,27 @@ end
 
 --region onclick functions
 function UICharmFeedback.OnClick_Close()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   this.CheckRedDot();
   CGTimer.RemoveListener(this.CheckLastItemWhileScroll);
   UI.Close(UICharmFeedback);
@@ -285,6 +348,27 @@ function UICharmFeedback.OnClick_GetButton(uiEvent)
 
     --C:105-006 <要求贈禮人回饋領獎> +獎勵累計值(4)
     Network.Send(105, 6, sendBuffer);
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   end
 end
 --endregion
@@ -446,6 +530,27 @@ function UICharmFeedback.SetFeedbackItem(data, item)
   if data:CheckRewardCanGetByScore(rewardExp) then
     item.text_Status.text = string.Get(21062);
     item.image_getButton.sprite = UI.GetSprite("but001D");
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   else
     item.text_Status.text = string.Get(21060);
     item.image_getButton.sprite = UI.GetSprite("but001L");

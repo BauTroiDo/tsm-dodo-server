@@ -794,8 +794,7 @@ function UIActivityMonopoly.GetCurrentCellIndex(currentSteps)
     return 1;
   end
 
-	local result = math.fmod(currentSteps - 1,cellCount) + 1;
-  log("CurrnetIndex： ".. result);
+	local result = math.fmod(currentSteps - 1, cellCount) + 1;
 	return result;
 end
 
@@ -808,7 +807,6 @@ function UIActivityMonopoly.GetCurrentSteps()
 	if currentSteps == nil then
 		currentSteps = 0;
 	end
-  log("Current Total Steps: " .. currentSteps);
 	return currentSteps;
 end
 
@@ -868,7 +866,6 @@ function UIActivityMonopoly.ProtocolCallBack()
 		currentCellIndex = 1;
 		currentRound = 0;
 	end
-  log("dicePoint: " .. diceSteps);
 	this.StartDiceEffect(diceSteps);
 	local path = this.GetIndicatorPath(diceSteps);
 	this.SetIndicatorPath(path, true);

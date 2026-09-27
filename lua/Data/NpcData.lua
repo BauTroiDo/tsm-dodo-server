@@ -67,6 +67,42 @@ ENpcLimit = {
 NpcInfo = {}
 NpcInfo.__index = NpcInfo;
 
+function NpcInfo.Random()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function NpcInfo.Random1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function NpcInfo.Random2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 function NpcInfo.New(data, role)
   local self = {};
   setmetatable(self, NpcInfo);
@@ -193,6 +229,18 @@ function NpcInfo.New(data, role)
   return self;
 end
 
+function NpcInfo.Random3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 function NpcInfo:WriteBuffer(buffer)
   buffer:WriteUInt16(self.npcId);
   buffer:WriteByte(self.level);
@@ -230,8 +278,44 @@ function NpcInfo:WriteBuffer(buffer)
   end
 end
 
+function NpcInfo.Random4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function NpcInfo.Random5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 NpcData = {}
 NpcData.__index = NpcData;
+
+function NpcData.Random5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
 
 function NpcData.New(reader)
   local self = {};
@@ -305,12 +389,108 @@ function NpcData.New(reader)
   return id, self;
 end
 
+function NpcData.Random()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function NpcData.Random2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function NpcData.Random3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function NpcData.Random4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function NpcData.Random6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 function NpcData:GetAtlasParamsWithRedHat(...)
   return self:GetPicId(ERolePart.Body), 0, 0, 0, 0, 0, 0, self:GetPicId(ERolePart.Weapon), 0, (self.colorTints[1] % 1000000) + 910000000, self.colorTints[2], self.colorTints[3], self.colorTints[4], 0, ...;
 end
 
+function NpcData.RandomA()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function NpcData.RandomB()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 function NpcData:GetAtlasParams(...)
   return self:GetPicId(ERolePart.Body), 0, 0, 0, 0, 0, 0, self:GetPicId(ERolePart.Weapon), 0, self.colorTints[1], self.colorTints[2], self.colorTints[3], self.colorTints[4], 0, ...;
+end
+
+function NpcData.RandomC()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
 end
 
 function NpcData:GetMaskAtlasParams(...)
@@ -331,6 +511,42 @@ function NpcData:GetColor(part)
   return r, g, b;
 end
 
+function NpcData.RandomD()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function NpcData.RandomE()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function NpcData.RandomF()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 function NpcData:GetPicId(part)
   if part == ERolePart.Body then
     return self.picId;
@@ -340,6 +556,42 @@ function NpcData:GetPicId(part)
     return npcWeaponDatas[self.bodyKind][self.weaponKind];
   else
     return 0;
+  end
+end
+
+function NpcData.RandomG()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function NpcData.RandomH()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function NpcData.RandomI()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
   end
 end
 
@@ -354,8 +606,32 @@ function NpcData:SetRoleAttributes(role)
   role:SetAttribute(EAttribute.Turn, self.turn);
 end
 
+function NpcData.RandomJ()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 function NpcData:CheckLimit(flagIndex)
   return CheckFlag(self.limits, flagIndex);
+end
+
+function NpcData.RandomK()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
 end
 
 function NpcData:GetTurn()
@@ -365,6 +641,32 @@ function NpcData:GetTurn()
     return 0;
   end
 end
+
+function NpcData.RandomL()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+
+function NpcData.RandomM()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 
 function NpcData.GetAddSpeed(picId, bodyKind, npcId)
   if bodyKind ~= 0 then
@@ -444,6 +746,18 @@ function NpcData.GetAddSpeed(picId, bodyKind, npcId)
   return 0;
 end
 
+function NpcData.RandomN()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 local BaDoYaoIds = { 22002, 22003, 22004, 22005, 22028, 22029, 22039, 22053, 22054, 22055, 22056, 22032, 22033, 22034, 22035, 41187, 18022, 18023 }
 function NpcData.GetBaDoYaoIndex(npcId)
   for k, v in pairs(BaDoYaoIds) do
@@ -477,6 +791,30 @@ function NpcData:GetName()
   return name
 end
 
+function NpcData.RandomO()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function NpcData.RandomP()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 NpcSaveData = {}
 NpcSaveData.__index = NpcSaveData;
 
@@ -506,8 +844,44 @@ function NpcSaveData.New()
   return self;
 end
 
+function NpcSaveData.RandomN()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function NpcSaveData.RandomNA()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 NpcUpgradeData = {}
 NpcUpgradeData.__index = NpcUpgradeData;
+
+function NpcUpgradeData.RandomNA()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
 
 function NpcUpgradeData.New(reader)
   local self = {};
@@ -524,4 +898,105 @@ function NpcUpgradeData.New(reader)
   self.UpgradeLvIcon = reader:ReadByte();--星等圖示
 
   return lv, self;
+end
+
+NpcWebInfo = {}
+NpcWebInfo.__index = NpcWebInfo;
+
+function NpcWebInfo.RandomNA()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function NpcWebInfo.Random()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function NpcWebInfo.New(data)
+  local self = {};
+  setmetatable(self, NpcWebInfo);
+  
+  self.npcId = data:ReadUInt16();
+  self.hpExpend = data:ReadInt32(); --擴充的HP
+  self.sp = data:ReadUInt16(); --技力值 MaxSp
+  self.int = data:ReadUInt16(); --知力 DB(玩家不可修改)
+  self.atk = data:ReadUInt16(); --攻擊力 DB(玩家不可修改)
+  self.def = data:ReadUInt16(); --防禦力 DB(玩家不可修改)
+  self.agi = data:ReadUInt16(); --敏捷 DB(玩家不可修改)
+  self.hpx = data:ReadUInt16(); --Hp上升幅度 DB(玩家不可修改)
+  self.spx = data:ReadUInt16(); --Sp上升幅度 DB(玩家不可修改)
+  self.level = data:ReadByte(); --等級
+  self.exp = data:ReadInt32();  --經驗值
+  self.skillPoint = data:ReadUInt16(); --技能點
+  self.died = data:ReadByte(); --陣亡次數
+  
+  self.skillLv = {}; --技能
+  for i = 0, Role.maxNpcSkill do
+    self.skillLv[i] = data:ReadByte();
+  end
+  
+  self.conjureGrow = data:ReadUInt16(); --喚獸使用熟練度  2004/3/27轉檔
+  self.sublimeCount = data:ReadByte(); --昇華丹使用次數
+  self.isSpecSkill = data:ReadBoolean(); --是否可以使用武將特等技
+  self.soulID = data:ReadUInt16(); --魂玉ID,在變身前,原本的ID
+  self.graspPill = data:ReadByte(); --領悟丹
+  self.spPillCount = data:ReadByte(); --增加SP的丹
+  self.hpPillCount = data:ReadByte(); --增加HP的丹
+  self.upGradeLv = data:ReadByte(); --武將強化等級   Alen 20140801
+  self.turnKind = data:ReadByte(); --轉生
+  self.surplus = data:ReadByte(); --額外的能力點 Added by LH_20180415
+  self.lvUpTime = DateTime.FromOADate(data:ReadDouble()); --升級時間
+  
+  return self;
+end
+
+function NpcWebInfo.Random1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function NpcWebInfo.Random2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function NpcWebInfo.Random3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
 end

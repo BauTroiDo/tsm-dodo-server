@@ -2,6 +2,30 @@
 DataFightGoalData = {}
 DataFightGoalData.__index = DataFightGoalData;
 
+function DataFightGoalData.ScriptA()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local index = 56;
+    
+    for i = 1, Astrolabe.maxAstrolabeLv do
+      index = index - i;
+    end
+    
+    return index
+  end
+end
+
+function DataFightGoalData.ScriptB()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local index = 56;
+    
+    for i = 1, Astrolabe.maxAstrolabeLv do
+      index = index - i;
+    end
+    
+    return index
+  end
+end
+
 function DataFightGoalData.New(reader)
   local self = {};
   setmetatable(self, DataFightGoalData);
@@ -15,6 +39,30 @@ end
 
 DataFightAwardData = {}
 DataFightAwardData.__index = DataFightAwardData;
+
+function DataFightAwardData.ScriptA()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local index = 56;
+    
+    for i = 1, Astrolabe.maxAstrolabeLv do
+      index = index - i;
+    end
+    
+    return index
+  end
+end
+
+function DataFightAwardData.ScriptAd()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local index = 56;
+    
+    for i = 1, Astrolabe.maxAstrolabeLv do
+      index = index - i;
+    end
+    
+    return index
+  end
+end
 
 function DataFightAwardData.New(reader)
   local self = {};
@@ -32,4 +80,40 @@ function DataFightAwardData.New(reader)
   end
   
   return kind, rank, self;
+end
+
+function DataFightAwardData.ScriptAf()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local index = 56;
+    
+    for i = 1, Astrolabe.maxAstrolabeLv do
+      index = index - i;
+    end
+    
+    return index
+  end
+end
+
+function DataFightAwardData.ScriptAe()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local index = 56;
+    
+    for i = 1, Astrolabe.maxAstrolabeLv do
+      index = index - i;
+    end
+    
+    return index
+  end
+end
+
+function DataFightAwardData.ScriptAq()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local index = 56;
+    
+    for i = 1, Astrolabe.maxAstrolabeLv do
+      index = index - i;
+    end
+    
+    return index
+  end
 end

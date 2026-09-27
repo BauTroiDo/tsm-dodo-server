@@ -13,9 +13,9 @@ this.uiController = nil;
 
 --ui
 local maxTextAward = 6;
-local slotMachineColor = {yellow = LuaHelper.GetColor(246, 244, 196, 255),
-                          blue = LuaHelper.GetColor(162, 230, 209, 255),
-                          red = LuaHelper.GetColor(255, 133, 153, 255)};
+local slotMachineColor = {yellow = LuaHelper.GetColor(246,244,196,255),
+                          blue = LuaHelper.GetColor(162,230,209,255),
+                          red = LuaHelper.GetColor(255,133,153,255)};
 local rawImage_Light = {};
 local uiRawImage_Light = {};
 local rawImage_ItemBoard = {};
@@ -64,6 +64,14 @@ function UISlotMachine.Initialize(go)
   this.uiController = uiController;
   this.uiController.onOpen = this.OnOpen;
   this.uiController.onVisible = this.OnVisible;
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
 
   for i = 1, 24 do
     rawImage_Light[i] = uiController:FindRawImage(string.Concat("Image_Light (", i, ")"));
@@ -118,6 +126,30 @@ function UISlotMachine.Initialize(go)
   tempEvent = uiController:FindEvent("Image_TripleTurn");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_Turn);
   tempEvent.parameter = 3;
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
 
   tempEvent = uiController:FindEvent("Image_Coin");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_InsertCoin);
@@ -136,11 +168,43 @@ function UISlotMachine.Initialize(go)
 
   tempEvent = uiController:FindEvent("Image_Stop");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_Stop);
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
 
   tempEvent = uiController:FindEvent("Image_Switch");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_Switch);
   image_Switch = tempEvent:GetComponent("Image");
-
+  
   tempEvent = uiController:FindEvent("Image_DontAsk");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_DontAsk);
   image_DontAsk = tempEvent:GetComponent("Image");
@@ -160,6 +224,7 @@ end
 
 function UISlotMachine.OnVisible(visible)
   if visible then
+    
     for i = 1, 2 do
       TextureManager.SetPng(ETextureUseType.UI, string.Concat("A0", i), rawImage_ItemBoard[i]);
     end
@@ -199,6 +264,30 @@ function UISlotMachine.OnVisible(visible)
 end
 
 function UISlotMachine.OnClick_Switch()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   if not auto and state ~= ESlotMachineState.None then
     ShowCenterMessage(string.Get(71218));  --轉動中請稍候
     return;
@@ -212,11 +301,35 @@ end
 function UISlotMachine.OnClick_DontAsk()
   dontAsk = not dontAsk;
   image_DontAsk.sprite = UI.GetSwitchSprite(dontAsk);
-
+  
   UISell.SetAsk(41, dontAsk);
 end
 
 function UISlotMachine.OnClick_Stop()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   stop = true;
 
   this.UpdateUI();
@@ -257,7 +370,7 @@ function UISlotMachine.Update()
 
     --轉完
     if currentSlot == targetSlot then
-      AudioManager.PlayOnce("WA0095");
+      AudioManager.PlayOnce("AudioClip_WA0095");
   
       --獲得獎勵資訊
       local awardText = "";
@@ -319,14 +432,14 @@ function UISlotMachine.Update()
 
     --剎車
     elseif currentSlot > targetSlot - breakSlots then
-      AudioManager.PlayChannelOnce("WA0094", 8 + math.fmod(currentSlot, 3), 0.3);
+      AudioManager.PlayChannelOnce("AudioClip_WA0094", 8 + math.fmod(currentSlot, 3), 0.3);
       slots[currentSlot].image_Frame.enabled = true;
 
       nextUpdateTime = CGTimer.time + 0.15;
     
     --轉動
     else
-      AudioManager.PlayChannelOnce("WA0094", 8 + math.fmod(currentSlot, 3), 0.25);
+      AudioManager.PlayChannelOnce("AudioClip_WA0094", 8 + math.fmod(currentSlot, 3), 0.25);
       slots[currentSlot].image_Frame.enabled = true;
 
       nextUpdateTime = CGTimer.time + 0.04;
@@ -374,6 +487,46 @@ function UISlotMachine.Update()
 end
 
 function UISlotMachine.Clear()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   table.Clear(this.awards);
 end
 
@@ -456,6 +609,14 @@ function UISlotMachine.UpdateUI()
 end
 
 function UISlotMachine.StartTurn(data)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   text_Award.text = "";
 
   table.Clear(results);
@@ -493,10 +654,99 @@ function UISlotMachine.StartTurn(data)
 end
 
 function UISlotMachine.OnClick_Help()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  
   UI.Open(UITutorialHint, 35, this);
 end
 
 function UISlotMachine.OnClick_Close()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   if state ~= ESlotMachineState.None then
     ShowCenterMessage(string.Get(71218));
     return;
@@ -506,7 +756,15 @@ function UISlotMachine.OnClick_Close()
 end
 
 function UISlotMachine.OnClick_Probability()
-  if auto and state ~= ESlotMachineState.None then
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if  state ~= ESlotMachineState.None then
   ShowCenterMessage(string.Get(71218));  --轉動中請稍候
   return;
   end
@@ -520,6 +778,31 @@ function UISlotMachine.OnClick_Probability()
 end
 
 function UISlotMachine.OnClick_ChangeReward()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  
   if state ~= ESlotMachineState.None then
     ShowCenterMessage(string.Get(71218));
     return;
@@ -535,6 +818,38 @@ function UISlotMachine.OnClick_ChangeReward()
 end
 
 function UISlotMachine.OnClick_InsertCoin()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   if state ~= ESlotMachineState.None then
     ShowCenterMessage(string.Get(71218));
     return;
@@ -565,7 +880,7 @@ function UISlotMachine.OnClick_InsertCoin()
       function(text)
         if text == nil then return end
 
-        AudioManager.PlayOnce("WA0005");
+        AudioManager.PlayOnce("AudioClip_WA0005");
         UISell.Launch(11, nil, 0, text);
       end
     );
@@ -581,7 +896,7 @@ function UISlotMachine.OnClick_InsertCoin()
       function(text)
         if text == nil then return end
 
-        AudioManager.PlayOnce("WA0005");
+        AudioManager.PlayOnce("AudioClip_WA0005");
         UISell.Launch(11, nil, text);
       end
     );
@@ -618,6 +933,30 @@ function UISlotMachine.ShowStopMessage(msg)
   else
     gameObject_Msg:SetActive(false);
     text_Msg.text = "";
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
   end
 end
 
@@ -645,6 +984,30 @@ function UISlotMachine.SendStartTurn()
 end
 
 function UISlotMachine.OnClick_Turn(uiEvent)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   local kind = uiEvent.parameter;
 
   if state ~= ESlotMachineState.None then
@@ -728,6 +1091,38 @@ function UISlotMachine.RevSlotMessage(data)
     ShowCenterMessage(string.Get(71223));
   elseif kind == 11 then
     logError("被關");
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
   end
 
   stop = true;

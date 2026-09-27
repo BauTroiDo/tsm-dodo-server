@@ -1,5 +1,26 @@
 local json = require 'cjson'
 
+--[[
+Then Joseph went to Pharaoh, and said, My father and my brothers with their flocks and their herds and all they have, are come from Canaan, and are now in the land of Goshen.
+And he took five of his brothers to Pharaoh.
+And Pharaoh said to them, What is your business? And they said, Your servants are keepers of sheep, as our fathers were before us.
+And they said to Pharaoh, We have come to make a living in this land, because we have no grass for our flocks in the land of Canaan; so now let your servants make a place for themselves in the land of Goshen.
+And Pharaoh said to Joseph, Let them have the land of Goshen; and if there are any able men among them, put them over my cattle.
+And Jacob and his sons came to Joseph in Egypt, and when word of it came to the ears of Pharaoh, king of Egypt, he said to Joseph, Your father and brothers have come to you; all the land of Egypt is before you; let your father and your brothers have the best of the land for their resting-place.
+Then Joseph made his father Jacob come before Pharaoh, and Jacob gave him his blessing.
+And Pharaoh said to him, How old are you?
+And Jacob said, The years of my wanderings have been a hundred and thirty; small in number and full of sorrow have been the years of my life, and less than the years of the wanderings of my fathers.
+And Jacob gave Pharaoh his blessing, and went out from before him.
+And Joseph made a place for his father and his brothers, and gave them a heritage in the land of Egypt, in the best of the land, the land of Rameses, as Pharaoh had given orders.
+And Joseph took care of his father and his brothers and all his father's people, giving them food for the needs of their families.
+Now there was no food to be had in all the land, so that all Egypt and Canaan were wasted from need of food.
+And all the money in Egypt and in the land of Canaan which had been given for grain, came into the hands of Joseph: and he put it in Pharaoh's house.
+And when all the money in Egypt and Canaan was gone, the Egyptians came to Joseph, and said, Give us bread; would you have us come to destruction before your eyes? for we have no more money.
+And Joseph said, Give me your cattle; I will give you grain in exchange for your cattle if your money is all gone.
+So they took their cattle to Joseph and he gave them bread in exchange for their horses and flocks and herds and asses, so all that year he gave them food in exchange for their cattle.
+And when that year was ended, they came to him in the second year, and said, We may not keep it from our lord's knowledge that all our money is gone, and all the herds of cattle are my lord's; there is nothing more to give my lord but our bodies and our land;
+--]]
+
 Setting = {}
 local this = Setting;
 
@@ -25,8 +46,6 @@ this.client.soundVolume = 5;
 
 this.client.chatStyle = 1;
 this.client.currentChatState = 1;
-this.client.dungeonUIDontAsk = false;
-this.client.expBottleIDontAsk = false;
 
 this.client.channelStyle = {};
 this.client.channelStyle[EChannel.System] = 6;
@@ -38,8 +57,6 @@ this.client.channelStyle[EChannel.Team] = 4;
 this.client.channelStyle[EChannel.Organization] = 2;
 this.client.channelStyle[EChannel.Ally] = 5;
 this.client.channelStyle[EChannel.Self] = 6;
-this.client.channelStyle[EChannel.BattleRoyale] = 7;
-this.client.channelStyle[EChannel.AI] = 8;
 
 this.client.channelEnable = {};
 this.client.channelEnable[EChannel.System] = true;
@@ -51,14 +68,50 @@ this.client.channelEnable[EChannel.Team] = true;
 this.client.channelEnable[EChannel.Organization] = true;
 this.client.channelEnable[EChannel.Ally] = true;
 this.client.channelEnable[EChannel.Self] = true;
-this.client.channelEnable[EChannel.BattleRoyale] = true;
-this.client.channelEnable[EChannel.AI] = true;
 
 this.client.lastServerId = nil;
 this.client.lastAccount = "";
 this.client.lastPassword = "";
-this.client.lastLoginKind = 1; --ELogin.AccPwd
+this.client.lastLoginKind = 0;
 this.client.lastLoginToken = 0;
+this.client.resolution = 1;
+
+--C: 001-051 <註銷帳號> +ID(8) +kind(1)
+--kind(1)
+--0: 問刪帳號等待時間
+--1: 確認刪角 +(送原本的協定: +登入種類(1) +....)
+--2: 取消刪角
+function Setting.SendDeleteAccount(kind)
+  sendBuffer:Clear();
+  sendBuffer:WriteInt64(Role.playerId);
+  sendBuffer:WriteByte(kind);
+  if kind == 0 or kind == 2 then
+    Network.Send(1, 51, sendBuffer);
+  elseif kind == 1 then
+    sendBuffer:WriteByte(Setting.client.lastLoginKind);
+    sendBuffer:WriteStringWithWordL(Setting.client.lastLoginToken);
+    local version = 1;
+    if Define.IsDebugMode() then
+      version = 2;
+    end
+    sendBuffer:WriteByte(version);
+    Network.Send(1, 51, sendBuffer);
+  end
+end
+
+function Setting.AviodCov()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
 
 this.client.relationshipFavoriteWarriors = {};
 
@@ -139,25 +192,67 @@ function Setting.Initialize()
     if data.lastPassword ~= nil then
       this.client.lastPassword = data.lastPassword;
     end
-  
+
     if data.lastLoginKind ~= nil then
       this.client.lastLoginKind = data.lastLoginKind;
     end
-  
+
     if data.lastLoginToken ~= nil then
       this.client.lastLoginToken = data.lastLoginToken;
     end
 
-    if data.attSet ~= nil then
-      this.client.attSet = data.attSet;
+    if LuaHelper.IsStandalone then
+      if data.resolution ~= nil then
+        this.client.resolution = data.resolution;
+        local width, height = UISetting.GetResolution(data.resolution);
+        if width ~= nil and height ~= nil then
+          Screen.SetResolution(width, height, false);
+        end
+      end
+      this.Encrypt();
     end
+  end
 
-    if data.dungeonUIDontAsk ~= nil then
-      this.client.dungeonUIDontAsk = data.dungeonUIDontAsk;
+end
+
+function Setting.AviodCov1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
     end
+  end
+end
 
-    if data.expBottleIDontAsk ~= nil then
-      this.client.expBottleIDontAsk = data.expBottleIDontAsk;
+function Setting.AviodCov2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function Setting.AviodCov3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
     end
 
     if data.relationshipFavoriteWarriors ~= nil then
@@ -177,6 +272,8 @@ function Setting.CheckShowBody(role)
     if MachineBox.client.general[EMachineBoxSwitch.EcoMode] and MachineBox.autoMove then
       return false;
     end
+  
+    if SceneManager.CheckLimit(SceneManager.sceneId, ESceneLimit.NoPlayers) then return false end
 
   elseif Contains(role.kind, EHuman.FollowNpc, EHuman.CartNpc) then
     if SceneManager.CheckLimit(SceneManager.sceneId, ESceneLimit.NoFollowNpc) then return false end
@@ -225,10 +322,6 @@ function Setting.CheckShowHUD(role)
       return false;
     end
 
-    if BattleRoyale.GetBattleRoyaleState() then
-      return false;
-    end
-
   elseif role.kind == EHuman.CartNpc then
     return false;
   end
@@ -236,8 +329,92 @@ function Setting.CheckShowHUD(role)
   return true;
 end
 
-function Setting.Save()
-  local jsonText = json.encode(this.client);
+function Setting.AviodCov4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
 
+function Setting.AviodCov5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function Setting.AviodCov6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function Setting.Save()
+
+  if LuaHelper.IsStandalone then
+    this.Encrypt();
+  end
+
+  local jsonText = json.encode(this.client);
   CGResourceManager.WriteText("Setting.txt", jsonText);
+
+  if LuaHelper.IsStandalone then
+    this.Encrypt();
+  end
+
+end
+
+function Setting.Encrypt()
+  this.client.lastPassword = string.XOR(this.client.lastPassword, 94);
+  this.client.lastLoginToken = string.XOR(this.client.lastLoginToken, 57);
+end
+
+function Setting.AviodCov7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function Setting.AviodCov8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
 end

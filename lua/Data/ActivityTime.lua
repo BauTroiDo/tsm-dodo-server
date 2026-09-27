@@ -1,6 +1,19 @@
 ActivityTime= {}
 ActivityTime.__index = ActivityTime;
 
+function ActivityTime.Trash()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+  
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
 function ActivityTime.New(reader)
   local self = {};
   setmetatable(self, ActivityTime);
@@ -29,14 +42,131 @@ function ActivityTime.New(reader)
   return self;
 end
 
+function ActivityTime.Trash1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function ActivityTime.Trash2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function ActivityTime.Trash3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function ActivityTime.Trash4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
 function ActivityTime:GetStartDate()
   return DateTime.New(self.startYear, self.startMonth, self.startDay, self.startHour, self.startMinute, 0);
+end
+
+function ActivityTime.Trash5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
 end
 
 function ActivityTime:GetEndDate()
   return DateTime.New(self.endYear, self.endMonth, self.endDay, self.endHour, self.endMinute, 0);
 end
 
+function ActivityTime.Trash6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function ActivityTime.Trash7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
 function ActivityTime:IsActive()
   return self.switch == 1 and System.DateTime.Compare( CGTimer.serverTime, self:GetStartDate() ) >= 0 and System.DateTime.Compare( CGTimer.serverTime, self:GetEndDate() ) < 0;
+end
+
+function ActivityTime.Trash8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function ActivityTime.Trash9()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
 end

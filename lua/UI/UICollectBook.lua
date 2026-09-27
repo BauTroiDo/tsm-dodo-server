@@ -18,9 +18,12 @@ local currentIndex = 1;
 local rawImage_BG;
 local rawImage_Title;
 local text_Title;
+local text_TitleNft;
 
 local tagCount = 4;
+local tagNftCount = 5;
 local tagObjects = {};
+local tagNftObjects = {};
 --共用左側頁面
 local scrollRect_Obj;
 local scrollContent_Obj;
@@ -44,7 +47,6 @@ local rawImage_Gift;
 local event_Gift;
 
 local text_RoleName;
-local rawImage_WarriorBG;
 local image_Element;
 local career;
 local text_RoleStory;
@@ -85,13 +87,14 @@ local text_CombinationName;
 local text_CombinationLevel;
 local text_LvFront;
 local textGroup_CardValue = {};
-local text_CardStory;
+local text_Story;
 local scrollContent_Card;
 local scrollItems_Card = {};
 local button_CardEquip ={};
 local button_CardUpgrate ={};
 
 local bool_Own = false;
+local openCardFeature = false;
 
 --卡片總攬
 local currentPage = 1;
@@ -101,6 +104,7 @@ local rawImage_ViewCards = {};
 local text_CardPage;
 local event_PageLeft;
 local event_PageRight;
+local text_CardStory;
 
 --卡片細節
 local gameObject_CardDetail;
@@ -110,6 +114,72 @@ local cardController;
 
 local bgBrownColor;
 local bgWhiteColor;
+
+local EUICollectTitleTag =
+{
+  normal = 1,
+  nft = 2,
+}
+
+local EUICollectNFTTag =
+{
+  Warrior = 1,
+  Style = 2,
+  CardView = 3,
+  Mounts = 4,
+  ShineValue = 5,
+}
+
+local currentTitle = EUICollectTitleTag.normal;
+local gameObject_normalTag;
+local gameObject_NFTlTag;
+local gameObject_Shine;
+local text_ShineValue;
+local text_PowerTitle;
+local text_NFTDescription;
+local image_Close;
+local image_Help;
+local image_Title;
+local image_TitleNFT;
+local image_Warrior;
+
+--NFT卡片
+local currentNFTPage = 1;
+local gameObject_NFTCardView;
+local rawImage_NFTViewCards = {};
+local text_NFTCardPage;
+local event_NFTPageLeft;
+local event_NFTPageRight;
+local event_AllAb;
+
+--Mount
+local currentMountPage = 1;
+local rawImage_Mounts = {};
+local rootObj_Mount;
+local rootObj_ShineValue;
+local text_MountsPage;
+local event_MountLeft;
+local event_MountRight;
+local MAX_MOUNT = 8;
+
+--Shine Summary
+local scrollContent_Summary;
+local scrollItems_Summary = {};
+local scrollContent_Total;
+local scrollItems_Total = {};
+local scrollContent_ShineDetail;
+local scrollItems_ShineDetail = {};
+local text_Summary;
+local shineDatas = {};
+local tagNFTNames = {};
+
+local gameObject_TitleRedDot;
+local gameObject_TitleNFTRedDot;
+local summary = 0;
+local lastSummary = 0;
+local nextSummary = 0;
+local severSummary = 0;
+local totalShineAtt = {}
 
 function UICollectBook.Initialize(go)
   local uiController = go:GetComponent("UIController");
@@ -121,10 +191,20 @@ function UICollectBook.Initialize(go)
   bgWhiteColor = LuaHelper.GetColor(242, 244, 236, 255);
 
   transform_FrameRect = uiController:FindGameObject("FrameRect").transform;
+  gameObject_TitleRedDot = uiController:FindGameObject("Image_TitleRedDot");
+  gameObject_TitleNFTRedDot = uiController:FindGameObject("Image_TitleNFTRedDot");
 
   rawImage_BG = uiController:FindRawImage("RawImage_BG");
   rawImage_Title = uiController:FindRawImage("RawImage_Title");
   text_Title = uiController:FindText("Text_Title");
+  text_TitleNft = uiController:FindText("Text_TitleNft");
+  text_ShineValue = uiController:FindText("Text_ShineValue");
+  text_NFTDescription = uiController:FindText("Text_NFTDescription");
+  image_Close = uiController:FindImage("Image_Close");
+  image_Help = uiController:FindImage("Image_Help");
+  image_Title = uiController:FindImage("RawImage_Title");
+  image_TitleNFT = uiController:FindImage("RawImage_TitleNft");
+  image_Warrior = uiController:FindImage("Image_WarriorBG");
 
   local event = uiController:FindEvent("Image_Mask");
   event:SetListener(EventTriggerType.PointerClick, this.OnClick_Mask);
@@ -134,14 +214,26 @@ function UICollectBook.Initialize(go)
 
   event = uiController:FindEvent("Image_Help");
   event:SetListener(EventTriggerType.PointerClick, this.OnClick_Help);
-
+  
+  event = uiController:FindEvent("RawImage_Title");
+  event:SetListener(EventTriggerType.PointerClick, this.OnClick_TitleTag);
+  event.parameter = EUICollectTitleTag.normal;
+  
+  event = uiController:FindEvent("RawImage_TitleNft");
+  event:SetListener(EventTriggerType.PointerClick, this.OnClick_TitleTag);
+  event.parameter = EUICollectTitleTag.nft;
+  
+  gameObject_normalTag = uiController:FindGameObject("MainTabGroup");
+  gameObject_NFTlTag = uiController:FindGameObject("MainNftTabGroup");
+  gameObject_Shine = uiController:FindGameObject("Image_Shine");
+  
   local tagNames = {};
   tagNames[1] = string.Get(10403)
   tagNames[2] = string.Get(99685);
   tagNames[3] = string.Get(21418);
   tagNames[4] = string.Get(21419);
-
-  for i = 1, tagCount do 
+  
+  for i = 1, tagCount do
     tagObjects[i] = {};
     tagObjects[i].gameObject = uiController:FindGameObject(string.Concat("TabObject", i));
     tagObjects[i].rawImage = tagObjects[i].gameObject.transform:Find("RawImage_Tab").gameObject:GetComponent("RawImage");
@@ -152,6 +244,23 @@ function UICollectBook.Initialize(go)
     tagObjects[i].text.text = tagNames[i];
     tagObjects[i].redDot = tagObjects[i].text.transform:Find("Image_RedDot").gameObject;
     tagObjects[i].redDot:SetActive(false);
+  end
+  
+  for i = 1, tagNftCount do
+    tagNftObjects[i] = {};
+    tagNftObjects[i].gameObject = uiController:FindGameObject(string.Concat("TabNftObject", i));
+    tagNftObjects[i].rawImage = tagNftObjects[i].gameObject.transform:Find("RawImage_Tab").gameObject:GetComponent("RawImage");
+    tagNftObjects[i].event = tagNftObjects[i].rawImage.gameObject:GetComponent("UIEvent");
+    tagNftObjects[i].event:SetListener(EventTriggerType.PointerClick, this.OnClick_NftTag);
+    tagNftObjects[i].event.parameter = i;
+    tagNftObjects[i].text = tagNftObjects[i].rawImage.transform:Find("Text_Name").gameObject:GetComponent("Text");
+    
+    tagNftObjects[i].redDot = tagNftObjects[i].text.transform:Find("Image_RedDot").gameObject;
+    tagNftObjects[i].redDot:SetActive(false);
+  end
+
+  if not openCardFeature then
+    tagNftObjects[3].gameObject:SetActive(false);
   end
 
   scrollRect_Obj =  uiController:FindGameObject("ScrollRect_Obj");
@@ -174,6 +283,19 @@ function UICollectBook.Initialize(go)
   this.InitStyle(uiController);
   --卡片
   this.InitCard(uiController);
+  
+  this.InitMount(uiController);
+  
+  this.InitShine(uiController);
+
+
+  tagNFTNames[1] = string.Get(10403)
+  tagNFTNames[2] = string.Get(99685);
+  tagNFTNames[3] = string.Get(21419);
+  tagNFTNames[4] = string.Get(99651);
+  tagNFTNames[5] = string.Get(23824);
+
+  tagNftCount = table.Count(tagNFTNames);
 end
 
 function UICollectBook.InitWarrior(uiController)
@@ -190,7 +312,31 @@ function UICollectBook.InitWarrior(uiController)
   jmpDrawer_Role = rawImage_Role.gameObject:AddComponent(typeof(JmpDrawer));
 
   text_RoleName = uiController:FindText("Text_RoleName");
-  rawImage_WarriorBG = uiController:FindRawImage("Image_WarriorBG");
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   
   rawImage_Gift = uiController:FindRawImage("RawImage_Gift").gameObject:GetComponent("UIRawImage");
   event_Gift = rawImage_Gift.gameObject:GetComponent("UIEvent");
@@ -222,16 +368,19 @@ function UICollectBook.InitStyle(uiController)
     appearence_Items[i].image_BG = appearence_Items[i].gameObject.transform:Find("Image_BG").gameObject:GetComponent("Image");
     appearence_Items[i].rawImage = appearence_Items[i].gameObject.transform:Find("Image").gameObject:GetComponent("RawImage");
     appearence_Items[i].text_Score = appearence_Items[i].gameObject.transform:Find("Text_Score").gameObject:GetComponent("Text");
-    appearence_Items[i].gameObject_RedDot = appearence_Items[i].gameObject.transform:Find("Image_RedDot").gameObject;    
+    appearence_Items[i].gameObject_RedDot = appearence_Items[i].gameObject.transform:Find("Image_RedDot").gameObject;
+    appearence_Items[i].eqShine = appearence_Items[i].gameObject.transform:Find("Image_EqShine").gameObject;
+    appearence_Items[i].ShineValue = appearence_Items[i].eqShine.transform:Find("Text_ShineValue").gameObject:GetComponent("Text");
     appearence_Items[i].event = appearence_Items[i].rawImage.gameObject:GetComponent("UIEvent");
     appearence_Items[i].event:SetListener(EventTriggerType.PointerClick, this.OnClick_AppearenceItem);
     appearence_Items[i].event.parameter = i;
   end  
-  rawImage_PointBG = uiController:FindRawImage("RawImage_PointBG")
+  rawImage_PointBG = uiController:FindImage("RawImage_PointBG")
   text_AppearenceName = uiController:FindText("Text_AppearenceName"); 
   text_Where = uiController:FindText("Text_Where");
   text_Point = uiController:FindText("Text_Point");
   text_AllGet = uiController:FindText("Text_AllGet");
+  text_PowerTitle = uiController:FindText("Text_PowerTitle");
 
   text_TotalValue = {};
   for i = 1, 6 do 
@@ -268,6 +417,31 @@ function UICollectBook.InitCard(uiController)
     textGroup_CardValue[i] = uiController:FindText(string.Concat("Text_CardValue", i));
   end
   text_CardStory = uiController:FindText("Text_CardStory");
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 
   scrollContent_Card = uiController:FindScrollContent("ScrollContent_Card");
   scrollContent_Card.onInitialize = this.OnInitialize_scrollContent_Card;
@@ -305,37 +479,168 @@ function UICollectBook.InitCard(uiController)
   event = uiController:FindEvent("Image_CardMask");
   event:SetListener(EventTriggerType.PointerClick, this.OnClick_CardMask);
 
-  event = uiController:FindEvent("Image_AllAb");
-  event:SetListener(EventTriggerType.PointerClick, this.OnClick_AllAb);
+  event_AllAb = uiController:FindEvent("Image_AllAb");
+  event_AllAb:SetListener(EventTriggerType.PointerClick, this.OnClick_AllAb);
+  
+  --NFTCardView
+  gameObject_NFTCardView = uiController:FindGameObject("RootObj_NFTCardView");
+  for i = 1, 2 do
+    rawImage_NFTViewCards[i] = {};
+    rawImage_NFTViewCards[i].root = uiController:FindGameObject(string.Concat("NFTCard", i));
+    rawImage_NFTViewCards[i].controller = UICardController.New(rawImage_NFTViewCards[i].root.transform);
+    rawImage_NFTViewCards[i].shineValue = uiController:FindText(string.Concat("Text_ShineValue", i));
+    rawImage_NFTViewCards[i].actionText = uiController:FindText(string.Concat("Text_Action", i));
+    rawImage_NFTViewCards[i].redDot = gameObject_NFTCardView.gameObject.transform:Find(string.Concat("NFTAction", i)):Find("Image_RedDot").gameObject;
+    local event = uiController:FindEvent(string.Concat("Image_Action", i));
+    event:SetListener(EventTriggerType.PointerClick, this.OnClick_NFTCardAction);
+    event.parameter = i;
+  end
+  
+  event_NFTPageLeft = uiController:FindEvent("Image_NFTCardLeftPage");
+  event_NFTPageLeft:SetListener(EventTriggerType.PointerClick, this.OnClick_NFTCardLeftPage);
+  
+  event_NFTPageRight = uiController:FindEvent("Image_NFTCardRightPage");
+  event_NFTPageRight:SetListener(EventTriggerType.PointerClick, this.OnClick_NFTCardRightPage);
+  text_NFTCardPage = uiController:FindText("Text_NFTCardPage");
+  
+  rootObj_ShineValue = uiController:FindGameObject("RootObj_ShineValue");
+end
+
+function UICollectBook.InitMount(uiController)
+  text_MountsPage = uiController:FindText("Text_MountsPage");
+  event_MountLeft = uiController:FindEvent("Image_MountLeftPage");
+  event_MountLeft:SetListener(EventTriggerType.PointerClick, this.OnClick_MountLeftPage);
+  event_MountRight = uiController:FindEvent("Image_MountRightPage");
+  event_MountRight:SetListener(EventTriggerType.PointerClick, this.OnClick_MountRightPage);
+  rootObj_Mount = uiController:FindGameObject("RootObj_Mount");
+  
+  for i = 1, MAX_MOUNT do
+    rawImage_Mounts[i] = {};
+    rawImage_Mounts[i].jmpDrawer = uiController:FindRawImage(string.Concat("Mount", i)):GetComponent(typeof(JmpDrawer));
+    rawImage_Mounts[i].shineMount = uiController:FindText(string.Concat("Text_ShineMount", i));
+    rawImage_Mounts[i].actionMountText = uiController:FindText(string.Concat("Text_ActionMount", i));
+    rawImage_Mounts[i].name = uiController:FindText(string.Concat("Text_MountName", i));
+    rawImage_Mounts[i].redDot = rawImage_Mounts[i].name.transform:Find("Image_RedDot").gameObject;
+  
+    rawImage_Mounts[i].event = uiController:FindEvent(string.Concat("Image_MountAction", i));
+    rawImage_Mounts[i].event:SetListener(EventTriggerType.PointerClick, this.OnClick_MountAction);
+    rawImage_Mounts[i].event.parameter = i;
+  end
+end
+
+function UICollectBook.InitShine(uiController)
+  text_Summary = uiController:FindText("Text_Summary");
+  scrollContent_Summary = uiController:FindScrollContent("ScrollContent_Summary");
+  scrollContent_Summary.onInitialize = this.OnInitialize_scrollSummary;
+  scrollContent_Summary.onItemChange = this.OnItemChange_scrollSummary;
+  scrollContent_Summary:Initialize(1);
+  
+  scrollContent_Total = uiController:FindScrollContent("ScrollContent_Total");
+  scrollContent_Total.onInitialize = this.OnInitialize_scrollTotal;
+  scrollContent_Total.onItemChange = this.OnItemChange_scrollTotal;
+  scrollContent_Total:Initialize(1);
+  
+  scrollContent_ShineDetail = uiController:FindScrollContent("ScrollContent_Shine");
+  scrollContent_ShineDetail.onInitialize = this.OnInitialize_scrollShineDetail;
+  scrollContent_ShineDetail.onItemChange = this.OnItemChange_scrollShineDetail;
+  scrollContent_ShineDetail:Initialize(1);
 end
 
 function UICollectBook.LoadBG()
   TextureManager.SetPng(ETextureUseType.UI, "common0_bod051", rawImage_BG);
-  -- TextureManager.SetPng(ETextureUseType.UI, "common0_bod067", rawImage_Title);  
 end
 
 function UICollectBook.OnOpen(tag)
+  text_Title.text = string.Get(23822);
+  text_TitleNft.text = string.Get(23823);
+
+  for i = 1, tagNftCount do
+    tagNftObjects[i].text.text = tagNFTNames[i];
+  end
+  
+  currentTitle = EUICollectTitleTag.normal;
+  this.UpdateMainTitleGroup();
+  
   this.CheckAllRedDot();
   this.LoadBG();
   if tag == nil then 
     tag = EUICollectTag.Warrior;
   end
-  this.ChangeTags(tag);    
+  this.ChangeTags(tag);
   return true;
 end
 
 function UICollectBook.UpdateTags(tagClick)
-  text_Title.text = tagObjects[tagClick].text.text;
-  for i = 1, tagCount do 
-    if tagClick == i then 
-      TextureManager.SetPng(ETextureUseType.UI, "common0_kin004L", tagObjects[i].rawImage);
-    else
-      TextureManager.SetPng(ETextureUseType.UI, "common0_kin004D", tagObjects[i].rawImage);
+  if currentTitle == EUICollectTitleTag.normal then
+    for i = 1, tagCount do
+      if tagClick == i then
+        TextureManager.SetPng(ETextureUseType.UI, "common0_kin004L", tagObjects[i].rawImage);
+      else
+        TextureManager.SetPng(ETextureUseType.UI, "common0_kin004D", tagObjects[i].rawImage);
+      end
+    end
+  else
+    for i = 1, tagNftCount do
+      if tagClick == i then
+        TextureManager.SetPng(ETextureUseType.UI, "common0_kin004L_P", tagNftObjects[i].rawImage);
+      else
+        TextureManager.SetPng(ETextureUseType.UI, "common0_kin004D", tagNftObjects[i].rawImage);
+      end
     end
   end
 end
 
 function UICollectBook.OnClose()
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   currentTag = 0;
   currentIndex = 1;
   currentRoleTurn = 1;
@@ -347,15 +652,32 @@ function UICollectBook.OnClose()
     player = nil;
   end
   jmpDrawer_Role:Disable();
+  for i, v in pairs(rawImage_Mounts) do
+    v.jmpDrawer:Disable();
+  end
+  
+  table.Clear(shineDatas);
 end
 
 function UICollectBook.CheckTeach()
-  if currentTag == EUICollectTag.Warrior then
-    UITeach.Guide(17);
-  elseif currentTag == EUICollectTag.Style then
-    UITeach.Guide(18);
-  elseif currentTag == EUICollectTag.Card then
-    UITeach.Guide(19);
+  if currentTitle == EUICollectTitleTag.normal then
+    if currentTag == EUICollectTag.Warrior then
+      UITeach.Guide(17);
+    elseif currentTag == EUICollectTag.Style then
+      UITeach.Guide(18);
+    elseif currentTag == EUICollectTag.Card then
+      UITeach.Guide(19);
+    end
+  else
+    if currentTag == EUICollectNFTTag.Mounts then
+      UITeach.Guide(26);
+    elseif currentTag == EUICollectNFTTag.Style then
+      UITeach.Guide(24);
+    elseif currentTag == EUICollectNFTTag.CardView then
+      UITeach.Guide(25);
+    elseif currentTag == EUICollectNFTTag.ShineValue then
+      UITeach.Guide(27);
+    end
   end
 end
 
@@ -364,7 +686,45 @@ function UICollectBook.OnClick_Mask(event)
 end
 
 function UICollectBook.OnClick_Help(event)
-  UI.Open(UITutorialHint, 31, this);
+  if currentTitle == EUICollectTitleTag.normal then
+    UI.Open(UITutorialHint, 31, this);
+  else
+    UI.Open(UITutorialHint, 69, this);
+  end
+end
+
+function UICollectBook.OnClick_TitleTag(event)
+  local index = event.parameter;
+  currentTitle = index;
+  currentTag = EUICollectTag.Warrior;
+  
+  this.UpdateMainTitleGroup();
+  this.SetShowDatas();
+  this.ChangeTags(currentTag);
+end
+
+function UICollectBook.UpdateMainTitleGroup()
+  if currentTitle == EUICollectTitleTag.normal then
+    gameObject_Shine:SetActive(false);
+    gameObject_NFTlTag:SetActive(false);
+    gameObject_normalTag:SetActive(true);
+    image_Help.sprite = UI.GetSprite("but162");
+    image_Close.sprite = UI.GetSprite("but161");
+    image_Title.sprite = UI.GetSprite("bod067_H");
+    image_TitleNFT.sprite = UI.GetSprite("bod067_D");
+    image_Warrior.sprite = UI.GetSprite("bod070");
+    rawImage_PointBG.sprite = UI.GetSprite("bod070");
+  elseif currentTitle == EUICollectTitleTag.nft then
+    gameObject_Shine:SetActive(true);
+    gameObject_NFTlTag:SetActive(true);
+    gameObject_normalTag:SetActive(false);
+    image_Help.sprite = UI.GetSprite("but162_P");
+    image_Close.sprite = UI.GetSprite("but161_P");
+    image_Title.sprite = UI.GetSprite("bod067_D");
+    image_TitleNFT.sprite = UI.GetSprite("bod067_H_P");
+    image_Warrior.sprite = UI.GetSprite("bod070_D");
+    rawImage_PointBG.sprite = UI.GetSprite("bod070_D");
+  end
 end
 
 function UICollectBook.OnInitialize_scrollContent_Obj(scrollItems)  
@@ -417,13 +777,13 @@ function UICollectBook.OnItemChange_scrollContent_Obj(dataIndex, itemIndex)
     scrollItems_Obj[itemIndex].gameObject_Warrior:SetActive(true);
     scrollItems_Obj[itemIndex].image_Icon2.gameObject:SetActive(false);
     for i = 1, 3 do       
-      local isExsist = data.ids[i] ~= 0;      
+      local isExsist = data.ids[i] ~= 0;
       scrollItems_Obj[itemIndex].getStatus[i].gameObject:SetActive(isExsist);
       if isExsist then 
         local warriorData = collectWarriorDatas[data.ids[i]];
         
         if warriorData ~= nil then
-          local isOwn = BitFlag.Get(warriorData.getFlag);      
+          local isOwn = BitFlag.Get(warriorData.getFlag);
           local isGetReward = BitFlag.Get(warriorData.flag);
 
           scrollItems_Obj[itemIndex].getEvent[i].parameter = {id = warriorData.id, turn = i, dataIndex = index, bg = scrollItems_Obj[itemIndex].image_BG.transform};
@@ -522,13 +882,11 @@ end
 function UICollectBook.OnItemChange_scrollContent_PointList(dataIndex, itemIndex)
   local index = dataIndex + 1;
   local data = collectStyleValueDatas[index];
-  if data == nil then
-    return false;
-  end
+  if data == nil then return false end
   
   local isOpen = CollectStyle.GetNowPoint() >= data.score;
   for i = 1, 4 do
-    if data.attribute[i].kind ~= 0 then
+    if data.attribute[i].kind ~= 0 and data.nft == 0 then
       scrollItems_PointList[itemIndex].text_V[i].text = string.Concat(this.GetAttributeString(data.attribute[i].kind),data.attribute[i].value);
       if isOpen then
         LuaHelper.SetColor(scrollItems_PointList[itemIndex].text_V[i], Color.LightGreen);
@@ -545,6 +903,20 @@ end
   
 function UICollectBook.GetAttributeString(kind)
     if kind == EAttribute.Hp then
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
       return string.Get(20033);
     elseif kind == EAttribute.Sp then
       return string.Get(20034);
@@ -555,6 +927,20 @@ function UICollectBook.GetAttributeString(kind)
     elseif kind == EAttribute.Def then
       return string.Get(20039);
     elseif kind == EAttribute.Agi then
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
       return string.Get(20042);
     elseif kind == EAttribute.Hpx then
       return string.Get(20040);
@@ -572,8 +958,8 @@ function UICollectBook.OnClick_WarriorStatus(event)
   --   Network.Send(95, 1, sendBuffer);
   -- end  
   if event.parameter.turn ~= currentRoleTurn or currentIndex ~= event.parameter.dataIndex then 
-    local id = showDatas[event.parameter.dataIndex].ids[event.parameter.turn];
-    local data = collectWarriorDatas[id];
+    --local id = showDatas[event.parameter.dataIndex].ids[event.parameter.turn];
+    --local data = collectWarriorDatas[id];
 
     currentRoleTurn = event.parameter.turn;  
     currentIndex = event.parameter.dataIndex;
@@ -593,48 +979,199 @@ function UICollectBook.OnClick_ScrollBG(event)
   if showDatas[result.index] ~= nil then 
     currentIndex = result.index;
     currentRoleTurn = 1;
-    this.UpdateInfo();    
+    this.UpdateInfo();
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   end
 end
 
-function UICollectBook.OnClick_Tag(event)  
-  this.ChangeTags(event.parameter);
+function UICollectBook.OnClick_Tag(event)
+  local tagIndex = event.parameter;
+  if currentTag == tagIndex then return end
+  
+  this.ChangeTags(tagIndex);
+  return true;
+end
+
+function UICollectBook.OnClick_NftTag(event)
+  local tagIndex = event.parameter;
+  if currentTag == tagIndex then return end
+  
+  this.ChangeTags(tagIndex);
   return true;
 end
 
 function UICollectBook.ChangeTags(mainTag)
-  if currentTag == mainTag then 
-    return 
-  end
   currentTag = mainTag;
-  this.UpdateTags(mainTag);   
-  if currentTag == EUICollectTag.Warrior then 
-    scrollRect_Obj:SetActive(true);
-    rawImage_RoleGround.gameObject:SetActive(true);
-    rawImage_RoleGround.transform.localPosition = Vector3.New(rawImage_RoleGround.transform.localPosition.x, warrior_rawImagePosY, 0);        
-  elseif currentTag == EUICollectTag.Style then 
-    scrollRect_Obj:SetActive(true);
-    rawImage_RoleGround.gameObject:SetActive(true);
-    rawImage_RoleGround.transform.localPosition = Vector3.New(rawImage_RoleGround.transform.localPosition.x, appearence_rawImagePosY, 0);    
-  elseif currentTag == EUICollectTag.Card then 
-    scrollRect_Obj:SetActive(true);
-    rawImage_RoleGround.gameObject:SetActive(false);
-  else 
-    scrollRect_Obj:SetActive(false);
-    rawImage_RoleGround.gameObject:SetActive(false);
+  this.UpdateTags(mainTag);
+  
+  if currentTitle == EUICollectTitleTag.normal then
+    if currentTag == EUICollectTag.Warrior then
+      scrollRect_Obj:SetActive(true);
+      rawImage_RoleGround.gameObject:SetActive(true);
+      rawImage_RoleGround.transform.localPosition = Vector3.New(rawImage_RoleGround.transform.localPosition.x, warrior_rawImagePosY, 0);
+    elseif currentTag == EUICollectTag.Style then
+      scrollRect_Obj:SetActive(true);
+      rawImage_RoleGround.gameObject:SetActive(true);
+      rawImage_RoleGround.transform.localPosition = Vector3.New(rawImage_RoleGround.transform.localPosition.x, appearence_rawImagePosY, 0);
+    elseif currentTag == EUICollectTag.Card then
+      scrollRect_Obj:SetActive(true);
+      rawImage_RoleGround.gameObject:SetActive(false);
+    elseif currentTag == EUICollectTag.CardView then
+      scrollRect_Obj:SetActive(false);
+      rawImage_RoleGround.gameObject:SetActive(false);
+      for i, v in pairs(rawImage_ViewCards) do
+        v.root:SetActive(true);
+      end
+    end
+  
+    transform_Search.gameObject:SetActive(currentTag ~= EUICollectTag.Card);
+    transform_EquipCard.gameObject:SetActive(currentTag == EUICollectTag.Card);
+    gameObject_EquipAll:SetActive(currentTag == EUICollectTag.Style);
+    transform_Appearence.gameObject:SetActive(currentTag == EUICollectTag.Style);
+    transform_Warrior.gameObject:SetActive(currentTag == EUICollectTag.Warrior);
+    transform_Card.gameObject:SetActive(currentTag == EUICollectTag.Card);
+    transform_CardView.gameObject:SetActive(currentTag == EUICollectTag.CardView);
+    gameObject_NFTCardView:SetActive(false);
+    event_AllAb.gameObject:SetActive(true);
+    rootObj_Mount:SetActive(false);
+    rootObj_ShineValue:SetActive(false);
+
+  elseif currentTitle == EUICollectTitleTag.nft then
+    if currentTag == EUICollectNFTTag.Warrior then
+      scrollRect_Obj:SetActive(true);
+      rawImage_RoleGround.gameObject:SetActive(true);
+      rawImage_RoleGround.transform.localPosition = Vector3.New(rawImage_RoleGround.transform.localPosition.x, warrior_rawImagePosY, 0);
+    elseif currentTag == EUICollectNFTTag.Style then
+      scrollRect_Obj:SetActive(true);
+      rawImage_RoleGround.gameObject:SetActive(true);
+      rawImage_RoleGround.transform.localPosition = Vector3.New(rawImage_RoleGround.transform.localPosition.x, appearence_rawImagePosY, 0);
+    elseif currentTag == EUICollectNFTTag.CardView then
+      scrollRect_Obj:SetActive(false);
+      rawImage_RoleGround.gameObject:SetActive(false);
+  
+      for i, v in pairs(rawImage_ViewCards) do
+        v.root:SetActive(false);
+      end
+  
+      if CollectCard.GetNFTRedDotCount() <= 0 then
+        RedDot.Remove(ERedDot.NFTCollectCard);
+        --4-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          for i = 1, 3 do
+            DemoCode.SetColorNum(i);
+          end
+          local area =  DemoCode.CalTriangleArea(1, 1);
+          local currentOptio = area;
+          local currentOption = string.Get(10055);
+        end
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+        --4-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          for i = 1, 3 do
+            DemoCode.SetColorNum(i);
+          end
+          local area =  DemoCode.CalTriangleArea(1, 1);
+          local currentOptio = area;
+          local currentOption = string.Get(10055);
+        end
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+        --4-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          for i = 1, 3 do
+            DemoCode.SetColorNum(i);
+          end
+          local area =  DemoCode.CalTriangleArea(1, 1);
+          local currentOptio = area;
+          local currentOption = string.Get(10055);
+        end
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+        --4-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          for i = 1, 3 do
+            DemoCode.SetColorNum(i);
+          end
+          local area =  DemoCode.CalTriangleArea(1, 1);
+          local currentOptio = area;
+          local currentOption = string.Get(10055);
+        end
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+        --4-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          for i = 1, 3 do
+            DemoCode.SetColorNum(i);
+          end
+          local area =  DemoCode.CalTriangleArea(1, 1);
+          local currentOptio = area;
+          local currentOption = string.Get(10055);
+        end
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+      end
+    elseif currentTag == EUICollectNFTTag.Mounts then
+      scrollRect_Obj:SetActive(false);
+      rawImage_RoleGround.gameObject:SetActive(false);
+      if Mounts.GetNFTMountRedDotCount() <= 0 then
+        RedDot.Remove(ERedDot.NFTCollectMount);
+      end
+    elseif currentTag == EUICollectNFTTag.ShineValue then
+      scrollRect_Obj:SetActive(false);
+      rawImage_RoleGround.gameObject:SetActive(false);
+      RedDot.Remove(ERedDot.NFTCollectShineValue);
+      for k, v in pairs(collectStyleValueDatas)do
+        if v.nft == 1 and v.score > summary then
+          nextSummary = v.score;
+          break;
+        end
+      end
+    end
+  
+    transform_Search.gameObject:SetActive(currentTag ~= EUICollectNFTTag.ShineValue);
+    transform_EquipCard.gameObject:SetActive(false);
+    gameObject_EquipAll:SetActive(currentTag == EUICollectNFTTag.Style);
+    transform_Appearence.gameObject:SetActive(currentTag == EUICollectNFTTag.Style);
+    transform_Warrior.gameObject:SetActive(currentTag == EUICollectNFTTag.Warrior);
+    transform_Card.gameObject:SetActive(false);
+    transform_CardView.gameObject:SetActive(false);
+    gameObject_NFTCardView:SetActive(currentTag == EUICollectNFTTag.CardView);
+    event_AllAb.gameObject:SetActive(false);
+    rootObj_Mount:SetActive(currentTag == EUICollectNFTTag.Mounts);
+    rootObj_ShineValue:SetActive(currentTag == EUICollectNFTTag.ShineValue);
   end
   
-  transform_Search.gameObject:SetActive(currentTag ~= EUICollectTag.Card);
-  inputField_Search.text = "";
   event_SearchClear.gameObject:SetActive(inputField_Search.text ~= "");
-  transform_EquipCard.gameObject:SetActive(currentTag == EUICollectTag.Card);
-  
-  gameObject_EquipAll:SetActive(currentTag == EUICollectTag.Style);
-  transform_Appearence.gameObject:SetActive(currentTag == EUICollectTag.Style);
-  transform_Warrior.gameObject:SetActive(currentTag == EUICollectTag.Warrior);
-  transform_Card.gameObject:SetActive(currentTag == EUICollectTag.Card);
-  transform_CardView.gameObject:SetActive(currentTag == EUICollectTag.CardView);
-  
+  inputField_Search.text = "";
   gameObject_CardDetail:SetActive(false);
   root_AbDetail.gameObject:SetActive(false);
   this.SetShowDatas();
@@ -648,28 +1185,70 @@ end
 function UICollectBook.SetShowDatas(searchName)
   table.Clear(showDatas);
   text_None.gameObject:SetActive(false);
-  if currentTag == EUICollectTag.Warrior then 
-    for k, v in pairs(collectWarriorSortDatas)do
-      table.insert(showDatas, v);              
-    end    
-
-    table.sort(showDatas, this.SortWarriorData);
-  elseif currentTag == EUICollectTag.Style then 
-    for k, v in pairs(collectStyleDatas)do 
-      table.insert(showDatas, v);
-    end
-  elseif currentTag == EUICollectTag.Card then     
-    for k, v in pairs(collectCardDatas)do 
-      if bool_Own == false or CollectCard.GetLv(v.id) > 0 then 
-        table.insert(showDatas, v);        
+  
+  if currentTitle == EUICollectTitleTag.normal then
+    if currentTag == EUICollectTag.Warrior then
+      for _, v in pairs(collectWarriorSortDatas)do
+        if v.nft == 0 then
+          table.insert(showDatas, v);
+        end
+      end
+      table.sort(showDatas, this.SortWarriorData);
+    elseif currentTag == EUICollectTag.Style then
+      for _, v in pairs(collectStyleDatas)do
+        if v.nft == 0 then
+          table.insert(showDatas, v);
+        end
+      end
+      table.sort(showDatas, function(a, b) return a.id < b.id end);
+    elseif currentTag == EUICollectTag.Card then
+      for _, v in pairs(collectCardDatas)do
+        if bool_Own == false or CollectCard.GetLv(v.id) > 0 then
+          table.insert(showDatas, v);
+        end
+      end
+    elseif currentTag == EUICollectTag.CardView then
+      for _, v in pairs(collectCardSortDatas)do
+        table.insert(showDatas, v);
       end
     end
-  elseif currentTag == EUICollectTag.CardView then 
-    for k, v in pairs(collectCardSortDatas)do       
-      table.insert(showDatas, v);      
+  else --NFT
+    if currentTag == EUICollectNFTTag.Warrior then
+      for _, v in pairs(collectWarriorSortDatas)do
+        if v.nft == 1 then
+          table.insert(showDatas, v);
+        end
+      end
+      table.sort(showDatas, this.SortWarriorData);
+    elseif currentTag == EUICollectNFTTag.Style then
+      for _, v in pairs(collectStyleDatas)do
+        if v.nft == 1 then
+          table.insert(showDatas, v);
+        end
+      end
+      table.sort(showDatas, function(a, b) return a.id < b.id end);
+    elseif currentTag == EUICollectNFTTag.CardView then
+      for _, v in pairs(collectNFTDatas)do
+        if v.kind == 1 then
+          table.insert(showDatas, v);
+        end
+      end
+      table.sort(showDatas, function(a, b) return a.warriorId < b.warriorId end);
+    elseif currentTag == EUICollectNFTTag.Mounts then
+      for _, v in pairs(collectNFTDatas)do
+        if v.kind == 2 then
+          table.insert(showDatas, v);
+        end
+      end
+      table.sort(showDatas, function(a, b) return a.warriorId < b.warriorId end);
+    elseif currentTag == EUICollectNFTTag.ShineValue then
+      for _, v in pairs(collectStyleValueDatas)do
+        if v.nft == 1 then
+          table.insert(showDatas, v);
+        end
+      end
+      table.sort(showDatas, function(a, b) return a.score < b.score end);
     end
-
-    -- table.sort(showDatas, this.SortViewCard); 
   end
 
   --search part
@@ -677,16 +1256,34 @@ function UICollectBook.SetShowDatas(searchName)
     local deleteTable = {};
     for k, v in pairs(showDatas)do
       local name = "";
-      if currentTag == EUICollectTag.Warrior then 
-        name = npcDatas[v.ids[1]].name;
-      elseif currentTag == EUICollectTag.CardView then 
-        name = npcDatas[v.warriorId].name;
-      else
-        name = string.Get(v.name);        
+      if currentTitle == EUICollectTitleTag.normal then
+        if currentTag == EUICollectTag.Warrior then
+          name = npcDatas[v.ids[1]].name;
+        elseif currentTag == EUICollectTag.CardView then
+          name = npcDatas[v.warriorId].name;
+        else
+          name = string.Get(v.name);
+        end
+      else--NFT
+        if currentTag == EUICollectNFTTag.Warrior then
+          name = npcDatas[v.ids[1]].name;
+        elseif currentTag == EUICollectNFTTag.CardView then
+          local warriorId = itemDatas[v.warriorId].spare3;
+          if warriorId == nil then return end
+  
+          local npcData = npcDatas[warriorId];
+          if npcData ~= nil then
+            name = npcData.name;
+          end
+        elseif currentTag == EUICollectNFTTag.Mounts then
+          name = npcDatas[v.warriorId].name;
+        else
+          name = string.Get(v.name);
+        end
       end
-              
-      if string.find(name, searchName, 1) == nil then         
-        table.insert( deleteTable, v);        
+
+      if string.find(name, searchName, 1) == nil then
+        table.insert( deleteTable, v);
       end
     end
     for k, v in pairs(deleteTable) do
@@ -696,6 +1293,8 @@ function UICollectBook.SetShowDatas(searchName)
 
   currentIndex = 1;
   currentPage = 1;
+  currentNFTPage = 1;
+  currentMountPage = 1;
   if currentTag ~= EUICollectTag.CardView then 
     if currentTag == EUICollectTag.Warrior and table.Count(showDatas) > 0 then 
       currentRoleTurn = 1;
@@ -704,16 +1303,87 @@ function UICollectBook.SetShowDatas(searchName)
     if table.Count(showDatas) == 0 and currentTag == EUICollectTag.Card then 
       text_None.gameObject:SetActive(true)
     end
-  end  
+  end
   this.UpdateInfo();
 end
 
 function UICollectBook.OnClick_Search()
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
   currentPage = 1;
   this.SetShowDatas(inputField_Search.text);
 end
 
-function UICollectBook.OnClick_SearchClear()  
+function UICollectBook.OnClick_SearchClear()
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   currentPage = 1;
   inputField_Search.text = "";
   this.SetShowDatas();
@@ -726,24 +1396,49 @@ end
 function UICollectBook.UpdateInfo()
   this.UpdateRedDot();
   local data = showDatas[currentIndex];
-  if currentTag ==  EUICollectTag.Warrior then 
-    this.UpdateRoleInfo(data);    
-  elseif currentTag == EUICollectTag.Style then 
-    this.UpdateAppearenceInfo(data);
-  elseif currentTag == EUICollectTag.Card then 
-    this.UpdateCardInfo(data);
-  elseif currentTag == EUICollectTag.CardView then 
-    this.UpdateCardView();
-  end  
+  
+  if currentTitle == EUICollectTitleTag.normal then
+    if currentTag == EUICollectTag.Warrior then
+      this.UpdateRoleInfo(data);
+    elseif currentTag == EUICollectTag.Style then
+      this.UpdateAppearenceInfo(data);
+    elseif currentTag == EUICollectTag.Card then
+      this.UpdateCardInfo(data);
+    elseif currentTag == EUICollectTag.CardView then
+      this.UpdateCardView();
+    end
+  else
+    if currentTag == EUICollectNFTTag.Warrior then
+      this.UpdateRoleInfo(data);
+    elseif currentTag == EUICollectNFTTag.Style then
+      this.UpdateAppearenceInfo(data);
+    elseif currentTag == EUICollectNFTTag.CardView then
+      this.UpdateNFTCardView();
+    elseif currentTag == EUICollectNFTTag.Mounts then
+      this.UpdateMounts();
+    elseif currentTag == EUICollectNFTTag.ShineValue then
+        this.UpdateShine();
+    end
+  end
+  
   scrollContent_Obj:Refresh();
 end
 
 function UICollectBook.UpdateList()
-  if currentTag ==  EUICollectTag.Warrior then
-    table.sort(showDatas, this.SortWarriorData);
-  elseif currentTag == EUICollectTag.CardView then 
-    table.sort(showDatas, this.SortViewCard); 
-  end  
+  if currentTitle == EUICollectTitleTag.normal then
+    if currentTag ==  EUICollectTag.Warrior then
+      table.sort(showDatas, this.SortWarriorData);
+    elseif currentTag == EUICollectTag.CardView then
+      table.sort(showDatas, this.SortViewCard);
+    end
+  elseif currentTitle == EUICollectTitleTag.nft then
+    if currentTag ==  EUICollectNFTTag.Warrior then
+      table.sort(showDatas, this.SortWarriorData);
+    elseif currentTag == EUICollectNFTTag.CardView then
+      table.sort(showDatas, this.SortViewCard);
+    end
+  end
+  
   this.UpdateInfo();
 end
 
@@ -764,6 +1459,35 @@ end
 function UICollectBook.OnClick_ChangeRoleL()  
   if currentRoleTurn == 1 then return end
   currentRoleTurn = currentRoleTurn -1;
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
   this.UpdateInfo();
 end
 
@@ -783,7 +1507,11 @@ function UICollectBook.OnClick_GetAllGift()
       if v.ids[i] ~= nil and v.ids[i] ~= 0 then 
         cWarriorData = collectWarriorDatas[v.ids[i]];
         if BitFlag.Get(cWarriorData.getFlag) and not BitFlag.Get(cWarriorData.flag) then --擁有沒領獎
-          table.insert(canGetGift, v.ids[i]);
+          if currentTitle == EUICollectTitleTag.normal and v.nft <= 0 then
+            table.insert(canGetGift, v.ids[i]);
+          elseif currentTitle == EUICollectTitleTag.nft and v.nft > 0 then
+            table.insert(canGetGift, v.ids[i]);
+          end
         end
       end
     end
@@ -791,6 +1519,7 @@ function UICollectBook.OnClick_GetAllGift()
   
   if table.Count(canGetGift) <= 0 then return end
 
+  --C:095-011 <領多個收集武將獎勵> +數量(1) +收集冊武將編號(2)
   sendBuffer:Clear();
   sendBuffer:WriteByte(table.Count(canGetGift));
   for k, v in pairs(canGetGift)do 
@@ -815,6 +1544,35 @@ function UICollectBook.OnClick_GetReward()
   if id == 0 or id == nil then 
     return 
   end
+  
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   sendBuffer:Clear();
   sendBuffer:WriteUInt16(id);  
   Network.Send(95, 1, sendBuffer);
@@ -823,15 +1581,25 @@ end
 function UICollectBook.UpdateRoleInfo(data)  
   if data ~= nil then 
     TextureManager.SetPng(ETextureUseType.UI, "common0_com040", rawImage_RoleGround);
-    -- TextureManager.SetPng(ETextureUseType.UI, "common0_bod070", rawImage_WarriorBG);   
-    TextureManager.SetPng(ETextureUseType.UI, "Ani_Reward", rawImage_Gift);        
+    TextureManager.SetPng(ETextureUseType.UI, "Ani_Reward", rawImage_Gift);
     local id = data.ids[currentRoleTurn];
     
     local nowWarriorData = collectWarriorDatas[id];
+  
+    if id == 0 then  --reset
+      currentRoleTurn = 1;
+      id = data.ids[currentRoleTurn];
+      nowWarriorData = collectWarriorDatas[id];
+    end
+    
     if npcDatas[data.ids[1]] ~= nil then 
       text_RoleGainWay.text = string.GetMoral(npcDatas[data.ids[1]].moral, false);
     else
       text_RoleGainWay.text = string.GetMoral(0);
+    end
+  
+    if collectWarriorDatas[id] ~= nil then
+      text_ShineValue.text = collectWarriorDatas[id].shineValue;
     end
 
     if npcDatas[id] ~= nil then
@@ -845,15 +1613,15 @@ function UICollectBook.UpdateRoleInfo(data)
       
       text_RoleName.text = npcData.name;
       career:SetCareer(npcData.turn, npcData.element, ECareer.None, true);
-    else      
+    else
       rawImage_Role.gameObject:SetActive(false);        
     end
 
     local giftActive = false;
     local giftGot = false;
-    if nowWarriorData ~= nil then 
-      if BitFlag.Get(nowWarriorData.getFlag) then 
-        LuaHelper.SetColor(rawImage_Role, Color.White);   
+    if nowWarriorData ~= nil then
+      if BitFlag.Get(nowWarriorData.getFlag) then
+        LuaHelper.SetColor(rawImage_Role, Color.White);
         if not BitFlag.Get(nowWarriorData.flag) then --還沒領過獎
           giftActive = true;
         else
@@ -874,11 +1642,11 @@ function UICollectBook.UpdateRoleInfo(data)
         end
       end
 
-      if giftGot then 
+      if giftGot then
         rawImage_Gift.gameObject:SetActive(false);
       else
         rawImage_Gift.gameObject:SetActive(true);
-        if giftActive then 
+        if giftActive then
           LuaHelper.SetColor(rawImage_Gift, Color.White);
           rawImage_Gift.shiftUV = true;
           event_Gift.enabled = true;
@@ -890,23 +1658,22 @@ function UICollectBook.UpdateRoleInfo(data)
       end
 
       text_RoleStory.text = nowWarriorData.storyStr;
-      --text_RoleGainWay.text = string.Get(nowWarriorData.gainStr);      
-
+    
       for i = 1, 5 do
-        if nowWarriorData.award[i].itemId ~= 0 and itemDatas[nowWarriorData.award[i].itemId] ~= nil then 
-          role_awards[i].gameObject:SetActive(true);     
+        if nowWarriorData.award[i].itemId ~= 0 and itemDatas[nowWarriorData.award[i].itemId] ~= nil then
+          role_awards[i].gameObject:SetActive(true);
           local itemData = itemDatas[nowWarriorData.award[i].itemId];
           local stringCount = "";
-          if itemData ~= nil then 
-            local count = nowWarriorData.award[i].count;            
-            if itemData:IsDirectUse() then            
+          if itemData ~= nil then
+            local count = nowWarriorData.award[i].count;
+            if itemData:IsDirectUse() then
               count = itemData.attribute[1].value * nowWarriorData.award[i].count;
             end
             stringCount = Item.GetSimpleValue(count, true)
-          end     
+          end
           role_awards[i].item:SetItem(nowWarriorData.award[i].itemId, nowWarriorData.award[i].count, nil, true);
           role_awards[i].item.text_Quant.text = stringCount;
-          role_awards[i].item:SetEvent(this.OnClickAward, nowWarriorData.award[i].itemId);    
+          role_awards[i].item:SetEvent(this.OnClickAward, nowWarriorData.award[i].itemId);
         else
           role_awards[i].gameObject:SetActive(false);
         end
@@ -914,26 +1681,63 @@ function UICollectBook.UpdateRoleInfo(data)
     end
   end
   this.UpdateGetllAllButton();
-  this.UpdateChangeRoleButton();  
+  this.UpdateChangeRoleButton();
 end
 
 function UICollectBook.UpdateGetllAllButton()
   local cWarriorData = nil;
-  for k, v in pairs(collectWarriorSortDatas)do 
+  for k, v in pairs(collectWarriorSortDatas)do
     for i = 1, 3 do 
       if v.ids[i] ~= nil and v.ids[i] ~= 0 then 
         cWarriorData = collectWarriorDatas[v.ids[i]];
         if BitFlag.Get(cWarriorData.getFlag) and not BitFlag.Get(cWarriorData.flag) then --擁有沒領獎
-          event_GetAllGift.gameObject:SetActive(true);
-          return;
+          if currentTitle == EUICollectTitleTag.normal and v.nft <= 0 then
+            event_GetAllGift.gameObject:SetActive(true);
+            return;
+          end
+  
+          if currentTitle == EUICollectTitleTag.nft and v.nft > 0 then
+            event_GetAllGift.gameObject:SetActive(true);
+            return;
+          end
         end
       end
     end
   end
+  
   event_GetAllGift.gameObject:SetActive(false);
 end
 
 function UICollectBook.OnClickAward(event)
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
   UIItemInfo.Show(event.parameter);
 end
 
@@ -941,8 +1745,7 @@ end
 function UICollectBook.UpdateAppearenceInfo(data)
   if data == nil then return end
   TextureManager.SetPng(ETextureUseType.UI, "common0_com040", rawImage_RoleGround);
-  -- TextureManager.SetPng(ETextureUseType.UI, "common0_bod070", rawImage_PointBG);  
-  --預覽模型 
+  --預覽模型
   playerData = PlayerData.Copy(Role.player.data);
   local OutfitStyleGap = 5;
   local count = 0;
@@ -953,7 +1756,8 @@ function UICollectBook.UpdateAppearenceInfo(data)
       playerData.equips[itemDatas[itemId].fitType + OutfitStyleGap] = 0;
       playerData.equips[itemDatas[itemId].fitType] = itemId;
       itemDatas[itemId]:SetIcon(appearence_Items[i].rawImage, ETextureUseType.UI);
-      appearence_Items[i].text_Score.text = string.Concat(string.Get(21132), ":",data.itemScore[i]);
+      appearence_Items[i].text_Score.text = string.Concat(string.Get(21132), ":", data.itemScore[i]);
+      appearence_Items[i].ShineValue.text = data.itemScore[i];
       appearence_Items[i].gameObject_RedDot:SetActive(false);
       if CollectStyle.CheckEquiped(data.id, i) then
         count = count + 1;
@@ -967,6 +1771,13 @@ function UICollectBook.UpdateAppearenceInfo(data)
         if Item.GetItemCount(itemId) > 0 then
           appearence_Items[i].gameObject_RedDot:SetActive(true);
         end
+      end
+  
+      if currentTitle == EUICollectTitleTag.nft then
+        appearence_Items[i].text_Score.text = "";
+        appearence_Items[i].eqShine:SetActive(true);
+      elseif currentTitle == EUICollectTitleTag.normal then
+        appearence_Items[i].eqShine:SetActive(false);
       end
     else
       appearence_Items[i].gameObject:SetActive(false);
@@ -984,10 +1795,7 @@ function UICollectBook.UpdateAppearenceInfo(data)
   jmpDrawer_Role.offsetY = 0;
   
   text_AppearenceName.text = string.Get(data.name);
-  text_Where.text = string.Concat(string.Get(21405), ":", string.Get(data.info));
-  text_Point.text = string.Concat(string.Get(21407), ":", CollectStyle.GetNowPoint());
-  text_AllGet.text = string.Concat(string.Get(21423), ":", data.itemScore[6]);
-  
+
   local allAb = CollectStyle.GetAllAb();
   local i = 1;
   for k, v in pairs(text_TotalValue) do 
@@ -999,15 +1807,23 @@ function UICollectBook.UpdateAppearenceInfo(data)
     end    
     text_TotalValue[i].text = string.Concat(this.GetAttributeString(k), "+", v);
     i = i + 1;
-  end  
-end
-
-function UICollectBook.OnClick_AllAb(event)
-  if root_AbDetail.gameObject.activeInHierarchy then 
-    root_AbDetail.gameObject:SetActive(false);
+  end
+  
+  if currentTitle == EUICollectTitleTag.normal then
+    text_Where.text = string.Concat(string.Get(21405), ":", string.Get(data.info));
+    text_Point.text = string.Concat(string.Get(21407), ":", CollectStyle.GetNowPoint());
+    text_AllGet.text = string.Concat(string.Get(21423), ":", data.itemScore[6]);
+    text_PowerTitle.text = string.Get(21424);
+    text_NFTDescription.text = "";
   else
-    root_AbDetail.gameObject:SetActive(true);
-    scrollContent_PointList:Reset(table.maxn(collectStyleValueDatas));
+    text_Where.text = "";
+    text_Point.text = "";
+    text_AllGet.text = "";
+    for _, v in pairs(text_TotalValue) do
+      v.text = "";
+    end
+    text_PowerTitle.text = string.Get(23835);
+    text_NFTDescription.text = string.Get(data.nftString);
   end
 end
 
@@ -1073,8 +1889,63 @@ function UICollectBook.OnClick_EquipAll()
     Network.Send(23, 127, sendBuffer);
   else
     ShowCenterMessage(string.Get(23675));
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   end
-  
 end
 
 --卡片
@@ -1120,25 +1991,23 @@ function UICollectBook.OnItemChange_scrollContent_Card(dataIndex, itemIndex)
   return true;
 end
 
-function UICollectBook.UpdateCardInfo(data)  
-  local maxCount = CollectCard.GetMaxEquipCard();
-  local vipCount = UIVIP.GetVIPLevel(EVIPPermission.Card);
-  local vipString = string.GetColorText(string.Concat("(", vipCount, ")"), Color.Red);
-  text_Combine.text = string.Concat(string.Get(21421), CollectCard.GetEquipedCount(), "/", maxCount + vipCount, vipString);
-
-  if data == nil then return end    
+function UICollectBook.UpdateCardInfo(data)
+  if data == nil then return end
+  
+  text_Combine.text =string.Concat(string.Get(21421), CollectCard.GetEquipedCount(), "/", CollectCard.GetMaxEquipCard());
   local cardLv = CollectCard.GetLv(data.id);
   local addName = "";
   if Define.IsDebugMode() then 
     addName = string.Concat("(", data.id, ")") ;
   end
+  
   text_CombinationName.text = string.Concat(string.Get(data.name), addName);
   text_CombinationLevel.text = cardLv;
   local isMaxLv = CollectCard.IsMaxLv(data.id);
   if isMaxLv then 
-    text_LvFront.text = string.Concat(string.Get(21453), " ", string.Get(71154));    
-  else    
-    text_LvFront.text = string.Get(71154);    
+    text_LvFront.text = string.Concat(string.Get(21453), " ", string.Get(71154));
+  else
+    text_LvFront.text = string.Get(71154);
   end
 
   text_CardStory.text = string.Get(data.story);
@@ -1146,8 +2015,8 @@ function UICollectBook.UpdateCardInfo(data)
   local powerValue = CollectCard.GetPowerValue(data.id);
   for k, v in pairs(textGroup_CardValue)do
     if powerValue[k] ~= nil and powerValue[k].kind ~= 0 then 
-      local str = string.Concat(this.GetAttributeString(powerValue[k].kind), "+", powerValue[k].value);      
-      if cardLv > 0 and not isMaxLv then         
+      local str = string.Concat(this.GetAttributeString(powerValue[k].kind), "+", powerValue[k].value);
+      if cardLv > 0 and not isMaxLv then
         local plusStr = string.GetColorText(string.Concat("(+", powerValue[k].plusValue, ")"), Color.LightGreen);
         str = string.Concat(str, plusStr);
       end
@@ -1204,6 +2073,21 @@ function UICollectBook.UpdateCardButton(data)
   end
 end
 
+function UICollectBook.OnClick_AllAb()
+  if root_AbDetail.gameObject.activeInHierarchy then
+    root_AbDetail.gameObject:SetActive(false);
+  else
+    root_AbDetail.gameObject:SetActive(true);
+    local count = 0;
+    for i, v in pairs(collectStyleValueDatas) do
+      if v.nft == 0 then
+        count = count + 1;
+      end
+    end
+    scrollContent_PointList:Reset(count);
+  end
+end
+
 function UICollectBook.OnClick_Toogle(event)
   bool_Own = not bool_Own;
   image_Toogle.sprite = UI.GetCheckBoxSprite(bool_Own);
@@ -1240,40 +2124,532 @@ function UICollectBook.UpdateCardView()
     if showDatas[index] == nil then 
       rawImage_ViewCards[i].controller:SetShow(false);
     else
-      rawImage_ViewCards[i].controller:SetShow(true);      
-      rawImage_ViewCards[i].controller:SetData(showDatas[index].id, this.OnClick_ViewCard);      
+      rawImage_ViewCards[i].controller:SetShow(true);
+      rawImage_ViewCards[i].controller:SetData(showDatas[index].id, this.OnClick_ViewCard);
       local flagId = showDatas[index].getFlag;
-      if BitFlag.Get(flagId) then --if CollectCard.GetCount(showDatas[index].id) > 0 then       
+      if BitFlag.Get(flagId) then
         LuaHelper.SetColor(rawImage_ViewCards[i].controller.image_Pic, Color.White);
         rawImage_ViewCards[i].controller:SetRedDot(CollectCard.CheckSortRedDot(flagId));
       else
         LuaHelper.SetColor(rawImage_ViewCards[i].controller.image_Pic, Color.Gray);
         rawImage_ViewCards[i].controller:SetRedDot(false);
       end
-    end    
+    end
   end
 end
 
-function UICollectBook.OnClick_CardLeftPage(event)
-  if currentPage == 1 then 
-    return;
+function UICollectBook.UpdateNFTCardView()
+  local pageCount = math.max(math.ceil(table.Count(showDatas) / 2) , 1);
+  text_NFTCardPage.text = string.Concat(currentNFTPage, "/",  pageCount);
+  event_PageLeft.gameObject:SetActive(currentNFTPage > 1);
+  event_PageRight.gameObject:SetActive(currentNFTPage < pageCount);
+  
+  for i = 1, 2 do
+    local index = (currentNFTPage - 1) * 2 + i;
+    if showDatas[index] ~= nil then
+      rawImage_NFTViewCards[i].controller:SetShow(true);
+      rawImage_NFTViewCards[i].controller:SetNFTData(showDatas[index].warriorId);
+      rawImage_NFTViewCards[i].shineValue.text = showDatas[index].shineValue;
+      rawImage_NFTViewCards[i].shineValue.transform.parent.gameObject:SetActive(true);
+      
+      local flagId = showDatas[index].flag;
+      if BitFlag.Get(flagId) then
+        LuaHelper.SetColor(rawImage_NFTViewCards[i].controller.image_BG, Color.White);
+        rawImage_NFTViewCards[i].actionText.text = string.Get(21413); -- 取出
+        if showDatas[index].canGet > 0 then  --0:不可取出  1:可以取出
+          rawImage_NFTViewCards[i].actionText.transform.parent.gameObject:SetActive(true);
+        else
+          rawImage_NFTViewCards[i].actionText.transform.parent.gameObject:SetActive(false);
+        end
+        rawImage_NFTViewCards[i].redDot:SetActive(false);
+      else
+        LuaHelper.SetColor(rawImage_NFTViewCards[i].controller.image_BG, Color.Gray);
+        if Item.GetItemCount(showDatas[index].getId) > 0 then
+          rawImage_NFTViewCards[i].actionText.text = string.Get(21408);  --放入
+          rawImage_NFTViewCards[i].actionText.transform.parent.gameObject:SetActive(true);
+          rawImage_NFTViewCards[i].redDot:SetActive(true);
+        else
+          rawImage_NFTViewCards[i].actionText.transform.parent.gameObject:SetActive(false);
+          rawImage_NFTViewCards[i].redDot:SetActive(false);
+        end
+      end
+    else
+      rawImage_NFTViewCards[i].controller:SetShow(false);
+      rawImage_NFTViewCards[i].shineValue.transform.parent.gameObject:SetActive(false);
+      rawImage_NFTViewCards[i].redDot:SetActive(false);
+      rawImage_NFTViewCards[i].actionText.transform.parent.gameObject:SetActive(false);
+    end
   end
+end
 
-  currentPage = currentPage - 1;  
+function UICollectBook.UpdateMounts()
+  local pageCount = math.max(math.ceil(table.Count(showDatas) / MAX_MOUNT) , 1);
+  text_MountsPage.text = string.Concat(currentMountPage, "/",  pageCount);
+  event_MountLeft.gameObject:SetActive(currentMountPage > 1);
+  event_MountRight.gameObject:SetActive(currentMountPage < pageCount);
+
+  for i = 1, MAX_MOUNT do
+    local index = (currentMountPage - 1) * MAX_MOUNT + i;
+    if showDatas[index] ~= nil then
+      local npcData = npcDatas[showDatas[index].warriorId];
+      local offsetX, offsetY = npcData:GetOffset();
+      rawImage_Mounts[i].jmpDrawer.transform.parent.gameObject:SetActive(true);
+      rawImage_Mounts[i].jmpDrawer:GenerateAndDraw(npcData:GetAtlasParams(ERolePose.Prepare + 1));
+      rawImage_Mounts[i].jmpDrawer.offsetY = offsetY + 35;
+      rawImage_Mounts[i].shineMount.text = showDatas[index].shineValue;
+      rawImage_Mounts[i].name.text = npcData.name;
+      if Mounts.HaveCollection(showDatas[index].warriorId) then
+        rawImage_Mounts[i].jmpDrawer.color = Color.White;
+        rawImage_Mounts[i].actionMountText.text = string.Get(21413); --取出
+        if showDatas[index].canGet > 0 then  --0:不可取出  1:可以取出
+          rawImage_Mounts[i].event.gameObject:SetActive(true);
+        else
+          rawImage_Mounts[i].event.gameObject:SetActive(false);
+        end
+        rawImage_Mounts[i].redDot:SetActive(false);
+      else
+        rawImage_Mounts[i].jmpDrawer.color = Color.MountsGray;
+        if Item.GetItemCount(showDatas[index].getId) > 0 then
+          rawImage_Mounts[i].actionMountText.text = string.Get(21408);  --放入
+          rawImage_Mounts[i].event.gameObject:SetActive(true);
+          rawImage_Mounts[i].redDot:SetActive(true);
+        else
+          rawImage_Mounts[i].event.gameObject:SetActive(false);
+          rawImage_Mounts[i].redDot:SetActive(false);
+        end
+      end
+    else
+      rawImage_Mounts[i].jmpDrawer.transform.parent.gameObject:SetActive(false);
+    end
+  end
+end
+
+function UICollectBook.UpdateShine()
+  scrollContent_ShineDetail:Reset(table.Count(showDatas));
+  text_Summary.text = tostring(summary);
+  scrollContent_Summary:Reset(table.Count(shineDatas));
+  
+  local totalAtt = {}
+  for k, v in pairs(showDatas) do
+    if v.score <= summary then
+      for kk, vv in pairs(v.attribute) do
+        if vv.kind > 0 then
+          if totalAtt[vv.kind] == nil then
+            totalAtt[vv.kind] = vv.value;
+          else
+            totalAtt[vv.kind] = totalAtt[vv.kind] + vv.value
+          end
+        end
+      end
+    end
+  end
+  
+  local index = 0;
+  for k, v in pairs(totalAtt) do
+    index = index + 1
+    totalShineAtt[index] = {};
+    totalShineAtt[index].kind = k;
+    totalShineAtt[index].value = v;
+  end
+  
+  local count = math.ceil(table.Count(totalShineAtt) / 2);
+  scrollContent_Total:Reset(count);
+end
+
+
+function UICollectBook.GetSummary()
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  return summary;
+end
+
+function UICollectBook.SetSummary(value)
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  summary = value;
+end
+
+function UICollectBook.CalNFTWarriorShine()
+  for k, v in pairs(collectWarriorDatas)do
+    if v.shineValue > 0 then
+      if v.getFlag ~= nil and BitFlag.Get(v.getFlag) then
+        shineDatas[EUICollectNFTTag.Warrior].shineValue = shineDatas[EUICollectNFTTag.Warrior].shineValue + v.shineValue;
+      end
+    end
+  end
+  
+  this.CalCollectShineValue();
+end
+
+function UICollectBook.CalNFTStyleShine()
+  shineDatas[EUICollectNFTTag.Style].shineValue = CollectStyle.GetNowNFT();
+  this.CalCollectShineValue();
+end
+
+function UICollectBook.CalNFTMountShine()
+  for k, v in pairs(collectNFTDatas)do
+    if v.kind == 2 and Mounts.HaveCollection(v.warriorId) then
+      shineDatas[EUICollectNFTTag.Mounts].shineValue = shineDatas[EUICollectNFTTag.Mounts].shineValue + v.shineValue;
+    end
+  end
+  
+  this.CalCollectShineValue();
+end
+
+function UICollectBook.CalNFTCardShine()
+  for k, v in pairs(collectNFTDatas)do
+    if v.kind == 1 and BitFlag.Get(v.flag) then
+      shineDatas[EUICollectNFTTag.CardView].shineValue = shineDatas[EUICollectNFTTag.CardView].shineValue + v.shineValue;
+    end
+  end
+  
+  this.CalCollectShineValue();
+end
+
+function UICollectBook.CalCollectShineValue()
+  local value = 0;
+  for i = 1, 4 do
+    if shineDatas[i] ~= nil and shineDatas[i].shineValue ~= nil then
+      value = value + shineDatas[i].shineValue;
+    end
+  end
+  
+  summary = value;
+  
+  if value >= nextSummary then
+    RedDot.Add(ERedDot.NFTCollectShineValue);
+  else
+    RedDot.Remove(ERedDot.NFTCollectShineValue);
+  end
+  
+  if Role.player ~= nil then
+    Role.player:SetAttribute(EAttribute.MaxHp, Calc.GetMaxHp(Role.player));
+    Role.player:SetAttribute(EAttribute.MaxSp, Calc.GetMaxSp(Role.player));
+  end
+  
+  return value;
+end
+
+function UICollectBook.CalShineValue(bSetLastSummary)
+  local value = 0;
+  for i = 1, 4 do
+    shineDatas[i] = {};
+    shineDatas[i].shineValue = 0;
+    shineDatas[i].title = tagNFTNames[i];
+  end
+  
+  this.CalNFTWarriorShine();
+  this.CalNFTStyleShine();
+  this.CalNFTMountShine();
+  this.CalNFTCardShine();
+  
+  value = this.CalCollectShineValue();
+  
+  if bSetLastSummary then
+    lastSummary = value;
+    for k, v in pairs(collectStyleValueDatas)do
+      if v.nft == 1 and v.score > lastSummary then
+        nextSummary = v.score;
+        break;
+      end
+    end
+  end
+  
+end
+
+function UICollectBook.OnInitialize_scrollSummary(scrollItems)
+  for itemIndex = 0, scrollItems.Length - 1 do
+    scrollItems_Summary[itemIndex] = {};
+    scrollItems_Summary[itemIndex].title = scrollItems[itemIndex]:Find("Text_Title"):GetComponent("Text");
+    scrollItems_Summary[itemIndex].shineSum = scrollItems[itemIndex]:Find("Image_EqShine"):Find("Text_ShineSum"):GetComponent("Text");
+  end
+end
+
+function UICollectBook.OnItemChange_scrollSummary(dataIndex, itemIndex)
+  local index = dataIndex + 1;
+  local data = shineDatas[index];
+  if data == nil then return false end
+  
+  scrollItems_Summary[itemIndex].title.text = data.title;
+  scrollItems_Summary[itemIndex].shineSum.text = data.shineValue;
+  
+  return true;
+end
+
+function UICollectBook.OnInitialize_scrollTotal(scrollItems)
+  for itemIndex = 0, scrollItems.Length - 1 do
+    scrollItems_Total[itemIndex] = {};
+    scrollItems_Total[itemIndex].title = scrollItems[itemIndex]:Find("Text_TotalAtt"):GetComponent("Text");
+    scrollItems_Total[itemIndex].title2 = scrollItems[itemIndex]:Find("Text_TotalAtt2"):GetComponent("Text");
+  end
+end
+
+function UICollectBook.OnItemChange_scrollTotal(dataIndex, itemIndex)
+  local index = ((dataIndex + 1) * 2) - 1;
+  local data = totalShineAtt[index];
+  local data2 = totalShineAtt[index + 1];
+  
+  if data ~= nil then
+    scrollItems_Total[itemIndex].title.text = string.Concat(this.GetAttributeString(data.kind), data.value);
+  end
+  
+  if data2 ~= nil then
+    scrollItems_Total[itemIndex].title2.text = string.Concat(this.GetAttributeString(data2.kind), data2.value);
+  else
+    scrollItems_Total[itemIndex].title2.text = "";
+  end
+  
+  return true;
+end
+
+function UICollectBook.OnInitialize_scrollShineDetail(scrollItems)
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  for itemIndex = 0, scrollItems.Length - 1 do
+    scrollItems_ShineDetail[itemIndex] = {};
+    scrollItems_ShineDetail[itemIndex].textSv = scrollItems[itemIndex]:Find("Image_Icon"):Find("Text_SV"):GetComponent("Text");
+    scrollItems_ShineDetail[itemIndex].image_BG = scrollItems[itemIndex]:Find("Image_BG"):GetComponent("RawImage");
+    scrollItems_ShineDetail[itemIndex].imageShine = scrollItems[itemIndex]:Find("Image_Icon"):GetComponent("Image");
+    scrollItems_ShineDetail[itemIndex].info = {};
+    for i = 1, 4 do
+      scrollItems_ShineDetail[itemIndex].info[i] = scrollItems[itemIndex]:Find("AttInfo"):Find(string.Concat("Text_Info (", i, ")")):GetComponent("Text");
+    end
+  end
+end
+
+function UICollectBook.OnItemChange_scrollShineDetail(dataIndex, itemIndex)
+  local index = dataIndex + 1;
+  local data = showDatas[index];
+  if data == nil then return false end
+
+  local isOpen = summary >= data.score;
+  
+  scrollItems_ShineDetail[itemIndex].textSv.text = data.score;
+  if math.fmod(index, 2) == 0 then
+    LuaHelper.SetColor(scrollItems_ShineDetail[itemIndex].image_BG, bgBrownColor);
+  else
+    LuaHelper.SetColor(scrollItems_ShineDetail[itemIndex].image_BG, bgWhiteColor);
+  end
+  
+  for i = 1, 4 do
+    if data.attribute[i].kind ~= 0 then
+      scrollItems_ShineDetail[itemIndex].info[i].text = string.Concat(this.GetAttributeString(data.attribute[i].kind), data.attribute[i].value);
+      if isOpen then
+        LuaHelper.SetColor(scrollItems_ShineDetail[itemIndex].info[i], LuaHelper.GetColor(0, 180, 60, 255));
+        scrollItems_ShineDetail[itemIndex].imageShine.sprite = UI.GetSprite("icon156");
+      else
+        LuaHelper.SetColor(scrollItems_ShineDetail[itemIndex].info[i], Color.Black);
+        scrollItems_ShineDetail[itemIndex].imageShine.sprite = UI.GetSprite("icon157");
+      end
+    else
+      scrollItems_ShineDetail[itemIndex].info[i].text = "";
+    end
+  end
+  
+  return true;
+end
+
+function UICollectBook.OnClick_CardLeftPage(event)
+  if currentPage == 1 then return end
+
+  currentPage = currentPage - 1;
   this.UpdateCardView();
 end
 
 function UICollectBook.OnClick_CardRightPage(event)
-  if table.Count(showDatas) <= currentPage * MAX_VIEWCARD then 
-    return;
-  end
+  if table.Count(showDatas) <= currentPage * MAX_VIEWCARD then return end
   currentPage = currentPage + 1;
   this.UpdateCardView();
 end
 
+function UICollectBook.OnClick_NFTCardAction(event)
+  local index = (currentNFTPage - 1) * 2 + event.parameter;
+  if showDatas[index] == nil then return end
+  
+  local getId = showDatas[index].getId;
+  if BitFlag.Get(showDatas[index].flag) then
+    if Item.GetBagLeftCount(EThings.Bag) <= 0 then
+      ShowCenterMessage(string.Get(80359));
+      return;
+    end
+    --取出
+    --C:095-013 <NFT卡片取出> +卡片物品編號(2)
+    sendBuffer:Clear();
+    sendBuffer:WriteUInt16(getId);
+    Network.Send(95, 13, sendBuffer);
+  else
+    --放入
+    local getId = showDatas[index].getId;
+    if Item.GetItemCount(getId) > 0 then
+      local bagIndex = Item.GetItemIndex(getId, EThings.Bag);
+      Item.SendUseItem(bagIndex, 1, 0, 0);
+    end
+  end
+end
+
+function UICollectBook.OnClick_NFTCardLeftPage(event)
+  if currentNFTPage == 1 then return end
+  
+  currentNFTPage = currentNFTPage - 1;
+  this.UpdateNFTCardView();
+end
+
+function UICollectBook.OnClick_NFTCardRightPage(event)
+  if table.Count(showDatas) <= currentNFTPage * 2 then return end
+  currentNFTPage = currentNFTPage + 1;
+  this.UpdateNFTCardView();
+end
+
+function UICollectBook.OnClick_MountLeftPage(event)
+  if currentMountPage == 1 then return end
+  
+  currentMountPage = currentMountPage - 1;
+  this.UpdateMounts();
+end
+
+function UICollectBook.OnClick_MountRightPage(event)
+  if table.Count(showDatas) <= currentMountPage * MAX_MOUNT then return end
+  
+  currentMountPage = currentMountPage + 1;
+  this.UpdateMounts();
+end
+
+function UICollectBook.OnClick_MountAction(event)
+  local index = (currentMountPage - 1) * MAX_MOUNT + event.parameter;
+  if showDatas[index] == nil then return end
+  
+  local npcId = showDatas[index].warriorId;
+  
+  if Mounts.HaveCollection(npcId) then
+    --取出
+    if Mounts.currentNpcId == npcId then
+      ShowCenterMessage(string.Get(23833));
+      return;
+    else
+      if Item.GetBagLeftCount(EThings.Bag) <= 0 then
+        ShowCenterMessage(string.Get(80359));
+        --4-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          for i = 1, 3 do
+            DemoCode.SetColorNum(i);
+          end
+          local area =  DemoCode.CalTriangleArea(1, 1);
+          local currentOptio = area;
+          local currentOption = string.Get(10055);
+        end
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+        --4-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          for i = 1, 3 do
+            DemoCode.SetColorNum(i);
+          end
+          local area =  DemoCode.CalTriangleArea(1, 1);
+          local currentOptio = area;
+          local currentOption = string.Get(10055);
+        end
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+        --4-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          for i = 1, 3 do
+            DemoCode.SetColorNum(i);
+          end
+          local area =  DemoCode.CalTriangleArea(1, 1);
+          local currentOptio = area;
+          local currentOption = string.Get(10055);
+        end
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+        return;
+      end
+  
+      ShowCheckMessage(
+        function(result)
+          if result then
+            --C:095-015 <NFT坐騎取出> +坐騎物品編號(2)
+            sendBuffer:Clear();
+            sendBuffer:WriteUInt16(npcId);
+            Network.Send(95, 15, sendBuffer);
+          end
+        end,
+        string.Get(23832),
+        Role.player
+      );
+    end
+  else
+    --放入
+    if not MarkManager.GetMissionFlag(10024) then
+      ShowCenterMessage(string.Get(20076));
+      return;
+    end
+    
+    local getId = showDatas[index].getId;
+    if Item.GetItemCount(getId) > 0 then
+      local bagIndex = Item.GetItemIndex(getId, EThings.Bag);
+      Item.SendUseItem(bagIndex, 1, 0, 0);
+    end
+  end
+end
+
+function UICollectBook.ShowShineShine(id, isAdd)
+  if collectNFTDatas[id] == nil then return end
+  
+  if isAdd then
+    ShowCenterMessage(string.format(string.Get(23825), collectNFTDatas[id].shineValue));
+  else
+    ShowCenterMessage(string.format(string.Get(23826), collectNFTDatas[id].shineValue));
+  end
+end
+
 function UICollectBook.OnClick_ViewCard(event)
   local id = event.parameter;
-  if BitFlag.Get(collectCardSortDatas[id].getFlag) then --CollectCard.GetCount(id) > 0 then 
+  if BitFlag.Get(collectCardSortDatas[id].getFlag) then
     this.OpenCardDetail(id);
     if CollectCard.DeleteSortRedDot(collectCardSortDatas[id].getFlag) then 
       this.CheckCardSortRedDot();
@@ -1281,6 +2657,21 @@ function UICollectBook.OnClick_ViewCard(event)
     end
   else
     ShowCenterMessage(string.Get(21511));
+  
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   end
 end
 
@@ -1302,7 +2693,7 @@ function UICollectBook.SortWarriorData(a, b)
   local aIsRedDot = false;
   for k, v in pairs(a.ids) do
     if collectWarriorDatas[v] ~= nil then 
-      if BitFlag.Get(collectWarriorDatas[v].getFlag) and not BitFlag.Get(collectWarriorDatas[v].flag) then 
+      if BitFlag.Get(collectWarriorDatas[v].getFlag) and not BitFlag.Get(collectWarriorDatas[v].flag) then
         aIsRedDot = true;
         break;
       end
@@ -1312,7 +2703,7 @@ function UICollectBook.SortWarriorData(a, b)
   local bIsRedDot = false;
   for k, v in pairs(b.ids) do
     if collectWarriorDatas[v] ~= nil then 
-      if BitFlag.Get(collectWarriorDatas[v].getFlag) and not BitFlag.Get(collectWarriorDatas[v].flag) then 
+      if BitFlag.Get(collectWarriorDatas[v].getFlag) and not BitFlag.Get(collectWarriorDatas[v].flag) then
         bIsRedDot = true;
         break;
       end
@@ -1334,7 +2725,7 @@ end
 
 function UICollectBook.OpenCardDetail(id)
   local cardData = collectCardSortDatas[id];
-  if cardData == nil then 
+  if cardData == nil then
     return 
   end
   gameObject_CardDetail:SetActive(true);
@@ -1347,41 +2738,77 @@ function UICollectBook.CheckAllRedDot()
   this.CheckStyleRedDot();
   this.CheckCardRedDot();
   this.CheckCardSortRedDot();
+  this.CheckTitleRedDot();
 end
 
 function UICollectBook.CheckWarriorRedDot()
+  this.DoCheckWarriroRedDot();
+  this.DoCheckNFTWarriroRedDot();
+  this.CalShineValue();
+end
+
+function UICollectBook.DoCheckWarriroRedDot()
   for k, v in pairs(collectWarriorSortDatas)do
-    for i = 1, 3 do             
-      if v.ids[i] ~= 0 then 
+    for i = 1, 3 do
+      if v.ids[i] ~= 0 then
         local warriorData = collectWarriorDatas[v.ids[i]];
         if warriorData ~= nil then
-          local isOwn = BitFlag.Get(warriorData.getFlag);      
+          local isOwn = BitFlag.Get(warriorData.getFlag);
           local isGetReward = BitFlag.Get(warriorData.flag);
-          if isOwn and not isGetReward then --擁有且沒領過獎                    
-            RedDot.Add(ERedDot.CollectWarrior);    
-            if UI.IsVisible(UICollectBook) then 
+          if isOwn and not isGetReward and v.nft <= 0 then --擁有且沒領過獎
+            RedDot.Add(ERedDot.CollectWarrior);
+            if UI.IsVisible(UICollectBook) then
               this.UpdateRedDot();
-            end        
-            return;                
+            end
+            return;
           end
-        end        
+        end
       end
     end
   end
   RedDot.Remove(ERedDot.CollectWarrior);
-  if UI.IsVisible(UICollectBook) then 
+  if UI.IsVisible(UICollectBook) then
+    this.UpdateRedDot();
+  end
+end
+
+function UICollectBook.DoCheckNFTWarriroRedDot()
+  for k, v in pairs(collectWarriorSortDatas)do
+    if v.ids[1] ~= nil and v.ids[1] ~= 0 then
+      local warriorData = collectWarriorDatas[v.ids[1]];
+      if warriorData ~= nil then
+        local isOwn = BitFlag.Get(warriorData.getFlag);
+        local isGetReward = BitFlag.Get(warriorData.flag);
+        if isOwn and not isGetReward and v.nft > 0 then --擁有且沒領過獎
+          RedDot.Add(ERedDot.NFTCollectWarrior);
+          if UI.IsVisible(UICollectBook) then
+            this.UpdateRedDot();
+          end
+          return;
+        end
+      end
+    end
+  end
+  
+  RedDot.Remove(ERedDot.NFTCollectWarrior);
+  if UI.IsVisible(UICollectBook) then
     this.UpdateRedDot();
   end
 end
 
 function UICollectBook.CheckStyleRedDot()
+  this.DoCheckStyleRedDot();
+  this.DoCheckNFTStyleRedDot();
+end
+
+function UICollectBook.DoCheckStyleRedDot()
   local bag = Item.GetBag(EThings.Bag);
-  for k, v in pairs(collectStyleDatas)do
-    for k2, v2 in pairs(v.itemId)do
+  for k, v in pairs(collectStyleDatas) do
+    for k2, v2 in pairs(v.itemId) do
       if not CollectStyle.CheckEquiped(v.id, k2) then
         if bag ~= nil then
           for bagIndex, bagInfos in pairs(bag) do
-            if bagInfos ~= nil and bagInfos.Id == v2 then
+            if bagInfos ~= nil and bagInfos.Id == v2 and v.nft <= 0 then
               RedDot.Add(ERedDot.CollectStyle);
               if UI.IsVisible(UICollectBook) then
                 this.UpdateRedDot();
@@ -1394,46 +2821,197 @@ function UICollectBook.CheckStyleRedDot()
     end
   end
   RedDot.Remove(ERedDot.CollectStyle);
-  if UI.IsVisible(UICollectBook) then 
+  if UI.IsVisible(UICollectBook) then
     this.UpdateRedDot();
-  end        
+  end
+end
+
+function UICollectBook.DoCheckNFTStyleRedDot()
+  this.CalShineValue();
+  
+  local bag = Item.GetBag(EThings.Bag);
+  for k, v in pairs(collectStyleDatas) do
+    for k2, v2 in pairs(v.itemId) do
+      if not CollectStyle.CheckEquiped(v.id, k2) then
+        if bag ~= nil then
+          for bagIndex, bagInfos in pairs(bag) do
+            if bagInfos ~= nil and bagInfos.Id == v2 and v.nft == 1 then
+              RedDot.Add(ERedDot.NFTCollectStyle);
+              if UI.IsVisible(UICollectBook) then
+                this.UpdateRedDot();
+              end
+              return;
+            end
+          end
+        end
+      end
+    end
+  end
+  RedDot.Remove(ERedDot.NFTCollectStyle);
+  if UI.IsVisible(UICollectBook) then
+    this.UpdateRedDot();
+  end
+  
 end
 
 function UICollectBook.CheckCardRedDot()
-  for k,v in pairs(collectCardDatas)do 
-    if CollectCard.CheckCanLevelUp(v.id) then    
+  for k, v in pairs(collectCardDatas) do
+    if CollectCard.CheckCanLevelUp(v.id) then
       RedDot.Add(ERedDot.CollectCard);
-      if UI.IsVisible(UICollectBook) then 
+      if UI.IsVisible(UICollectBook) then
         this.UpdateRedDot();
-      end        
+      end
       return;
-    end 
+    end
   end
   RedDot.Remove(ERedDot.CollectCard);
-  if UI.IsVisible(UICollectBook) then 
+  if UI.IsVisible(UICollectBook) then
     this.UpdateRedDot();
-  end        
+  end
 end
 
 function UICollectBook.CheckCardSortRedDot()
-  if CollectCard.GetSortRedDotCount() > 0 then 
+  if CollectCard.GetSortRedDotCount() > 0 then
     RedDot.Add(ERedDot.CollectCardSort);
   else
     RedDot.Remove(ERedDot.CollectCardSort);
   end
-
-  if UI.IsVisible(UICollectBook) then 
+  
+  if UI.IsVisible(UICollectBook) then
     this.UpdateRedDot();
-  end 
+  end
+end
+
+function UICollectBook.CheckNFTCardRedDot()
+  if CollectCard.GetNFTRedDotCount() <= 0 then
+    RedDot.Remove(ERedDot.NFTCollectCard);
+  end
+  
+  if UI.IsVisible(UICollectBook) then
+    this.UpdateRedDot();
+  end
+  
+  this.CalShineValue();
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+end
+
+function UICollectBook.CheckNFTMountsRedDot()
+  if Mounts.GetNFTMountRedDotCount() <= 0 then
+    RedDot.Remove(ERedDot.NFTCollectMount);
+  end
+  
+  if UI.IsVisible(UICollectBook) then
+    this.UpdateRedDot();
+  end
+  
+  this.CalShineValue();
+end
+
+function UICollectBook.OnGetNFT(itemId)
+  for k, v in pairs(collectNFTDatas) do
+    if itemId == v.getId then
+      if v.kind == 1 then
+        CollectCard.AddNFTCardRedDot(v.flag);
+      elseif v.kind == 2 then
+        Mounts.AddNFTMountRedDot(v.flag);
+      end
+      break;
+    end
+  end
+end
+
+function UICollectBook.OnLosNFT(itemId)
+  for k, v in pairs(collectNFTDatas) do
+    if itemId == v.getId then
+      if v.kind == 1 then
+        CollectCard.DeleteNFTRedDot(v.flag);
+        this.CheckNFTCardRedDot();
+      elseif v.kind == 2 then
+        Mounts.DeleteNFTMountRedDot(v.flag);
+        this.CheckNFTMountsRedDot();
+      end
+      break;
+    end
+  end
+end
+
+function UICollectBook.CheckTitleRedDot()
+  gameObject_TitleRedDot:SetActive(
+    RedDot.Check(ERedDot.CollectWarrior) or
+    RedDot.Check(ERedDot.CollectStyle) or
+    RedDot.Check(ERedDot.CollectCard) or
+    RedDot.Check(ERedDot.CollectCardSort));
+  
+  gameObject_TitleNFTRedDot:SetActive(
+    RedDot.Check(ERedDot.NFTCollectWarrior) or
+    RedDot.Check(ERedDot.NFTCollectStyle) or
+    RedDot.Check(ERedDot.NFTCollectCard) or
+    RedDot.Check(ERedDot.NFTCollectMount) or
+    RedDot.Check(ERedDot.NFTCollectShineValue));
 end
 
 function UICollectBook.SetRedDot(tag, active)
-  tagObjects[tag].redDot:SetActive(active);
+  if currentTitle == EUICollectTitleTag.normal then
+    tagObjects[tag].redDot:SetActive(active);
+  else
+    tagNftObjects[tag].redDot:SetActive(active);
+  end
+  UICollectBook.CheckTitleRedDot();
 end
 
 function UICollectBook.UpdateRedDot()
-  this.SetRedDot(EUICollectTag.Warrior, RedDot.Check(ERedDot.CollectWarrior));
-  this.SetRedDot(EUICollectTag.Style, RedDot.Check(ERedDot.CollectStyle));
-  this.SetRedDot(EUICollectTag.Card, RedDot.Check(ERedDot.CollectCard));
-  this.SetRedDot(EUICollectTag.CardView, RedDot.Check(ERedDot.CollectCardSort));
+  if currentTitle == EUICollectTitleTag.normal then
+    this.SetRedDot(EUICollectTag.Warrior, RedDot.Check(ERedDot.CollectWarrior));
+    this.SetRedDot(EUICollectTag.Style, RedDot.Check(ERedDot.CollectStyle));
+    this.SetRedDot(EUICollectTag.Card, RedDot.Check(ERedDot.CollectCard));
+    this.SetRedDot(EUICollectTag.CardView, RedDot.Check(ERedDot.CollectCardSort));
+  else
+    this.SetRedDot(EUICollectNFTTag.Warrior, RedDot.Check(ERedDot.NFTCollectWarrior));
+    this.SetRedDot(EUICollectNFTTag.Style, RedDot.Check(ERedDot.NFTCollectStyle));
+    this.SetRedDot(EUICollectNFTTag.CardView, RedDot.Check(ERedDot.NFTCollectCard));
+    this.SetRedDot(EUICollectNFTTag.Mounts, RedDot.Check(ERedDot.NFTCollectMount));
+    this.SetRedDot(EUICollectNFTTag.ShineValue, RedDot.Check(ERedDot.NFTCollectShineValue));
+  end
 end

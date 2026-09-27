@@ -4,8 +4,8 @@ local this = UIUseContract;
 this.name = "UIUseContract";
 this.uiController = nil;
 
-this.ContractName = "Contract";
-this.PrivacyName = "Privacy";
+this.ContractName = "Contract20251209";
+this.PrivacyName = "Privacy20251209";
 
 local scroll_ContentRect;
 
@@ -37,6 +37,11 @@ function UIUseContract.Initialize(go)
 
   tempEvent = uiController:FindEvent("Toggle_Agree");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_Check);
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function UIUseContract.OnOpen()
@@ -47,7 +52,11 @@ function UIUseContract.OnOpen()
 
   if CGResourceManager.ReadText(UIUseContract.ContractName) == "" then
     text_Title.text = string.Get(20867);
-    text_Content.text = string.Get(20726);
+    if LuaHelper.CheckDefine("NFT") then
+      text_Content.text = string.Get(23896);
+    else
+      text_Content.text = string.Get(20726);
+    end
   elseif CGResourceManager.ReadText(UIUseContract.PrivacyName) == "" then
     text_Title.text = string.Get(20868);
     text_Content.text = string.Get(20727);
@@ -59,6 +68,16 @@ function UIUseContract.OnOpen()
 end
 
 function UIUseContract.OnClick_Agree()
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
   if not checkMark then return end
 
   if CGResourceManager.ReadText(UIUseContract.ContractName) == "" then
@@ -87,6 +106,16 @@ function UIUseContract.ReOpenListener()
 end
 
 function UIUseContract.OnClick_Check()
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
   checkMark = not checkMark;
 
   image_Agree.gameObject:SetActive(checkMark);

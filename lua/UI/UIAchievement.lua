@@ -33,6 +33,15 @@ function UIAchievement.Initialize(go)
   scrollContent_Achievement.onInitialize = this.OnInitialize_ScrollContent_Achievement;
   scrollContent_Achievement.onItemChange = this.OnItemChange_ScrollContent_Achievement;
   scrollContent_Achievement:Initialize(1);
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
 
   --tag
   local mainPageCount = Achievement.GetMainPageCount();
@@ -50,6 +59,25 @@ function UIAchievement.Initialize(go)
 end
 
 function UIAchievement.OnInitialize_ScrollContent_Achievement(scrollItems)
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  
   for itemIndex = 0, scrollItems.Length - 1 do
     scrollItems_Achievement[itemIndex] = {};
     scrollItems_Achievement[itemIndex].scoreBG = scrollItems[itemIndex]:Find("Image_ScoreBG"):GetComponent("Image");
@@ -105,7 +133,7 @@ function UIAchievement.OnItemChange_ScrollContent_Achievement(dataIndex, itemInd
   else --進行中
     scrollItems_Achievement[itemIndex].scoreBG.sprite = UI.GetSprite("icon036");
     scrollItems_Achievement[itemIndex].status.text = string.Get(21060);
-    scrollItems_Achievement[itemIndex].status.color = Color.LightGreen;
+    scrollItems_Achievement[itemIndex].status.color = Color.DarkGreen;
   end
 
   itemData = itemDatas[achievementData.itemId];
@@ -128,7 +156,17 @@ end
 
 function UIAchievement.OnOpen()
   Achievement.InitTotalScore();
-
+  
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  
   currentMainPage = 1;
   currentSubPage = 1;
 
@@ -151,6 +189,15 @@ function UIAchievement.OnVisible(visible)
 end
 
 function UIAchievement.UpdateTotoalScoreText()
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
   text_TotoalScore.text = Achievement.GetTotalScore();
 end
 
@@ -174,6 +221,51 @@ function UIAchievement.UpdateRedot(mainPageIndex, subPageIndex)
 end
 
 function UIAchievement.OnClick_Close()
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
   UI.Close(this);
 
   return true;
@@ -195,6 +287,15 @@ function UIAchievement.OnClick_Tag(mainTag, subTag)
 end
 
 function UIAchievement.OnClick_Item(uiEvent)
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
   local achievementData = Achievement.GetShowAchievementData(uiEvent.parameter);
 
   if not achievementData:HaveGetFlag() and achievementData:HaveCompeleteFlag()then

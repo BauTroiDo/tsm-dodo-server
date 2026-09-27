@@ -1,6 +1,24 @@
 StoreValueData = {};
 StoreValueData.__index = StoreValueData;
 
+function StoreValueData.GetLShift(bitlshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoThrArea = 0;
+    bit.lshift(DemoThrArea, bitlshift)
+    
+    return DemoThrArea
+  end
+end
+
+function StoreValueData.GetLShift1(bitlshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoThrArea = 0;
+    bit.lshift(DemoThrArea, bitlshift)
+    
+    return DemoThrArea
+  end
+end
+
 function StoreValueData.New(reader)
   local self = {};
   setmetatable(self, StoreValueData);
@@ -19,4 +37,13 @@ function StoreValueData.New(reader)
   self.bonusTarget = reader:ReadByte();  --分紅對象
 
   return  kind, self;
+end
+
+function StoreValueData.GetLShift2(bitlshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoThrArea = 0;
+    bit.lshift(DemoThrArea, bitlshift)
+    
+    return DemoThrArea
+  end
 end

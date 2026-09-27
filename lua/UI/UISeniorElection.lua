@@ -131,9 +131,28 @@ function UISeniorElection.InitializePageList(uiController)
   event_ShowRank1:SetListener(EventTriggerType.PointerClick, this.OnClick_Rank);
   event_Search = uiController:FindEvent("Image_Search");
   event_Search:SetListener(EventTriggerType.PointerClick, this.OnClick_UpdateFilter);
+  
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
 end
 
 function UISeniorElection.OnOpen(electionKindId)
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
   this.SetElectionKind(electionKindId);
   if nowElectionKind == EElectionActivityID.SISTER then
     this.ChangeUIForSisterElection();
@@ -163,10 +182,29 @@ function UISeniorElection.OnClose()
     scrollItems_Candidate.serverName[i].text = "";
     scrollItems_Candidate.loading[i].text = string.format(string.Get(22052), string.Get(20910));
   end
+  
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
   return true;
 end
 
 function UISeniorElection.OnClick_Close()
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
   UI.Close(this);
   return true;
 end
@@ -204,6 +242,16 @@ function UISeniorElection.ChangeUIForSisterElection()
   -- 修改投票文字
   text_MyVotes.text = string.format(string.Get(22341), 0);
   text_Vote1.text = string.Get(22376);
+  
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
 end
 
 function UISeniorElection.ChangeUIForSportsElection()
@@ -278,6 +326,12 @@ end
 
 --[[
   創建可設定時、分、秒、毫秒的DateTime物件，日期則預設為今日
+    --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
 ]]
 function UISeniorElection.CreateDateTimeBelowHour(hour, minute, seconds, milliseconds)
   return DateTime.New(CGTimer.serverTime.Year, CGTimer.serverTime.Month, CGTimer.serverTime.Day, hour, minute, seconds, milliseconds);
@@ -285,6 +339,12 @@ end
 
 --[[
   計算開放日
+    --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
 ]]
 function UISeniorElection.intTobit(num)
 	local result = {0,0,0,0,0,0,0};
@@ -353,6 +413,15 @@ function UISeniorElection.Shuffle(tbl)
   return tbl;
 end
 
+--[[
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+--]]
+
 function UISeniorElection.DownloadDataFromFTP(dataDirectory)
   -- 取得學姊人數
   local candidateAmount = CGResourceManager.DownloadText(string.Concat(dataDirectory, "CandidateAmount.txt"), false);
@@ -418,6 +487,12 @@ end
 
 --[[
   切換學姊清單，下一頁
+    --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
 ]]
 function UISeniorElection.OnClick_NextPage()
   if this.UpdatePageUI(filterCandidateList, (nowPage + 1)) then
@@ -438,6 +513,11 @@ end
   顯示當前頁的學姊清單
 ]]
 function UISeniorElection.UpdatePageUI(candidates, currentPage)
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   -- 計算總人數/8等於頁數
   local totalPages, remainder = math.modf(#candidates / ONEPAGEITEM);
   -- 若餘數大於0，代表總頁數要+1，存放剩餘的資料
@@ -499,6 +579,11 @@ local downloadTask = {};
 local taskIndex = 0;
 
 function UISeniorElection.StartNewDownloadPic(url, rawImage, callback)
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   taskIndex = taskIndex + 1;
   table.insert(downloadTask, {
     rawImage = rawImage,
@@ -540,6 +625,11 @@ end
 
 --[[
   顯示學姊的詳細資料
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
 ]]
 function UISeniorElection.ShowCandidateDetail(uiEvent)
   local clickIndex = uiEvent.parameter;
@@ -634,6 +724,11 @@ end
 
 function UISeniorElection.OnClick_Vote2()
   this.SendVote(2);
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function UISeniorElection.SendVote(btnIndex)
@@ -683,6 +778,11 @@ end
 
 --[[
   更新"已幫她投票XXX次"的投票數
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
 ]]
 function UISeniorElection.UpdateVotesNumber(data)
   if nowElectionKind == EElectionActivityID.SISTER then
@@ -701,6 +801,11 @@ end
 
 --[[
   顯示扣除學姊小卡的畫面，由Server端回傳玩家能使用的學姊小卡類型
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
 ]]
 function UISeniorElection.ShowUseTicketAlert(useTicketID)
   local itemCount = Item.GetItemCount(useTicketID);

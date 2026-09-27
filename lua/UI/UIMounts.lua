@@ -93,6 +93,39 @@ function UIMounts.Initialize(go)
   gameObject_Equip = uiController:FindGameObject("Equip");
   gameObject_Collection = uiController:FindGameObject("Collection");
   gameObject_LevelRequire = uiController:FindGameObject("LevelRequire");
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 
   --Common
   text_Level = uiController:FindText("Text_Level");
@@ -171,6 +204,39 @@ function UIMounts.OnVisible(visible)
 end
 
 function UIMounts.OnClose()
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   attributeUping = false;
 
   if currentTag == EUIMountsTag.Equip then
@@ -297,6 +363,40 @@ function UIMounts.UpdateUI(refresh)
   
     text_LevelItem.text = "-- / --";
     text_LevelMoney.text = "--";
+  
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
 
     item_LevelItem:SetItem(0);
 
@@ -373,9 +473,9 @@ function UIMounts.UpdateUI(refresh)
               Item.SaveEquipMessage(itemSave.Id);
             end
             
-            --C:079-005 <座騎穿裝> +背包索引(1)
+            --C:079-005 <座騎穿裝> +背包索引(2)
             sendBuffer:Clear();
-            sendBuffer:WriteByte(bagIndex);
+            sendBuffer:WriteUInt16(bagIndex);
             Network.Send(79, 5, sendBuffer);
           end
         );
@@ -500,6 +600,39 @@ function UIMounts.OnClick_Close()
 end
 
 function UIMounts.OnClick_Help(checkShow)
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   if checkShow ~= true then
     UI.Open(UITutorialHint, 32, this);
   end
@@ -592,11 +725,44 @@ function UIMounts.OnClick_Equip(uiEvent)
         Item.SaveEquipMessage(itemSave.Id);
       end
       
-      --C:079-006 <座騎脫裝> +裝備部位(1) +背包索引(1)
+      --C:079-006 <座騎脫裝> +裝備部位(1) +背包索引(2)
       sendBuffer:Clear()
       sendBuffer:WriteByte(bagIndex);
-      sendBuffer:WriteByte(Item.ThingFindEmpty());
+      sendBuffer:WriteUInt16(Item.ThingFindEmpty());
       Network.Send(79, 6, sendBuffer);
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     end
   );
 end
@@ -623,9 +789,11 @@ function UIMounts.OnInitialize_ScrollContent_Collection(scrollItems)
     scrollItems_Collection[itemIndex] = {};
 
     scrollItems_Collection[itemIndex].text_Name = scrollItems[itemIndex]:Find("Text_Name"):GetComponent("Text");
+    scrollItems_Collection[itemIndex].text_NameOutline = scrollItems[itemIndex]:Find("Text_Name"):GetComponent("Outline8");
     scrollItems_Collection[itemIndex].text_Source = scrollItems[itemIndex]:Find("Text_Source"):GetComponent("Text");
     scrollItems_Collection[itemIndex].jmpDrawer_Mounts = scrollItems[itemIndex]:Find("RawImage_Mounts"):GetComponent("RawImage").gameObject:AddComponent(typeof(JmpDrawer));
-
+    scrollItems_Collection[itemIndex].bg = scrollItems[itemIndex]:GetComponent("Image");
+    
     scrollItems_Collection[itemIndex].event_Use = scrollItems[itemIndex]:Find("Image_Use"):GetComponent("UIEvent");
     scrollItems_Collection[itemIndex].event_Use:SetListener(EventTriggerType.PointerClick, this.OnClick_Switch);
   end
@@ -643,10 +811,19 @@ function UIMounts.OnItemChange_ScrollContent_Collection(dataIndex, itemIndex)
     scrollItems_Collection[itemIndex].jmpDrawer_Mounts.offsetY = -32 + offsetY;
 
     scrollItems_Collection[itemIndex].text_Name.text = npcData.name;
-
+    
+    if mountsData.source == 80350 then
+      scrollItems_Collection[itemIndex].text_Name.color = Color.White;
+      scrollItems_Collection[itemIndex].text_NameOutline.enabled = true;
+    else
+      scrollItems_Collection[itemIndex].text_Name.color = Color.Black;
+      scrollItems_Collection[itemIndex].text_NameOutline.enabled = false;
+    end
+    
     if Mounts.HaveCollection(npcId) then
       scrollItems_Collection[itemIndex].jmpDrawer_Mounts.color = Color.White;
-
+      scrollItems_Collection[itemIndex].bg.color = Color.MountCollect;
+      
       if Mounts.currentNpcId == npcId then
         scrollItems_Collection[itemIndex].text_Source.text = string.Get(99661);
 
@@ -660,7 +837,8 @@ function UIMounts.OnItemChange_ScrollContent_Collection(dataIndex, itemIndex)
       end
     else
       scrollItems_Collection[itemIndex].jmpDrawer_Mounts.color = Color.MountsGray;
-
+      scrollItems_Collection[itemIndex].bg.color = Color.MountNotCollect;
+      
       scrollItems_Collection[itemIndex].text_Source.text = string.Concat(string.Get(98019), string.Get(mountsData.source));
 
       scrollItems_Collection[itemIndex].event_Use.gameObject:SetActive(false);
@@ -670,6 +848,8 @@ function UIMounts.OnItemChange_ScrollContent_Collection(dataIndex, itemIndex)
     scrollItems_Collection[itemIndex].jmpDrawer_Mounts:Disable();
 
     scrollItems_Collection[itemIndex].text_Name.text = "";
+    scrollItems_Collection[itemIndex].text_Name.color = Color.Black;
+    scrollItems_Collection[itemIndex].text_NameOutline.enabled = false;
     scrollItems_Collection[itemIndex].text_Source.text = "";
 
     scrollItems_Collection[itemIndex].event_Use.gameObject:SetActive(false);

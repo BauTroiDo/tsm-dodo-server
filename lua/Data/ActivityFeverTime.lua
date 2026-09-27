@@ -30,8 +30,78 @@ function ActivityFeverTime.New(reader)
   return self;
 end
 
+function ActivityFeverTime.Demo()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
 function ActivityFeverTime:GetStartDate()
   return DateTime.New(self.startYear, self.startMonth, self.startDay, self.startHour, self.startMinute, 0);
+end
+
+function ActivityFeverTime.Demo1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function ActivityFeverTime.Demo2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function ActivityFeverTime.Demo3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function ActivityFeverTime.Demo4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
 end
 
 function ActivityFeverTime:GetEndDate()
@@ -40,6 +110,34 @@ end
 
 function ActivityFeverTime:GetOpenDate()
   return DateTime.New(CGTimer.serverTime.Year, CGTimer.serverTime.Month, CGTimer.serverTime.Day, self.openHour, self.openMinute, 0);
+end
+
+function ActivityFeverTime.Demo5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function ActivityFeverTime.Demo6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
 end
 
 function ActivityFeverTime:GetCloseDate()
@@ -53,6 +151,48 @@ function ActivityFeverTime:IsActive()
   local onWeekDay = (bit.band(today,self.openDay)) == today;
   local onOpen = System.DateTime.Compare( CGTimer.serverTime, self:GetOpenDate() ) >= 0 and System.DateTime.Compare( CGTimer.serverTime, self:GetCloseDate() ) < 0;
   return switchOn and onWeekDay and onOpen;
+end
+
+function ActivityFeverTime.Demo7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function ActivityFeverTime.Demo8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function ActivityFeverTime.Demo9()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
 end
 
 function ActivityFeverTime:GetDayOfWeek(weekday)
@@ -70,5 +210,47 @@ function ActivityFeverTime:GetDayOfWeek(weekday)
     return 32
   elseif weekday == "Sunday" then
     return 64
+  end
+end
+
+function ActivityFeverTime.Demo10()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function ActivityFeverTime.Demo11()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function ActivityFeverTime.Demo12()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
   end
 end

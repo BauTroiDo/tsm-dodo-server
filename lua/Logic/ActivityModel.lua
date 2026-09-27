@@ -110,10 +110,6 @@ local isShowIcon = false; --狂歡按鈕顯示
 local incomingActivityTime = math.huge;
 local isInitBingo = false;
 local secondPage = 2;
-local eResourceType = {
-  ActivityCoin = 1,
-  Item = 2,
-}
 
 function ActivityModel.GetData(data)
   local dataTemp = {};
@@ -161,6 +157,7 @@ function ActivityModel.GetData(data)
       DateTime.Compare(CGTimer.serverTime, dataTemp.startTime) >= 0 ) then
 
     dataTemp.isCurrentActivity = true;
+    dataTemp.isEnd = false;
     this.hasActiveActivity = true;
     RedDot.Add(ERedDot.ActivityModelHasAct);
   end
@@ -216,11 +213,9 @@ function ActivityModel.GetData(data)
       table.insert(dataTemp.missionsWithNoPage, mission);
     end
 
-    if this.PlayerAwardCount[mission.id] == nil then
-      this.PlayerAwardCount[mission.id] = {};
-      this.PlayerAwardCount[mission.id].complete = 0; --數量值
-      this.PlayerAwardCount[mission.id].get = 0;      --領取次數
-    end
+    this.PlayerAwardCount[mission.id] = {};
+    this.PlayerAwardCount[mission.id].complete = 0; --數量值
+    this.PlayerAwardCount[mission.id].get = 0;      --領取次數
     this.PlayerAwardCount[mission.id].mission = mission;
   end
 
@@ -245,15 +240,33 @@ function ActivityModel.SortMission(missionList)
   end
 
   if table.Count(first) > 1 then
-    table.sort(first, function(a, b) return a.order < b.order end)
+    table.sort(first, function(a, b)
+      if a.order == b.order then
+        return a.id < b.id
+      else
+        return a.order < b.order
+      end
+    end)
   end
 
   if table.Count(second) > 1 then
-    table.sort(second, function(a, b) return a.order < b.order end)
+    table.sort(second, function(a, b)
+      if a.order == b.order then
+        return a.id < b.id
+      else
+        return a.order < b.order
+      end
+    end)
   end
 
   if table.Count(third) > 1 then
-    table.sort(third, function(a, b) return a.order < b.order end)
+    table.sort(third, function(a, b)
+      if a.order == b.order then
+        return a.id < b.id
+      else
+        return a.order < b.order
+      end
+    end)
   end
 
   for _, v in pairs(first) do
@@ -379,41 +392,41 @@ function ActivityModel.CheckMissionStatus(mission)
   if not this.ActivityData[activityIdx].isCurrentActivity then return end
 
   if mission.type == EMissionType.Exchange then
-    local firstCostCheck = true;
-    local secondCostCheck = true;
+    local firstCheck = true;
+    local secondCheck = true;
 
     for i = 1, 2 do
-      if mission.itemCost[i].itemId ~= 0 then -- 消耗值類型的Item存在
-        if mission.itemCost[i].kind == eResourceType.ActivityCoin then
+      if mission.itemCost[i].itemId ~= 0 then
+        if mission.itemCost[i].kind == 1 then
           if this.ActivityCoin[mission.itemCost[i].itemId].quant < mission.itemCost[i].quant then
             if i == 1 then
-              firstCostCheck = false;
+              firstCheck = false;
             else
-              secondCostCheck = false;
+              secondCheck = false;
             end
           end
-        elseif mission.itemCost[i].kind == eResourceType.Item then
+        elseif mission.itemCost[i].kind == 2 then
           local haveQuant = Item.GetItemCount(mission.itemCost[i].itemId);
 
           if haveQuant < mission.itemCost[i].quant then
             if i == 1 then
-              firstCostCheck = false;
+              firstCheck = false;
             else
-              secondCostCheck = false;
+              secondCheck = false;
             end
           end
         end
-      else --消耗值類型的Item不存在
+      else
         if i == 1 then
-          firstCostCheck = false;
+          firstCheck = false;
         else
-          secondCostCheck = true;
+          secondCheck = true;
         end
       end
     end
 
     if mission.getLimit == 0 or this.PlayerAwardCount[mission.id].get < mission.getLimit then
-      if secondCostCheck and firstCostCheck then
+      if secondCheck and firstCheck then
         mission.status = ESortOrder.Available;
       else
         mission.status = ESortOrder.Processing;
@@ -423,7 +436,7 @@ function ActivityModel.CheckMissionStatus(mission)
     end
 
   elseif mission.type == EMissionType.Complete then
-    local completeCheck = false;
+    local check = false;
     local getCount = 0;
 
     if mission.getLimit > 1 then
@@ -433,15 +446,15 @@ function ActivityModel.CheckMissionStatus(mission)
     end
 
     if mission.conditionId == EMissionConditionType.SpecifiedDateLogin then
-      completeCheck = this.PlayerAwardCount[mission.id].complete > 0;
-    elseif (mission.conditionId >= EMissionConditionType.Recharge90 and mission.conditionId <= EMissionConditionType.Recharge2990) or (mission.getLimit <= 1) then
-      completeCheck = this.GetResult(mission.conditionCount * getCount, mission.operator, this.PlayerAwardCount[mission.id].complete);
+      check = this.PlayerAwardCount[mission.id].complete > 0;
+	elseif (mission.conditionId >= EMissionConditionType.Recharge90 and mission.conditionId <= EMissionConditionType.Recharge2990) or (mission.getLimit <= 1) then
+      check = this.GetResult(mission.conditionCount * getCount, mission.operator, this.PlayerAwardCount[mission.id].complete);
     elseif mission.getLimit > 1 then
       getCount = getCount + 1;
-      completeCheck = this.GetResult(mission.conditionCount * getCount, mission.operator, this.PlayerAwardCount[mission.id].complete);
+      check = this.GetResult(mission.conditionCount * getCount, mission.operator, this.PlayerAwardCount[mission.id].complete);
     end
 
-    if completeCheck then
+    if check then
       if this.PlayerAwardCount[mission.id].get >= mission.getLimit then
         if mission.getLimit == 0 then
           mission.status = ESortOrder.Available;
@@ -600,7 +613,7 @@ function ActivityModel.GetMissionTitle(mission)
     end
   elseif mission.conditionId == EMissionConditionType.SpecifiedDateLogin then
     local temp = mission.conditionCount;
-    local _, _, month, day = string.find(temp, "(%d%d)(%d%d)$");
+    local month, day = string.match(temp, "(%d%d)(%d%d)$");
     result = string.format(string.Get(data.stringId), month, day);
 
   -- 任務標題字串增補點 (%s %d)
@@ -622,7 +635,7 @@ function ActivityModel.GetCompleteCount(mission)
     if ((mission.conditionId >= EMissionConditionType.WarriorGacha_M and mission.conditionId <= EMissionConditionType.PartyDungeonCount) and (mission.conditionId ~= EMissionConditionType.SpecifiedDateLogin)) or
       (mission.conditionId >= EMissionConditionType.ItemCraftCount and mission.conditionId <= EMissionConditionType.EquipAffixCount) or
       (mission.conditionId == EMissionConditionType.DispatchCount) or (mission.conditionId == EMissionConditionType.AccumulatedRecharge) or
-      (mission.conditionId >= EMissionConditionType.BingoFlippedCount and mission.conditionId <= EMissionConditionType.LeaderBoardSimpleCoins)
+      (mission.conditionId >= EMissionConditionType.BingoFlippedCount and mission.conditionId <= EMissionConditionType.LeaderBoardSimple)
       then
       return string.Concat(this.PlayerAwardCount[mission.id].complete, "/", mission.conditionCount);
     end
@@ -661,10 +674,6 @@ function ActivityModel.GetActivityStatusString(status)
 end
 
 function ActivityModel.SendGetAward(missionId, count)
-  if Role.player.war ~= EWar.None then
-    ShowCenterMessage(string.Get(80099)); --戰鬥中，無法使用。
-    return
-  end
   sendBuffer:Clear();
   sendBuffer:WriteUInt32(missionId);
   sendBuffer:WriteUInt32(count);
@@ -681,20 +690,18 @@ function ActivityModel.ReceiveResult(result)
   elseif result == 1 then
   elseif result == 2 then
   elseif result == 3 then
-    ShowCenterMessage(string.Get(22841)); --請稍後再點擊
+    ShowCenterMessage(string.Get(22841));
   elseif result == 4 then
   elseif result == 5 then
   elseif result == 6 then
-    ShowCenterMessage(string.Get(80359)); --背包已滿,可至錢莊放置物品或找商人出售多餘雜物
+    ShowCenterMessage(string.Get(80359));
   elseif result == 7 then
   elseif result == 8 then
-    ShowCenterMessage(string.format(string.Get(24934), this.ActivityData[this.openActivityId].coin[1].data.name)); --%s 不足！
+    ShowCenterMessage(string.Get(24591));
   elseif result == 9 then
-    ShowCenterMessage(string.Get(10143)); --請檢查背包物品是否足夠
-  elseif result == 10 then
-    ShowCenterMessage(string.Get(80099)); --戰鬥中無法使用
+    ShowCenterMessage(string.Get(10143));
   elseif result == 255 then
-    ShowCenterMessage(string.Get(24507)); --功能未開放
+    ShowCenterMessage(string.Get(24507));
   end
 
   if result ~= 0 then
@@ -813,7 +820,6 @@ function ActivityModel.CheckOnClickSpecialACtivity(parameter)
 end
 
 function ActivityModel.CheckCurrentSpecialActivity(SpecialActivity)
-  local result = false;
   local kind = this.ActivityData[this.openActivityId].kind
   if SpecialActivity == ESpecialActivity.Bingo then
     if kind == EBingoActKind.fiveSquareMultiBar or kind == EBingoActKind.fiveSquareSingleBar then return true end;
@@ -822,5 +828,5 @@ function ActivityModel.CheckCurrentSpecialActivity(SpecialActivity)
   elseif SpecialActivity == ESpecialActivity.LeaderBoard then
     if kind == LeaderboardSimpleData.ActivityKind then return true end;
   end
-  return result;
+  return false;
 end

@@ -22,6 +22,16 @@ function UITutorialHint.Initialize(go)
 
   local tempEvent = uiController:FindEvent("Image_Mask");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_Close);
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
 end
 
 function UITutorialHint.OnOpen(tutorialId, senderUI, title, content, callback)
@@ -48,6 +58,17 @@ function UITutorialHint.OnOpen(tutorialId, senderUI, title, content, callback)
 end
 
 function UITutorialHint.OnClose()
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  
   if closeFunction ~= nil then
     closeFunction();
     closeFunction = nil;
@@ -57,5 +78,16 @@ function UITutorialHint.OnClose()
 end
 
 function UITutorialHint.OnClick_Close()
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  
   UI.Close(UITutorialHint);
 end

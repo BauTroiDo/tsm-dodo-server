@@ -5,26 +5,28 @@ local this = UIHotkey;
 this.name = "UIHotkey";
 this.uiController = nil;
 
-local scrollContent_Hotkeys = {};
-local scrollItems_Hotkeys = {};
+local scrollContent_Skill;
+local scrollItems_Skill = {};
 
+local scrollContent_Item;
+local scrollItems_Item = {};
+local rectTransform_Root;
+local text_Name;
+local skillViewData = {};
+local itemViewData = {};
 local image_SkillOnClear;
 local image_ItemOnClear;
 
-local event_SkillEdit;
-local event_ItemEdit;
-
-local scrollRect_Main;
-local scrollRect_Sub;
+local scrollRect_Skill;
+local scrollRect_Item;
 
 local root_SkillTree;
 local root_ItemInfo;
-local root_Main;
-local root_Sub;
-local mask_Main;
-local mask_Sub;
+local root_Skill;
+local root_Item;
+local mask_Skill;
 local mask_Side;
-local sortingOrder;
+local mask_Item;
 
 function UIHotkey.Initialize(go)
   local uiController = go:GetComponent("UIController");
@@ -35,160 +37,363 @@ function UIHotkey.Initialize(go)
 
   image_SkillOnClear = uiController:FindImage("Image_SkillOnClear");
   image_ItemOnClear = uiController:FindImage("Image_ItemOnClear");
-  scrollRect_Main = uiController:FindGameObject("ScrollRect_Main"):GetComponent("RectTransform");
-  scrollRect_Sub = uiController:FindGameObject("ScrollRect_Sub"):GetComponent("RectTransform");
+  scrollRect_Skill = uiController:FindGameObject("ScrollRect_Skill"):GetComponent("RectTransform");
+  scrollRect_Item = uiController:FindGameObject("ScrollRect_Item"):GetComponent("RectTransform");
   root_SkillTree = uiController:FindGameObject("Root_SkillTree"):GetComponent("RectTransform");
   root_ItemInfo = uiController:FindGameObject("Root_ItemInfo"):GetComponent("RectTransform");
-  root_Main = uiController:FindGameObject("Root_Main"):GetComponent("RectTransform");
-  root_Sub = uiController:FindGameObject("Root_Sub"):GetComponent("RectTransform");
-  mask_Main = uiController:FindGameObject("Mask_Main");
-  mask_Sub = uiController:FindGameObject("Mask_Sub");
+  root_Skill = uiController:FindGameObject("Root_Skill"):GetComponent("RectTransform");
+  root_Item = uiController:FindGameObject("Root_Item"):GetComponent("RectTransform");
+  mask_Skill = uiController:FindGameObject("Mask_Skill");
   mask_Side = uiController:FindGameObject("Mask_Side");
+  mask_Item = uiController:FindGameObject("Mask_Item");
 
-  event_SkillEdit = uiController:FindEvent("Image_SkillOnClear");
-  event_SkillEdit:SetListener(EventTriggerType.PointerClick, this.OnClick_SwitchEditMode);
-  event_SkillEdit.parameter = EHotkeyUI.Main;
+  local event = uiController:FindEvent("Image_SkillOnClear");
+  event:SetListener(EventTriggerType.PointerClick, this.OnClickClear);
 
-  event_ItemEdit = uiController:FindEvent("Image_ItemOnClear");
-  event_ItemEdit:SetListener(EventTriggerType.PointerClick, this.OnClick_SwitchEditMode);
-  event_ItemEdit.parameter = EHotkeyUI.Sub;
+  event = uiController:FindEvent("Image_ItemOnClear");
+  event:SetListener(EventTriggerType.PointerClick, this.OnClickClear);
 
-  scrollContent_Hotkeys[EHotkeyUI.Main] = this.uiController:FindScrollContent("ScrollContent_Main");
-  scrollContent_Hotkeys[EHotkeyUI.Main].onInitialize = this.GetHotkeyInitializeFunction(EHotkeyUI.Main);
-  scrollContent_Hotkeys[EHotkeyUI.Main].onItemChange = this.GetHotkeyItemChangeFunction(EHotkeyUI.Main);
-  scrollContent_Hotkeys[EHotkeyUI.Main].onRootChange = this.GetHotkeyRootChangeFunction(EHotkeyUI.Main);
-  Hotkey.SetCurrentPage(EHotkeyUI.Main, 0);
-  scrollContent_Hotkeys[EHotkeyUI.Main]:Initialize(1);
-
-  scrollContent_Hotkeys[EHotkeyUI.Sub] = this.uiController:FindScrollContent("ScrollContent_Sub");
-  scrollContent_Hotkeys[EHotkeyUI.Sub].onInitialize = this.GetHotkeyInitializeFunction(EHotkeyUI.Sub);
-  scrollContent_Hotkeys[EHotkeyUI.Sub].onItemChange = this.GetHotkeyItemChangeFunction(EHotkeyUI.Sub);
-  scrollContent_Hotkeys[EHotkeyUI.Sub].onRootChange = this.GetHotkeyRootChangeFunction(EHotkeyUI.Sub);
-  Hotkey.SetCurrentPage(EHotkeyUI.Sub, 0);
-  scrollContent_Hotkeys[EHotkeyUI.Sub]:Initialize(1);
+  scrollContent_Skill = this.uiController:FindScrollContent("ScrollContent_Skill");
+  scrollContent_Skill.onInitialize = this.OnInitialize_ScrollContent_Skill;
+  scrollContent_Skill.onItemChange = this.OnItemChange_ScrollContent_Skill;
+  scrollContent_Skill.onRootChange = this.OnRootChange_ScrollContent_Skill;
+  scrollContent_Skill:Initialize(1);
+  
+  scrollContent_Item = this.uiController:FindScrollContent("ScrollContent_Item");
+  scrollContent_Item.onInitialize = this.OnInitialize_ScrollContent_Item;
+  scrollContent_Item.onItemChange = this.OnItemChange_ScrollContent_Item;
+  scrollContent_Item.onRootChange = this.OnRootChange_ScrollContent_Item;
+  scrollContent_Item:Initialize(1);
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
-function UIHotkey.GetHotkeyInitializeFunction(uiIndex)
-  local result = function(scrollItems, index)
-    if index == nil then
-      index = uiIndex;
-      scrollItems_Hotkeys[index] = {};
-      for itemIndex = 0, scrollItems.Length-1 do
-        local tempTransform = scrollItems[itemIndex]:Find(string.Concat("Image_Btn"));
-        scrollItems_Hotkeys[index][itemIndex] = {};
-        scrollItems_Hotkeys[index][itemIndex].btn = {};
-        scrollItems_Hotkeys[index][itemIndex].btn.image_Btn = tempTransform:GetComponent("Image");
-        scrollItems_Hotkeys[index][itemIndex].btn.text_Name = tempTransform:Find("Text_Name"):GetComponent("Text");
-        scrollItems_Hotkeys[index][itemIndex].btn.text_Lv = tempTransform:Find("Text_Lv"):GetComponent("Text");
-        scrollItems_Hotkeys[index][itemIndex].btn.rawimgae_Icon = tempTransform:Find("RawImage_Icon"):GetComponent("RawImage");
-        scrollItems_Hotkeys[index][itemIndex].btn.image_Select = tempTransform:Find("Image_Select"):GetComponent("Image");
-        scrollItems_Hotkeys[index][itemIndex].btn.event_Use = tempTransform:GetComponent("UIEvent");
-        scrollItems_Hotkeys[index][itemIndex].btn.event_Use:SetListener(EventTriggerType.PointerClick, this.OnClick_Hotkey);
-        scrollItems_Hotkeys[index][itemIndex].btn.event_Use.parameter = {};
-        scrollItems_Hotkeys[index][itemIndex].btn.event_Use.parameter.uiIndex = index;
+function UIHotkey.OnVisible(visible)
+  if visible then
+    Hotkey.UseClearMode(false);
+  end
+end
+
+function UIHotkey.OnInitialize_ScrollContent_Skill(scrollItems)
+  for itemIndex = 0, scrollItems.Length - 1 do
+    scrollItems_Skill[itemIndex] = {};
+    scrollItems_Skill[itemIndex].btns = {};
+
+    for i = 1, 5 do
+      local tempTransform = scrollItems[itemIndex]:Find(string.Concat("Image_Btn (", i, ")"));
+
+      scrollItems_Skill[itemIndex].btns[i] = {};
+      scrollItems_Skill[itemIndex].btns[i].text_Name = tempTransform:Find("Text_Name"):GetComponent("Text");
+      scrollItems_Skill[itemIndex].btns[i].text_Lv = tempTransform:Find("Text_Lv"):GetComponent("Text");
+      scrollItems_Skill[itemIndex].btns[i].rawimgae_Icon = tempTransform:Find("RawImage_Icon"):GetComponent("RawImage");
+      scrollItems_Skill[itemIndex].btns[i].image_Select = tempTransform:Find("Image_Select"):GetComponent("Image");
+      scrollItems_Skill[itemIndex].btns[i].event_Use = tempTransform:GetComponent("UIEvent");
+      local parameter = {};
+      parameter.pageIndex = itemIndex + 1;
+      parameter.btnIdx = i;
+      parameter.type = EHotKeyType.Skill;
+      parameter.id = -1;
+      scrollItems_Skill[itemIndex].btns[i].event_Use.parameter = parameter;
+      scrollItems_Skill[itemIndex].btns[i].event_Use:SetListener(EventTriggerType.PointerClick, this.OnClick_Btn);
+    end
+  end
+end
+
+function UIHotkey.OnItemChange_ScrollContent_Skill(dataIndex, itemIndex)
+  local id = -1;
+  local canBeSet = Hotkey.CanBeSet(currentSkillId, EHotKeyType.Skill);
+  
+  for i = 1, skillViewData.maxElements do
+    id = skillViewData.ids[itemIndex * skillViewData.maxElements + i];
+    -- 招換技能轉換
+    id = Hotkey.GetUseSummonSkill(id);
+
+    if skillDatas[id] ~= nil then
+      scrollItems_Skill[itemIndex].btns[i].rawimgae_Icon.enabled = true;
+      scrollItems_Skill[itemIndex].btns[i].text_Lv.text = Hotkey.GetLv(id);
+      scrollItems_Skill[itemIndex].btns[i].event_Use.parameter.id = id;
+      skillDatas[id]:SetIcon(scrollItems_Skill[itemIndex].btns[i].rawimgae_Icon);
+    else
+      scrollItems_Skill[itemIndex].btns[i].rawimgae_Icon.enabled = false;
+      scrollItems_Skill[itemIndex].btns[i].text_Lv.text = "";
+      scrollItems_Skill[itemIndex].btns[i].event_Use.parameter.id = -1;
+    end
+    
+    scrollItems_Skill[itemIndex].btns[i].image_Select.enabled = canBeSet;
+
+    if canBeSet then
+      if Hotkey.isClearMode then
+        scrollItems_Skill[itemIndex].btns[i].image_Select.sprite = UI.GetSprite("bod109");
+      else
+        scrollItems_Skill[itemIndex].btns[i].image_Select.sprite = UI.GetSprite("bod025");
       end
     end
-    return true;
+    
+    if Hotkey.GetLv(id) > 0 then
+      if Hotkey.currentDisplayMode == EHotkeyDisplayMode.SingleSkill then
+        if not Hotkey.CheckSkillElement(id, true) then 
+          LuaHelper.SetColor(scrollItems_Skill[itemIndex].btns[i].rawimgae_Icon, Color.Gray);
+        else
+          LuaHelper.SetColor(scrollItems_Skill[itemIndex].btns[i].rawimgae_Icon, Color.White);
+        end
+      elseif Hotkey.currentDisplayMode == EHotkeyDisplayMode.Both then
+        if not Hotkey.CheckSkillElement(id) then 
+          LuaHelper.SetColor(scrollItems_Skill[itemIndex].btns[i].rawimgae_Icon, Color.Gray);
+        elseif Hotkey.CheckCanUseSkill(id) then
+          LuaHelper.SetColor(scrollItems_Skill[itemIndex].btns[i].rawimgae_Icon, Color.White);
+        else
+          LuaHelper.SetColor(scrollItems_Skill[itemIndex].btns[i].rawimgae_Icon, Color.Gray);
+        end
+      else
+        LuaHelper.SetColor(scrollItems_Skill[itemIndex].btns[i].rawimgae_Icon, Color.White);
+      end
+    else
+      LuaHelper.SetColor(scrollItems_Skill[itemIndex].btns[i].rawimgae_Icon, Color.Gray);
+    end
   end
-  return result;
+
+  return true;
 end
 
-function UIHotkey.GetHotkeyItemChangeFunction(uiIndex)
-  local result = function(dataIndex, itemIndex, index)
-    if index == nil then
-      index = uiIndex;
+function UIHotkey.OnRootChange_ScrollContent_Skill(dataIndex)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
     end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  Hotkey.SetPage(EHotKeyType.Skill, dataIndex);
+end
 
-    local hotkeyIndex = dataIndex + 1;
-    scrollItems_Hotkeys[index][itemIndex].btn.event_Use.parameter.keyId = hotkeyIndex;
+function UIHotkey.OnRootChange_ScrollContent_Item(dataIndex)
+  Hotkey.SetPage(EHotKeyType.Item, dataIndex);
+end
 
-    if Hotkey.GetHotkeyUseType(index, hotkeyIndex) == EHotKeyIdType.Equip and Hotkey.IsHotkeyIdDataEmpty(index, hotkeyIndex) then
-      Hotkey.SetEquipIcon(hotkeyIndex, scrollItems_Hotkeys[index][itemIndex].btn.image_Btn);
-    else
-      scrollItems_Hotkeys[index][itemIndex].btn.image_Btn.sprite = UI.GetSprite("bod023");
+function UIHotkey.OnInitialize_ScrollContent_Item(scrollItems)
+  for itemIndex = 0, scrollItems.Length - 1 do
+    scrollItems_Item[itemIndex] = {};
+    scrollItems_Item[itemIndex].btns = {};
+
+    for i = 1, 3 do
+
+      local tempTransform = scrollItems[itemIndex]:Find(string.Concat("Image_Btn (", i, ")"));
+
+      scrollItems_Item[itemIndex].btns[i] = {};
+      scrollItems_Item[itemIndex].btns[i].text_Name = tempTransform:Find("Text_Name"):GetComponent("Text");
+      scrollItems_Item[itemIndex].btns[i].text_Lv = tempTransform:Find("Text_Lv"):GetComponent("Text");
+      scrollItems_Item[itemIndex].btns[i].rawimgae_Icon = tempTransform:Find("RawImage_Icon"):GetComponent("RawImage");
+      scrollItems_Item[itemIndex].btns[i].image_Select = tempTransform:Find("Image_Select"):GetComponent("Image");
+      scrollItems_Item[itemIndex].btns[i].event_Use = tempTransform:GetComponent("UIEvent");
+      scrollItems_Item[itemIndex].btns[i].event_Use:SetListener(EventTriggerType.PointerClick, this.OnClick_Btn);
+      local parameter = {};
+      parameter.pageIndex = itemIndex + 1;
+      parameter.btnIdx = i;
+      parameter.type = EHotKeyType.Item;
+      parameter.id = -1;
+      scrollItems_Item[itemIndex].btns[i].event_Use.parameter = parameter;
     end
+  end
+end 
 
-    if Hotkey.IsHotkeyIdDataEmpty(index, hotkeyIndex) then
-      scrollItems_Hotkeys[index][itemIndex].btn.rawimgae_Icon.enabled = false;
-      scrollItems_Hotkeys[index][itemIndex].btn.text_Lv.text = "";
-    else
-      scrollItems_Hotkeys[index][itemIndex].btn.rawimgae_Icon.enabled = true;
-      scrollItems_Hotkeys[index][itemIndex].btn.text_Lv.text = Hotkey.GetNumberText(index, hotkeyIndex);
-      Hotkey.SetIcon(index, hotkeyIndex, scrollItems_Hotkeys[index][itemIndex].btn.rawimgae_Icon);
-      LuaHelper.SetColor(scrollItems_Hotkeys[index][itemIndex].btn.rawimgae_Icon, Hotkey.GetColor(index, hotkeyIndex));
-    end
+function UIHotkey.OnItemChange_ScrollContent_Item(dataIndex, itemIndex)
+  local id = -1;
+  local canBeSet = Hotkey.CanBeSet(currentItemId, EHotKeyType.Item);
 
-    local editFlag = Hotkey.CheckEditPermission(index);
-    scrollItems_Hotkeys[index][itemIndex].btn.image_Select.enabled = editFlag;
-    if editFlag then
-      if Hotkey.GetEditMode() == EHotkeyEditMode.Clear then
-        scrollItems_Hotkeys[index][itemIndex].btn.image_Select.sprite = UI.GetSprite("bod109");
-      elseif Hotkey.GetEditMode() == EHotkeyEditMode.Setting then
-        scrollItems_Hotkeys[index][itemIndex].btn.image_Select.sprite = UI.GetSprite("bod025");
+  for i = 1, 3 do
+    id = itemViewData.ids[itemIndex * itemViewData.maxElements + i];
+    scrollItems_Item[itemIndex].btns[i].image_Select.enabled = canBeSet;
+
+    if canBeSet then
+      if Hotkey.isClearMode then
+        scrollItems_Item[itemIndex].btns[i].image_Select.sprite = UI.GetSprite("bod109");
+      else
+        scrollItems_Item[itemIndex].btns[i].image_Select.sprite = UI.GetSprite("bod025");
       end
     end
 
-    return true
-  end
-  return result
-end
-
-function UIHotkey.GetHotkeyRootChangeFunction(uiIndex)
-  local result = function(dataIndex, index)
-    if index == nil then
-      index = uiIndex;
-      Hotkey.SetCurrentPage(index, dataIndex);
+    if id == nil or id <= 0 then
+      scrollItems_Item[itemIndex].btns[i].rawimgae_Icon.texture = nil;
+      scrollItems_Item[itemIndex].btns[i].rawimgae_Icon.enabled = false;
+      scrollItems_Item[itemIndex].btns[i].text_Lv.text = "";
+    else
+      scrollItems_Item[itemIndex].btns[i].rawimgae_Icon.enabled = true;
+      itemDatas[id]:SetIcon(scrollItems_Item[itemIndex].btns[i].rawimgae_Icon);
+      scrollItems_Item[itemIndex].btns[i].text_Lv.text = Item.GetItemCount(id);
+      scrollItems_Item[itemIndex].btns[i].event_Use.parameter.id = id;
+      
+      if Item.GetItemCount(id) > 0 or Hotkey.currentDisplayMode == EHotkeyDisplayMode.SingleItem then
+        LuaHelper.SetColor(scrollItems_Item[itemIndex].btns[i].rawimgae_Icon, Color.White);
+      else
+        LuaHelper.SetColor(scrollItems_Item[itemIndex].btns[i].rawimgae_Icon, Color.Gray);
+      end
     end
   end
-  return result
+
+  return true;
 end
 
 function UIHotkey.OnEnable(enabled)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   this.uiController.canvas.enabled = enabled;
 end
 
-function UIHotkey.OnOpen()
-  this.SetSortOrder();
+function UIHotkey.OnOpen(defaultId, sortOrderIndex)
+
+  this.SetSortOrder(sortOrderIndex);
+  currentSkillId = -1;
+  currentItemId = -1;
+  Hotkey.UseClearMode(false);
+
+  if Hotkey.currentDisplayMode == EHotkeyDisplayMode.SingleSkill then
+    currentSkillId = tonumber(defaultId);
+  elseif Hotkey.currentDisplayMode == EHotkeyDisplayMode.SingleItem then
+    currentItemId = tonumber(defaultId);
+  end
+
   this.uiController.canvas.enabled = true;
   this.UpdateUI(true);
   return true;
 end
 
-function UIHotkey.UpdateUI(reset)
-  if sortingOrder ~= nil then
-    this.uiController.canvas.sortingOrder = sortingOrder;
+function UIHotkey.SelectedItem(id, hotKeyType)
+  if hotKeyType == EHotKeyType.Skill then 
+    currentSkillId = id;
+  else
+    currentItemId = id;
+    currentBagIndex = bagIndex;
   end
   
-  if Hotkey.currentDisplayMode == EHotkeyDisplayMode.Both then
-    scrollRect_Main:SetParent(root_Main);
-    scrollRect_Sub:SetParent(root_Sub);
+  scrollContent_Skill:Refresh(skillViewData.maxPages);
+  scrollContent_Item:Refresh(itemViewData.maxPages);
+end
+
+function UIHotkey.OnClick_Btn(uiEvent)
+  local parameter = uiEvent.parameter;
+  if Hotkey.currentDisplayMode == EHotkeyDisplayMode.SingleSkill then
+    currentSkillId = UISkillTree.GetCurrentClick();
+    Hotkey.OnSettingHotkey(parameter.pageIndex, parameter.btnIdx, currentSkillId, parameter.type);
   elseif Hotkey.currentDisplayMode == EHotkeyDisplayMode.SingleItem then
-    scrollRect_Sub:SetParent(root_ItemInfo);
-  elseif Hotkey.currentDisplayMode == EHotkeyDisplayMode.SingleSkill then
-    scrollRect_Main:SetParent(root_SkillTree);
+    Hotkey.OnSettingHotkey(parameter.pageIndex, parameter.btnIdx, currentItemId, parameter.type);
+  elseif Hotkey.currentDisplayMode == EHotkeyDisplayMode.Both then
+    Hotkey.OnUseHotKey(parameter.id, parameter.type);
+  end
+end
+
+function UIHotkey.IsCurrentRole(role)
+  return this.currentRole == role;
+end
+
+function UIHotkey.SetBtn(pageIndex, btnIndex, id, hotKeyType)
+  if hotKeyType == EHotKeyType.Skill then
+    skillViewData.ids[pageIndex * skillViewData.maxElements + btnIndex] = id;
+    scrollContent_Skill:Refresh(skillViewData.maxPages);
+  elseif hotKeyType == EHotKeyType.Item then
+    itemViewData.ids[pageIndex * itemViewData.maxElements + btnIndex] = id;
+    scrollContent_Item:Refresh(itemViewData.maxPages);
   end
 
-  this.UpdatePos();
-  this.UpdateHotkey(EHotkeyUI.Main, reset);
-  this.UpdateHotkey(EHotkeyUI.Sub, reset);
-  this.UpdateEditMode(EHotkeyUI.Main);
-  this.UpdateEditMode(EHotkeyUI.Sub);
+  if UI.IsVisible(UIMachineBox) then
+    UIMachineBox.UpdateFight();
+  end
 end
 
 function UIHotkey.SetSortOrder(sortOrder)
   if sortOrder ~= nil then
-    sortingOrder = sortOrder + 1;
+    this.uiController.canvas.sortingOrder = sortOrder + 1;
   end
 end
 
-function UIHotkey.UpdateHotkey(uiIndex, reset)
-  if Hotkey.GetDisplayFlag(uiIndex) then
-    local mainCount = Hotkey.GetCurrentKeyCount(uiIndex);
-    if reset then
-      scrollContent_Hotkeys[uiIndex]:Reset(mainCount, Hotkey.GetCurrentPage(uiIndex));
+function UIHotkey.UpdateUI(reset, sortOrder)
+  if sortOrder ~= nil then
+    this.SetSortOrder(sortOrder);
+  end
+  
+  if Hotkey.currentDisplayMode == EHotkeyDisplayMode.Both then
+    scrollRect_Skill:SetParent(root_Skill);
+    scrollRect_Item:SetParent(root_Item);
+
+  elseif Hotkey.currentDisplayMode == EHotkeyDisplayMode.SingleItem then
+    scrollRect_Item:SetParent(root_ItemInfo);
+    if Hotkey.isClearMode then
+      image_ItemOnClear.sprite = UI.GetSprite("but168L");
     else
-      scrollContent_Hotkeys[uiIndex]:Refresh(mainCount);
+      image_ItemOnClear.sprite = UI.GetSprite("but168D");
     end
+    
+  elseif Hotkey.currentDisplayMode == EHotkeyDisplayMode.SingleSkill then
+    scrollRect_Skill:SetParent(root_SkillTree);
+    if Hotkey.isClearMode then
+      image_SkillOnClear.sprite = UI.GetSprite("but168L");
+    else
+      image_SkillOnClear.sprite = UI.GetSprite("but168D");
+    end
+  end
+
+  this.UpdatePos();
+
+  skillViewData = Hotkey.GetViewData(EHotKeyType.Skill);
+  itemViewData = Hotkey.GetViewData(EHotKeyType.Item);
+
+  if reset then
+    scrollContent_Skill:Reset(skillViewData.maxPages, Hotkey.GetPage(EHotKeyType.Skill));
+    scrollContent_Item:Reset(itemViewData.maxPages, Hotkey.GetPage(EHotKeyType.Item));
+  else
+    scrollContent_Skill:Refresh(skillViewData.maxPages);
+    scrollContent_Item:Refresh(itemViewData.maxPages);
   end
 end
 
@@ -197,47 +402,43 @@ function UIHotkey.UpdatePos()
   image_ItemOnClear.gameObject:SetActive(Hotkey.currentDisplayMode == EHotkeyDisplayMode.SingleItem and Hotkey.IsPlayer());
   root_SkillTree.gameObject:SetActive(Hotkey.currentDisplayMode == EHotkeyDisplayMode.SingleSkill);
   root_ItemInfo.gameObject:SetActive(Hotkey.currentDisplayMode == EHotkeyDisplayMode.SingleItem);
-  root_Main.gameObject:SetActive(Hotkey.currentDisplayMode == EHotkeyDisplayMode.Both);
-  root_Sub.gameObject:SetActive(Hotkey.currentDisplayMode == EHotkeyDisplayMode.Both);
-  mask_Main:SetActive(Hotkey.currentDisplayMode == EHotkeyDisplayMode.Both);
+  root_Skill.gameObject:SetActive(Hotkey.currentDisplayMode == EHotkeyDisplayMode.Both);
+  root_Item.gameObject:SetActive(Hotkey.currentDisplayMode == EHotkeyDisplayMode.Both);
+  mask_Skill:SetActive(Hotkey.currentDisplayMode == EHotkeyDisplayMode.Both);
   mask_Side:SetActive(Hotkey.currentDisplayMode == EHotkeyDisplayMode.Both);
-  mask_Sub:SetActive(Hotkey.currentDisplayMode == EHotkeyDisplayMode.Both);
-  scrollRect_Main.offsetMin = Vector2.New(5, 5); -- Left, Bottom
-  scrollRect_Main.offsetMax = Vector2.New(-5, -5); -- Right, Top
-  scrollRect_Sub.offsetMin = Vector2.New(5, 5);
+  mask_Item:SetActive(Hotkey.currentDisplayMode == EHotkeyDisplayMode.Both);
+  scrollRect_Skill.offsetMin = Vector2.New(5, 5); -- Left, Bottom
+  scrollRect_Skill.offsetMax = Vector2.New(-5, -5); -- Right, Top 
+  scrollRect_Item.offsetMin = Vector2.New(5, 5); 
   if Hotkey.currentDisplayMode == EHotkeyDisplayMode.Both then
-    scrollRect_Sub.offsetMax = Vector2.New(-5, -11);
+    scrollRect_Item.offsetMax = Vector2.New(-5, -11);
   else
-    scrollRect_Sub.offsetMax = Vector2.New(-5, -5);
+    scrollRect_Item.offsetMax = Vector2.New(-5, -5);
   end
 end
 
-function UIHotkey.OnClick_Hotkey(uiEvent)
-  local parameter = uiEvent.parameter;
-  Hotkey.UseHotkey(parameter.uiIndex, parameter.keyId);
-end
-
-function UIHotkey.OnClick_SwitchEditMode(uiEvent)
-  Hotkey.SwitchEditMode();
-  this.UpdateEditMode(uiEvent.parameter);
-  this.UpdateHotkey(uiEvent.parameter);
-end
-
-function UIHotkey.UpdateEditMode(uiIndex)
-  local sprite;
-  if Hotkey.GetEditMode() == EHotkeyEditMode.Clear then
-    sprite = UI.GetSprite("but168L");
-  elseif Hotkey.GetEditMode() == EHotkeyEditMode.Setting then
-    sprite = UI.GetSprite("but168D");
+function UIHotkey.OnClickClear()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
   end
-
-  if uiIndex == EHotkeyUI.Main then
-    image_SkillOnClear.sprite = sprite;
-  elseif uiIndex == EHotkeyUI.Sub then
-    image_ItemOnClear.sprite = sprite;
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
   end
-end
-
-function UIHotkey.IsCurrentRole(role)
-  return this.currentRole == role;
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  Hotkey.UseClearMode();
+  this.UpdateUI(false);
 end

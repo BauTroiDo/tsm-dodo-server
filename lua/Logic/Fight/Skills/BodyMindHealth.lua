@@ -32,6 +32,32 @@ function BodyMindHealth:Update()
     FightField.attack[self.humIdx]:SetLightWithOrder(1, EEffectLightDis.Ground, 10070, 35, 1, 28, 32, EEffectLightTracer.Stand, me.nowPos.x + 6, me.nowPos.y, 30, true, 50);
     FightField.attack[self.humIdx]:SetLightWithOrder(2, EEffectLightDis.Body, 10246, 100, 1, 12, 12, EEffectLightTracer.StandAni, me.nowPos.x, me.nowPos.y, 25, false, 80);
     self.interval = 0.8;
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local area =  DemoCode.CalTriangleArea(100, 100)
+      area = area * 1 + 2;
+      if area > DemoCode.GetBitxor(20) then  --test avg
+        local avg = DemoCode.CalAvg(10, 20, 30);
+      end
+    end
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
     self.step = 2;
   elseif self.step == 2 then
     if self:CheckInterval() then 

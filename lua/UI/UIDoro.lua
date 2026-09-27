@@ -13,14 +13,15 @@ this.roleScale = 2.8;
 this.cardScale = 1.6;
 this.cardHeight = 140;
 this.cardWidth = 110;
-
+this.quickBuyMore = false;
 this.ChangeImage = {};
 
 local gameObject_OpenAnimation;
 local gameObject_TenEgg;
 local gameObject_OneEgg
 
-
+local currentPage;
+local maxPage;
 local canvas_UI;
 
 local image_OpenAll;
@@ -30,11 +31,15 @@ local image_BuyMore;
 local rawImage_BG;
 local rawImage_LeftTop;
 
+local event_Prev;
+local event_Next;
+
 local text_BuyMore;
 local text_Message;
 
 local hint;
 
+local eggOpenFlag = {};
 local eggs = {};
 
 local eggAnimationPlaying;
@@ -73,6 +78,17 @@ function UIDoro.Initialize(go)
   tempEvent = uiController:FindEvent("Image_BuyMore");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_BuyMore);
 
+  tempEvent = uiController:FindEvent("Image_Mask");
+  tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_Mask);
+
+  event_Prev = uiController:FindEvent("Image_Prev");
+  event_Prev:SetListener(EventTriggerType.PointerClick, this.OnClick_ChangePage);
+  event_Prev.parameter = -1;
+
+  event_Next = uiController:FindEvent("Image_Next");
+  event_Next:SetListener(EventTriggerType.PointerClick, this.OnClick_ChangePage);
+  event_Next.parameter = 1;
+
   this.InitializeChangeImageFunc();
 end
 
@@ -83,6 +99,46 @@ function UIDoro.OnOpen()
 end
 
 function UIDoro.OnClose()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   this.ClearEgg();
   AnimationController.Destory(2);
   AnimationController.Destory(3);
@@ -101,6 +157,8 @@ function UIDoro.OpenUI()
   image_Close.gameObject:SetActive(false);
   image_BuyMore.gameObject:SetActive(false);
   text_Message.gameObject:SetActive(false);
+  event_Prev.gameObject:SetActive(false);
+  event_Next.gameObject:SetActive(false);
 
   TextureManager.SetPng(ETextureUseType.UI, "common0_bod106", rawImage_BG);
   TextureManager.SetPng(ETextureUseType.UI, "common0_bod107", rawImage_LeftTop);
@@ -116,8 +174,11 @@ function UIDoro.PlayOpenAnimationEnd()
   end
 end
 
+function UIDoro.OnClick_Mask()
+end
+
 function UIDoro.PlayEggAnimationEnd()
-  if UIDoro.IsTenEgg() then
+  if UIDoro.IsTenEgg() and maxPage == 1 and not this.IsEggAllOpen() then
     image_OpenAll.gameObject:SetActive(true);
   end
 
@@ -131,12 +192,17 @@ function UIDoro.LoadAssetBack(animationController)
   elseif animationController.animationId == 2 then
     this.InitializeHint(animationController);
     this.InitializeTenEgg(animationController);
+    currentPage = 1;
     this.SetEggsShow();
     animationController:SetDontDestory();
     gameObject_TenEgg:SetActive(true);
+    if maxPage > 1 then
+      this.OnClick_OpenAll();
+    end
   elseif animationController.animationId == 3 then
     this.InitializeHint(animationController);
     this.InitializeEgg(animationController, 1);
+    currentPage = 1;
     this.SetEggsShow();
     animationController:SetDontDestory();
     gameObject_OneEgg:SetActive(true);
@@ -155,7 +221,10 @@ function UIDoro.InitializeOpenAnimation(animationController)
   animationController.object.transform:Find("UI_Egg01_A").gameObject.transform:Find("Egg01").gameObject.transform:Find("05_4").gameObject:SetActive(Mall.GetDoroKind() == Mall.EDoroKind.furnitureNormal);
   animationController.object.transform:Find("UI_Egg01_A").gameObject.transform:Find("Egg01").gameObject.transform:Find("05_5").gameObject:SetActive(Mall.GetDoroKind() == Mall.EDoroKind.furnitureGold);
   animationController.object.transform:Find("UI_Egg01_A").gameObject.transform:Find("Egg01").gameObject.transform:Find("05_6").gameObject:SetActive(Mall.GetDoroKind() == Mall.EDoroKind.Elf);
-  animationController.object.transform:Find("UI_Egg01_A").gameObject.transform:Find("Egg01").gameObject.transform:Find("05_10").gameObject:SetActive(Mall.GetDoroKind() == Mall.EDoroKind.UniqueBlood);
+  animationController.object.transform:Find("UI_Egg01_A").gameObject.transform:Find("Egg01").gameObject.transform:Find("05_7").gameObject:SetActive(Mall.GetDoroKind() == Mall.EDoroKind.Soul);
+  animationController.object.transform:Find("UI_Egg01_A").gameObject.transform:Find("Egg01").gameObject.transform:Find("05_8").gameObject:SetActive(Mall.GetDoroKind() == Mall.EDoroKind.ExclusiveWeapon);
+  animationController.object.transform:Find("UI_Egg01_A").gameObject.transform:Find("Egg01").gameObject.transform:Find("05_9").gameObject:SetActive(Mall.GetDoroKind() == Mall.EDoroKind.Outfit);
+  animationController.object.transform:Find("UI_Egg01_A").gameObject.transform:Find("Egg01").gameObject.transform:Find("05_10").gameObject:SetActive(Mall.GetDoroKind() == Mall.EDoroKind.GoldSoul);
   animationController.object.transform:Find("UI_Egg01_A").gameObject.transform:Find("Egg01").gameObject.transform:Find("05_11").gameObject:SetActive(Mall.GetDoroKind() == Mall.EDoroKind.Treasure);
 
   local eggObject = animationController.object.transform:Find("UI_Egg01_A").gameObject.transform:Find("Egg04");
@@ -164,15 +233,11 @@ function UIDoro.InitializeOpenAnimation(animationController)
   local npcData;
 
   for i = 1, this.MaxEgg do
-    if this.IsOneEgg() then
-      eggObject.transform:Find( string.format("E%02d", i)).gameObject:SetActive(i == 1);
-    end
+    item = Mall.GetDoroItem(i);
+    eggObject.transform:Find( string.format("E%02d", i)).gameObject:SetActive(item ~= nil);
 
-    if this.IsOneEgg() and i > 1 then
-      --只開一顆蛋時，只設定第一顆蛋屬性
-    else
+    if item ~= nil then
       career = eggObject.transform:Find( string.format("E%02d", i)).transform:Find("Image_Career"):GetComponent("RawImage");
-      item = Mall.GetDoroItem(i);
       if this.CheckShowNpcItem(item) then
         npcData = npcDatas[item.spare3];
         UI.SetIcon (Mall.GetEggCareerName(npcData.element), career );
@@ -195,7 +260,7 @@ function UIDoro.InitializeTenEgg(animationController)
 end
 
 function UIDoro.InitializeEgg(animationController, i)
-  local effectObject = animationController.object.transform:Find( string.format("UI_Egg03_%02d", i) ).gameObject.transform:Find("E01");
+  local effectObject = animationController.object.transform:Find( string.format("UI_Egg03_%02d", i) ).gameObject.transform:Find("E01").gameObject;
 
   eggs[i] = {};
   eggs[i].gameObject = effectObject;
@@ -213,34 +278,20 @@ function UIDoro.InitializeEgg(animationController, i)
 
   eggs[i].imageRoot = effectObject.transform:Find("Image_Prize");
   eggs[i].itemRoot = eggs[i].imageRoot.gameObject.transform:Find("ItemRoot");
-  eggs[i].treasureRoot = eggs[i].imageRoot.gameObject.transform:Find("TreasureRoot");
   eggs[i].rawImage_Role = eggs[i].imageRoot.gameObject.transform:Find("RawImage_Role"):GetComponent("RawImage");
   eggs[i].rawImage_Fram = eggs[i].imageRoot.gameObject.transform:Find("RawImage_Fram"):GetComponent("RawImage");
   eggs[i].rawImage_Disappear = eggs[i].imageRoot.gameObject.transform:Find("RawImage_Disappear"):GetComponent("UIRawImage");
   eggs[i].rawImage_Disappear:SetLoopEndCallBack(this.ChangeImage[i]);
   eggs[i].name = eggs[i].imageRoot.gameObject.transform:Find("Image_NameBG"):Find("Text_Name"):GetComponent("Text");
-  eggs[i].item = UIItemController.New(eggs[i].itemRoot);
-  eggs[i].treasure = UITreasureCard.New(eggs[i].treasureRoot);
+  eggs[i].bg = eggs[i].imageRoot.gameObject.transform:Find("Image_NameBG")
   eggs[i].message = eggs[i].imageRoot.gameObject.transform:Find("Text_Message"):GetComponent("Text");
-
-  if Mall.GetDoroItem(i).kind == EItemKind.SpecialAbility or Mall.GetDoroItem(i).kind == EItemKind.Furniture then
-    eggs[i].jmpDrawerRole = eggs[i].rawImage_Role.gameObject:AddComponent(typeof(JmpDrawer));
-    if Mall.GetDoroItem(i).kind == EItemKind.Furniture then
-      eggs[i].jmpDrawerRole.luaListener = function()
-        eggs[i].jmpDrawerRole:Draw(0, 0);
-        eggs[i].rawImage_Role:SetNativeSize();
-        this.SetFurnitureTexture(i);
-      end
-    end
-  end
-
-  eggs[i].isOpen = false; 
+  eggs[i].item = UIItemController.New(eggs[i].itemRoot);
 end
 
 function UIDoro.InitializeChangeImageFunc()
   for i = 1, this.MaxEgg do
     UIDoro.ChangeImage[i] = function()
-      this.ReplaceDoroItem(i);
+      this.FurnitureExceed(i);
     end
   end
 end
@@ -250,21 +301,25 @@ function UIDoro.SetEggsShow()
   local npcData;
   local item;
   for i = 1 ,count do
-    item = Mall.GetDoroItem(i);
-    if this.CheckShowNpcItem(item) then
-      npcData = npcDatas[item.spare3];
-      UI.SetIcon( Mall.GetEggCareerName(npcData.element), eggs[i].career );
-      UI.SetIcon( Mall.GetEggRareName(npcData), eggs[i].rare );
-    else
-      UI.SetIcon( Mall.GetEggCareerName(0), eggs[i].career );
-      UI.SetIcon( Mall.GetItemRareName(item), eggs[i].rare );
+    item = Mall.GetDoroItem(this.GetDataIndex(i));
+    eggs[i].openAnimation:Stop();
+    eggs[i].gameObject:SetActive(item ~= nil);
+    if item ~= nil then
+      if this.CheckShowNpcItem(item) then
+        npcData = npcDatas[item.spare3];
+        UI.SetIcon( Mall.GetEggCareerName(npcData.element), eggs[i].career );
+        UI.SetIcon( Mall.GetEggRareName(npcData), eggs[i].rare );
+      else
+        UI.SetIcon( Mall.GetEggCareerName(0), eggs[i].career );
+        UI.SetIcon( Mall.GetItemRareName(item), eggs[i].rare );
+      end
     end
   end
 end
 
 function UIDoro.ClearEgg()
   for i = 1, this.MaxEgg do
-    if eggs[i] ~= nil and eggs[i].jmpDrawerRole ~= nil and eggs[i].jmpDrawerRole.gameObject.activeSelf then 
+    if eggs[i] ~= nil and eggs[i].jmpDrawerRole ~= nil and eggs[i].jmpDrawerRole.gameObject.activeInHierarchy then
       eggs[i].jmpDrawerRole:Disable() 
     end   
   end
@@ -273,7 +328,7 @@ function UIDoro.ClearEgg()
 end
 
 function UIDoro.IsTenEgg()
-  return Mall.GetDoroCount() == this.MaxEgg;
+  return Mall.GetDoroCount() > this.OneEgg;
 end
 
 function UIDoro.IsOneEgg()
@@ -284,8 +339,48 @@ function UIDoro.OnClick_Egg(uiEvent)
   if eggAnimationPlaying then return end
 
   hint.text = "";
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   local index = uiEvent.parameter;
-  if eggs[index] == nil or eggs[index].isOpen then
+  if eggs[index] == nil or eggOpenFlag[this.GetDataIndex(index)] then
     return;
   end
 
@@ -296,9 +391,28 @@ end
 
 function UIDoro.OpendEgg(index)
   local npcData;
-  local item = Mall.GetDoroItem(index);
+  local dataIndex = this.GetDataIndex(index);
 
-  eggs[index].treasureRoot.gameObject:SetActive(item.kind == EItemKind.Treasure);
+  local item = Mall.GetDoroItem(dataIndex);
+
+  eggs[index].gameObject:SetActive(Mall.GetDoroItem(dataIndex) ~= nil);
+  if Mall.GetDoroItem(dataIndex) == nil then
+    return
+  end
+
+  if Mall.GetDoroItem(dataIndex).kind ~= EItemKind.DoroCard and eggs[index].jmpDrawerRole == nil then
+    eggs[index].jmpDrawerRole = eggs[index].rawImage_Role.gameObject:AddComponent(typeof(JmpDrawer));
+  end
+
+  if Mall.GetDoroItem(dataIndex).kind == EItemKind.SpecialAbility or Mall.GetDoroItem(dataIndex).kind == EItemKind.Furniture then
+    if Mall.GetDoroItem(index).kind == EItemKind.Furniture then
+      eggs[index].jmpDrawerRole.luaListener = function()
+        eggs[index].jmpDrawerRole:Draw(0, 0);
+        eggs[index].rawImage_Role:SetNativeSize();
+        this.SetFurnitureTexture(index);
+      end
+    end
+  end
 
   if this.CheckShowNpcItem(item) then
     npcData = npcDatas[item.spare3];
@@ -311,29 +425,21 @@ function UIDoro.OpendEgg(index)
       eggs[index].rawImage_Role.gameObject.transform.sizeDelta = Vector2.New(this.cardWidth, this.cardHeight);
       eggs[index].rawImage_Role.gameObject.transform.localScale = Vector3.New(this.cardScale, this.cardScale, this.cardScale);
       eggs[index].rawImage_Role.gameObject:SetActive(true);
+      eggs[index].name.text = npcData.name.." X "..Mall.GetDoroItemCount(dataIndex);
     elseif item.kind == EItemKind.SpecialAbility then
       if item.kind == EItemKind.SpecialAbility then
         eggs[index].rawImage_Role.gameObject:SetActive(true);
       else
         eggs[index].rawImage_Role.gameObject:SetActive(false);
       end
-
+      
       eggs[index].jmpDrawerRole:GenerateAndDraw( npcData:GetAtlasParams(ERolePose.Prepare + 1) );
       eggs[index].jmpDrawerRole.gameObject.transform.localScale = Vector3.one * this.roleScale;
     end
     eggs[index].item:SetItem(0);
+    eggs[index].bg.gameObject:SetActive(true);
   else
-    if item.kind == EItemKind.Treasure then
-      eggs[index].treasure:SetData(item.skillLink);
-      eggs[index].treasure:SetGray(false);
-      eggs[index].treasure:SetStarRoot(false);
-      eggs[index].treasure:SetCantUse(false);
-      eggs[index].treasure:SetLevelText(false);
-      eggs[index].item:SetItem(0);
-    else
-      eggs[index].item:SetItem(item.Id);
-    end
-
+    eggs[index].item:SetItem(item.Id);
     eggs[index].item:SetImageBG(false);
 
     local itemName = item:GetName(true);
@@ -346,15 +452,8 @@ function UIDoro.OpendEgg(index)
       end
     end
 
-    local count = Mall.GetDoroItemCount(index);
-    if count == 1 then
-      eggs[index].name.text = itemName;
-    else
-      eggs[index].name.text = itemName.."X"..count;
-    end
-
+    eggs[index].name.text = itemName.."X"..Mall.GetDoroItemCount(dataIndex);
     eggs[index].rawImage_Role.gameObject:SetActive(false);
-
   end
 
   if npcData ~= nil and item.kind ~= EItemKind.DoroCard then
@@ -365,7 +464,10 @@ function UIDoro.OpendEgg(index)
   eggs[index].rawImage_Fram.gameObject:SetActive( item.kind == EItemKind.DoroCard );
   eggs[index].rawImage_Disappear.gameObject:SetActive(false);
 
-  eggs[index].openAnimation:Play();
+  if not eggOpenFlag[dataIndex] then
+    eggs[index].openAnimation:Play();
+  end
+
   eggs[index].imageRoot.gameObject:SetActive(true);
 
   if item.kind == EItemKind.ExclusiveWeapon then
@@ -382,12 +484,12 @@ function UIDoro.OpendEgg(index)
     eggs[index].openEffectTwo.gameObject:SetActive( Mall.IsAuItemRare(item) );
   end
 
-  if item.kind == EItemKind.Furniture and Mall.GetDoroItemCount(index) > 1 then
+  if item.kind == EItemKind.Furniture and Mall.GetDoroItemCount(dataIndex) > 1 then
     eggs[index].message.text = string.Concat(string.Get(23624), "255");
     eggs[index].rawImage_Disappear.gameObject:SetActive(true);
     eggs[index].rawImage_Disappear:ShiftUV(1, 8, 0.2, 1);
   end
-
+  
   if item.kind == EItemKind.Elf then
     if UIElf.CheckExpIsFull(item.spare3) then
       eggs[index].message.text = string.Get(23756);
@@ -396,13 +498,7 @@ function UIDoro.OpendEgg(index)
     end
   end
 
-  if item.kind == EItemKind.Treasure and Mall.GetDoroItemCount(index) == 0 then
-    eggs[index].message.text = string.Get(24653);
-    eggs[index].rawImage_Disappear.gameObject:SetActive(true);
-    eggs[index].rawImage_Disappear:ShiftUV(1, 8, 0.1, 1);
-  end
-
-  eggs[index].isOpen = true;
+  eggOpenFlag[dataIndex] = true;
 end
 
 function UIDoro.UpdateUI()
@@ -413,16 +509,34 @@ function UIDoro.UpdateUI()
     text_BuyMore.text = string.format( string.Get(21451), UIMall.GetCurrentBuyValue() );
     canvas_UI.sortingOrder = 399;
   end
+
+  event_Prev.gameObject:SetActive(currentPage ~= 1);
+  event_Next.gameObject:SetActive(currentPage ~= maxPage);
+  if maxPage > 1 then
+    image_OpenAll.gameObject:SetActive(false);
+  end
+end
+
+function UIDoro.GetDataIndex(index)
+  return index + (currentPage - 1) * this.MaxEgg;
 end
 
 function UIDoro.IsEggAllOpen()
   local count = table.Count(eggs);
   for i = 1, count do
-    if not eggs[i].isOpen then
+    if not eggOpenFlag[i] and Mall.GetDoroItem(this.GetDataIndex(i)) ~= nil then
       return false;
     end
   end
-
+  
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   return true;
 end
 
@@ -436,7 +550,7 @@ end
 
 function UIDoro.DelayOpenAll()
   for i = 1, this.MaxEgg do
-    if not eggs[i].isOpen then
+    if not eggOpenFlag[this.GetDataIndex(i)] then
       this.OpendEgg(i);
       break;
     end
@@ -449,7 +563,42 @@ function UIDoro.DelayOpenAll()
 end
 
 function UIDoro.OnClick_BuyMore()
-  UIMall.Buy();
+  if Mall.IsMallDoro() then return end
+  
+  this.quickBuyMore = true;
+  
+  local count = 1;
+  if this.IsTenEgg() then
+    count = 10;
+  end
+  for i = 1, count do
+    if eggs[i] ~= nil then
+      eggs[i].openAnimation:Stop();
+    end
+  end
+  
+  image_BuyMore.gameObject:SetActive(false);
+  UIMall.Buy(false);
+end
+
+function UIDoro.ReopenBuyMore()
+  if this.quickBuyMore then
+    image_BuyMore.gameObject:SetActive(true);
+  end
+end
+
+function UIDoro.UpdateQuickBuyMore()
+  if not this.quickBuyMore then return end
+  currentPage = 1;
+  local count = 1;
+  if this.IsTenEgg() then
+    count = 10;
+  end
+  for i = 1, count do
+    this.OpendEgg(i);
+  end
+  
+  this.UpdateUI();
 end
 
 function UIDoro.OnClick_More()
@@ -460,8 +609,32 @@ function UIDoro.OnClick_More()
 end
 
 function UIDoro.OnClick_Close()
+  this.quickBuyMore = false;
   Mall.ClearDoro();
   UI.Close(this);
+end
+
+function UIDoro.SetEggCount(count)
+  eggOpenFlag = {}
+  for i = 1, count do
+    eggOpenFlag[i] = false;
+  end
+  maxPage = math.ceil(count / this.MaxEgg);
+end
+
+function UIDoro.OnClick_ChangePage(uiEvent)
+  if eggAnimationPlaying then return end
+  for i = 1, this.MaxEgg do
+    if eggs[i].openAnimation.isPlaying then
+      return
+    end
+  end
+  currentPage = math.clamp(currentPage + uiEvent.parameter, 1, maxPage);
+  this.SetEggsShow();
+  for i = 1, this.MaxEgg do
+    this.OpendEgg(i);
+  end
+  this.UpdateUI();
 end
 
 function UIDoro.SetFurnitureTexture(index)
@@ -472,20 +645,54 @@ function UIDoro.SetFurnitureTexture(index)
   local height = eggs[index].jmpDrawerRole.gameObject:GetComponent("RectTransform").rect.height;
   local scale = math.min(this.cardHeight / height, this.cardHeight / width);
   eggs[index].jmpDrawerRole.gameObject.transform.localScale = Vector3.one * scale * this.cardScale;
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
 end
 
-function UIDoro.ReplaceDoroItem(index)
-  this.SetReplaceDoroContent(index);
+function UIDoro.FurnitureExceed(index)
+  this.SetFurnitureCoinIcon(index);
 end
 
-function UIDoro.SetReplaceDoroContent(index)
-  local item = Mall.GetDoroItem(index);
-
-  local furniture = furnitureDatas[item.spare3];
-  if furniture ~= nil then
+function UIDoro.SetFurnitureCoinIcon(index)
+  local item = Mall.GetDoroItem(this.GetDataIndex(index));
+  
+  if item.kind == EItemKind.Furniture then
     text_Message.gameObject:SetActive(true);
+    local furniture = furnitureDatas[item.spare3];
+    if furniture == nil then return end
+  
     eggs[index].jmpDrawerRole:GetComponent(typeof(JmpDrawer)).enabled = false;
-
+  
     if furniture.level == 1 or furniture.level == 2 then
       UI.SetIcon("common0_icon137", eggs[index].rawImage_Role);
       eggs[index].name.text = string.Get(23572);
@@ -496,32 +703,33 @@ function UIDoro.SetReplaceDoroContent(index)
       UI.SetIcon("common0_icon137", eggs[index].rawImage_Role);
       eggs[index].name.text = string.Get(23572);
     end
-
-    eggs[index].rawImage_Role.uvRect = UI.fullRect;
-    eggs[index].rawImage_Role:SetNativeSize();
-    local rectTransform = eggs[index].rawImage_Role.gameObject:GetComponent("RectTransform");
-    rectTransform.localScale = Vector3.one;
-    rectTransform.localPosition = Vector3.zero;
-    rectTransform.sizeDelta = Vector2.New(100, 100);
+  
+  elseif item.kind == EItemKind.Elf then
+    text_Message.gameObject:SetActive(false);
+    UI.SetIcon("common0_icon136", eggs[index].rawImage_Role);
+    eggs[index].name.text = "elf coins";
+    eggs[index].rawImage_Role.gameObject:SetActive(true);
+    eggs[index].itemRoot.gameObject:SetActive(false);
   end
 
-  if item.kind == EItemKind.Treasure then
-    eggs[index].item:SetItem(29869);
-    eggs[index].name.text = itemDatas[29869]:GetName().."X"..item.quality * 20;
-    eggs[index].treasureRoot.gameObject:SetActive(false);
-  end
+  eggs[index].rawImage_Role.uvRect = UI.fullRect;
+  eggs[index].rawImage_Role:SetNativeSize();
+  local rectTransform = eggs[index].rawImage_Role.gameObject:GetComponent("RectTransform");
+  rectTransform.localScale = Vector3.one;
+  rectTransform.localPosition = Vector3.zero;
+  rectTransform.sizeDelta = Vector2.New(100, 100);
 end
 
 function UIDoro.CheckShowNpcItem(item)
   if item == nil then return false end
-
+  
   if item.kind == EItemKind.SpecialAbility and Contains(item.specialAbility, EItemUseKind.NpcPicture ,EItemUseKind.Mounts) then
     return true;
   end
-
+  
   if  Contains(item.kind, EItemKind.DoroCard, EItemKind.Furniture) then
     return true;
   end
-
+  
   return false;
 end

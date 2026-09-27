@@ -8,6 +8,8 @@ local nextUpdateTime = 0;
 local audioRoot = nil;
 local audioChannel = {};
 local loopDatas = {};
+local nftAudioPath = "AudioClip_"
+
 
 this.soundMode = SOUND_MODE1;
 this.musicVolume = 1;
@@ -21,67 +23,108 @@ function AudioManager.Destroy()
     GameObject.Destroy(audioRoot);
     audioRoot = nil;
   end
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function AudioManager.Initialize()
   -- 模式一 新音樂
-  this.sceneSound_Map_1       = "Mp3/WC0002.mp3";  --冒險
-  this.sceneSound_Town1_1     = "Mp3/WC0004.mp3";  --城內(室內)
-  this.sceneSound_Town2_1     = "Mp3/WM0001.mp3";   --城內(室外)
-  this.sceneSound_Hole_1      = "Mp3/WM0002.mp3";   --山洞
-  this.sceneSound_Gym_1       = "Mp3/WM0007.mp3";   --練功區
-  this.sceneSound_Topic_1     = "Mp3/WC0001.mp3";  --片頭
-  this.sceneSound_City_1      = "Mp3/WM0006.mp3";   --攻城場景、洛陽皇宮
-  this.sceneSound_Fight1_1    = "Mp3/WC0007.mp3";  --戰鬥1
-  this.sceneSound_Fight2_1    = "Mp3/WC0008.wav";  --戰鬥2
-  this.sceneSound_Fight3_1    = "Mp3/WC0010.mp3";  --魔王
-  this.sceneSound_Chirstmas_1 = "Mp3/WC0012.mp3";  --耶誕場景
+  this.sceneSound_Map_1       = "Audio/AudioClip_WC0002.mp3";  --冒險
+  this.sceneSound_Town1_1     = "Audio/AudioClip_WC0004.mp3";  --城內(室內)
+  this.sceneSound_Town2_1     = "Audio/AudioClip_WM0001.mp3";   --城內(室外)
+  this.sceneSound_Hole_1      = "Audio/AudioClip_WM0002.mp3";   --山洞
+  this.sceneSound_Gym_1       = "Audio/AudioClip_WM0007.mp3";   --練功區
+  this.sceneSound_Topic_1     = "Audio/AudioClip_WC0001.mp3";  --片頭
+  this.sceneSound_City_1      = "Audio/AudioClip_WM0006.mp3";   --攻城場景、洛陽皇宮
+  this.sceneSound_Fight1_1    = "Audio/AudioClip_WC0007.mp3";  --戰鬥1
+  this.sceneSound_Fight2_1    = "Audio/AudioClip_WC0008.mp3";  --戰鬥2
+  this.sceneSound_Fight3_1    = "Audio/AudioClip_WC0010.mp3";  --魔王
+  this.sceneSound_Chirstmas_1 = "Audio/AudioClip_WC0012.mp3";  --耶誕場景
 
-  this.sceneSound_Tower1_1    = "Mp3/WM0009.mp3";   --死亡之塔
-  this.sceneSound_Tower2_1    = "Mp3/WM0010.mp3";   --死亡之塔
-  this.sceneSound_Tower3_1    = "Mp3/WM0011.mp3";   --死亡之塔
-  this.sceneSound_Tower4_1    = "Mp3/WC0014.mp3";   --死亡之塔
+  this.sceneSound_Tower1_1    = "Audio/AudioClip_WM0009.mp3";   --死亡之塔
+  this.sceneSound_Tower2_1    = "Audio/AudioClip_WM0010.mp3";   --死亡之塔
+  this.sceneSound_Tower3_1    = "Audio/AudioClip_WM0011.mp3";   --死亡之塔
+  this.sceneSound_Tower4_1    = "Audio/AudioClip_WC0014.mp3";   --死亡之塔
 
-  this.sceneSound_pardadise1_1 = "Mp3/WC0015.mp3";  --仙界室外場景
-  this.sceneSound_pardadise2_1 = "Mp3/WC0016.mp3";  --仙界室內場景
+  this.sceneSound_pardadise1_1 = "Audio/AudioClip_WC0015.mp3";  --仙界室外場景
+  this.sceneSound_pardadise2_1 = "Audio/AudioClip_WC0016.mp3";  --仙界室內場景
 
-  this.sceneSound_Trun1_1      = "Mp3/20.mp3";      --靈虛山山頂小屋地窖
-  this.sceneSound_SeaWarfare1_1= "Mp3/WC0013.mp3";  --海戰場景  2004/12/27
-  this.sceneSound_ToLive1_1    = "Mp3/WC0006.mp3";  --生存遊戲 場景:54511~54526
-  this.sceneSound_ToLive2_1    = "Mp3/WC0013.mp3";  --生存遊戲 場景:54527~54535
+  this.sceneSound_Trun1_1      = "Audio/AudioClip_20.mp3";      --靈虛山山頂小屋地窖
+  this.sceneSound_SeaWarfare1_1= "Audio/AudioClip_WC0013.mp3";  --海戰場景  2004/12/27
+  this.sceneSound_ToLive1_1    = "Audio/AudioClip_WC0006.mp3";  --生存遊戲 場景:54511~54526
+  this.sceneSound_ToLive2_1    = "Audio/AudioClip_WC0013.mp3";  --生存遊戲 場景:54527~54535
 
-  this.sceneSound_SNouthLSouth_1= "Mp3/WM0013.mp3";   --塞北、嶺南
-  this.sceneSound_Hell_1        = "Mp3/WM0016.mp3";   --地獄(非酆都場景)
+  this.sceneSound_SNouthLSouth_1= "Audio/AudioClip_WM0013.mp3";   --塞北、嶺南
+  this.sceneSound_Hell_1        = "Audio/AudioClip_WM0016.mp3";   --地獄(非酆都場景)
 
-  this.sceneSound_WaterBattle1_1= "Mp3/WM0014.mp3";   --水戰
-  this.sceneSound_WaterBattle2_1= "Mp3/WM0015.mp3";   --水戰
+  this.sceneSound_WaterBattle1_1= "Audio/AudioClip_WM0014.mp3";   --水戰
+  this.sceneSound_WaterBattle2_1= "Audio/AudioClip_WM0015.mp3";   --水戰
 -- 模式二 舊音樂
-  this.sceneSound_Map_2       = "Mp3/WC0002.mp3";  --冒險
-  this.sceneSound_Town1_2     = "Mp3/WC0004.mp3";  --城內(室內)
-  this.sceneSound_Town2_2     = "Mp3/WC0003.mp3";  --城內(室外)
-  this.sceneSound_Hole_2      = "Mp3/WC0006.mp3";  --山洞
-  this.sceneSound_Gym_2       = "Mp3/WC0005.mp3";  --練功區
-  this.sceneSound_Topic_2     = "Mp3/WC0001.mp3";  --片頭
-  this.sceneSound_City_2      = "Mp3/WC0003.mp3";  --攻城場景、洛陽皇宮
-  this.sceneSound_Fight1_2    = "Mp3/WC0007.mp3";  --戰鬥1
-  this.sceneSound_Fight2_2    = "Mp3/WC0008.mp3";  --戰鬥2
-  this.sceneSound_Fight3_2    = "Mp3/WC0010.mp3";  --魔王
-  this.sceneSound_Chirstmas_2 = "Mp3/WC0012.mp3";  --耶誕場景
+  this.sceneSound_Map_2       = "Audio/AudioClip_WC0002.mp3";  --冒險
+  this.sceneSound_Town1_2     = "Audio/AudioClip_WC0004.mp3";  --城內(室內)
+  this.sceneSound_Town2_2     = "Audio/AudioClip_WC0003.mp3";  --城內(室外)
+  this.sceneSound_Hole_2      = "Audio/AudioClip_WC0006.mp3";  --山洞
+  this.sceneSound_Gym_2       = "Audio/AudioClip_WC0005.mp3";  --練功區
+  this.sceneSound_Topic_2     = "Audio/AudioClip_WC0001.mp3";  --片頭
+  this.sceneSound_City_2      = "Audio/AudioClip_WC0003.mp3";  --攻城場景、洛陽皇宮
+  this.sceneSound_Fight1_2    = "Audio/AudioClip_WC0007.mp3";  --戰鬥1
+  this.sceneSound_Fight2_2    = "Audio/AudioClip_WC0008.mp3";  --戰鬥2
+  this.sceneSound_Fight3_2    = "Audio/AudioClip_WC0010.mp3";  --魔王
+  this.sceneSound_Chirstmas_2 = "Audio/AudioClip_WC0012.mp3";  --耶誕場景
 
-  this.sceneSound_Tower1_2     = "Mp3/WC0005.mp3";   --死亡之塔
-  this.sceneSound_Tower2_2     = "Mp3/WC0005.mp3";   --死亡之塔
-  this.sceneSound_Tower3_2     = "Mp3/WC0005.mp3";   --死亡之塔
-  this.sceneSound_Tower4_2     = "Mp3/WC0014.mp3";   --死亡之塔
+  this.sceneSound_Tower1_2     = "Audio/AudioClip_WC0005.mp3";   --死亡之塔
+  this.sceneSound_Tower2_2     = "Audio/AudioClip_WC0005.mp3";   --死亡之塔
+  this.sceneSound_Tower3_2     = "Audio/AudioClip_WC0005.mp3";   --死亡之塔
+  this.sceneSound_Tower4_2     = "Audio/AudioClip_WC0014.mp3";   --死亡之塔
 
-  this.sceneSound_pardadise1_2 = "Mp3/WC0015.mp3";  --仙界室外場景
-  this.sceneSound_pardadise2_2 = "Mp3/WC0016.mp3";  --仙界室內場景
-  this.sceneSound_Trun1_2      = "Mp3/20.mp3";      --靈虛山山頂小屋地窖
-  this.sceneSound_SeaWarfare1_2= "Mp3/WC0013.mp3";  --海戰場景  2004/12/27
-  this.sceneSound_ToLive1_2    = "Mp3/WC0006.mp3";  --生存遊戲 場景:54511~54526
-  this.sceneSound_ToLive2_2    = "Mp3/WC0013.mp3";  --生存遊戲 場景:54527~54535
+  this.sceneSound_pardadise1_2 = "Audio/AudioClip_WC0015.mp3";  --仙界室外場景
+  this.sceneSound_pardadise2_2 = "Audio/AudioClip_WC0016.mp3";  --仙界室內場景
+  this.sceneSound_Trun1_2      = "Audio/AudioClip_20.mp3";      --靈虛山山頂小屋地窖
+  this.sceneSound_SeaWarfare1_2= "Audio/AudioClip_WC0013.mp3";  --海戰場景  2004/12/27
+  this.sceneSound_ToLive1_2    = "Audio/AudioClip_WC0006.mp3";  --生存遊戲 場景:54511~54526
+  this.sceneSound_ToLive2_2    = "Audio/AudioClip_WC0013.mp3";  --生存遊戲 場景:54527~54535
 
-  this.sceneSound_SNouthLSouth_2= "Mp3/WM0013.mp3";   --塞北、嶺南
-  this.sceneSound_Hell_2        = "Mp3/WM0016.mp3";   --地獄(非酆都場景)
+  this.sceneSound_SNouthLSouth_2= "Audio/AudioClip_WM0013.mp3";   --塞北、嶺南
+  this.sceneSound_Hell_2        = "Audio/AudioClip_WM0016.mp3";   --地獄(非酆都場景)
 
 ---- 模式一 新音樂
 --  this.sceneSound_Map_1       = "WC0002.wav";  --冒險
@@ -157,6 +200,47 @@ function AudioManager.Initialize()
     end
   end
 
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   this.soundMode = Setting.client.musicMode;
   this.SetMusicVolume(Setting.client.musicVolume * 0.1);
   this.SetSoundVolume(Setting.client.soundVolume * 0.1);
@@ -264,7 +348,7 @@ function AudioManager.PlaySceneMusic3()
   local bgID = MapManager.musicId;
   
   if sceneType == ESceneType.Town then
-    if Contains(MapManager.musicId, 10801, 10851) then
+    if Contains(MapManager.musicId, 10801, 10851, 10821, 10853) then
       this.PlayBack(this.sceneSound_Town2_2);
     elseif Contains(MapManager.musicId, 10901, 50016, 50017, 50164, 50166, 50021, 50022, 50059, 50060, 50066, 50067, 50069, 50070, 50081) or Between(bgID, 50001, 50009)
     or Between(MapManager.musicId, 50045, 50048) or Between(MapManager.musicId, 50084, 50089) then
@@ -442,7 +526,12 @@ end
 
 function AudioManager.PlayOnce(path, volume)
   if not this.isSoundEnable then return end
-
+  
+  --如果音效path沒有加上NFT音效前綴就加上前綴
+  if string.match(path, nftAudioPath) == nil then
+    path = string.Concat(nftAudioPath, path);
+  end
+  
   --重覆音效正在播，超過五個,新的就不播放
   local sameCount = 0;
   for i = 8, 15 do
@@ -495,7 +584,7 @@ function AudioManager.PlayChannelOnce(path, channel, volume)
 end
 
 function AudioManager.PlaySlot(path)
-  if this.isSoundEnable then return end
+  if not this.isSoundEnable then return end
 
   this.LoadMusicFile(audioChannel[15], path);
   if this.isSoundEnable then
@@ -527,7 +616,47 @@ end
 
 function AudioManager.ChangeMusicName(fileName)
   local sceneID = SceneManager.sceneId;
-  
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   if this.soundMode == SOUND_MODE1 then
     if this.CheckMusicName(fileName) then
       return fileName;
@@ -561,7 +690,7 @@ function AudioManager.ChangeMusicName(fileName)
     end
     
     if fileName == this.sceneSound_Town2_2 then       --城內(室外)
-      if sceneID == 10801 or sceneID == 10851 then     --網咖新手村例外處理
+      if Contains(sceneID, 10801, 10851, 10821, 10853) then     --網咖新手村例外處理
         return this.sceneSound_Town2_2;
       else
         return this.sceneSound_Town2_1;
@@ -745,7 +874,47 @@ function AudioManager.CheckMusicName(fileName) --如為戰鬥音則先播戰鬥�
       return true        
     end
   end
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   return false;
 end
 
@@ -817,8 +986,7 @@ function AudioManager.SubMusicName(name)
   if idx2 ~= nil then
     name = string.sub(name, idx2 + 1);
   end
-
-  return string.Concat("Mp3/", name);
+  return string.Concat("Audio/", name);
 end
 
 function AudioManager.SubMusicExtension(name)

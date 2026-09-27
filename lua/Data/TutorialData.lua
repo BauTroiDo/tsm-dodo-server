@@ -19,8 +19,44 @@ function TutorialData.New(reader)
   return id, self;
 end
 
+function TutorialData.AddThree(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
+function TutorialData.AddThree1(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
 GuideData = {}
 GuideData.__index = GuideData;
+
+function GuideData.AddThree1(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
 
 function GuideData.New(reader)
   local self = {};
@@ -47,4 +83,28 @@ function GuideData.New(reader)
   self.closeUI = reader:ReadBoolean();
   
   return id, step, self;
+end
+
+function GuideData.AddThree2(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
+function GuideData.AddThre1(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
 end

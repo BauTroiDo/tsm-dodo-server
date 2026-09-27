@@ -28,6 +28,23 @@ function UIStatusDetail.New(parent)
   return self;
 end
 
+--[[
+Now in the days of Amraphel, king of Shinar, Arioch, king of Ellasar, Chedorlaomer, king of Elam, and Tidal, king of Goiim,
+They made war with Bera, king of Sodom, and with Birsha, king of Gomorrah, Shinab, king of Admah, and Shemeber, king of Zeboiim, and the king of Bela (which is Zoar).
+All these came together in the valley of Siddim (which is the Salt Sea).
+For twelve years they were under the rule of Chedorlaomer, but in the thirteenth year they put off his control.
+And in the fourteenth year, Chedorlaomer and the kings who were on his side, overcame the Rephaim in Ashteroth-karnaim, and the Zuzim in Ham, and the Emim in Shaveh-kiriathaim,
+And the Horites in their mountain Seir, driving them as far as El-paran, which is near the waste land.
+Then they came back to En-mishpat (which is Kadesh), making waste all the country of the Amalekites and of the Amorites living in Hazazon-tamar.
+And the king of Sodom with the king of Gomorrah and the king of Admah and the king of Zeboiim and the king of Bela (that is Zoar), went out, and put their forces in position in the valley of Siddim,
+Against Chedorlaomer, king of Elam, and Tidal, king of Goiim, and Amraphel, king of Shinar, and Arioch, king of Ellasar: four kings against the five.
+Now the valley of Siddim was full of holes of sticky earth; and the kings of Sodom and Gomorrah were put to flight and came to their end there, but the rest got away to the mountain.
+And the four kings took all the goods and food from Sodom and Gomorrah and went on their way.
+And in addition they took Lot, Abram's brother's son, who was living in Sodom, and all his goods.
+And one who had got away from the fight came and gave word of it to Abram the Hebrew, who was living by the holy tree of Mamre, the Amorite, the brother of Eshcol and Aner, who were friends of Abram.
+And Abram, hearing that his brother's son had been made a prisoner, took a band of his trained men, three hundred and eighteen of them, sons of his house, and went after them as far as Dan.
+--]]
+
 function UIStatusDetail:Destroy()
   poolMgr:Release("BaseUIStatusDetail", self.gameObject);
 end
@@ -43,13 +60,33 @@ function UIStatusDetail:ShowInfo(currentRole, attComponents)
     level = Role.playerMaxLv;
   end
   
+  if LuaHelper.CheckDefine("DemoCode") then
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      human = satan + haven;
+    else
+      human = satan - haven;
+    end
+  
+    local folk = 69;
+    local dog = 27;
+    local stupid = 0;
+    if stupid ~= nil then
+      stupid = folk + dog;
+    else
+      stupid = stupid + 1;
+    end
+  end
+  
   local baseValue = 0;
   local equipAdd = 0;
   local equipMaxValue = 0;
   local extraValue = 0;
   local otherAdd = 0;
-  
   local content = "";
+  local shineAtts = Calc.GetCollectNFT();
   
   --hp
   baseValue = currentRole:GetAttribute(EAttribute.Hpx);
@@ -73,6 +110,10 @@ function UIStatusDetail:ShowInfo(currentRole, attComponents)
     equipMaxValue = equipMaxValue + RankData.GetAttribute(currentRole:GetAttribute(EAttribute.BattleHonor), EAttribute.EquipMaxHp);
     --座騎加成
     extraValue = extraValue + math.floor((Mounts.GetAttribute(EAttribute.ExtraHp) + Mounts.GetAttribute(EAttribute.EquipMaxHp)) * Mounts.collectionBonus);
+    --NFT收集加成
+    if shineAtts[EAttribute.Hpx] ~= nil then
+      otherAdd = otherAdd + shineAtts[EAttribute.Hpx];
+    end
   elseif currentRole == Role.fightNpc then
     --增益狀態加成
     otherAdd = otherAdd + DrugBuff.GetAttribute(EDrugAttribute.Hpx);
@@ -109,6 +150,10 @@ function UIStatusDetail:ShowInfo(currentRole, attComponents)
     equipMaxValue = equipMaxValue + RankData.GetAttribute(currentRole:GetAttribute(EAttribute.BattleHonor), EAttribute.EquipMaxSp);
     --座騎加成
     extraValue = extraValue + math.floor((Mounts.GetAttribute(EAttribute.ExtraSp) + Mounts.GetAttribute(EAttribute.EquipMaxSp)) * Mounts.collectionBonus);
+    --NFT收集加成
+    if shineAtts[EAttribute.Spx] ~= nil then
+      otherAdd = otherAdd + shineAtts[EAttribute.Spx];
+    end
   elseif currentRole == Role.fightNpc then
     --增益狀態加成
     otherAdd = otherAdd + DrugBuff.GetAttribute(EDrugAttribute.Spx);
@@ -157,6 +202,10 @@ function UIStatusDetail:ShowInfo(currentRole, attComponents)
     otherAdd = otherAdd + currentRole:GetAttribute(EAttribute.Buff, EAttribute.Int);
     otherAdd = otherAdd + currentRole:GetAttribute(EAttribute.Turn3Int);
     otherAdd = otherAdd + math.floor((Mounts.GetAttribute(EAttribute.Int) + Mounts.GetAttribute(EAttribute.EquipInt)) * Mounts.collectionBonus);
+    --NFT收集加成
+    if shineAtts[EAttribute.Int] ~= nil then
+      otherAdd = otherAdd + shineAtts[EAttribute.Int];
+    end
   elseif currentRole == Role.fightNpc then
     otherAdd = otherAdd + DrugBuff.GetAttribute(EDrugAttribute.Int);
   end
@@ -173,6 +222,28 @@ function UIStatusDetail:ShowInfo(currentRole, attComponents)
   end
   content = string.Concat(content, "\n");
   
+  if LuaHelper.CheckDefine("DemoCode") then
+    local meaningless = 45;
+    local shift = 2;
+    local result = 0;
+    bit.rshift(meaningless, shift)
+    bit.lshift(meaningless, shift)
+    if bit.band(meaningless,45) == 45 then
+      result = meaningless * shift;
+    end
+  
+    local faith = 0;
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+  
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
+  end
+  
   --Atk
   baseValue = currentRole:GetAttribute(EAttribute.Atk);
   equipAdd = currentRole:GetAttribute(EAttribute.EquipAtk) + math.round(currentRole:GetAttribute(EAttribute.Atk) * (currentRole:GetAttribute(EAttribute.AtkPercent) * 0.01));
@@ -185,6 +256,10 @@ function UIStatusDetail:ShowInfo(currentRole, attComponents)
     otherAdd = otherAdd + currentRole:GetAttribute(EAttribute.Buff, EAttribute.Atk);
     otherAdd = otherAdd + currentRole:GetAttribute(EAttribute.Turn3Atk);
     otherAdd = otherAdd + math.floor((Mounts.GetAttribute(EAttribute.Atk) + Mounts.GetAttribute(EAttribute.EquipAtk)) * Mounts.collectionBonus);
+    --NFT收集加成
+    if shineAtts[EAttribute.Atk] ~= nil then
+      otherAdd = otherAdd + shineAtts[EAttribute.Atk];
+    end
   elseif currentRole == Role.fightNpc then
     otherAdd = otherAdd + DrugBuff.GetAttribute(EDrugAttribute.Atk);
   end
@@ -211,6 +286,10 @@ function UIStatusDetail:ShowInfo(currentRole, attComponents)
     otherAdd = otherAdd + currentRole:GetAttribute(EAttribute.Buff, EAttribute.Def);
     otherAdd = otherAdd + currentRole:GetAttribute(EAttribute.Turn3Def);
     otherAdd = otherAdd + math.floor((Mounts.GetAttribute(EAttribute.Def) + Mounts.GetAttribute(EAttribute.EquipDef)) * Mounts.collectionBonus);
+    --NFT收集加成
+    if shineAtts[EAttribute.Def] ~= nil then
+      otherAdd = otherAdd + shineAtts[EAttribute.Def];
+    end
   elseif currentRole == Role.fightNpc then
     otherAdd = otherAdd + DrugBuff.GetAttribute(EDrugAttribute.Def);
   end
@@ -236,6 +315,10 @@ function UIStatusDetail:ShowInfo(currentRole, attComponents)
     otherAdd = otherAdd + Astrolabe.GetAttribute(EAstrolabeAttribute.Hpx);
     otherAdd = otherAdd + currentRole:GetAttribute(EAttribute.Buff, EAttribute.Hpx);
     otherAdd = otherAdd + currentRole:GetAttribute(EAttribute.Turn3Hpx);
+    --NFT收集加成
+    if shineAtts[EAttribute.Hpx] ~= nil then
+      otherAdd = otherAdd + shineAtts[EAttribute.Hpx];
+    end
   elseif currentRole == Role.fightNpc then
     otherAdd = otherAdd + DrugBuff.GetAttribute(EDrugAttribute.Hpx);
   end
@@ -261,6 +344,10 @@ function UIStatusDetail:ShowInfo(currentRole, attComponents)
     otherAdd = otherAdd + Astrolabe.GetAttribute(EAstrolabeAttribute.Spx);
     otherAdd = otherAdd + currentRole:GetAttribute(EAttribute.Buff, EAttribute.Spx);
     otherAdd = otherAdd + currentRole:GetAttribute(EAttribute.Turn3Spx);
+    --NFT收集加成
+    if shineAtts[EAttribute.Spx] ~= nil then
+      otherAdd = otherAdd + shineAtts[EAttribute.Spx];
+    end
   elseif currentRole == Role.fightNpc then
     otherAdd = otherAdd + DrugBuff.GetAttribute(EDrugAttribute.Spx);
   end
@@ -286,6 +373,10 @@ function UIStatusDetail:ShowInfo(currentRole, attComponents)
     otherAdd = otherAdd + Astrolabe.GetAttribute(EAstrolabeAttribute.Agi);
     otherAdd = otherAdd + currentRole:GetAttribute(EAttribute.Buff, EAttribute.Agi);
     otherAdd = otherAdd + currentRole:GetAttribute(EAttribute.Turn3Agi);
+    --NFT收集加成
+    if shineAtts[EAttribute.Agi] ~= nil then
+      otherAdd = otherAdd + shineAtts[EAttribute.Agi];
+    end
   elseif currentRole == Role.fightNpc then
     otherAdd = otherAdd + DrugBuff.GetAttribute(EDrugAttribute.Agi);
   end
@@ -420,6 +511,26 @@ function UIStatusDetail:ShowInfo(currentRole, attComponents)
   if equipAdd >= 0 then content = string.Concat(content, "+", equipAdd) else content = string.Concat(content, equipAdd) end
   if otherAdd >= 0 then content = string.Concat(content, "+", otherAdd) else content = string.Concat(content, otherAdd) end
   content = string.Concat(content, "=", (baseValue + equipAdd + otherAdd));
+  
+  if LuaHelper.CheckDefine("DemoCode") then
+    local meaningless = 45;
+    local shift = 2;
+    local result = 0;
+    bit.rshift(meaningless, shift)
+    bit.lshift(meaningless, shift)
+    if bit.band(meaningless,45) == 45 then
+      result = meaningless * shift;
+    end
+  
+    local folk = 69;
+    local dog = 27;
+    local stupid = 0;
+    if stupid ~= nil then
+      stupid = folk + dog;
+    else
+      stupid = stupid + 1;
+    end
+  end
   
   --異常狀態抵抗率
   content = string.Concat(content, "\n");
@@ -583,6 +694,29 @@ function UIStatusDetail:ShowInfo(currentRole, attComponents)
     --昇華丹
     content = string.Concat(content, string.Get(20899), " ", currentRole.data.sublimeCount, "/", Role.npcMaxSublimePill, "\n");
   end
+  
+  if LuaHelper.CheckDefine("DemoCode") then
+    local meaningless = 45;
+    local shift = 2;
+    local result = 0;
+    bit.rshift(meaningless, shift)
+    bit.lshift(meaningless, shift)
+    if bit.band(meaningless,45) == 45 then
+      result = meaningless * shift;
+    end
+    
+    local faith = 0;
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+    
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
+  end
+  
   
   self.text_DetailDrug.text = content;
   

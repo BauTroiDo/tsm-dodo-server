@@ -9,9 +9,11 @@ local this = UISetting;
 
 this.name = "UISetting";
 this.uiController = nil;
+this.networkDisMsg = 0;
 
 --ui
 local transform_FrameRect;
+local gameObject_Resolution;
 
 local image_PK;
 local image_War;
@@ -21,6 +23,7 @@ local image_NpcInfo;
 
 local dropdown_Player;
 local dropdown_Display;
+local dropdown_Resolution;
 
 local text_RoleId;
 
@@ -32,7 +35,7 @@ local imeage_Channels = {};
 --var
 local serverName = "default";
 
---[[ 
+--[[
 local currentTag = 1;
 local currentSubPage = 1;
 
@@ -48,6 +51,8 @@ function UISetting.Initialize(go)
   local tempEvent;
 
   transform_FrameRect = uiController:FindGameObject("FrameRect").transform;
+
+
 
   --system
   local functionRoot = uiController:FindGameObject("Function").transform;
@@ -79,6 +84,21 @@ function UISetting.Initialize(go)
   dropdown_Display:AddOption(string.Get(23324));
   dropdown_Display:AddListener(this.OnDropChange_Display);
   dropdown_Display.value = Setting.client.DisplayMode - 1;
+
+  gameObject_Resolution = uiController:FindGameObject("Resolution");
+  gameObject_Resolution:SetActive(LuaHelper.IsStandalone);
+  if LuaHelper.IsStandalone then
+    dropdown_Resolution = uiController:FindDropdown("Dropdown_Resolution");
+    local width, height;
+    width, height = this.GetResolution(1);
+    dropdown_Resolution:AddOption(string.format("%d * %d", width, height));
+    width, height = this.GetResolution(2);
+    dropdown_Resolution:AddOption(string.format("%d * %d", width, height));
+    width, height = this.GetResolution(3);
+    dropdown_Resolution:AddOption(string.format("%d * %d", width, height));
+    dropdown_Resolution:AddListener(this.OnDropChange_Resolution);
+    dropdown_Resolution.value = Setting.client.resolution - 1;
+  end
 
   text_RoleId = uiController:FindText("Text_RoleId");
 
@@ -124,11 +144,39 @@ function UISetting.OnOpen()
     for k, v in pairs(Network.servers) do
       if Network.serverId == v.id then
         serverName = v.name;
+        break;
+      end
+      if Network.serverId == Network.activityServerId then
+        serverName = string.Get(24749);
       end
     end
   end
-  text_RoleId.text = string.format(string.Get(20767), serverName, tonumber(string.sub(Role.playerId, -10)));
 
+  local birthSID = tonumber(string.sub(Role.playerId, -15, -11));
+  local bsName = "";
+
+  for _, v in pairs(Network.servers) do
+    if birthSID == v.id then
+      bsName = v.name;
+      break;
+    end
+  end
+
+  if this.networkDisMsg > 0 then
+    serverName = string.Concat(serverName, "_", Network.networkDisMsg, "_", this.networkDisMsg);
+  end
+
+  text_RoleId.text = string.Concat(
+    string.format(string.Get(24705), serverName), "\t\t\t",
+    string.format(string.Get(20767), bsName, tonumber(string.sub(Role.playerId, -10)))
+  );
+  
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
   return true;
 end
 
@@ -150,6 +198,13 @@ function UISetting.OnClick_Help(checkShow)
     UI.Open(UITutorialHint, 57, this);
   end
   
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+---
   return true;
 end
 
@@ -171,16 +226,23 @@ function UISetting.UpdateUI()
   end
 
   for k, v in pairs(event_Functions) do
-    if (k == 3 or k == 4 or k == 5) and Network.CheckServerSwitch(EServerSwitch.Review) then --送審版本關閉
+    if (k == 3 or k == 4) and Network.CheckServerSwitch(EServerSwitch.Review) then --3客服、4官網送審版本關閉
       v.gameObject:SetActive(false);
     else
       v.gameObject:SetActive(Function.CheckShow(229 + k));
     end
   
-    --安卓平台關閉刪除帳號按鈕
-    --if LuaHelper.IsAndroidPlatform and k == 6 then
-    --  v.gameObject:SetActive(false);
-    --end
+    if k == 5 then --NFT關閉帳號綁定按鈕
+      v.gameObject:SetActive(false);
+    end
+  
+    --安卓和PC關閉刪除帳號按鈕
+    if LuaHelper.IsAndroidPlatform or LuaHelper.IsStandalone then
+      if k == 6 then
+        v.gameObject:SetActive(false);
+      end
+    end
+
   end
 end
 
@@ -189,16 +251,41 @@ function UISetting.OnClick_Close()
   
   UI.Close(UISetting);
   
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+  
   return true;
 end
 
-function UISetting.ShowLoginForm()
-  CGSDK.showLoginForm();
+--[[
+function UISetting.OnClick_Tag(mainTag, subTag)
+  currentTag = mainTag;
+  currentSubPage = subTag;
+
+  this.UpdateUI();
+
+  return true;
 end
+--]]
 
 function UISetting.OnClick_Function(uiEvent)
   if uiEvent.parameter == 1 then
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local area =  DemoCode.CalTriangleArea(100, 100)
+      area = area * 1 + 2;
+      if area > DemoCode.GetBitxor(20) then  --test avg
+        local avg = DemoCode.CalAvg(10, 20, 30);
+      end
+    end
+    --3----------------------------------------------------
+    
     --離開遊戲
+    --GoogleAnalytics.Call("LogEvent", this.name, GAEventAction.ClickButton, GALabel.Quit);
     ShowCheckMessage(
       function(result)
         if result then
@@ -211,10 +298,11 @@ function UISetting.OnClick_Function(uiEvent)
 
   elseif uiEvent.parameter == 2 then
     --登出
+    --GoogleAnalytics.Call("LogEvent", this.name, GAEventAction.ClickButton, GALabel.LogOut);
     ShowCheckMessage(
       function(result)
         if result then
-          Game.DoLogout();
+          Game.Logout();
         end
       end,
       string.Get(20393),
@@ -222,41 +310,50 @@ function UISetting.OnClick_Function(uiEvent)
     );
 
   elseif uiEvent.parameter == 3 then
-    Application.OpenURL(string.Get(25126));
+    --客服中心
+    local data = {};
+    data["game_kind"] = 6;
+    data["uid"] = Role.playerId;
+    data["gamedata"] = {};
+    data["gamedata"].server = serverName;
+    data["gamedata"].id = tonumber(string.sub(Role.playerId, -10));
+    data["gamedata"].nickname = Role.player.name;
+    data["gamedata"].level = Role.player:GetAttribute(EAttribute.Lv);
+    if LuaHelper.IsAndroidPlatform then
+      data["gamedata"].version = string.Concat(string.Get(20773), LuaHelper.GetVersion());
+    elseif LuaHelper.IsApplePlatform then
+      data["gamedata"].version = string.Concat(string.Get(20774), LuaHelper.GetVersion());
+    else
+      data["gamedata"].version = string.Concat(string.Get(20775), LuaHelper.GetVersion());
+    end
+    data["systemdata"] = {};
+    data["systemdata"].imei = SystemInfo.deviceUniqueIdentifier;
+    data["systemdata"].os = SystemInfo.operatingSystem;
+    data["systemdata"].phone = SystemInfo.deviceName;
+
+    if Application.internetReachability == NetworkReachability.ReachableViaLocalAreaNetwork then
+      data["systemdata"].network = "WIFI";
+    elseif Application.internetReachability == NetworkReachability.ReachableViaCarrierDataNetwork then
+      data["systemdata"].network = "手機連線網路";
+    else
+      data["systemdata"].network = "";
+    end
+
+    --GoogleAnalytics.Call("LogEvent", this.name, GAEventAction.ClickButton, GALabel.CustomerService);
+    local url = string.Get(24065);
+    Application.OpenURL(string.Concat(url, UnityWebRequest.EscapeURL(json.encode(data), DataManager.encoding_UTF8)));
+
   elseif uiEvent.parameter == 4 then
     --連結官網
-    Application.OpenURL(string.Get(50018));
+    --GoogleAnalytics.Call("LogEvent", this.name, GAEventAction.ClickButton, GALabel.OfficialSite);
+    Application.OpenURL(string.Get(24066));
   elseif uiEvent.parameter == 5 then
-    --CGSDK.showImageActivityWhenCall();
-    Application.OpenURL(string.Get(20776));
+    --帳號綁定
+    UI.Open(UIAccount);
   elseif uiEvent.parameter == 6 then
     --刪除帳號
-    ShowCheckMessage(
-      function(result)
-        if result then
-          if not LuaHelper.IsEditor then
-            if LuaHelper.IsApplePlatform then
-              CGTimer.DoFunctionDelay(6, this.DoShowLoginform);
-            end
-            Game.Logout();
-            UI.Close(UILogin);
-            UI.Open(UILoading);
-            UILoading.SetSDKBG(true);
-          else
-            Game.Logout();
-          end
-
-          CGSDK.deleteUser();
-        end
-      end,
-      "delete",
-      Role.player
-    );
+    Setting.SendDeleteAccount(0);
   end
-end
-
-function UISetting.DoShowLoginform()
-  Game.Quit();
 end
 
 function UISetting.OnClick_PK()
@@ -307,6 +404,18 @@ function UISetting.OnDropChange_Display()
   
 end
 
+function UISetting.OnDropChange_Resolution()
+  if Setting.client.resolution == dropdown_Resolution.value + 1 then
+    return
+  end
+  Setting.client.resolution = dropdown_Resolution.value + 1;
+  local width, height = this.GetResolution(dropdown_Resolution.value + 1);
+  if width ~= nil and height ~= nil then
+    Screen.SetResolution(width, height, false);
+    Setting.Save();
+  end
+end
+
 function UISetting.SetDisplay()
   if Setting.client.DisplayMode == 1 then
     TexturePool.SetMaxTextureSize(ETextureSize.high);
@@ -315,6 +424,16 @@ function UISetting.SetDisplay()
   else
     TexturePool.SetMaxTextureSize(ETextureSize.low);
   end
+  
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
 end
 
 function UISetting.OnClick_NpcInfo()
@@ -334,6 +453,16 @@ function UISetting.OnClick_NpcInfo()
   end
 
   this.UpdateUI();
+  
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
   --GoogleAnalytics.Call("LogEvent", this.name, GAEventAction.ClickButton, GALabel.NpcInfo);
 end
 
@@ -352,6 +481,16 @@ function UISetting.OnClick_SoundEnable()
   AudioManager.SwitchSound(Setting.client.soundEnable);
   
   this.UpdateUI();
+  
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
   --GoogleAnalytics.Call("LogEvent", this.name, GAEventAction.ClickButton, GALabel.Sound);
 end
 
@@ -402,24 +541,47 @@ function UISetting.OnClick_ChannelNext(uiEvent)
 end
 
 function UISetting.OnClick_ConfirmDeleteAccount()
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  
   ShowCheckMessage(
     function(result)
       if result then
-        sendBuffer:Clear();
-        sendBuffer:WriteInt64(Role.playerId);
-        sendBuffer:WriteByte(Setting.client.lastLoginKind);
-        sendBuffer:WriteStringWithWordL(Setting.client.lastLoginToken);
-        local version = 1;
-        if Define.IsDebugMode() then
-          version = 2;
-        end
-        sendBuffer:WriteByte(version);
-        Network.Send(1, 51, sendBuffer);
+        Setting.SendDeleteAccount(1);
       end
     end,
-    string.Get(23677),
+    string.Get(24080),
     Role.player
   );
+end
+
+function UISetting.OnClick_CheckCancelDeletAccount()
+  ShowCheckMessage(
+    function(result)
+      if result then
+        Setting.SendDeleteAccount(2);
+      end
+    end,
+    string.Get(24098),
+  Role.player
+  );
+end
+
+function UISetting.GetResolution(option)
+  if option == 1 then
+    return 1280, 720
+  elseif option == 2 then
+    return 1600, 900
+  elseif option == 3 then
+    return 1920, 1080
+  end
 end
 
 --[[ 目前沒有接的功能

@@ -1,15 +1,50 @@
 
 --未載入字串表前用到的字串
-Str_DownloadSize = "Tải : %.2fMB\n Giải nén : %.2f MB\n. Nhớ lưu ý dung lượng của máy bạn.Xin cám ơn"
-Str_DiskFull = "Máy không đủ dung lượng, vui lòng kiểm tra lại."
-Str_DownloadResources = "Tải : %.2f MB / %.2f MB";
-Str_DecompressResources = "Giải nén :  %d / %d";
-Str_DownloadDatas = "Tải dữ liệu : %d / %d";
-Str_DownloadImages = "Tải hình ảnh : %.2f MB / %.2f MB";
-Str_DecompressImages = "Giải nén : %d / %d";
-Str_LoadData = "Đang tải dữ liệu";
-Str_LoadResource = "Đang tải hình ảnh";
-Str_NeedDownLoadResource = "Cần cập nhật"
+Str_DownloadSize = "本次下載 : %.2f MB\n解壓縮後 : %.2f MB\n請注意自身網路流量及儲存空間"
+Str_DiskFull = "儲存空間不足，請檢查儲存空間並重新啟動遊戲"
+Str_DownloadResources = "下載遊戲資源 : %.2f MB / %.2f MB";
+Str_DecompressResources = "解壓縮遊戲資源 : %d / %d";
+Str_DownloadDatas = "下載遊戲演出、檔案 : %d / %d";
+Str_DownloadImages = "下載遊戲圖片、檔案 : %.2f MB / %.2f MB";
+Str_DecompressImages = "解壓縮遊戲圖片、檔案 : %d / %d";
+Str_LoadData = "載入資料";
+Str_LoadResource = "載入資源";
+Str_NeedDownLoadResource = "後續遊戲內容需更新遊戲資源"
+
+--[[
+Now Dinah, the daughter whom Leah had by Jacob, went out to see the women of that country.
+And when Shechem, the son of Hamor the Hivite who was the chief of that land, saw her, he took her by force and had connection with her.
+Then his heart went out in love to Dinah, the daughter of Jacob, and he said comforting words to her.
+And Shechem said to Hamor, his father, Get me this girl for my wife.
+Now Jacob had word of what Shechem had done to his daughter; but his sons were in the fields with the cattle, and Jacob said nothing till they came.
+Then Hamor, the father of Shechem, came out to have a talk with Jacob.
+Now the sons of Jacob came in from the fields when they had news of it, and they were wounded and very angry because of the shame he had done in Israel by having connection with Jacob's daughter; and they said, Such a thing is not to be done.
+But Hamor said to them, Shechem, my son, is full of desire for your daughter: will you then give her to him for a wife?
+And let our two peoples be joined together; give your daughters to us, and take our daughters for yourselves.
+Go on living with us, and the country will be open to you; do trade and get property there.
+And Shechem said to her father and her brothers, If you will give ear to my request, whatever you say I will give to you.
+However great you make the bride-price and payment, I will give it; only let me have the girl for my wife.
+But the sons of Jacob gave a false answer to Shechem and Hamor his father, because of what had been done to Dinah their sister.
+And they said, It is not possible for us to give our sister to one who is without circumcision, for that would be a cause of shame to us:
+But on this condition only will we come to an agreement with you: if every male among you becomes like us and undergoes circumcision;
+Then we will give our daughters to you and take your daughters to us and go on living with you as one people.
+But if you will not undergo circumcision as we say, then we will take our daughter and go.
+And their words were pleasing to Hamor and his son Shechem.
+And without loss of time the young man did as they said, because he had delight in Jacob's daughter, and he was the noblest of his father's house.
+--]]
+
+--[[
+And Isaac answering said, But I have made him your master, and have given him all his brothers for servants; I have made him strong with grain and wine: what then am I to do for you, my son?
+And Esau said to his father, Is that the only blessing you have, my father? give a blessing to me, even me! And Esau was overcome with weeping.
+Then Isaac his father made answer and said to him, Far from the fertile places of the earth, and far from the dew of heaven on high will your living-place be:
+By your sword will you get your living and you will be your brother's servant; but when your power is increased his yoke will be broken from off your neck.
+So Esau was full of hate for Jacob because of his father's blessing; and he said in his heart, The days of weeping for my father are near; then I will put my brother Jacob to death.
+Then Rebekah, hearing what Esau had said, sent for Jacob, her younger son, and said to him, It seems that your brother Esau is purposing to put you to death.
+So now, my son, do what I say: go quickly to Haran, to my brother Laban;
+And be there with him for a little time, till your brother's wrath is turned away;
+Till the memory of what you have done to him is past and he is no longer angry: then I will send word for you to come back; are the two of you to be taken from me in one day?
+Then Rebekah said to Isaac, My life is a weariness to me because of the daughters of Heth: if Jacob takes a wife from among the daughters of Heth, such as these, the women of this land, of what use will my life be to me?
+--]]
 
 --GoogleAnalytics用到的字串
 GALabel = {
@@ -67,6 +102,40 @@ function string.IsNullOrEmpty(s)
   return s == nil or s == "";
 end
 
+--[[
+And these two had a dream on the same night; the chief wine-servant and the chief bread-maker of the king of Egypt, who were in prison, the two of them had dreams with a special sense.
+And in the morning when Joseph came to them he saw that they were looking sad.
+And he said to the servants of Pharaoh who were in prison with him, Why are you looking so sad?
+Then they said to him, We have had a dream, and no one is able to give us the sense. And Joseph said, Does not the sense of dreams come from God? what was your dream?
+Then the chief wine-servant gave Joseph an account of his dream, and said, In my dream I saw a vine before me;
+And on the vine were three branches; and it seemed as if it put out buds and flowers, and from them came grapes ready for cutting.
+And Pharaoh's cup was in my hand, and I took the grapes and crushing them into Pharaoh's cup, gave the cup into Pharaoh's hand.
+Then Joseph said, This is the sense of your dream: the three branches are three days;
+After three days Pharaoh will give you honour, and put you back into your place, and you will give him his cup as you did before, when you were his wine-servant.
+But keep me in mind when things go well for you, and be good to me and say a good word for me to Pharaoh and get me out of this prison:
+For truly I was taken by force from the land of the Hebrews; and I have done nothing for which I might be put in prison.
+Now when the chief bread-maker saw that the first dream had a good sense, he said to Joseph, I had a dream; and in my dream there were three baskets of white bread on my head;
+And in the top basket were all sorts of cooked meats for Pharaoh; and the birds were taking them out of the baskets on my head.
+Then Joseph said, This is the sense of your dream: the three baskets are three days;
+--]]
+
+--[[
+Now at that time, Judah went away from his brothers and became the friend of a man of Adullam named Hirah.
+And there he saw the daughter of a certain man of Canaan named Shua, and took her as his wife.
+And she gave birth to a son, and he gave him the name Er.
+And again she gave birth to a son, and he gave him the name Onan.
+Then she had another son, to whom she gave the name Shelah; she was at Chezib when the birth took place.
+And Judah took a wife for his first son Er, and her name was Tamar.
+Now Er, Judah's first son, did evil in the eyes of the Lord, so that he put him to death.
+Then Judah said to Onan, Go in to your brother's wife and do what it is right for a husband's brother to do; make her your wife and get offspring for your brother.
+But Onan, seeing that the offspring would not be his, went in to his brother's wife, but let his seed go on to the earth, so that he might not get offspring for his brother.
+And what he did was evil in the eyes of the Lord, so that he put him to death, like his brother.
+Then Judah said to Tamar, his daughter-in-law, Go back to your father's house and keep yourself as a widow till my son Shelah becomes a man: for he had in his mind the thought that death might come to him as it had come to his brothers. So Tamar went back to her father's house.
+And after a time, Bath-shua, Judah's wife, came to her end; and after Judah was comforted for her loss, he went to Timnah, where they were cutting the wool of his sheep, and his friend Hirah of Adullam went with him.
+And when Tamar had news that her father-in-law was going up to Timnah to the wool-cutting,
+She took off her widow's clothing, and covering herself with her veil, she took her seat near Enaim on the road to Timnah; for she saw that Shelah was now a man, but she had not been made his wife.
+--]]
+
 function string.Count(str)
   local len = #str;
   local left = len;
@@ -93,75 +162,177 @@ function string.Count(str)
 end
 
 function string.Sub(str, start, len)
-  local initIndex = 1;
+  local firstResult = "";
   local strResult = "";
-  local endIndex;
-  if len == nil then
-    endIndex = string.Count(str);
-  else
-    endIndex = start + len - initIndex;
-  end
+  local maxLen = string.len(str);
+  start = start - 1;
 
-  local index = initIndex;
-  if endIndex < start then return strResult end;
+  --找到起始位置
+  local preSite = 1;
 
-  --[[
-    https://www.cnblogs.com/SkyflyBird/p/9804282.html
-    UTF8的编码规则：
-    1. 字符的第一个字节范围： 0x00—0x7F(0-127),或者 0xC2—0xF4(194-244);
-        UTF8 是兼容 ascii 的，所以 0~127 就和 ascii 完全一致
-    2. 0xC0, 0xC1,0xF5—0xFF(192, 193 和 245-255)不会出现在UTF8编码中
-    3. 0x80—0xBF(128-191)只会出现在第二个及随后的编码中(针对多字节编码，如汉字)
-    ]]
-  --Use gmatch from http://lua-users.org/wiki/LuaUnicode for now.
-  for singleChar in string.gmatch(str, "([%z\1-\127\194-\244][\128-\191]*)") do
-    if index >= start and index <= endIndex then
-      strResult = string.Concat(strResult, singleChar);
+  if start > 0 then
+    for i = 1, maxLen do
+      local s_dropping = string.byte(str, i);
+      if not s_dropping then
+        local s_str = string.sub(str, preSite, i - 1);
+
+        preSite = i + 1;
+        break;
+      end
+      
+      if s_dropping < 128 or (i + 1 - preSite) == 3 then
+        local s_str = string.sub(str, preSite, i);
+
+        preSite = i + 1;
+        firstResult = string.Concat(firstResult, s_str);
+
+        local curLen = string.Count(firstResult);
+        if curLen == start then
+          break;
+        end
+      end
     end
-    index = index + 1;
   end
+  
+  --截取字符串
+  preSite = string.len(firstResult) + 1;
+  local startC = preSite;
+  for i = startC, maxLen do
+    local s_dropping = string.byte(str, i);
+    if not s_dropping then
+      local s_str = string.sub(str, preSite, i - 1);
+
+      preSite = i;
+      strResult = string.Concat(strResult, s_str);
+
+      return strResult
+    end
+    
+    if s_dropping < 128 or (i + 1 - preSite) == 3 then
+      local s_str = string.sub(str, preSite, i)
+
+      preSite = i + 1;
+      strResult = string.Concat(strResult, s_str);
+
+      local curLen = string.Count(strResult);
+      if curLen == len then
+        return strResult;
+      end
+    end
+  end
+
   return strResult;
 end
 
-
 function string.GetLength(s)
-  if string.gmatch(s, "([%z\1-\127\194-\244][\128-\191]*)") then
-    return TextChecker.GetLength(s);
-  else
-    --计算字符串宽度
-    --可以计算出字符宽度，用于显示使用
-    local lenInByte = #s;
-    local width = 0;
-    local i = 1;
+  --计算字符串宽度
+  --可以计算出字符宽度，用于显示使用
+  local lenInByte = #s;
+  local width = 0;
+  local i = 1;
 
-    while i <= lenInByte do
-      local curByte = string.byte(s, i);
+  while i <= lenInByte do
+    local curByte = string.byte(s, i);
 
-      local byteCount = 1;
-      if curByte > 0 and curByte <= 127 then
-        --1字节字符
-        byteCount = 1;
-      elseif curByte >= 192 and curByte < 223 then
-        --双字节字符
-        byteCount = 2;
-      elseif curByte >= 224 and curByte < 239 then
-        --汉字
-        byteCount = 2;  --原本是3  因為delphi一個中文字長度是2所以改2
-      elseif curByte >= 240 and curByte <= 247 then
-        --4字节字符
-        byteCount = 4;
-      end
-
-      --重置下一字节的索引
-      i = i + byteCount;
-
-      --字符的个数（长度
-      width = width + 1;
+    local byteCount = 1;
+    if curByte > 0 and curByte <= 127 then
+      --1字节字符
+      byteCount = 1;
+    elseif curByte >= 192 and curByte < 223 then
+      --双字节字符
+      byteCount = 2;
+    elseif curByte >= 224 and curByte < 239 then
+      --汉字
+      byteCount = 2;  --原本是3  因為delphi一個中文字長度是2所以改2
+    elseif curByte >= 240 and curByte <= 247 then
+      --4字节字符
+      byteCount = 4;
     end
 
-    return width;
+    --重置下一字节的索引
+    i = i + byteCount;
+
+    --字符的个数（长度
+    width = width + 1;
   end
+
+  return width;
 end
+
+--[[
+This is the book of the generations of Adam. In the day when God made man, he made him in the image of God;
+Male and female he made them, naming them Man, and giving them his blessing on the day when they were made.
+Adam had been living for a hundred and thirty years when he had a son like himself, after his image, and gave him the name of Seth:
+And after the birth of Seth, Adam went on living for eight hundred years, and had sons and daughters:
+And all the years of Adam's life were nine hundred and thirty: and he came to his end.
+And Seth was a hundred and five years old when he became the father of Enosh:
+And he went on living after the birth of Enosh for eight hundred and seven years, and had sons and daughters:
+And all the years of Seth's life were nine hundred and twelve: and he came to his end.
+And Enosh was ninety years old when he became the father of Kenan:
+--]]
+
+
+
+--[[
+Now in the days of Amraphel, king of Shinar, Arioch, king of Ellasar, Chedorlaomer, king of Elam, and Tidal, king of Goiim,
+They made war with Bera, king of Sodom, and with Birsha, king of Gomorrah, Shinab, king of Admah, and Shemeber, king of Zeboiim, and the king of Bela (which is Zoar).
+All these came together in the valley of Siddim (which is the Salt Sea).
+For twelve years they were under the rule of Chedorlaomer, but in the thirteenth year they put off his control.
+And in the fourteenth year, Chedorlaomer and the kings who were on his side, overcame the Rephaim in Ashteroth-karnaim, and the Zuzim in Ham, and the Emim in Shaveh-kiriathaim,
+And the Horites in their mountain Seir, driving them as far as El-paran, which is near the waste land.
+Then they came back to En-mishpat (which is Kadesh), making waste all the country of the Amalekites and of the Amorites living in Hazazon-tamar.
+And the king of Sodom with the king of Gomorrah and the king of Admah and the king of Zeboiim and the king of Bela (that is Zoar), went out, and put their forces in position in the valley of Siddim,
+Against Chedorlaomer, king of Elam, and Tidal, king of Goiim, and Amraphel, king of Shinar, and Arioch, king of Ellasar: four kings against the five.
+Now the valley of Siddim was full of holes of sticky earth; and the kings of Sodom and Gomorrah were put to flight and came to their end there, but the rest got away to the mountain.
+And the four kings took all the goods and food from Sodom and Gomorrah and went on their way.
+And in addition they took Lot, Abram's brother's son, who was living in Sodom, and all his goods.
+And one who had got away from the fight came and gave word of it to Abram the Hebrew, who was living by the holy tree of Mamre, the Amorite, the brother of Eshcol and Aner, who were friends of Abram.
+And Abram, hearing that his brother's son had been made a prisoner, took a band of his trained men, three hundred and eighteen of them, sons of his house, and went after them as far as Dan.
+--]]
+
+--[[
+Now Abraham was old and far on in years: and the Lord had given him everything in full measure.
+And Abraham said to his chief servant, the manager of all his property, Come now, put your hand under my leg:
+And take an oath by the Lord, the God of heaven and the God of the earth, that you will not get a wife for my son Isaac from the daughters of the Canaanites among whom I am living;
+But that you will go into my country and to my relations and get a wife there for my son Isaac.
+And the servant said, If by chance the woman will not come with me into this land, am I to take your son back again to the land from which you came?
+And Abraham said, Take care that you do not let my son go back to that land.
+The Lord God of heaven, who took me from my father's house and from the land of my birth, and made an oath to me, saying, To your seed I will give this land: he will send his angel before you and give you a wife for my son in that land.
+And if the woman will not come with you, then you are free from this oath; only do not take my son back there.
+And the servant put his hand under Abraham's leg, and gave him his oath about this thing.
+And the servant took ten of his master's camels, and all sorts of good things of his master's, and went to Mesopotamia, to the town of Nahor.
+And he made the camels take their rest outside the town by the water-spring in the evening, at the time when the women came to get water.
+And he said, O Lord, the God of my master Abraham, let me do well in what I have undertaken this day, and give your mercy to my master Abraham.
+See, I am waiting here by the water-spring; and the daughters of the town are coming out to get water:
+Now, may the girl to whom I say, Let down your vessel and give me a drink, and who says in answer, Here is a drink for you and let me give water to your camels: may she be the one marked out by you for your servant Isaac: so may I be certain that you have been good to my master Abraham.
+And even before his words were ended, Rebekah, the daughter of Bethuel, the son of Milcah, who was the wife of Nahor, Abraham's brother, came out with her water-vessel on her arm.
+She was a very beautiful girl, a virgin, who had never been touched by a man: and she went down to the spring to get water in her vessel.
+And the servant came running to her and said, Give me a little water from your vessel.
+And she said, Take a drink, my lord: and quickly letting down her vessel onto her hand, she gave him a drink.
+And having done so, she said, I will get water for your camels till they have had enough.
+And after putting the water from her vessel into the animals' drinking-place, she went quickly back to the spring and got water for all the camels.
+And the man, looking at her, said nothing, waiting to see if the Lord had given his journey a good outcome.
+And when the camels had had enough, the man took a gold nose-ring, half a shekel in weight, and two ornaments for her arms of ten shekels weight of gold;
+And said to her, Whose daughter are you? is there room in your father's house for us?
+And she said to him, I am the daughter of Bethuel, the son of Milcah, Nahor's wife.
+And she said, We have a great store of dry grass and cattle-food, and there is room for you.
+And with bent head the man gave worship to the Lord;
+And said, Praise be to the Lord, the God of my master Abraham, who has given a sign that he is good and true to my master, by guiding me straight to the house of my master's family.
+]]--
+
+
+--[[
+And Isaac answering said, But I have made him your master, and have given him all his brothers for servants; I have made him strong with grain and wine: what then am I to do for you, my son?
+And Esau said to his father, Is that the only blessing you have, my father? give a blessing to me, even me! And Esau was overcome with weeping.
+Then Isaac his father made answer and said to him, Far from the fertile places of the earth, and far from the dew of heaven on high will your living-place be:
+By your sword will you get your living and you will be your brother's servant; but when your power is increased his yoke will be broken from off your neck.
+So Esau was full of hate for Jacob because of his father's blessing; and he said in his heart, The days of weeping for my father are near; then I will put my brother Jacob to death.
+Then Rebekah, hearing what Esau had said, sent for Jacob, her younger son, and said to him, It seems that your brother Esau is purposing to put you to death.
+So now, my son, do what I say: go quickly to Haran, to my brother Laban;
+And be there with him for a little time, till your brother's wrath is turned away;
+Till the memory of what you have done to him is past and he is no longer angry: then I will send word for you to come back; are the two of you to be taken from me in one day?
+Then Rebekah said to Isaac, My life is a weariness to me because of the daughters of Heth: if Jacob takes a wife from among the daughters of Heth, such as these, the women of this land, of what use will my life be to me?
+--]]
 
 function string.ChangeSymbol(s)
   s = string.gsub(s, ",", "，");
@@ -282,6 +453,31 @@ function string.GetChineseNumber(value)
   return result;
 end
 
+--[[
+In the beginning God created the heaven and the earth.At the first God made the heaven and the earth.
+And the earth was without form, and void; and darkness was upon the face of the deep. And the Spirit of God moved upon the face of the waters.
+At the first God made the heaven and the earth.And the earth was waste and without form; and it was dark on the face of the deep: and the Spirit of God was moving on the face of the waters.And God said, Let there be light: and there was light.
+And God, looking on the light, saw that it was good: and God made a division between the light and the dark,
+Naming the light, Day, and the dark, Night. And there was evening and there was morning, the first day.
+And God said, Let there be a solid arch stretching over the waters, parting the waters from the waters.
+And God made the arch for a division between the waters which were under the arch and those which were over it: and it was so.
+And God gave the arch the name of Heaven. And there was evening and there was morning, the second day.
+And God said, Let the waters under the heaven come together in one place, and let the dry land be seen: and it was so.
+And God gave the dry land the name of Earth; and the waters together in their place were named Seas: and God saw that it was good.
+And God said, Let grass come up on the earth, and plants producing seed, and fruit-trees giving fruit, in which is their seed, after their sort: and it was so.
+And grass came up on the earth, and every plant producing seed of its sort, and every tree producing fruit, in which is its seed, of its sort: and God saw that it was good.
+And there was evening and there was morning, the third day.
+And God said, Let there be lights in the arch of heaven, for a division between the day and the night, and let them be for signs, and for marking the changes of the year, and for days and for years:
+And let them be for lights in the arch of heaven to give light on the earth: and it was so.
+And God made the two great lights: the greater light to be the ruler of the day, and the smaller light to be the ruler of the night: and he made the stars.
+And God put them in the arch of heaven, to give light on the earth;
+To have rule over the day and the night, and for a division between the light and the dark: and God saw that it was good.
+And there was evening and there was morning, the fourth day.
+And God said, Let the waters be full of living things, and let birds be in flight over the earth under the arch of heaven.
+And God made great sea-beasts, and every sort of living and moving thing with which the waters were full, and every sort of winged bird: and God saw that it was good.
+And God gave them his blessing, saying, Be fertile and have increase, making all the waters of the seas full, and let the birds be increased in the earth.
+--]]
+
 function string.GetChineseNumberLower(value)
   if LuaHelper.CheckDefine("TH") then
     return value;
@@ -365,6 +561,40 @@ function string.GetSecondSymbol(seconds, noHour)
   return result;
 end
 
+--[[
+Now these are the generations of the sons of Noah, Shem, Ham, and Japheth: these are the sons which they had after the great flow of waters
+The sons of Japheth: Gomer and Magog and Madai and Javan and Tubal and Meshech and Tiras.
+And the sons of Gomer: Ashkenaz and Riphath and Togarmah.
+And the sons of Javan: Elishah and Tarshish, the Kittim and the Dodanim.
+From these came the nations of the sea-lands, with their different families and languages.
+And the sons of Ham: Cush and Mizraim and Put and Canaan.
+And the sons of Cush: Seba and Havilah and Sabtah and Raamah and Sabteca; and the sons of Raamah: Sheba and Dedan.
+And Cush was the father of Nimrod, who was the first of the great men of the earth.
+He was a very great bowman, so that there is a saying, Like Nimrod, a very great bowman.
+And at the first, his kingdom was Babel and Erech and Accad and Calneh, in the land of Shinar.
+From that land he went out into Assyria, building Nineveh with its wide streets and Calah,
+And Resen between Nineveh and Calah, which is a very great town.
+And Mizraim was the father of the Ludim and Anamim and Lehabim and Naphtuhim;
+And Pathrusim and Casluhim and Caphtorim, from whom came the Philistines.
+And Canaan was the father of Zidon, who was his oldest son, and Heth,
+And the Jebusite and the Amorite and the Girgashite,
+And the Hivite and the Arkite and the Sinite,
+And the Arvadite and the Zemarite and the Hamathite; after that the families of the Canaanites went far and wide in all directions;
+Their country stretching from Zidon to Gaza, in the direction of Gerar; and to Lasha, in the direction of Sodom and Gomorrah and Admah and Zeboiim.
+All these, with their different families, languages, lands, and nations, are the offspring of Ham.
+And Shem, the older brother of Japheth, the father of the children of Eber, had other sons in addition.
+These are the sons of Shem: Elam and Asshur and Arpachshad and Lud and Aram.
+And the sons of Aram: Uz and Hul and Gether and Mash.
+And Arpachshad became the father of Shelah; and Shelah became the father of Eber.
+And Eber had two sons: the name of the one was Peleg, because in his time the peoples of the earth became separate; and his brother's name was Joktan.
+And Joktan was the father of Almodad and Sheleph and Hazarmaveth and Jerah
+And Hadoram and Uzal and Diklah
+And Obal and Abimael and Sheba
+And Ophir and Havilah and Jobab; all these were the sons of Joktan.
+And their country was from Mesha, in the direction of Sephar, the mountain of the east.
+These, with their families and their languages and their lands and their nations, are the offspring of Shem.
+--]]
+
 function string.TenDigits(number)
    return string.Concat(math.floor(number / 10), number % 10);
 end
@@ -381,8 +611,7 @@ function string.Trim(s)
   return (s:gsub("^%s*(.-)%s*$", "%1"));
 end
 
-function string.CheckName(s, skipIllegal)
-  
+function string.CheckName(s)
   if s == nil or s == "" then
     ShowCenterMessage(string.Get(50021));
     return false;
@@ -393,18 +622,16 @@ function string.CheckName(s, skipIllegal)
     return false;
   end
 
-  if string.GetLength(s) > 14 then
-    ShowCenterMessage(string.Get(49005));
-    return false;
-  end
-
-  if skipIllegal then return true end
-
   for k, v in pairs(illegalDatas) do
     if string.match(s, string.GetNocase(v)) ~= nil then
       ShowCenterMessage(string.Get(50022));
       return false;
     end
+  end
+
+  if string.GetLength(s) > 14 then
+    ShowCenterMessage(string.Get(49005));
+    return false;
   end
 
   return true;
@@ -423,6 +650,40 @@ function string.ReomveSymbol(str, symbol)
   end  
   return table.concat(subStr);
 end
+
+--[[
+Now at that time, Judah went away from his brothers and became the friend of a man of Adullam named Hirah.
+And there he saw the daughter of a certain man of Canaan named Shua, and took her as his wife.
+And she gave birth to a son, and he gave him the name Er.
+And again she gave birth to a son, and he gave him the name Onan.
+Then she had another son, to whom she gave the name Shelah; she was at Chezib when the birth took place.
+And Judah took a wife for his first son Er, and her name was Tamar.
+Now Er, Judah's first son, did evil in the eyes of the Lord, so that he put him to death.
+Then Judah said to Onan, Go in to your brother's wife and do what it is right for a husband's brother to do; make her your wife and get offspring for your brother.
+But Onan, seeing that the offspring would not be his, went in to his brother's wife, but let his seed go on to the earth, so that he might not get offspring for his brother.
+And what he did was evil in the eyes of the Lord, so that he put him to death, like his brother.
+Then Judah said to Tamar, his daughter-in-law, Go back to your father's house and keep yourself as a widow till my son Shelah becomes a man: for he had in his mind the thought that death might come to him as it had come to his brothers. So Tamar went back to her father's house.
+And after a time, Bath-shua, Judah's wife, came to her end; and after Judah was comforted for her loss, he went to Timnah, where they were cutting the wool of his sheep, and his friend Hirah of Adullam went with him.
+And when Tamar had news that her father-in-law was going up to Timnah to the wool-cutting,
+She took off her widow's clothing, and covering herself with her veil, she took her seat near Enaim on the road to Timnah; for she saw that Shelah was now a man, but she had not been made his wife.
+--]]
+
+--[[
+And these two had a dream on the same night; the chief wine-servant and the chief bread-maker of the king of Egypt, who were in prison, the two of them had dreams with a special sense.
+And in the morning when Joseph came to them he saw that they were looking sad.
+And he said to the servants of Pharaoh who were in prison with him, Why are you looking so sad?
+Then they said to him, We have had a dream, and no one is able to give us the sense. And Joseph said, Does not the sense of dreams come from God? what was your dream?
+Then the chief wine-servant gave Joseph an account of his dream, and said, In my dream I saw a vine before me;
+And on the vine were three branches; and it seemed as if it put out buds and flowers, and from them came grapes ready for cutting.
+And Pharaoh's cup was in my hand, and I took the grapes and crushing them into Pharaoh's cup, gave the cup into Pharaoh's hand.
+Then Joseph said, This is the sense of your dream: the three branches are three days;
+After three days Pharaoh will give you honour, and put you back into your place, and you will give him his cup as you did before, when you were his wine-servant.
+But keep me in mind when things go well for you, and be good to me and say a good word for me to Pharaoh and get me out of this prison:
+For truly I was taken by force from the land of the Hebrews; and I have done nothing for which I might be put in prison.
+Now when the chief bread-maker saw that the first dream had a good sense, he said to Joseph, I had a dream; and in my dream there were three baskets of white bread on my head;
+And in the top basket were all sorts of cooked meats for Pharaoh; and the birds were taking them out of the baskets on my head.
+Then Joseph said, This is the sense of your dream: the three baskets are three days;
+--]]
 
 function string.Concat(...)
   return table.concat({ ... });
@@ -494,7 +755,7 @@ function string.Parse(text)
       if Network.servers[i].id == value then
         return Network.servers[i].name
       end
-    end
+    end  
   end
   
   return string.Concat("%", text, "%");
@@ -517,6 +778,72 @@ function string.GetAttribute(kind)
   
   return "";
 end
+
+--[[
+Now Abraham was old and far on in years: and the Lord had given him everything in full measure.
+And Abraham said to his chief servant, the manager of all his property, Come now, put your hand under my leg:
+And take an oath by the Lord, the God of heaven and the God of the earth, that you will not get a wife for my son Isaac from the daughters of the Canaanites among whom I am living;
+But that you will go into my country and to my relations and get a wife there for my son Isaac.
+And the servant said, If by chance the woman will not come with me into this land, am I to take your son back again to the land from which you came?
+And Abraham said, Take care that you do not let my son go back to that land.
+The Lord God of heaven, who took me from my father's house and from the land of my birth, and made an oath to me, saying, To your seed I will give this land: he will send his angel before you and give you a wife for my son in that land.
+And if the woman will not come with you, then you are free from this oath; only do not take my son back there.
+And the servant put his hand under Abraham's leg, and gave him his oath about this thing.
+And the servant took ten of his master's camels, and all sorts of good things of his master's, and went to Mesopotamia, to the town of Nahor.
+And he made the camels take their rest outside the town by the water-spring in the evening, at the time when the women came to get water.
+And he said, O Lord, the God of my master Abraham, let me do well in what I have undertaken this day, and give your mercy to my master Abraham.
+See, I am waiting here by the water-spring; and the daughters of the town are coming out to get water:
+Now, may the girl to whom I say, Let down your vessel and give me a drink, and who says in answer, Here is a drink for you and let me give water to your camels: may she be the one marked out by you for your servant Isaac: so may I be certain that you have been good to my master Abraham.
+And even before his words were ended, Rebekah, the daughter of Bethuel, the son of Milcah, who was the wife of Nahor, Abraham's brother, came out with her water-vessel on her arm.
+She was a very beautiful girl, a virgin, who had never been touched by a man: and she went down to the spring to get water in her vessel.
+And the servant came running to her and said, Give me a little water from your vessel.
+And she said, Take a drink, my lord: and quickly letting down her vessel onto her hand, she gave him a drink.
+And having done so, she said, I will get water for your camels till they have had enough.
+And after putting the water from her vessel into the animals' drinking-place, she went quickly back to the spring and got water for all the camels.
+And the man, looking at her, said nothing, waiting to see if the Lord had given his journey a good outcome.
+And when the camels had had enough, the man took a gold nose-ring, half a shekel in weight, and two ornaments for her arms of ten shekels weight of gold;
+And said to her, Whose daughter are you? is there room in your father's house for us?
+And she said to him, I am the daughter of Bethuel, the son of Milcah, Nahor's wife.
+And she said, We have a great store of dry grass and cattle-food, and there is room for you.
+And with bent head the man gave worship to the Lord;
+And said, Praise be to the Lord, the God of my master Abraham, who has given a sign that he is good and true to my master, by guiding me straight to the house of my master's family.
+]]--
+
+
+--[[
+And Isaac answering said, But I have made him your master, and have given him all his brothers for servants; I have made him strong with grain and wine: what then am I to do for you, my son?
+And Esau said to his father, Is that the only blessing you have, my father? give a blessing to me, even me! And Esau was overcome with weeping.
+Then Isaac his father made answer and said to him, Far from the fertile places of the earth, and far from the dew of heaven on high will your living-place be:
+By your sword will you get your living and you will be your brother's servant; but when your power is increased his yoke will be broken from off your neck.
+So Esau was full of hate for Jacob because of his father's blessing; and he said in his heart, The days of weeping for my father are near; then I will put my brother Jacob to death.
+Then Rebekah, hearing what Esau had said, sent for Jacob, her younger son, and said to him, It seems that your brother Esau is purposing to put you to death.
+So now, my son, do what I say: go quickly to Haran, to my brother Laban;
+And be there with him for a little time, till your brother's wrath is turned away;
+Till the memory of what you have done to him is past and he is no longer angry: then I will send word for you to come back; are the two of you to be taken from me in one day?
+Then Rebekah said to Isaac, My life is a weariness to me because of the daughters of Heth: if Jacob takes a wife from among the daughters of Heth, such as these, the women of this land, of what use will my life be to me?
+--]]
+
+--[[
+Now Dinah, the daughter whom Leah had by Jacob, went out to see the women of that country.
+And when Shechem, the son of Hamor the Hivite who was the chief of that land, saw her, he took her by force and had connection with her.
+Then his heart went out in love to Dinah, the daughter of Jacob, and he said comforting words to her.
+And Shechem said to Hamor, his father, Get me this girl for my wife.
+Now Jacob had word of what Shechem had done to his daughter; but his sons were in the fields with the cattle, and Jacob said nothing till they came.
+Then Hamor, the father of Shechem, came out to have a talk with Jacob.
+Now the sons of Jacob came in from the fields when they had news of it, and they were wounded and very angry because of the shame he had done in Israel by having connection with Jacob's daughter; and they said, Such a thing is not to be done.
+But Hamor said to them, Shechem, my son, is full of desire for your daughter: will you then give her to him for a wife?
+And let our two peoples be joined together; give your daughters to us, and take our daughters for yourselves.
+Go on living with us, and the country will be open to you; do trade and get property there.
+And Shechem said to her father and her brothers, If you will give ear to my request, whatever you say I will give to you.
+However great you make the bride-price and payment, I will give it; only let me have the girl for my wife.
+But the sons of Jacob gave a false answer to Shechem and Hamor his father, because of what had been done to Dinah their sister.
+And they said, It is not possible for us to give our sister to one who is without circumcision, for that would be a cause of shame to us:
+But on this condition only will we come to an agreement with you: if every male among you becomes like us and undergoes circumcision;
+Then we will give our daughters to you and take your daughters to us and go on living with you as one people.
+But if you will not undergo circumcision as we say, then we will take our daughter and go.
+And their words were pleasing to Hamor and his son Shechem.
+And without loss of time the young man did as they said, because he had delight in Jacob's daughter, and he was the noblest of his father's house.
+--]]
 
 function string.GetMoral(kind, singleWord)
   if kind == 0 then
@@ -633,8 +960,6 @@ function string.GetCurrency(currency)
     return TextParse.GetSpriteText("common0", "common0_icon137", 20, 20, 0, 2);
   elseif currency == ECurrency.Elf then
     return TextParse.GetSpriteText("common0", "common0_icon155", 20, 20, 0, 2);
-  elseif currency == ECurrency.Treasure then
-    return TextParse.GetSpriteText("common0", "common0_icon202", 20, 20, 0, 2);
   elseif currency == ECurrency.TS then
     return TextParse.GetSpriteText("common0", "common0_icon154", 20, 20, 0, 2);
   elseif currency == ECurrency.Soul then
@@ -649,6 +974,8 @@ function string.GetCurrency(currency)
     return TextParse.GetSpriteText("common0", "common0_icon163", 20, 20, 0, 2);
   elseif currency == ECurrency.OutfitTicket then
     return TextParse.GetSpriteText("common0", "common0_icon162", 20, 20, 0, 2);
+  elseif currency == ECurrency.Treasure then
+    return TextParse.GetSpriteText("common0", "common0_icon202", 20, 20, 0, 2);
   else
     return "";
   end
@@ -692,6 +1019,72 @@ function string.GetCurrencyName(currency)
   end
 end
 
+--[[
+Now Abraham was old and far on in years: and the Lord had given him everything in full measure.
+And Abraham said to his chief servant, the manager of all his property, Come now, put your hand under my leg:
+And take an oath by the Lord, the God of heaven and the God of the earth, that you will not get a wife for my son Isaac from the daughters of the Canaanites among whom I am living;
+But that you will go into my country and to my relations and get a wife there for my son Isaac.
+And the servant said, If by chance the woman will not come with me into this land, am I to take your son back again to the land from which you came?
+And Abraham said, Take care that you do not let my son go back to that land.
+The Lord God of heaven, who took me from my father's house and from the land of my birth, and made an oath to me, saying, To your seed I will give this land: he will send his angel before you and give you a wife for my son in that land.
+And if the woman will not come with you, then you are free from this oath; only do not take my son back there.
+And the servant put his hand under Abraham's leg, and gave him his oath about this thing.
+And the servant took ten of his master's camels, and all sorts of good things of his master's, and went to Mesopotamia, to the town of Nahor.
+And he made the camels take their rest outside the town by the water-spring in the evening, at the time when the women came to get water.
+And he said, O Lord, the God of my master Abraham, let me do well in what I have undertaken this day, and give your mercy to my master Abraham.
+See, I am waiting here by the water-spring; and the daughters of the town are coming out to get water:
+Now, may the girl to whom I say, Let down your vessel and give me a drink, and who says in answer, Here is a drink for you and let me give water to your camels: may she be the one marked out by you for your servant Isaac: so may I be certain that you have been good to my master Abraham.
+And even before his words were ended, Rebekah, the daughter of Bethuel, the son of Milcah, who was the wife of Nahor, Abraham's brother, came out with her water-vessel on her arm.
+She was a very beautiful girl, a virgin, who had never been touched by a man: and she went down to the spring to get water in her vessel.
+And the servant came running to her and said, Give me a little water from your vessel.
+And she said, Take a drink, my lord: and quickly letting down her vessel onto her hand, she gave him a drink.
+And having done so, she said, I will get water for your camels till they have had enough.
+And after putting the water from her vessel into the animals' drinking-place, she went quickly back to the spring and got water for all the camels.
+And the man, looking at her, said nothing, waiting to see if the Lord had given his journey a good outcome.
+And when the camels had had enough, the man took a gold nose-ring, half a shekel in weight, and two ornaments for her arms of ten shekels weight of gold;
+And said to her, Whose daughter are you? is there room in your father's house for us?
+And she said to him, I am the daughter of Bethuel, the son of Milcah, Nahor's wife.
+And she said, We have a great store of dry grass and cattle-food, and there is room for you.
+And with bent head the man gave worship to the Lord;
+And said, Praise be to the Lord, the God of my master Abraham, who has given a sign that he is good and true to my master, by guiding me straight to the house of my master's family.
+]]--
+
+
+--[[
+And Isaac answering said, But I have made him your master, and have given him all his brothers for servants; I have made him strong with grain and wine: what then am I to do for you, my son?
+And Esau said to his father, Is that the only blessing you have, my father? give a blessing to me, even me! And Esau was overcome with weeping.
+Then Isaac his father made answer and said to him, Far from the fertile places of the earth, and far from the dew of heaven on high will your living-place be:
+By your sword will you get your living and you will be your brother's servant; but when your power is increased his yoke will be broken from off your neck.
+So Esau was full of hate for Jacob because of his father's blessing; and he said in his heart, The days of weeping for my father are near; then I will put my brother Jacob to death.
+Then Rebekah, hearing what Esau had said, sent for Jacob, her younger son, and said to him, It seems that your brother Esau is purposing to put you to death.
+So now, my son, do what I say: go quickly to Haran, to my brother Laban;
+And be there with him for a little time, till your brother's wrath is turned away;
+Till the memory of what you have done to him is past and he is no longer angry: then I will send word for you to come back; are the two of you to be taken from me in one day?
+Then Rebekah said to Isaac, My life is a weariness to me because of the daughters of Heth: if Jacob takes a wife from among the daughters of Heth, such as these, the women of this land, of what use will my life be to me?
+--]]
+
+--[[
+Now Dinah, the daughter whom Leah had by Jacob, went out to see the women of that country.
+And when Shechem, the son of Hamor the Hivite who was the chief of that land, saw her, he took her by force and had connection with her.
+Then his heart went out in love to Dinah, the daughter of Jacob, and he said comforting words to her.
+And Shechem said to Hamor, his father, Get me this girl for my wife.
+Now Jacob had word of what Shechem had done to his daughter; but his sons were in the fields with the cattle, and Jacob said nothing till they came.
+Then Hamor, the father of Shechem, came out to have a talk with Jacob.
+Now the sons of Jacob came in from the fields when they had news of it, and they were wounded and very angry because of the shame he had done in Israel by having connection with Jacob's daughter; and they said, Such a thing is not to be done.
+But Hamor said to them, Shechem, my son, is full of desire for your daughter: will you then give her to him for a wife?
+And let our two peoples be joined together; give your daughters to us, and take our daughters for yourselves.
+Go on living with us, and the country will be open to you; do trade and get property there.
+And Shechem said to her father and her brothers, If you will give ear to my request, whatever you say I will give to you.
+However great you make the bride-price and payment, I will give it; only let me have the girl for my wife.
+But the sons of Jacob gave a false answer to Shechem and Hamor his father, because of what had been done to Dinah their sister.
+And they said, It is not possible for us to give our sister to one who is without circumcision, for that would be a cause of shame to us:
+But on this condition only will we come to an agreement with you: if every male among you becomes like us and undergoes circumcision;
+Then we will give our daughters to you and take your daughters to us and go on living with you as one people.
+But if you will not undergo circumcision as we say, then we will take our daughter and go.
+And their words were pleasing to Hamor and his son Shechem.
+And without loss of time the young man did as they said, because he had delight in Jacob's daughter, and he was the noblest of his father's house.
+--]]
+
 function string.GetUiSellFail(sellId, kind, value)
   if kind == 1 then
     return string.Get(10137); --無介消資料
@@ -702,7 +1095,7 @@ function string.GetUiSellFail(sellId, kind, value)
   elseif kind == 4 then
     return string.Get(10140); --價格錯誤
   elseif kind == 5 then
-    return string.Get(24959); --貨幣不足
+    return string.Get(40077); --金錢不足
   elseif kind == 6 then
     return string.Get(10141); --扣金錢失敗
   elseif kind == 7 then
@@ -849,9 +1242,7 @@ function string.GetServerText(data)
   local textKind = data:ReadByte();
   
   if textKind == 0 then
-    local len = data:ReadInt16()
-    result = data:ReadString(len);
-    result = string.gsub(result, "<%%(.-)%%>", string.Parse);
+    result = data:ReadString(data:ReadByte());
   elseif textKind == 1 then
     result = string.Get(data:ReadInt32());
   elseif textKind == 2 then
@@ -865,30 +1256,15 @@ function string.GetServerText(data)
   local argTexts = {};
   for i = 1, count do
     textKind = data:ReadByte();
+    
     if textKind == 0 then
-      argTexts[i] = data:ReadString(data:ReadInt16());
-      argTexts[i] = string.gsub(argTexts[i], "<%%(.-)%%>", string.Parse);
+      argTexts[i] = data:ReadString(data:ReadByte());
     elseif textKind == 1 then
       argTexts[i] = string.Get(data:ReadInt32());
     elseif textKind == 2 then
       argTexts[i] = tostring(data:ReadInt32());
     elseif textKind == 3 then
       argTexts[i] = string.AddBrackets(string.Get(data:ReadInt32()));
-    elseif textKind == 4 then
-      local itemId = data:ReadUInt16();
-      local itemData = itemDatas[itemId];
-      if itemData ~= nil then
-        argTexts[i] = itemData:GetName(true);
-      else
-        logError(" GetServerText itemId is nil : " .. itemId);
-      end
-    elseif textKind == 5 then
-      local npcId = data:ReadUInt16();
-      if npcId ~= nil then
-        argTexts[i] = npcDatas[npcId].name;
-      else
-        logError(" GetServerText npcId is nil : " .. npcId);
-      end
     end
   end
   
@@ -938,25 +1314,64 @@ function string.GetNocase(s)
   return s
 end
 
+--[[In the beginning God created the heaven and the earth.At the first God made the heaven and the earth.
+And the earth was without form, and void; and darkness was upon the face of the deep. And the Spirit of God moved upon the face of the waters.
+    At the first God made the heaven and the earth.And the earth was waste and without form; and it was dark on the face of the deep: and the Spirit of God was moving on the face of the waters.And God said, Let there be light: and there was light.
+And God, looking on the light, saw that it was good: and God made a division between the light and the dark,
+Naming the light, Day, and the dark, Night. And there was evening and there was morning, the first day.
+And God said, Let there be a solid arch stretching over the waters, parting the waters from the waters.
+And God made the arch for a division between the waters which were under the arch and those which were over it: and it was so.
+And God gave the arch the name of Heaven. And there was evening and there was morning, the second day.
+And God said, Let the waters under the heaven come together in one place, and let the dry land be seen: and it was so.
+And God gave the dry land the name of Earth; and the waters together in their place were named Seas: and God saw that it was good.
+And God said, Let grass come up on the earth, and plants producing seed, and fruit-trees giving fruit, in which is their seed, after their sort: and it was so.
+And grass came up on the earth, and every plant producing seed of its sort, and every tree producing fruit, in which is its seed, of its sort: and God saw that it was good.
+And there was evening and there was morning, the third day.
+And God said, Let there be lights in the arch of heaven, for a division between the day and the night, and let them be for signs, and for marking the changes of the year, and for days and for years:
+And let them be for lights in the arch of heaven to give light on the earth: and it was so.
+And God made the two great lights: the greater light to be the ruler of the day, and the smaller light to be the ruler of the night: and he made the stars.
+And God put them in the arch of heaven, to give light on the earth;
+To have rule over the day and the night, and for a division between the light and the dark: and God saw that it was good.
+And there was evening and there was morning, the fourth day.
+And God said, Let the waters be full of living things, and let birds be in flight over the earth under the arch of heaven.
+And God made great sea-beasts, and every sort of living and moving thing with which the waters were full, and every sort of winged bird: and God saw that it was good.
+And God gave them his blessing, saying, Be fertile and have increase, making all the waters of the seas full, and let the birds be increased in the earth.--]]
+
+
+
+--[[
+This is the book of the generations of Adam. In the day when God made man, he made him in the image of God;
+Male and female he made them, naming them Man, and giving them his blessing on the day when they were made.
+Adam had been living for a hundred and thirty years when he had a son like himself, after his image, and gave him the name of Seth:
+And after the birth of Seth, Adam went on living for eight hundred years, and had sons and daughters:
+And all the years of Adam's life were nine hundred and thirty: and he came to his end.
+And Seth was a hundred and five years old when he became the father of Enosh:
+And he went on living after the birth of Enosh for eight hundred and seven years, and had sons and daughters:
+And all the years of Seth's life were nine hundred and twelve: and he came to his end.
+And Enosh was ninety years old when he became the father of Kenan:
+--]]
+
+
+
+--[[
+Now in the days of Amraphel, king of Shinar, Arioch, king of Ellasar, Chedorlaomer, king of Elam, and Tidal, king of Goiim,
+They made war with Bera, king of Sodom, and with Birsha, king of Gomorrah, Shinab, king of Admah, and Shemeber, king of Zeboiim, and the king of Bela (which is Zoar).
+All these came together in the valley of Siddim (which is the Salt Sea).
+For twelve years they were under the rule of Chedorlaomer, but in the thirteenth year they put off his control.
+And in the fourteenth year, Chedorlaomer and the kings who were on his side, overcame the Rephaim in Ashteroth-karnaim, and the Zuzim in Ham, and the Emim in Shaveh-kiriathaim,
+And the Horites in their mountain Seir, driving them as far as El-paran, which is near the waste land.
+Then they came back to En-mishpat (which is Kadesh), making waste all the country of the Amalekites and of the Amorites living in Hazazon-tamar.
+And the king of Sodom with the king of Gomorrah and the king of Admah and the king of Zeboiim and the king of Bela (that is Zoar), went out, and put their forces in position in the valley of Siddim,
+Against Chedorlaomer, king of Elam, and Tidal, king of Goiim, and Amraphel, king of Shinar, and Arioch, king of Ellasar: four kings against the five.
+Now the valley of Siddim was full of holes of sticky earth; and the kings of Sodom and Gomorrah were put to flight and came to their end there, but the rest got away to the mountain.
+And the four kings took all the goods and food from Sodom and Gomorrah and went on their way.
+And in addition they took Lot, Abram's brother's son, who was living in Sodom, and all his goods.
+And one who had got away from the fight came and gave word of it to Abram the Hebrew, who was living by the holy tree of Mamre, the Amorite, the brother of Eshcol and Aner, who were friends of Abram.
+And Abram, hearing that his brother's son had been made a prisoner, took a band of his trained men, three hundred and eighteen of them, sons of his house, and went after them as far as Dan.
+--]]
+
 function string.GetRoleKey()
   return string.format("_%d_%s", Network.serverId, Role.playerId);
-end
-
-function string.ReplaceSpecialSymbol(s)
-  --( ) . % + - * ? [ ] ^ $
-  --  s = string.gsub(s,  "%(", "%%(");
-  --  s = string.gsub(s,  "%)", "%%)");
-  s = string.gsub(s,  "%.", "%%.");
-  --  s = string.gsub(s,  "%%", "%%%");
-  s = string.gsub(s,  "%+", "%%+");
-  s = string.gsub(s,  "%-", "%%-");
-  s = string.gsub(s,  "%*", "%%*");
-  --  s = string.gsub(s,  "%?", "%%?");
-  --  s = string.gsub(s,  "%[", "%%[");
-  --  s = string.gsub(s,  "%]", "%%]");
-  --  s = string.gsub(s,  "%^", "%%^");
-  --  s = string.gsub(s,  "%$", "%%$");
-  return s;
 end
 
 function string.GetCommaValue(amount)
@@ -1022,16 +1437,6 @@ function string.GetRandomName()
   return fullName;
 end
 
-function string.DecodeURI(s)
-  s = string.gsub(s, '%%(%x%x)', function(h) return string.char(tonumber(h, 16)) end)
-  return s
-end
-
-function string.EncodeURI(s)
-  s = string.gsub(s, "([^%w%.%- ])", function(c) return string.format("%%%02X", string.byte(c)) end)
-  return string.gsub(s, " ", "+")
-end
-
 function string.CheckNpcName(npcId, npcName)
   if string.IsNullOrEmpty(npcName) then
     local defaultName = npcDatas[npcId].name;
@@ -1040,4 +1445,14 @@ function string.CheckNpcName(npcId, npcName)
   else
     return npcName;
   end
+end
+
+function string.DecodeURI(s)
+  s = string.gsub(s, '%%(%x%x)', function(h) return string.char(tonumber(h, 16)) end)
+  return s
+end
+
+function string.EncodeURI(s)
+  s = string.gsub(s, "([^%w%.%- ])", function(c) return string.format("%%%02X", string.byte(c)) end)
+  return string.gsub(s, " ", "+")
 end

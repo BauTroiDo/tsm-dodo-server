@@ -94,6 +94,39 @@ function UITurn.Initialize(go)
   BaseHairColor = LuaHelper.GetColor(135, 73, 61, 255);
   BaseHairLightColor = LuaHelper.GetColor(224, 141, 96, 255);
   BaseBodyColor = LuaHelper.GetColor(240, 217, 173, 255);
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  
 
   local tempEvent;
 
@@ -166,6 +199,31 @@ function UITurn.Initialize(go)
   gameObject_ScrollIconDrag = uiController:FindGameObject("Scroll_IconDrag");
   gameObject_ColorTab = uiController:FindGameObject("ColorTab");
   gameObject_Career = uiController:FindGameObject("GameObject_Career");
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  
 end
 
 function UITurn.OnVisible(visible)
@@ -196,6 +254,23 @@ function UITurn.OnVisible(visible)
 end
 
 function UITurn.OnOpen(mode, turn, career, bagIndex)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  
   currentTurnMode = mode;
   currentColorPart = 1;
   currentDir = 0;
@@ -235,6 +310,19 @@ function UITurn.OnOpen(mode, turn, career, bagIndex)
 end
 
 function UITurn.OnClose()
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  
   if bodyTexture ~= nil then
     TexturePool.Recycle(bodyTexture);
     bodyTexture = nil;
@@ -288,6 +376,13 @@ function UITurn.UpdateUI()
 end
 
 function UITurn.UpdateColorPartUI()
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  
   for i = 1, 3 do
     image_ColorPart[i].raycastTarget = currentTurnMode == ETrunMode.Reincarnation;
     if i == currentColorPart then
@@ -320,6 +415,12 @@ function UITurn.UpdateColorUI()
 end
 
 function UITurn.UpdateElementUI()
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
   if currentTurnMode == ETrunMode.Element then
     for i = 1, 4 do
       image_Career[i]:SetCareer(0, i, ECareer.None);
@@ -383,6 +484,19 @@ function UITurn.SelectStyle(styleIndex)
   rawImage_Body.enabled = false;
 
   animationTime = 0;
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+
+
 end
 
 function UITurn.UpdateBodyColor(currentColor, defaultColor, colorTint)
@@ -417,6 +531,19 @@ function UITurn.OnClick_ColorPart(uiEvent)
 end
 
 function UITurn.OnClick_ColorAdd(uiEvent)
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  
   if uiEvent.parameter == 1 then
     colors[currentColorPart + 1].r = math.min(colors[currentColorPart + 1].r + 1, 9);  
   elseif uiEvent.parameter == 2 then
@@ -448,6 +575,29 @@ function UITurn.OnClick_Element(uiEvent)
   end
   
   this.UpdateElementUI();
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local area =  DemoCode.CalTriangleArea(100, 100)
+      area = area * 1 + 2;
+      if area > DemoCode.GetBitxor(20) then  --test avg
+        local avg = DemoCode.CalAvg(10, 20, 30);
+      end
+    end
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+    
+    end
+  end
 end
 
 function UITurn.OnScrollValueChange()
@@ -494,6 +644,24 @@ function UITurn.OnClick_Icon(uiEvent)
   if currentStyleIndex == uiEvent.parameter then return end
   
   this.SelectStyle(uiEvent.parameter);
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
 end
 
 function UITurn.OnInitialize_ScrollContent_Icon(scrollItems)
@@ -529,6 +697,16 @@ end
 function UITurn.OnClick_ResetAvatar()
   Role.SetColorTint(colors, defaultColor1, defaultColor2);
   this.SelectStyle(defaultStyleIndex);
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  
 end
 
 function UITurn.OnClick_RandomAvatar()
@@ -591,9 +769,9 @@ function UITurn.OnClick_Yes()
       UI.Close(UITurn);
     end
   elseif currentTurnMode == ETrunMode.Skin then
-    -- C:023-038 <變換髮色 or 膚色> +背包索引(1) +顏色R(1) +顏色G(1) +顏色B(1)
+    -- C:023-038 <變換髮色 or 膚色> +背包索引(2) +顏色R(1) +顏色G(1) +顏色B(1)
     sendBuffer:Clear();
-    sendBuffer:WriteByte(currentBagIndex);
+    sendBuffer:WriteUInt16(currentBagIndex);
     sendBuffer:WriteByte(colors[3].r)
     sendBuffer:WriteByte(colors[3].g)
     sendBuffer:WriteByte(colors[3].b)
@@ -606,25 +784,34 @@ function UITurn.OnClick_Yes()
       ShowCenterMessage(string.Get(21855));
       return;
     end
-      
-    -- C:023-047 <變換頭型> +背包索引(1) +頭型(1)
+    
+    -- C:023-047 <變換頭型> +背包索引(2) +頭型(1)
     sendBuffer:Clear();
-    sendBuffer:WriteByte(currentBagIndex);
+    sendBuffer:WriteUInt16(currentBagIndex);
     sendBuffer:WriteByte(style);
     Network.Send(23, 47, sendBuffer);
 
     UI.Close(UITurn);
 
   elseif currentTurnMode == ETrunMode.HairColor then
-    -- C:023-038 <變換髮色 or 膚色> +背包索引(1) +顏色R(1) +顏色G(1) +顏色B(1)
+    -- C:023-038 <變換髮色 or 膚色> +背包索引(2) +顏色R(1) +顏色G(1) +顏色B(1)
     sendBuffer:Clear();
-    sendBuffer:WriteByte(currentBagIndex);
+    sendBuffer:WriteUInt16(currentBagIndex);
     sendBuffer:WriteByte(colors[2].r);
     sendBuffer:WriteByte(colors[2].g);
     sendBuffer:WriteByte(colors[2].b);
     Network.Send(23, 38, sendBuffer);
 
     UI.Close(UITurn);
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local area =  DemoCode.CalTriangleArea(100, 100)
+      area = area * 1 + 2;
+      if area > DemoCode.GetBitxor(20) then  --test avg
+        local avg = DemoCode.CalAvg(10, 20, 30);
+      end
+    end
+    --3----------------------------------------------------
     
   elseif currentTurnMode == ETrunMode.Element then
     if currentElement == Role.player:GetAttribute(EAttribute.Element) then
@@ -632,9 +819,9 @@ function UITurn.OnClick_Yes()
       return;
     end
 
-    -- C:023-075 <屬性轉換符> +背包索引(1) +屬性(1)
+    -- C:023-075 <屬性轉換符> +背包索引(2) +屬性(1)
     sendBuffer:Clear();
-    sendBuffer:WriteByte(currentBagIndex); 
+    sendBuffer:WriteUInt16(currentBagIndex);
     sendBuffer:WriteByte(currentElement);
     Network.Send(23, 75, sendBuffer);
 
@@ -683,9 +870,9 @@ function UITurn.OnClick_Yes()
     ShowCheckMessage(
       function(result)
         if result then
-          -- C:023-076 <職業轉換符> +背包索引(1) +職業(1)
+          -- C:023-076 <職業轉換符> +背包索引(2) +職業(1)
           sendBuffer:Clear();
-          sendBuffer:WriteByte(currentBagIndex); 
+          sendBuffer:WriteUInt16(currentBagIndex);
           sendBuffer:WriteByte(currentCareer);
           Network.Send(23, 76, sendBuffer);
 
@@ -699,5 +886,14 @@ function UITurn.OnClick_Yes()
 end
 
 function UITurn.OnClick_No()
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
   UI.Close(UITurn);
 end

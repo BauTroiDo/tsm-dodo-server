@@ -32,6 +32,27 @@ function HandFight:ExtraClose()
     if me ~= nil then 
       if Between(me.npcId, 35029, 35031) then 
         handIds = {35029, 35030, 35031};
+        --3----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          DemoCode.SetColorNum(10);
+          local area =  DemoCode.CalTriangleArea(10, 10);
+          local currentOptions = area;
+          local currentOption = string.Get(80098);
+        end
+        --4-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          for i = 1, 3 do
+            DemoCode.SetColorNum(i);
+          end
+          local area =  DemoCode.CalTriangleArea(1, 1);
+          local currentOptio = area;
+          local currentOption = string.Get(10055);
+        end
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
       elseif Between(me.npcId, 35032, 35034) then 
         handIds = {35032, 35033, 35034};
       elseif Between(me.npcId, 35054, 35056) then
@@ -83,6 +104,28 @@ function HandFight:Update()
     newPos = target:GetAttackPos(EFightSpot.Front, 60);
     me.roleController:SetIsJumping(true);
     isDragon = false;
+  
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
 
     if me.kind ~=EHuman.Players then
       if me.npcId == 35030 or me.npcId == 35031 then
@@ -175,7 +218,29 @@ function HandFight:UpdateArrow()
     else
       me.roleController:RangeAttack();
     end
-
+  
+  
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
     self.interval = 0.4;
     self.step = 2;      
   elseif self.step == 2 then           
@@ -240,6 +305,40 @@ function HandFight:UpdateGun()
     me:SetSpeed(0.52);
     me:SetBeh(EFightBeh.Residual);  --殘影        
     self.step = 2;
+  
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+  
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    
   elseif self.step == 2 then          
     if me.arrive then     
       me.roleController:SetIsJumping(false); 

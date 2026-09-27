@@ -1,6 +1,28 @@
 SceneFightData = {};
 SceneFightData.__index = SceneFightData;
 
+function SceneFightData.Script1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function SceneFightData.Script()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
 function SceneFightData.New(reader)
   local self = {};
   setmetatable(self, SceneFightData);
@@ -20,4 +42,15 @@ function SceneFightData.New(reader)
   self.info = reader:ReadByte();
 
   return self;
+end
+
+function SceneFightData.Script2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
 end

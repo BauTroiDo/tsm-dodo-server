@@ -52,6 +52,7 @@ require "Data/CollectStyleData"
 require "Data/CollectStyleValueData"
 require "Data/CollectCardData"
 require "Data/CollectCardSortData"
+require "Data/CollectNFTData"
 require "Data/FestivalInfo"
 require "Data/FireworkPositionData"
 require "Data/TitleData"
@@ -84,25 +85,19 @@ require "Data/HouseExpandConditionData"
 require "Data/WarriorCombinationData"
 require "Data/FurnitureCollectLevelData"
 require "Data/NumberOfHouseWarriorData"
+require "Data/SacredEquipPrimaryData"
+require "Data/SacredEquipSubData"
+require "Data/SacredEquipUpgradeData"
 require "Data/ElfData"
-require "Data/VIPRewardData"
-require "Data/VIPPrivilegesData"
 require "Data/ElfExpData"
-require "Data/AIChatData"
 require "Data/BreakthroughData"
 require "Data/FurnitureEffectData"
+require "Data/SoulLevelData"
+require "Data/SoulData"
+require "Data/NpcSoulData"
+require "Data/SacrificeSlotData"
+require "Data/RequiemBossData"
 require "Data/PassAwardData"
-require "Data/UniqueBloodInfoData"
-require "Data/UniqueBloodLevelUpData"
-require "Data/UniqueBloodMinorData"
-require "Data/UniqueBloodUnlimitedData"
-require "Data/UniqueBloodSuitData"
-require "Data/SceneSkillData"
-require "Data/BattleRoyaleVocationData"
-require "Data/BattleRoyaleSealData"
-require "Data/BattleRoyaleScheduleData"
-require "Data/BattleRoyaleSceneData"
-require "Data/BattleRoyaleHotkeyData"
 require "Data/TreasureActivityCriteriaData"
 require "Data/TreasureRoleCriteriaData"
 require "Data/TreasureStarData"
@@ -111,6 +106,10 @@ require "Data/TreasureGroupInfoData"
 require "Data/TreasureLvData"
 require "Data/ArmyPokeData"
 require "Data/ArmyMissionAwardData"
+require "Data/StrongholdData"
+require "Data/StrongholdNPCData"
+require "Data/StrongholdAwardData"
+require "Data/StrongholdWarData"
 require "Data/PokeBonusRewardData"
 require "Data/RelationshipData"
 require "Data/RelationshipBonusData"
@@ -118,10 +117,9 @@ require "Data/PlayerBonusData"
 require "Data/ActivityConditionData"
 require "Data/LeaderboardSimpleData"
 
+
 DataManager = {};
 local this = DataManager;
-local dataCount = 0;
-local backCount = 0;
 
 if Define.TextCount then
   local textCount = 0;
@@ -168,6 +166,7 @@ textureSizeDatas = {};
 textureOffsetDatas = {};
 dungeonDatas = {};
 weekDungeonDatas = {}; --週副本資料
+soulDungeonDatas = {}; --狂週副本資料
 dungeonComboDatas = {};
 uisellDatas = {};
 itemHintDatas = {};
@@ -199,6 +198,7 @@ collectStyleDatas = {};
 collectStyleValueDatas = {};
 collectCardDatas = {};
 collectCardSortDatas = {};
+collectNFTDatas = {};
 auctionTagDatas = {};
 festivalInfos = {};
 beStrongerDatas = {};
@@ -230,7 +230,6 @@ dungeonCriteriaDatas = {};
 fieldEffectDatas = {};
 souvenirDatas = {};
 charmRewardDatas = {};
-
 furnitureDatas = {};
 furnitureKindDatas = {};
 houseEditorSceneSetDatas = {};
@@ -243,26 +242,28 @@ furnitureEffectDatas = {};
 
 elfDatas = {};
 elfExpDatas = {};
-aiChatDatas = {};
+SacredEquipPrimaryDatas = {};
+--SacredEquipSubDatas = {};
+SacredEquipUpgradeDatas = {};
 monopolyCellRewardDatas = {};
 missionAwardDatas = {};
+soulLevelDatas = {};
+soulDatas = {};
+npcSoulDatas = {};
+sacrificeSlotDatas = {};
+requiemBossDatas = {};
 passAwardDatas = {};
-uniqueBloodInfoDatas = {};
-uniqueBloodLevelUpDatas = {};
-uniqueBloodMinorDatas = {};
-uniqueBloodUnlimitedDatas = {};
-uniqueBloodSuitDataDatas = {};
-sceneSkillDatas = {};
-battleRoyaleVocationDatas = {};
-battleRoyaleSealDatas = {};
-battleRoyaleScheduleDatas = {};
-battleRoyaleSceneDatas = {};
-battleRoyaleHotkeyDatas = {};
+armyPokeDatas = {};
+armyMissionAwardDatas = {};
+pokeBonusRewardDatas = {};
+strongholdDatas = {};
+strongholdNPCDatas = {};
+strongholdAwardDatas = {};
+strongholdWarDatas = {};
 relationshipDatas = {};
 relationshipBonusDatas = {};
 playerBonusDatas = {};
-vipPrivilegesDatas = {};
-vipRewardDatas = {};
+activityConditionDatas = {};
 
 treasureActivityCriteriaDatas = {};
 treasureRoleCriteriaDatas = {};
@@ -270,10 +271,6 @@ treasureStarDatas = {};
 treasureGroupLVDatas = {};
 treasureGroupInfoDatas = {};
 treasureLvDatas = {};
-armyPokeDatas = {};
-armyMissionAwardDatas = {};
-pokeBonusRewardDatas = {};
-activityConditionDatas = {};
 
 --test
 testNaviDatas = {};
@@ -302,7 +299,7 @@ function DataManager.LoadResourcePacked()
   end
 
   log("Text");
-  this.ReadData("Data/TextData_C.dat", this.OnLoadTextData);
+  this.ReadData("Data/IOS_TextData_C.dat", this.OnLoadTextData);
 
   log("Talk");
   this.ReadData(DataManager.talkDataPath, this.OnLoadTalkData);
@@ -317,414 +314,612 @@ function DataManager.LoadResourcePacked()
   this.ReadData("Data/Wem.mmg", this.OnLoadWemData);
   
   log("Item");
-  this.ReadData("Data/Item_C.dat", this.OnLoadItemData);
+  this.ReadData("Data/IOS_Item_C.dat", this.OnLoadItemData);
   
   log("CommonAwardData");
-  this.ReadData("Data/CommonAward_C.dat", this.OnLoadCommonAwardData);
+  this.ReadData("Data/IOS_CommonAward_C.dat", this.OnLoadCommonAwardData);
   
   log("SceneSet");
-  this.ReadData("Data/SceneSet_C.dat", this.OnLoadSceneSetData);
+  this.ReadData("Data/IOS_SceneSet_C.dat", this.OnLoadSceneSetData);
   
   log("Npc");
-  this.ReadData("Data/Npc_C.dat", this.OnLoadNpcData);
+  this.ReadData("Data/IOS_Npc_C.dat", this.OnLoadNpcData);
   
   log("WeapBody");
-  this.ReadData("Data/WeapBody.dat", this.OnLoadNpcWeaponData);
+  this.ReadData("Data/IOS_WeapBody.dat", this.OnLoadNpcWeaponData);
   
   log("Rank");
-  this.ReadData("Data/Rank.dat", this.OnLoadRankData);
+  this.ReadData("Data/IOS_Rank.dat", this.OnLoadRankData);
   
   log("EVOStatus");
-  this.ReadData("Data/EVOStatus.dat", this.OnLoadEVOStatusData);
-  
+  this.ReadData("Data/IOS_EVOStatus.dat", this.OnLoadEVOStatusData);
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   log("Mark");
-  this.ReadData("Data/Mark_C.dat", this.OnLoadMarkData);
+  this.ReadData("Data/IOS_Mark_C.dat", this.OnLoadMarkData);
   
   log("MARK_STEP_C");
-  this.ReadData("Data/MarkStep_C.dat", this.OnLoadMarkStepData);
+  this.ReadData("Data/IOS_MarkStep_C.dat", this.OnLoadMarkStepData);
   
   log("Formula");
-  this.ReadData("Data/Formula.dat", this.OnLoadFormulaData);
+  this.ReadData("Data/IOS_Formula.dat", this.OnLoadFormulaData);
   
   log("Astrolabe");
-  this.ReadData("Data/Astrolabe.dat", this.OnLoadAstrolabeData);
+  this.ReadData("Data/IOS_Astrolabe.dat", this.OnLoadAstrolabeData);
   
   log("Skill");
-  this.ReadData("Data/Skill_C.dat", this.OnLoadSkillData);
+  this.ReadData("Data/IOS_Skill_C.dat", this.OnLoadSkillData);
   
   log("FashionStress");
-  this.ReadData("Data/FashionStress_C.dat", this.OnLoadFashionStressData);
+  this.ReadData("Data/IOS_FashionStress_C.dat", this.OnLoadFashionStressData);
   
   log("Suit");
-  this.ReadData("Data/Suit_C.dat", this.OnLoadSuitData);
+  this.ReadData("Data/IOS_Suit_C.dat", this.OnLoadSuitData);
   
   log("GS");
-  this.ReadData("Data/GS_C.dat", this.OnLoadGoodsSaleData);
+  this.ReadData("Data/IOS_GS_C.dat", this.OnLoadGoodsSaleData);
   
   log("GSTag");
-  this.ReadData("Data/GSTag_C.dat", this.OnLoadGoodsSaleTagData);
+  this.ReadData("Data/IOS_GSTag_C.dat", this.OnLoadGoodsSaleTagData);
   
   log("BlissBag");
-  this.ReadData("Data/BlissBag_C.dat", this.OnLoadBlissBagData);
+  this.ReadData("Data/IOS_BlissBag_C.dat", this.OnLoadBlissBagData);
   
   log("luckyBag");
-  this.ReadData("Data/LuckyBag2_C.dat", this.OnLoadLuckyBagData);
+  this.ReadData("Data/IOS_LuckyBag2_C.dat", this.OnLoadLuckyBagData);
 
   log("Warp");
-  this.ReadData("Data/Warp_C.dat", this.OnLoadWarpData);
+  this.ReadData("Data/IOS_Warp_C.dat", this.OnLoadWarpData);
 
   log("RandomName");
-  this.ReadData("Data/RandomName.dat", this.OnLoadRandomNameData);
+  this.ReadData("Data/IOS_RandomName.dat", this.OnLoadRandomNameData);
 
   log("LoginAwardData");
-  this.ReadData("Data/LoginAwardData_C.dat", this.OnLoadLoginAwardData);
+  this.ReadData("Data/IOS_LoginAwardData_C.dat", this.OnLoadLoginAwardData);
 
   log("LoginAwardTagData");
-  this.ReadData("Data/LoginAwardTagData_C.dat", this.OnLoadLoginAwardTagData);
+  this.ReadData("Data/IOS_LoginAwardTagData_C.dat", this.OnLoadLoginAwardTagData);
 
   log("ACTag");
-  this.ReadData("Data/ACTag_C.dat", this.OnLoadAchievementTagData);
+  this.ReadData("Data/IOS_ACTag_C.dat", this.OnLoadAchievementTagData);
 
   log("AchievementData_C");
-  this.ReadData("Data/AchievementData_C.dat", this.OnLoadAchievementData);
+  this.ReadData("Data/IOS_AchievementData_C.dat", this.OnLoadAchievementData);
 
   log("ActivityInfo_C");
-  this.ReadData("Data/ActivityInfo_C.dat", this.OnLoadActivityInfo);
+  this.ReadData("Data/IOS_ActivityInfo_C.dat", this.OnLoadActivityInfo);
 
   log("ActivityTime_C")
-  this.ReadData("Data/ActivityTime_C.dat", this.OnLoadActivityTime);
+  this.ReadData("Data/IOS_ActivityTime_C.dat", this.OnLoadActivityTime);
 
   log("ActivityFeverTime_C")
-  this.ReadData("Data/ActivityFeverTime_C.dat", this.OnLoadActivityFeverTime);
+  this.ReadData("Data/IOS_ActivityFeverTime_C.dat", this.OnLoadActivityFeverTime);
 
   log("Mounts");
-  this.ReadData("Data/Mounts_C.dat", this.OnLoadMountsData);
+  this.ReadData("Data/IOS_Mounts_C.dat", this.OnLoadMountsData);
 
   log("MountsGrow");
-  this.ReadData("Data/MountsGrow_C.dat", this.OnLoadMountsGrowData);
+  this.ReadData("Data/IOS_MountsGrow_C.dat", this.OnLoadMountsGrowData);
 
   log("Illegal");
-  this.ReadData("Data/Illegal_C.dat", this.OnLoadIllegalData);
+  this.ReadData("Data/IOS_Illegal_C.dat", this.OnLoadIllegalData);
 
   log("TextureSize");
-  this.ReadData("Data/TextureSize.dat", this.OnLoadTextureSizeData);
+  this.ReadData("Data/IOS_TextureSize.dat", this.OnLoadTextureSizeData);
 
   log("TextureOffset");
-  this.ReadData("Data/TextureOffset.dat", this.OnLoadTextureOffsetData);
+  this.ReadData("Data/IOS_TextureOffset.dat", this.OnLoadTextureOffsetData);
   
   --this.ReadData("Data/Compound.Dat", this.OnLoadCompoundData);
 
   log("Dungeon");
-  this.ReadData("Data/Dungeon_C.dat", this.OnLoadDungeonData);
+  this.ReadData("Data/IOS_Dungeon_C.dat", this.OnLoadDungeonData);
 
   log("Dungeoncombo");
-  this.ReadData("Data/DungeonCombo_C.dat", this.OnLoadDungeonComboData);
+  this.ReadData("Data/IOS_DungeonCombo_C.dat", this.OnLoadDungeonComboData);
 
   log("SceneFightData");
-  this.ReadData("Data/SceneFight_C.dat", this.OnLoadSceneFightData);
+  this.ReadData("Data/IOS_SceneFight_C.dat", this.OnLoadSceneFightData);
 
   log("LimitTimeDungeonData");
-  this.ReadData("Data/LimitTimeDungeon_C.dat", this.OnLoadLimitTimeDungeonData);
+  this.ReadData("Data/IOS_LimitTimeDungeon_C.dat", this.OnLoadLimitTimeDungeonData);
 
   log("AnotherWorldLvData");
-  this.ReadData("Data/AnotherWorldLv_C.dat", this.OnLoadAnotherWorldLvData);
-
+  this.ReadData("Data/IOS_AnotherWorldLv_C.dat", this.OnLoadAnotherWorldLvData);
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   log("LvUp");
-  this.ReadData("Data/LvUp_C.dat", this.LvUpData);
+  this.ReadData("Data/IOS_LvUp_C.dat", this.LvUpData);
 
   log("DoorGroup");
-  this.ReadData("Data/DoorGroupData.dat", this.OnLoadDoorGroupData);
+  this.ReadData("Data/IOS_DoorGroupData.dat", this.OnLoadDoorGroupData);
 
   log("UISell");
-  this.ReadData("Data/UISell_C.dat", this.OnLoadUISellData);
+  this.ReadData("Data/IOS_UISell_C.dat", this.OnLoadUISellData);
 
   log("ItemHint");
-  this.ReadData("Data/ItemHint_C.dat", this.OnLoadUIItemHintData);
+  this.ReadData("Data/IOS_ItemHint_C.dat", this.OnLoadUIItemHintData);
 
   log("Dispatch")
-  this.ReadData("Data/Dispatch_C.dat", this.OnLoadDispatchData);
+  this.ReadData("Data/IOS_Dispatch_C.dat", this.OnLoadDispatchData);
 
   log("DispatchBonusData")
-  this.ReadData("Data/DispatchBonus_C.dat", this.OnLoadDispatchBonusData);
+  this.ReadData("Data/IOS_DispatchBonus_C.dat", this.OnLoadDispatchBonusData);
 
   log("MarkGroup");
-  this.ReadData("Data/MarkGroupData.dat", this.OnLoadMarkGroupData);
+  this.ReadData("Data/IOS_MarkGroupData.dat", this.OnLoadMarkGroupData);
 
   log("FunctionData");
-  this.ReadData("Data/UiOpen_C.dat", this.OnLoadFunctionData);
+  this.ReadData("Data/IOS_UiOpen_C.dat", this.OnLoadFunctionData);
 
   log("StoreValueData");
-  this.ReadData("Data/StoreValue_C.dat", this.OnLoadStoreValueData);
+  this.ReadData("Data/IOS_StoreValue_C.dat", this.OnLoadStoreValueData);
 
   log("TutorialData");
-  this.ReadData("Data/Hotkey_C.dat", this.OnLoadTutorialData);
+  this.ReadData("Data/IOS_Hotkey_C.dat", this.OnLoadTutorialData);
 
   log("GuideData");
-  this.ReadData("Data/TeachInfo_C.dat", this.OnLoadGuideData);
+  this.ReadData("Data/IOS_TeachInfo_C.dat", this.OnLoadGuideData);
 
   log("TabooData");
-  this.ReadData("Data/IllegalChat_C.dat", this.OnLoadTabooData);
+  this.ReadData("Data/IOS_IllegalChat_C.dat", this.OnLoadTabooData);
 
   log("ArmyArchitecture");
-  this.ReadData("Data/ArmyArchitecture_C.dat", this.OnLoadArmyArchitectureData);
+  this.ReadData("Data/IOS_ArmyArchitecture_C.dat", this.OnLoadArmyArchitectureData);
 
   log("ArmySign");
-  this.ReadData("Data/ArmySign_In_C.dat", this.OnLoadArmySignData);
+  this.ReadData("Data/IOS_ArmySign_In_C.dat", this.OnLoadArmySignData);
 
   log("ArmyAward");
-  this.ReadData("Data/ArmyWeeklyAward_C.dat", this.OnLoadArmyAwardData);
+  this.ReadData("Data/IOS_ArmyWeeklyAward_C.dat", this.OnLoadArmyAwardData);
 
   log("ArmyProduction");
-  this.ReadData("Data/ArrayRes_C.dat", this.OnLoadArmyProductionData);
+  this.ReadData("Data/IOS_ArrayRes_C.dat", this.OnLoadArmyProductionData);
 
   log("Leaderboard");
-  this.ReadData("Data/LeaderbordInfo_C.dat", this.OnLoadLeaderboardInfo);
+  this.ReadData("Data/IOS_LeaderbordInfo_C.dat", this.OnLoadLeaderboardInfo);
 
   log("NpcUpgrade");
-  this.ReadData("Data/NpcUpgrade_C.dat", this.OnLoadNpcUpgradeData);
+  this.ReadData("Data/IOS_NpcUpgrade_C.dat", this.OnLoadNpcUpgradeData);
 
   log("Exchange");
-  this.ReadData("Data/Exchange_C.dat", this.OnLoadExchange);
+  this.ReadData("Data/IOS_Exchange_C.dat", this.OnLoadExchange);
 
   log("JiugonggeInfo")
-  this.ReadData("Data/JiugonggeInfo_C.dat", this.OnLoadJiugonggeInfo);
+  this.ReadData("Data/IOS_JiugonggeInfo_C.dat", this.OnLoadJiugonggeInfo);
 
   log("JiugonggeMission");
-  this.ReadData("Data/JiugonggeMission_C.dat", this.OnLoadJiugonggeMission);
+  this.ReadData("Data/IOS_JiugonggeMission_C.dat", this.OnLoadJiugonggeMission);
 
   log("CollectWarriorData")
-  this.ReadData("Data/CollectWarrior_C.dat", this.OnLoadCollectWarriorData);
+  this.ReadData("Data/IOS_CollectWarrior_C.dat", this.OnLoadCollectWarriorData);
 
   log("CollectWarriorSortData")
-  this.ReadData("Data/CollectWarriorSort_C.dat", this.OnLoadCollectWarriorSortData);
+  this.ReadData("Data/IOS_CollectWarriorSort_C.dat", this.OnLoadCollectWarriorSortData);
 
   log("CollectStyle")
-  this.ReadData("Data/CollectStyle_C.dat", this.OnLoadCollectStyleData);
+  this.ReadData("Data/IOS_CollectStyle_C.dat", this.OnLoadCollectStyleData);
 
   log("CollectStyleValueData")
-  this.ReadData("Data/CollectStyleValue_C.dat", this.OnLoadCollectStyleValueData);
+  this.ReadData("Data/IOS_CollectStyleValue_C.dat", this.OnLoadCollectStyleValueData);
+  
+  log("CollectNFTData")
+  this.ReadData("Data/IOS_CollectNFT_C.dat", this.OnLoadCollectNFTData);
 
   log("CollectCard")
-  this.ReadData("Data/CollectCard_C.dat", this.OnLoadCollectCardData);
+  this.ReadData("Data/IOS_CollectCard_C.dat", this.OnLoadCollectCardData);
 
   log("CollectCardSort")
-  this.ReadData("Data/CollectCardSort_C.dat", this.OnLoadCollectCardSortData);
+  this.ReadData("Data/IOS_CollectCardSort_C.dat", this.OnLoadCollectCardSortData);
 
   log("SellTag")
-  this.ReadData("Data/SellTag_C.dat", this.OnLoadSellTagData);
+  this.ReadData("Data/IOS_SellTag_C.dat", this.OnLoadSellTagData);
 
   log("BeStronger")
-  this.ReadData("Data/BeStronger_C.dat", this.OnLoadBeStrongerData);
+  this.ReadData("Data/IOS_BeStronger_C.dat", this.OnLoadBeStrongerData);
 
   log("FestivalInfo")
-  this.ReadData("Data/FestivalInfo_C.dat", this.OnLoadFestivalInfo);
+  this.ReadData("Data/IOS_FestivalInfo_C.dat", this.OnLoadFestivalInfo);
 
   log("DungeonArea")
-  this.ReadData("Data/DungeonArea_C.dat", this.OnLoadDungeonArea);
+  this.ReadData("Data/IOS_DungeonArea_C.dat", this.OnLoadDungeonArea);
 
   log("GSActivityData")
-  this.ReadData("Data/GSActivity_C.dat", this.OnLoadGSActivity);
+  this.ReadData("Data/IOS_GSActivity_C.dat", this.OnLoadGSActivity);
 
   log("OrgBossAwardData")
-  this.ReadData("Data/LegionBoss_C.dat", this.OnLoadOrgBossAwardData);
+  this.ReadData("Data/IOS_LegionBoss_C.dat", this.OnLoadOrgBossAwardData);
 
   log("FireworkPositionData")
-  this.ReadData("Data/FireWorkPosition_C.dat", this.OnLoadFireworkPositionData);
+  this.ReadData("Data/IOS_FireWorkPosition_C.dat", this.OnLoadFireworkPositionData);
 
   log("TitelData")
-  this.ReadData("Data/TitleData_C.dat", this.OnLoadTitleData);
-
+  this.ReadData("Data/IOS_TitleData_C.dat", this.OnLoadTitleData);
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   log("TianGuanData")
-  this.ReadData("Data/Strengthening_C.dat", this.OnLoadTianGuanData);
+  this.ReadData("Data/IOS_Strengthening_C.dat", this.OnLoadTianGuanData);
 
   log("MoneyTreeData")
-  this.ReadData("Data/MoneyTree_C.dat", this.OnLoadMoneyTreeData);
+  this.ReadData("Data/IOS_MoneyTree_C.dat", this.OnLoadMoneyTreeData);
 
   log("FurnaceSlotData");
-  this.ReadData("Data/FurnaceSlot_C.dat", this.OnLoadFurnaceSlotData);
+  this.ReadData("Data/IOS_FurnaceSlot_C.dat", this.OnLoadFurnaceSlotData);
 
   log("FurnaceSelectData");
-  this.ReadData("Data/FurnaceSelect_C.dat", this.OnLoadFurnaceSelectData);
+  this.ReadData("Data/IOS_FurnaceSelect_C.dat", this.OnLoadFurnaceSelectData);
 
   log("ItemEvolutionData");
-  this.ReadData("Data/Evolution_C.dat", this.OnLoadItemEvolutionData);
+  this.ReadData("Data/IOS_Evolution_C.dat", this.OnLoadItemEvolutionData);
 
   log("DataFightGoalData");
-  this.ReadData("Data/PVPgoal_C.dat", this.OnLoadDataFightGoalData);
+  this.ReadData("Data/IOS_PVPgoal_C.dat", this.OnLoadDataFightGoalData);
 
   log("DataFightAwardData");
-  this.ReadData("Data/PVPReward_C.dat", this.OnLoadDataFightAwardData);
+  this.ReadData("Data/IOS_PVPReward_C.dat", this.OnLoadDataFightAwardData);
 
   log("FNpcSlot");
-  this.ReadData("Data/FNpcSlot_C.dat", this.OnLoadFNpcSlotData);
+  this.ReadData("Data/IOS_FNpcSlot_C.dat", this.OnLoadFNpcSlotData);
   
   log("ExclusiveWeaponData");
-  this.ReadData("Data/ExclusiveWeapon_C.dat", this.OnLoadExclusiveWeaponData);
+  this.ReadData("Data/IOS_ExclusiveWeapon_C.dat", this.OnLoadExclusiveWeaponData);
 
    log("CityScrambleCityData");
-  this.ReadData("Data/CityScrambleCityData_C.dat", this.OnLoadCityScrambleCityData);
+  this.ReadData("Data/IOS_CityScrambleCityData_C.dat", this.OnLoadCityScrambleCityData);
 
   log("CityScrambleCityRewardData");
-  this.ReadData("Data/CityScrambleCityRewardData_C.dat", this.OnLoadCityScrambleCityRewardData);
+  this.ReadData("Data/IOS_CityScrambleCityRewardData_C.dat", this.OnLoadCityScrambleCityRewardData);
 
   log("CityScrambleGroundData");
-  this.ReadData("Data/CityScrambleGroundData_C.dat", this.OnLoadCityScrambleGroundData);
+  this.ReadData("Data/IOS_CityScrambleGroundData_C.dat", this.OnLoadCityScrambleGroundData);
 
   log("ExclusiveWeaponData")
-  this.ReadData("Data/ExclusiveWeapon_C.dat", this.OnLoadExclusiveWeaponData);
+  this.ReadData("Data/IOS_ExclusiveWeapon_C.dat", this.OnLoadExclusiveWeaponData);
 
   log("EQAffixData")
-  this.ReadData("Data/EquipmentAffix_C.dat", this.OnLoadEQAffixData);
+  this.ReadData("Data/IOS_EquipmentAffix_C.dat", this.OnLoadEQAffixData);
 
   log("EQReinforcedData")
-  this.ReadData("Data/EquipmentReinforced_C.dat", this.OnLoadEQReinforcedData);
+  this.ReadData("Data/IOS_EquipmentReinforced_C.dat", this.OnLoadEQReinforcedData);
 
   log("EQRateData")
-  this.ReadData("Data/EquipmentReinforcedRate_C.dat", this.OnLoadEQRateData);
+  this.ReadData("Data/IOS_EquipmentReinforcedRate_C.dat", this.OnLoadEQRateData);
 
   log("EQValueData")
-  this.ReadData("Data/EquipmentReinforcedValue_C.dat", this.OnLoadEQValueData);
+  this.ReadData("Data/IOS_EquipmentReinforcedValue_C.dat", this.OnLoadEQValueData);
 
   log("EternalDungeonPrizeData")
-  this.ReadData("Data/EternalDungeonPrize_C.dat", this.OnLoadEternalDungeonPrizeData);
+  this.ReadData("Data/IOS_EternalDungeonPrize_C.dat", this.OnLoadEternalDungeonPrizeData);
 
   log("EternalDungeonLayerData")
-  this.ReadData("Data/EternalDungeonLayer_C.dat", this.OnLoadEternalDungeonLayerData);
+  this.ReadData("Data/IOS_EternalDungeonLayer_C.dat", this.OnLoadEternalDungeonLayerData);
 
   log("DungeonCriteriaData")
-  this.ReadData("Data/DungeonCriteria_C.dat", this.OnLoadDungeonCriteriaData);
+  this.ReadData("Data/IOS_DungeonCriteria_C.dat", this.OnLoadDungeonCriteriaData);
 
   log("FieldEffectData")
-  this.ReadData("Data/FieldEffect_C.dat", this.OnLoadFieldEffectData);
+  this.ReadData("Data/IOS_FieldEffect_C.dat", this.OnLoadFieldEffectData);
 
   log("SouvenirData")
-  this.ReadData("Data/Souvenir_C.dat", this.OnLoadSouvenirData);
+  this.ReadData("Data/IOS_Souvenir_C.dat", this.OnLoadSouvenirData);
 
   log("CharmRewardData")
-  this.ReadData("Data/CharmReward_C.dat", this.OnLoadCharmRewardData);
+  this.ReadData("Data/IOS_CharmReward_C.dat", this.OnLoadCharmRewardData);
 
   log("MonopolyCellRewardData")
-  this.ReadData("Data/MonopolyCellReward_C.dat", this.OnLoadMonopolyCellRewardData);
+  this.ReadData("Data/IOS_MonopolyCellReward_C.dat", this.OnLoadMonopolyCellRewardData);
 
   log("MissionAwardData")
-  this.ReadData("Data/MissionAward_C.dat", this.OnLoadMissionAwardData);
+  this.ReadData("Data/IOS_MissionAward_C.dat", this.OnLoadMissionAwardData);
 
   log("FurnitureData")
-  this.ReadData("Data/Furniture_C.dat", this.OnLoadFurnitureData);
+  this.ReadData("Data/IOS_Furniture_C.dat", this.OnLoadFurnitureData);
 
   log("FurnitureKindData")
-  this.ReadData("Data/FurnitureKind_C.dat", this.OnLoadFurnitureKindData);
+  this.ReadData("Data/IOS_FurnitureKind_C.dat", this.OnLoadFurnitureKindData);
 
   log("HouseEditorSceneSetData")
-  this.ReadData("Data/HouseEditorSceneSet_C.dat", this.OnLoadHouseEditorSceneSetData);
+  this.ReadData("Data/IOS_HouseEditorSceneSet_C.dat", this.OnLoadHouseEditorSceneSetData);
 
   log("HouseExpandConditionData")
-  this.ReadData("Data/HouseExpandCondition_C.dat", this.OnLoadHouseExpandConditionData);
+  this.ReadData("Data/IOS_HouseExpandCondition_C.dat", this.OnLoadHouseExpandConditionData);
 
   log("WarriorCombinationData")
-  this.ReadData("Data/WarriorCombination_C.dat", this.OnLoadWarriorCombinationData);
+  this.ReadData("Data/IOS_WarriorCombination_C.dat", this.OnLoadWarriorCombinationData);
 
   log("FurnitureCollectLevelData")
-  this.ReadData("Data/FurnitureCollectLevel_C.dat", this.OnLoadFurnitureCollectLevelData);
-
+  this.ReadData("Data/IOS_FurnitureCollectLevel_C.dat", this.OnLoadFurnitureCollectLevelData);
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   log("NumberOfHouseWarriorData")
-  this.ReadData("Data/NumberOfHouseWarrior_C.dat", this.OnLoadNumberOfHouseWarriorData);
-
+  this.ReadData("Data/IOS_NumberOfHouseWarrior_C.dat", this.OnLoadNumberOfHouseWarriorData);
+  
   log("ElfData")
-  this.ReadData("Data/Elf_C.dat", this.OnLoadElfData);
+  this.ReadData("Data/IOS_Elf_C.dat", this.OnLoadElfData);
   
   log("ElfExpData")
-  this.ReadData("Data/ElfExp_C.dat", this.OnLoadElfExpData);
+  this.ReadData("Data/IOS_ElfExp_C.dat", this.OnLoadElfExpData);
   
-  log("AIChatData")
-  this.ReadData("Data/AIChat_C.dat", this.OnLoadAIChatData);
+  log("SacredEquipPrimaryData")
+  this.ReadData("Data/IOS_SacredEquipPrimaryStatus_C.dat", this.OnLoadSacredEquipPrimaryData);
+  
+  log("SacredEquipSubData")
+  this.ReadData("Data/IOS_SacredEquipSubStatus_C.dat", this.OnLoadSacredEquipSubData);
+  
+  log("OnLoadSacredEquipUpgradeData")
+  this.ReadData("Data/IOS_SacredEquipUpgrade_C.dat", this.OnLoadSacredEquipUpgradeData);
   
   log("breakthroughData")
-  this.ReadData("Data/EXPUpgrade_C.dat", this.OnLoadBreakthroughData);
+  this.ReadData("Data/IOS_EXPUpgrade_C.dat", this.OnLoadBreakthroughData);
 
   log("FurnitureEffectData")
-  this.ReadData("Data/FurnitureEffect_C.dat", this.OnLoadFurnitureEffectData);
+  this.ReadData("Data/IOS_FurnitureEffect_C.dat", this.OnLoadFurnitureEffectData);
   
+  log("SoulLevelData")
+  this.ReadData("Data/IOS_SoulLevel_C.dat", this.OnLoadSoulLevelData);
+
+  log("SoulData")
+  this.ReadData("Data/IOS_Soul_C.dat", this.OnLoadSoulData);
+
+  log("NpcSoulData")
+  this.ReadData("Data/IOS_NpcSoul_C.dat", this.OnLoadNpcSoulData);
+
+  log("SacrificeSlotData");
+  this.ReadData("Data/IOS_SacrificeSlot_C.dat", this.OnLoadSacrificeSlotData);
+
+  log("RequiemBossData");
+  this.ReadData("Data/IOS_RequiemBoss_C.dat", this.OnLoadRequiemBossData);
+
+  log("StrongholdData");
+  this.ReadData("Data/IOS_Stronghold_C.dat", this.OnLoadStrongholdData);
+
+  log("StrongholdNPCData");
+  this.ReadData("Data/IOS_StrongholdNPC_C.dat", this.OnLoadStrongholdNPCData);
+
+  log("StrongholdAwardData");
+  this.ReadData("Data/IOS_StrongholdAward_C.dat", this.OnLoadStrongholdAwardData);
+
+  log("StrongholdWarData");
+  this.ReadData("Data/IOS_StrongholdWar_C.dat", this.OnLoadStrongholdWarData);
+
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   log("PassAwardData");
-  this.ReadData("Data/PassAward_C.dat", this.OnLoadPassAwardData);
-  
-  log("UniqueBloodInfoData")
-  this.ReadData("Data/UniqueBloodInfo_C.dat", this.OnLoadUniqueBloodInfoData);
-
-  log("UniqueBloodMinorData")
-  this.ReadData("Data/UniqueBloodMinor_C.dat", this.OnLoadUniqueBloodMinorData);
-
-  log("UniqueBloodLevelUpData")
-  this.ReadData("Data/UniqueBloodLevelUp_C.dat", this.OnLoadUniqueBloodLevelUpData);
-
-  log("UniqueBloodUnlimitedData")
-  this.ReadData("Data/UniqueBloodUnlimited_C.dat", this.OnLoadUniqueBloodUnlimitedData);
-
-  log("UniqueBloodSuitData")
-  this.ReadData("Data/UniqueBloodSuit_C.dat", this.OnLoadUniqueBloodSuitData);
-
-  log("SceneSkillData");
-  this.ReadData("Data/SceneSkill_C.dat", this.OnLoadSceneSkillData);
-
-  log("BattleRoyaleVocationData");
-  this.ReadData("Data/BattleRoyaleVocation_C.dat", this.OnLoadBattleRoyaleVocationData);
-
-  log("BattleRoyaleSealData");
-  this.ReadData("Data/BattleRoyaleSeal_C.dat", this.OnLoadBattleRoyaleSealData);
-
-  log("BattleRoyaleScheduleData");
-  this.ReadData("Data/BattleRoyaleSchedule_C.dat", this.OnLoadBattleRoyaleScheduleData);
-
-  log("BattleRoyaleSceneData");
-  this.ReadData("Data/BattleRoyaleScene_C.dat", this.OnLoadBattleRoyaleSceneData);
+  this.ReadData("Data/IOS_PassAward_C.dat", this.OnLoadPassAwardData);
 
   log("ArmyPokeData");
-  this.ReadData("Data/ArmyPoke_C.dat", this.OnLoadArmyPokeData);
+  this.ReadData("Data/IOS_ArmyPoke_C.dat", this.OnLoadArmyPokeData);
 
   log("ArmyMissionAwardData");
-  this.ReadData("Data/ArmyMissionAward_C.dat", this.OnLoadArmyMissionAwardData);
-
-  log("BattleRoyaleHotkeyData");
-  this.ReadData("Data/BattleRoyaleHotkey_C.dat", this.OnLoadBattleRoyaleHotkeyData);
-
-  log("TreasureActivityCriteriaData");
-  this.ReadData("Data/TreasureActivityCriteria_C.dat", this.OnLoadTreasureActivityCriteriaData);
-
-  log("TreasureGroupInfoData");
-  this.ReadData("Data/TreasureGroupInfo_C.dat", this.OnLoadTreasureGroupInfoData);
-
-  log("TreasureGroupLVData");
-  this.ReadData("Data/TreasureGroupLV_C.dat", this.OnLoadTreasureGroupLVData);
-
-  log("TreasureRoleCriteriaData");
-  this.ReadData("Data/TreasureRoleCriteria_C.dat", this.OnLoadTreasureRoleCriteriaData);
-
-  log("TreasureLvData");
-  this.ReadData("Data/TreasureLv_C.dat", this.OnLoadTreasureLvData);
-
-  log("TreasureStarData");
-  this.ReadData("Data/TreasureStar_C.dat", this.OnLoadTreasureStarData);
+  this.ReadData("Data/IOS_ArmyMissionAward_C.dat", this.OnLoadArmyMissionAwardData);
 
   log("PokeBonusRewardData");
-  this.ReadData("Data/PokeBonusReward_C.dat", this.OnLoadPokeBonusRewardData);
+  this.ReadData("Data/IOS_PokeBonusReward_C.dat", this.OnLoadPokeBonusRewardData);
 
   log("RelationshipData");
-  this.ReadData("Data/Relationship_C.dat", this.OnLoadRelationshipData);
+  this.ReadData("Data/IOS_Relationship_C.dat", this.OnLoadRelationshipData);
 
   log("RelationshipBonusData");
-  this.ReadData("Data/RelationshipBonus_C.dat", this.OnLoadRelationshipBonusData);
-
-  log("VIPprivilegesData");
-  this.ReadData("Data/VIPprivileges_C.dat", this.OnLoadVIPPrivilegesData);
-
-  log("VIPRewardData");
-  this.ReadData("Data/VIPReward_C.dat", this.OnLoadVIPRewardData);
+  this.ReadData("Data/IOS_RelationshipBonus_C.dat", this.OnLoadRelationshipBonusData);
 
   log("PlayerBonusData");
-  this.ReadData("Data/PlayerBonus_C.dat", this.OnLoadPlayerBonusData);
+  this.ReadData("Data/IOS_PlayerBonus_C.dat", this.OnLoadPlayerBonusData);
 
   log("ActivityConditionData");
-  this.ReadData("Data/ActivityCondition_C.dat", this.OnLoadActivityConditionData);
+  this.ReadData("Data/IOS_ActivityCondition_C.dat", this.OnLoadActivityConditionData);
+
+  log("TreasureActivityCriteriaData");
+  this.ReadData("Data/IOS_TreasureActivityCriteria_C.dat", this.OnLoadTreasureActivityCriteriaData);
+
+  log("TreasureGroupInfoData");
+  this.ReadData("Data/IOS_TreasureGroupInfo_C.dat", this.OnLoadTreasureGroupInfoData);
+
+  log("TreasureGroupLVData");
+  this.ReadData("Data/IOS_TreasureGroupLV_C.dat", this.OnLoadTreasureGroupLVData);
+
+  log("TreasureRoleCriteriaData");
+  this.ReadData("Data/IOS_TreasureRoleCriteria_C.dat", this.OnLoadTreasureRoleCriteriaData);
+
+  log("TreasureLvData");
+  this.ReadData("Data/IOS_TreasureLv_C.dat", this.OnLoadTreasureLvData);
+
+  log("TreasureStarData");
+  this.ReadData("Data/IOS_TreasureStar_C.dat", this.OnLoadTreasureStarData);
 
   if Define.TextCount then
     logError(string.Concat("Total Text Count = ", this.textCount));
@@ -887,9 +1082,51 @@ function DataManager.OnLoadNpcData(file)
       npcDatas[id] = data;
     end
   end
+
   if Define.TextCount then
     logWarn(string.Concat("NpcData Text Count = ", (this.textCount - textCount)));
   end
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function DataManager.OnLoadNpcWeaponData(file)
@@ -930,6 +1167,47 @@ function DataManager.OnLoadEVOStatusData(file)
       evoStatusDatas[id] = data;
     end
   end
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function DataManager.OnLoadMarkData(file)
@@ -1082,7 +1360,47 @@ function DataManager.OnLoadSkillData(file)
   if Define.TextCount then
     textCount = this.textCount;
   end
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   local count = reader:ReadInt32();
   for i = 1, count do
    local id, data = SkillData.New(reader);
@@ -1125,6 +1443,47 @@ function DataManager.OnLoadSuitData(file)
 end
 
 function DataManager.OnLoadGoodsSaleData(file)
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   local reader = DatReader.New(file);
   local count = reader:ReadInt32();
   for i = 1, count do
@@ -1159,7 +1518,47 @@ end
 function DataManager.OnLoadBlissBagData(file)
   local reader = DatReader.New(file);
   local count = reader:ReadInt32();
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   for i = 1, count do
     local id, data = BlissBagData.New(reader);
 
@@ -1295,7 +1694,47 @@ end
 
 function DataManager.OnLoadActivityFeverTime(file)
   local reader = DatReader.New(file);
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   local count = reader:ReadInt32();
   for i = 1, count do
     local  data = ActivityFeverTime.New(reader);
@@ -1338,7 +1777,47 @@ end
 
 function DataManager.OnLoadLoginAwardTagData(file)
   local reader = DatReader.New(file);
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   local count = reader:ReadInt32();
   for i = 1, count do
     local data = LoginAwardTagData.New(reader);
@@ -1374,7 +1853,47 @@ end
 
 function DataManager.OnLoadMountsGrowData(file)
   local reader = DatReader.New(file);
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   local count = reader:ReadInt32();
   for i = 1, count do
     local level, data = MountsGrowData.New(reader);
@@ -1411,9 +1930,7 @@ function DataManager.OnLoadIllegalData(file)
 
   local count = reader:ReadInt32();
   for i = 1, count do
-    local word = LuaHelper.BytesToString(DataManager.encoding_Unicode, reader:ReadBytes(reader:ReadUInt16()));
-    local replace = string.gsub(word, "%W", "%%%1");
-    table.insert(illegalDatas, replace);
+    table.insert(illegalDatas, LuaHelper.BytesToString(DataManager.encoding_Unicode, reader:ReadBytes(reader:ReadUInt16())));
   end
 end
 
@@ -1440,14 +1957,57 @@ end
 function DataManager.OnLoadDungeonData(file)
   local reader = DatReader.New(file);
   local count = reader:ReadInt32();
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   table.Clear(weekDungeonDatas);
+  table.Clear(soulDungeonDatas);
   for i = 1, count do
     local data = DungeonData.New(reader);
     dungeonDatas[data.id] = data;
 
     if data.kind == 3 then
       table.insert(weekDungeonDatas, data.id);
+    elseif data.kind == 5 then
+      table.insert(soulDungeonDatas, data.id);
     end
   end
 end
@@ -1490,7 +2050,47 @@ end
 
 function DataManager.OnLoadAnotherWorldLvData(file)
   local reader = DatReader.New(file);
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   local count = reader:ReadInt32();
   for i = 1, count do
     local data = AnotherWroldLvData.New(reader);
@@ -1571,7 +2171,47 @@ end
 
 function DataManager.OnLoadTestNavi(file)
   local reader = DatReader.New(file);
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   while reader:CanRead() do
     local fromSceneId = reader:ReadInt32();
 
@@ -1630,7 +2270,47 @@ end
 
 function DataManager.OnLoadFunctionData(file)
   local reader = DatReader.New(file);
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   local count = reader:ReadInt32();
   for i = 1, count do
     local id, data = FunctionData.New(reader);
@@ -1667,7 +2347,47 @@ end
 
 function DataManager.OnLoadGuideData(file)
   local reader = DatReader.New(file);
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   local count = reader:ReadInt32();
   for i = 1, count do
     local id, step, data = GuideData.New(reader);
@@ -1685,7 +2405,7 @@ function DataManager.OnLoadTabooData(file)
 
   local count = reader:ReadInt32();
   for i = 1, count do
-    table.insert(tabooDatas, string.ReplaceSpecialSymbol(LuaHelper.BytesToString(DataManager.encoding_Unicode, reader:ReadBytes(reader:ReadUInt16()))));
+    table.insert(tabooDatas, LuaHelper.BytesToString(DataManager.encoding_Unicode, reader:ReadBytes(reader:ReadUInt16())));
   end
 end
 
@@ -1713,7 +2433,47 @@ end
 
 function DataManager.OnLoadArmyAwardData(file)
   local reader = DatReader.New(file);
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   local count = reader:ReadInt32();
   for i = 1, count do
     local data = ArmyAwardData.New(reader);
@@ -1750,7 +2510,47 @@ end
 
 function DataManager.OnLoadLeaderboardInfo(file)
   local reader = DatReader.New(file);
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   local count = reader:ReadInt32();
   for i = 1, count do
     local id, data = LeaderboardData.New(reader);
@@ -1839,7 +2639,12 @@ function DataManager.OnLoadCollectWarriorData(file)
   for i = 1, count do
     local data = CollectWarriorData.New(reader);
     collectWarriorDatas[data.id] = data;
-    collectWarriorDatas[data.id].name = npcDatas[data.id].name;
+
+    if npcDatas[data.id] ~= nil then
+      collectWarriorDatas[data.id].name = npcDatas[data.id].name;
+    else
+      logError(data.id .." not find in npcData");
+    end
   end
 end
 
@@ -1875,6 +2680,56 @@ function DataManager.OnLoadCollectStyleValueData(file)
   end
 end
 
+function DataManager.OnLoadCollectNFTData(file)
+  local reader = DatReader.New(file);
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  local count = reader:ReadInt32();
+  for i = 1, count do
+    local data = CollectNFTData.New(reader);
+    collectNFTDatas[data.warriorId] = data;
+  end
+end
+
 function DataManager.OnLoadCollectCardData(file)
   local reader = DatReader.New(file);
 
@@ -1899,7 +2754,47 @@ end
 
 function DataManager.OnLoadSellTagData(file)
   local reader = DatReader.New(file);
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   local count = reader:ReadInt32();
   local mainTag;
   local subTag;
@@ -1987,7 +2882,47 @@ end
 
 function DataManager.OnLoadDungeonArea(file)
   local reader = DatReader.New(file);
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   local count = reader:ReadInt32();
   for i = 1, count do
     local id, data = DungeonAreaData.New(reader);
@@ -2035,7 +2970,47 @@ end
 
 function DataManager.OnLoadTitleData(file)
   local reader = DatReader.New(file);
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   local finded = false;
   local count = reader:ReadInt32();
   for i = 1, count do
@@ -2106,7 +3081,47 @@ end
 
 function DataManager.OnLoadFurnaceSelectData(file)
   local reader = DatReader.New(file);
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   local count = reader:ReadInt32();
   for i = 1, count do
     local data = FurnaceSelectData.New(reader);
@@ -2159,7 +3174,47 @@ end
 function DataManager.OnLoadDataFightAwardData(file)
   local reader = DatReader.New(file);
   local count = reader:ReadInt32();
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   for i = 1, count do
     local kind, rank, data = DataFightAwardData.New(reader);
     
@@ -2185,7 +3240,47 @@ function DataManager.OnLoadExclusiveWeaponData(file)
   local count = reader:ReadInt32();
   for i = 1, count do
     local id, lv, data = ExclusiveWeaponData.New(reader);
-
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
     if exclusiveWeaponDatas[id] == nil then 
       exclusiveWeaponDatas[id] = {};
     end
@@ -2328,7 +3423,7 @@ function DataManager.OnLoadElfData(file)
   local count = reader:ReadInt32();
   for i = 1, count do
     local no, data = ElfData.New(reader);
-
+  
     if no == 999 then
       elfDatas[i] = data;
     else
@@ -2342,18 +3437,79 @@ function DataManager.OnLoadElfExpData(file)
   local count = reader:ReadInt32();
   for i = 1, count do
     local lv, data = ElfExpData.New(reader);
-
+    
     elfExpDatas[lv] = data;
   end
 end
 
-function DataManager.OnLoadAIChatData(file)
+function DataManager.OnLoadSacredEquipPrimaryData(file)
   local reader = DatReader.New(file);
   local count = reader:ReadInt32();
   for i = 1, count do
-    local no, data = AIChatData.New(reader);
+    local data = SacredEquipPrimaryData.New(reader);
+  
+    SacredEquipPrimaryDatas[i] = data;
+  end
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+end
+
+function DataManager.OnLoadSacredEquipSubData(file)
+  --local reader = DatReader.New(file);
+  --local count = reader:ReadInt32();
+  --for i = 1, count do
+  --  local data = SacredEquipSubData.New(reader);
+  --
+  --  SacredEquipSubDatas[i] = data;
+  --end
+end
+
+function DataManager.OnLoadSacredEquipUpgradeData(file)
+  local reader = DatReader.New(file);
+  local count = reader:ReadInt32();
+  for i = 1, count do
+    local data = SacredEquipUpgradeData.New(reader);
     
-    aiChatDatas[no] = data;
+    SacredEquipUpgradeDatas[i] = data;
   end
 end
 
@@ -2411,7 +3567,6 @@ function DataManager.OnLoadMonopolyCellRewardData(file)
     monopolyCellRewardDatas[round][cellID] = data;
   end
   MonopolyRewardData.CalculateRoundRefreshIndex();
-  MonopolyRewardData.CalculateRoundToLevel();
 end
 
 function DataManager.OnLoadMissionAwardData(file)
@@ -2439,7 +3594,47 @@ end
 function DataManager.OnLoadFurnitureKindData(file)
   local reader = DatReader.New(file);
   local count = reader:ReadInt32();
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   for i = 1, count do
     local id, data = FurnitureKindData.New(reader);
     furnitureKindDatas[id] = data;
@@ -2484,7 +3679,47 @@ function DataManager.OnLoadFurnitureCollectLevelData(file)
   local reader = DatReader.New(file);
   local count = reader:ReadInt32();
 
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   for i = 1, count do
     local level, data = FurnitureCollectLevelData.New(reader);
     furnitureCollectLevelDatas[level] = data;
@@ -2524,119 +3759,101 @@ function DataManager.OnLoadFurnitureEffectData(file)
   end
 end
 
+function DataManager.OnLoadNpcSoulData(file)
+  local reader = DatReader.New(file);
+  local count = reader:ReadInt32();
+
+  for i = 1, count do
+    local id, data = NpcSoulData.New(reader);
+    npcSoulDatas[id] = data;
+  end
+end
+
+function DataManager.OnLoadSoulData(file)
+  local reader = DatReader.New(file);
+  local count = reader:ReadInt32();
+
+  for i = 1, count do
+    local number, data = SoulData.New(reader);
+    soulDatas[number] = data;
+  end
+end
+
 function DataManager.OnLoadPassAwardData(file)
   local reader = DatReader.New(file);
   local count = reader:ReadInt32();
-  
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   for i = 1, count do
     local data = PassAwardData.New(reader);
     passAwardDatas[i] = data;
   end
 end
 
-function DataManager.OnLoadUniqueBloodInfoData(file)
+function DataManager.OnLoadSoulLevelData(file)
   local reader = DatReader.New(file);
   local count = reader:ReadInt32();
 
-  for index = 1, count do
-    local id, data = UniqueBloodInfoData.New(reader);
-    uniqueBloodInfoDatas[id] = data;
+  for i = 1, count do
+    local level, data = SoulLevelData.New(reader);
+    soulLevelDatas[level] = data;
   end
 end
 
-function DataManager.OnLoadUniqueBloodMinorData(file)
+function DataManager.OnLoadSacrificeSlotData(file)
   local reader = DatReader.New(file);
   local count = reader:ReadInt32();
-
   for index = 1, count do
-    local id, data = UniqueBloodMinorData.New(reader);
-    uniqueBloodMinorDatas[id] = data;
+    local id, data = SacrificeSlotData.New(reader);
+    table.insert(sacrificeSlotDatas, id, data);
   end
 end
 
-function DataManager.OnLoadUniqueBloodLevelUpData(file)
-  local reader = DatReader.New(file);
-  local count = reader:ReadInt32();
-
-  for index = 1, count do
-    local data = UniqueBloodLevelUpData.New(reader);
-    uniqueBloodLevelUpDatas[index] = data;
-  end
-end
-
-function DataManager.OnLoadUniqueBloodUnlimitedData(file)
-  local reader = DatReader.New(file);
-  local count = reader:ReadInt32();
-
-  for index = 1, count do
-    local id, data = UniqueBloodUnlimitedData.New(reader);
-    uniqueBloodUnlimitedDatas[id] = data;
-  end
-end
-
-function DataManager.OnLoadUniqueBloodSuitData(file)
-  local reader = DatReader.New(file);
-  local count = reader:ReadInt32();
-
-  for index = 1, count do
-    local id, data = UniqueBloodSuitData.New(reader);
-    uniqueBloodSuitDataDatas[id] = data;
-  end
-end
-
-function DataManager.OnLoadSceneSkillData(file)
+function DataManager.OnLoadRequiemBossData(file)
   local reader = DatReader.New(file);
   local count = reader:ReadInt32();
   for index = 1, count do
-    local id, data = SceneSkillData.New(reader);
-    table.insert(sceneSkillDatas, id, data);
-  end
-end
-
-function DataManager.OnLoadBattleRoyaleVocationData(file)
-  local reader = DatReader.New(file);
-  local count = reader:ReadInt32();
-  for index = 1, count do
-    local id, data = BattleRoyaleVocationData.New(reader);
-    table.insert(battleRoyaleVocationDatas, id, data);
-  end
-end
-
-function DataManager.OnLoadBattleRoyaleSealData(file)
-  local reader = DatReader.New(file);
-  local count = reader:ReadInt32();
-  for index = 1, count do
-    local id, data = BattleRoyaleSealData.New(reader);
-    table.insert(battleRoyaleSealDatas, id, data);
-  end
-end
-
-function DataManager.OnLoadBattleRoyaleScheduleData(file)
-  local reader = DatReader.New(file);
-  local count = reader:ReadInt32();
-  local content = {};
-  for index = 1, count do
-    local data = BattleRoyaleScheduleData.New(reader);
-    if data.time ~= 0 and data.textId ~= 0 then
-      if content[data.time] == nil then
-        content[data.time] = string.Get(data.textId);
-      else
-        content[data.time] = string.Concat(content[data.time], "\n", string.Get(data.textId));
-      end
-    end
-  end
-  local times = {};
-  times[1] = 0;
-  for k, _ in pairs(content) do
-    table.insert(times, k);
-  end
-  table.sort(times);
-  for index = 1, table.Count(times) - 1 do
-    local data = {};
-    data.startTime = times[index];
-    data.endTime = times[index + 1];
-    data.content = content[data.endTime];
-    table.insert(battleRoyaleScheduleDatas, data);
+    local id, data = RequiemBossData.New(reader);
+    table.insert(requiemBossDatas, id, data);
   end
 end
 
@@ -2652,7 +3869,6 @@ end
 function DataManager.OnLoadArmyMissionAwardData(file)
   local reader = DatReader.New(file);
   local count = reader:ReadInt32();
-
   for index = 1, count do
     local id, data = ArmyMissionAwardData.New(reader);
     table.insert(armyMissionAwardDatas, id, data);
@@ -2668,60 +3884,39 @@ function DataManager.OnLoadPokeBonusRewardData(file)
   end
 end
 
-function DataManager.OnLoadBattleRoyaleSceneData(file)
+function DataManager.OnLoadStrongholdData(file)
   local reader = DatReader.New(file);
   local count = reader:ReadInt32();
   for index = 1, count do
-    local id, data = BattleRoyaleSceneData.New(reader);
-    table.insert(battleRoyaleSceneDatas, id, data);
+    local id,  data = StrongholdData.New(reader);
+    strongholdDatas[id] = data;
   end
 end
 
-function DataManager.OnLoadBattleRoyaleHotkeyData(file)
+function DataManager.OnLoadStrongholdNPCData(file)
   local reader = DatReader.New(file);
   local count = reader:ReadInt32();
   for index = 1, count do
-    local hotkeyType, useId = BattleRoyaleHotkeyData.New(reader);
-    if battleRoyaleHotkeyDatas[hotkeyType] == nil then
-      battleRoyaleHotkeyDatas[hotkeyType] = {};
-    end
-    table.insert(battleRoyaleHotkeyDatas[hotkeyType], useId);
+    local data = StrongholdNPCData.New(reader);
+    strongholdNPCDatas[index] = data;
   end
 end
 
-function DataManager.OnLoadTreasureActivityCriteriaData(file)
+function DataManager.OnLoadStrongholdAwardData(file)
   local reader = DatReader.New(file);
   local count = reader:ReadInt32();
   for index = 1, count do
-    local data = TreasureActivityCriteriaData.New(reader);
-    table.insert(treasureActivityCriteriaDatas, data);
+    local data = StrongholdAwardData.New(reader);
+    strongholdAwardDatas[index] = data;
   end
 end
 
-function DataManager.OnLoadTreasureRoleCriteriaData(file)
+function DataManager.OnLoadStrongholdWarData(file)
   local reader = DatReader.New(file);
   local count = reader:ReadInt32();
   for index = 1, count do
-    local data = TreasureRoleCriteriaData.New(reader);
-    table.insert(treasureRoleCriteriaDatas, data);
-  end
-end
-
-function DataManager.OnLoadTreasureStarData(file)
-  local reader = DatReader.New(file);
-  local count = reader:ReadInt32();
-  for index = 1, count do
-    local data = TreasureStarData.New(reader);
-    table.insert(treasureStarDatas, data);
-  end
-end
-
-function DataManager.OnLoadTreasureGroupLVData(file)
-  local reader = DatReader.New(file);
-  local count = reader:ReadInt32();
-  for index = 1, count do
-    local data = TreasureGroupLVData.New(reader);
-    table.insert(treasureGroupLVDatas, data);
+    local id, data = StrongholdWarData.New(reader);
+    strongholdWarDatas[id] = data;
   end
 end
 
@@ -2749,24 +3944,6 @@ function DataManager.OnLoadRelationshipData(file)
   for index = 1, count do
     local id, data = RelationshipData.New(reader);
     relationshipDatas[id] = data;
-  end
-end
-
-function DataManager.OnLoadVIPPrivilegesData(file)
-  local reader = DatReader.New(file);
-  local count = reader:ReadInt32();
-  for index = 1, count do
-    local lv, data = VIPPrivilegesData.New(reader);
-    vipPrivilegesDatas[lv] = data;
-  end
-end
-
-function DataManager.OnLoadVIPRewardData(file)
-  local reader = DatReader.New(file);
-  local count = reader:ReadInt32();
-  for index = 1, count do
-    local id, data = VIPRewardData.New(reader);
-    vipRewardDatas[id] = data;
   end
 end
 
@@ -2812,3 +3989,58 @@ function DataManager.OnLoadActivityConditionData(file)
     activityConditionDatas[id] = data;
   end
 end
+
+function DataManager.OnLoadTreasureActivityCriteriaData(file)
+  local reader = DatReader.New(file);
+  local count = reader:ReadInt32();
+  for index = 1, count do
+    local data = TreasureActivityCriteriaData.New(reader);
+    table.insert(treasureActivityCriteriaDatas, data);
+  end
+end
+
+function DataManager.OnLoadTreasureRoleCriteriaData(file)
+  local reader = DatReader.New(file);
+  local count = reader:ReadInt32();
+  for index = 1, count do
+    local data = TreasureRoleCriteriaData.New(reader);
+    table.insert(treasureRoleCriteriaDatas, data);
+  end
+end
+
+function DataManager.OnLoadTreasureStarData(file)
+  local reader = DatReader.New(file);
+  local count = reader:ReadInt32();
+  for index = 1, count do
+    local data = TreasureStarData.New(reader);
+    table.insert(treasureStarDatas, data);
+  end
+end
+
+function DataManager.OnLoadTreasureGroupLVData(file)
+  local reader = DatReader.New(file);
+  local count = reader:ReadInt32();
+  for index = 1, count do
+    local data = TreasureGroupLVData.New(reader);
+    table.insert(treasureGroupLVDatas, data);
+  end
+end
+
+function DataManager.OnLoadTreasureGroupInfoData(file)
+  local reader = DatReader.New(file);
+  local count = reader:ReadInt32();
+  for index = 1, count do
+    local id, data = TreasureGroupInfoData.New(reader);
+    table.insert(treasureGroupInfoDatas, id, data);
+  end
+end
+
+function DataManager.OnLoadTreasureLvData(file)
+  local reader = DatReader.New(file);
+  local count = reader:ReadInt32();
+  for index = 1, count do
+    local data = TreasureLvData.New(reader);
+    table.insert(treasureLvDatas, data);
+  end
+end
+

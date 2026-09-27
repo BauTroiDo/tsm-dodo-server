@@ -62,7 +62,7 @@ EFFWar_Style = {
   CityHegemony = 25,  --城鎮爭霸
   NewMix5to5 = 26, --無界混P
   NewChaos5to5_100LV = 27,  --無界亂鬥100LV
-  BattleRoyale = 33  --大逃殺戰鬥
+  OrgRankFight = 34 --據點戰
 }
 
 EAttackResult = {
@@ -228,20 +228,56 @@ function FightManager.FightFieldWarStyle(data)                  --戰埸戰鬥�
 
   FightField.notShowCountDown = CheckFlag(fightMark, 2);
 
-  if FightField.ffWar_Style == EFFWar_Style.BattleRoyale then
-    BattleRoyale.EnterFight();
-  end
-
-  if Contains(FightField.ffWar_Style, EFFWar_Style.BEQ, EFFWar_Style.W5to5, EFFWar_Style.GMBeQ, EFFWar_Style.Chaos5to5, EFFWar_Style.Mix5to5, EFFWar_Style.WorldBoss, EFFWar_Style.NewChaos5to5) then 
+  if Contains(FightField.ffWar_Style, EFFWar_Style.BEQ, EFFWar_Style.W5to5, EFFWar_Style.GMBeQ, EFFWar_Style.Chaos5to5, EFFWar_Style.Mix5to5, EFFWar_Style.WorldBoss, EFFWar_Style.NewChaos5to5, EFFWar_Style.OrgRankFight) then
       FightField.downSec = CountDown5to5; --//30SEC
   elseif FightField.ffWar_Style == EFFWar_Style.ChaosGod then 
       FightField.downSec = CountDownChaosGod; --//10SEC
   else
       FightField.downSec = CountDownConst;
   end
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   AudioManager.PlayFightMusic();
-end
+ end 
 
 function FightManager.FightOver(roleId, guardIndex) --某id玩家結束戰役
  --Kind(1)+玩家ID(8)+Npcidx(2)             Kind=0  某Id戰鬥結束
@@ -274,7 +310,47 @@ function FightManager.RevExitFight(colm, row)                       --收到離�
   if FightField.fightHum[fIdx] == nil then 
     return 
   end
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   --還原全部狀態
   FightField.fightHum[fIdx]:ClearAllStatus();
   FightField.ClearAllAttack()
@@ -293,6 +369,38 @@ function FightManager.RevExitFight(colm, row)                       --收到離�
       FightField.fightHum[fIdx]:CloseInfoUI();
       FightField.SetSkillKind(fIdx, ESkill_Kind.ExitFight, fIdx)        
     end
+  end
+
+  --靈魂武將
+  FightManager.FreeSoulRole(colm, row);
+end
+
+function FightManager.FreeSoulRole(colm, row)
+  if Contains(colm, 1, 2) then
+    local soulColm = 0;
+    if colm == 2 then
+      soulColm = 1;
+    end
+    FightField.SoulRoleFree(soulColm, row);
+  end
+end
+
+function FightManager.AllSoulWarriorVisible(visible)
+  --logError(this.commandActive);
+  --logError(FightField.isFreeSoulWarrior);
+    for i = 0,  1 do
+      for j = 0, 4 do
+        FightManager.SoulWarriorVisible(i, j, visible);
+      end
+    end
+end
+
+function FightManager.SoulWarriorVisible(colm, row, visible)
+  local fIdx = FightField.GetSoulFHumIdx(colm, row);
+  if fIdx >=0  then
+    FightField.fightHum[fIdx].roleController:SetVisible(visible);
+    --FightField.fightHum[fIdx]:ClearAllStatus();roleController
+    --FightField.fightHum[fIdx]:ExitFight();
   end
 end
 
@@ -332,7 +440,7 @@ function FightManager.RevAttackSkill(data)
   local skill_ID;
   local idx;
   local me;
-  
+
   FightField.countDown = -1;
   FightField.slowCntDown =-1; --烏龜計數,開打就不數
   FightField.isShowTurtle = false; 
@@ -495,6 +603,8 @@ function FightManager.RevFlyOut(data)
      FightField.ClearAllAttack();
      FightField.fightHum[idx]:SetBeh(EFightBeh.FlyOut);
      FightField.fightHum[idx]:ThrowTreasure();
+
+    FightManager.FreeSoulRole(colm, row);
   end
 end
 
@@ -515,7 +625,47 @@ function FightManager.RevHelpMsg(data)
   local style = data:ReadByte();
   local beHid = data:ReadInt64();
   local hid = data:ReadInt64();
-  
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   --顯示對話方塊
   if tonumber(beHid) > 0 then
     if style == 1 then
@@ -567,7 +717,47 @@ function FightManager.RevChangeBody(data)
   local colm = data:ReadByte();
   local row = data:ReadByte();
   local npcId = data:ReadUInt16();
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   if FightField.isInBattle == false then 
     return;
   end
@@ -664,22 +854,10 @@ function FightManager.ReciveFightAppearenceData(data, roleId)
   
   --外顯外觀裝備
   local outfitStyleCount = data:ReadByte();
-
   for i = 1, outfitStyleCount do
-    local id = data:ReadUInt16();
-    if not BattleRoyale.GetBattleRoyaleState() then
-      roleData.itemId[roleData.equipCount + i] = id;
-    end
+    roleData.itemId[roleData.equipCount + i] = data:ReadUInt16();
   end
-
-  if BattleRoyale.GetBattleRoyaleState() then
-    for k, v in pairs(BattleRoyale.GetOutfit()) do
-      if itemDatas[v] ~= nil then
-        roleData.itemId[roleData.equipCount + k] = v;
-      end
-    end
-  end
-
+  
   roleData.teamState = data:ReadByte();
   roleData.orgId = data:ReadInt32();
   return roleData;  
@@ -712,6 +890,9 @@ function FightManager.RevExtarBuffStatus(data)
     logError("ExtarBuffStatus Cant Find FightRole");
     return;
   end
+  --logError("colm:" .. colm);
+  --logError("row:" .. row);
+  --logError("count:" .. count);
 
   FightField.ClearAllAttack()
   fightRole:ClearFightBuffData();

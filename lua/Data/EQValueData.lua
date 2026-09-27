@@ -1,6 +1,17 @@
 EQValueData = {};
 EQValueData.__index = EQValueData;
 
+function EQValueData.Trash()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
 function EQValueData.New(reader)
   local self = {};
   setmetatable(self, EQValueData);
@@ -14,4 +25,37 @@ function EQValueData.New(reader)
   end
 
   return self;
+end
+
+function EQValueData.TrashA()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function EQValueData.TrashB()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function EQValueData.TrashD()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
 end

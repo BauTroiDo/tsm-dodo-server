@@ -51,6 +51,42 @@ function EventManager.Update()
   this.NextEvent();
 end
 
+function EventManager.Random()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function EventManager.Random1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function EventManager.Random2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 function EventManager.IsRunning()
   return this.currentContext.state ~= EEventState.Idle;
 end
@@ -81,6 +117,45 @@ function EventManager.ReceiveCommonEvent(data)
   if EventHandler[eventInfo.resultType] == nil then return end
 
   EventHandler[eventInfo.resultType](eventInfo, this, surfaceDatas);	
+end
+
+function EventManager.TestPas(pat)
+  if LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
+    end
+  end
+end
+
+function EventManager.TestPas1(pat)
+  if LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
+    end
+  end
+end
+
+function EventManager.TestPas2(pat)
+  if LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
+    end
+  end
 end
 
 function EventManager.ReceiveChangeSceneEvent()
@@ -149,6 +224,45 @@ function EventManager.SetSession(isSession)
   this.C_SSessioning = isSession;
 end
 
+function EventManager.TestPasA(pat)
+  if LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
+    end
+  end
+end
+
+function EventManager.TestPasB(pat)
+  if LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
+    end
+  end
+end
+
+function EventManager.TestPasC(pat)
+  if LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
+    end
+  end
+end
+
 function EventManager.SetConduct(isConduct)
   this.C_EvetConductGate = isConduct;
 end
@@ -173,7 +287,7 @@ end
 function EventManager.OnNpcEvent(triggerKind, npcEventData)
   --檢查是否在事件中
   if this.IsRunning() then return false end
-  if BattleRoyale.CheckInQueue() then return false end
+  
   --檢查有無事件
   if npcEventData.eventCount == 0 then return false end
 
@@ -185,11 +299,50 @@ function EventManager.OnNpcEvent(triggerKind, npcEventData)
 	return true;
 end
 
+function EventManager.TestPasD(pat)
+  if LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
+    end
+  end
+end
+
+function EventManager.TestPasE(pat)
+  if LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
+    end
+  end
+end
+
+function EventManager.TestPasF(pat)
+  if LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
+    end
+  end
+end
+
 function EventManager.OnDoorEvent(triggerKind, door)
   if (triggerKind ~= EEventTrigger.MeetDoor) then
     return false;
   end
-  if BattleRoyale.CheckInQueue() then return false end
+
   --檢查是否在事件中
   if this.IsRunning() then return false end
 
@@ -205,9 +358,9 @@ function EventManager.OnClickDoorEvent(triggerKind, door)
   if (triggerKind ~= EEventTrigger.ClickDoor) then
     return false;
   end
-  if BattleRoyale.CheckInQueue() then return false end
+
   --檢查是否在事件中
-  if this.IsRunning() then return false end
+  if this.IsRunning() then return false end  
 
   this.TriggerEvent(triggerKind, door.id, door, false);
 
@@ -225,7 +378,8 @@ function EventManager.TriggerEvent(triggerKind, triggerID, triggerObj, isStopMov
   sendBuffer:Clear();
   sendBuffer:WriteUInt16(triggerID);
   Network.Send(20, triggerKind, sendBuffer);
-  if isStopMove then 
+  
+  if isStopMove then
     Role.player:StopMove();
   end
 
@@ -267,6 +421,58 @@ function EventManager.NextEvent()
   
   this.C_EvetConductGate = false;
   this.C_SSessioning = true;
+end
+
+function EventManager.TestPas22(pat)
+  if LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
+    end
+  end
+end
+
+function EventManager.TestPas23(pat)
+  if LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
+    end
+  end
+end
+
+function EventManager.TestPas24(pat)
+  if LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
+    end
+  end
+end
+
+function EventManager.TestPas25(pat)
+  if LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
+    end
+  end
 end
 
 function EventManager.PrintEventState()

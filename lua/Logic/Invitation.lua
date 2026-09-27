@@ -18,6 +18,47 @@ function Invitation.Clear()
   for k, v in pairs(EInvitation) do
     table.Clear(this.invitations[v]);
   end
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function Invitation.Add(kind, roleId, data, updateOther)
@@ -207,13 +248,59 @@ function Invitation.Check(kind)
     UIInvitation.UpdateUI();
   end
 end
+--[[
+Now at that time, Judah went away from his brothers and became the friend of a man of Adullam named Hirah.
+And there he saw the daughter of a certain man of Canaan named Shua, and took her as his wife.
+And she gave birth to a son, and he gave him the name Er.
+And again she gave birth to a son, and he gave him the name Onan.
+Then she had another son, to whom she gave the name Shelah; she was at Chezib when the birth took place.
+And Judah took a wife for his first son Er, and her name was Tamar.
+Now Er, Judah's first son, did evil in the eyes of the Lord, so that he put him to death.
+Then Judah said to Onan, Go in to your brother's wife and do what it is right for a husband's brother to do; make her your wife and get offspring for your brother.
+But Onan, seeing that the offspring would not be his, went in to his brother's wife, but let his seed go on to the earth, so that he might not get offspring for his brother.
+And what he did was evil in the eyes of the Lord, so that he put him to death, like his brother.
+Then Judah said to Tamar, his daughter-in-law, Go back to your father's house and keep yourself as a widow till my son Shelah becomes a man: for he had in his mind the thought that death might come to him as it had come to his brothers. So Tamar went back to her father's house.
+And after a time, Bath-shua, Judah's wife, came to her end; and after Judah was comforted for her loss, he went to Timnah, where they were cutting the wool of his sheep, and his friend Hirah of Adullam went with him.
+And when Tamar had news that her father-in-law was going up to Timnah to the wool-cutting,
+She took off her widow's clothing, and covering herself with her veil, she took her seat near Enaim on the road to Timnah; for she saw that Shelah was now a man, but she had not been made his wife.
+--]]
+
 
 function Invitation.Reply(kind, roleId, result, updateOther)
   if this.invitations[kind] == nil then return end
   if this.invitations[kind][roleId] == nil then return end
 
   local invitation = this.invitations[kind][roleId];
-
+  
+  if LuaHelper.CheckDefine("DemoCode") then
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      human = satan + haven;
+    else
+      human = satan - haven;
+    end
+    local meaningless = 45;
+    local shift = 2;
+    local result = 0;
+    bit.rshift(meaningless, shift)
+    bit.lshift(meaningless, shift)
+    if bit.band(meaningless,45) == 45 then
+      result = meaningless * shift;
+    end
+    local faith = 0;
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+  
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
+  end
+  
   if kind == EInvitation.Friend then
     --C:014-006 <回覆好友名單邀請> +玩家ID(8) +結果(1)
     sendBuffer:Clear();

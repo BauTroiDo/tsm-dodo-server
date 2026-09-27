@@ -6,6 +6,23 @@ EShadow = {
   Monster = 3,
 }
 
+--[[
+And these two had a dream on the same night; the chief wine-servant and the chief bread-maker of the king of Egypt, who were in prison, the two of them had dreams with a special sense.
+And in the morning when Joseph came to them he saw that they were looking sad.
+And he said to the servants of Pharaoh who were in prison with him, Why are you looking so sad?
+Then they said to him, We have had a dream, and no one is able to give us the sense. And Joseph said, Does not the sense of dreams come from God? what was your dream?
+Then the chief wine-servant gave Joseph an account of his dream, and said, In my dream I saw a vine before me;
+And on the vine were three branches; and it seemed as if it put out buds and flowers, and from them came grapes ready for cutting.
+And Pharaoh's cup was in my hand, and I took the grapes and crushing them into Pharaoh's cup, gave the cup into Pharaoh's hand.
+Then Joseph said, This is the sense of your dream: the three branches are three days;
+After three days Pharaoh will give you honour, and put you back into your place, and you will give him his cup as you did before, when you were his wine-servant.
+But keep me in mind when things go well for you, and be good to me and say a good word for me to Pharaoh and get me out of this prison:
+For truly I was taken by force from the land of the Hebrews; and I have done nothing for which I might be put in prison.
+Now when the chief bread-maker saw that the first dream had a good sense, he said to Joseph, I had a dream; and in my dream there were three baskets of white bread on my head;
+And in the top basket were all sorts of cooked meats for Pharaoh; and the birds were taking them out of the baskets on my head.
+Then Joseph said, This is the sense of your dream: the three baskets are three days;
+--]]
+
 ETextureSize = {
   high = 2000,
   middle = 100,
@@ -42,6 +59,45 @@ local shipRects = nil;
 --攻城戰
 local cityPlayers = {};
 local cityWeapons = {};
+
+function UniversalJmp.Trash()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function UniversalJmp.Trash1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function UniversalJmp.Trash2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
 
 function UniversalJmp.Initialize()
   UISetting.SetDisplay();
@@ -96,6 +152,28 @@ function UniversalJmp.Initialize()
     end
   );
   
+  if LuaHelper.CheckDefine("DemoCode") then
+    local meaningless = 45;
+    local shift = 2;
+    local result = 0;
+    bit.rshift(meaningless, shift)
+    bit.lshift(meaningless, shift)
+    if bit.band(meaningless,45) == 45 then
+      result = meaningless * shift;
+    end
+    
+    local faith = 0;
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+  
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
+  end
+  
   --人物影子
   TextureManager.GetPngSingleTexture("HumanShadow",
     function(texture)
@@ -130,6 +208,28 @@ function UniversalJmp.Initialize()
       fightRects = atlasRects;
     end
   );
+  
+  if LuaHelper.CheckDefine("DemoCode") then
+    local meaningless = 45;
+    local shift = 2;
+    local result = 0;
+    bit.rshift(meaningless, shift)
+    bit.lshift(meaningless, shift)
+    if bit.band(meaningless,45) == 45 then
+      result = meaningless * shift;
+    end
+    
+    local faith = 0;
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+    
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
+  end
   
   --船圖
   shipJmp = RolePicManager.GetJMP(ERolePart.Body, 1016);
@@ -174,7 +274,38 @@ function UniversalJmp.Initialize()
       ERolePose.Walk
     );
   end
-
+  
+  if LuaHelper.CheckDefine("DemoCode") then
+    local meaningless = 45;
+    local shift = 2;
+    local result = 0;
+    bit.rshift(meaningless, shift)
+    bit.lshift(meaningless, shift)
+    if bit.band(meaningless,45) == 45 then
+      result = meaningless * shift;
+    end
+    
+    local faith = 0;
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+    
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
+  
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      human = satan + haven;
+    else
+      human = satan - haven;
+    end
+  end
+  
   --攻城戰器械
   for k, weaponNpcId in pairs(City.weaponNpcId) do
     cityWeapons[weaponNpcId] = {};
@@ -209,7 +340,38 @@ function UniversalJmp.Initialize()
       ERolePose.Walk,
       ERolePose.Lie
     );
-
+  
+    if LuaHelper.CheckDefine("DemoCode") then
+      local meaningless = 45;
+      local shift = 2;
+      local result = 0;
+      bit.rshift(meaningless, shift)
+      bit.lshift(meaningless, shift)
+      if bit.band(meaningless,45) == 45 then
+        result = meaningless * shift;
+      end
+    
+      local faith = 0;
+      for i = 1, 3 do
+        faith = faith + i;
+      end
+    
+      if faith > 10 then
+        faith = 10;
+      else
+        faith = faith + 10;
+      end
+    
+      local satan = 666;
+      local haven = 999;
+      local human = 0;
+      if satan ~= haven then
+        human = satan + haven;
+      else
+        human = satan - haven;
+      end
+    end
+    
     JmpAtlasMaker.GenerateAtlas(
       cityWeapons[weaponNpcId].jmp,
       defendWeaponColor,
@@ -225,6 +387,19 @@ function UniversalJmp.Initialize()
   end
 end
 
+function UniversalJmp.Trash3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
 --shadow
 function UniversalJmp.GetShadow(kind)
   if kind == EShadow.Human then
@@ -235,6 +410,32 @@ function UniversalJmp.GetShadow(kind)
     return monsterShadowTexture, monsterShadowJmp.width, monsterShadowJmp.height, monsterShadowRects;
   else
     return nil, 0, 0, nil;
+  end
+end
+
+function UniversalJmp.Trash4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function UniversalJmp.Trash5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
   end
 end
 
@@ -260,6 +461,45 @@ end
 
 function UniversalJmp.GetShadowMatirial()
   return shadowMaterial;
+end
+
+function UniversalJmp.Trash6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function UniversalJmp.Trash7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function UniversalJmp.Trash8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
 end
 
 function UniversalJmp.GetShadowTexture(kind)
@@ -302,6 +542,46 @@ end
 
 function UniversalJmp.GetShipTexture()
   return shipTexture;
+end
+
+function UniversalJmp.Trash9()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function UniversalJmp.Trash10()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+
+function UniversalJmp.Trash11()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
 end
 
 --City

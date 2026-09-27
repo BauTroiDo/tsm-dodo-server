@@ -1,12 +1,13 @@
-EUIDungeonTag =
+EUIDungeonTag = 
 {
   Multiple = 1,
   Single = 2,
   Team = 3,
-  WeekDungeon = 4
+  WeekDungeon = 4,
+  SoulDungeon = 5,
 }
 
-ENeedKindTag =
+ENeedKindTag = 
 {
   Area = 1,      --國家
   Elements = 2,  --屬性
@@ -16,6 +17,9 @@ ENeedKindTag =
   NoSill = 5,    --禁用技能
   MaxRound = 6,  --回合數(上限)
   LimitRound = 7,--回合數(下限)
+  SoulElement = 8,
+  SoulLevelLarger = 9,
+  SoulLevelSmaller = 10,
 }
 
 UIDungeon = {};
@@ -45,7 +49,6 @@ local text_MReward_Title;
 local event_MBuyCount;
 local event_MJoin;
 local event_MCreate;
-local event_MClear;
 local event_MRefresh;
 local event_MBack;
 
@@ -57,7 +60,6 @@ local roomDatas = {};
 --單人頁
 local gameObject_SingleRoot;
 local rawImage_SBG;
-local image_DontAsk;
 
 local text_SName;
 local text_SLv;
@@ -68,12 +70,10 @@ local text_SInfo;
 
 local event_SBuyCount;
 local event_SJoin;
-local event_SClear;
 local event_SSkip;
 
 local singleRewards = {};
 local singleExtraRewrad = {};
-local dontAsk = false;
 --
 --組隊頁
 local gameObject_TeamRoot;
@@ -93,7 +93,7 @@ local gameObject_WeekDungeonRequire;
 local text_NeedPar1_T;
 local text_NeedPar2_T;
 
---百戰天關
+--百戰天關 靈魂挑戰
 local gameObject_WeekRoot;
 local rawImage_WeekDungeonBG;
 local event_AllPassPrize;
@@ -102,6 +102,7 @@ local item_AllPassPrize;
 local image_GetAllPassPrize;
 local event_ToNext;
 local event_ToBack;
+local text_WeekName;
 
 local nodeInfos = {};
 
@@ -119,6 +120,7 @@ local currentMainPage = 1;
 local currentSubPage = 1;
 local tagDatas = {};
 local nowDungeonData = nil;
+local weekPageMainData = nil;
 
 function UIDungeon.Initialize(go)
   local uiController = go:GetComponent("UIController");
@@ -132,7 +134,7 @@ function UIDungeon.Initialize(go)
 
   text_MName = uiController:FindText("Text_T2_MName");
   text_MLv = uiController:FindText("Text_MLv");
-  text_MTime = uiController:FindText("Text_MTime");
+  text_MTime = uiController:FindText("Text_MTime");  
   text_MPeople = uiController:FindText("Text_MPeople");
   text_NeedPar1 = uiController:FindText("Text_NeedPar1");
   text_NeedPar2 = uiController:FindText("Text_NeedPar2");
@@ -147,22 +149,52 @@ function UIDungeon.Initialize(go)
 
   event_MBuyCount = uiController:FindEvent("Image_MBuyCount");
   event_MBuyCount:SetListener(EventTriggerType.PointerClick, this.OnClickMBuyCount);
-
+  
   event_MJoin = uiController:FindEvent("Image_MJoin");
   event_MJoin:SetListener(EventTriggerType.PointerClick, this.OnClickMJoin);
 
   event_MCreate = uiController:FindEvent("Image_MCreate");
   event_MCreate:SetListener(EventTriggerType.PointerClick, this.OnClickMCreate);
 
-  event_MClear = uiController:FindEvent("Image_MClear");
-
-  event_MRefresh = uiController:FindEvent("Image_MRefresh");
+  event_MRefresh = uiController:FindEvent("Image_MRefresh"); 
   event_MRefresh:SetListener(EventTriggerType.PointerClick, this.OnClickMRefresh);
 
   event_MBack = uiController:FindEvent("Image_Back");
   event_MBack:SetListener(EventTriggerType.PointerClick, this.OnClickMBack);
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
 
-  for i = 1, 3 do
+  for i = 1, 3 do 
     local temp = {};
     temp.event = uiController:FindEvent(string.Concat("Image_MBox", i));
     temp.event:SetListener(EventTriggerType.PointerClick, this.OnClickMBox);
@@ -177,11 +209,12 @@ function UIDungeon.Initialize(go)
   gameObject_SingleRoot = uiController:FindGameObject("SingleRoot");
 
   text_SName = uiController:FindText("Text_T2_SName");
-  text_SLv = uiController:FindText("Text_SLv");
+  text_SLv = uiController:FindText("Text_SLv");  
   text_SPeople = uiController:FindText("Text_SPeople");
   text_STime = uiController:FindText("Text_STime");
   text_SCount = uiController:FindText("Text_SCount");
   text_SInfo = uiController:FindText("Text_SInfo");
+  text_WeekName = uiController:FindText("Text_T2_WeekName");
 
   event_SBuyCount = uiController:FindEvent("Image_SBuyCount");
   event_SBuyCount:SetListener(EventTriggerType.PointerClick, this.OnClickSBuyCount);
@@ -189,13 +222,34 @@ function UIDungeon.Initialize(go)
   event_SJoin = uiController:FindEvent("Image_SJoin");
   event_SJoin:SetListener(EventTriggerType.PointerClick, this.OnClickSJoin);
 
-  event_SClear = uiController:FindEvent("Image_SClear");
-  event_SClear:SetListener(EventTriggerType.PointerClick, this.OnClickSClear);
-
   event_SSkip = uiController:FindEvent("Image_SSkip");
   event_SSkip:SetListener(EventTriggerType.PointerClick, this.OnClickSSkip);
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
 
-  for i = 1, 2 do
+  for i = 1, 2 do 
     local temp = {};
     temp.image = uiController:FindImage(string.Concat("Image_SReward", i));
     temp.event = temp.image.gameObject:GetComponent("UIEvent");
@@ -221,8 +275,8 @@ function UIDungeon.Initialize(go)
   text_TeamOk = temp.transform:Find("Text_").gameObject:GetComponent("Text");
   text_TeamName = uiController:FindText("Text_T1_TeamName");
   text_RoomName = uiController:FindText("Text_T2_RoomName");
-
-  gameObject_WeekDungeonRequire = uiController:FindGameObject("WeekDungeonRequire");
+  
+  gameObject_WeekDungeonRequire = uiController:FindGameObject("WeekDungeonRequire"); 
   text_NeedPar1_T = uiController:FindText("Text_NeedPar1_T");
   text_NeedPar2_T = uiController:FindText("Text_NeedPar2_T");
 
@@ -242,13 +296,13 @@ function UIDungeon.Initialize(go)
   event_Kick:SetListener(EventTriggerType.PointerClick, this.OnClickTeamKick);
   event_KickBg = uiController:FindEvent("Image_KickBg");
   event_KickBg:SetListener(EventTriggerType.PointerClick, this.OnClickKickBg);
-
+  
   event_KickBg.gameObject:SetActive(false);
 
   temp = uiController:FindEvent("Image_TeamRecruit");
   temp:SetListener(EventTriggerType.PointerClick, this.OnClickTeamRecruit);
 
-  for i = 1, 5 do
+  for i = 1, 5 do 
     temp = {};
     temp.gameObject = uiController:FindGameObject(string.Concat("Role", i));
     temp.gameObject_Add = temp.gameObject.transform:Find("Image_Add").gameObject;
@@ -258,7 +312,7 @@ function UIDungeon.Initialize(go)
 
     temp.root = temp.gameObject.transform:Find("Root");
     temp.jmpDrawer_Role = temp.root.transform:Find("GameObject_Role").transform:Find("RawImage_Role").gameObject:GetComponent("RawImage").gameObject:AddComponent(typeof(JmpDrawer));
-
+    
     local roleEvent = temp.jmpDrawer_Role.gameObject:GetComponent("UIEvent");
     roleEvent:SetListener(EventTriggerType.PointerClick, this.OnClickTeamRole);
     roleEvent.parameter = i;
@@ -268,7 +322,7 @@ function UIDungeon.Initialize(go)
     temp.gameObject_Prepare = temp.root.transform:Find("Image_Prepare").gameObject;
 
     roleSet[i] = temp;
-  end
+  end  
 
   rawImage_SBG = uiController:FindRawImage("RawImage_SBG");
   rawImage_MBG = uiController:FindRawImage("RawImage_MBG");
@@ -277,35 +331,48 @@ function UIDungeon.Initialize(go)
   gameObject_CountdownMask = uiController:FindGameObject("Image_CountdownMask");
   text_Countdown = uiController:FindText("Text_Countdown");
   gameObject_CountdownMask:SetActive(false);
-
-  local tempEvent = uiController:FindEvent("Image_DontAsk");
-  tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_DontAsk);
-  image_DontAsk = tempEvent:GetComponent("Image");
 end
 
 function UIDungeon.Initialize2(go)
-  local uiController = go:GetComponent("UIController");
-  --百戰天關
+  local uiController = go:GetComponent("UIController"); 
+  --百戰天關 
   gameObject_WeekRoot = uiController:FindGameObject("WeekRoot");
   local gameObject_NodeRoot = uiController:FindGameObject("NodeRoot");
 
   rawImage_WeekDungeonBG = uiController:FindRawImage("RawImage_WeekDungeonBG");
 
-  event_AllPassPrize = uiController:FindEvent("Image_AllPassPrize");
+  event_AllPassPrize = uiController:FindEvent("Image_AllPassPrize"); 
   event_AllPassPrize:SetListener(EventTriggerType.PointerClick, this.OnClick_AllPassPrize);
 
   item_AllPassPrize = UIItemController.New(event_AllPassPrize.transform);
 
-  event_GetAllPassPrize = uiController:FindEvent("Image_GetAllPassPrize");
+  event_GetAllPassPrize = uiController:FindEvent("Image_GetAllPassPrize"); 
   event_GetAllPassPrize:SetListener(EventTriggerType.PointerClick, this.OnClick_GetAllPassPrize);
 
   image_GetAllPassPrize = event_GetAllPassPrize.gameObject:GetComponent("Image");
-
-
+  
+   
   event_ToNext = uiController:FindEvent("Image_ToNext");
   event_ToNext:SetListener(EventTriggerType.PointerClick, this.OnClick_ToNext);
-  event_ToBack = uiController:FindEvent("Image_ToBack");
+  event_ToBack = uiController:FindEvent("Image_ToBack"); 
   event_ToBack:SetListener(EventTriggerType.PointerClick, this.OnClick_ToBack);
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  
 
 
   for i = 1, Dungeon.maxWeekDungeonNode do
@@ -315,7 +382,7 @@ function UIDungeon.Initialize2(go)
     temp.image_Icon = tempTransform:GetComponent("Image");
     temp.gameObject_Complete = tempTransform:Find("NodeComple").gameObject;
     temp.NameText = tempTransform:Find("Text_Name"):GetComponent("Text");
-
+    
     temp.event = tempTransform:GetComponent("UIEvent");
     temp.event:SetListener(EventTriggerType.PointerClick, this.OnClick_WeekNode);
     temp.event.parameter = i;
@@ -326,42 +393,21 @@ end
 
 function UIDungeon.LoadUIPic()
   TextureManager.SetPng(ETextureUseType.UI, "common0_com075", rawImage_SBG);
-  TextureManager.SetPng(ETextureUseType.UI, "common0_com075", rawImage_MBG);
+  TextureManager.SetPng(ETextureUseType.UI, "common0_com075", rawImage_MBG); 
   TextureManager.SetPng(ETextureUseType.UI, "common0_bod127", rawImage_WeekDungeonBG);
-  for i = 1, 5 do
+  for i = 1, 5 do 
     TextureManager.SetPng(ETextureUseType.UI, "common0_com040", roleSet[i].rawImage_BG);
   end
-end
-
-function UIDungeon.UpdateDontAsk()
-  dontAsk = Setting.client.dungeonUIDontAsk;
-  image_DontAsk.sprite = UI.GetSwitchSprite(dontAsk);
-  UISell.SetAsk(13, dontAsk);
-end
-
-function UIDungeon.OnClick_DontAsk()
-  dontAsk = not dontAsk;
-  image_DontAsk.sprite = UI.GetSwitchSprite(dontAsk);
-
-  Setting.client.dungeonUIDontAsk = dontAsk;
-
-  UISell.SetAsk(13, dontAsk);
-
-  CGTimer.DoCountdown(this.SaveSetting, 3);
-end
-
-function UIDungeon.SaveSetting()
-  Setting.Save();
 end
 
 function UIDungeon.ResetScrollContent()
   table.Clear(roomDatas);
   for k, v in pairs(Dungeon.dungeonRoomDatas)do
-    if v.dungeonId == nowDungeonData.id then
+    if v.dungeonId == nowDungeonData.id then 
       table.insert(roomDatas, v);
     end
   end
-  scrollContent_Room:Reset(table.maxn(roomDatas));
+  scrollContent_Room:Reset(table.maxn(roomDatas)); 
 end
 
 function UIDungeon.UpdateTags()
@@ -383,22 +429,30 @@ function UIDungeon.UpdateTags()
 end
 
 function UIDungeon.CheckRedDot(mainTag, subTag)
-  if Dungeon.availableDungeonDatas[mainTag] == nil then
+  if Dungeon.availableDungeonDatas[mainTag] == nil then 
     return false;
   end
 
-  if subTag == nil then
-    for k,v in pairs(Dungeon.availableDungeonDatas[mainTag])do
-      if Dungeon.useableDungeons[v.id] ~= nil then
+  if subTag == nil then 
+    for k,v in pairs(Dungeon.availableDungeonDatas[mainTag])do 
+      if Dungeon.useableDungeons[v.id] ~= nil then 
         return true;
       end
     end
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
     return false;
   else
-    local data = Dungeon.availableDungeonDatas[mainTag][subTag];
-    if data == nil then
+    local data = Dungeon.availableDungeonDatas[mainTag][subTag];  
+    if data == nil then 
       return false;
-    end
+    end  
     return Dungeon.useableDungeons[data.id] ~= nil;
   end
 end
@@ -417,7 +471,7 @@ end
 
 function UIDungeon.OnItemChange_scrollContent_Room(dataIndex, itemIndex)
   local index = dataIndex+ 1 ;
-  local roomData = roomDatas[index];
+  local roomData = roomDatas[index];  
   if roomData == nil then
     return false;
   end
@@ -441,13 +495,30 @@ end
 
 function UIDungeon.OnOpen(mainPage, subPage, isInvite, isTeamPage)
   if Dungeon.availableDungeonDatas[4] ~= nil and Dungeon.availableDungeonDatas[4][1] ~= nil then
-    mainPage = 4;
+    mainPage = 4;  
     subPage = 1;
   end
-  if mainPage == 0 or mainPage == nil then
-    mainPage = 1;
+  if mainPage == 0 or mainPage == nil then 
+    mainPage = 1;  
   end
   if subPage == 0 or subPage == nil then
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    
     subPage = 1;
   end
   this.LoadUIPic();
@@ -471,16 +542,16 @@ function UIDungeon.OnReturnToTags()
   UIFrame.SetTab(tagDatas, 1, 1);
 
   this.UpdatePage(1, 1);
-  UIFrame.SetCloseEvent(this.OnClick_Close);
+  UIFrame.SetCloseEvent(this.OnClick_Close);   
 end
 
 function UIDungeon.OnClose()
   if UI.IsVisible(UIAlert) then
     UI.Close(UIAlert);
   end
-
-  for i = 1, 5 do
-    if roleSet[i] ~= nil then
+  
+  for i = 1, 5 do 
+    if roleSet[i] ~= nil then  
       roleSet[i].jmpDrawer_Role:Disable();
     end
   end
@@ -489,11 +560,11 @@ function UIDungeon.OnClose()
 end
 
 function UIDungeon.OnVisible(visible)
-  if visible then
+  if visible then 
     if isTeamPage == nil and table.Count(Dungeon.dungeonNowRoomPlayers) == 0 then
       transform_FrameRect.anchoredPosition = UI.tabUIPosition;
       transform_FrameRect.sizeDelta = UI.tabUISize;
-      UIFrame.Active(transform_FrameRect, string.Get(10118), this.OnClick_Close, nil, this.OnClick_Tag, tagDatas, currentMainPage, currentSubPage, this.CheckRedDot);
+      UIFrame.Active(transform_FrameRect, string.Get(10118), this.OnClick_Close, nil, this.OnClick_Tag, tagDatas, currentMainPage, currentSubPage, this.CheckRedDot);  
 
       this.UpdatePage(currentMainPage, currentSubPage);
     else
@@ -503,21 +574,87 @@ function UIDungeon.OnVisible(visible)
 end
 
 function UIDungeon.OnClick_TeamClose()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   UI.Close(UIDungeon);
 end
 
 function UIDungeon.OnClick_Close()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   UI.Close(UIDungeon);
 end
 
 function UIDungeon.OnClick_Tag(mainTag, subTag)
   nowDungeonData = Dungeon.availableDungeonDatas[mainTag][subTag];
-  if nowDungeonData.kind == 1 or nowDungeonData.kind == 4 then
+  if nowDungeonData.kind == 1 or nowDungeonData.kind == 4 then 
     nowPagKind = EUIDungeonTag.Multiple; --種類4依照種類1 已經說好了 不給改
-  elseif nowDungeonData.kind == 2 then
+  elseif nowDungeonData.kind == 2 then 
     nowPagKind = EUIDungeonTag.Single;
+  elseif nowDungeonData.kind == 5 then
+    nowPagKind = EUIDungeonTag.SoulDungeon;
   else
-    nowPagKind = EUIDungeonTag.WeekDungeon;
+    nowPagKind = EUIDungeonTag.WeekDungeon; 
   end
 
   this.UpdatePage(mainTag, subTag);
@@ -528,10 +665,18 @@ end
 function UIDungeon.UpdatePage(mainTag, subTag)
   currentMainPage = mainTag;
   currentSubPage = subTag;
-  if  Dungeon.availableDungeonDatas[currentMainPage][1].kind == 3 then
+
+  if nowPagKind == EUIDungeonTag.WeekDungeon then
+    weekPageMainData = weekDungeonDatas;
+  elseif  nowPagKind == EUIDungeonTag.SoulDungeon then
+    weekPageMainData = soulDungeonDatas;
+    nowPag = 0;
+  end
+
+  if Dungeon.availableDungeonDatas[currentMainPage][1].kind == 3 or Dungeon.availableDungeonDatas[currentMainPage][1].kind == 5 then
     local WeekDataIdx = 0;
     WeekDataIdx = currentSubPage+ nowPag*Dungeon.maxWeekDungeonNode;
-    nowDungeonData = Dungeon.GetData(weekDungeonDatas[WeekDataIdx]);
+    nowDungeonData = Dungeon.GetData(weekPageMainData[WeekDataIdx]);
   else
     nowDungeonData = Dungeon.availableDungeonDatas[currentMainPage][currentSubPage];
   end
@@ -541,7 +686,7 @@ function UIDungeon.UpdatePage(mainTag, subTag)
     this.UpdateMultipleInfo();
   elseif nowPagKind == EUIDungeonTag.Single then --單人
     this.UpdateSingleInfo();
-  elseif nowPagKind == EUIDungeonTag.WeekDungeon then
+  elseif nowPagKind == EUIDungeonTag.WeekDungeon or nowPagKind == EUIDungeonTag.SoulDungeon then
     this.UpdateWeekDungeonInfo(); --特殊副本(周副本)
   else
     this.UpdateSingleInfo();
@@ -578,6 +723,24 @@ function UIDungeon.GetNeedParStr(requireData)
     param = string.format(string.Get(22419), requireData.parameter);
   elseif requireData.kind == ENeedKindTag.LimitRound then
     param = string.format(string.Get(22420), requireData.parameter);
+  elseif requireData.kind == ENeedKindTag.SoulElement then
+    local element = "";
+    for i = 0, 3 do
+      if requireData.parameter == i + 1 then
+        element = string.Get(20002 + i);
+        break;
+      end
+    end
+    if requireData.parameter == 7 then
+      element = string.Get(20922);
+    elseif requireData.parameter == 8 then
+      element = string.Get(20923);
+    end
+    param = string.format(string.Get(24103), element);
+  elseif requireData.kind == ENeedKindTag.SoulLevelLarger then
+    param = string.format(string.Get(24104), requireData.parameter);
+  elseif requireData.kind == ENeedKindTag.SoulLevelSmaller then
+    param = string.format(string.Get(24105), requireData.parameter);
   end
 
   return param;
@@ -585,23 +748,30 @@ end
 
 --WeekDungeon
 function UIDungeon.UpdateWeekDungeonInfo()
-  if not gameObject_WeekRoot.activeInHierarchy then
+  if not gameObject_WeekRoot.activeInHierarchy then 
     gameObject_MultipleRoot:SetActive(false);
     gameObject_SingleRoot:SetActive(false);
     gameObject_TeamRoot:SetActive(false);
     gameObject_WeekRoot:SetActive(true);
-    image_DontAsk.gameObject:SetActive(false);
   end
 
   this.ResetScrollContent();
-
+  
   event_ToNext.gameObject:SetActive(true);
   event_ToBack.gameObject:SetActive(true);
+
   if nowPag <= 0 then
     event_ToBack.gameObject:SetActive(false);
   end
-  if (nowPag*Dungeon.maxWeekDungeonNode + Dungeon.maxWeekDungeonNode) >= table.Count(weekDungeonDatas)  then
+
+  if (nowPag*Dungeon.maxWeekDungeonNode + Dungeon.maxWeekDungeonNode) >= table.Count(weekPageMainData) then
     event_ToNext.gameObject:SetActive(false);
+  end
+
+  if nowPagKind == EUIDungeonTag.WeekDungeon then
+    text_WeekName.text = string.Get(22386);
+  elseif nowPagKind == EUIDungeonTag.SoulDungeon then
+    text_WeekName.text = string.Get(24099);
   end
 
   local dungeonData = {};
@@ -610,14 +780,30 @@ function UIDungeon.UpdateWeekDungeonInfo()
   local allPassPrizeMark = 0;
   for i = 1, Dungeon.maxWeekDungeonNode do
     local DatasIdx = i+nowPag*Dungeon.maxWeekDungeonNode;
-    dungeonData = Dungeon.GetData(weekDungeonDatas[DatasIdx]);
+    dungeonData = Dungeon.GetData(weekPageMainData[DatasIdx]);
     local nodeInfo = nodeInfos[i];
     if dungeonData ~= nil and nodeInfo ~= nil then
       nodeInfo.gameObject:SetActive(true);
       nodeInfo.NameText.text = DatasIdx;
       usedCount = 0;
-      if MarkManager.missions[dungeonData.dayilyFlag] ~= nil then
+      if MarkManager.missions[dungeonData.dayilyFlag] ~= nil then 
         usedCount = MarkManager.missions[dungeonData.dayilyFlag].step;
+      end
+
+      if nowPagKind == EUIDungeonTag.SoulDungeon then
+        if i > 1 then
+          local tempIdx =  i - 1 + nowPag * Dungeon.maxWeekDungeonNode;
+          if MarkManager.missions[Dungeon.GetData(weekPageMainData[tempIdx]).dayilyFlag] == nil then
+            nodeInfo.image_Icon.color = Color.Gray;
+            nodeInfo.event.enabled = false;
+          else
+            nodeInfo.image_Icon.color = Color.White;
+            nodeInfo.event.enabled = true;
+          end
+        end
+      else
+        nodeInfo.image_Icon.color = Color.White;
+        nodeInfo.event.enabled = true;
       end
 
       if nowDungeonData.dayilyCount <= usedCount then
@@ -633,41 +819,56 @@ function UIDungeon.UpdateWeekDungeonInfo()
     end
 
     if dungeonData ~= nil and i == 1 then
-      --已第一筆週副本來抓全通獎
+      --已第一筆週副本來抓全通獎   
       allPassPrizeMark = dungeonData.costPoint;--取得全通獎勵的以領獎標記 用消耗點數的欄位代替(周副本每區的第一關)
       if dungeonData.allPassPrize ~= 0 and itemDatas[dungeonData.allPassPrize] ~= nil then
         event_GetAllPassPrize.gameObject:SetActive(true);
         event_AllPassPrize.gameObject:SetActive(true);
         item_AllPassPrize:SetItem(dungeonData.allPassPrize, 1);
-        item_AllPassPrize:SetEvent(this.OnClick_AllPassPrize);
+        item_AllPassPrize:SetEvent(this.OnClick_AllPassPrize); 
       else
         event_GetAllPassPrize.gameObject:SetActive(false);
         event_AllPassPrize.gameObject:SetActive(false);
       end
-    end
-  end
-
-  --if (allPass) and (MarkManager.missions[12803] ~= nil) and (MarkManager.missions[12803].step == 0) then
-  if allPass and not MarkManager.GetMissionFlag(allPassPrizeMark) then
+    end   
+  end 
+     
+  --if (allPass) and (MarkManager.missions[12803] ~= nil) and (MarkManager.missions[12803].step == 0) then 
+  if allPass and not MarkManager.GetMissionFlag(allPassPrizeMark) then 
     event_GetAllPassPrize.enabled = true;
-    LuaHelper.SetColor(image_GetAllPassPrize, Color.White);
-  else
+    LuaHelper.SetColor(image_GetAllPassPrize, Color.White); 
+  else 
     event_GetAllPassPrize.enabled = false;
     LuaHelper.SetColor(image_GetAllPassPrize, Color.Gray);
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    
   end
 end
 
 --Multiple
 function UIDungeon.UpdateMultipleInfo()
-  if not gameObject_MultipleRoot.activeInHierarchy then
+  if not gameObject_MultipleRoot.activeInHierarchy then 
     gameObject_MultipleRoot:SetActive(true);
     gameObject_SingleRoot:SetActive(false);
     gameObject_TeamRoot:SetActive(false);
     gameObject_WeekRoot:SetActive(false);
-    image_DontAsk.gameObject:SetActive(true);
   end
 
-  this.UpdateDontAsk();
   this.ResetScrollContent();
 
   text_MName.text = string.Get(nowDungeonData.name);
@@ -675,7 +876,7 @@ function UIDungeon.UpdateMultipleInfo()
   text_MTime.text = string.Concat(nowDungeonData.time, string.Get(49024));
   text_MPeople.text = nowDungeonData.maxPlayer;
 
-  if nowDungeonData.kind == 3 then
+  if nowDungeonData.kind == 3 or nowDungeonData.kind == 5 then
     -- 特殊多人副本
     text_NeedTitle1.text = string.Get(22411);
     text_NeedTitle2.text = string.Get(22412);
@@ -684,35 +885,26 @@ function UIDungeon.UpdateMultipleInfo()
     text_NeedPar2.text = this.GetNeedParStr(nowDungeonData.needPar[1]);
 
     event_MBuyCount.gameObject:SetActive(false);
-    event_MJoin.gameObject:SetActive(true);
+    event_MJoin.gameObject:SetActive(true); 
     event_MCreate.gameObject:SetActive(true);
     event_MBack.gameObject:SetActive(true);
   else
     -- 一般多人副本
     local usedCount = 0;
-    if MarkManager.missions[nowDungeonData.dayilyFlag] ~= nil then
+    if MarkManager.missions[nowDungeonData.dayilyFlag] ~= nil then 
       usedCount = MarkManager.missions[nowDungeonData.dayilyFlag].step;
     end
     local dayilyCount = nowDungeonData.dayilyCount - usedCount;
 
     text_NeedTitle1.text = string.Get(10106);
     text_NeedTitle2.text = "";
-
-    if nowDungeonData.kind == 4 then --史詩副本
-      local vipCount = UIVIP.GetVIPLevel(EVIPPermission.EpicDungeon);
-      dayilyCount = dayilyCount + vipCount;
-      text_NeedPar1.text = dayilyCount .. string.GetColorText(string.Concat("(", vipCount, ")"), Color.Red);
-    else
-      text_NeedPar1.text = dayilyCount;
-    end
-
+    text_NeedPar1.text = dayilyCount;
     text_NeedPar2.text = "";
     text_MReward_Title.text = string.Get(10108);
-
+    
     event_MBuyCount.gameObject:SetActive(dayilyCount == 0);
     event_MJoin.gameObject:SetActive(dayilyCount > 0);
     event_MCreate.gameObject:SetActive(dayilyCount > 0);
-    event_MClear.gameObject:SetActive(false);
     event_MBack.gameObject:SetActive(false);
   end
 
@@ -741,9 +933,9 @@ function UIDungeon.UpdateMultipleInfo()
 end
 
 function UIDungeon.UpdateInfo()
-  if gameObject_SingleRoot.activeInHierarchy then
+  if gameObject_SingleRoot.activeInHierarchy then 
     this.UpdateSingleInfo();
-  elseif gameObject_MultipleRoot.activeInHierarchy then
+  elseif gameObject_MultipleRoot.activeInHierarchy then 
     this.UpdateMultipleInfo();
   elseif gameObject_TeamRoot.activeInHierarchy then
     this.UpdateTeamUI();
@@ -755,38 +947,63 @@ end
 function UIDungeon.OnClick_WeekNode(uiEvent)
   local WeekDataIdx = 0;
   WeekDataIdx = uiEvent.parameter+ nowPag*Dungeon.maxWeekDungeonNode;
-  local dungeonData = Dungeon.GetData(weekDungeonDatas[WeekDataIdx]);
-  if dungeonData ~= nil then
-    nowPagKind = EUIDungeonTag.Multiple;
+  local dungeonData = Dungeon.GetData(weekPageMainData[WeekDataIdx]);
+  if dungeonData ~= nil then 
+    nowPagKind = EUIDungeonTag.Multiple; 
     nowDungeonData = dungeonData;
     this.UpdatePage(currentMainPage, uiEvent.parameter);
   end
 end
 
-function UIDungeon.OnClick_GetAllPassPrize(uiEvent)
-  --送領全通獎
+function UIDungeon.OnClick_GetAllPassPrize(uiEvent) 
+  --送領全通獎 
   local dungeonData = {};
   local usedCount = 0;
   local WeekDataIdx = 0;
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  
 
   for i = 1, Dungeon.maxWeekDungeonNode do
     WeekDataIdx = i+ nowPag*Dungeon.maxWeekDungeonNode;
-    dungeonData = Dungeon.GetData(weekDungeonDatas[WeekDataIdx]);
-    if dungeonData ~= nil then
+    dungeonData = Dungeon.GetData(weekPageMainData[WeekDataIdx]);
+    if dungeonData ~= nil then 
       usedCount = 0;
 
-      if MarkManager.missions[dungeonData.dayilyFlag] ~= nil then
+      if MarkManager.missions[dungeonData.dayilyFlag] ~= nil then 
         usedCount = MarkManager.missions[dungeonData.dayilyFlag].step;
       end
 
       if usedCount == 0 then return end
     end
   end
-
+  
   Dungeon.SendGetWeekDungeonPrize(nowPag);
 end
 
-function UIDungeon.OnClick_ToNext(uiEvent)
+function UIDungeon.OnClick_ToNext(uiEvent) 
   --周副本轉換至其它區
   if nowPag >= math.floor(table.Count(weekDungeonDatas) / Dungeon.maxWeekDungeonNode) then
     return;
@@ -795,19 +1012,44 @@ function UIDungeon.OnClick_ToNext(uiEvent)
   this.UpdateWeekDungeonInfo();
 end
 
-function UIDungeon.OnClick_ToBack(uiEvent)
-  --周副本轉換至其它區
+function UIDungeon.OnClick_ToBack(uiEvent) 
+  --周副本轉換至其它區 
   if nowPag <= 0 then
     return;
   end
-  nowPag = nowPag-1;
+  nowPag = nowPag-1; 
   this.UpdateWeekDungeonInfo();
 end
 
 function UIDungeon.OnClick_AllPassPrize(uiEvent)
   local WeekDataIdx = 0;
   WeekDataIdx = 1+ nowPag*Dungeon.maxWeekDungeonNode;
-  local dungeonData = Dungeon.GetData(weekDungeonDatas[WeekDataIdx]);
+  local dungeonData = Dungeon.GetData(weekPageMainData[WeekDataIdx]);
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  
   if dungeonData ~= nil then
     UIItemInfo.Show(dungeonData.allPassPrize);
   end
@@ -818,9 +1060,25 @@ function UIDungeon.OnClick_JoinTeam(uiEvent)
     ShowCenterMessage(string.Get(80099));
     return;
   end
-
+  
   local roomData = roomDatas[uiEvent.parameter];
   if roomData.isLock then
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
     ShowStrInput(string.Get(20156), function(text) if text == nil then return end;  Dungeon.SendJoinRoom(roomData.id, text) end);
   else
     Dungeon.SendJoinRoom(roomData.id);
@@ -830,7 +1088,7 @@ end
 function UIDungeon.OnClickMBack(uiEvent)
   this.OnClick_Tag(currentMainPage, 1);
 end
-
+ 
 function UIDungeon.OnClickMBuyCount(uiEvent)
   Dungeon.SendResetCount(nowDungeonData.id);
 end
@@ -840,7 +1098,7 @@ function UIDungeon.OnClickMJoin(uiEvent)
     ShowCenterMessage(string.Get(80099));
     return;
   end
-
+  
   Dungeon.SendJoinAnyway(nowDungeonData.id);
 end
 
@@ -853,65 +1111,44 @@ function UIDungeon.OnClickMCreate(uiEvent)
   ShowCheckBoxAlert(string.Get(10109), string.Get(10112), this.OnClickToogleSubmit);
 end
 
-function UIDungeon.OnClickSClear()
-  if Role.player.war ~= EWar.None then
-    ShowCenterMessage(string.Get(80099));
-    return;
-  end
-
-  if Item.currentThingGrid - Item.GetBagCount(EThings.Bag, 0) <= 2 then
-    ShowCenterMessage(string.Get(25059));
-    return;
-  end
-
-  sendBuffer:Clear()
-  sendBuffer:WriteUInt16(nowDungeonData.id);
-  Network.Send(47, 5, sendBuffer);
-end
-
 function UIDungeon.OnClickMRefresh(uiEvent)
-  if CGTimer.time - last_RefreshTime > 3 then
+  if CGTimer.time - last_RefreshTime > 3 then 
     last_RefreshTime = CGTimer.time;
     Dungeon.SendAskRoomData();
   end
 end
 
 function UIDungeon.OnClickMBox(uiEvent)
-  local comboData = dungeonComboDatas[nowDungeonData.lootTable][uiEvent.parameter];
+  local comboData = dungeonComboDatas[nowDungeonData.lootTable][uiEvent.parameter];  
   local item = comboData:GetReward();
-  if item ~= nil then
+  if item ~= nil then 
     UIItemInfo.Show(item.itemId);
   end
 end
 
 --Single
 function UIDungeon.UpdateSingleInfo()
-  if not gameObject_SingleRoot.activeInHierarchy then
+  if not gameObject_SingleRoot.activeInHierarchy then 
     gameObject_MultipleRoot:SetActive(false);
     gameObject_SingleRoot:SetActive(true);
     gameObject_TeamRoot:SetActive(false);
     gameObject_WeekRoot:SetActive(false);
-    image_DontAsk.gameObject:SetActive(true);
   end
-
-  this.UpdateDontAsk();
-
   text_SName.text = string.Get(nowDungeonData.name);
   text_SLv.text = string.Concat(nowDungeonData.minLv, "~", nowDungeonData.maxLv);
   text_SPeople.text = nowDungeonData.maxPlayer;
   text_STime.text = string.Concat(nowDungeonData.time, string.Get(49024));
   text_SInfo.text = string.Get(nowDungeonData.infoText);
-
+  
   local usedCount = 0;
-  if MarkManager.missions[nowDungeonData.dayilyFlag] ~= nil then
+  if MarkManager.missions[nowDungeonData.dayilyFlag] ~= nil then 
     usedCount = MarkManager.missions[nowDungeonData.dayilyFlag].step;
   end
-  local dayilyCount = nowDungeonData.dayilyCount - usedCount + UIVIP.GetVIPLevel(EVIPPermission.Dungeon);
-  local vipString = string.GetColorText(string.format(string.Get(25058), UIVIP.GetVIPLevel(EVIPPermission.LV), UIVIP.GetVIPLevel(EVIPPermission.Dungeon)), Color.Red);
-  text_SCount.text = string.Concat(dayilyCount, " ", vipString);
+  local dayilyCount = nowDungeonData.dayilyCount - usedCount;
+  text_SCount.text = dayilyCount;
   event_SBuyCount.gameObject:SetActive(dayilyCount == 0);
   event_SJoin.gameObject:SetActive(dayilyCount > 0);
-  event_SSkip.gameObject:SetActive(dayilyCount > 0 and MarkManager.GetMissionFlag(nowDungeonData.skipFlag));
+  event_SSkip.gameObject:SetActive(dayilyCount > 0 and MarkManager.GetMissionFlag(nowDungeonData.skipFlag));  
   --
   --獎勵
   local turn = Role.player:GetAttribute(EAttribute.Turn);
@@ -921,7 +1158,15 @@ function UIDungeon.UpdateSingleInfo()
     singleRewards[1].item:SetItem(tempItem.itemId, tempItem.itemValue);
     singleRewards[1].item:SetEvent(this.OnClick_SingleBox, tempItem.itemId);
   end
-
+  
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   tempItem = maxData:GetReward();
   if tempItem ~= nil and itemDatas[tempItem.itemId] ~= nil then
     singleRewards[2].item:SetItem(tempItem.itemId, tempItem.itemValue);
@@ -931,9 +1176,9 @@ function UIDungeon.UpdateSingleInfo()
   if turn >= 1 and dungeonComboDatas[nowDungeonData.extraLoot] ~= nil then
     maxData = nil;
     for k, v in pairs(dungeonComboDatas[nowDungeonData.extraLoot])do
-      if v.kindValue == turn then
+      if v.kindValue == turn then 
         maxData = v;
-        break;
+        break;        
       end
     end
     local item = maxData:GetReward();
@@ -952,15 +1197,19 @@ function UIDungeon.UpdateSingleInfo()
 end
 
 function UIDungeon.OnClick_SingleBox(event)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   UIItemInfo.Show(event.parameter);
 end
 
 function UIDungeon.OnClickSBuyCount(uiEvent)
-  if UIVIP.GetVIPLevel(EVIPPermission.LV > 0) then
-    Dungeon.SendResetCount(nowDungeonData.id, nil);
-  else
-    Dungeon.SendResetCount(nowDungeonData.id, this.OnClickSJoin);
-  end
+  Dungeon.SendResetCount(nowDungeonData.id, this.OnClickSJoin);
 end
 
 function UIDungeon.OnClickSJoin(uiEvent)
@@ -979,10 +1228,10 @@ function UIDungeon.OnClickSSkip(uiEvent)
     ShowCenterMessage(string.Get(80099));
     return;
   end
-
+  
   --todo Check flag
-  if nowDungeonData == nil then
-    return
+  if nowDungeonData == nil then 
+    return 
   end
   Dungeon.SendSkip(nowDungeonData.id)
 end
@@ -991,28 +1240,44 @@ function UIDungeon.OnClickSReward(uiEvent)
 end
 
 --Team
-function UIDungeon.UpdateTeamCloseButton(prepare)
-  if prepare == nil then
+function UIDungeon.UpdateTeamCloseButton(prepare)  
+  if prepare == nil then 
     prepare = false;
     for k, v in pairs(Dungeon.dungeonNowRoomPlayers)do
-      if v.id == Role.playerId then
+      if v.id == Role.playerId then 
         prepare = v.prepare;
         break;
       end
     end
   end
 
-  if not prepare then
-    UIFrame.SetCloseEvent(this.OnClick_TeamClose);
+  if not prepare then 
+    UIFrame.SetCloseEvent(this.OnClick_TeamClose);    
   else
     UIFrame.SetCloseEvent(nil);
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
   end
 end
 
 function UIDungeon.UpdateTeamUI()
   if not gameObject_TeamRoot.activeInHierarchy then
     if nowDungeonData == nil or (Dungeon.nowDungeonId ~= 0 and nowDungeonData.id ~= Dungeon.nowDungeonId) then
-      nowDungeonData = Dungeon.GetData(Dungeon.nowDungeonId);
+       nowDungeonData = Dungeon.GetData(Dungeon.nowDungeonId);
     end
     transform_FrameRect.anchoredPosition = UI.nonTabUIPosition;
     transform_FrameRect.sizeDelta = UI.nonTabUISize;
@@ -1021,28 +1286,27 @@ function UIDungeon.UpdateTeamUI()
     this.UpdateTeamCloseButton();
     gameObject_MultipleRoot:SetActive(false);
     gameObject_SingleRoot:SetActive(false);
-    gameObject_TeamRoot:SetActive(true);
+    gameObject_TeamRoot:SetActive(true); 
     gameObject_WeekRoot:SetActive(false);
     UIDungeon.UpdateTeamPassword();
     event_KickBg.gameObject:SetActive(false);
-    image_DontAsk.gameObject:SetActive(false);
   end
 
   UIDungeon.UpdateTeamRole();
 end
 
 function UIDungeon.UpdateRole()
-  if not gameObject_TeamRoot.activeInHierarchy then
+  if not gameObject_TeamRoot.activeInHierarchy then 
     return;
   end
 end
 
 function UIDungeon.UpdateTeamStatus()
   local isLeader = (Dungeon.nowDungeonOwnerId == Role.playerId);
-  for i = 1, 5 do
-    if Dungeon.dungeonNowRoomPlayers[i] ~= nil then
-      local playerData = Dungeon.dungeonNowRoomPlayers[i];
-      roleSet[i].root.gameObject:SetActive(true);
+  for i = 1, 5 do 
+    if Dungeon.dungeonNowRoomPlayers[i] ~= nil then 
+      local playerData = Dungeon.dungeonNowRoomPlayers[i]; 
+      roleSet[i].root.gameObject:SetActive(true); 
       roleSet[i].gameObject_Add.gameObject:SetActive(false);
 
       if i == 1 then --房主不顯示
@@ -1051,18 +1315,18 @@ function UIDungeon.UpdateTeamStatus()
         roleSet[i].gameObject_Prepare:SetActive(playerData.prepare);
       end
 
-      if playerData.id == Role.playerId then
+       if playerData.id == Role.playerId then         
         this.ShowLeaderButtons(isLeader);
-        if isLeader then
+        if isLeader then 
           local isReady = Dungeon.CheckTeamIsReady();
-          if isReady then
+          if isReady then 
             LuaHelper.SetColor(image_TeamOk, Color.White);
           else
             LuaHelper.SetColor(image_TeamOk, Color.Gray);
           end
           text_TeamOk.text = string.Get(10116); --開始
         else
-          if playerData.prepare then
+          if playerData.prepare then 
             LuaHelper.SetColor(image_TeamOk, Color.Gray);
             text_TeamOk.text = string.Get(20991); --取消
           else
@@ -1072,30 +1336,47 @@ function UIDungeon.UpdateTeamStatus()
         end
       end
     else
-      roleSet[i].root.gameObject:SetActive(false);
+      roleSet[i].root.gameObject:SetActive(false); 
       roleSet[i].gameObject_Add.gameObject:SetActive(isLeader);
     end
   end
 end
 
-function UIDungeon.UpdateTeamRoomName()
+function UIDungeon.UpdateTeamRoomName()  
   text_RoomName.text = Dungeon.nowDungeonRoom.name;
-  if nowDungeonData ~= nil and nowDungeonData.kind == 3 then
+  if nowDungeonData ~= nil and nowDungeonData.kind == 3 then 
     gameObject_WeekDungeonRequire:SetActive(true);
     text_NeedPar1_T.text = this.GetNeedParStr(nowDungeonData.needPar[0]);
     text_NeedPar2_T.text = this.GetNeedParStr(nowDungeonData.needPar[1]);
-  else
+  else 
     gameObject_WeekDungeonRequire:SetActive(false);
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    
   end
 end
 
-function UIDungeon.UpdateTeamRole()
+function UIDungeon.UpdateTeamRole()  
   text_TeamName.text = Dungeon.GetName(Dungeon.nowDungeonRoom.dungeonId);
-  this.UpdateTeamRoomName();
+  this.UpdateTeamRoomName();  
   local isLeader = (Dungeon.nowDungeonOwnerId == Role.playerId);
   gameObject_changeName:SetActive(isLeader);
-  for i = 1, 5 do
-    if Dungeon.dungeonNowRoomPlayers[i] ~= nil then
+  for i = 1, 5 do 
+    if Dungeon.dungeonNowRoomPlayers[i] ~= nil then  
       local playerInfo = Dungeon.dungeonNowRoomPlayers[i];
 
       if playerInfo.id == Role.playerId then
@@ -1103,14 +1384,14 @@ function UIDungeon.UpdateTeamRole()
         roleSet[i].jmpDrawer_Role.offsetY = 0;
       else
         local playerData = PlayerData.New();
-
+        
         playerData.roleId = playerInfo.id;
         playerData.sex = playerInfo.sex;
         playerData.headStyle = playerInfo.headStyle;
-
+        
         playerData.colorTints[1] = playerInfo.colorTints[1];
         playerData.colorTints[2] = playerInfo.colorTints[2];
-
+      
         playerData.equips = {};
         for i = 1, Role.maxEquip + Role.maxStyle do
           if playerInfo.equip[i] ~= nil then
@@ -1121,11 +1402,11 @@ function UIDungeon.UpdateTeamRole()
         roleSet[i].jmpDrawer_Role:GenerateAndDraw(playerData:GetAtlasParams(playerInfo.titleId, ERolePose.Prepare + 1));
         roleSet[i].jmpDrawer_Role.offsetY = 0;
       end
-
-      roleSet[i].root.gameObject:SetActive(true);
+      
+      roleSet[i].root.gameObject:SetActive(true); 
       roleSet[i].gameObject_Add.gameObject:SetActive(false);
 
-
+      
       roleSet[i].text_Name.text = playerInfo.name;
 
       roleSet[i].text_Lv.text = playerInfo.lv;
@@ -1136,18 +1417,18 @@ function UIDungeon.UpdateTeamRole()
         roleSet[i].gameObject_Prepare:SetActive(playerInfo.prepare);
       end
 
-      if playerInfo.id == Role.playerId then
+      if playerInfo.id == Role.playerId then         
         this.ShowLeaderButtons(isLeader);
-        if isLeader then
+        if isLeader then 
           local isReady = Dungeon.CheckTeamIsReady();
-          if isReady then
+          if isReady then 
             LuaHelper.SetColor(image_TeamOk, Color.White);
           else
             LuaHelper.SetColor(image_TeamOk, Color.Gray);
           end
           text_TeamOk.text = string.Get(10116); --開始
         else
-          if playerInfo.prepare then
+          if playerInfo.prepare then 
             LuaHelper.SetColor(image_TeamOk, Color.Gray);
             text_TeamOk.text = string.Get(20991); --取消
           else
@@ -1157,8 +1438,40 @@ function UIDungeon.UpdateTeamRole()
         end
       end
     else
-      roleSet[i].root.gameObject:SetActive(false);
+      roleSet[i].root.gameObject:SetActive(false);       
       roleSet[i].gameObject_Add.gameObject:SetActive(isLeader);
+      --3----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      --3----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      --3----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      --3----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
     end
   end
 end
@@ -1166,14 +1479,39 @@ end
 function UIDungeon.OnClickTeamOk(uiEvent)
   if Role.player.war ~= EWar.None then
     ShowCenterMessage(string.Get(80099));
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    
     return;
   end
-
-  if Dungeon.nowDungeonOwnerId == Role.playerId then
+  
+  if Dungeon.nowDungeonOwnerId == Role.playerId then 
     --其他人都準備才能送
     local isReady = Dungeon.CheckTeamIsReady();
 
-    if isReady then
+    if isReady then 
       Dungeon.SendStartMultiplayerDungeon();
     end
   else
@@ -1196,7 +1534,7 @@ function UIDungeon.OnClickTeamAdd(uiEvent)
       end
     end
   end
-  if isFriendOnline then
+  if isFriendOnline then 
     UI.Open(UIInvite, Dungeon.SendInvite, UIDungeon.FilterDungeonFriend);
   else
     ShowCenterMessage(string.Get(21529));
@@ -1205,15 +1543,63 @@ end
 
 function UIDungeon.FilterDungeonFriend(playerInfo)
   local data = dungeonDatas[Dungeon.nowDungeonId];
-  if data.minLv <= playerInfo.level and data.maxLv >= playerInfo.level then
+  if data.minLv <= playerInfo.level and data.maxLv >= playerInfo.level then         
     return true;
   else
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
     return false;
   end
 end
 
 function UIDungeon.OnClickTeamPass(uiEvent)
   --Dungeon.SendSetPassword();
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
 end
 
 function UIDungeon.OnClickTeamRecruit(uiEvent)
@@ -1225,7 +1611,7 @@ function UIDungeon.ClickChannel(uiEvent)
     if uiEvent.parameter == EChannel.World then
       Dungeon.SendRecurit(2);
     elseif uiEvent.parameter == EChannel.Organization then
-      if Organization.Id ~= nil and Organization.Id ~= 0 then
+      if Organization.Id ~= nil and Organization.Id ~= 0 then 
         Dungeon.SendRecurit(1);
       else
         ShowCenterMessage(string.Get(20539));
@@ -1247,7 +1633,7 @@ end
 
 function UIDungeon.OnClickTeamKick(uiEvent)
   event_KickBg.gameObject:SetActive(false);
-  if Dungeon.dungeonNowRoomPlayers[uiEvent.parameter] ~= nil then
+  if Dungeon.dungeonNowRoomPlayers[uiEvent.parameter] ~= nil then 
     Dungeon.SendKickPlayer(Dungeon.dungeonNowRoomPlayers[uiEvent.parameter].id);
   end
 end
@@ -1261,7 +1647,7 @@ function UIDungeon.ShowLeaderButtons(isLeader)
 end
 
 function UIDungeon.ShowKickButton(index)
-  if index <=0 or index >5 then
+  if index <=0 or index >5 then 
     return;
   end
   event_KickBg.gameObject:SetActive(true);
@@ -1269,16 +1655,49 @@ function UIDungeon.ShowKickButton(index)
   event_Kick.transform.position = roleSet[index].root.transform.position;
 end
 
-function UIDungeon.UpdateTeamPassword()
-  if Dungeon.nowDungeonPassword ~= "" then
+function UIDungeon.UpdateTeamPassword()  
+  if Dungeon.nowDungeonPassword ~= "" then 
     image_TeamPass.gameObject:SetActive(true);
     image_TeamPass.sprite = UI.GetSprite("bod008");
     text_TeamPass.text = string.Concat(string.Get(10314), ":", Dungeon.nowDungeonPassword);
-
+    
     --gameObject_WeekDungeonRequire:SetActive(false); 原本想說顯示密碼就不顯示周副本限制字串
   else
     image_TeamPass.gameObject:SetActive(false);
     --image_TeamPass.sprite = UI.GetSprite("bod004");
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    
     text_TeamPass.text = "";
   end
 end
@@ -1291,7 +1710,7 @@ function UIDungeon.OnClickToogleSubmit(boolToogle)
     end
     Dungeon.SendCreateDungeon(nowDungeonData.id, boolToogle, 1);
   else
-    -- Cancel Alert CallBack in Here
+      -- Cancel Alert CallBack in Here
   end
 end
 
@@ -1301,13 +1720,13 @@ function UIDungeon.DisCountDown()
   countdownStart = false;
 end
 
-function UIDungeon.UpdateCountdown()
-  if countdownStart == false then
+function UIDungeon.UpdateCountdown()  
+  if countdownStart == false then 
     gameObject_CountdownMask:SetActive(false)
   else
     gameObject_CountdownMask:SetActive(true)
     countdown = countdown - CGTimer.deltaTime;
-    if countdown > 0 then
+    if countdown > 0 then 
       text_Countdown.text = math.round(countdown);
     else
       text_Countdown.text = 0;

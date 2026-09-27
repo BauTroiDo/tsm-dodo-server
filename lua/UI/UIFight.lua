@@ -67,7 +67,6 @@ local text_Round;
 local text_MainInfo;
 local text_wDamage;
 local text_wRound;
-local text_Description;
 
 --var
 
@@ -120,8 +119,7 @@ function UIFight.Initialize(go)
   text_MainInfo = uiController:FindText("Text_MainInfo");
   text_wDamage = uiController:FindText("Text_wDamage");
   text_wRound = uiController:FindText("Text_wRound");
-  text_Description = uiController:FindText("Text_Description");
-
+  
   tempEvent = uiController:FindEvent("Image_Win");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_Debug);
   tempEvent.parameter = 1;
@@ -150,7 +148,70 @@ function UIFight.OnOpen(isShowFightBtn)
   this.OnNilToSkillID();
   this.UpdateWorldBoss();
   this.UpdateUIStatus(Role.player);
-
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
   gameObject_DebugBtn:SetActive(not UIDebug.RecordMode);
 
   return true;
@@ -169,8 +230,8 @@ function UIFight.UpdateWorldBoss()
     text_wDamage.text = FightField.worldBossInfo[1];
     text_wRound.text = FightField.worldBossInfo[2];
 
-  --軍團戰
-  elseif FightField.ffWar_Style == EFFWar_Style.OrgWar then
+  --軍團戰/據點戰
+  elseif FightField.ffWar_Style == EFFWar_Style.OrgWar or FightField.ffWar_Style == EFFWar_Style.OrgRankFight then
     gameObject_WorldBoss.gameObject:SetActive(true);
 
     text_wDamage.transform.parent.gameObject:SetActive(false);
@@ -338,6 +399,27 @@ function UIFight.UpdateFunctionIcon()
     image_Function.gameObject:SetActive(true);
     rawImage_Skill.gameObject:SetActive(false);
     image_Function.sprite = UI.GetSprite("but023D");
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif skId == 0 then 
     image_Function.gameObject:SetActive(true);
     rawImage_Skill.gameObject:SetActive(false);
@@ -357,6 +439,27 @@ end
 function UIFight.OnClick_Cancel()
   this.OnNilToSkillID();
   FightField.SetConSkill(0);
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 --Main Text Info
@@ -370,14 +473,9 @@ function UIFight.ShowMainText(isShow)
     LuaHelper.SetColor(text_MainInfo, roleController.text_Name.color);    
     this.UpdateFunctionIcon();
     FightField.UpdateSelectFrame();
-    text_Description.text = "";
   else
     this.OnNilToSkillID();
   end
-end
-
-function UIFight.SetDescription(content)
-  text_Description.text = content;
 end
 
 function UIFight.GetSortOrder()
@@ -407,7 +505,6 @@ function UIFight.OnClick_Function(kind)
     UI.Open(UISkillPick,
       this.name,
       function(skill, role)
-        FightField.SetConSkill(skill.id);
         if skill ~= nil then
           if skill.requireSp <= role:GetAttribute(EAttribute.Sp) then
             FightField.SetConSkill(skill.id);
@@ -453,6 +550,27 @@ function UIFight.OnClick_Function(kind)
       
       --C:011-001 <結束觀戰>
       Network.Send(11, 1);
+      --3----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
       return;
     end
 
@@ -514,7 +632,7 @@ end
 function UIFight.OnClick_Debug(uiEvent)
   if not Define.IsDebugMode() then return end
 
-  --S:011-000 <結束戰鬥> +結束的玩家ID(8) +結束的NPCIndex(2)
+  --C:011-000 <金手指結束戰鬥> +Win/Lose(1)
   sendBuffer:Clear();
   sendBuffer:WriteByte(uiEvent.parameter);
   Network.Send(11, 0, sendBuffer);

@@ -1,6 +1,15 @@
 GroupData = {}
 GroupData.__index = GroupData
 
+function GroupData.GetLShift4(bitlshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoThrArea = 0;
+    bit.lshift(DemoThrArea, bitlshift)
+    
+    return DemoThrArea
+  end
+end
+
 function GroupData.New(reader) 
   local self = {};
   setmetatable(self, GroupData);
@@ -21,4 +30,31 @@ function GroupData.New(reader)
   self.PickMember = reader:ReadByte();
 
   return self;
+end
+
+function GroupData.GetLShift1(bitlshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoThrArea = 0;
+    bit.lshift(DemoThrArea, bitlshift)
+    
+    return DemoThrArea
+  end
+end
+
+function GroupData.GetLShift2(bitlshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoThrArea = 0;
+    bit.lshift(DemoThrArea, bitlshift)
+    
+    return DemoThrArea
+  end
+end
+
+function GroupData.GetLShift3(bitlshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoThrArea = 0;
+    bit.lshift(DemoThrArea, bitlshift)
+    
+    return DemoThrArea
+  end
 end

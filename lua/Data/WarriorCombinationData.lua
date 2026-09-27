@@ -1,6 +1,28 @@
 WarriorCombinationData = {}
 WarriorCombinationData.__index = WarriorCombinationData;
 
+function WarriorCombinationData.Script1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function WarriorCombinationData.Script2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
 function WarriorCombinationData.New(reader)
   local self = {};
 
@@ -17,4 +39,15 @@ function WarriorCombinationData.New(reader)
   self.values.value = reader:ReadUInt16();
 
   return  self;
+end
+
+function WarriorCombinationData.Script3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
 end

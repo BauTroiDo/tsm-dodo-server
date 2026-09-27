@@ -1,6 +1,24 @@
 CompoundData = {}
 CompoundData.__index = CompoundData;
 
+function CompoundData.GetRShift(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function CompoundData.GetRShifts(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
 function CompoundData.New(reader)
   local self = {};
   setmetatable(self, CompoundData);
@@ -14,4 +32,13 @@ function CompoundData.New(reader)
   self.cDegree = reader:ReadByte();     --[7] C比 (0~5)
 
   return self;
+end
+
+function CompoundData.GetRShiftg(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
 end

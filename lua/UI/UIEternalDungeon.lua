@@ -178,11 +178,7 @@ function UIEternalDungeon.OnClick_Battle()
   local need = EternalDungeonLayerData.GetNeed(currentLayer);
   local compare = EternalDungeonLayerData.GetCompare(currentLayer);
 
-  if need[1] == 0 and need[2] == 0 then
-    sendBuffer:Clear();
-    sendBuffer:WriteInt32(this.GetLayerAdjust(currentLayer));
-    Network.Send(48, 1, sendBuffer);
-  elseif compare == 2 then
+  if compare == 2 then
     if DungeonCriteriaData.CheckForQualification(need[1]) or DungeonCriteriaData.CheckForQualification(need[2]) then
       sendBuffer:Clear();
       sendBuffer:WriteInt32(this.GetLayerAdjust(currentLayer));
@@ -331,22 +327,18 @@ function UIEternalDungeon.SetEffect(layer)
   local need = EternalDungeonLayerData.GetNeed(currentLayer);
   local temp = string.Get(20568);
 
-  if need[1] == 0 and need[2] == 0 then
-    aStr = "";
-  else
-    if string.IsNullOrEmpty(DungeonCriteriaData.GetRoleStr(need[2])) and
-      string.IsNullOrEmpty(DungeonCriteriaData.GetResultStr(need[2])) then
-      temp = "";
-    end
-
-    aStr = string.Concat(string.Get(24526)," ",
-      DungeonCriteriaData.GetRoleStr(need[1]), " ",
-      DungeonCriteriaData.GetResultStr(need[1]), "\n",
-      temp, " ",
-      DungeonCriteriaData.GetRoleStr(need[2]), " ",
-      DungeonCriteriaData.GetResultStr(need[2])
-    );
+  if string.IsNullOrEmpty(DungeonCriteriaData.GetRoleStr(need[2])) and
+    string.IsNullOrEmpty(DungeonCriteriaData.GetResultStr(need[2])) then
+    temp = "";
   end
+
+  aStr = string.Concat(string.Get(24526)," ",
+    DungeonCriteriaData.GetRoleStr(need[1]), " ",
+    DungeonCriteriaData.GetResultStr(need[1]), "\n",
+    temp, " ",
+    DungeonCriteriaData.GetRoleStr(need[2]), " ",
+    DungeonCriteriaData.GetResultStr(need[2])
+  );
 
   text_NeedPar.text = aStr;
 end

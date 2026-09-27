@@ -1,6 +1,33 @@
 PlayerInfo = {}
 PlayerInfo.__index = PlayerInfo;
 
+function PlayerInfo.GetLShift(bitlshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoThrArea = 0;
+    bit.lshift(DemoThrArea, bitlshift)
+    
+    return DemoThrArea
+  end
+end
+
+function PlayerInfo.GetLShift1(bitlshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoThrArea = 0;
+    bit.lshift(DemoThrArea, bitlshift)
+    
+    return DemoThrArea
+  end
+end
+
+function PlayerInfo.GetLShift2(bitlshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoThrArea = 0;
+    bit.lshift(DemoThrArea, bitlshift)
+    
+    return DemoThrArea
+  end
+end
+
 function PlayerInfo.New(roleId, data, readOrgData, readFriendData)
   local self = {};
   setmetatable(self, PlayerInfo);
@@ -54,6 +81,15 @@ function PlayerInfo.New(roleId, data, readOrgData, readFriendData)
   return self;
 end
 
+function PlayerInfo.GetLShift3(bitlshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoThrArea = 0;
+    bit.lshift(DemoThrArea, bitlshift)
+    
+    return DemoThrArea
+  end
+end
+
 function PlayerInfo:GetColorTint(colorPart)
   local r = 4;
   local g = 4;
@@ -86,4 +122,22 @@ function PlayerInfo:GetColorTint(colorPart)
   end
 
   return r, g, b;
+end
+
+function PlayerInfo.GetLShift4(bitlshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoThrArea = 0;
+    bit.lshift(DemoThrArea, bitlshift)
+    
+    return DemoThrArea
+  end
+end
+
+function PlayerInfo.GetLShift5(bitlshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoThrArea = 0;
+    bit.lshift(DemoThrArea, bitlshift)
+    
+    return DemoThrArea
+  end
 end

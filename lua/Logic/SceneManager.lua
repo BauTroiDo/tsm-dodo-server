@@ -25,6 +25,7 @@ ESceneLimit = {
   NoTeam = 15, --不可組隊
   ForcePK = 16, --強制PK
   NoDecExp = 17, --死亡不減少經驗
+  NoPlayers = 18, --不顯示其它玩家
 }
 
 ESceneEffect = {
@@ -38,6 +39,19 @@ ESceneEffect = {
   Cloud = 7, --大地圖雲
   Dragon = 8, --地獄場景光影
 }
+
+--[[
+And Isaac answering said, But I have made him your master, and have given him all his brothers for servants; I have made him strong with grain and wine: what then am I to do for you, my son?
+And Esau said to his father, Is that the only blessing you have, my father? give a blessing to me, even me! And Esau was overcome with weeping.
+Then Isaac his father made answer and said to him, Far from the fertile places of the earth, and far from the dew of heaven on high will your living-place be:
+By your sword will you get your living and you will be your brother's servant; but when your power is increased his yoke will be broken from off your neck.
+So Esau was full of hate for Jacob because of his father's blessing; and he said in his heart, The days of weeping for my father are near; then I will put my brother Jacob to death.
+Then Rebekah, hearing what Esau had said, sent for Jacob, her younger son, and said to him, It seems that your brother Esau is purposing to put you to death.
+So now, my son, do what I say: go quickly to Haran, to my brother Laban;
+And be there with him for a little time, till your brother's wrath is turned away;
+Till the memory of what you have done to him is past and he is no longer angry: then I will send word for you to come back; are the two of you to be taken from me in one day?
+Then Rebekah said to Isaac, My life is a weariness to me because of the daughters of Heth: if Jacob takes a wife from among the daughters of Heth, such as these, the women of this land, of what use will my life be to me?
+--]]
 
 SceneManager = {};
 local this = SceneManager;
@@ -53,8 +67,8 @@ this.pkSecens = {};
 
 this.sceneState = {
   sceneTag = 0,
-  type = ESceneType.None, 
-  name = "", 
+  type = ESceneType.None,
+  name = "",
   moveSpeed = 0,
   followDistance = math.pow(45, 2),
   bumpDistance = math.pow(80, 2),
@@ -84,6 +98,36 @@ function SceneManager.Initialize()
   doorRoot = GameObject.Find("DoorRoot");
 end
 
+function SceneManager.GetNothing()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
+function SceneManager.GetNothing1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
 function SceneManager.ExitScene(callBack, checkCode)
   if checkCode == nil then
     this.changeSceneCheckCode = math.random();
@@ -93,7 +137,7 @@ function SceneManager.ExitScene(callBack, checkCode)
   MoviePlayer.state = EMovieState.Idle;
   MoviePlayer.ClearMovie();
 
-  this.Hide(true);
+  this.Hide();
 
   NotifyManager.Notify(ENotifyManager.ExitScene);
 
@@ -111,6 +155,21 @@ function SceneManager.ExitScene(callBack, checkCode)
       callBack(checkCode);
     end
   );
+end
+
+function SceneManager.GetNothing2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
 end
 
 function SceneManager.OnExitScene()
@@ -256,7 +315,7 @@ function SceneManager.ChangeScene(sceneId, sceneTag, instanceId)
 end
 
 --[[ PK地圖資料
-S:005-011 <PK地圖資料> count(2) +<<ActID(2) +StartTime(8) +EndTime(8) +count(2) +<<SceneID(2)>>>>
+S:005-021 <PK地圖資料> count(2) +<<ActID(2) +StartTime(8) +EndTime(8) +count(2) +<<SceneID(2)>>>>
 ]]--
 function SceneManager.RevPKSceneData(data)
   table.Clear(this.pkSecenDatas);
@@ -367,6 +426,7 @@ function SceneManager.OnEnterScene(eventData, checkCode)
   --進出副本介面開關
   if UI.IsVisible(UIMain) then 
     UIMain.UpdateDungeon();
+    UIMain.UpdateMining();
   end
 
   if sceneDatas[this.sceneId] ~= nil and sceneDatas[this.sceneId].kind == 2 then 
@@ -403,8 +463,53 @@ function SceneManager.OnEnterScene(eventData, checkCode)
       end
     end
   );
-
   this.IsPkSecne(this.sceneId);
+end
+
+function SceneManager.GetNothing3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
+function SceneManager.GetNothing4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
+
+function SceneManager.GetNothing5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
 end
 
 function SceneManager.Show()
@@ -456,20 +561,25 @@ function SceneManager.Show()
   if not UI.IsVisible(UIJoystick) then
     UI.Open(UIJoystick);
   end
+
+  if Requiem.reOpenUI and not UI.IsVisible(UIRequiem) then
+    Requiem.reOpenUI = false;
+    UI.Open(UIRequiem);
+  end
 end
 
-function SceneManager.Hide(stopMove)
+function SceneManager.Hide()
   --mask
   UILoading.ImmediateOut();
 
   --do something
   TargetManager.CancelTarget();
 
-  if Role.player ~= nil and stopMove then
+  if Role.player ~= nil then
     Role.player:StopMove();
   end
 
-  if CGTimer.ContainsListener(MoveController.SendRolePosition) and stopMove then
+  if CGTimer.ContainsListener(MoveController.SendRolePosition) then
     CGTimer.RemoveListener(MoveController.SendRolePosition);
   end
 
@@ -499,6 +609,66 @@ function SceneManager.Hide(stopMove)
   --UI.Close(UINpcInn);
   UI.Close(UITrade);
   UI.Close(UIDragonBoat);
+end
+
+function SceneManager.GetNothing6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
+function SceneManager.GetNothing7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
+function SceneManager.GetNothing8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
+function SceneManager.GetNothing9()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
 end
 
 function SceneManager.UpdateArea()
@@ -608,4 +778,34 @@ function SceneManager.GetPathRecursively(searchCodes, targetCode, checkedScenes)
   end
 
   return;
+end
+
+function SceneManager.GetNothing10()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
+function SceneManager.GetNothing11()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
 end

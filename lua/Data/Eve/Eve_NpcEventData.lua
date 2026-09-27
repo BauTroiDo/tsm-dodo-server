@@ -1,6 +1,17 @@
 NpcEventData = {}
 NpcEventData.__index = NpcEventData
 
+function NpcEventData.Trash()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
 function NpcEventData.New(reader) 
   local self = {};
   setmetatable(self, NpcEventData);
@@ -26,6 +37,28 @@ function NpcEventData.New(reader)
   return self;
 end
 
+function NpcEventData.Trash1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function NpcEventData.Trash2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
 function NpcEventData:ReadCondition(reader)
   local condition = {};
 
@@ -48,6 +81,17 @@ function NpcEventData:ReadCondition(reader)
   return condition;
 end
 
+function NpcEventData.Trash3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
 function NpcEventData:ReadResult(reader)
   local result = {};
 
@@ -61,4 +105,26 @@ function NpcEventData:ReadResult(reader)
   result.ResultMeanNo = reader:ReadUInt16();
 
   return result;
+end
+
+function NpcEventData.Trash4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function NpcEventData.Trash5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
 end

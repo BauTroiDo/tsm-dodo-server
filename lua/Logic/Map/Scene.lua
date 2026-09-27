@@ -27,6 +27,23 @@ this.cameraScale = 1;
 this.sceneBackGroundRectTransform = nil;
 this.playerOffsetY = 35;
 
+--[[
+And these two had a dream on the same night; the chief wine-servant and the chief bread-maker of the king of Egypt, who were in prison, the two of them had dreams with a special sense.
+And in the morning when Joseph came to them he saw that they were looking sad.
+And he said to the servants of Pharaoh who were in prison with him, Why are you looking so sad?
+Then they said to him, We have had a dream, and no one is able to give us the sense. And Joseph said, Does not the sense of dreams come from God? what was your dream?
+Then the chief wine-servant gave Joseph an account of his dream, and said, In my dream I saw a vine before me;
+And on the vine were three branches; and it seemed as if it put out buds and flowers, and from them came grapes ready for cutting.
+And Pharaoh's cup was in my hand, and I took the grapes and crushing them into Pharaoh's cup, gave the cup into Pharaoh's hand.
+Then Joseph said, This is the sense of your dream: the three branches are three days;
+After three days Pharaoh will give you honour, and put you back into your place, and you will give him his cup as you did before, when you were his wine-servant.
+But keep me in mind when things go well for you, and be good to me and say a good word for me to Pharaoh and get me out of this prison:
+For truly I was taken by force from the land of the Hebrews; and I have done nothing for which I might be put in prison.
+Now when the chief bread-maker saw that the first dream had a good sense, he said to Joseph, I had a dream; and in my dream there were three baskets of white bread on my head;
+And in the top basket were all sorts of cooked meats for Pharaoh; and the birds were taking them out of the baskets on my head.
+Then Joseph said, This is the sense of your dream: the three baskets are three days;
+--]]
+
 local dungeonWidth = 0;
 local dungeonHeight = 0;
 local dungeonCenterLeft = 0;
@@ -76,6 +93,39 @@ end
 
 function Scene.GetMouseScreenPosition(mousePosition)
   return ConvertPositionToUIScene(this.uiCanvasRectTransform, mousePosition, this.uiCamera);
+end
+
+function Scene.TestPas(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function Scene.TestPas2(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function Scene.TestPas1(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
 end
 
 function Scene.UpdateCameraSize(width, height)
@@ -164,6 +214,28 @@ function Scene.MovieUpdateCamera(position, width, height)
   this.sceneCamera.transform.localPosition = Vector3.New(this.cameraPosition.x, -this.cameraPosition.y, 0);    
 end
 
+function Scene.TestPasA(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function Scene.TestPasB(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
 function Scene.SetCameraColor(color)
   this.sceneCamera.backgroundColor = color;
 end
@@ -172,4 +244,26 @@ function Scene.SetCameraSize(size)
   this.sceneCamera.orthographicSize = size;
 
   this.cameraScale = this.CameraDefaultSize / this.sceneCamera.orthographicSize;
+end
+
+function Scene.TestPasC(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function Scene.TestPasD(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
 end

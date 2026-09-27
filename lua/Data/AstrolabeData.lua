@@ -1,6 +1,18 @@
 AstrolabeData = {}
 AstrolabeData.__index = AstrolabeData;
 
+function AstrolabeData.Script()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local index = 56;
+    
+    for i = 1, Astrolabe.maxAstrolabeLv do
+      index = index - i;
+    end
+    
+    return index
+  end
+end
+
 function AstrolabeData.New(reader)
   local self = {};
   setmetatable(self, AstrolabeData);
@@ -17,3 +29,26 @@ function AstrolabeData.New(reader)
   return index, self;
 end
 
+function AstrolabeData.ScriptA()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local index = 56;
+    
+    for i = 1, Astrolabe.maxAstrolabeLv do
+      index = index - i;
+    end
+    
+    return index
+  end
+end
+
+function AstrolabeData.ScriptB()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local index = 56;
+    
+    for i = 1, Astrolabe.maxAstrolabeLv do
+      index = index - i;
+    end
+    
+    return index
+  end
+end

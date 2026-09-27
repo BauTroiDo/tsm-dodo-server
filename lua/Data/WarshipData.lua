@@ -1,6 +1,18 @@
 WarshipData = {}
 WarshipData.__index = WarshipData;
 
+function WarshipData.Random()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 function WarshipData.New()
   local self = {};
   setmetatable(self, WarshipData);
@@ -62,6 +74,30 @@ function WarshipData.New()
   return self;
 end
 
+function WarshipData.Random1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function WarshipData.Random2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 function WarshipData:SetSkill(index, skillId, skillLv)
   self.skills[index].Id = skillId;
   self.skills[index].Lv = skillLv;
@@ -72,6 +108,30 @@ function WarshipData:SetSkill(index, skillId, skillLv)
   end
 
   --ShipSkillTreeForm.UpdataPlayerSkillInfo;
+end
+
+function WarshipData.Random3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function WarshipData.Random4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
 end
 
 function WarshipData:SetAttribute(attrKind, attrValue)
@@ -91,5 +151,29 @@ function WarshipData:SetAttribute(attrKind, attrValue)
     self.jewel = attrValue;
   elseif attrKind == EWarshipAttribute.EquipAgi then
     self.equipAgi = attrValue;
+  end
+end
+
+function WarshipData.Random5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function WarshipData.Random6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
   end
 end

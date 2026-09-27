@@ -50,6 +50,27 @@ function UIFestival.Initialize(go)
   scrollContent_Festival.onInitialize = this.OnInitialize_ScrollContent_Festival;
   scrollContent_Festival.onItemChange = this.OnItemChange_ScrollContent_Festival;
   scrollContent_Festival:Initialize(1);
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   this.InitOpenUIKind();
   init = true
 end
@@ -106,12 +127,54 @@ function UIFestival.OnOpen(functionkind)
 end
 
 function UIFestival.OnClick_Close()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   UI.Close(this);
 
   return true;
 end
 
 function UIFestival.OnClose()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   CGTimer.RemoveListener(this.UpdateTime);
   return true;
 end
@@ -244,11 +307,48 @@ function UIFestival.GetFestivalStatus(festivalData)
   if activityTimes[festivalData.activityId][1].serverStartTime == 0 then
     return EFestivalStatus.Close, string.Get(20377);
   elseif DateTime.Compare(CGTimer.serverTime, activityTimes[festivalData.activityId][1].serverStartTime) < 0 then
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
     return EFestivalStatus.Upcoming, string.Get(20376);
   elseif DateTime.Compare(CGTimer.serverTime, activityTimes[festivalData.activityId][1].serverCloseTime) < 0 then
     local leftTime = DateTime.Subtract(activityTimes[festivalData.activityId][1].serverCloseTime, CGTimer.serverTime);
     return EFestivalStatus.Open, string.Concat(string.Get(80098), string.GetSecondText(math.ceil(leftTime.TotalSeconds)));
   else
     return EFestivalStatus.Close, string.Get(20377);
+  end
+  if festivalData.type == EFestivalDataType.Traditional then
+    if activityTimes[festivalData.activityId][1].serverStartTime == 0 then
+      return EFestivalStatus.Close, string.Get(20377);
+    elseif DateTime.Compare(CGTimer.serverTime, activityTimes[festivalData.activityId][1].serverStartTime) < 0 then
+      return EFestivalStatus.Upcoming, string.Get(20376);
+    elseif DateTime.Compare(CGTimer.serverTime, activityTimes[festivalData.activityId][1].serverCloseTime) < 0 then
+      local leftTime = DateTime.Subtract(activityTimes[festivalData.activityId][1].serverCloseTime, CGTimer.serverTime);
+      return EFestivalStatus.Open, string.Concat(string.Get(80098), string.GetSecondText(math.ceil(leftTime.TotalSeconds)));
+    else
+      return EFestivalStatus.Close, string.Get(20377);
+    end
+  elseif festivalData.type == EFestivalDataType.Model then
+    local status, text = ActivityModel.GetActivityStatus(festivalData.activityId);
+
+    return status, text;
   end
 end

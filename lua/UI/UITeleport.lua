@@ -1,9 +1,10 @@
 EUITeleportTag = {
-  Skypoint = 1,       --天行
-  Memory = 2,         --記憶傳送
-  FightArea = 3,      --練功區
+  Skypoint = 1,  --天行
+  Memory = 2,    --記憶傳送
+  FightArea = 3, --練功區
   LimitFightArea = 4, --限時練功區
-  Turn = 5,           --轉生
+  Turn = 5, --轉生
+  Mining = 6  --挖礦
 }
 
 UITeleport = {}
@@ -56,9 +57,25 @@ local limitfightArea = {};
 function UITeleport.Clear()
   this.flyPointCount = 0;
   table.Clear(this.flyPoints);
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    --local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
 end
 
 function UITeleport.Initialize(go)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   local uiController = go:GetComponent("UIController");
   this.uiController = uiController;
   this.uiController.onOpen = this.OnOpen;
@@ -96,6 +113,14 @@ function UITeleport.Initialize(go)
 end
 
 function UITeleport.OnInitialize_scrollContent_Skypoint(scrollItems)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    --local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   for itemIndex = 0, scrollItems.Length - 1 do
     scrollItems_Skypoint[itemIndex] = {};
     scrollItems_Skypoint[itemIndex].point = {};
@@ -153,6 +178,14 @@ function UITeleport.OnInitialize_scrollContent_Area(scrollItems)
 end
 
 function UITeleport.UpdateMemoryPage()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    --local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   scrollContent_Teleport:Reset(this.MaxFlyScroll + this.MaxFlyScrollExtend);
 end
 
@@ -206,8 +239,10 @@ function UITeleport.OnItemChange_scrollContent_Area(dataIndex, itemIndex)
 
   if currentTag == EUITeleportTag.FightArea then
     this.OnItemChange_scrollContent_Area_FightArea(dataIndex, itemIndex);
-  else
+  elseif currentTag == EUITeleportTag.Turn then
     this.OnItemChange_scrollContent_Area_Turn(dataIndex, itemIndex);
+  else
+    this.OnItemChange_scrollContent_Mining(dataIndex, itemIndex);
   end
 
   return true;
@@ -262,7 +297,25 @@ function UITeleport.OnItemChange_scrollContent_Area_Turn(dataIndex, itemIndex)
   scrollItems_Area[itemIndex].text_Boss.text = "";
 end
 
+function UITeleport.OnItemChange_scrollContent_Mining(dataIndex, itemIndex)
+  local index = dataIndex + 1;
+  scrollItems_Area[itemIndex].itemEventArea.parameter = index;
+  scrollItems_Area[itemIndex].text_Name.text = string.Concat(string.Get(23796), index);
+
+  scrollItems_Area[itemIndex].text_Lv.text = "";
+  scrollItems_Area[itemIndex].text_Element.text = "";
+  scrollItems_Area[itemIndex].text_Boss.text = "";
+end
+
 function UITeleport.OnInitialize_scrollContent_LimitArea(scrollItems)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    --local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   for itemIndex = 0, scrollItems.Length - 1 do
     scrollItems_LimitArea[itemIndex] = {};
     scrollItems_LimitArea[itemIndex].text_Name = scrollItems[itemIndex]:Find("Text_fightArea"):GetComponent("Text");
@@ -296,6 +349,14 @@ function UITeleport.OnItemChange_scrollContent_LimitArea(dataIndex, itemIndex)
 end
 
 function UITeleport.GetElementString(index)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    --local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   local result = "";
 
   if bit.band(fightAreaPage[index].element, 1) == 1 then  --無
@@ -342,6 +403,14 @@ function UITeleport.GetElementString(index)
 end
 
 function UITeleport.OnOpen(tag, tag2)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    --local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   if tag ~= nil then
     currentTag = tag;
   else
@@ -402,6 +471,8 @@ function UITeleport.OnVisible(visible)
 
     this.SetupSkyPointData();
 
+    tagDatas[6] = { string.Get(23796), nil};
+
     UIFrame.Active(transform_FrameRect, string.Get(99675), this.OnClick_Close, nil, this.OnClick_Tag, tagDatas, currentTag, currentSubPage);
     
     this.UpdateUI();
@@ -411,6 +482,14 @@ function UITeleport.OnVisible(visible)
 end
 
 function UITeleport.GetFightData()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    --local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   table.Clear(fightArea);
   local area = {};
 
@@ -441,7 +520,15 @@ function UITeleport.GetFightData()
 end
 
 function UITeleport.UpdatFightArea()
-  if not (currentTag == EUITeleportTag.FightArea or currentTag == EUITeleportTag.Turn) then return end
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    --local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if not (currentTag == EUITeleportTag.FightArea or currentTag == EUITeleportTag.Turn or currentTag == EUITeleportTag.Mining) then return end
 
   if currentTag == EUITeleportTag.FightArea then
       this.GetFightAreaPage(subPageData[currentSubPage]);
@@ -449,28 +536,50 @@ function UITeleport.UpdatFightArea()
       this.GetFightAreaPage(turnPageData[currentSubPage]);
   end
 
-  scrollContent_Area:Reset(table.maxn(fightAreaPage));
+  if currentTag == EUITeleportTag.FightArea or currentTag == EUITeleportTag.Turn then
+    scrollContent_Area:Reset(table.maxn(fightAreaPage));
+  else
+    scrollContent_Area:Reset(1);
+  end
 end
 
 function UITeleport.OnClick_FightArea(uiEvent)
-  if Role.player.war ~= EWar.None then
-    ShowCenterMessage(string.Get(80099));
-    return true;
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
   end
+  --6-----------------------------------------------------
+  if currentTag ~= EUITeleportTag.Mining then
+    if Team.IsMember(Role.playerId) and not Team.IsLeader(Role.playerId) then
+      ShowCenterMessage(string.Get(20519));
+      return;
+    end
 
-  if fightAreaPage[uiEvent.parameter] == nil then return end
-  
-  if Team.IsMember(Role.playerId) and not Team.IsLeader(Role.playerId) then
-    ShowCenterMessage(string.Get(20519));
-    return;
+    if Role.player.war ~= EWar.None then
+      ShowCenterMessage(string.Get(80099));
+      return true;
+    end
+
+    if not Role.CanControl() then return end
+
+    if fightAreaPage[uiEvent.parameter] == nil then return end
+
+    local position = Vector2.New(fightAreaPage[uiEvent.parameter].x, fightAreaPage[uiEvent.parameter].y);
+
+    MarkManager.StartNavigation(0, fightAreaPage[uiEvent.parameter].sceneId, fightAreaPage[uiEvent.parameter].areaId, position, 0)
+  else
+    if this.CheckTeleport() then return end
+
+    if Team.IsMember(Role.playerId) and not Team.IsLeader(Role.playerId) then
+      ShowCenterMessage(string.Get(20518));
+      return;
+    end
+
+    --C:170-002 進礦場 +礦種類(1)
+    sendBuffer:Clear();
+    sendBuffer:WriteByte(1);
+    Network.Send(170,2,sendBuffer);
   end
-
-  if not Role.CanControl() then return end
-
-  local position = Vector2.New(fightAreaPage[uiEvent.parameter].x, fightAreaPage[uiEvent.parameter].y);
-
-  MarkManager.StartNavigation(0, fightAreaPage[uiEvent.parameter].sceneId, fightAreaPage[uiEvent.parameter].areaId, position, 0)
-
   this.OnClick_Close();
 end
 
@@ -495,6 +604,12 @@ end
 
 function UITeleport.UpdatLimitFightArea()
   if currentTag ~= EUITeleportTag.LimitFightArea then return end
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 
   scrollContent_LimitArea:Reset(table.maxn(limitTimeDungeonDatas));
 end
@@ -516,17 +631,27 @@ function UITeleport.OnClick_LimitFightArea(uiEvent)
   sendBuffer:Clear();
   sendBuffer:WriteByte(uiEvent.parameter);
   Network.Send(97, 1, sendBuffer);
-
+  
+  if Network.activityServerId == Network.serverId then
+    ShowCenterMessage(string.Get(24880));
+  end
+  
   this.OnClick_Close();
 end
 
 function UITeleport.OnClose()
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
   return true;
 end
 
 function UITeleport.UpdateUI()
   gameObject_Skypoint:SetActive(currentTag == EUITeleportTag.Skypoint);
-  gameObject_FightArea:SetActive(currentTag == EUITeleportTag.FightArea or currentTag == EUITeleportTag.Turn);
+  gameObject_FightArea:SetActive(currentTag == EUITeleportTag.FightArea or currentTag == EUITeleportTag.Turn or currentTag == EUITeleportTag.Mining);
   gameObject_Memory:SetActive(currentTag == EUITeleportTag.Memory);
   gameObject_LimitFightArea:SetActive(currentTag == EUITeleportTag.LimitFightArea);
 
@@ -543,12 +668,24 @@ function UITeleport.UpdateSkypoint()
 end
 
 function UITeleport.UpdateMemory()
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
   if currentTag ~= EUITeleportTag.Memory then return end
 
   this.UpdateMemoryPage();
 end
 
 function UITeleport.OnClick_Close()
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
   UI.Close(UITeleport);
 
   return true;
@@ -592,6 +729,12 @@ function UITeleport.OnClick_Warp(uiEvent)
 end
 
 function UITeleport.OnClick_Memory(uiEvent)
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
   if Role.player.war ~= EWar.None then
     ShowCenterMessage(string.Get(80099));
     return true;
@@ -621,6 +764,12 @@ function UITeleport.OnClick_Memory(uiEvent)
 end
 
 function UITeleport.SendMemory(index)
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
   --記憶
   sendBuffer:Clear();
   sendBuffer:WriteByte(2);
@@ -664,6 +813,12 @@ end
 
 --C:068-001 <使用晶石天行異能> +場景ID(2) +NO(1)
 function UITeleport.SendUseWarp(sceneId, no)
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
   sendBuffer:Clear();
   sendBuffer:WriteUInt16(sceneId);
   sendBuffer:WriteByte(no);

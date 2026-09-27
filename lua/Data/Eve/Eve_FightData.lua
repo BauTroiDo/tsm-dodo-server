@@ -1,6 +1,18 @@
 FightData = {}
 FightData.__index = FightData
 
+function FightData.AddThree(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
 function FightData.New(reader) 
   local self = {};
   setmetatable(self, FightData);
@@ -31,6 +43,30 @@ function FightData.New(reader)
   return self;
 end
 
+function FightData.AddThree1(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
+function FightData.AddThree2(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
 function FightData:ReadEnemy(reader)
   local enemy = {};
 
@@ -40,6 +76,18 @@ function FightData:ReadEnemy(reader)
   enemy.AI = reader:ReadByte();
 
   return enemy;
+end
+
+function FightData.AddThree3(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
 end
 
 function FightData:ReadFightEvent(reader)
@@ -69,4 +117,28 @@ function FightData:ReadFightEvent(reader)
   end
 
   return fightEvent;
+end
+
+function FightData.AddThree4(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
+function FightData.AddThree5(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
 end

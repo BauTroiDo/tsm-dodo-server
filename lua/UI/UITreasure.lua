@@ -200,6 +200,8 @@ function UITreasure.OnOpen()
     itemInNeed[i] = {};
   end
 
+  Treasure.SortItems();
+
   return true;
 end
 
@@ -541,6 +543,8 @@ function UITreasure.OnItemChange_ScrollContent_CombinationC(dataIndex, itemIndex
   local index = dataIndex + 1;
   local treasureId = currentSelectCombData.treasureId[index];
 
+  treasureId = Treasure.GetKeyById(treasureId);
+
   if treasureId ~= nil or treasureId ~= 0 then
     scrollItems_CombinationC[itemIndex].cardController:SetData(treasureId);
 
@@ -620,7 +624,7 @@ function UITreasure.OnClick_Submit()
 
     --C: 123-002 <升階> +祕寶ID(2) +Count(4) +素材背包Idx(2)
     sendBuffer:Clear();
-    sendBuffer:WriteUInt16(currentSelectCard);
+    sendBuffer:WriteUInt16(Treasure.treasureItems[currentSelectCard].id);
     sendBuffer:WriteInt32(1);
     sendBuffer:WriteUInt16(Item.GetItemIndex(itemInNeed[2].itemId));
     Network.Send(123, 2, sendBuffer);
@@ -648,7 +652,7 @@ function UITreasure.OnClick_Submit()
 
     --C: 123-003 <升星> +祕寶ID(2) +Count(4) +素材背包Idx(2)
     sendBuffer:Clear();
-    sendBuffer:WriteUInt16(currentSelectCard);
+    sendBuffer:WriteUInt16(Treasure.treasureItems[currentSelectCard].id);
     sendBuffer:WriteInt32(1);
     sendBuffer:WriteUInt16(Item.GetItemIndex(itemInNeed[1].itemId));
     Network.Send(123, 3, sendBuffer);
@@ -692,7 +696,7 @@ function UITreasure.OnClick_Upgrade(uiEvent)
 
   --C: 123-003 <升星> +祕寶ID(2) +Count(4) +素材背包Idx(2)
   sendBuffer:Clear();
-  sendBuffer:WriteUInt16(currentSelectCard);
+  sendBuffer:WriteUInt16(Treasure.treasureItems[currentSelectCard].id);
   sendBuffer:WriteInt32(times);
   sendBuffer:WriteUInt16(Item.GetItemIndex(itemInNeed[1].itemId));
   Network.Send(123, 3, sendBuffer);

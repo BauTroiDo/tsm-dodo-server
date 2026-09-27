@@ -39,6 +39,16 @@ function UIShop.OnOpen(kind, options)
   currentKind = kind;
   currentOptions = options;
   currentOption = 0;
+  
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
 
   return true;
 end
@@ -72,6 +82,16 @@ function UIShop.OnClose()
     EventManager.SetConduct(true);
   elseif currentKind == EUIShop.Vender then
   end
+  
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
 end
 
 function UIShop.UpdateUI(refresh)
@@ -91,6 +111,15 @@ end
 function UIShop.OnClick_Submit(value)
   if value == nil then return end
   if tonumber(value) == 0 then return end
+  
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
 
   if currentKind == EUIShop.Shop then
     if currentOption == 0 then return end
@@ -141,6 +170,15 @@ end
 
 function UIShop.OnClick_Shop(uiEvent)
   currentOption = uiEvent.parameter;
+  
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
 
   if currentOption == 0 then return end
 
@@ -166,6 +204,14 @@ function UIShop.OnClick_Shop(uiEvent)
 end
 
 function UIShop.OnInitialize_ScrollContent_Shop(scrollItems)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   for itemIndex = 0, scrollItems.Length - 1 do
     scrollItems_Shop[itemIndex] = {};
 

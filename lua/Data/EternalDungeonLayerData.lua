@@ -5,6 +5,17 @@ local this = EternalDungeonLayerData;
 local eternalDungeonLayerGroup = {};
 local lastIdx = 1;
 
+function EternalDungeonLayerData.Script()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
 function EternalDungeonLayerData.New(reader)
   local self = {};
   setmetatable(self, EternalDungeonLayerData);
@@ -30,7 +41,18 @@ function EternalDungeonLayerData.New(reader)
   end
 
   return self.id, self;
-end 
+end
+
+function EternalDungeonLayerData.Script1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
 
 function EternalDungeonLayerData.GetIdx(idx)
   if eternalDungeonLayerGroup[idx] ~= nil then
@@ -38,6 +60,39 @@ function EternalDungeonLayerData.GetIdx(idx)
   else
     return eternalDungeonLayerGroup[lastIdx];
   end;
+end
+
+function EternalDungeonLayerData.Script2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function EternalDungeonLayerData.Script3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function EternalDungeonLayerData.Script4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
 end
 
 function EternalDungeonLayerData.GetEffect(idx)

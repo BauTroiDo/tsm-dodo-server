@@ -1,6 +1,17 @@
 TextureOffsetData ={}
 TextureOffsetData.__index = TextureOffsetData
 
+function TextureOffsetData.Script1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
 function TextureOffsetData.New(reader)
   local self = {};
   setmetatable(self, TextureOffsetData);
@@ -18,4 +29,26 @@ function TextureOffsetData.New(reader)
   end
   
   return self.textureName, self;
+end
+
+function TextureOffsetData.Script()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function TextureOffsetData.Script2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
 end

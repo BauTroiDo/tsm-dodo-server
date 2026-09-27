@@ -2,6 +2,18 @@
 TagData = {}
 TagData.__index = TagData;
 
+function TagData.Random()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 function TagData.New(reader)
   local mainTag = reader:ReadByte();--主分類
   local subTag = reader:ReadByte();--次分類
@@ -41,6 +53,18 @@ function AchievementData.New(reader)
   return mainTag, subTag, self;
 end
 
+function AchievementData.Random()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 function AchievementData:GetName()
   return string.Get(self.name);
 end
@@ -57,8 +81,57 @@ function AchievementData:GetContent()
   return string.Get(self.content);
 end
 
+function AchievementData.RandomA()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function AchievementData.RandomB()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+
 function AchievementData:GetPogress()
   return string.Concat(self:GetConditionCurrentValue(), " / ", self.conditions.value);
+end
+
+function AchievementData.RandomC()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function AchievementData.RandomD()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
 end
 
 function AchievementData:IsComplete()
@@ -79,6 +152,30 @@ function AchievementData:IsComplete()
   return false;
 end
 
+function AchievementData.RandomE()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function AchievementData.RandomF()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 function AchievementData.GetData(achievementId)
   for mainKey, mainValue in pairs(achievementDatas) do
     for subKey, subValue in pairs(mainValue) do
@@ -93,12 +190,72 @@ function AchievementData.GetData(achievementId)
   return nil;
 end
 
+function AchievementData.RandomG()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function AchievementData.RandomH()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 function AchievementData:HaveCompeleteFlag()
   return BitFlag.Get(self.completeFlag);
 end
 
 function AchievementData:HaveGetFlag()
   return BitFlag.Get(self.getFlag);
+end
+
+function AchievementData.RandomI()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function AchievementData.RandomJ()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function AchievementData.RandomK()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
 end
 
 function AchievementData:GetConditionCurrentValue()

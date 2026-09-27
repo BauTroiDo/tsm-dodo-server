@@ -25,9 +25,9 @@ local percents = {  --多獎勵進度條的物件對應名稱
   100,
 }
 
-local progressBarType = {
-  Once = 1,
-  Multiple = 2,
+local progressType = {
+   Once = 1,
+   Multiple = 2,
 }
 
 local gameObject_BoardRoot;
@@ -111,8 +111,8 @@ function UIBingo.Initialize(go)
   image_BarSingle_Border.gameObject:SetActive(false);
   image_BarSingle_White.gameObject:SetActive(false);
   this.SetProgressBar()
-  gameObject_ProgressBarOne:SetActive(progressBarKind == progressBarType.Once);
-  gameObject_ProgressBarTwo:SetActive(progressBarKind == progressBarType.Multiple);
+  gameObject_ProgressBarOne:SetActive(progressBarKind == progressType.Once);
+  gameObject_ProgressBarTwo:SetActive(progressBarKind == progressType.Multiple);
 
   for i = 1, CONST_BINGO_MULTIAWARD_COUNT do
     image_BarMultiple_Items[i] = {};
@@ -217,9 +217,9 @@ function UIBingo.OnOpen()
   this.InitData(bingoUIPage);
   this.SetMissionAward();
   this.SetProgressBar();
-  gameObject_ProgressBarOne:SetActive(progressBarKind == progressBarType.Once);
-  gameObject_ProgressBarTwo:SetActive(progressBarKind == progressBarType.Multiple);
-  this.UpdateProgressBarCount();
+  gameObject_ProgressBarOne:SetActive(progressBarKind == progressType.Once);
+  gameObject_ProgressBarTwo:SetActive(progressBarKind == progressType.Multiple);
+  this.UpdateProgressCount();
   this.UpdateBoard();
   this.CheckChangeBoard();
 end
@@ -264,7 +264,7 @@ function UIBingo.OnClick_OnceProgressPrize()
   clickResult, lastClickProgessTime = this.CheckClickTime(lastClickProgessTime);
   if not clickResult then return end;
   sendBuffer:Clear();
-  sendBuffer:WriteUInt32(this.ProgressBarMission(EBingoActKind.fiveSquareSingleBar) + bingoMaxPrizeCount + 1);
+  sendBuffer:WriteUInt32(this.ProgressMission(EBingoActKind.fiveSquareSingleBar) + bingoMaxPrizeCount + 1);
   local result = math.floor(currentCharge / totalCharge);
   sendBuffer:WriteUInt32(result);
   Network.Send(124, 3 , sendBuffer);
@@ -274,7 +274,7 @@ function UIBingo.OnClick_MultiProgressPrize(event)
   clickResult, lastClickProgessTime = this.CheckClickTime(lastClickProgessTime);
   if not clickResult then return end;
   sendBuffer:Clear();
-  sendBuffer:WriteUInt32(this.ProgressBarMission(EBingoActKind.fiveSquareMultiBar) + bingoMaxPrizeCount + event.parameter);
+  sendBuffer:WriteUInt32(this.ProgressMission(EBingoActKind.fiveSquareMultiBar) + bingoMaxPrizeCount + event.parameter);
   sendBuffer:WriteUInt32(1);
   Network.Send(124, 3 , sendBuffer);
 end
@@ -284,14 +284,14 @@ function UIBingo.UpdateBoard()
   local boardPattern;
   local bingoBoardPlayerAwardCount = {};
   local bingoAwardPlayerAwardCount = {};
-  missionPattern = string.Concat("^", tostring(ActivityModel.openActivityId),"3%d%d$"); --match使用的pattern ^表達匹配開始 .. ActivityModel.openActivityId .. 3 .. %d%d
-  boardPattern = string.Concat("^", tostring(ActivityModel.openActivityId),"0%d%d$"); --match使用的pattern ^表達匹配開始 .. ActivityModel.openActivityId .. 0 ..%d%d
+  missionPattern = string.Concat("^", tostring(ActivityModel.openActivityId),"3%d%d$");
+  boardPattern = string.Concat("^", tostring(ActivityModel.openActivityId),"0%d%d$");
 
   for k, v in pairs(ActivityModel.PlayerAwardCount) do
     local str = tostring(k)
     local result;
     if string.match(str, boardPattern) then
-      result = tonumber(string.sub(str, -2)); --從字符串 str 中提取出最後兩個字符，然後將這兩個字符轉換為數字。
+      result = tonumber(string.sub(str, -2));
       if result <= 25 then
         bingoBoardPlayerAwardCount[result] = v;
       end
@@ -301,9 +301,9 @@ function UIBingo.UpdateBoard()
       end
     end
 
-    if string.match(str, missionPattern) then --match(要匹配的目標字串, 匹配規則pattern) 根據查詢結果的有無回傳bool
+    if string.match(str, missionPattern) then
       result = tonumber(string.sub(str, -2));
-      if result == bingoMaxPrizeCount + 1 and progressBarKind == progressBarType.Once then -- 單一Bar條
+      if result == bingoMaxPrizeCount + 1 and progressBarKind == progressType.Once then -- 單一Bar條
         if v.get < v.mission.getLimit and v.mission.getLimit ~= 0 then
           image_BarSingle_Border.gameObject:SetActive(true);
           image_BarSingle_White.gameObject:SetActive(false);
@@ -323,7 +323,7 @@ function UIBingo.UpdateBoard()
             end
           end
         end
-      elseif result > bingoMaxPrizeCount and progressBarKind == progressBarType.Multiple then
+      elseif result > bingoMaxPrizeCount and progressBarKind == progressType.Multiple then
         if v.get < v.mission.getLimit and v.mission.getLimit ~= 0 and currentCharge < v.mission.conditionCount then
           image_BarMultiple_Items[result - bingoMaxPrizeCount].lock.gameObject:SetActive(true);
           image_BarMultiple_Items[result - bingoMaxPrizeCount].lock.raycastTarget = false;
@@ -382,7 +382,7 @@ function UIBingo.UpdateBoard()
     end
   end
 
-  this.UpdateProgressBarCount();
+  this.UpdateProgressCount();
 end
 
 function UIBingo.ChangeBoard()
@@ -415,9 +415,9 @@ end
 function UIBingo.SetProgressBar()
   local kind = ActivityModel.ActivityData[ActivityModel.openActivityId].kind;
   if kind == EBingoActKind.fiveSquareSingleBar then
-    progressBarKind = progressBarType.Once;
+    progressBarKind = progressType.Once;
   elseif kind == EBingoActKind.fiveSquareMultiBar then
-    progressBarKind = progressBarType.Multiple;
+    progressBarKind = progressType.Multiple;
   end
 end
 
@@ -517,25 +517,25 @@ function UIBingo.CheckChangeBoard()
   return result, 1;
 end
 
-function UIBingo.ProgressBarMission(progressBarType)
-  local progressBarMission;
-  if progressBarType == EBingoActKind.fiveSquareSingleBar then
-    progressBarMission = singleActivityId * CONST_MISSION_INDEX + CONST_MISSION_PAGE_INDEX;
-  elseif progressBarType == EBingoActKind.fiveSquareMultiBar then
-    progressBarMission = multipleActivityId * CONST_MISSION_INDEX + CONST_MISSION_PAGE_INDEX;
+function UIBingo.ProgressMission(progressType)
+  local progressMission;
+  if progressType == EBingoActKind.fiveSquareSingleBar then
+    progressMission = singleActivityId * CONST_MISSION_INDEX + CONST_MISSION_PAGE_INDEX;
+  elseif progressType == EBingoActKind.fiveSquareMultiBar then
+    progressMission = multipleActivityId * CONST_MISSION_INDEX + CONST_MISSION_PAGE_INDEX;
   end
-  return progressBarMission;
+  return progressMission;
 end
 
-function UIBingo.UpdateProgressBarCount()
-  local progressBarKind;
-  local once = (progressBarKind == progressBarType.Once);
+function UIBingo.UpdateProgressCount()
+  local progressKind;
+  local once = (progressBarKind == progressType.Once);
   local barAwardMission = ActivityModel.PlayerAwardCount[ActivityModel.openActivityId * CONST_MISSION_INDEX + CONST_MISSION_PAGE_INDEX + bingoMaxPrizeCount + 1];
 
-  if ActivityModel.openActivityId == singleActivityId then progressBarKind = EBingoActKind.fiveSquareSingleBar;
-  elseif ActivityModel.openActivityId == multipleActivityId then progressBarKind = EBingoActKind.fiveSquareMultiBar end
+  if ActivityModel.openActivityId == singleActivityId then progressKind = EBingoActKind.fiveSquareSingleBar;
+  elseif ActivityModel.openActivityId == multipleActivityId then progressKind = EBingoActKind.fiveSquareMultiBar end
 
-  currentCharge = ActivityModel.PlayerAwardCount[this.ProgressBarMission(progressBarKind) + bingoMaxPrizeCount + 1].complete;
+  currentCharge = ActivityModel.PlayerAwardCount[this.ProgressMission(progressKind) + bingoMaxPrizeCount + 1].complete;
   text_CurrentCount.text = currentCharge;
 
   if once then
@@ -554,7 +554,7 @@ function UIBingo.UpdateProgressBarCount()
     slider_ProgressBarMultiple.maxValue = totalCharge;
     text_ProgressCount.text = totalCharge;
     for i = 1, CONST_BINGO_MULTIAWARD_COUNT do
-      text_Progresspercent.text = ActivityModel.PlayerAwardCount[this.ProgressBarMission(EBingoActKind.fiveSquareMultiBar) + bingoMaxPrizeCount + i].mission.conditionCount;
+      text_Progresspercent.text = ActivityModel.PlayerAwardCount[this.ProgressMission(EBingoActKind.fiveSquareMultiBar) + bingoMaxPrizeCount + i].mission.conditionCount;
     end
   end
 
@@ -628,7 +628,7 @@ function UIBingo.InitData(page)
   end
 
   this.SetMissionAward();
-	this.UpdateProgressBarCount();
+	this.UpdateProgressCount();
   this.UpdateBoard();
   if page ~= 3 then
     this.OnClose();
@@ -660,9 +660,9 @@ function UIBingo.Clear()
     slider_ProgressBarMultiple.value = 0;
   end
 
-  lastClickFlipTime = nil;
-  lastClickPrizeTime = nil;
-  lastClickProgessTime = nil;
+   lastClickFlipTime = nil;
+   lastClickPrizeTime = nil;
+   lastClickProgessTime = nil;
 end
 
 function UIBingo.CheckClickTime(lastClickTime)

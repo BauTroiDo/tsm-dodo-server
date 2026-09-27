@@ -33,6 +33,7 @@ local transform_FrameRect;
 local gameObjects = {};
 
 --Info
+local gameObject_Quit;
 
 local infoTexts = {};
 
@@ -234,6 +235,7 @@ function UIArmy.Initialize(go)
   tempEvent = uiController:FindEvent("Image_Quit");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_Quit);
 
+  gameObject_Quit = tempEvent.gameObject;
   --endregion
 
     --region WeekAward
@@ -399,6 +401,16 @@ end
 function UIArmy.InitProduction(uiController)
   local tempTransform;
   local tempEvent;
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
 
   for k, v in pairs(EOrgProduction) do
     tempTransform = gameObjects.Production.transform:Find(string.Concat("Production (", v, ")"));
@@ -432,6 +444,16 @@ function UIArmy.InitProduction(uiController)
 end
 
 function UIArmy.InitEnsign(uiController)
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
   local tempTransform;
   local tempEvent;
 
@@ -509,6 +531,16 @@ function UIArmy.InitFunction(uiController)
 
   tempEvent = uiController:FindEvent("Image_SignGet");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_SignSubmit);
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
 end
 
 function UIArmy.InitSupportPoke(uiController)
@@ -638,7 +670,15 @@ function UIArmy.OnOpen(page)
   else
     currentPage = EUIArmyPage.Info;
   end
-
+  
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   return true;
 end
 
@@ -693,6 +733,23 @@ function UIArmy.OnVisible(visible)
 end
 
 function UIArmy.OnClose()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  
   if UI.IsVisible(UIAlert) then
     UI.Close(UIAlert);
   end
@@ -775,6 +832,7 @@ function UIArmy.UpdateUI(reset)
   gameObjects.SupportPoke:SetActive(Contains(currentPage, EUIArmyPage.SupportPoke));
   gameObjects.SupportInfo:SetActive(Contains(currentPage, EUIArmyPage.SupportInfo));
   gameObjects.SupportMission:SetActive(Contains(currentPage, EUIArmyPage.SupportMission));
+  gameObject_Quit:SetActive(not UI.IsVisible(UIArmyBattle));
   
   this.UpdateMain();
   this.UpdateMember(reset);
@@ -954,6 +1012,15 @@ function UIArmy.UpdateMember(reset)
     gameObjects.InfoWeekScore:SetActive(false);
     gameObjects.SelectInfo:SetActive(true);
   
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    
     image_MemberBG.rectTransform.sizeDelta = Vector2.New(723, 320);
 
     --軍團戰權限
@@ -985,6 +1052,15 @@ end
 function UIArmy.UpdateEnsign()
   if not Contains(currentPage, EUIArmyPage.Ensign) then return end
   
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  
   image_SelectPixel.rectTransform.anchoredPosition = Vector2.New((7 + (pixelScale * 0.5)) + (pixelScale * currentX), -((7 + (pixelScale * 0.5)) + (pixelScale * currentY)));
 
   local colorIndex = 15;
@@ -1008,6 +1084,15 @@ end
 
 function UIArmy.UpdateResource(selections, openBag)
   if not Contains(currentPage, EUIArmyPage.Resource) then return end
+  
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
 
   if openBag then
     UI.Open(UIBag,
@@ -1121,7 +1206,16 @@ end
 
 function UIArmy.UpdateDonate()
   text_Donate.text = string.Concat(string.Get(20771), Organization.members[Role.playerId].score);
-
+  
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  
   local donateMoney = 0;
   if not string.IsNullOrEmpty(inputField_Donate.text) then
     donateMoney = tonumber(inputField_Donate.text);
@@ -1213,6 +1307,15 @@ function UIArmy.UpdateBoss(reset)
   if not Contains(currentPage, EUIArmyPage.Boss) then return end
 
   RedDot.Remove(ERedDot.OrgBoss);
+  
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
 
   TextureManager.SetPng(ETextureUseType.UI, "common0_bod120", rawImage_Boss[1]);
   TextureManager.SetPng(ETextureUseType.UI, "common0_bod113", rawImage_Boss[2]);
@@ -1293,7 +1396,11 @@ end
 
 function UIArmy.UpdateAlly(reset)
   if not Contains(currentPage, EUIArmyPage.Ally) then return end
-
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   if Organization.orgs[Organization.Id].allyId ~= 0 then
     image_AllySwitch.sprite = UI.GetSwitchSprite(true);
   else
@@ -1331,6 +1438,11 @@ function UIArmy.UpdateAlly(reset)
 end
 
 function UIArmy.UpdateFunction()
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   event_FunctionBG.gameObject:SetActive(currentFunction ~= EUIArmyFunction.None);
   gameObjects.Declaration:SetActive(currentFunction == EUIArmyFunction.Declaration);
   gameObjects.Sign:SetActive(currentFunction == EUIArmyFunction.Sign);
@@ -1402,6 +1514,11 @@ function UIArmy.UpdateFunction()
       infoTexts.text_NextSignRequire1.text = "";
       infoTexts.text_NextSignRequire2.text = "";
       infoTexts.text_NextSignRequire3.text = "";
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     end
 
     if armySignDatas[signLv] ~= nil then
@@ -1446,6 +1563,11 @@ function UIArmy.UpdateFunction()
       infoTexts.text_CurrentSignRequire3.text = "";
     end
   end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function UIArmy.UpdateSupportPoke()
@@ -1502,6 +1624,8 @@ end
 
 function UIArmy.UpdateSupportInfo(reset)
   if not Contains(currentPage, EUIArmyPage.SupportInfo) then return end
+
+  RedDot.Remove(ERedDot.ArmySupportInfo);
 
   scoreData = ArmySupport.GetArmyScores();
   rankData = ArmySupport.GetRank();
@@ -1613,6 +1737,14 @@ end
 
   --region  ui
 function UIArmy.OnClick_Close()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   UI.Close(UIArmy);
 
   return true;
@@ -1622,6 +1754,14 @@ function UIArmy.OnClick_Help(checkShow)
   if checkShow ~= true then
     if currentPage == EUIArmyPage.Boss then
       UI.Open(UITutorialHint, 0, this, string.Get(99790), string.Get(99791));
+      --3----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
     elseif Contains( currentPage, EUIArmyPage.SupportInfo, EUIArmyPage.SupportMission, EUIArmyPage.SupportPoke) then
       UI.Open(UITutorialHint, 0, this, string.Get(24404), string.Get(24437));
     else
@@ -1665,6 +1805,14 @@ end
 
   --region Info
 function UIArmy.OnClick_Declaration()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   currentFunction = EUIArmyFunction.Declaration;
 
   this.UpdateFunction();
@@ -1691,16 +1839,24 @@ function UIArmy.CloseSignUI()
 end
 
 function UIArmy.OnChange_Declaration(text)
-  local convertedString = LuaHelper.StringToBytes(DataManager.encoding_Unicode, inputField_Declaration.text);
-  if string.len(convertedString) > 50 then
+  local convertedString = LuaHelper.StringToBytes(DataManager.encoding_Big5, inputField_Declaration.text);
+  if string.len(convertedString) > 200 then
     convertedString = string.sub(convertedString, 1, 200);
-    inputField_Declaration.text = LuaHelper.BytesToString(DataManager.encoding_Unicode, convertedString);
+    inputField_Declaration.text = LuaHelper.BytesToString(DataManager.encoding_Big5, convertedString);
   end
 end
 
 function UIArmy.OnClick_DeclarationSubmit()
   if not Organization.IsChief(Role.playerId) then
     ShowCenterMessage(string.Get(40186));
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
     return;
   end
 
@@ -1725,6 +1881,15 @@ function UIArmy.OnClick_SignSubmit()
     ShowCenterMessage(string.Get(21157));
     return;
   end
+  
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
 
   --C:039-105 <每日簽到>
   Network.Send(39, 105);
@@ -1739,6 +1904,14 @@ function UIArmy.OnClick_Invite()
     ShowCenterMessage(string.Get(40186));
     return;
   end
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   
   ShowNameInput(string.Get(20502),
     function(name)
@@ -1750,6 +1923,14 @@ function UIArmy.OnClick_Invite()
 end
 
 function UIArmy.OnClick_Quit()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   if Organization.IsChief(Role.playerId) then
     if table.Count(Organization.members) > 1 then
       ShowNotifyMessage(nil, string.Get(10257));
@@ -1790,6 +1971,22 @@ end
 
   --region Member
 function UIArmy.OnClick_Member(uiEvent)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   local playerInfo = uiEvent.parameter;
 
   if UI.IsVisible(UIArmyBattle) then return end
@@ -1812,6 +2009,15 @@ end
 
 function UIArmy.OnClick_SelectAll(uiEvent)
   if currentDuty == EOrgDuty.None then return end
+  
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
 
   local maxMember = 0;
   if Between(currentDuty, EOrgDuty.WalkerArmy, EOrgDuty.StrongOfficer) then
@@ -1867,6 +2073,16 @@ function UIArmy.OnClick_SelectArmy(itemIndex, value)
   
   local roleId = scrollItems_Member[itemIndex].event_BG.parameter.roleId;
   
+  
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  
   if value > 0 then
     local duty = value + (EOrgDuty.WalkerArmy - 1);
     if not Organization.GetDutyFlag(duty, roleId) then
@@ -1893,6 +2109,21 @@ function UIArmy.OnClick_SelectArmy(itemIndex, value)
 end
 
 function UIArmy.OnInitialize_ScrollContent_Member(scrollItems)
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   for itemIndex = 0, scrollItems.Length - 1 do
     scrollItems_Member[itemIndex] = {};
     scrollItems_Member[itemIndex].event_BG = scrollItems[itemIndex]:GetComponent("UIEvent");
@@ -1996,6 +2227,17 @@ end
 
   --region Ensign
 function UIArmy.OnClick_Ensign(uiEvent)
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
   local localPosition = ConvertPositionToUIScene(rawImage_Ensign.transform, uiEvent.eventData.position, this.uiController.canvas.worldCamera);
   
   currentX = math.floor(math.abs(localPosition.x) / pixelScale);
@@ -2007,6 +2249,14 @@ function UIArmy.OnClick_Ensign(uiEvent)
 end
 
 function UIArmy.OnClick_PixelUp()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   if currentY <= 0 then
     currentY = 23;
   else
@@ -2019,6 +2269,11 @@ function UIArmy.OnClick_PixelUp()
 end
 
 function UIArmy.OnClick_PixelRight()
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   if currentX >= 23 then
     currentX = 0;
   else
@@ -2055,6 +2310,14 @@ function UIArmy.OnClick_PixelLeft()
 end
 
 function UIArmy.OnClick_Color(uiEvent)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   local pixelIndex = math.floor((currentX * 24 + currentY) / 2) + 1;
   local colorIndex = ensignData[pixelIndex] or 255;
 
@@ -2080,6 +2343,14 @@ end
 
 function UIArmy.OnClick_EnsignRemove(uiEvent)
   currentSample = 0;
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   Organization.RemoveCustomEnsign(uiEvent.parameter);
 end
 
@@ -2105,6 +2376,15 @@ end
 
 function UIArmy.OnClick_EnsignReset(uiEvent)
   local orgData = Organization.orgs[Organization.Id];
+  
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
 
   if uiEvent ~= nil then
     local changed = false;
@@ -2153,6 +2433,14 @@ function UIArmy.OnClick_EnsignReset(uiEvent)
   currentY = 0;
 
   currentSample = 0;
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
 
   this.UpdateEnsign();
 end
@@ -2173,11 +2461,28 @@ function UIArmy.OnClick_SampleEnsign(uiEvent)
   currentY = 0;
 
   currentSample = sampleIndex;
+  
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
 
   this.UpdateEnsign();
 end
 
 function UIArmy.OnInitialize_ScrollContent_Ensign(scrollItems)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   for itemIndex = 0, scrollItems.Length - 1 do
     scrollItems_Ensign[itemIndex] = {};
     scrollItems_Ensign[itemIndex].event_BG = scrollItems[itemIndex]:GetComponent("UIEvent");
@@ -2207,6 +2512,11 @@ end
 
   --region Resource
 function UIArmy.OnChange_Donate(text)
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   this.UpdateDonate();
 end
 
@@ -2227,7 +2537,7 @@ function UIArmy.OnClick_DonateResource()
 
   if count == 0 then return end
 
-  --C:039-015 <捐獻資源> +金錢數(4) <<+背包索引(1)>>
+  --C:039-015 <捐獻資源> +金錢數(4) <<+背包索引(2)>>
   sendBuffer:Clear();
   if tonumber(inputField_Donate.text) ~= nil then
     sendBuffer:WriteInt32(tonumber(inputField_Donate.text));
@@ -2237,7 +2547,7 @@ function UIArmy.OnClick_DonateResource()
 
   for i = 1, Item.MaxThingGrid do
     if selections[i] then
-      sendBuffer:WriteByte(i);
+      sendBuffer:WriteUInt16(i);
     end
   end
   Network.Send(39, 15, sendBuffer);
@@ -2250,6 +2560,12 @@ end
 
   --region Production
 function UIArmy.OnClick_ProductPrev(uiEvent)
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   local kind = uiEvent.parameter;
 
   if armyProductionDatas[kind] == nil then return end
@@ -2278,6 +2594,42 @@ function UIArmy.OnClick_ProductNext(uiEvent)
 end
 
 function UIArmy.OnClick_ProductTake(uiEvent)
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
   local kind = uiEvent.parameter;
 
   if armyProductionDatas[kind] == nil then return end
@@ -2397,6 +2749,23 @@ function UIArmy.OnClick_NpcInfo(uiEvent)
   npcInfo.hpx = npcData.attributes[4];
   npcInfo.spx = npcData.attributes[5];
   npcInfo.agi = npcData.attributes[6];
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
 
   UI.Open(UINpcInfo, npcInfo, false);
 end
@@ -2414,6 +2783,11 @@ function UIArmy.OnClick_ArmyDuty()
 end
 
 function UIArmy.OnClick_Weapon(uiEvent)
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   local index = uiEvent.parameter;
   if Organization.weapons[index] <= 0 then return end
   if not (Organization.IsChief(Role.playerId) or Organization.IsSubChief(Role.playerId)) then
@@ -2443,6 +2817,27 @@ function UIArmy.OnClick_Weapon(uiEvent)
 end
 
 function UIArmy.OnClick_DonateWeapon()
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
   local selections = UIBag.GetSelect();
 
   local count = 0;
@@ -2454,11 +2849,11 @@ function UIArmy.OnClick_DonateWeapon()
 
   if count == 0 then return end
 
-  --C:039-053 <歸還軍備> <<+背包索引(1)>>
+  --C:039-053 <歸還軍備> <<+背包索引(2)>>
   sendBuffer:Clear();
   for i = 1, Item.MaxThingGrid do
     if selections[i] then
-      sendBuffer:WriteByte(i);
+      sendBuffer:WriteUInt16(i);
     end
   end
   Network.Send(39, 53, sendBuffer);
@@ -2469,6 +2864,22 @@ end
 
   --region Boss
 function UIArmy.OnClick_BossFight()
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
   if EventManager.IsRunning() then
     ShowCenterMessage(string.Get(21767));
     return;
@@ -2532,6 +2943,22 @@ end
 
   --region Ally
 function UIArmy.OnClick_AllySwitch()
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
   if Organization.orgs[Organization.Id].allyId ~= 0 then
     ShowCheckMessage(
       function(result)
@@ -2648,6 +3075,21 @@ function UIArmy.ArmyFilter(itemSave)
   if Contains(itemSave.Id, 10505, 19209, 20209, 21609, 22909, 20747, 20748, 20749, 26209, 26210, 26211, 26212, 26213, 26214, 26215, 26216, 26217, 26218, 26219, 16000, 21610, 19210, 22910, 20210, 11046) then return false end
   if not Contains(itemData.material, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36) then return false end
   if Contains(itemData.kind, 20, 21, 22) then return false end
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-------------------------------------------------------5-----------------------------------------------------
+  --  if LuaHelper.CheckDefine("DemoCode") then
+  --   --
+  --  end
+  --  --6-----------------------------------------------------
   
   return true;
 end

@@ -1,6 +1,28 @@
 HouseEditorSceneSetData = {}
 HouseEditorSceneSetData.__index = HouseEditorSceneSetData;
 
+function HouseEditorSceneSetData.Trash()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function HouseEditorSceneSetData.Trash1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
 function HouseEditorSceneSetData.New(reader)
   local self = {};
   setmetatable(self, HouseEditorSceneSetData);
@@ -14,4 +36,37 @@ function HouseEditorSceneSetData.New(reader)
   self.maxAmountOfFurnitureOnScene = reader:ReadInt16(); --[8]場景家具數量上限
 
   return  self.Id,self;
+end
+
+function HouseEditorSceneSetData.Trash2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function HouseEditorSceneSetData.Trash3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function HouseEditorSceneSetData.Trash4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
 end

@@ -112,6 +112,34 @@ function UIAuctionSell.OnOpen(kind, index)
       maxCount = itemSave.quant;
       this.OnClick_EditCount();
     else
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
       this.OnClick_EditPrice();
     end
 
@@ -162,7 +190,34 @@ end
 
 function UIAuctionSell.OnClick_EditCount()
   if currentKind == EAuctionProduct.Npc then return end
-
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   currentEdit = text_Count;
   currentValue = currentCount;
 
@@ -179,6 +234,34 @@ function UIAuctionSell.OnClick_EditPrice()
 end
 
 function UIAuctionSell.OnClick_Dec()
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   currentValue = currentValue - 1;
 
   edited = true;
@@ -197,6 +280,20 @@ function UIAuctionSell.OnClick_Max()
     currentValue = maxCount;
   else
     currentValue = maxPrice;
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   end
 
   edited = false;
@@ -227,12 +324,12 @@ end
 
 function UIAuctionSell.OnClick_Submit()
   --C:096-001 <上架商品> +商品種類(1)
-  --  商品種類 1:物品 +背包索引(1) +數量(2) +價格(4)
+  --  商品種類 1:物品 +背包索引(2) +數量(2) +價格(4)
   --  商品種類 2:武將 +武將索引(1) +價格(4)
   if currentKind == EAuctionProduct.Item then
     sendBuffer:Clear();
     sendBuffer:WriteByte(EAuctionProduct.Item);
-    sendBuffer:WriteByte(currentIndex);
+    sendBuffer:WriteUInt16(currentIndex);
     sendBuffer:WriteUInt16(currentCount);
     sendBuffer:WriteUInt32(currentPrice);
     Network.Send(96, 1, sendBuffer);
@@ -243,6 +340,34 @@ function UIAuctionSell.OnClick_Submit()
     sendBuffer:WriteByte(currentIndex);
     sendBuffer:WriteUInt32(currentPrice);
     Network.Send(96, 1, sendBuffer);
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   end
 
   --Test Code

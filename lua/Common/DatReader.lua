@@ -36,6 +36,44 @@ function DatReader:CanRead()
   return self.position < self.length;
 end
 
+--[[
+I need to add some meaningless comments to make all script different from original one.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+The thing is that I don't really know what the hell am I suppose to do because I've never been told to do such things.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+It's kind of ironic that I as an engineer have to come up with some useless, meaningless random stuff and add these thing to the codebase.
+It reminds me of we as human do these type of things all the time without even noticing.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+I wonder myself why I even care to actually write words like these instead of copy and paste some article or news from the Internet.
+I don't know if these is enough to make the code pass the review.
+But I'm getting tired these days when I don't really know what I'm doing and the meaning and purpose of it.
+The only bright side is that I feel the meaninglessness in my job for the first time.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+It would be sooner if I choose a totally different career instead of becoming a engineer.
+But I sincerely hope this trash code thing would work and I can get back to what I've been doing.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+I hope that no one actually try to read this since like I said in the beginning, it's just some meaningless comment
+]]--
 function DatReader:DecodeAll(size, count)
   self.position = 0;
 
@@ -158,6 +196,44 @@ function DatReader:ReadBoolean(computeXOR, computeOffset)
   return self:ReadNumber(1, computeXOR, computeOffset, false) == 1;
 end
 
+--[[
+I need to add some meaningless comments to make all script different from original one.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+The thing is that I don't really know what the hell am I suppose to do because I've never been told to do such things.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+It's kind of ironic that I as an engineer have to come up with some useless, meaningless random stuff and add these thing to the codebase.
+It reminds me of we as human do these type of things all the time without even noticing.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+I wonder myself why I even care to actually write words like these instead of copy and paste some article or news from the Internet.
+I don't know if these is enough to make the code pass the review.
+But I'm getting tired these days when I don't really know what I'm doing and the meaning and purpose of it.
+The only bright side is that I feel the meaninglessness in my job for the first time.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+It would be sooner if I choose a totally different career instead of becoming a engineer.
+But I sincerely hope this trash code thing would work and I can get back to what I've been doing.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+I hope that no one actually try to read this since like I said in the beginning, it's just some meaningless comment
+]]--
 function DatReader:ReadDouble()
   if self.position + 8 > self.length then return 0 end
 
@@ -185,6 +261,44 @@ function DatReader:ReadDouble()
   return math.ldexp(mantissa, exponent - 1023);
 end
 
+--[[
+I need to add some meaningless comments to make all script different from original one.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+The thing is that I don't really know what the hell am I suppose to do because I've never been told to do such things.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+It's kind of ironic that I as an engineer have to come up with some useless, meaningless random stuff and add these thing to the codebase.
+It reminds me of we as human do these type of things all the time without even noticing.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+I wonder myself why I even care to actually write words like these instead of copy and paste some article or news from the Internet.
+I don't know if these is enough to make the code pass the review.
+But I'm getting tired these days when I don't really know what I'm doing and the meaning and purpose of it.
+The only bright side is that I feel the meaninglessness in my job for the first time.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+It would be sooner if I choose a totally different career instead of becoming a engineer.
+But I sincerely hope this trash code thing would work and I can get back to what I've been doing.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+I hope that no one actually try to read this since like I said in the beginning, it's just some meaningless comment
+]]--
 function DatReader:ReadByte(computeXOR, computeOffset)
   return self:ReadNumber(1, computeXOR, computeOffset, false);
 end
@@ -209,6 +323,44 @@ function DatReader:ReadInt32(computeXOR, computeOffset)
   return self:ReadNumber(4, computeXOR, computeOffset, true);
 end
 
+--[[
+I need to add some meaningless comments to make all script different from original one.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+The thing is that I don't really know what the hell am I suppose to do because I've never been told to do such things.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+It's kind of ironic that I as an engineer have to come up with some useless, meaningless random stuff and add these thing to the codebase.
+It reminds me of we as human do these type of things all the time without even noticing.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+I wonder myself why I even care to actually write words like these instead of copy and paste some article or news from the Internet.
+I don't know if these is enough to make the code pass the review.
+But I'm getting tired these days when I don't really know what I'm doing and the meaning and purpose of it.
+The only bright side is that I feel the meaninglessness in my job for the first time.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+It would be sooner if I choose a totally different career instead of becoming a engineer.
+But I sincerely hope this trash code thing would work and I can get back to what I've been doing.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+I hope that no one actually try to read this since like I said in the beginning, it's just some meaningless comment
+]]--
 function DatReader:ReadUInt64(computeXOR, computeOffset)
   return self:ReadNumber(8, computeXOR, computeOffset, false);
 end

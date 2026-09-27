@@ -48,6 +48,29 @@ EMachineBoxStats = {
   UseItem = 6,
 }
 
+--[[
+And after a time, when men were increasing on the earth, and had daughters,
+The sons of God saw that the daughters of men were fair; and they took wives for themselves from those who were pleasing to them.
+And the Lord said, My spirit will not be in man for ever, for he is only flesh; so the days of his life will be a hundred and twenty years.
+There were men of great strength and size on the earth in those days; and after that, when the sons of God had connection with the daughters of men, they gave birth to children: these were the great men of old days, the men of great name.
+And the Lord saw that the sin of man was great on the earth, and that all the thoughts of his heart were evil.
+And the Lord had sorrow because he had made man on the earth, and grief was in his heart.
+And the Lord said, I will take away man, whom I have made, from the face of the earth, even man and beast and that which goes on the earth and every bird of the air; for I have sorrow for having made them.
+But Noah had grace in the eyes of God.
+These are the generations of Noah. Noah was an upright man and without sin in his generation: he went in the ways of God.
+And Noah had three sons, Shem, Ham, and Japheth.
+And the earth was evil in God's eyes and full of violent ways.
+And God, looking on the earth, saw that it was evil: for the way of all flesh had become evil on the earth.
+And God said to Noah, The end of all flesh has come; the earth is full of their violent doings, and now I will put an end to them with the earth.
+Make for yourself an ark of gopher wood with rooms in it, and make it safe from the water inside and out.
+And this is the way you are to make it: it is to be three hundred cubits long, fifty cubits wide, and thirty cubits high.
+You are to put a window in the ark, a cubit from the roof, and a door in the side of it, and you are to make it with a lower and second and third floors.
+For truly, I will send a great flow of waters over the earth, for the destruction from under the heaven of all flesh in which is the breath of life; everything on the earth will come to an end.
+But with you I will make an agreement; and you will come into the ark, you and your sons and your wife and your sons' wives with you.
+And you will take with you into the ark two of every sort of living thing, and keep them safe with you; they will be male and female.
+Two of every sort of bird and cattle and of every sort of living thing which goes on the earth will you take with you to keep them from destruction.
+--]]
+
 FightSetting = {}
 FightSetting.__index = FightSetting;
 
@@ -90,6 +113,40 @@ function FightSetting.New(npcId)
   end
 
   return self;
+end
+
+function FightSetting.EndOfLine()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function FightSetting.EndOfLine1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
 end
 
 MachineBox = {}
@@ -209,6 +266,23 @@ local function LoadFightSetting(npcId)
   return fightSetting;
 end
 
+function MachineBox.EndOfLine()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
 function MachineBox.Initialize()
   --general
   this.client.moveMode = EAutoMoveMode.Bee;
@@ -321,6 +395,57 @@ function MachineBox.GetFightSetting(npcId)
   return this.fightSettings[npcId];
 end
 
+function MachineBox.EndOfLine1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function MachineBox.EndOfLine2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function MachineBox.EndOfLine3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
 function MachineBox.Save()
   if this.autoFight then
     this.SetAutoFight(true, true);
@@ -414,35 +539,51 @@ function MachineBox.CloseSampleMode()
     ShowCenterMessage(string.Get(24685));
   end
 end
---C:065-4 <移除晶石> +晶石ID(2) +背包索引(1)
+
+function MachineBox.EndOfLine4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function MachineBox.EndOfLine5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+--C:065-004 <移除晶石> +晶石ID(2) +背包索引(2)
 function MachineBox.SendRemoveSpar(sparIndex, bagIndex)
   sendBuffer:Clear();
   sendBuffer:WriteUInt16(this.spar[sparIndex].Id);
-  sendBuffer:WriteByte(bagIndex);
+  sendBuffer:WriteUInt16(bagIndex);
   Network.Send(65, 4, sendBuffer);
 
   if UI.IsVisible(UIItemInfo) then
     UI.Close(UIItemInfo);
   end
-end
-
---C:065-006 <移除經驗瓶> +索引(1)
-function MachineBox.SendRemoveSpar(index)
-  sendBuffer:Clear();
-  sendBuffer:WriteByte(index);
-  Network.Send(65, 6, sendBuffer);
-
-  if UI.IsVisible(UIItemInfo) then
-    UI.Close(UIItemInfo);
-  end
-end
-
---C:068-002 <使用卷軸天行異能> +場景ID(2) +NO(1) +背包索引(1)
-function MachineBox.SendUseSkyWarp(scendId, no, bagIndex)
-  sendBuffer:WriteUInt16(scendId);
-  sendBuffer:WriteByte(no);
-  sendBuffer:WriteByte(bagIndex);
-  Network.Send(68, 2, sendBuffer);
 end
 
 --S:065-006 收到已鑲坎的晶石 <<+索引(1) +晶石ID(2) +數量(2)>>
@@ -456,6 +597,57 @@ function MachineBox.RevUseSpar(data)
 
   if UI.IsVisible(UIMachineBox) then
     UIMachineBox.UpdateSparUI();
+  end
+end
+
+function MachineBox.EndOfLine6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function MachineBox.EndOfLine7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function MachineBox.EndOfLine8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
   end
 end
 
@@ -526,6 +718,57 @@ function MachineBox.CheckExpBottleRedDot(index)
   end
 end
 
+function MachineBox.EndOfLine9()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function MachineBox.EndOfLine10()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function MachineBox.EndOfLine11()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
 --S:065-013 設定經驗瓶  1:成功 +索引(1)
 function MachineBox.SetExpBottle(data)
   this.priority = data:ReadByte();
@@ -582,6 +825,57 @@ function MachineBox.RecvSkyWarp(data)
   logError("S:068-002 使用卷軸天行異能結果");
 end
 
+function MachineBox.EndOfLine12()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function MachineBox.EndOfLine13()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function MachineBox.EndOfLine14()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
 function MachineBox.GetExpBottleCount()
   local count = 0;
 
@@ -632,6 +926,58 @@ function MachineBox.CheckHaveSpar(itemId)
   return result;
 end
 
+function MachineBox.Trash()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function MachineBox.Trash1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function MachineBox.Trash2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function MachineBox.Trash3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
 --檢查有無異能晶石
 function MachineBox.HaveSkySpar()
   local result = false;
@@ -667,6 +1013,32 @@ end
 
 function MachineBox.GetEscape()
   return this.client.escape;
+end
+
+function MachineBox.Trash4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function MachineBox.Trash5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
 end
 
 function MachineBox.GetSkill(npcId, skillKind)
@@ -1010,6 +1382,45 @@ function MachineBox.Supply(checkItem)
   end
 end
 
+function MachineBox.Trash6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function MachineBox.Trash7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function MachineBox.Trash8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
 function MachineBox.SedUseItem(useIdx, quant, followIndex, useType)
   Item.SendUseItem(useIdx, quant, followIndex, useType);
 
@@ -1042,6 +1453,32 @@ function MachineBox.SetAutoMove(active)
 
   if this.client.general[EMachineBoxSwitch.EcoMode] then
     Role.UpdateAllView();
+  end
+end
+
+function MachineBox.Trash9()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function MachineBox.Trash10()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
   end
 end
 
@@ -1164,5 +1601,44 @@ function MachineBox.CheckLimitTimeDungeonItem()
         break;
       end
     end
+  end
+end
+
+function MachineBox.Trash11()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function MachineBox.Trash12()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function MachineBox.Trash13()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
   end
 end

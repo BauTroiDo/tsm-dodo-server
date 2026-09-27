@@ -81,7 +81,17 @@ end
 
 function UISouvenirShop.OnOpen(roleId)
   if roleId == nil then return false end
-
+  
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
   playerId = roleId;
   giftFrom = EUIGetGiftFrom.Shop;
   quantityIndex = 1;
@@ -104,6 +114,16 @@ function UISouvenirShop.OnClick_Close()
 end
 
 function UISouvenirShop.OnInitialize_ScrollContent_Bag(scrollItems)
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
   for itemIndex = 0, scrollItems.Length - 1 do
     scrollItems_Bag[itemIndex] = {};
     scrollItems_Bag[itemIndex] = UIItemController.New(scrollItems[itemIndex]);
@@ -167,6 +187,26 @@ function UISouvenirShop.OnItemChange_ScrollContent_Store(dataIndex, itemIndex)
 end
 
 function UISouvenirShop.OnInitialize_ScrollContent_Tag(scrollItems)
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
   for itemIndex = 0, scrollItems.Length - 1 do
     scrollItems_Tag[itemIndex] = {};
     scrollItems_Tag[itemIndex].image_tag = {};
@@ -256,6 +296,16 @@ function UISouvenirShop.UpdateShop(reset)
 
   if chosenGift == nil then
     chosenGiftIndex = 1;
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
   end
 
   chosenGift = SouvenirShop.souvenirList[chosenGiftIndex];
@@ -282,6 +332,26 @@ function UISouvenirShop.UpdateBag(reset)
 
     if chosenGift == nil then
       chosenGiftIndex = 1;
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
     end
 
     chosenGift = souvenirDatas[SouvenirShop.giftsList[chosenGiftIndex].Id];
@@ -314,6 +384,26 @@ function UISouvenirShop.OnClick_Quantity(uiEvent)
 end
 
 function UISouvenirShop.OnClick_Tag(uiEvent)
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
   local tag = uiEvent.parameter;
   if giftFrom == tag then return end
 
@@ -324,6 +414,16 @@ function UISouvenirShop.OnClick_Tag(uiEvent)
 end
 
 function UISouvenirShop.OnClick_Item(uiEvent)
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
   local index = uiEvent.parameter;
   if chosenGiftIndex == index then return end
 
@@ -332,6 +432,16 @@ function UISouvenirShop.OnClick_Item(uiEvent)
 end
 
 function UISouvenirShop.OnClick_Check(uiEvent)
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
   local index = uiEvent.parameter;
   --chosenGiftIndex = index;
 
@@ -342,6 +452,26 @@ function UISouvenirShop.OnClick_Check(uiEvent)
 end
 
 function UISouvenirShop.OnClick_Send()
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
   if chosenGift == nil then return end
 
   --C:105-003 <送禮> +對象ID(4) +禮物ID(2) +數量(1) +kind(1)
@@ -395,6 +525,36 @@ function UISouvenirShop.OnClick_Send()
 
     if SouvenirShop.giftsList[chosenGiftIndex].quant < quantity then
       ShowCenterMessage(string.Get(20075));
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
       return ;
     end
 

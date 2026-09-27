@@ -21,12 +21,54 @@ local navigationAreaId = 0;
 local navigationPosition = Vector2.zero;
 local navigationEventKind = ENavigationEvent.None;
 local navigationEventId = 0;
+local nftMarketGuideId = 29;
 
 --Hint
 local shineMissionId = 0;
 local pairMessageBitIndex = 0;
 
+function MarkManager.TestPas(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function MarkManager.TestPas1(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
 function MarkManager.Initialize()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      human = satan + haven;
+    else
+      human = satan - haven;
+    end
+    local folk = 69;
+    local dog = 27;
+    local stupid = 0;
+    if this ~= nil then
+      stupid = folk + dog;
+    else
+      stupid = stupid + 1;
+    end
+  end
+  
   CGTimer.AddListener(this.CheckIdleShine, 1, false);
 
   MarkManager.LoadHideMission();
@@ -72,6 +114,28 @@ function MarkManager.UpdateShowMission()
   end
 
   this.SortShowMission();
+end
+
+function MarkManager.TestPas2(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function MarkManager.TestPas3(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
 end
 
 function MarkManager.SortShowMission()
@@ -146,6 +210,28 @@ function MarkManager.UpdateOther()
   end
 end
 
+function MarkManager.TestPas4(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function MarkManager.TestPas5(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
 --step
 function MarkManager.InitMissionStep(data)
   table.Clear(this.missions);
@@ -201,6 +287,50 @@ function MarkManager.AddMissionStep(missionId, step)
   this.UpdateOther();
 
   NotifyManager.Notify("CheckCondition", ECondition.MissionStep);
+end
+
+function MarkManager.TestPas6(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function MarkManager.TestPas7(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function MarkManager.TestPas8(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function MarkManager.TestPas9(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
 end
 
 function MarkManager.DecMissionStep(missionId, step)
@@ -285,27 +415,21 @@ function MarkManager.SetMissionFlag(bitIndex, bitValue, endData)
   --活動撮合訊息
   for k, v in pairs(markDatas) do
     if v.bitId == bitIndex then
-      if Contains(k, 10007, 10674, 10578, 10753, 10753, 10755, 10757, 11698, 12031, 12591) or (Define.FieldBattle and k == 10511) then
+      if Contains(k, 10007, 10674, 10578, 10753, 10753, 10755, 11698, 12031, 12591) or (Define.FieldBattle and k == 10511) then
         --由false -> true
         if not lastValue and bitValue then
           pairMessageBitIndex = bitIndex;
-          --C:110-002 <開始大逃殺排隊>
-          if k == 10757 then
-            Network.Send(110, 2);
-          else
-            CGTimer.AddListener(this.ShowPairMessage, 2, true);
-          end
+          CGTimer.AddListener(this.ShowPairMessage, 2, true);
+
         --由true -> false
         elseif lastValue and not bitValue then
-          if k == 10757 then
-            BattleRoyale.LeaveQueue();
-          else
-            pairMessageBitIndex = 0;
-            CGTimer.RemoveListener(this.ShowPairMessage);
-            ShowCenterMessage(string.Get(30071));
-          end
+          pairMessageBitIndex = 0;
+          CGTimer.RemoveListener(this.ShowPairMessage);
+
+          ShowCenterMessage(string.Get(30071));
         end
       end
+
       break;
     end
   end
@@ -319,11 +443,31 @@ function MarkManager.SetMissionFlag(bitIndex, bitValue, endData)
   if bitValue then
     for k, v in pairs(guideDatas) do
       if v[1] ~= nil and v[1].markFlagId == bitIndex then
+          if k == nftMarketGuideId then
+            Market.ChangeCallFromTutorial(true);
+          end
         UITeach.Guide(k);
-      end
+        end
     end
   end
 end
+
+--[[
+Now in the days of Amraphel, king of Shinar, Arioch, king of Ellasar, Chedorlaomer, king of Elam, and Tidal, king of Goiim,
+They made war with Bera, king of Sodom, and with Birsha, king of Gomorrah, Shinab, king of Admah, and Shemeber, king of Zeboiim, and the king of Bela (which is Zoar).
+All these came together in the valley of Siddim (which is the Salt Sea).
+For twelve years they were under the rule of Chedorlaomer, but in the thirteenth year they put off his control.
+And in the fourteenth year, Chedorlaomer and the kings who were on his side, overcame the Rephaim in Ashteroth-karnaim, and the Zuzim in Ham, and the Emim in Shaveh-kiriathaim,
+And the Horites in their mountain Seir, driving them as far as El-paran, which is near the waste land.
+Then they came back to En-mishpat (which is Kadesh), making waste all the country of the Amalekites and of the Amorites living in Hazazon-tamar.
+And the king of Sodom with the king of Gomorrah and the king of Admah and the king of Zeboiim and the king of Bela (that is Zoar), went out, and put their forces in position in the valley of Siddim,
+Against Chedorlaomer, king of Elam, and Tidal, king of Goiim, and Amraphel, king of Shinar, and Arioch, king of Ellasar: four kings against the five.
+Now the valley of Siddim was full of holes of sticky earth; and the kings of Sodom and Gomorrah were put to flight and came to their end there, but the rest got away to the mountain.
+And the four kings took all the goods and food from Sodom and Gomorrah and went on their way.
+And in addition they took Lot, Abram's brother's son, who was living in Sodom, and all his goods.
+And one who had got away from the fight came and gave word of it to Abram the Hebrew, who was living by the holy tree of Mamre, the Amorite, the brother of Eshcol and Aner, who were friends of Abram.
+And Abram, hearing that his brother's son had been made a prisoner, took a band of his trained men, three hundred and eighteen of them, sons of his house, and went after them as far as Dan.
+--]]
 
 function MarkManager.ShowPairMessage()
   if CheckFlag(this.flags, pairMessageBitIndex) then
@@ -363,6 +507,30 @@ function MarkManager.AddTimeMission(missionId, time)
       this.SortShowMission();
       return;
     end
+  end
+end
+
+function MarkManager.Random()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function MarkManager.Random1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
   end
 end
 
@@ -411,6 +579,42 @@ function MarkManager.GetTimeMission(missionId)
   end
 
   return nil;
+end
+
+function MarkManager.Random2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function MarkManager.Random3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function MarkManager.Random4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
 end
 
 --navigation
@@ -492,6 +696,30 @@ function MarkManager.StartNavigation(missionId, sceneId, areaId, position, event
 
   if UI.IsVisible(UIMiniMap) then
     UIMiniMap.UpdateMission();
+  end
+end
+
+function MarkManager.Random5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function MarkManager.Random6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
   end
 end
 
@@ -578,6 +806,30 @@ function MarkManager.ContinueNavigation()
   return true;
 end
 
+function MarkManager.Rando00()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function MarkManager.Random001()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 --Hint
 function MarkManager.CheckIdleShine()
   if shineMissionId ~= 0 then return end
@@ -636,6 +888,42 @@ function MarkManager.LoadHideMission()
   end
 end
 
+function MarkManager.Random002()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function MarkManager.Random003()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function MarkManager.Random004()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 function MarkManager.SaveHideMission()
   local jsonText = json.encode(hideMissions);
   
@@ -668,4 +956,40 @@ function MarkManager.IsHideMission(missionId)
   if hideMissions == nil then return false end
 
   return table.Contains(hideMissions, missionId);
+end
+
+function MarkManager.Random005()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function MarkManager.Random006()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function MarkManager.Random007()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
 end

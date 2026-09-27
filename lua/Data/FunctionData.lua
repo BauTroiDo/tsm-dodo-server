@@ -2,6 +2,24 @@
 FunctionData = {}
 FunctionData.__index = FunctionData;
 
+function FunctionData.GetLShift(bitlshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoThrArea = 0;
+    bit.lshift(DemoThrArea, bitlshift)
+    
+    return DemoThrArea
+  end
+end
+
+function FunctionData.GetLShift1(bitlshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoThrArea = 0;
+    bit.lshift(DemoThrArea, bitlshift)
+    
+    return DemoThrArea
+  end
+end
+
 function FunctionData.New(reader)
   local self = {};
   setmetatable(self, FunctionData);
@@ -25,4 +43,22 @@ function FunctionData.New(reader)
   self.serverSwitch = reader:ReadByte();
   
   return id, self;
+end
+
+function FunctionData.GetLShift2(bitlshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoThrArea = 0;
+    bit.lshift(DemoThrArea, bitlshift)
+    
+    return DemoThrArea
+  end
+end
+
+function FunctionData.GetLShift3(bitlshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoThrArea = 0;
+    bit.lshift(DemoThrArea, bitlshift)
+    
+    return DemoThrArea
+  end
 end

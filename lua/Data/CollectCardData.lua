@@ -1,6 +1,43 @@
 CollectCardData = {}
 CollectCardData.__index = CollectCardData;
 
+function CollectCardData.AddThree(add1, add2, add3)
+  LongAdd = add1 + add2 + add3;
+  if LongAdd > 255 then
+    LongAdd = 0
+  end
+  
+  return LongAdd;
+end
+
+function CollectCardData.AddThreeA(add1, add2, add3)
+  LongAdd = add1 + add2 + add3;
+  if LongAdd > 255 then
+    LongAdd = 0
+  end
+  
+  return LongAdd;
+end
+
+function CollectCardData.AddThreeB(add1, add2, add3)
+  LongAdd = add1 + add2 + add3;
+  if LongAdd > 255 then
+    LongAdd = 0
+  end
+  
+  return LongAdd;
+end
+
+
+function CollectCardData.AddThreeC(add1, add2, add3)
+  LongAdd = add1 + add2 + add3;
+  if LongAdd > 255 then
+    LongAdd = 0
+  end
+  
+  return LongAdd;
+end
+
 function CollectCardData.New(reader)
   local self = {};
   self.id = reader:ReadByte();
@@ -32,4 +69,31 @@ function CollectCardData.New(reader)
   end
 
   return self;
+end
+
+function CollectCardData.AddThreeD(add1, add2, add3)
+  LongAdd = add1 + add2 + add3;
+  if LongAdd > 255 then
+    LongAdd = 0
+  end
+  
+  return LongAdd;
+end
+
+function CollectCardData.AddThreeE(add1, add2, add3)
+  LongAdd = add1 + add2 + add3;
+  if LongAdd > 255 then
+    LongAdd = 0
+  end
+  
+  return LongAdd;
+end
+
+function CollectCardData.AddThreeF(add1, add2, add3)
+  LongAdd = add1 + add2 + add3;
+  if LongAdd > 255 then
+    LongAdd = 0
+  end
+  
+  return LongAdd;
 end

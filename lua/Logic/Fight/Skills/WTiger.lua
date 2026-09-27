@@ -22,6 +22,32 @@ function WTiger1:Update()
     FightField.attack[self.humIdx]:SetLightWithOrder(6, EEffectLightDis.Ground, 10892, 100, 1, 10, 10, EEffectLightTracer.StandAni, me.nowPos.x + 10, me.nowPos.y, 15, true, 60);
     FightField.attack[self.humIdx]:SetLightWithOrder(7, EEffectLightDis.Sky, 10893, 150, 1, 9, 9, EEffectLightTracer.StandAni, me.nowPos.x + 10, me.nowPos.y, 15, true, 80);
     self.step = 2;
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif self.step == 2 then
     if target.party_Kind == EFightParty.Right then
       local posX = FightField.chip[0][2].x;
@@ -35,6 +61,32 @@ function WTiger1:Update()
     FightField.attack[self.humIdx].lights[1]:SetAlpha(1, 1, 25);
     self.interval = 0.07;
     self.step = 3;
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif self.step == 3 then
     if self:CheckInterval() then 
       if math.fmod(FightField.attack[self.humIdx].lights[1].alpha, 7) ==  0 then
@@ -85,6 +137,32 @@ function WTiger1:Update()
       me:PlaySound(target.colm, target.row, Attack_Start, 1);
       self.bombCount = 0;
       self.step = 6;
+      --1--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        local code = DemoCode.GetBitxor(20);
+        code = code * 10;
+      end
+      ---2--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        --local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     end
   elseif self.step == 6 then
     if FightField.attack[self.humIdx].lights[1].isArrive then
@@ -161,6 +239,32 @@ function WTiger1:Update()
     if self.bombCount >= self.maxBombCount then
       self.interval = 1;
       self.step = 7;
+      --1--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        local code = DemoCode.GetBitxor(20);
+        code = code * 10;
+      end
+      ---2--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        --local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
       local newPos;
       for i = 0, self.emyNum - 1 do 
         target = FightField.fightHum[self.emyIdxAy[i]];
@@ -174,6 +278,32 @@ function WTiger1:Update()
       if self:CheckInterval() then 
         self.isLightEnd =true;
         self.step = 8;
+        --1--------------------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          local code = DemoCode.GetBitxor(20);
+          code = code * 10;
+        end
+        ---2--------------------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          DemoCode.SetColorNum(10);
+          local area =  DemoCode.CalTriangleArea(10, 10);
+          local currentOptions = area;
+          --local currentOption = string.Get(80098);
+        end
+        --4-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          for i = 1, 3 do
+            DemoCode.SetColorNum(i);
+          end
+          local area =  DemoCode.CalTriangleArea(1, 1);
+          local currentOptio = area;
+          local currentOption = string.Get(10055);
+        end
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
       end
     end
   end
@@ -203,6 +333,32 @@ function WTiger2:Update()
     FightField.attack[self.humIdx]:SetLightWithOrder(6, EEffectLightDis.Ground, 10892, 100, 1, 10, 10, EEffectLightTracer.StandAni, me.nowPos.x + 10, me.nowPos.y, 15, true, 60);
     FightField.attack[self.humIdx]:SetLightWithOrder(7, EEffectLightDis.Sky, 10893, 150, 1, 9, 9, EEffectLightTracer.StandAni, me.nowPos.x + 10, me.nowPos.y, 15, true, 80);
     self.step = 2;
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif self.step == 2 then
     me:PlaySound(target.colm, target.row, Attack_Start, 1);
     local newPos = me:RCtoSpot(me.colm, me.row);
@@ -214,6 +370,32 @@ function WTiger2:Update()
     FightField.attack[self.humIdx].lights[1]:SetAlpha(1, 1, 25);
     self.interval = 0.07;
     self.step = 3;
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif self.step == 3 then
     if self:CheckInterval() then 
       if math.fmod(FightField.attack[self.humIdx].lights[1].alpha, 7) ==  0 then
@@ -239,6 +421,32 @@ function WTiger2:Update()
     end
     self.interval = 1;
     self.step = 5;
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif self.step == 5 then
     if self:CheckInterval() then 
       me:PlaySound(target.colm, target.row, Attack_Start, 2);
@@ -329,6 +537,32 @@ function WTiger2:Update()
 
     if self.bombCount >= self.maxBombCount then
       self.step = 7;
+      --1--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        local code = DemoCode.GetBitxor(20);
+        code = code * 10;
+      end
+      ---2--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        --local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
       local newPos;
       self.interval = 1;
       for i = 0, self.emyNum - 1 do 
@@ -343,6 +577,32 @@ function WTiger2:Update()
       if self:CheckInterval() then 
         self.isLightEnd =true;
         self.step = 8;
+        --1--------------------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          local code = DemoCode.GetBitxor(20);
+          code = code * 10;
+        end
+        ---2--------------------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          DemoCode.SetColorNum(10);
+          local area =  DemoCode.CalTriangleArea(10, 10);
+          local currentOptions = area;
+          --local currentOption = string.Get(80098);
+        end
+        --4-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          for i = 1, 3 do
+            DemoCode.SetColorNum(i);
+          end
+          local area =  DemoCode.CalTriangleArea(1, 1);
+          local currentOptio = area;
+          local currentOption = string.Get(10055);
+        end
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
       end
     end
   end
@@ -372,6 +632,32 @@ function WTiger3:Update()
     FightField.attack[self.humIdx]:SetLightWithOrder(6, EEffectLightDis.Ground, 10892, 100, 1, 10, 10, EEffectLightTracer.StandAni, me.nowPos.x + 10, me.nowPos.y, 15, true, 60);
     FightField.attack[self.humIdx]:SetLightWithOrder(7, EEffectLightDis.Sky, 10893, 150, 1, 9, 9, EEffectLightTracer.StandAni, me.nowPos.x + 10, me.nowPos.y, 15, true, 80);
     self.step = 2;
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif self.step == 2 then
     me:PlaySound(target.colm, target.row, Attack_Start, 1);
     local newPos = me:RCtoSpot(me.colm, me.row);
@@ -408,6 +694,32 @@ function WTiger3:Update()
     end
     self.interval = 1;
     self.step = 5;
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif self.step == 5 then
     if self:CheckInterval() then 
       me:PlaySound(target.colm, target.row, Attack_Start, 2);
@@ -468,6 +780,32 @@ function WTiger3:Update()
     if self.bombCount >= self.maxBombCount then
       self.interval = 1;
       self.step = 7;
+      --1--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        local code = DemoCode.GetBitxor(20);
+        code = code * 10;
+      end
+      ---2--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        --local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
       local newPos;
       for i = 0, self.emyNum - 1 do 
         target = FightField.fightHum[self.emyIdxAy[i]];

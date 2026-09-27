@@ -6,16 +6,63 @@ local isIAPInit = false;
 local isResend = false;
 local orderData = nil;
 
+function IAP.TestPas(pat)
+  if LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
+    end
+  end
+end
 
 function IAP.Init()
   if isIAPInit then return end
 
   if not LuaHelper.IsStandalone then
-    LuaHelper.InitIAP( this.PurchaseSucess, this.PurchaseFail, this.QueryPurchase, IAPData.GetProductName(), IAPData.GetPublicKey() );
-    LuaHelper.QueryReceipt();
+    if LuaHelper.CheckDefine("ThirdParty") then
+      if LuaHelper.CheckDefine("NFT") then
+        MyCard.Init();
+        AliPay.Init();
+      elseif LuaHelper.CheckDefine("TW") then
+        MyCard.Init();
+      end
+    else
+      LuaHelper.InitIAP( this.PurchaseSucess, this.PurchaseFail, this.QueryPurchase, IAPData.GetProductName(), IAPData.GetPublicKey() );
+      LuaHelper.QueryReceipt();
+    end
   end
 
   isIAPInit = true;
+end
+
+function IAP.TestPas1(pat)
+  if LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
+    end
+  end
+end
+
+function IAP.TestPas2(pat)
+  if LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
+    end
+  end
 end
 
 function IAP.LoginCheckOrder()
@@ -28,6 +75,32 @@ function IAP.PurchaseProduct(index)
   this.LoginCheckOrder();
 
   LuaHelper.BuyPoint(index);
+end
+
+function IAP.TestPas3(pat)
+  if LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
+    end
+  end
+end
+
+function IAP.TestPas4(pat)
+  if LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
+    end
+  end
 end
 
 function IAP.PurchaseSucess(...)
@@ -49,6 +122,45 @@ end
 function IAP.SendIAP()
   PluginManager.StoreIAP( orderData.orderId, orderData.productId );
   this.SendDataToServer();
+end
+
+function IAP.TestPas5(pat)
+  if LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
+    end
+  end
+end
+
+function IAP.TestPas6(pat)
+  if LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
+    end
+  end
+end
+
+function IAP.TestPas7(pat)
+  if LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
+    end
+  end
 end
 
 function IAP.TransferOrderData(arg)
@@ -83,6 +195,32 @@ function IAP.AddReSendData()
   isResend = true;
 
   CGTimer.AddListener(this.ReSendServerData, 10, true);
+end
+
+function IAP.TestPas8(pat)
+  if LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
+    end
+  end
+end
+
+function IAP.TestPas9(pat)
+  if LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
+    end
+  end
 end
 
 function IAP.ReSendServerData()
@@ -136,6 +274,19 @@ function IAP.SendDataToServer()
   Network.Send(35, 12, sendBuffer);
 end
 
+function IAP.TestPas10(pat)
+  if LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
+    end
+  end
+end
+
 function IAP.ReciveReciptResult(result, orderId)
   if result == 0 then
     --購買成功
@@ -162,4 +313,30 @@ function IAP.ReciveReciptResult(result, orderId)
     UIMall.UpdateRecipt();
   end
   --]]
+end
+
+function IAP.TestPas11(pat)
+  if LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
+    end
+  end
+end
+
+function IAP.TestPas12(pat)
+  if LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
+    end
+  end
 end

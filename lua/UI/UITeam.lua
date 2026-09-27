@@ -47,6 +47,12 @@ local exchangeFollowIndex = 0;
 local exchangeCartIndex = 0;
 
 function UITeam.Initialize(go)
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
   local uiController = go:GetComponent("UIController");
   this.uiController = uiController;
   this.uiController.onOpen = this.OnOpen;
@@ -134,6 +140,12 @@ function UITeam.Initialize(go)
 end
 
 function UITeam.OnOpen(tag)
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
   if tag ~= nil then
     currentTag = tag;
   else
@@ -144,6 +156,24 @@ function UITeam.OnOpen(tag)
 end
 
 function UITeam.OnClose()
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
   if UI.IsVisible(UIAlert) then
     UI.Close(UIAlert);
   end
@@ -188,6 +218,15 @@ function UITeam.UpdateUI(refresh)
 end
 
 function UITeam.UpdatePlayer()
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
   if not Contains(currentTag, EUITeamTag.Team, EUITeamTag.Cart, EUITeamTag.FightTeam) then return end
 
   if currentTag == EUITeamTag.Cart then
@@ -287,6 +326,16 @@ function UITeam.UpdateTeam()
   if currentTag == EUITeamTag.Cart then
     text_TeamTitle.text = string.Get(22491);
     image_PlayerState.gameObject:SetActive(false);
+  
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local area =  DemoCode.CalTriangleArea(100, 100)
+      area = area * 1 + 2;
+      if area > DemoCode.GetBitxor(20) then  --test avg
+        local avg = DemoCode.CalAvg(10, 20, 30);
+      end
+    end
+    --3----------------------------------------------------
 
     for i = 1, 4 do
       local followNpc = nil;
@@ -353,6 +402,16 @@ function UITeam.UpdateTeam()
     else
       image_PlayerState.gameObject:SetActive(false);
     end
+  
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local area =  DemoCode.CalTriangleArea(100, 100)
+      area = area * 1 + 2;
+      if area > DemoCode.GetBitxor(20) then  --test avg
+        local avg = DemoCode.CalAvg(10, 20, 30);
+      end
+    end
+    --3----------------------------------------------------
 
     local members = Team.GetMember(Role.playerId);
     local isLeader = Team.IsLeader(Role.playerId);
@@ -451,6 +510,15 @@ function UITeam.UpdateList(refresh)
 
   table.Clear(datas);
   if currentTag == EUITeamTag.FindTeam then
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local area =  DemoCode.CalTriangleArea(100, 100)
+      area = area * 1 + 2;
+      if area > DemoCode.GetBitxor(20) then  --test avg
+        local avg = DemoCode.CalAvg(10, 20, 30);
+      end
+    end
+    --3----------------------------------------------------
     for k, v in pairs(Role.players) do
       if v ~= Role.player then
         if Team.IsLeader(k) then
@@ -468,6 +536,15 @@ function UITeam.UpdateList(refresh)
     end
 
   elseif currentTag == EUITeamTag.FindPlayer then
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local area =  DemoCode.CalTriangleArea(100, 100)
+      area = area * 1 + 2;
+      if area > DemoCode.GetBitxor(20) then  --test avg
+        local avg = DemoCode.CalAvg(10, 20, 30);
+      end
+    end
+    --3----------------------------------------------------
     for k, v in pairs(Role.players) do
       if v ~= Role.player then
         if Team.IsAlone(k) then
@@ -493,10 +570,28 @@ function UITeam.UpdateList(refresh)
 end
 
 function UITeam.IsCurrentTag(tag)
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
   return currentTag == tag;
 end
 
 function UITeam.OnClick_Close()
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
   UI.Close(UITeam);
 
   return true;
@@ -519,6 +614,15 @@ function UITeam.OnClick_Tag(tag)
 end
 
 function UITeam.OnClick_FollowNpcEdit(uiEvent)
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
   if Role.player.war ~= EWar.None then
     ShowCenterMessage(string.Get(80099));
     return;
@@ -564,6 +668,15 @@ function UITeam.OnClick_FollowNpcState(uiEvent)
     ShowCenterMessage(string.Get(71312));
     return;
   end
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
 
   if Role.player.war ~= EWar.None and not FightField.IsCanControl() then
     return;
@@ -582,6 +695,15 @@ function UITeam.OnClick_FollowNpcState(uiEvent)
     sendBuffer:Clear()
     sendBuffer:WriteUInt16(uiEvent.parameter.npcId);
     Network.Send(19, 1, sendBuffer);
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local area =  DemoCode.CalTriangleArea(100, 100)
+      area = area * 1 + 2;
+      if area > DemoCode.GetBitxor(20) then  --test avg
+        local avg = DemoCode.CalAvg(10, 20, 30);
+      end
+    end
+    --3----------------------------------------------------
   end
 end
 
@@ -603,6 +725,16 @@ function UITeam.OnClick_FollowNpcKick(uiEvent)
     ShowCenterMessage(string.Get(50074));
     return;
   end
+  
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
 
   if followNpc.npcId == Role.rebornNpcId then
     if Role.rebornKind == 1 then
@@ -611,11 +743,6 @@ function UITeam.OnClick_FollowNpcKick(uiEvent)
       ShowCenterMessage(string.Get(71291));
     end
     
-    return;
-  end
-
-  if UniqueBlood.HasEquip(followNpc.npcId) then
-    ShowCenterMessage(string.Get(24082));
     return;
   end
 
@@ -649,6 +776,20 @@ function UITeam.OnClick_FollowNpcKick(uiEvent)
     end
     
   else
+    if Soul.GetEquippedSoul(followNpc.npcId) ~= nil then
+      ShowCenterMessage(string.Get(23794));
+      return;
+    end
+  
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local area =  DemoCode.CalTriangleArea(100, 100)
+      area = area * 1 + 2;
+      if area > DemoCode.GetBitxor(20) then  --test avg
+        local avg = DemoCode.CalAvg(10, 20, 30);
+      end
+    end
+    --3----------------------------------------------------
     ShowCheckMessage(
       function(result)
         if result then
@@ -656,7 +797,7 @@ function UITeam.OnClick_FollowNpcKick(uiEvent)
             ShowCenterMessage(string.Get(40277));
             return;
           end
-
+  
           local haveEquip = false;
           for i = EItemFitType.Equip_Head, EItemFitType.Equip_Spec do
             if Item.GetBagItem(EThings.Equip, i, followNpc.index) ~= nil then
@@ -699,6 +840,15 @@ function UITeam.OnClick_FollowNpcKick(uiEvent)
 end
 
 function UITeam.OnClick_TeamUp(uiEvent)
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
   if Role.player.war ~= EWar.None then
     ShowCenterMessage(string.Get(80099));
     return;
@@ -721,6 +871,15 @@ function UITeam.OnClick_TeamUp(uiEvent)
 end
 
 function UITeam.OnClick_TeamDown(uiEvent)
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
   if Role.player.war ~= EWar.None then
     ShowCenterMessage(string.Get(80099));
     return;
@@ -729,13 +888,6 @@ function UITeam.OnClick_TeamDown(uiEvent)
   if currentTag == EUITeamTag.Cart then
     if exchangeFollowIndex ~= 0 then
       exchangeCartIndex = uiEvent.parameter;
-
-      local followNpc = Role.GetRole(EHuman.FollowNpc, Role.playerId, exchangeFollowIndex);
-
-      if UniqueBlood.HasEquip(followNpc.npcId) then
-        ShowCenterMessage(string.Get(24082));
-        return;
-      end
 
       --C:015-012 <交換武將> +跟隨索引(1) +馬車索引(1)
       sendBuffer:Clear();
@@ -781,6 +933,15 @@ function UITeam.OnClick_TeamDown(uiEvent)
 end
 
 function UITeam.OnClick_LeaveTeam(uiEvent)
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
   if Role.player.war ~= EWar.None then
     ShowCenterMessage(string.Get(80099));
     return;
@@ -796,6 +957,15 @@ function UITeam.OnClick_List(uiEvent)
 end
 
 function UITeam.OnInitialize_ScrollContent_List(scrollItems)
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
   for itemIndex = 0, scrollItems.Length - 1 do
     scrollItems_List[itemIndex] = {};
 

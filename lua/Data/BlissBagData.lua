@@ -6,6 +6,17 @@ EBlissBagKind = {
 BlissBagData = {}
 BlissBagData.__index = BlissBagData;
 
+function BlissBagData.Trash()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
 function BlissBagData.New(reader)
   local self = {};
   setmetatable(self, BlissBagData);
@@ -20,9 +31,43 @@ function BlissBagData.New(reader)
   return id, self;
 end
 
+function BlissBagData.TrashA()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
 function BlissBagData.IsBlissBag(itemId)
   return blissBagDatas[itemId] ~= nil;
 end
+
+function BlissBagData.TrashB()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function BlissBagData.TrashC()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
 
 function BlissBagData.GetAllBlissBagItem(itemId)
   local itemData = itemDatas[itemId];
@@ -56,6 +101,39 @@ function LuckyBagData.New(reader)
   return id, self;
 end
 
+function LuckyBagData.Trash()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function LuckyBagData.Trasha()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function LuckyBagData.Trashb()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
 function LuckyBagData:GetName()
   return string.Get(self.name);
 end
@@ -74,4 +152,37 @@ function LuckyBagData:GetCount()
   end
 
   return itemCount, blockCount;
+end
+
+function LuckyBagData.Trash1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function LuckyBagData.Trash2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function LuckyBagData.Trash3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
 end

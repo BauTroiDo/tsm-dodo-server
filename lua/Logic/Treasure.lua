@@ -109,6 +109,31 @@ function Treasure.Initialize()
   end
 end
 
+function Treasure.SortItems()
+  table.sort(this.treasureItems,
+    function(a, b)
+      if a.level == b.level then
+        if a.quality == b.quality then
+          return a.id > b.id
+        else
+          return a.quality > b.quality
+        end
+      else
+        return a.level > b.level
+      end
+    end
+  );
+end
+
+function Treasure.GetKeyById(id)
+  for k, v in pairs(this.treasureItems) do
+    if id == v.id then
+      return k;
+    end
+  end
+
+  return 0;
+end
 
 function Treasure.GetCardCount(data, lv)
   local count = data.count;
@@ -184,6 +209,7 @@ function Treasure.GetCombinationLv(combIndex)
   if this.treasureCombination[combIndex] == nil then return end
 
   for _, v in pairs(this.treasureCombination[combIndex].treasureId) do
+    v = this.GetKeyById(v);
     if this.treasureItems[v].level < lv then
       lv = this.treasureItems[v].level;
     end

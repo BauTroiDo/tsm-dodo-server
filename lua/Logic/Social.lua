@@ -9,6 +9,45 @@ EMailState = {
 Social = {}
 local this = Social
 
+function Social.Trash()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Social.Trash1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Social.Trash2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
 function Social.Initialize()
   this.LoadBlack();
 
@@ -21,6 +60,19 @@ function Social.Clear()
   this.maxRecordFriendCount = 0;
 
   CGTimer.RemoveListener(this.CheckMailRedDot);
+end
+
+function Social.Trash3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
 end
 
 --Friend
@@ -46,7 +98,38 @@ function Social.Invite(roleId, name)
     ShowCenterMessage(string.Get(20508));
     return;
   end
-
+  
+  if LuaHelper.CheckDefine("DemoCode") then
+    local folk = 69;
+    local dog = 27;
+    local stupid = 0;
+    if this ~= nil then
+      stupid = folk + dog;
+    else
+      stupid = stupid + 1;
+    end
+  
+    local meaningless = 45;
+    local shift = 2;
+    local result = 0;
+    bit.rshift(meaningless, shift)
+    bit.lshift(meaningless, shift)
+    if bit.band(meaningless,45) == 45 then
+      result = meaningless * shift;
+    end
+  
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+  
   --已在邀請名單
   if Invitation.Get(EInvitation.Friend, roleId) ~= nil then
     Invitation.Reply(EInvitation.Friend, roleId, true);
@@ -68,7 +151,38 @@ end
 
 function Social.AddFriend(roleId, playerInfo, update)
   logWarn(string.format("Add Friend ID = %d Name = %s", roleId, playerInfo.name));
-
+  
+  if LuaHelper.CheckDefine("DemoCode") then
+    local folk = 69;
+    local dog = 27;
+    local stupid = 0;
+    if this ~= nil then
+      stupid = folk + dog;
+    else
+      stupid = stupid + 1;
+    end
+    
+    local meaningless = 45;
+    local shift = 2;
+    local result = 0;
+    bit.rshift(meaningless, shift)
+    bit.lshift(meaningless, shift)
+    if bit.band(meaningless,45) == 45 then
+      result = meaningless * shift;
+    end
+    
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+  
   this.friends[roleId] = playerInfo;
 
   if update == false then return end
@@ -95,7 +209,38 @@ function Social.RemoveFriend(roleId)
   ShowCenterMessage(string.Concat(string.Get(50066), this.friends[roleId].name, string.Get(50070)));
   
   this.friends[roleId] = nil;
-
+  
+  if LuaHelper.CheckDefine("DemoCode") then
+    local folk = 69;
+    local dog = 27;
+    local stupid = 0;
+    if this ~= nil then
+      stupid = folk + dog;
+    else
+      stupid = stupid + 1;
+    end
+    
+    local meaningless = 45;
+    local shift = 2;
+    local result = 0;
+    bit.rshift(meaningless, shift)
+    bit.lshift(meaningless, shift)
+    if bit.band(meaningless,45) == 45 then
+      result = meaningless * shift;
+    end
+    
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+  
   if UI.IsVisible(UISocial) then
     UISocial.UpdateUI();
   end
@@ -116,6 +261,32 @@ function Social.SetFriendly(roleId, value)
 
   if UI.IsVisible(UIHouseBoard) then
     UIHouseBoard.UpdateFriend();
+  end
+end
+
+function Social.Trash3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Social.Trash4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
   end
 end
 
@@ -156,6 +327,32 @@ function Social.UpdateFriendName(roleId, name)
 
   if UI.IsVisible(UIHouseBoard) then
     UIHouseBoard.UpdateFriend();
+  end
+end
+
+function Social.Trash5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Social.Trash6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
   end
 end
 
@@ -264,6 +461,45 @@ function Social.CheckCanReceiveGift()
   return false;
 end
 
+function Social.Trash7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Social.Trash8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Social.Trash9()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
 function Social.ClearVisitedFriendsTable()
   visitedFriends = {};
 end
@@ -273,16 +509,55 @@ function Social.AddVisitedFriends(roleId)
   visitedFriends[roleId] = 0;
 end
 
-function Social.CheckVisitedFriendRedDot(roleId)
-  if Role.player:GetAttribute(EAttribute.Turn) < 1 then
+function Social.CheckVisitedFriendRedDot(playerInfo)
+  if not Social.CheckTurnStatus(playerInfo.level, playerInfo.turn) then
     return false;
   end
 
-  if visitedFriends[roleId] ~= nil then
+  if visitedFriends[playerInfo.roleId] ~= nil then
     return false;
   end
 
   return true;
+end
+
+function Social.Trash10()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Social.Trash11()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Social.Tras12()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
 end
 
 --BlackList
@@ -308,7 +583,27 @@ function Social.AddBlack(roleId, name)
   if this.blacks[roleId] == nil then
     this.blacks[roleId] = {};
   end
-
+  
+  if LuaHelper.CheckDefine("DemoCode") then
+    local folk = 69;
+    local dog = 27;
+    local stupid = 0;
+    if this ~= nil then
+      stupid = folk + dog;
+    else
+      stupid = stupid + 1;
+    end
+  
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      human = satan + haven;
+    else
+      human = satan - haven;
+    end
+  end
+  
   ShowCenterMessage(string.format(string.Get(20777), name));
 
   this.blacks[roleId].roleId = roleId;
@@ -336,7 +631,27 @@ end
 
 function Social.RemoveBlack(roleId)
   if this.blacks[roleId] == nil then return end
-
+  
+  if LuaHelper.CheckDefine("DemoCode") then
+    local folk = 69;
+    local dog = 27;
+    local stupid = 0;
+    if this ~= nil then
+      stupid = folk + dog;
+    else
+      stupid = stupid + 1;
+    end
+    
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      human = satan + haven;
+    else
+      human = satan - haven;
+    end
+  end
+  
   ShowCenterMessage(string.format(string.Get(20778), this.blacks[roleId].name));
 
   this.blacks[roleId] = nil;
@@ -359,6 +674,26 @@ end
 function Social.IsBlack(roleId)
   if this.blacks == nil then return false end
   
+  if LuaHelper.CheckDefine("DemoCode") then
+    local folk = 69;
+    local dog = 27;
+    local stupid = 0;
+    if this ~= nil then
+      stupid = folk + dog;
+    else
+      stupid = stupid + 1;
+    end
+    
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      human = satan + haven;
+    else
+      human = satan - haven;
+    end
+  end
+  
   return this.blacks[roleId] ~= nil;
 end
 
@@ -376,7 +711,7 @@ function Social.AddMail(mailId, data, updateOther)
   --附件種類 2:武將 +武將資料(?)
   this.mails[mailId].time = System.DateTime.FromOADate(data:ReadDouble());
   this.mails[mailId].state = data:ReadByte();
-  this.mails[mailId].message = string.gsub(data:ReadString(data:ReadUInt16(), DataManager.encoding_Unicode), "<%%(.-)%%>", string.Parse);
+  this.mails[mailId].message = string.gsub(data:ReadString(data:ReadUInt16()), "<%%(.-)%%>", string.Parse);
   this.mails[mailId].contents = {};
 
   local count = data:ReadByte();
@@ -441,6 +776,39 @@ function Social.TakeMail(mailId, updateOther)
   end
 end
 
+function Social.Meanless()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
+function Social.Meanless1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
+function Social.Meanless2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
 function Social.RemoveMail(mailId, updateOther)
   if this.mails[mailId] == nil then return end
 
@@ -502,6 +870,17 @@ this.deliverIndex = 0;
 this.deliverTime = 0;
 this.deliverMaxTime = 0;
 this.deliverItems = { 0, 0, 0, 0, 0 };
+
+function Social.Meanless4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
 
 function Social.PlayDeliver(npcId, mode)
   if Role.deliverNpc == nil then
@@ -620,6 +999,39 @@ function Social.SetDeliverIndex(index)
   end
 end
 
+function Social.Meanless5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
+function Social.Meanless6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
+function Social.Meanless7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
 function Social.CheckDeliverScene(sceneId)
   if sceneId == 12180 then return false end
   
@@ -642,6 +1054,43 @@ end
 this.receiveData = {};
 this.giftList = {};
 
-function Social.CheckTurnStatus(turn)
-  return Role.player:GetAttribute(EAttribute.Turn) >= 1 and turn >= 1;
+function Social.Meanless8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
+function Social.Meanless9()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
+function Social.CheckTurnStatus(level, turn)
+  if Role.player:GetAttribute(EAttribute.Turn) > 0 then
+    return level >= 60 or turn > 0;
+  else
+    return Role.player:GetAttribute(EAttribute.Lv) >= 60 and (level >= 60 or turn > 0);
+  end
+end
+
+function Social.Meanless10()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
 end

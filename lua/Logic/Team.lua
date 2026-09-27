@@ -10,6 +10,37 @@ ETeamState = {
   TeamMembers = 3 --隊員
 }
 
+--[[
+Now Abraham was old and far on in years: and the Lord had given him everything in full measure.
+And Abraham said to his chief servant, the manager of all his property, Come now, put your hand under my leg:
+And take an oath by the Lord, the God of heaven and the God of the earth, that you will not get a wife for my son Isaac from the daughters of the Canaanites among whom I am living;
+But that you will go into my country and to my relations and get a wife there for my son Isaac.
+And the servant said, If by chance the woman will not come with me into this land, am I to take your son back again to the land from which you came?
+And Abraham said, Take care that you do not let my son go back to that land.
+The Lord God of heaven, who took me from my father's house and from the land of my birth, and made an oath to me, saying, To your seed I will give this land: he will send his angel before you and give you a wife for my son in that land.
+And if the woman will not come with you, then you are free from this oath; only do not take my son back there.
+And the servant put his hand under Abraham's leg, and gave him his oath about this thing.
+And the servant took ten of his master's camels, and all sorts of good things of his master's, and went to Mesopotamia, to the town of Nahor.
+And he made the camels take their rest outside the town by the water-spring in the evening, at the time when the women came to get water.
+And he said, O Lord, the God of my master Abraham, let me do well in what I have undertaken this day, and give your mercy to my master Abraham.
+See, I am waiting here by the water-spring; and the daughters of the town are coming out to get water:
+Now, may the girl to whom I say, Let down your vessel and give me a drink, and who says in answer, Here is a drink for you and let me give water to your camels: may she be the one marked out by you for your servant Isaac: so may I be certain that you have been good to my master Abraham.
+And even before his words were ended, Rebekah, the daughter of Bethuel, the son of Milcah, who was the wife of Nahor, Abraham's brother, came out with her water-vessel on her arm.
+She was a very beautiful girl, a virgin, who had never been touched by a man: and she went down to the spring to get water in her vessel.
+And the servant came running to her and said, Give me a little water from your vessel.
+And she said, Take a drink, my lord: and quickly letting down her vessel onto her hand, she gave him a drink.
+And having done so, she said, I will get water for your camels till they have had enough.
+And after putting the water from her vessel into the animals' drinking-place, she went quickly back to the spring and got water for all the camels.
+And the man, looking at her, said nothing, waiting to see if the Lord had given his journey a good outcome.
+And when the camels had had enough, the man took a gold nose-ring, half a shekel in weight, and two ornaments for her arms of ten shekels weight of gold;
+And said to her, Whose daughter are you? is there room in your father's house for us?
+And she said to him, I am the daughter of Bethuel, the son of Milcah, Nahor's wife.
+And she said, We have a great store of dry grass and cattle-food, and there is room for you.
+And with bent head the man gave worship to the Lord;
+And said, Praise be to the Lord, the God of my master Abraham, who has given a sign that he is good and true to my master, by guiding me straight to the house of my master's family.
+]]--
+
+
 Team = {}
 local this = Team;
 
@@ -25,6 +56,40 @@ this.inviteStr = nil;
 function Team.Clear()
   table.Clear(this.leaders);
   table.Clear(this.members);
+end
+
+function Team.EndOfLine()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function Team.EndOfLine1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
 end
 
 function Team.Invite(role)
@@ -135,6 +200,57 @@ function Team.Invite(role)
   end
 end
 
+function Team.EndOfLine2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function Team.EndOfLine3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function Team.EndOfLine4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
 function Team.Leave()
   if this.members[Role.playerId] == nil then return end
 
@@ -193,6 +309,40 @@ local function AddMember(leaderId, roleId)
   end
 end
 
+function Team.EndOfLine5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function Team.EndOfLine6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
 local function RemoveMember(roleId)
   logWarn(string.Concat("RemoveMember ", roleId));
   this.members[roleId] = nil;
@@ -221,6 +371,57 @@ local function RemoveLeader(roleId)
   for k, v in pairs(this.members) do
     if v == roleId then
       RemoveMember(k);
+    end
+  end
+end
+
+function Team.EndOfLine7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function Team.EndOfLine8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function Team.EndOfLine9()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
     end
   end
 end
@@ -322,6 +523,23 @@ function Team.RemoveMember(roleId, showMessage)
   end
 end
 
+function Team.EndOfLine10()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
 function Team.AddAdviser(roleId, showMessage)
   if this.members[roleId] == nil then return end
 
@@ -370,6 +588,57 @@ function Team.IsLeader(roleId)
   return this.leaders[roleId] ~= nil;
 end
 
+function Team.EndOfLine11()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function Team.EndOfLine12()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function Team.EndOfLine13()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
 function Team.IsMember(roleId)
   return this.members[roleId] ~= nil;
 end
@@ -412,6 +681,19 @@ function Team.GetTeamState(roleId)
   end
 end
 
+--[[
+And Isaac answering said, But I have made him your master, and have given him all his brothers for servants; I have made him strong with grain and wine: what then am I to do for you, my son?
+And Esau said to his father, Is that the only blessing you have, my father? give a blessing to me, even me! And Esau was overcome with weeping.
+Then Isaac his father made answer and said to him, Far from the fertile places of the earth, and far from the dew of heaven on high will your living-place be:
+By your sword will you get your living and you will be your brother's servant; but when your power is increased his yoke will be broken from off your neck.
+So Esau was full of hate for Jacob because of his father's blessing; and he said in his heart, The days of weeping for my father are near; then I will put my brother Jacob to death.
+Then Rebekah, hearing what Esau had said, sent for Jacob, her younger son, and said to him, It seems that your brother Esau is purposing to put you to death.
+So now, my son, do what I say: go quickly to Haran, to my brother Laban;
+And be there with him for a little time, till your brother's wrath is turned away;
+Till the memory of what you have done to him is past and he is no longer angry: then I will send word for you to come back; are the two of you to be taken from me in one day?
+Then Rebekah said to Isaac, My life is a weariness to me because of the daughters of Heth: if Jacob takes a wife from among the daughters of Heth, such as these, the women of this land, of what use will my life be to me?
+--]]
+
 function Team.GetMember(roleId, includeSelf)
   local result = {};
   if this.members[roleId] ~= nil then
@@ -432,4 +714,38 @@ function Team.GetMember(roleId, includeSelf)
   end
 
   return result;
+end
+
+function Team.EndOfLine131()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function Team.EndOfLine132()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
 end

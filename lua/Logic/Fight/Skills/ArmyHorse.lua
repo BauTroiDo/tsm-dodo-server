@@ -33,6 +33,33 @@ function SkillHorse.New(showKind)
   self.dSpeedKind = 1;  --移動的速度
   if self.showKind == 1 then 
     self.attackRole = AttackRole.New(ESkill_Kind.ArmyHorse, EHuman.Duplicate, 18001); --一般的馬
+  
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif self.showKind == 2 then 
     self.attackRole = AttackRole.New(ESkill_Kind.ArmyHorse, EHuman.Duplicate, 31001); --一般的象
   elseif self.showKind == 3 then 
@@ -133,7 +160,7 @@ function SkillHorse:GetPosition()
     for i=3 ,1,-1 do    
       self.pathMed[i] = self.pathMed[i-1];
     end
-    table.Dump(self.pathMed);
+    --table.Dump(self.pathMed);
   end
 end
 
@@ -153,6 +180,28 @@ function SkillHorse:SetPosition(dir, showX, showY, goalX, goalY)
   self.attackRole.nowPos = Vector2.New(showX, showY);
   self.attackRole.goal = Vector2.New(goalX, goalY);  
   self.isStart = true;
+  
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function SkillHorse:SetPositionWithPose(rolePose, showX, showY, goalX, goalY)
@@ -230,8 +279,29 @@ function ArmyHorse:SetPosition()
   local HorseDist = 60;              --馬和馬之間的距離  
   local runW, showW;  --TPoint;   //移到下一個格子長和寬的x,y差值FieldSinSitaW
   local showX, showY, goalX, goalY;  
-  local defDir;  
-
+  local defDir;
+  
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 
   --顯示的距離
   showW = {};
@@ -302,6 +372,28 @@ function ArmyHorse:Update()
     FightField.attack[self.humIdx]:SetLight(EEffectLightKind.Ground,10080,50,1,21,21, EEffectLightTracer.StandAni, me.nowPos.x+6, me.nowPos.y,20, true, 80);
 
     self.interval = 0.8;
+  
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
     self.step = 2;              
   elseif self.step == 2 then      
     if self:CheckInterval() then        

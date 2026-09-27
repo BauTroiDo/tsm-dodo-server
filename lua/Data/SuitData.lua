@@ -1,6 +1,62 @@
 SuitData = {}
 SuitData.__index = SuitData;
 
+function SuitData.Demo()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function SuitData.Demo1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function SuitData.Demo2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function SuitData.Demo3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
 function SuitData.New(reader)
   local self = {};
   setmetatable(self, SuitData);
@@ -21,4 +77,18 @@ function SuitData.New(reader)
   end
   
   return self.id, self;
+end
+
+function SuitData.Demo()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
 end

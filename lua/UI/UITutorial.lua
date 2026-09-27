@@ -32,6 +32,15 @@ function UITutorial.Initialize(go)
 
   event_Guide = uiController:FindEvent("Image_Guide");
   event_Guide:SetListener(EventTriggerType.PointerClick, this.OnClick_Guide);
+  
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
 end
 
 function UITutorial.OnOpen(tutorialId)
@@ -107,6 +116,15 @@ function UITutorial.UpdateUI()
 end
 
 function UITutorial.OnClick_Close()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  
   UI.Close(UITutorial);
 
   return true;
@@ -121,6 +139,15 @@ function UITutorial.OnClick_Tag(mainTag, subTag)
   currentSubTag = subTag;
 
   this.UpdateUI();
+  
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   
   return true;
 end

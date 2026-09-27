@@ -3,6 +3,39 @@ BreakthroughData.__index = BreakthroughData;
 
 local maxBreakthroughEXP = 0;
 
+function BreakthroughData.Meanless()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
+function BreakthroughData.Meanless1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
+function BreakthroughData.Meanless2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
 function BreakthroughData.New(reader)
   local self = {};
   setmetatable(self, BreakthroughData);
@@ -18,6 +51,61 @@ function BreakthroughData:IsEmpty()
     return true
   else
     return false
+  end
+end
+
+function BreakthroughData.MeanlessA()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
+function BreakthroughData.MeanlessB()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
+function BreakthroughData.MeanlessC()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
+function BreakthroughData.MeanlessD()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
+function BreakthroughData.MeanlessE()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
   end
 end
 

@@ -24,6 +24,34 @@ function GoodsSaleTagData.New(reader)
   return self;
 end
 
+function GoodsSaleTagData.Demo()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function GoodsSaleTagData.Demo2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
 GoodsSaleData = {}
 GoodsSaleData.__index = GoodsSaleData
 function GoodsSaleData.New(reader) 
@@ -65,6 +93,20 @@ function GoodsSaleData.New(reader)
   return storeKind, mjrKind, sndKind, self;
 end
 
+function GoodsSaleData.Demo2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
 function GoodsSaleData:GetLimitString(roleCount)
   local result = "";
 
@@ -82,15 +124,59 @@ function GoodsSaleData:GetLimitString(roleCount)
     result = string.Concat(string.Get(25041), roleCount, "/", self.dayCount);
   end
 
-  if self.timeKind ~= 0 then --顯示下架時間
-    if result ~= "" then
-      result = string.Concat(result, "\n");
-    end
+    return result;
+end
 
+function GoodsSaleData:GetSpecLimitTimeString()
+  local result = "";
+  
+  if self.timeKind == 3 then --顯示下架時間
     result = string.Concat(result, self:GetSaleEndTimeString());
   end
-
+  
   return result;
+end
+
+function GoodsSaleData.Demo3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function GoodsSaleData.Demo4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function GoodsSaleData.Demo5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
 end
 
 function GoodsSaleData:IsInSaleTime()
@@ -117,6 +203,34 @@ function GoodsSaleData:GetSaleEndTimeString()
   return string.format( string.Get(22158), endTime:ToString("yyyy/MM/dd HH:mm") );
 end
 
+function GoodsSaleData.Demo6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function GoodsSaleData.Demo7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
 function GoodsSaleData:GetSaleTime()
   local startTime = nil;
   local endTime = nil;
@@ -134,6 +248,20 @@ function GoodsSaleData:GetSaleTime()
   end
 
   return startTime, endTime;
+end
+
+function GoodsSaleData.Demo8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
 end
 
 EGSActivityKind = {
@@ -195,6 +323,62 @@ function GSActivityData.New(reader)
   return self;
 end
 
+function GSActivityData.Demo8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function GSActivityData.Demo1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function GSActivityData.Demo2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function GSActivityData.Demo3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
 function GSActivityData.GetActivityData(kind)
   for k, v in pairs(gsActivityDatas) do
     if kind == v.Id then
@@ -203,4 +387,32 @@ function GSActivityData.GetActivityData(kind)
   end
 
   return nil;
-end 
+end
+
+function GSActivityData.Demo4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function GSActivityData.Demo5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end

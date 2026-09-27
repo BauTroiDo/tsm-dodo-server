@@ -24,20 +24,31 @@ local attributes = {};
 
 local getFlagId = {};
 
+local getNFTFlagId = {};
+
 function CollectCard.AddCollectCardSortRedDot(flagId)
   getFlagId[flagId] = true;
   RedDot.Add(ERedDot.CollectCardSort);
+end
+
+function CollectCard.AddNFTCardRedDot(flagId)
+  getNFTFlagId[flagId] = true;
+  RedDot.Add(ERedDot.NFTCollectCard);
 end
 
 function CollectCard.GetSortRedDotCount()
   return table.Count(getFlagId);
 end
 
+function CollectCard.GetNFTRedDotCount()
+  return table.Count(getNFTFlagId);
+end
+
 function CollectCard.CheckSortRedDot(getflag)
   return getFlagId[getflag] ~= nil;
 end
 
-function CollectCard.DeleteSortRedDot(getFlag) 
+function CollectCard.DeleteSortRedDot(getFlag)
   if getFlagId[getFlag] ~= nil then   
     getFlagId[getFlag] = nil;
     return true;
@@ -45,12 +56,60 @@ function CollectCard.DeleteSortRedDot(getFlag)
   return false;
 end
 
+function CollectCard.DeleteNFTRedDot(getFlag)
+  if getNFTFlagId[getFlag] ~= nil then
+    getNFTFlagId[getFlag] = nil;
+  end
+end
+
 function CollectCard.Clear()
   table.Clear(cardSave);
   table.Clear(equipCards);
   table.Clear(attributes);
   table.Clear(getFlagId);
-  maxEquipCard = 1; 
+  table.Clear(getNFTFlagId);
+  maxEquipCard = 1;
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function CollectCard.GetCount(id)
@@ -155,7 +214,48 @@ function CollectCard.GetMaxEquipCard()
 end
 
 function CollectCard.CanEquipCard()
-  return this.GetEquipedCount() < RoleCount.Get(127) + UIVIP.GetVIPLevel(EVIPPermission.Card);
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  return this.GetEquipedCount() < RoleCount.Get(127);
 end
 
 function CollectCard.GetOwnDatas()
@@ -231,8 +331,12 @@ function CollectCard.ReciveEquipCard(data)
   table.Clear(equipCards);
   maxEquipCard = data:ReadByte();
   local count = data:ReadByte();
-  for i = 1, count do
-    equipCards[i] = data:ReadByte();
+  for i = 1, maxEquipCard do 
+    if count >= i then      
+      equipCards[i] = data:ReadByte();
+    else
+      equipCards[i] = 0;
+    end
   end
   this.UpdateAttributes();
   if UI.IsVisible(UICollectBook)then 
@@ -262,4 +366,45 @@ function CollectCard.OnReciveLvUp(data)
   elseif lv > 1 then 
     ShowCenterMessage(string.format(string.Get(21495), string.Get(collectCardDatas[id].name), lv));
   end
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end

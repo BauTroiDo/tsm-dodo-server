@@ -18,7 +18,33 @@ function WeightlessWave:Update()
     attack:SetLight(EEffectLightKind.Ground,10080,50,1,21,21, EEffectLightTracer.StandAni, me.nowPos.x+6, me.nowPos.y,20, false, 80);
     attack:SetLight(EEffectLightKind.Sky1,10363,80,5,9,9,EEffectLightTracer.StandAni,me.nowPos.x, me.nowPos.y, 20,false, 110);
     attack:SetLight(EEffectLightKind.Sky2,10147,80,1,1,1,EEffectLightTracer.Stand,me.nowPos.x, me.nowPos.y, 20,false, 80);
-    self.step = 2;              
+    self.step = 2;
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif self.step == 2 then 
     if attack:CheckLightIsEnd(EEffectLightKind.Sky1) then        
       attack:SetLight(EEffectLightKind.Sky1, 10063,30,1, 2, 2, EEffectLightTracer.Line, me.nowPos.x, me.nowPos.y-30 ,255, true, 10, target.nowPos.x ,target.nowPos.y-10 ,0.45);
@@ -44,7 +70,33 @@ function WeightlessWave:Update()
       me:PlaySound(target.colm, target.row, Attack_Start);  --音效
       FightField.SetShake(true);
       self.interval = 0.8;
-      self.step = 5;                  
+      self.step = 5;
+      --1--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        local code = DemoCode.GetBitxor(20);
+        code = code * 10;
+      end
+      ---2--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        --local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     end
   elseif self.step == 5 then       
     if self:CheckInterval() then  

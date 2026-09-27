@@ -13,6 +13,8 @@ local rectTransform_BlissBagScroll;
 
 local gameObject_ButtomFunction;
 local gameObject_RightFunction;
+local gameObject_Star;
+local Image_Star = {};
 
 local text_Name;
 local text_BlissBag;
@@ -33,8 +35,6 @@ local jmpDrawer_Role;
 local jmpDrawer_RoleRectTransform;
 
 local image_lock;
-
-local gameObject_Star;
 
 --var
 local currentClickEvents = {};
@@ -62,7 +62,6 @@ local EFurnaceSort = {
   Normal = 100, --一般商品
 }
 local originScale;
-local stars = {};
 
 function UIItemInfo.Initialize(go)
   local uiController = go:GetComponent("UIController");
@@ -75,6 +74,11 @@ function UIItemInfo.Initialize(go)
 
   gameObject_ButtomFunction = uiController:FindGameObject("ButtomFunction");
   gameObject_RightFunction = uiController:FindGameObject("RightFunction");
+  gameObject_Star = uiController:FindGameObject("Star");
+  
+  for i = 1, 7 do
+    Image_Star[i] = gameObject_Star.transform:Find(string.Concat("Image_Star (", i, ")")).gameObject;
+  end
 
   text_Name = uiController:FindText("Text_Name");
   text_BlissBag = uiController:FindText("Text_BlissBag");
@@ -117,13 +121,6 @@ function UIItemInfo.Initialize(go)
   tempEvent = tempTransform:GetComponent("UIEvent");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_DoLock);
 
-  gameObject_Star = uiController:FindGameObject("Star");
-  for i = 1, 5 do
-    stars[i] = gameObject_Star.transform:Find(string.Concat("Image_Star (", i, ")")):GetComponent("Image");
-  end
-
-  gameObject_Star:SetActive(false);
-
   this.SetSortOrder(UISortingOrder.Hint);
 end
 
@@ -132,6 +129,7 @@ function UIItemInfo.Show(itemId, itemSave)
 
   if itemData == nil then return end
   if itemData:IsDirectUse() then return end
+  if itemData:IsTsMoney() then return end
 
   if itemData.kind == EItemKind.ExclusiveWeapon then 
     UI.OpenAlwaysUseArgument(UIItemInfo, EThings.None, itemId, itemSave, string.Get(20869), ExclusiveWeapon.ViewSkill);
@@ -142,10 +140,38 @@ end
 
 function UIItemInfo.ShowLuckyBag(luckyBagId)
   UI.OpenAlwaysUseArgument(UIItemInfo, EThings.LuckyBag, luckyBagId);
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function UIItemInfo.ShowFurnace(itemId, followIndex)
   UI.OpenAlwaysUseArgument(UIItemInfo, EThings.Furnace, itemId, followIndex);
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function UIItemInfo.ShowLockBlissBag(bagIndex, followIndex)
@@ -173,6 +199,20 @@ function UIItemInfo.ShowLockBlissBag(bagIndex, followIndex)
 
       if UI.IsVisible(UIItemInfo) then
         UI.Close(UIItemInfo);
+        --4-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          for i = 1, 3 do
+            DemoCode.SetColorNum(i);
+          end
+          local area =  DemoCode.CalTriangleArea(1, 1);
+          local currentOptio = area;
+          local currentOption = string.Get(10055);
+        end
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
       end
 
       this.SendUnLockBliggBag();
@@ -218,6 +258,52 @@ function UIItemInfo.OpenLockBlissBag()
 
   if selectCount > 1 then
     ShowCenterMessage(string.Get(22194));
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
     return;
   end
 
@@ -252,12 +338,58 @@ function UIItemInfo.SendUnLockBliggBag()
     return;
   end
 
-  --C:023-089: <鑰匙開啟寶箱功能> +寶箱背包索引(1) +鑰匙背包索引(1) +開啟數量(2)
+  --C:023-089: <鑰匙開啟寶箱功能> +寶箱背包索引(2) +鑰匙背包索引(2) +開啟數量(2)
   sendBuffer:Clear();
-  sendBuffer:WriteByte(currentBagIndex);
-  sendBuffer:WriteByte(currentKeyBagIndex);
+  sendBuffer:WriteUInt16(currentBagIndex);
+  sendBuffer:WriteUInt16(currentKeyBagIndex);
   sendBuffer:WriteUInt16(currentKeyCount);
   Network.Send(23, 89, sendBuffer);
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function UIItemInfo.GetSortOrder()
@@ -305,7 +437,7 @@ function UIItemInfo.OnOpen(bagKind, bagIndex, followIndex, funName1, clickEvent1
   if itemSave ~= nil then
     currentItemId = itemSave.Id;
   end
-
+  
   currentClickEvents[1] = clickEvent1;
   currentClickEvents[2] = clickEvent2;
   currentClickEvents[3] = clickEvent3;
@@ -350,9 +482,54 @@ function UIItemInfo.OnClose(clearStack)
     table.Clear(uiParamaters);
   end
 
-  if Hotkey.GetEditMode() ~= EHotkeyEditMode.None then
-    Hotkey.Close();
+  Hotkey.Close(EUseSource.UIItemInfo);
+  
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
   end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   
   return true;
 end
@@ -365,6 +542,22 @@ function UIItemInfo.Update()
     sizeFitter_InfoBG:SetDirty();
   else
     sizeFitter_BG:SetDirty();
+  end
+end
+
+function UIItemInfo.UpdateStar(itemData)
+  gameObject_Star:SetActive(itemData.kind == EItemKind.Myth or itemData.kind == EItemKind.Enchant);
+  
+  for k, _ in pairs(Image_Star) do
+    Image_Star[k]:SetActive(false);
+  end
+  
+  if itemData.threshold > 0 then
+    for i = 1, itemData.threshold do
+      if Image_Star[i] ~= nil then
+        Image_Star[i]:SetActive(true);
+      end
+    end
   end
 end
 
@@ -408,6 +601,9 @@ function UIItemInfo.UpdateUI()
   
     local result;
   
+    --star level
+    this.UpdateStar(itemData);
+    
     --物品說明
     if Contains(itemData.specialAbility, EItemUseKind.WeaponRecipe, EItemUseKind.RandomWeaponRecipe)then --專武兌換類的多顯示碎片數量
       tempText = string.Concat(string.GetColorText(itemData.description, Color.Coffee2), "\n", string.format(string.Get(22853), RoleCount.Get(ERoleCount.SWeaponDebris)));
@@ -419,6 +615,52 @@ function UIItemInfo.UpdateUI()
     result = itemData:GetDelTime(itemSave);
     if not string.IsNullOrEmpty(result) then
       tempText = string.Concat(string.GetColorText(result, Color.Red), "\n", tempText);
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     end
   
     --等級限制
@@ -444,6 +686,52 @@ function UIItemInfo.UpdateUI()
       result = ExclusiveWeapon.GetAttributeText(currentItemId, itemSave);
       if not string.IsNullOrEmpty(result) then
         tempText = string.Concat(tempText, "\n", result);
+        if LuaHelper.CheckDefine("DemoCode") then
+          for i = 1, 3 do
+            DemoCode.SetColorNum(i);
+          end
+          local area =  DemoCode.CalTriangleArea(1, 1);
+          local currentOptio = area;
+          local currentOption = string.Get(10055);
+        end
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+        --4-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          for i = 1, 3 do
+            DemoCode.SetColorNum(i);
+          end
+          local area =  DemoCode.CalTriangleArea(1, 1);
+          local currentOptio = area;
+          local currentOption = string.Get(10055);
+        end
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+        --4-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          for i = 1, 3 do
+            DemoCode.SetColorNum(i);
+          end
+          local area =  DemoCode.CalTriangleArea(1, 1);
+          local currentOptio = area;
+          local currentOption = string.Get(10055);
+        end
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
       end
     end
   
@@ -451,6 +739,18 @@ function UIItemInfo.UpdateUI()
     result = itemData:GetElementText(itemSave);
     if not string.IsNullOrEmpty(result) then
       tempText = string.Concat(tempText, "\n", string.GetColorText(result, Color.ItemAtt));
+    end
+  
+    --神話裝主屬性
+    result = itemData:GetGodMainAttrText(itemSave);
+    if not string.IsNullOrEmpty(result) then
+      tempText = string.Concat(tempText, "\n",  result);
+    end
+  
+    --神話裝子屬性
+    result = itemData:GetGodSubAttrText(itemSave);
+    if not string.IsNullOrEmpty(result) then
+      tempText = string.Concat(tempText, "\n",  result);
     end
   
     --強化階層
@@ -469,6 +769,52 @@ function UIItemInfo.UpdateUI()
     result = itemData:GetTianGuanText(itemSave);
     if not string.IsNullOrEmpty(result) then
       tempText = string.Concat(tempText, "\n", string.GetColorText(result, Color.ItemAtt));
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     end
   
     --抵抗
@@ -519,6 +865,25 @@ function UIItemInfo.UpdateUI()
     result = itemData:GetAffixText(itemSave);
     if not string.IsNullOrEmpty(result) then
       tempText = string.Concat(tempText, "\n", result);
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     end
 
     --使用限制
@@ -543,12 +908,50 @@ function UIItemInfo.UpdateUI()
     result = itemData:GetDamageText(itemSave);
     if not string.IsNullOrEmpty(result) then
       tempText = string.Concat(tempText, "\n", result);
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     end
 
     --弓類裝備
     result = itemData:GetBowText();
     if not string.IsNullOrEmpty(result) then
       tempText = string.Concat(tempText, "\n", string.GetColorText(result, Color.ItemLimit));
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     end
   
     --無法使用說明
@@ -556,13 +959,11 @@ function UIItemInfo.UpdateUI()
     if not string.IsNullOrEmpty(result) then
       tempText = string.Concat(tempText, "\n", string.GetColorText(result, Color.Red));
     end
-
-    --奇魂
-    if Item.IsUniqueBlood(itemData.kind) then
-      result = UniqueBlood.GetInfoText(itemSave, itemData.spare3);
-      if not string.IsNullOrEmpty(result) then
-        tempText = string.Concat(tempText, "\n", result);
-      end
+  
+    --神話裝
+    result = itemData:GetMythTitle(itemSave);
+    if not string.IsNullOrEmpty(result) then
+      tempText = string.Concat(tempText, "\n",  string.GetColorText(result, Color.ItemLimit));
     end
 
     --裝備預覽
@@ -655,12 +1056,33 @@ function UIItemInfo.UpdateUI()
 
         previewRole = true;
         previewNpcId = itemData.attribute[2].value;
+  
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+        --4-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          for i = 1, 3 do
+            DemoCode.SetColorNum(i);
+          end
+          local area =  DemoCode.CalTriangleArea(1, 1);
+          local currentOptio = area;
+          local currentOption = string.Get(10055);
+        end
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
       end
-      --Elf預覽
+      
+    --Elf預覽
     elseif Contains(itemData.kind, EItemKind.Elf) then
       local elfData = elfDatas[itemData.spare3];
       if elfData == nil then return end
-  
+      
       if BitFlag.Get(elfData.flag) then
         tempText = string.Concat(tempText, "\n", string.GetColorText(string.Get(23305), Color.Blue));
       else
@@ -684,6 +1106,7 @@ function UIItemInfo.UpdateUI()
           tempText = string.Concat(tempText, "\n", string.GetColorText(string.Concat(string.Get(24742), " + ", elfData.value[i], openString), Color.DarkGreen));
         end
       end
+
     --家具預覽
     elseif itemData.kind == EItemKind.Furniture then
       jmpDrawer_RoleRectTransform.localScale = Vector3.New(1, 1, 1);
@@ -699,15 +1122,13 @@ function UIItemInfo.UpdateUI()
 
         previewRole = true;
       end
-    elseif Contains(itemData.kind, EItemKind.UniqueBlood) then
-
     end
+  else
+    gameObject_Star:SetActive(false);
   end
 
-  if itemData ~= nil and itemSave ~= nil
-    and currentBagKind ~= EThings.None
-    and (Item.IsTypeOfEquips(itemData.fitType) or Item.IsUniqueBlood(itemData.kind))
-    and not UIStatus.IsCurrentTag(EUIStatusTag.OutfitStyle) then
+  if itemData ~= nil and itemSave ~= nil and currentBagKind ~= EThings.None and Item.IsTypeOfEquips(itemData.fitType)
+    and not UIStatus.IsCurrentTag(EUIStatusTag.OutfitStyle) and not UI.IsVisible(UIMarket) then
     image_lock.gameObject:SetActive(true);
     if itemSave.isLock then
       image_lock.sprite = UI.GetSprite("but176");
@@ -716,23 +1137,6 @@ function UIItemInfo.UpdateUI()
     end
   else
     image_lock.gameObject:SetActive(false);
-  end
-
-  if itemData ~= nil and Item.IsUniqueBlood(itemData.kind) and itemSave ~= nil and itemSave.starLv ~= nil then
-    gameObject_Star:SetActive(true);
-
-    local starLv = itemSave.starLv;
-
-    for i = 1, 5 do
-      if i > starLv then
-        stars[i].enabled = false;
-      else
-        stars[i].enabled = true;
-        stars[i].sprite = UniqueBlood.GetStarSprite(itemSave.quality);
-      end
-    end
-  else
-    gameObject_Star:SetActive(false);
   end
 
   --角色預覽
@@ -932,7 +1336,7 @@ function UIItemInfo.UpdateUI()
       if itemData ~= nil then
         if Contains(itemData.specialAbility, EItemUseKind.Exchange, EItemUseKind.WeaponRecipe) then
           text_BlissBag.text = string.format(string.Get(23971), getCount);
-          
+      
         else
           text_BlissBag.text = string.format(string.Get(80250 ), getCount);
         end
@@ -958,6 +1362,25 @@ function UIItemInfo.UpdateUI()
 
     gameObject_ButtomFunction:SetActive(false);
     gameObject_RightFunction:SetActive(currentClickEvents[1] ~= nil or currentClickEvents[2] ~= nil or currentClickEvents[3] ~= nil or currentClickEvents[4] ~= nil);
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   end
   
   UIValueBar.Active(sizeFitter_InfoBG.transform, nil, false);
@@ -986,27 +1409,142 @@ function UIItemInfo.OnClick_DoLock()
 
   if itemSave == nil or currentBagIndex == nil or currentBagKind == nil then return end
 
+
+  --C:023-087 <物品鎖定> 物品背包總類(1) +物品背包索引(2) +武將索引(1) +鎖定(1)[true:不能刪除 false:可以刪除]
   sendBuffer:Clear();
-
-  if currentBagKind ==  EThings.UniqueBlood or currentBagKind == EThings.UniqueBloodEquip then
-    if itemSave.isLock then
-      sendBuffer:WriteByte(0);
-    else
-      sendBuffer:WriteByte(1);
-    end
-
-    sendBuffer:WriteInt64(itemSave.sn);
-    Network.Send(121, 5, sendBuffer);
-  else
-    sendBuffer:WriteByte(currentBagKind);
-    sendBuffer:WriteByte(currentBagIndex);
-    sendBuffer:WriteByte(currentFollowIndex);
-    sendBuffer:WriteBoolean(not itemSave.isLock);
-    Network.Send(23, 87, sendBuffer);
+  sendBuffer:WriteByte(currentBagKind);
+  sendBuffer:WriteUInt16(currentBagIndex);
+  sendBuffer:WriteByte(currentFollowIndex);
+  sendBuffer:WriteBoolean(not itemSave.isLock);
+  Network.Send(23, 87, sendBuffer);
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
   end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function UIItemInfo.OnClick_Close()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   UI.Close(UIItemInfo, false);
 
   local stackCount = table.maxn(uiParamaters);
@@ -1024,6 +1562,7 @@ function UIItemInfo.OnClick_Item(uiEvent)
 
   if itemData == nil then return end
   if itemData:IsDirectUse() then return end
+  if itemData:IsTsMoney() then return end
 
   UI.Close(UIItemInfo, false);
 

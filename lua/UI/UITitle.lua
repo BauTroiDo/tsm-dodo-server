@@ -40,6 +40,14 @@ local bodyEffect = nil;
 local datas = {};
 
 function UITitle.Initialize(go)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   local uiController = go:GetComponent("UIController");
   this.uiController = uiController;
   this.uiController.onOpen = this.OnOpen;
@@ -122,6 +130,15 @@ function UITitle.OnOpen(titleId)
   local orgName = Organization.GetOrgName(Organization.Id)
   text_Organization.text = orgName;
   text_Organization.gameObject:SetActive(not string.IsNullOrEmpty(orgName));
+  
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
 
   this.UpdateUI(titleId);
 
@@ -129,6 +146,22 @@ function UITitle.OnOpen(titleId)
 end
 
 function UITitle.OnClose()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   jmpDrawer_Role:Disable();
 
   if bodyEffect ~= nil then
@@ -177,6 +210,14 @@ function UITitle.UpdateUI(titleId, searchText)
 end
 
 function UITitle.UpdatePage()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   text_Page.text = string.Concat(currentPage, "/", math.ceil(table.maxn(datas) / maxPageShow));
 
   for i = 1, maxPageShow do
@@ -200,6 +241,14 @@ function UITitle.UpdatePage()
 end
 
 function UITitle.UpdateTitle()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   local titleData = titleDatas[currentTitleId];
 
   if bodyEffect ~= nil then
@@ -270,6 +319,22 @@ function UITitle.UpdateTitle()
 end
 
 function UITitle.OnClick_Close()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   UI.Close(UITitle);
 end
 
@@ -292,6 +357,14 @@ function UITitle.OnClick_Page(uiEvent)
 end
 
 function UITitle.OnClick_Active()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   local titleData = titleDatas[currentTitleId];
 
   if titleData == nil then return end

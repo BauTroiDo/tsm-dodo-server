@@ -27,6 +27,16 @@ function UIAction.OnOpen()
 end
 
 function UIAction.OnClick_Close()
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
   UI.Close(UIAction);
 end
 
@@ -34,6 +44,16 @@ function UIAction.OnClick_Action(uiEvent)
   local pose = ERolePose.Stand;
 
   if uiEvent.parameter == 1 then
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
     pose = ERolePose.Sit;
   elseif uiEvent.parameter == 2 then
     pose = ERolePose.Wave;
@@ -44,6 +64,16 @@ function UIAction.OnClick_Action(uiEvent)
   elseif uiEvent.parameter == 5 then
     pose = ERolePose.Lie;
   elseif uiEvent.parameter == 6 then
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
     pose = ERolePose.Jump;
   elseif uiEvent.parameter == 7 then
     pose = ERolePose.Magic;
@@ -51,6 +81,16 @@ function UIAction.OnClick_Action(uiEvent)
     pose = ERolePose.Attack;
   elseif uiEvent.parameter == 9 then
     pose = ERolePose.Walk;
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
   elseif uiEvent.parameter == 10 then
     pose = ERolePose.Stand;
   elseif uiEvent.parameter == 11 then
@@ -97,6 +137,16 @@ function UIAction.OnClick_Action(uiEvent)
       end
     else
       --海上不可做動作
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
       return;
     end
   end
@@ -116,6 +166,17 @@ function UIAction.OnClick_Action(uiEvent)
   Network.Send(32, 2, sendBuffer);
 
   Role.player:SetAnimationForceId(pose);
+  
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
 
   --GoogleAnalytics.Call("LogEvent", this.name, GAEventAction.ClickButton, GALabel.Action, pose);
 

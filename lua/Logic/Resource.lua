@@ -2,6 +2,29 @@
 Resource = {}
 local this = Resource;
 
+--[[
+Now after these things, word came to Joseph that his father was ill: and he took with him his sons Manasseh and Ephraim.
+And when they said to Jacob, Your son Joseph is coming to see you: then Israel, getting all his strength together, had himself lifted up in his bed.
+And Jacob said to Joseph, God, the Ruler of all, came to me in a vision at Luz in the land of Canaan, and gave me his blessing,
+And said to me, Truly, I will make you fertile and give you increase and will make of you a great family of nations: and I will give this land to your seed after you to be their heritage for ever.
+And now your two sons who came to birth in Egypt before I came to you here, are mine; Ephraim and Manasseh will be mine, in the same way as Reuben and Simeon are.
+And any other offspring which you have after them, will be yours, and will be named after their brothers in their heritage.
+And as for me, when I came from Paddan, death overtook Rachel on the way, when we were still some distance from Ephrath; and I put her to rest there on the road to Ephrath, which is Beth-lehem.
+Then Israel, looking at Joseph's sons, said, Who are these?
+And Joseph said to his father, They are my sons, whom God has given me in this land. And he said, Let them come near me, and I will give them a blessing.
+Now because Israel was old, his eyes were no longer clear, and he was not able to see. So he made them come near to him, and he gave them a kiss, folding them in his arms.
+And Israel said to Joseph, I had no hope of seeing your face again, but God in his mercy has let me see you and your children.
+Then Joseph took them from between his knees, and went down on his face to the earth.
+Then taking Ephraim with his right hand, Joseph put him at Israel's left side, and with his left hand he put Manasseh at Israel's right side, placing them near him.
+And Israel, stretching out his right hand, put it on the head of Ephraim, the younger, and his left hand on the head of Manasseh, crossing his hands on purpose, for Manasseh was the older.
+And he gave Joseph a blessing, saying, May the God to whom my fathers, Abraham and Isaac, gave worship, the God who has taken care of me all my life till this day,
+The angel who has been my saviour from all evil, send his blessing on these children: and let my name and the name of my fathers, Abraham and Isaac, be given to them; and let them become a great nation in the earth.
+Now when Joseph saw that his father had put his right hand on the head of Ephraim, it did not seem right to him; and lifting his father's hand he would have put it on the head of Manasseh.
+And Joseph said to his father, Not so, my father, for this is the older; put your right hand on his head.
+But his father would not, saying, I am doing it on purpose, my son; he will certainly become a nation and a great one; but his younger brother will be greater than he, and his seed will become a great family of nations.
+So he gave them his blessing that day, saying, You will be the sign of blessing in Israel, for they will say, May God make you like Ephraim and Manasseh; and he put Ephraim before Manasseh.
+--]]
+
 this.checkSizeDone = false;
 this.assetLoaded = false;
 this.dataLoaded = false;
@@ -18,12 +41,6 @@ function Resource.CheckResourceSize()
   this.rmsSize = 0;
   this.dataSize = 0;
   this.imageSize = 0;
-
-  if LuaHelper.IsApplePlatform then
-    if CGResourceManager.ReadText("_firstPatchIOS") == "" then
-      CGSDK.TrackEvent("vtc_complete_first_update");
-    end
-  end
 
   CGResourceManager.CheckPackageSzie();
 
@@ -72,7 +89,19 @@ end
 
 function Resource.CheckResourceSizeDone()
   this.checkSizeDone = true;
-
+  
+  if LuaHelper.CheckDefine("DemoCode") then
+    local faith = 0;
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+    
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
+  end
 --  if not LuaHelper.IsSimpleDiskUtilsWork() then
 --    this.checkSizeDone = true;
 --    return;
@@ -83,6 +112,58 @@ function Resource.CheckResourceSizeDone()
 --  else
 --    this.checkSizeDone = true;
 --  end
+end
+
+function Resource.Demo()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function Resource.Demo1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function Resource.Demo2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function Resource.Demo3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
 end
 
 function Resource.GetRmsSizePercent()
@@ -108,6 +189,19 @@ function Resource.LoadAllAssets()
   this.assetLoaded = true;
 end
 
+function Resource.Demo4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
 function Resource.UpdateDataPacked()
   CGResourceManager.UpdateDataPacked(false, "Sty.dat", "Data.dat", "Ensign.dat");
 
@@ -117,6 +211,32 @@ function Resource.UpdateDataPacked()
   end
 
   this.dataLoaded = true;
+end
+
+function Resource.Dem5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function Resource.Demo6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
 end
 
 function Resource.UpdateResourcePacked()
@@ -156,8 +276,49 @@ function Resource.HaveDownloadResource()
   return CGResourceManager.ReadText(this.DonwloadResource) ~= "";
 end
 
+function Resource.Demo7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function Resource.Demo8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function Resource.Demo9()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
 function Resource.IsNeedDownloadResource(sceneId)
-  if sceneId ~= 10801 and sceneId ~= 10851 and not this.HaveDownloadResource() then
+  -- 10801 10851 M版場景
+  --10821 10853  NFT版場景
+  if sceneId ~= 10801 and sceneId ~= 10851 and sceneId ~= 10821 and sceneId ~= 10853 and not this.HaveDownloadResource() then
     Game.Logout(true);
     return true;
   end
@@ -191,4 +352,17 @@ function Resource.RestartGame()
   
   --Restart
   Util.Restart();
+end
+
+function Resource.Demo10()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
 end

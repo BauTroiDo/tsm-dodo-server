@@ -36,6 +36,7 @@ EAward = {
   ReUseAct_6 = 35,     --重覆使用6
   Collect = 36,        --全服收集
   Arena = 37,          --周年競技慶典
+  SoulGacha = 38,      --靈魂抽送
   ArmySupport = 39,    --支援戰
   Prize_1 = 101,       --Prize活動1
   Prize_2 = 102,       --Prize活動2
@@ -82,6 +83,7 @@ EUITag = {
   ReUseAct_6 = 32,     --重覆使用6
   Collect = 33,        --全服收集
   Arena = 34,          --周年競技慶典
+  SoulGacha = 35,      --靈魂抽
   Prize_1 = 101,       --Prize活動1
   Prize_2 = 102,       --Prize活動2
   Prize_3 = 103,       --Prize活動3
@@ -152,6 +154,7 @@ this.FirstPrizeRedDot = false;
 this.DragonBoxRedDot = false;
 this.SupportArmyRedDot = false;
 this.PokeOnceRedDot = false;
+this.SoulGachaRedDot = false;
 this.ReUseAct = false;
 this.PrizeRedDot = { false, false, false, false, false, false };
 this.MaxPrize = 8;
@@ -203,6 +206,8 @@ local text_DoubleSaveDate;
 local text_DoubleSaveVal;
 local text_DoubleSaveBack;
 local text_DoubleSaveDetail;
+local text_SoulDate;
+local text_SoulValue;
 
 local gameObjs = {};
 
@@ -237,6 +242,8 @@ local scrollContent_Back;
 local scrollItems_Back = {};
 local scrollContent_DragonBox;
 local scrollItems_DragonBox = {};
+local scrollContent_Soul;
+local scrollItems_Soul = {};
 
 local onlineTime;
 local reslutString = {20689, 98017, 20702, 80359, 20703, 60065, 22373, 23210};
@@ -277,7 +284,6 @@ local currentScratchCard = 0;
 local reUseActTitle;
 local reUseActContent;
 local mainTag;
-local convertIndex = 0;
 local scratchCardRoleCount = {
   ERoleCount.Scratch_100,
   ERoleCount.Scratch_500,
@@ -296,6 +302,105 @@ local consumeScratchCardRoleCount = {
 };
 
 function UILoginAward.InitializeText(uiController)
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   text_loginDays = uiController:FindText("LogainDays");
   text_Info = uiController:FindText("text_Info");
   text_online = uiController:FindText("Text_Online");
@@ -331,6 +436,8 @@ function UILoginAward.InitializeText(uiController)
   text_Ticket_1000 = uiController:FindText("Text_Ticket_1000");
   text_ScratchReward = uiController:FindText("Text_ScratchReward");
   text_ScratchRewardHint = uiController:FindText("Text_ScratchRewardHint");
+  text_SoulDate = uiController:FindText("Text_SoulDate");
+  text_SoulValue = uiController:FindText("Text_SoulValue");
 
   for i = 1, 3 do
     text_rate[i] = uiController:FindText(string.Concat("Text_Rate_", i));
@@ -364,6 +471,40 @@ function UILoginAward.InitializeGameObject(uiController)
   gameObjs.gameObject_SupportBG = uiController:FindGameObject("Image_Support");
   gameObjs.gameObject_DoubleSave = uiController:FindGameObject("DoubleSave");
   gameObjs.gameObject_Scratch = uiController:FindGameObject("Scratch");
+  gameObjs.gameObject_Soul = uiController:FindGameObject("Soul");
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function UILoginAward.Initialize(go)
@@ -448,6 +589,11 @@ function UILoginAward.Initialize(go)
   scrollContent_DragonBox.onInitialize = this.OnInitialize_scrollContent_DragonBox;
   scrollContent_DragonBox.onItemChange = this.OnItemChange_scrollContent_DragonBox;
   scrollContent_DragonBox:Initialize(1);
+
+  scrollContent_Soul = uiController:FindScrollContent("ScrollContent_Soul");
+  scrollContent_Soul.onInitialize = this.OnInitialize_scrollContent_Soul;
+  scrollContent_Soul.onItemChange = this.OnItemChange_scrollContent_Soul;
+  scrollContent_Soul:Initialize(1);
 
   inputField_Code = uiController:FindInputField("InputField_Code");
   slider_time = uiController:FindSlider("Slider_Time");
@@ -604,6 +750,39 @@ function UILoginAward.OnItemChange_scrollContent_OpenServer(dataIndex, itemIndex
 end
 
 function UILoginAward.OnInitialize_scrollContent_Save(scrollItems)
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   for itemIndex = 0, scrollItems.Length - 1 do
     scrollItems_Save[itemIndex] = {};
     scrollItems_Save[itemIndex].text = scrollItems[itemIndex]:Find("Text_Save"):GetComponent("Text");
@@ -660,6 +839,68 @@ function UILoginAward.OnItemChange_scrollContent_Save(dataIndex, itemIndex)
     scrollItems_Save[itemIndex].event.gameObject:SetActive(false);
     scrollItems_Save[itemIndex].event.gameObject:SetActive(false);
     scrollItems_Save[itemIndex].image_BGMask.gameObject:SetActive(true);
+  end
+
+  return true;
+end
+
+function UILoginAward.OnInitialize_scrollContent_Soul(scrollItems)
+  for itemIndex = 0, scrollItems.Length - 1 do
+    scrollItems_Soul[itemIndex] = {};
+    scrollItems_Soul[itemIndex].text = scrollItems[itemIndex]:Find("Text_Soul"):GetComponent("Text");
+    scrollItems_Soul[itemIndex].status = scrollItems[itemIndex]:Find("Text_Status"):GetComponent("Text");
+    scrollItems_Soul[itemIndex].image_BGMask = scrollItems[itemIndex]:Find("Image_BGMask"):GetComponent("Image");
+    scrollItems_Soul[itemIndex].item = {};
+    for i = 1, this.MaxItem do
+      scrollItems_Soul[itemIndex].item[i] = UIItemController.New(scrollItems[itemIndex]:Find(string.Concat("Image_Item (", i, ")")));
+    end
+    scrollItems_Soul[itemIndex].event = scrollItems[itemIndex]:Find("Image_Btn_Soul"):GetComponent("UIEvent");
+    scrollItems_Soul[itemIndex].event:SetListener(EventTriggerType.PointerClick, this.OnClick_Soul);
+    scrollItems_Soul[itemIndex].event.parameter = itemIndex;
+  end
+end
+
+function UILoginAward.OnItemChange_scrollContent_Soul(dataIndex, itemIndex)
+  local index = dataIndex + 1;
+  local isInTime;
+  scrollItems_Soul[itemIndex].text.text = string.format(string.Get(23906), loginAward[EAward.SoulGacha].Date[index].day);
+  for i = 1, this.MaxItem do
+    if loginAward[EAward.SoulGacha].Date[index].itemId[i] > 0 then
+      scrollItems_Soul[itemIndex].item[i].transform.parent.gameObject:SetActive(true);
+      scrollItems_Soul[itemIndex].item[i]:SetItem(loginAward[EAward.SoulGacha].Date[index].itemId[i], loginAward[EAward.SoulGacha].Date[index].quant[i]);
+      scrollItems_Soul[itemIndex].item[i]:SetEvent(this.OnClick_ItemInfo, loginAward[EAward.SoulGacha].Date[index].itemId[i]);
+    else
+      scrollItems_Soul[itemIndex].item[i].transform.parent.gameObject:SetActive(false);
+    end
+  end
+
+  scrollItems_Soul[itemIndex].event.parameter = index;
+
+  if isInTime == nil then
+    isInTime = this.IsInTime(EAward.SoulGacha);
+  end
+
+  if isInTime then
+    if loginAward[EAward.SoulGacha].Date[index].sort == ESortOrder.Available then
+      scrollItems_Soul[itemIndex].status.text = "";
+      scrollItems_Soul[itemIndex].event.gameObject:SetActive(true);
+      scrollItems_Soul[itemIndex].image_BGMask.gameObject:SetActive(false);
+    elseif loginAward[EAward.SoulGacha].Date[index].sort == ESortOrder.Complete then
+      scrollItems_Soul[itemIndex].status.text = string.Get(21061);  --完成
+      scrollItems_Soul[itemIndex].status.color = Color.LightBlue;
+      scrollItems_Soul[itemIndex].event.gameObject:SetActive(false);
+      scrollItems_Soul[itemIndex].image_BGMask.gameObject:SetActive(true);
+    else
+      scrollItems_Soul[itemIndex].status.text = string.Get(21060);  --進行中
+      scrollItems_Soul[itemIndex].status.color = Color.LightGreen;
+      scrollItems_Soul[itemIndex].event.gameObject:SetActive(false);
+      scrollItems_Soul[itemIndex].image_BGMask.gameObject:SetActive(false);
+    end
+  else
+    scrollItems_Soul[itemIndex].status.text = "";
+    scrollItems_Soul[itemIndex].event.gameObject:SetActive(false);
+    scrollItems_Soul[itemIndex].event.gameObject:SetActive(false);
+    scrollItems_Soul[itemIndex].image_BGMask.gameObject:SetActive(true);
   end
 
   return true;
@@ -1083,6 +1324,39 @@ function UILoginAward.OnItemChange_scrollContent_Consume(dataIndex, itemIndex)
 end
 
 function UILoginAward.OnInitialize_scrollContent_SupportArmy(scrollItems)
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   for itemIndex = 0, scrollItems.Length - 1 do
     scrollItems_SupportArmy[itemIndex] = {};
     scrollItems_SupportArmy[itemIndex].item = {};
@@ -1182,14 +1456,6 @@ function UILoginAward.OnItemChange_scrollContent_Change(dataIndex, itemIndex)
   local itemData, itemId;
   local bag = Item.GetBag(EThings.Bag);
 
-  if table.Count(changeAward) <= 0 then
-    for k, v in pairs(loginAward[EAward.Change].Date) do
-      if v ~= nil and currentSubPage == math.floor(v.day / 100) then
-        table.insert(changeAward, v);
-      end
-    end
-  end
-
   for i = 1, this.MaxItem do
     itemId = changeAward[index].itemId[i];
     itemData = itemDatas[itemId];
@@ -1210,6 +1476,18 @@ function UILoginAward.OnItemChange_scrollContent_Change(dataIndex, itemIndex)
           simpleItemCount = Item.GetSimpleValue(bagItemCount, true);
         elseif itemId == 65351 then
           bagItemCount = Role.GetPlayerGold();
+          simpleItemCount = Item.GetSimpleValue(bagItemCount, true);
+        elseif itemId == 65343 then  --吞食幣
+          bagItemCount = Role.GetPlayerCurrency(ECurrency.TS);
+          simpleItemCount = Item.GetSimpleValue(bagItemCount, true);
+        elseif itemId == 65347 then
+          bagItemCount = Role.GetPlayerCurrency(ECurrency.WarriorTicket);
+          simpleItemCount = Item.GetSimpleValue(bagItemCount, true);
+        elseif itemId == 65348 then
+          bagItemCount = Role.GetPlayerCurrency(ECurrency.CardTicket);
+          simpleItemCount = Item.GetSimpleValue(bagItemCount, true);
+        elseif itemId == 65349 then
+          bagItemCount = Role.GetPlayerCurrency(ECurrency.ExclusiveWeaponTicket);
           simpleItemCount = Item.GetSimpleValue(bagItemCount, true);
         else
           simpleItemCount = 0;
@@ -1366,6 +1644,39 @@ function UILoginAward.OnItemChange_scrollContent_Back(dataIndex, itemIndex)
 end
 
 function UILoginAward.OnInitialize_scrollContent_DragonBox(scrollItems)
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   for itemIndex = 0, scrollItems.Length - 1 do
 
     scrollItems_DragonBox[itemIndex] = {};
@@ -1416,6 +1727,10 @@ end
 
 function UILoginAward.OnClick_Save(uiEvent)
   this.SendGetAward(EAward.Save, uiEvent.parameter);
+end
+
+function UILoginAward.OnClick_Soul(uiEvent)
+  this.SendGetAward(EAward.SoulGacha, uiEvent.parameter);
 end
 
 function UILoginAward.OnClick_Consume(uiEvent)
@@ -1504,6 +1819,39 @@ function UILoginAward.OnClick_Code()
   sendBuffer:WriteStringWithByteL(inputField_Code.text);
   sendBuffer:WriteByte(1);
   Network.Send(87, 2, sendBuffer);
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function UILoginAward.OnClick_Month()
@@ -1512,6 +1860,39 @@ end
 function UILoginAward.OnClick_MoneyTree()
   if this.CheckMoneyTreeComplete() then
     Network.Send(87, 7);
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   end
 end
 
@@ -1549,6 +1930,39 @@ function UILoginAward.OnClick_GetExp(uiEvent)
 
   if Role.player.war ~= EWar.None then
     ShowCenterMessage(string.Get(80099));
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
     return;
   end
 
@@ -1592,6 +2006,40 @@ function UILoginAward.OnClick_DragonBox(uiEvent)
   if dragonBoxRoleCount >= uiEvent.parameter then return; end
 
   local item = loginAward[EAward.DragonBox].Date[uiEvent.parameter];
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 
   if dragonBoxRoleCount < uiEvent.parameter - 1 then
     UI.Open(UIItemInfo, EThings.None, item.itemId[1], item.quant[1]);
@@ -1610,6 +2058,39 @@ function UILoginAward.DragonBoxUISell()
   this.DragonBoxRedDot = false;
   this.UpdateRedDot();
   CGTimer.RemoveListener(this.DragonBoxCountDown);
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   scrollContent_DragonBox:Refresh();
 end
 
@@ -1716,6 +2197,39 @@ function UILoginAward.SendGetAward(kind, val, count)
         sendBuffer:WriteInt32(loginAward[kind].Date[val].day);
         sendBuffer:WriteByte(changeCount);
         Network.Send(87, 2, sendBuffer);
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+        --4-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          for i = 1, 3 do
+            DemoCode.SetColorNum(i);
+          end
+          local area =  DemoCode.CalTriangleArea(1, 1);
+          local currentOptio = area;
+          local currentOption = string.Get(10055);
+        end
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+        --4-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          for i = 1, 3 do
+            DemoCode.SetColorNum(i);
+          end
+          local area =  DemoCode.CalTriangleArea(1, 1);
+          local currentOptio = area;
+          local currentOption = string.Get(10055);
+        end
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
       end
     );
   else
@@ -1745,11 +2259,13 @@ function UILoginAward.GetStagePassCount()
   return passCount;
 end
 
+--C:087-003 <要離線經驗資料>
 function UILoginAward.GetServerExpDatas()
   sendBuffer:Clear();
   Network.Send(87, 3, sendBuffer);
 end
 
+--C:087-004 <查詢軍團資源活動資料>
 function UILoginAward.QuertySupportArmy()
   Network.Send(87, 4);
 end
@@ -1772,9 +2288,45 @@ function UILoginAward.ReciveAward(data)
     elseif kind == EAward.Save then
       this.UpdateSave();
       RedDot.Remove(ERedDot.Save);
+    elseif kind == EAward.SoulGacha then
+      this.UpdateSoul();
+      RedDot.Remove(ERedDot.SoulGacha);
     elseif kind == EAward.Consume then
       this.UpdateConsume();
       RedDot.Remove(ERedDot.Consume);
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     elseif kind == EAward.LottoNpc then
       this.UpdateConsume();
       RedDot.Remove(ERedDot.LottoNpc);
@@ -1818,6 +2370,39 @@ function UILoginAward.ReciveAward(data)
       this.UpdateChange();
     elseif kind == EAward.SupportArmy then
       this.UpdateSupportArmy();
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     elseif kind == EAward.Back then
       this.UpdateBack();
       RedDot.Remove(ERedDot.Back);
@@ -1952,6 +2537,7 @@ function UILoginAward.UpdateUI(tag, changeCover)
   gameObjs.gameObject_MoneyTree:SetActive(currentTag == EUITag.MoneyTree);
   gameObjs.gameObject_DoubleSave:SetActive(currentTag == EUITag.DoubleSave or currentTag == EUITag.Arena);
   gameObjs.gameObject_Scratch:SetActive(currentTag == EUITag.Scratch or currentTag == EUITag.ConsumeScratch);
+  gameObjs.gameObject_Soul:SetActive(currentTag == EUITag.SoulGacha);
 
   if currentTag ~= EUITag.Code then
     inputField_Code.text = "";
@@ -1972,6 +2558,7 @@ function UILoginAward.UpdateUI(tag, changeCover)
   this.UpdateMoneyTree();
   this.UpdateDoubleSave();
   this.UpdateScratch();
+  this.UpdateSoul();
 end
 
 function UILoginAward.RefreshRoleCount()
@@ -2060,6 +2647,39 @@ function UILoginAward.UpdateOnline()
   table.sort(loginAward[EAward.Online].Date, this.SortAward);
 
   scrollContent_Online:Reset(table.maxn(loginAward[EAward.Online].Date));
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 
   this.UpdateRedDot();
 end
@@ -2220,6 +2840,70 @@ function UILoginAward.UpdateSave()
   end
 
   scrollContent_Save:Reset(table.maxn(loginAward[EAward.Save].Date));
+
+  this.UpdateRedDot();
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+end
+
+function UILoginAward.UpdateSoul()
+  if currentTag ~= EUITag.SoulGacha then return end
+
+  if this.SoulGachaRedDot then
+    this.SoulGachaRedDot = false;
+    RedDot.Remove(ERedDot.SoulGacha);
+  end
+
+  for k, v in pairs(loginAward[EAward.SoulGacha].Date) do
+    if not BitFlag.Get(v.flag) and RoleCount.Get(ERoleCount.SoulGachaCount) >= v.day then
+      v.sort = ESortOrder.Available;
+    elseif BitFlag.Get(v.flag) and RoleCount.Get(ERoleCount.SoulGachaCount) >= v.day then
+      v.sort = ESortOrder.Complete;
+    else
+      v.sort = ESortOrder.Processing;
+    end
+  end
+
+  table.sort(loginAward[EAward.SoulGacha].Date, this.SortAward);
+
+  if this.IsInTime(EAward.SoulGacha) then
+    text_SoulValue.text = string.format(string.Get(23905), RoleCount.Get(ERoleCount.SoulGachaCount));
+  else
+    text_SoulValue.text = string.format(string.Get(23905), 0);
+  end
+
+  scrollContent_Soul:Reset(table.maxn(loginAward[EAward.SoulGacha].Date));
 
   this.UpdateRedDot();
 end
@@ -2385,6 +3069,39 @@ function UILoginAward.UpdateExp()
   end
 
   this.UpdateRedDot();
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function UILoginAward.UpdateDragonBox()
@@ -2510,6 +3227,7 @@ function UILoginAward.UpdateMoneyTreeSlider()
     text_MoneyTreeTime.text = string.format(string.Get(22140), string.GetSecondText(seconds));
 
     if math.fmod(seconds, 60) == 0 then
+      --C:087-005 <查詢搖錢樹狀態>
       Network.Send(87, 5);
     end
   end
@@ -2525,9 +3243,14 @@ function UILoginAward.ActiveRedDot()
     RedDot.Add(ERedDot.Consume);
   end
 
-  if this.CheckSaveBitFlag() then
-    this.SaveRedDot = true;
-    RedDot.Add(ERedDot.Save);
+  if this.CheckSoulBitFlag() then
+    this.SoulGachaRedDot = true;
+    RedDot.Add(ERedDot.SoulGacha);
+  end
+
+  if this.CheckSoulBitFlag() then
+    this.SoulGachaRedDot = true;
+    RedDot.Add(ERedDot.SoulGacha);
   end
 
   if this.IsInTime(EAward.Back) then
@@ -2586,6 +3309,19 @@ function UILoginAward.CheckSaveBitFlag()
 
   for k, v in pairs(loginAward[EAward.Save].Date) do
     if not BitFlag.Get(v.flag) and this.IsInTime(EAward.Save) then
+      result = true;
+      break;
+    end
+  end
+
+  return result;
+end
+
+function UILoginAward.CheckSoulBitFlag()
+  local result = false;
+
+  for k, v in pairs(loginAward[EAward.SoulGacha].Date) do
+    if not BitFlag.Get(v.flag) and this.IsInTime(EAward.SoulGacha) then
       result = true;
       break;
     end
@@ -2687,6 +3423,39 @@ function UILoginAward.UpdateConsume()
     infoString = reUseActTitle;
   elseif currentTag == EUITag.Collect then
     loginAwardData = loginAward[EAward.Collect].Date;
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
 
     local serverIndex = loginAwardData[1].roleCount;
 
@@ -2833,6 +3602,10 @@ end
 
 function UILoginAward.UpdateLeftSaveTime()
   this.CalLeftTime(EAward.Save, text_SaveDate);
+end
+
+function UILoginAward.UpdateLeftSoulTime()
+  this.CalLeftTime(EAward.SoulGacha, text_SoulDate);
 end
 
 function UILoginAward.UpdateLeftConsumeTime()
@@ -3112,6 +3885,19 @@ function UILoginAward.UpdateRedDot()
     end
   end
 
+  for k, v in pairs(loginAward[EAward.SoulGacha].Date) do
+    if RoleCount.Get(ERoleCount.SoulGachaCount) >= v.day then
+      if not BitFlag.Get(v.flag) then
+        if not RedDot.Check(ERedDot.SoulGacha) and this.IsInTime(EAward.SoulGacha) then
+          RedDot.Add(ERedDot.SoulGacha);
+          if scrollContent_Soul ~= nil then
+            scrollContent_Soul:Refresh();
+          end
+        end
+      end
+    end
+  end
+
   for k, v in pairs(loginAward[EAward.Consume].Date) do
     if RoleCount.Get(ERoleCount.Consume) >= v.day then
       if not BitFlag.Get(v.flag) then
@@ -3351,12 +4137,79 @@ function UILoginAward.CheckActivityTag(kind)
   if not Contains(kind, EAward.Code, EAward.Back, EAward.Save, EAward.Change, EAward.Consume, EAward.LottoNpc,
           EAward.LottoCard, EAward.Furnace, EAward.DragonBox, EAward.MoneyTree, EAward.DoubleSave,
           EAward.Scratch, EAward.ConsumeScratch, EAward.Poke, EAward.StagePass, EAward.ClassAward,
-          EAward.ActLogin, EAward.ActAccLogin, EAward.ReturnLogin, EAward.Swimming, EAward.ReUseAct_1,
+          EAward.ActLogin, EAward.ActAccLogin, EAward.ReturnLogin, EAward.Swimming, EAward.SoulGacha, EAward.ReUseAct_1,
           EAward.ReUseAct_2, EAward.ReUseAct_3, EAward.ReUseAct_4, EAward.ReUseAct_5, EAward.ReUseAct_6, EAward.Collect, EAward.Arena) then return end
 
   if kind == EAward.Code then
     if Network.CheckServerSwitch(EServerSwitch.Review) then --送審關閉
       this.CloseActSort(kind);
+  
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     end
   else
     if not this.IsInTime(kind) then --非活動時間
@@ -3397,6 +4250,7 @@ function UILoginAward.UpdateTagData()
   this.CheckActivityTag(EAward.Code);
   this.CheckActivityTag(EAward.Back);
   this.CheckActivityTag(EAward.Save);
+  this.CheckActivityTag(EAward.SoulGacha);
   this.CheckActivityTag(EAward.Change);
   this.CheckActivityTag(EAward.SupportArmy);
   this.CheckActivityTag(EAward.Consume);
@@ -3441,10 +4295,6 @@ function UILoginAward.UpdateTagData()
   for k, v in pairs(loginAwardTagDatas) do
     if v.actSort > 0 then
       index = index + 1;
-
-      if v.tagString == 21008 then --好禮兌換
-        convertIndex = index;
-      end
 
       if v.tagString == 0 and not v.isStop then
         tagDatas[index] = { v.title, nil };
@@ -3563,20 +4413,6 @@ function UILoginAward.CheckConvertItem(itemId)
   return false;
 end
 
-function UILoginAward.GetConverItemPage(itemId)
-  local result = 0;
-  for k, v in pairs(loginAward[EAward.Change].Date) do
-    for i = 1, this.MaxItem do
-      if itemId == v.itemId[i] then
-        result = v.day;
-        return result;
-      end
-    end
-  end
-
-  return result;
-end
-
 function UILoginAward.ViewItemInfo(itemId)
   UIItemInfo.Show(itemId);
 end
@@ -3617,6 +4453,14 @@ function UILoginAward.CheckChangeItem(index, bAllData)
           itemCount = Role.GetPoint();
         elseif award.itemId[i] == 65351 then
           itemCount = Role.GetPlayerGold();
+        elseif  award.itemId[i] == 65343 then  --吞食幣
+          itemCount = Role.GetPlayerCurrency(ECurrency.TS);
+        elseif award.itemId[i] == 65347 then
+          itemCount = Role.GetPlayerCurrency(ECurrency.WarriorTicket);
+        elseif award.itemId[i] == 65348 then
+          itemCount = Role.GetPlayerCurrency(ECurrency.CardTicket);
+        elseif award.itemId[i] == 65349 then
+          itemCount = Role.GetPlayerCurrency(ECurrency.ExclusiveWeaponTicket);
         else
           for k, bagInfo in pairs(bag) do
             if bagInfo ~= nil and bagInfo.Id == award.itemId[i] and bagInfo.quant > 0 then
@@ -3869,6 +4713,7 @@ function UILoginAward.OnOpen(tag)
 
   CGTimer.AddListener(this.UpdateOnlineTime, 1, true);
   CGTimer.AddListener(this.UpdateLeftSaveTime, 1, true);
+  CGTimer.AddListener(this.UpdateLeftSoulTime, 1, true);
   CGTimer.AddListener(this.UpdateLeftConsumeTime, 1, true);
   CGTimer.AddListener(this.UpdateLeftLottoNpcTime, 1, true);
   CGTimer.AddListener(this.UpdateLeftLottoCardTime, 1, true);
@@ -3986,11 +4831,312 @@ function UILoginAward.OnClick_Help(checkShow)
     end
   elseif currentTag == EUITag.ReUseAct_4 then
     if checkShow ~= true then
-      UI.Open(UITutorialHint, 47, this);
+      UI.Open(UITutorialHint, 73, this);
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     end
   elseif currentTag == EUITag.ReUseAct_5 then
     if checkShow ~= true then
-      UI.Open(UITutorialHint, 60, this);
+      UI.Open(UITutorialHint, 74, this);
+    end
+  elseif currentTag == EUITag.ReUseAct_6 then
+    if checkShow ~= true then
+      UI.Open(UITutorialHint, 75, this);
     end
   else
     return false;
@@ -4016,6 +5162,8 @@ function UILoginAward.CheckRedDot(mTag, subTag)
     return RedDot.Check(ERedDot.OpenServer);
   elseif mainTag == EUITag.Save then
     return RedDot.Check(ERedDot.Save);
+  elseif mainTag == EUITag.SoulGacha then
+    return RedDot.Check(ERedDot.SoulGacha);
   elseif mainTag == EUITag.Back then
     return RedDot.Check(ERedDot.Back);
   elseif mainTag == EUITag.Change then
@@ -4069,6 +5217,98 @@ function UILoginAward.CheckRedDot(mTag, subTag)
   elseif mainTag == EUITag.ReUseAct_5 then
     return RedDot.Check(ERedDot.ReUseAct_5);
   elseif mainTag == EUITag.ReUseAct_6 then
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
     return RedDot.Check(ERedDot.ReUseAct_6);
   elseif mainTag == EUITag.Collect then
     return RedDot.Check(ERedDot.Collect);
@@ -4133,17 +5373,6 @@ function UILoginAward.UpdateConsumeScratchRedDot()
   end
 
   RedDot.Remove(ERedDot.ConsumeScratch);
-end
-
-function UILoginAward.ShowConvertPage(convertPage)
-  UI.Close(UIItemInfo);
-  UI.Close(UIBag);
-  UI.Close(UIStatus);
-  UI.Open(UILoginAward);
-
-  local subTag = math.floor(convertPage / 100);
-  UILoginAward.OnClick_Tag(convertIndex, subTag);
-  UIFrame.SetTab(tagDatas, convertIndex, subTag);
 end
 
 function UILoginAward.OnClick_Tag(mainTag, subTag)
@@ -4232,6 +5461,8 @@ function UILoginAward.CheckCrossDay()
 
   if currentTag == EUITag.Save then
     reOpen = not this.IsInTime(EAward.Save);
+  elseif currentTag == EUITag.SoulGacha then
+    reOpen = not this.IsInTime(EAward.SoulGacha);
   elseif currentTag == EUITag.Back then
     reOpen = not this.IsInTime(EAward.Back);
   elseif currentTag == EUITag.Change then
@@ -4327,6 +5558,8 @@ function UILoginAward.RemoveExpiredRedDot()
     if v.activityTime > 0 and not this.IsInTime(v.kind) then
       if v.kind == EAward.Save then
         RedDot.Remove(ERedDot.Save);
+      elseif v.kind == EAward.SoulGacha then
+        RedDot.Remove(ERedDot.SoulGacha);
       elseif v.kind == EAward.Back then
         RedDot.Remove(ERedDot.Back);
       elseif v.kind == EAward.Change then
@@ -4408,6 +5641,7 @@ end
 function UILoginAward.OnClick_Close()
   CGTimer.RemoveListener(this.UpdateOnlineTime);
   CGTimer.RemoveListener(this.UpdateLeftSaveTime);
+  CGTimer.RemoveListener(this.UpdateLeftSoulTime);
   CGTimer.RemoveListener(this.UpdateLeftConsumeTime);
   CGTimer.RemoveListener(this.UpdateLeftLottoNpcTime);
   CGTimer.RemoveListener(this.UpdateLeftLottoCardTime);

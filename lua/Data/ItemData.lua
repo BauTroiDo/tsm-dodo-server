@@ -122,7 +122,7 @@ EItemKind = {
   Enchant = 91, --神話符文
   Hammer = 92, --神工錘
   Elf = 93, --elf
-  UniqueBlood = 96, --經脈
+  Soul = 94,  --靈魂
   Treasure = 98, --祕寶
 }
 
@@ -291,11 +291,39 @@ EItemUseKind = {
   WeaponRecipe = 234, --專武兌換
   RandomWeaponRecipe = 235, --隨機專武製作
   ArmyBlissBag = 236, --軍團福袋用
-  ActivityModelCoin = 247, --後臺貨幣
+  --Elf = 239, --小精靈
+  Soul = 240,  --靈魂
+  SoulPoint = 243,
+  GodskinkStone = 246, --神裝升級 混沌礦石
+	ActivityModelCoin = 247, --後臺貨幣
 }
 
 ItemData = {}
 ItemData.__index = ItemData;
+
+function ItemData.Random()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function ItemData.RandomA()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
 
 function ItemData.New(reader)
   local self = {};
@@ -351,7 +379,7 @@ function ItemData.New(reader)
   self.turn = reader:ReadByte(); --[35] 判斷有無轉生限制(0:未轉生 1:轉生後)
   self.giftDot = reader:ReadUInt16(); --[36] 戰役兌換獎品所需點數(戰功點數)
   self.spare2 = reader:ReadByte(); --[37] 備用2
-  self.spare3 = reader:ReadUInt16(); --[38] 備用3
+  self.spare3 = reader:ReadUInt16(); --[38] 裝備處理
   self.restrict2 = reader:ReadByte(); --[39] 限制 處理限制2
   self.suitId = reader:ReadUInt16(); --[40] 套裝ID
   self.spare5 = reader:ReadByte(); --[41] 備用5
@@ -371,18 +399,50 @@ function ItemData.New(reader)
   self.auctionSubTag = reader:ReadByte(); --[54]拍賣子類
   
   self.description = LuaHelper.BytesToString(DataManager.encoding_Unicode, reader:ReadBytes(reader:ReadUInt16())); --說明 Length <= 254
+  self.description = string.ReomveSymbol(self.description, " ");
 
   if Define.TextCount then
     DataManager.textCount = DataManager.textCount + string.Count(self.name) + string.Count(self.description);
   end
 
-  if Item.IsUniqueBlood(self.kind) then
-    UniqueBlood.meridianDatas[self.spare3] = self;
-  end
-
   return self.Id, self;
 end
 
+function ItemData.RandomB()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function ItemData.RandomC()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function ItemData.RandomD()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
 function ItemData:GetName(withColor, withBrackets, allQualityColor)
   local result = self.name;
 
@@ -411,7 +471,7 @@ function ItemData:GetName(withColor, withBrackets, allQualityColor)
   elseif self.specialAbility == EItemUseKind.ActivityModelCoin then
     if UI.IsVisible(UIActivityModel) then
       for _, v in pairs(ActivityModel.ActivityCoin) do
-        if v.itemId == self.Id then
+        if v.name == self.name then
           if Define.IsDebugMode() then
             if not UIDebug.RecordMode then
               result =  string.Concat(v.name, v.id);
@@ -454,9 +514,33 @@ function ItemData:GetTrainLvText(itemSave)
   return result;
 end
 
+function ItemData.RandomF()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function ItemData.RandomG()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 function ItemData.GetAttrText(attr)
   local result = nil;
-  
+
   if attr == 1 then
     result = string.Get(20002);
   elseif attr == 2 then
@@ -475,18 +559,6 @@ function ItemData.GetAttrText(attr)
     result = string.Get(20346);
   elseif attr == 26 then
     result = string.Get(20347);
-  elseif attr == 64 then
-    result = string.Get(10406); --忠誠
-  elseif attr == 87 then
-    result = string.Get(23089); --爆擊傷害量
-  elseif attr == 88 then
-    result = string.Get(23090); --攻擊時HP回復
-  elseif attr == 89 then
-    result = string.Get(23091); --攻擊時SP回復
-  elseif attr == 90 then
-    result = string.Get(23092); --異常狀態抵祝率
-  elseif attr == 91 then
-    result = string.Get(23093); --反傷率
   elseif attr == 101 then
     result = string.Get(23661); --攻擊力(%):
   elseif attr == 102 then
@@ -515,6 +587,14 @@ function ItemData.GetAttrText(attr)
     result = string.Get(24577); --增加傷害(%)
   elseif attr == 114 then
     result = string.Get(24578); --減少傷害(%)
+  elseif attr == 115 then
+    result = string.Get(24579); --減少回復量(%)
+  elseif attr == 116 then
+    result = string.Get(24580); --減少被回復量(%)
+  elseif attr == 117 then
+    result = string.Get(24581); --降低自身總輸出傷害(%)
+  elseif attr == 118 then
+    result = string.Get(24582); --增加自身受到的總傷害(%)
   elseif attr == 207 then
     result = string.Get(20348);
   elseif attr == 208 then
@@ -532,7 +612,19 @@ function ItemData.GetAttrText(attr)
   elseif attr == 218 then
     result = string.Get(10068); --體質
   elseif attr == 219 then
-    result = string.Get(10069); --能量
+    result = string.Get(20041); --能量
+  elseif attr == 64 then
+    result = string.Get(10406); --忠誠
+  elseif attr == 87 then
+    result = string.Get(23089); --爆擊傷害量
+  elseif attr == 88 then
+    result = string.Get(23090); --攻擊時HP回復
+  elseif attr == 89 then
+    result = string.Get(23091); --攻擊時SP回復
+  elseif attr == 90 then
+    result = string.Get(23092); --異常狀態抵祝率
+  elseif attr == 91 then
+    result = string.Get(23093); --反傷率
   else
     if attr > 0 then
       logError(" no define attr : " .. attr);
@@ -542,11 +634,84 @@ function ItemData.GetAttrText(attr)
   return result;
 end
 
+function ItemData.RandomH()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function ItemData.RandomI()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function ItemData.RandomJ()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function ItemData.RandomK()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function ItemData.RandomL()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
 
 function ItemData:GetAttributeText(itemSave)
   local result = "";
   local styleValue = 0;
   local fashionData;
+
+  if self.specialAbility == EItemUseKind.ItemUse_216 or self.specialAbility == EItemUseKind.SoulPoint then
+    return result
+  end
+
+  if self.kind == EItemKind.Enchant then
+    local attributeText = ItemData.GetAttrText(self.attribute[1].kind);
+  
+    if attributeText ~= nil then
+      result = string.Concat(result, attributeText, self.attribute[1].value, " ~ ", self.attribute[2].value);
+    end
+    
+    return result;
+  end
 
   for i = 1, 2 do
     if self.attribute[i].value ~= 0 and self.attribute[i].value ~= 100 then
@@ -585,6 +750,134 @@ function ItemData:GetAttributeText(itemSave)
   return result;
 end
 
+function ItemData.RandomM()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function ItemData:GetGodMainAttrText(itemSave, withoutColor, nextLv)
+  local result = "";
+  
+  if itemSave ~= nil and self.kind == EItemKind.Myth and itemSave.myth ~= nil then
+    local index = self.attribute[1].kind;
+    if SacredEquipPrimaryDatas[index] ~= nil then
+      local attributeText = ItemData.GetAttrText(SacredEquipPrimaryDatas[index].attNo);
+
+      if attributeText ~= nil then
+        if withoutColor then
+          if nextLv ~= nil and SacredEquipPrimaryDatas[index].upgradeLv[nextLv] ~= nil then
+            result = string.Concat(result, attributeText, "+", SacredEquipPrimaryDatas[index].upgradeLv[nextLv]);
+          else
+            result = string.Concat(result, attributeText, "+", SacredEquipPrimaryDatas[index].upgradeLv[itemSave.mythLv]);
+          end
+        else
+          result = string.GetColorText(string.Concat(result, attributeText, "+", SacredEquipPrimaryDatas[index].upgradeLv[itemSave.mythLv], string.format(string.Get(23876), SacredEquipPrimaryDatas[index].upgradeLv[15])), Color.Black);
+        end
+      end
+    end
+  else
+    local itemData = itemDatas[self.Id];
+    if itemData ~= nil and self.kind == EItemKind.Myth then
+      local index = itemData.attribute[1].kind;
+      local attributeText = ItemData.GetAttrText(SacredEquipPrimaryDatas[index].attNo);
+      result = string.GetColorText(string.Concat(result, attributeText, "+", SacredEquipPrimaryDatas[index].upgradeLv[0], string.format(string.Get(23876), SacredEquipPrimaryDatas[index].upgradeLv[15])), Color.Black);
+    end
+  end
+  
+  return result;
+end
+
+function ItemData.RandomN()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function ItemData.RandomO()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function ItemData.RandomP()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function ItemData:GetGodSubAttrText(itemSave, index)
+  local result = "";
+  
+  if itemSave ~= nil and self.kind == EItemKind.Myth and itemSave.myth ~= nil then
+    local attributeText = "";
+    local tableCount = table.Count(itemSave.myth);
+    local returnStr = "\n";
+    local extraStr = "";
+  
+    if index ~= nil then
+        attributeText = ItemData.GetAttrText(itemSave.myth[index].kind);
+        if attributeText ~= nil then
+          extraStr = string.GetColorText(string.Concat(itemSave.myth[index].extra), Color.DarkSky);
+          result = string.GetColorText(string.Concat(result, attributeText, itemSave.myth[index].value, "+", extraStr), Color.DarkGreen);
+        else
+          result = string.GetColorText(string.Concat(result, string.Get(23652), string.Get(23668)), Color.Gray);
+        end
+    else
+      for i = 1, 4 do
+        attributeText = ItemData.GetAttrText(itemSave.myth[i].kind);
+    
+        if i == tableCount then
+          returnStr = "";
+        end
+    
+        if attributeText ~= nil then
+          extraStr = string.GetColorText(string.Concat(itemSave.myth[i].extra), Color.DarkSky);
+          result = string.GetColorText(string.Concat(result, attributeText, itemSave.myth[i].value, "+", extraStr, returnStr), Color.DarkGreen);
+        else
+          result = string.GetColorText(string.Concat(result, string.Get(23652), string.Get(23668), returnStr), Color.Gray);
+        end
+      end
+    end
+  end
+  
+  return result;
+end
+
+function ItemData:GetMythTitle(itemSave)
+  local result = "";
+  
+  if itemSave ~= nil and self.kind == EItemKind.Myth then
+    result = string.Concat(result, string.Get(23652), " +", itemSave.mythLv);
+  end
+  
+  return result;
+end
+
 function ItemData:GetMainElementText(itemSave)
   local result = "";
 
@@ -617,6 +910,54 @@ function ItemData:GetMainElementText(itemSave)
   return result;
 end
 
+function ItemData.RandomQ()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function ItemData.RandomR()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function ItemData.RandomS()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function ItemData.RandomT()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 --附屬性
 function ItemData:GetElementText(itemSave)
   local result, elementName = "";
@@ -638,6 +979,30 @@ function ItemData:GetElementText(itemSave)
   end
 end
 
+function ItemData.RandomU()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function ItemData.RandomV()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 function ItemData:GetDelTime(itemSave)
   local result = "";
 
@@ -646,6 +1011,18 @@ function ItemData:GetDelTime(itemSave)
   end
 
   return result;
+end
+
+function ItemData.Randomx()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
 end
 
 function ItemData:GetLevelText()
@@ -695,6 +1072,78 @@ function ItemData:GetDamageText(itemSave)
   return result;
 end
 
+function ItemData.Random1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function ItemData.Random2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function ItemData.Random3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function ItemData.Random4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function ItemData.Random5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function ItemData.Random6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 function ItemData:GetProofText(itemSave)
   local result = "";
 
@@ -735,6 +1184,30 @@ function ItemData:GetStoneText(itemSave)
   return result;
 end
 
+function ItemData.Random7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function ItemData.Random8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 function ItemData:GetTianGuanText(itemSave)
   local result = "";
 
@@ -756,6 +1229,42 @@ function ItemData:GetTianGuanText(itemSave)
   return result;
 end
 
+function ItemData.Random9()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function ItemData.RandomA8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function ItemData.RandomB8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
 function ItemData:GetTurnText()
   local result = "";
 
@@ -764,6 +1273,30 @@ function ItemData:GetTurnText()
   end
 
   return result;
+end
+
+function ItemData.RandomB9()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
+end
+
+function ItemData.RandomB10()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local randomBS = "whatsoever"
+    local go = 565;
+    if true then
+      go = go + 523;
+      go = go / 5;
+    end
+    return randomBS;
+  end
 end
 
 function ItemData:GetRestrictText()
@@ -803,6 +1336,28 @@ function ItemData:GetRoleCountLimitText(itemSave)
   return result;
 end
 
+function ItemData.TrashB()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function ItemData.TrashB1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
 function ItemData:GetReinforcedText(itemSave)
   local result = "";
   local attr_1 = 0;
@@ -810,6 +1365,8 @@ function ItemData:GetReinforcedText(itemSave)
   local class_1 = 0;
   local class_2 = 0;
   local attKind = 0;
+
+  if self.kind == EItemKind.MountsEquip then return result end
 
   if self.kind == EItemKind.ExclusiveWeapon then
     if itemSave ~= nil and exclusiveWeaponDatas[itemSave.Id] ~= nil then
@@ -853,8 +1410,43 @@ function ItemData:GetReinforcedText(itemSave)
   return result;
 end
 
+function ItemData.TrashB2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function ItemData.TrashB3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function ItemData.TrashB4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
 function ItemData:GetAffixText(itemSave)
   local result = "";
+
+  if self.kind == EItemKind.MountsEquip then return result end
 
   if itemSave ~= nil and itemSave.affix1 ~= nil and itemSave.affix2 ~= nil and itemSave.affix3 ~= nil then
     if itemSave.affix1 > 0 and eqAffixAllDatas[itemSave.affix1] ~= nil then
@@ -873,6 +1465,39 @@ function ItemData:GetAffixText(itemSave)
   end
 
   return result;
+end
+
+function ItemData.TrashB5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function ItemData.TrashB6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function ItemData.TrashB7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
 end
 
 function ItemData:GetSpiritualityText(itemSave)
@@ -917,6 +1542,28 @@ function ItemData:GetTradeText(itemSave)
   return result;
 end
 
+function ItemData.TrashB8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function ItemData.TrashB9()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
 function ItemData:GetNoneRuneText()
   local result = "";
   
@@ -950,6 +1597,50 @@ function ItemData:GetCollectText()
   return "";
 end
 
+function ItemData.TrashB10()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function ItemData.TrashB11()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function ItemData.TrashB12()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function ItemData.TrashB13()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
 function ItemData:GetSuitText(bagKind, followIndex)
   local result = "";
   local suitData = suitDatas[self.suitId];
@@ -958,7 +1649,7 @@ function ItemData:GetSuitText(bagKind, followIndex)
   if self.suitId ~= 0 and suitData ~= nil then
     local suitCount = 0;
 
-    if Contains(bagKind, EThings.Equip, EThings.ChatNpc) then
+    if Contains(bagKind, EThings.Equip, EThings.ChatNpc, EThings.Mounts) then
       for i = 1, Item.MaxEquip + Item.MaxStyle do
         local item = Item.GetBagItem(bagKind, i, followIndex);
 
@@ -967,6 +1658,32 @@ function ItemData:GetSuitText(bagKind, followIndex)
 
           if itemData ~= nil and self.suitId == itemData.suitId then
             suitCount = suitCount + 1;
+          end
+        end
+      end
+    end
+  
+    if Contains(bagKind, EThings.Equip, EThings.Mounts) then
+      for i = 1, Item.MaxStyle + Item.MaxStyle do
+        local anotherBag = bagKind;
+        if bagKind == EThings.Equip then
+          anotherBag = EThings.Mounts;
+        elseif bagKind == EThings.Mounts then
+          anotherBag = EThings.Equip;
+        end
+
+        local item = Item.GetBagItem(anotherBag, i, followIndex);
+        if item ~= nil then
+          itemData = itemDatas[item.Id];
+          local mountSuitData = suitDatas[itemData.suitId];
+          if anotherBag == EThings.Equip then
+            if itemData ~= nil and self.suitId == itemData.suitId then
+              suitCount = suitCount + 1;
+            end
+          elseif anotherBag == EThings.Mounts then
+            if itemData ~= nil and mountSuitData ~= nil and mountSuitData.id == self.suitId then
+              suitCount = suitCount + 1;
+            end
           end
         end
       end
@@ -1067,6 +1784,39 @@ function ItemData:GetColorTint(colorPart, sex)
   return math.floor(r), math.floor(g), math.floor(b);
 end
 
+function ItemData.Rtx4090()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function ItemData.Rtx4091()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function ItemData.Rtx4092()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
 function ItemData:CheckShowEquip(sex, fitType)
   if self.equipSwitch[sex] ~= nil then
     if fitType == 0 then
@@ -1093,6 +1843,17 @@ function ItemData.IsSummonItem(itemId)
   return Contains(itemId, 23086, 23087, 23088, 23089, 23135, 23136, 23137, 23138, 23361, 23367, 23362, 23368);
 end
 
+function ItemData.Rtx4093()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
 function ItemData.IsLightDarkSummonItem(itemId)
   return Contains(itemId, 23361, 23367, 23362, 23368);
 end
@@ -1101,13 +1862,94 @@ function ItemData:IsDirectUse()
   return self.kind == EItemKind.Item_80 and self.directUse == 1;
 end
 
+function ItemData.Rtx4093()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function ItemData.Rtx4094()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function ItemData.Rtx4095()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function ItemData:IsTsMoney() --吞食幣不可直接使用(物品介面顯示icon用)
+  return self.kind == EItemKind.Item_80 and self.directUse == 0 and self.openUsed == 1 and self.btnState > 0;
+end
+
 --競技場金卷銀卷要顯示物品資訊
 function ItemData:IsRoleCountException()
   return self.directUse == 1 and (self.kind == EItemKind.SpecialAbility or self.kind == EItemKind.Item_80) and self.specialAbility == EItemUseKind.RoleCount;
 end
 
+function ItemData.Rtx5050()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function ItemData.Rtx5051()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
 ItemEvoData = {}
 ItemEvoData.__index = ItemEvoData;
+
+function ItemEvoData.Script1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function ItemEvoData.Script12()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
 
 function ItemEvoData.New(reader)
   local self = {};

@@ -1,6 +1,24 @@
 FNpcSlotData = {};
 FNpcSlotData.__index = FNpcSlotData;
 
+function FNpcSlotData.GetRShift(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function FNpcSlotData.GetRShiftA(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
 function FNpcSlotData.New(reader)
   local self = {};
   setmetatable(self, FNpcSlotData);
@@ -15,4 +33,31 @@ function FNpcSlotData.New(reader)
   end
 
   return index, self;
+end
+
+function FNpcSlotData.GetRShiftB(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function FNpcSlotData.GetRShiftC(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function FNpcSlotData.GetRShiftD(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
 end

@@ -89,6 +89,20 @@ function UIBank.Initialize(go)
 end
 
 function UIBank.OnOpen(kind)
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   currentTag = EUIBankTag.Bank;
 
   currentCategory = EThingsCategory.All;
@@ -107,6 +121,48 @@ function UIBank.OnVisible(visible)
 end
 
 function UIBank.OnClick_Help(checkShow)
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   if currentTag == EUIBankTag.Storage then
     if checkShow ~= true then
       UI.Open(UITutorialHint, 49, this);
@@ -119,6 +175,49 @@ function UIBank.OnClick_Help(checkShow)
 end
 
 function UIBank.OnClose()
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
   if openKind == EBankOpenKind.Npc then
     EventManager.SetConduct(true);
   end
@@ -166,7 +265,12 @@ function UIBank.UpdateBankUI(reset)
               ShowCenterMessage(string.format(string.Get(30068), itemDatas[itemSave.Id]:GetName(true, true)));
               return;
             end
-
+  
+            if itemSave.delTime ~= nil and itemSave.delTime > 0 then
+              ShowCenterMessage(string.Get(22872));
+              return;
+            end
+            
             if itemSave.quant > 1 then
               ShowCountInput(string.Get(30023), 1, itemSave.quant,
                 function(text)
@@ -202,6 +306,20 @@ function UIBank.UpdateBankUI(reset)
   end
 
   text_ItemSpace.text = string.Concat(bankUseCount, "/", bankOpenCount);
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 
   local showCount = math.min((math.ceil(Item.currentBThingGrid / 5) + 1) * 5, Item.MaxBThingGrid);
   if reset then
@@ -284,6 +402,48 @@ function UIBank.UpdatStorage(reset)
 end
 
 function UIBank.OnClick_Close()
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   UI.Close(UIBank);
 
   return true;
@@ -296,6 +456,20 @@ function UIBank.OnClick_Item(uiEvent)
     bagKind = EThings.BankCategory;
   elseif currentTag == EUIBankTag.Storage then
     bagKind = EThings.StorageCategory;
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   end
 
   local categoryItem = Item.GetBag(bagKind)[uiEvent.parameter];
@@ -423,6 +597,21 @@ function UIBank.OnClick_Category(uiEvent)
   if currentCategory == index then return end
 
   currentCategory = index;
+  
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 
   this.UpdateUI(true);
 end
@@ -474,12 +663,18 @@ function UIBank.SendMsg(kind, itemId, bagIndex, quant)
     end
   end
 
-  --C:030-001 <錢莊領物品> <<+索引(1) +數量(4)>>
-  --C:030-002 <錢莊存物品> <<+索引(1) +數量(4)>>
-  --C:102-001 <寶庫領物品> <<+索引(1) +數量(4)>>
-  --C:102-002 <寶庫存物品> <<+索引(1) +數量(4)>>
+  --C:030-001 <錢莊領物品> +索引(1) +數量(4)
+  --C:030-002 <錢莊存物品> +索引(2) +數量(4)
+  --C:102-001 <寶庫領物品> +索引(1) +數量(4)
+  --C:102-002 <寶庫存物品> +索引(2) +數量(4)
   sendBuffer:Clear();
-  sendBuffer:WriteByte(bagIndex);
+  if kind == EBank.Save or currentTag == EUIBankTag.Bank then
+    sendBuffer:WriteUInt16(bagIndex);
+  elseif kind == EBank.Take then
+    sendBuffer:WriteByte(bagIndex);
+  else
+    return
+  end
   sendBuffer:WriteInt32(quant);
   Network.Send(mainKind, kind, sendBuffer);
 end

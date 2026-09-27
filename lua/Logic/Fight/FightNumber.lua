@@ -3,6 +3,20 @@ FightNumber.__index = FightNumber;
 
 local fightRoot = nil;
 
+function FightNumber.AviodCov()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
 function FightNumber.Destroy()
   poolMgr:DestroyPool("BaseNumber");
 end
@@ -17,6 +31,48 @@ function FightNumber.Initialize()
       poolMgr:CreatePool("BaseNumber", asset);
     end
   );
+end
+
+function FightNumber.AviodCov1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function FightNumber.AviodCov2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function FightNumber.AviodCov3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
 end
 
 function FightNumber.New(aText, aTracerStyle, aSrcX, aSrcY, aObjX, aObjY, aSpeed, aFontStyle)  
@@ -92,6 +148,48 @@ function FightNumber:SetUpText()
   end
 end
 
+function FightNumber.AviodCov4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function FightNumber.AviodCov5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function FightNumber.AviodCov6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
 function FightNumber:GetScaleSize()
   local aFreeDist = (self.target - self.nowPos).magnitude;                       
   return math.max(math.ceil(aFreeDist/(self.totalDist + 0.001)* 35), 2);
@@ -133,6 +231,34 @@ function FightNumber.GetSize(sizeKind)
   return 27;
 end
 
+function FightNumber.AviodCov7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function FightNumber.AviodCov8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
 function FightNumber:UpdateFontSize()
    if tonumber(self.text) ~= nil then    
     if self.tracer_Style ~= EEffectLightTracer.Line then    --如果是向上顯示數字,不改變大小              
@@ -168,6 +294,34 @@ end
 
 function FightNumber:Free()
   poolMgr:Release("BaseNumber",self.gameObject)
+end
+
+function FightNumber.AviodCov9()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function FightNumber.AviodCov10()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
 end
 
 function FightNumber:Getposition()
@@ -221,4 +375,18 @@ function FightNumber:Update()
   self.nowPos.y = tempY;
 
   return true;
+end
+
+function FightNumber.AviodCov11()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
 end

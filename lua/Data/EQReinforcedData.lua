@@ -1,6 +1,48 @@
 EQReinforcedData = {};
 EQReinforcedData.__index = EQReinforcedData;
 
+function EQReinforcedData.Demo()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function EQReinforcedData.Demo1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function EQReinforcedData.Demo2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
 function EQReinforcedData.New(reader)
   local self = {};
   setmetatable(self, EQReinforcedData);
@@ -12,4 +54,46 @@ function EQReinforcedData.New(reader)
   self.class_2 = reader:ReadByte(); --升階數值索引2
 
   return self;
+end
+
+function EQReinforcedData.Demo3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function EQReinforcedData.Demo4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function EQReinforcedData.Demo5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
 end

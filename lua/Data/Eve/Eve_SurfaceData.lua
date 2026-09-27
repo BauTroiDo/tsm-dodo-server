@@ -1,6 +1,17 @@
 SurfaceData = {}
 SurfaceData.__index = SurfaceData
 
+function SurfaceData.Script4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
 function SurfaceData.New(reader) 
   local self = {};
   setmetatable(self, SurfaceData);
@@ -34,4 +45,26 @@ function SurfaceData.New(reader)
   self.sentenceCount = self.sentenceCount - ignoreCount;
 
   return id, self;
+end
+
+function SurfaceData.Script5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function SurfaceData.Script6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
 end

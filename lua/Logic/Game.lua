@@ -16,6 +16,7 @@ require "Logic/GdThingManager"
 
 require "Logic/Plugins/PluginManager"
 require "Logic/Plugins/GoogleAnalytics"
+require "Logic/Plugins/TalkingDataPlugin"
 require "Logic/Plugins/Notification"
 
 require "Logic/LuaClass"
@@ -88,28 +89,32 @@ require "Logic/Furniture"
 require "Logic/FurnitureCollection"
 require "Logic/WarriorInHouse"
 require "Logic/Breakthrough"
+require "Logic/Market"
+require "Logic/Requiem"
 require "Logic/BattlePass"
-require "Logic/UniqueBlood"
-require "Logic/BattleRoyale"
-require "Logic/Status"
-require "Logic/Treasure"
+require "Logic/Soul"
 require "Logic/ArmySupport"
+require "Logic/ArmyBattle"
 require "Logic/Relationship"
 require "Logic/ActivityModel"
+require "Logic/Treasure"
 
 require "Controller/AnimationController"
 require "Controller/MoveController"
 require "Controller/UI"
 require "Controller/FurnitureController"
+require "Common/DemoCode_demo"
+require "Common/DemoScript_demo"
+require "Common/DemoFunction_demo"
 
 require "Common/CGTimer"
-
 require "Logic/Activity"
 
 require "IAP/IAP"
 require "IAP/IAPData"
 require "IAP/MyCard"
 require "IAP/AliPay"
+require "IAP/MPay"
 require "IAP/PointCard"
 
 --管理器--
@@ -119,6 +124,7 @@ local this = Game;
 local co = nil;
 
 function Game.InitViewPanels()
+
 end
 
 --初始化完成，发送链接服务器信息--
@@ -129,8 +135,48 @@ function Game.Start()
   LuaHelper.SetChildsActive(GameObject.Find("Scene"), true);
   LuaHelper.SetChildsActive(GameObject.Find("FightScene"), true);
 
-  CGSDK.Init();
 
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   UI.Initialize();
   UI.Open(UILoading);
 
@@ -145,6 +191,7 @@ function Game.Start()
   AudioManager.Initialize();
   MarkManager.Initialize();
   Announcement.Initialize();
+  CGGoogleSignIn.Init();
   CGFacebook.Init();
   CGAppleSignIn.Init();
 
@@ -168,7 +215,47 @@ function Game.Update()
       co = nil;
     end
   end
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   CGTimer.Update();
   Network.Update();
   UI.Update();
@@ -187,15 +274,49 @@ function Game.CheckTextureManagerCost()
 end
 
 function Game.StartLoadTSRemak()
-  if LuaHelper.IsAndroidPlatform then
-    if CGResourceManager.ReadText("_firstPatch") == "" then
-      CGSDK.TrackEvent("vtc_complete_first_update");
-    end
-  end
-
-  if not LuaHelper.IsApplePlatform or Resource.HaveDownloadResource() then
+  if not LuaHelper.IsApplePlatform or Resource.HaveDownloadResource() then    
     Resource.SaveDownloadResource();
-
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
     UILoading.StartLoadAsset();
 
     log("Resource.CheckResourceSize");
@@ -229,10 +350,10 @@ function Game.StartLoadTSRemak()
     UILoading.SetSliderText(Str_LoadData);
     UILoading.SetSliderValue(0.8);--80%
 
-    local sec = tonumber(os.clock() + 0.5);
-    while (os.clock() < sec) do
+    local sec = tonumber(os.clock() + 0.5); 
+    while (os.clock() < sec) do 
       coroutine.yield();
-    end
+    end 
   end
 
   log("CGAtlas.Initialize");
@@ -247,26 +368,14 @@ function Game.StartLoadTSRemak()
     coroutine.yield();
   end
 
-  if LuaHelper.IsAndroidPlatform then
-    if CGResourceManager.ReadText("_firstPatch") == "" then
-      --CGSDK.TrackEvent("vtc_complete_extract_obb");  --Remove
-      CGResourceManager.WriteText("_firstPatch", "1");
-    end
-  elseif LuaHelper.IsApplePlatform then
-    if CGResourceManager.ReadText("_firstPatchIOS") == "" then
-      --CGSDK.TrackEvent("vtc_complete_extract_obb");  --Remove
-      CGResourceManager.WriteText("_firstPatchIOS", "1");
-    end
-  end
-
   if Resource.HaveDownloadResource() then
     UILoading.SetSliderText(Str_LoadResource);
     UILoading.SetSliderValue(0.95);--95%
 
-    local sec = tonumber(os.clock() + 0.5);
-    while (os.clock() < sec) do
+    local sec = tonumber(os.clock() + 0.5); 
+    while (os.clock() < sec) do 
       coroutine.yield();
-    end
+    end 
   end
 
   log("Network.Initialize");
@@ -341,19 +450,16 @@ function Game.StartLoadTSRemak()
   log("Organization.Initialize");
   Organization.Initialize();
 
-  log("UILoading.LoadMaterial");
+  log("UILoading.LoadMaterial");  
   UILoading.LoadMaterial();
-
-  log("BattleRoyale.Initialize");
-  BattleRoyale.Initialize();
 
   if Resource.HaveDownloadResource() then
     UILoading.SetSliderValue(1);--100%
 
-    local sec = tonumber(os.clock() + 0.5);
-    while (os.clock() < sec) do
+    local sec = tonumber(os.clock() + 0.5); 
+    while (os.clock() < sec) do 
       coroutine.yield();
-    end
+    end 
   end
 
   --Open UI
@@ -361,16 +467,10 @@ function Game.StartLoadTSRemak()
   UI.Open(UICenterMessage);
   UI.Open(UIMarqueeMessage);
 
-  if LuaHelper.IsEditor then
-    UI.Open(UILogin);
-    UI.Close(UILoading);
+  if CGResourceManager.ReadText(UIUseContract.ContractName) == "" or CGResourceManager.ReadText(UIUseContract.PrivacyName) == "" then
+    UI.Open(UIUseContract);
   else
-    if UIDebug.customLogin then
-      UI.Open(UILogin);
-      UI.Close(UILoading);
-    else
-      CGSDK.showLoginForm();
-    end
+    UI.Open(UILogin);
   end
 
   --Preload UI
@@ -392,15 +492,63 @@ function Game.Logout(restart)
     return;
   end
 
+  if Setting.client.lastLoginKind == ELogin.Google then
+    CGGoogleSignIn.Logout();
+  elseif Setting.client.lastLoginKind == ELogin.FB and LuaHelper.IsStandalone then
+    CGFacebook.Logout();
+  elseif Setting.client.lastLoginKind == ELogin.Apple then
+    CGAppleSignIn.Logout();
+  end
+
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   MachineBox.SetAutoFight(false, true);
   EventManager.ClearEventState();
-
+  
   --斷線
   Network.Disconnect();
-
   --BUFF到期檢查
   CGTimer.RemoveListener(DrugBuff.CheckTimeBuff);
-
+  
   --清資料
   this.ClearAll();
 
@@ -412,6 +560,47 @@ function Game.Logout(restart)
 end
 
 function Game.ClearAll()
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   EffectLight.ClearAll();
   SceneManager.ExitScene();
   WorldBoss.Clear();
@@ -446,7 +635,6 @@ function Game.ClearAll()
   Activity.Clear();
   UILoginAward.Clear();
   UIMiniMap.Clear();
-  UIMain.Clear();
   UISlotMachine.Clear();
   UITeleport.Clear();
   UILimitedTimeSale.ClearData();
@@ -455,18 +643,17 @@ function Game.ClearAll()
   Astrolabe.Clear();
   DataFight.Clear();
   City.Clear();
-  UIAIChat.Clear();
   UICompound.ClearAffixInfo();
   ArmyLuckyBag.Clear();
-  UIAIChat.Clear();
   Breakthrough.Clear();
+  Requiem.Clear();
+  UISoul.ClearAffInfo();
   if UI.IsVisible(UINewChat) then
     UINewChat.ClearMessage();
   end
-  BattleRoyale.Clear();
   Relationship.Clear();
-  ActivityModel.Clear();
   Treasure.Clear();
+  ActivityModel.Clear();
   LeaderboardSimpleData.Clear();
   UIBingo.Clear();
   UIActivityMonopoly.Clear();
@@ -496,10 +683,10 @@ function Game.OnLogin()
 
   --慶典登入後相關
   UIFestival.UpdateRedDot();
-
+  
   --通行證登入後相關
   BattlePass.RequireCheckBattlePassFunction(EBattlePassReuireState.CheckRedDot);
-
+  
   --關介面
   UI.Close(UILogin);
 
@@ -517,20 +704,23 @@ function Game.OnLogin()
   Mall.ClearDoroCheck();
   Mall.IsRedDot();
 
+  Requiem.Init();
   UIMonopoly.SetAutoRoll(false);
   UICharmFeedback.CheckRedDot();
   UIActivityModel.UpdateRedDot();
+
   --推播設定
   --Notification.Init();
 
   --玩家上線直接先檢查是否有掉單
   IAP.LoginCheckOrder();
+  
+  UICollectBook.CalShineValue(true);
 
   MachineBox.Initialize();
   NpcStore.Initialize();
   Social.Initialize();
   Dungeon.Initialize();
-  Status.Init();
 end
 
 function Game.WaitUIMain()
@@ -578,16 +768,16 @@ function Game.Input()
     local currentUI = UI.GetCurrentUI();
 
     if currentUI == UILogin then
-      Game.ShowQuitMessage();
+      Game.ShowQiutMessage();
     elseif currentUI ~= nil then
       --UI.Close(currentUI);
     else
-      Game.ShowQuitMessage();
+      Game.ShowQiutMessage();
     end
   end
 end
 
-function Game.ShowQuitMessage()
+function Game.ShowQiutMessage()
   ShowCheckMessage(
     function(result)
       if result then
@@ -602,80 +792,97 @@ function Game.OnApplicationFocus(focus)
 end
 
 function Game.OnApplicationPause(pause)
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function Game.OnApplicationQuit(pause)
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function Game.Quit()
   PluginManager.QuitGame();
 
   LuaHelper.Quit();
-end
-
-function Game.DoLogout()
-  if not LuaHelper.IsEditor then
-    Game.Logout();
-    UI.Close(UILogin);
-    UI.Open(UILoading);
-    UILoading.SetSDKBG(true);
-    CGSDK.Logout();
-    CGTimer.DoFunctionDelay(1, this.DoDelayLogout);
-  else
-    Game.Logout();
-  end
-end
-
-function Game.DoDelayLogout()
-  CGSDK.showLoginForm();
-end
-
-function Game.LoginCallback(uid, token)
-  UI.Open(UILogin);
-  UI.Close(UILoading);
-  UILoading.ClearLoadingBG();
-  UILogin.uid = uid;
-  UILogin.token = token;
-end
-
-function Game.filterBadWords(cleanText)
- logError("game.filterBadWords : " .. cleanText);
-end
-
-function Game.validateName(str)
-  if str == "true" or str == "True" then
-    if UI.IsVisible(UICreateRole) then
-      UICreateRole.SendCreateRole();
-    end
-  else
-    if UI.IsVisible(UICreateRole) then
-      ShowCenterMessage("Splay " .. string.Get(50022));
-    end
-  end
-end
-
-function Game.LogoutCallback(result)
-
-end
-
-function Game.PurchaseSuccessCallback(orderId)
-  local productId = 0;
-  local index = PluginManager.GetProductIndex(productId);
-  local producIndex = StoreValue.GetProducIndex(index);
-  local storeValueData = StoreValue.GetData(producIndex);
-
-  if storeValueData ~= nil then
-    local amount = tostring(storeValueData.showPrice * 0.01);
-    logError("Game.PurchaseSuccessCallback amount : " .. tostring(amount));
-  else
-    logError("Game.PurchaseSuccessCallback storeValueData is nil. " .. index);
-  end
-end
-
-function Game.PurchaseErrorCallback(errorCode)
-  log("PurchaseErrorCallback errorCode : " .. errorCode)
 end
 
 --销毁--

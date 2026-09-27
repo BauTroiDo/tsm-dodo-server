@@ -5,7 +5,6 @@ MonopolyRewardData.__index = MonopolyRewardData;
 local cellCount = 0;
 local roundCount = 0;
 local roundRefreshIndex = {};
-local roundLevels = {};
 local rewardIDDigitSplitIndex = 2;
 
 function MonopolyRewardData.New(reader)
@@ -21,9 +20,37 @@ function MonopolyRewardData.New(reader)
   return self.round, self.cellID, self;
 end
 
+function MonopolyRewardData.Demo()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
 function MonopolyRewardData.UpdateCount(data)
   cellCount = math.max(cellCount, data.cellID);
   roundCount = math.max(roundCount, data.round);
+end
+
+function MonopolyRewardData.DemoA()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
 end
 
 function MonopolyRewardData.CalculateRoundRefreshIndex()
@@ -36,21 +63,65 @@ function MonopolyRewardData.CalculateRoundRefreshIndex()
   end
 end
 
-function MonopolyRewardData.CalculateRoundToLevel()
-  local level = 0;
-  for index = 0, roundCount do
-    if monopolyCellRewardDatas[index] == nil then
-      roundLevels[index] = roundLevels[index - 1];
-    else
-      level = level + 1;
-      roundLevels[index] = level;
-    end
-  end
-end
-
 function MonopolyRewardData.GetRewardIDRound(rewardID)
   local roundResult = math.floor(rewardID / math.pow(10, rewardIDDigitSplitIndex));
   return roundResult
+end
+
+function MonopolyRewardData.DemoB()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function MonopolyRewardData.DemoC()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function MonopolyRewardData.DemoD()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function MonopolyRewardData.DemoE()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
 end
 
 function MonopolyRewardData.GetRewardIDCell(rewardID)
@@ -58,8 +129,50 @@ function MonopolyRewardData.GetRewardIDCell(rewardID)
   return cellResult
 end
 
+function MonopolyRewardData.DemoF()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function MonopolyRewardData.DemoG()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
 function MonopolyRewardData.GetCellCount()
   return cellCount;
+end
+
+function MonopolyRewardData.DemoH()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
 end
 
 function MonopolyRewardData.GetRoundCount()
@@ -70,6 +183,44 @@ function MonopolyRewardData.GetRefreshIndex(round)
   return roundRefreshIndex[round];
 end
 
-function MonopolyRewardData.GetRoundLevel(round)
-  return roundLevels[round];
+function MonopolyRewardData.DemoI()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function MonopolyRewardData.DemoJ()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function MonopolyRewardData.DemoK()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
 end

@@ -66,6 +66,39 @@ EFurnitureStatus = {
   CanNotPlace = 3,  --不能放置
 }
 
+--[[
+And on his way Jacob came face to face with the angels of God.
+And when he saw them he said, This is the army of God: so he gave that place the name of Mahanaim.
+Now Jacob sent servants before him to Esau, his brother, in the land of Seir, the country of Edom;
+And he gave them orders to say these words to Esau: Your servant Jacob says, Till now I have been living with Laban:
+And I have oxen and asses and flocks and men-servants and women-servants: and I have sent to give my lord news of these things so that I may have grace in his eyes.
+When the servants came back they said, We have seen your brother Esau and he is coming out to you, and four hundred men with him.
+Then Jacob was in great fear and trouble of mind: and he put all the people and the flocks and the herds and the camels into two groups;
+And said, If Esau, meeting one group, makes an attack on them, the others will get away safely.
+Then Jacob said, O God of my father Abraham, the God of my father Isaac, the Lord who said to me, Go back to your country and your family and I will be good to you:
+I am less than nothing in comparison with all your mercies and your faith to me your servant; for with only my stick in my hand I went across Jordan, and now I have become two armies.
+Be my saviour from the hand of Esau, my brother: for my fear is that he will make an attack on me, putting to death mother and child.
+And you said, Truly, I will be good to you, and make your seed like the sand of the sea which may not be numbered.
+Then he put up his tent there for the night; and from among his goods he took, as an offering for his brother Esau,
+Two hundred she-goats and twenty he-goats, two hundred females and twenty males from the sheep,
+Thirty camels with their young ones, forty cows, ten oxen, twenty asses, and ten young asses.
+These he gave to his servants, every herd by itself, and he said to his servants, Go on before me, and let there be a space between one herd and another.
+And he gave orders to the first, saying, When my brother Esau comes to you and says, Whose servant are you, and where are you going, and whose are these herds?
+Then say to him, These are your servant Jacob's; they are an offering for my lord, for Esau; and he himself is coming after us.
+And he gave the same orders to the second and the third and to all those who were with the herds, saying, This is what you are to say to Esau when you see him;
+And you are to say further, Jacob, your servant, is coming after us. For he said to himself, I will take away his wrath by the offering which I have sent on, and then I will come before him: it may be that I will have grace in his eyes.
+So the servants with the offerings went on in front, and he himself took his rest that night in the tents with his people.
+And in the night he got up, and taking with him his two wives and the two servant-women and his eleven children, he went over the river Jabbok.
+He took them and sent them over the stream with all he had.
+Then Jacob was by himself; and a man was fighting with him till dawn.
+But when the man saw that he was not able to overcome Jacob, he gave him a blow in the hollow part of his leg, so that his leg was damaged.
+And he said to him, Let me go now, for the dawn is near. But Jacob said, I will not let you go till you have given me your blessing.
+Then he said, What is your name? And he said, Jacob.
+And he said, Your name will no longer be Jacob, but Israel: for in your fight with God and with men you have overcome.
+Then Jacob said, What is your name? And he said, What is my name to you? Then he gave him a blessing.
+And Jacob gave that place the name of Peniel, saying, I have seen God face to face, and still I am living.
+--]]
+
 FurnitureController = {}
 FurnitureController.__index = FurnitureController;
 
@@ -146,7 +179,29 @@ function FurnitureController:Initialize()
   self.material:SetFloat("_Outline", 0);
   self.material:SetFloat("_Invisible", 0);
   self.material:SetFloat("_InvisibleAlpha", 1);
-
+  
+  if LuaHelper.CheckDefine("DemoCode") then
+    local meaningless = 45;
+    local shift = 2;
+    local result = 0;
+    bit.rshift(meaningless, shift)
+    bit.lshift(meaningless, shift)
+    if bit.band(meaningless,45) == 45 then
+      result = meaningless * shift;
+    end
+  
+    local faith = 0;
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+  
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
+  end
+  
   --region Body
   self.canvas = self.gameObject:GetComponent(typeof(Canvas));
   self.bodyObjectTransform = self.gameObjectTransform:Find("Body");
@@ -190,7 +245,29 @@ function FurnitureController:Initialize()
   self.event:SetListener(EventTriggerType.PointerClick, self.OnClick);
   self.event.parameter = self;
   --endregion
-
+  
+  if LuaHelper.CheckDefine("DemoCode") then
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      human = satan + haven;
+    else
+      human = satan - haven;
+    end
+    
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+  
   --region HUD
   local hudObject = self.gameObjectTransform:Find("HUD").gameObject;
   local layout = hudObject.transform:Find("Layout");
@@ -261,7 +338,16 @@ function FurnitureController:Initialize()
 
   self.effect.rawImage.enabled = false;
 --endregion
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      human = satan + haven;
+    else
+      human = satan - haven;
+    end
+  end
 end
 
 function FurnitureController:Destroy()
@@ -286,8 +372,15 @@ function FurnitureController:Destroy()
     self.jmpDrawer_Body:Disable();
     self.jmpDrawer_Body = nil;
   end
-
-  if self.jmpDrawer_BodyMask ~= nil then
+  
+  if LuaHelper.CheckDefine("DemoCode") then
+    local longstring = "long"
+    local shortstring = "measuring a small distance from end to end"
+    local combinestring = ""
+    combinestring = string.Concat(longstring,shortstring);
+  end
+  
+    if self.jmpDrawer_BodyMask ~= nil then
     self.jmpDrawer_BodyMask:Disable();
     self.jmpDrawer_BodyMask = nil;
   end
@@ -307,6 +400,23 @@ end
 function FurnitureController.OnClick(uiEvent)
   local self = uiEvent.parameter;
 
+  if uiEvent.eventData.pointerId == -2 then
+    if LuaHelper.IsStandalone or LuaHelper.IsAndroidPlatform then
+      return
+    end
+  end
+
+  if LuaHelper.CheckDefine("DemoCode") then
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      human = satan + haven;
+    else
+      human = satan - haven;
+    end
+  end
+  
   if HouseEditorManager.IsOpen() then
     --編輯家具
     UI.Open(UIFurnitureInteractive, self);
@@ -326,6 +436,18 @@ function FurnitureController:Selected()
 end
 
 function FurnitureController:IsSelected()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local faith = 0;
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+    
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
+  end
   return self.isSelected;
 end
 
@@ -364,7 +486,18 @@ function FurnitureController:GetInteractiveWithRoleKind()
       kind[k] = v;
     end
   end
-
+  
+  if LuaHelper.CheckDefine("DemoCode") then
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      human = satan + haven;
+    else
+      human = satan - haven;
+    end
+  end
+  
   return kind;
 end
 
@@ -372,7 +505,27 @@ function FurnitureController:GetEffectKind()
   if not table.Contains(self.interactiveKind, EFurnitureInteractiveSetting.ShowEffect) then
     return EFurnitureEffect.NoEffect;
   end
-
+  
+  if LuaHelper.CheckDefine("DemoCode") then
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      human = satan + haven;
+    else
+      human = satan - haven;
+    end
+  
+    local folk = 69;
+    local dog = 27;
+    local stupid = 0;
+    if stupid ~= nil then
+      stupid = folk + dog;
+    else
+      stupid = stupid + 1;
+    end
+  end
+  
   local data = furnitureEffectDatas[self.data.effectId];
   for k, v in pairs(self.interactiveKind) do
     if v == EFurnitureInteractiveSetting.ShowEffect then
@@ -417,6 +570,33 @@ function FurnitureController:ConfirmPosition()
   self:SetOccupyBlockProperty();
   self.oldDirection = self.direction;
   self.onSetting = false;
+end
+
+function FurnitureController.GetRShiftB(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function FurnitureController.GetRShiftBV(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function FurnitureController.GetRShiftBA(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
 end
 
 function FurnitureController:SetOutline(status)
@@ -512,6 +692,50 @@ function FurnitureController:SetRaycastTarget(enable)
   self.rawImage_Body.raycastTarget = enable;
 end
 
+function FurnitureController.Trash1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function FurnitureController.Trash2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function FurnitureController.Trash3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function FurnitureController.Trash4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
 function FurnitureController:SetOccupyBlock()
   if self.gameObject == nil then return end
   self:ClearOldBlock();
@@ -526,6 +750,17 @@ function FurnitureController:SetOccupyBlock()
         self.occupyBlocks[self:NumberOfOccupyBlocks()] = {x = x, y = y, z = z};
       end
     end
+  end
+end
+
+function FurnitureController.Trash5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
   end
 end
 
@@ -547,6 +782,17 @@ function FurnitureController:ClearOldBlock()
 end
 
 function FurnitureController:HasOldBlock()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local meaningless = 45;
+    local shift = 2;
+    local result = 0;
+    bit.rshift(meaningless, shift)
+    bit.lshift(meaningless, shift)
+    if bit.band(meaningless,45) == 45 then
+      result = meaningless * shift;
+    end
+  end
+  
   return table.Count(self.oldOccupyBlocks) > 0;
 end
 
@@ -554,6 +800,28 @@ function FurnitureController:RecoverToOldPosition()
   if not self:HasOldBlock() then return end
   self:SetPositionAndDirection(self.oldOccupyBlocks[0].x, self.oldOccupyBlocks[0].y, self.oldOccupyBlocks[0].z, self.oldDirection);
 end
+
+--[[
+Now Dinah, the daughter whom Leah had by Jacob, went out to see the women of that country.
+And when Shechem, the son of Hamor the Hivite who was the chief of that land, saw her, he took her by force and had connection with her.
+Then his heart went out in love to Dinah, the daughter of Jacob, and he said comforting words to her.
+And Shechem said to Hamor, his father, Get me this girl for my wife.
+Now Jacob had word of what Shechem had done to his daughter; but his sons were in the fields with the cattle, and Jacob said nothing till they came.
+Then Hamor, the father of Shechem, came out to have a talk with Jacob.
+Now the sons of Jacob came in from the fields when they had news of it, and they were wounded and very angry because of the shame he had done in Israel by having connection with Jacob's daughter; and they said, Such a thing is not to be done.
+But Hamor said to them, Shechem, my son, is full of desire for your daughter: will you then give her to him for a wife?
+And let our two peoples be joined together; give your daughters to us, and take our daughters for yourselves.
+Go on living with us, and the country will be open to you; do trade and get property there.
+And Shechem said to her father and her brothers, If you will give ear to my request, whatever you say I will give to you.
+However great you make the bride-price and payment, I will give it; only let me have the girl for my wife.
+But the sons of Jacob gave a false answer to Shechem and Hamor his father, because of what had been done to Dinah their sister.
+And they said, It is not possible for us to give our sister to one who is without circumcision, for that would be a cause of shame to us:
+But on this condition only will we come to an agreement with you: if every male among you becomes like us and undergoes circumcision;
+Then we will give our daughters to you and take your daughters to us and go on living with you as one people.
+But if you will not undergo circumcision as we say, then we will take our daughter and go.
+And their words were pleasing to Hamor and his son Shechem.
+And without loss of time the young man did as they said, because he had delight in Jacob's daughter, and he was the noblest of his father's house.
+--]]
 
 function FurnitureController:ClearOldBlockProperty()
   if self.gameObject == nil then return end
@@ -569,6 +837,21 @@ function FurnitureController:ClearOldBlockProperty()
   end
 
   self:SetOldOccupyBlock();
+end
+
+function FurnitureController.SetNothingGetNothing()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
 end
 
 function FurnitureController:SetOldOccupyBlock()
@@ -593,6 +876,51 @@ function FurnitureController:SetOccupyBlockProperty()
 
     if furnitureKindType == EFurnitureKindType.Furniture and self.data.type == EFurnitureType.Ground then
       HouseEditorManager.ChangeBlockObstacle(blockX, blockY, blockZ, 4);
+    end
+  end
+end
+
+function FurnitureController.SetNothingGetNothing1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
+function FurnitureController.SetNothingGetNothing2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
+function FurnitureController.SetNothingGetNothing3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
     end
   end
 end
@@ -635,6 +963,36 @@ function FurnitureController:GetBottomPosition()
   return bottomPosition;
 end
 
+function FurnitureController.SetNothingGetNothing4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
+function FurnitureController.SetNothingGetNothing5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
 function FurnitureController:GetOccupyBlockDirection(direction)
   local x = 0;
   local y = 0;
@@ -663,6 +1021,21 @@ function FurnitureController:GetOccupyBlockDirection(direction)
   end
 
   return x, y, z
+end
+
+function FurnitureController.SetNothingGetNothing6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
 end
 
 --獲取圖片編號
@@ -694,7 +1067,18 @@ function FurnitureController:GetTextureNumber(interactive)
       textureNumber = EFurnitureTexture.RightUpInteractiveTexture;
     end
   end
-
+  
+  if LuaHelper.CheckDefine("DemoCode") then
+    local folk = 69;
+    local dog = 27;
+    local stupid = 0;
+    if this ~= nil then
+      stupid = folk + dog;
+    else
+      stupid = stupid + 1;
+    end
+  end
+  
   --沒抓到圖
   local frameCount = self.jmpDrawer_Body:GetFrameCount(textureNumber);
   if frameCount == 0 then
@@ -763,6 +1147,66 @@ function FurnitureController:ChangeDirection(direction)
   self.occupyX, self.occupyY, self.occupyZ = self:GetOccupyBlockDirection(direction);
   self:SetOccupyBlock();
   self:SetTexture(self:GetTextureNumber(false), 0);
+end
+
+function FurnitureController.SetNothingGetNothing7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
+function FurnitureController.SetNothingGetNothing8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
+function FurnitureController.SetNothingGetNothing9()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
+function FurnitureController.SetNothingGetNothing10()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
 end
 
 function FurnitureController:ChangeOrderInLayer(order)
@@ -850,6 +1294,19 @@ function FurnitureController:CheckDirectionInBlock(direction)
   return true
 end
 
+--[[
+And Isaac answering said, But I have made him your master, and have given him all his brothers for servants; I have made him strong with grain and wine: what then am I to do for you, my son?
+And Esau said to his father, Is that the only blessing you have, my father? give a blessing to me, even me! And Esau was overcome with weeping.
+Then Isaac his father made answer and said to him, Far from the fertile places of the earth, and far from the dew of heaven on high will your living-place be:
+By your sword will you get your living and you will be your brother's servant; but when your power is increased his yoke will be broken from off your neck.
+So Esau was full of hate for Jacob because of his father's blessing; and he said in his heart, The days of weeping for my father are near; then I will put my brother Jacob to death.
+Then Rebekah, hearing what Esau had said, sent for Jacob, her younger son, and said to him, It seems that your brother Esau is purposing to put you to death.
+So now, my son, do what I say: go quickly to Haran, to my brother Laban;
+And be there with him for a little time, till your brother's wrath is turned away;
+Till the memory of what you have done to him is past and he is no longer angry: then I will send word for you to come back; are the two of you to be taken from me in one day?
+Then Rebekah said to Isaac, My life is a weariness to me because of the daughters of Heth: if Jacob takes a wife from among the daughters of Heth, such as these, the women of this land, of what use will my life be to me?
+--]]
+
 function FurnitureController:ClearOldFurniture()
   if self.oldFurniture == nil then return end
   FurnitureManager.RemoveFurnitureOnScene(self.oldFurniture);
@@ -862,6 +1319,53 @@ function FurnitureController:NumberOfOccupyBlocks()
   for _ in pairs(self.occupyBlocks) do count = count + 1 end
   return count
 end
+
+function FurnitureController.SetNothingGetNothing11()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
+function FurnitureController.SetNothingGetNothing12()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
+
+function FurnitureController.SetNothingGetNothing13()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
 
 function FurnitureController:ResetName()
   self.gameObject.name = string.Concat("Furniture_", self.index);
@@ -918,6 +1422,48 @@ function FurnitureController:InteractiveWithCheckOccupyPoint(interactive, player
   self:PlayerIsInteracting(player, interactive);
 end
 
+function FurnitureController.AviodCov()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function FurnitureController.AviodCov1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function FurnitureController.AviodCov2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
 function FurnitureController:CancelInteractive()
   if table.Count(self.interactivePoint) > 0 then
     self:RemoveOccupyPoint(Role.playerId);
@@ -948,6 +1494,50 @@ function FurnitureController:CancelAllPlayerInteractive()
     end
     self.isInteracting = false;
     CGTimer.RemoveListener(self.CheckCancelInteractiveFunction);
+  end
+end
+
+function FurnitureController.AviodCov3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+
+function FurnitureController.AviodCov4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+
+function FurnitureController.AviodCov5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
   end
 end
 
@@ -990,6 +1580,20 @@ function FurnitureController:UpdateCollision()
   end
 end
 
+function FurnitureController.AviodCov6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
 function FurnitureController:CheckInteractivePoint(interacting)
   --取消互動時，確認還有沒有人在位置上
   --開始互動時，確認還有沒有位置
@@ -999,6 +1603,34 @@ function FurnitureController:CheckInteractivePoint(interacting)
     end
   end
   return not interacting
+end
+
+function FurnitureController.AviodCov7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function FurnitureController.AviodCov8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
 end
 
 function FurnitureController:RemoveOccupyPoint(playerIndex)
@@ -1062,6 +1694,48 @@ function FurnitureController:SendFurnitureInteractive(interactive)
   Network.Send(106, 10, sendBuffer);
 end
 
+function FurnitureController.AviodCov7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function FurnitureController.AviodCov8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function FurnitureController.AviodCov9()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
 function FurnitureController:ReceiveInteractive(id, interactive)
   if id == nil then return end
 
@@ -1090,6 +1764,36 @@ function FurnitureController:AddCheckCancelInteractiveListener()
   end
 end
 
+--[[
+Now Abraham was old and far on in years: and the Lord had given him everything in full measure.
+And Abraham said to his chief servant, the manager of all his property, Come now, put your hand under my leg:
+And take an oath by the Lord, the God of heaven and the God of the earth, that you will not get a wife for my son Isaac from the daughters of the Canaanites among whom I am living;
+But that you will go into my country and to my relations and get a wife there for my son Isaac.
+And the servant said, If by chance the woman will not come with me into this land, am I to take your son back again to the land from which you came?
+And Abraham said, Take care that you do not let my son go back to that land.
+The Lord God of heaven, who took me from my father's house and from the land of my birth, and made an oath to me, saying, To your seed I will give this land: he will send his angel before you and give you a wife for my son in that land.
+And if the woman will not come with you, then you are free from this oath; only do not take my son back there.
+And the servant put his hand under Abraham's leg, and gave him his oath about this thing.
+And the servant took ten of his master's camels, and all sorts of good things of his master's, and went to Mesopotamia, to the town of Nahor.
+And he made the camels take their rest outside the town by the water-spring in the evening, at the time when the women came to get water.
+And he said, O Lord, the God of my master Abraham, let me do well in what I have undertaken this day, and give your mercy to my master Abraham.
+See, I am waiting here by the water-spring; and the daughters of the town are coming out to get water:
+Now, may the girl to whom I say, Let down your vessel and give me a drink, and who says in answer, Here is a drink for you and let me give water to your camels: may she be the one marked out by you for your servant Isaac: so may I be certain that you have been good to my master Abraham.
+And even before his words were ended, Rebekah, the daughter of Bethuel, the son of Milcah, who was the wife of Nahor, Abraham's brother, came out with her water-vessel on her arm.
+She was a very beautiful girl, a virgin, who had never been touched by a man: and she went down to the spring to get water in her vessel.
+And the servant came running to her and said, Give me a little water from your vessel.
+And she said, Take a drink, my lord: and quickly letting down her vessel onto her hand, she gave him a drink.
+And having done so, she said, I will get water for your camels till they have had enough.
+And after putting the water from her vessel into the animals' drinking-place, she went quickly back to the spring and got water for all the camels.
+And the man, looking at her, said nothing, waiting to see if the Lord had given his journey a good outcome.
+And when the camels had had enough, the man took a gold nose-ring, half a shekel in weight, and two ornaments for her arms of ten shekels weight of gold;
+And said to her, Whose daughter are you? is there room in your father's house for us?
+And she said to him, I am the daughter of Bethuel, the son of Milcah, Nahor's wife.
+And she said, We have a great store of dry grass and cattle-food, and there is room for you.
+And with bent head the man gave worship to the Lord;
+And said, Praise be to the Lord, the God of my master Abraham, who has given a sign that he is good and true to my master, by guiding me straight to the house of my master's family.
+]]--
+
 --互動時結束條件判斷
 function FurnitureController:CheckCancelInteractive()
   for interactiveKind in pairs(self.interactiveKind) do
@@ -1113,6 +1817,31 @@ function FurnitureController:PlayerIsInteracting(player, isInteracting)
     FurnitureManager.SetPlayerIsInteracting(isInteracting);
   end
 end
+
+--[[
+In the beginning God created the heaven and the earth.At the first God made the heaven and the earth.
+And the earth was without form, and void; and darkness was upon the face of the deep. And the Spirit of God moved upon the face of the waters.
+At the first God made the heaven and the earth.And the earth was waste and without form; and it was dark on the face of the deep: and the Spirit of God was moving on the face of the waters.And God said, Let there be light: and there was light.
+And God, looking on the light, saw that it was good: and God made a division between the light and the dark,
+Naming the light, Day, and the dark, Night. And there was evening and there was morning, the first day.
+And God said, Let there be a solid arch stretching over the waters, parting the waters from the waters.
+And God made the arch for a division between the waters which were under the arch and those which were over it: and it was so.
+And God gave the arch the name of Heaven. And there was evening and there was morning, the second day.
+And God said, Let the waters under the heaven come together in one place, and let the dry land be seen: and it was so.
+And God gave the dry land the name of Earth; and the waters together in their place were named Seas: and God saw that it was good.
+And God said, Let grass come up on the earth, and plants producing seed, and fruit-trees giving fruit, in which is their seed, after their sort: and it was so.
+And grass came up on the earth, and every plant producing seed of its sort, and every tree producing fruit, in which is its seed, of its sort: and God saw that it was good.
+And there was evening and there was morning, the third day.
+And God said, Let there be lights in the arch of heaven, for a division between the day and the night, and let them be for signs, and for marking the changes of the year, and for days and for years:
+And let them be for lights in the arch of heaven to give light on the earth: and it was so.
+And God made the two great lights: the greater light to be the ruler of the day, and the smaller light to be the ruler of the night: and he made the stars.
+And God put them in the arch of heaven, to give light on the earth;
+To have rule over the day and the night, and for a division between the light and the dark: and God saw that it was good.
+And there was evening and there was morning, the fourth day.
+And God said, Let the waters be full of living things, and let birds be in flight over the earth under the arch of heaven.
+And God made great sea-beasts, and every sort of living and moving thing with which the waters were full, and every sort of winged bird: and God saw that it was good.
+And God gave them his blessing, saying, Be fertile and have increase, making all the waters of the seas full, and let the birds be increased in the earth.
+--]]
 
 function FurnitureController:GetInteractivePointPosition(point)
   local direction_X = point.x;
@@ -1143,6 +1872,48 @@ function FurnitureController:TransferDirectionToRoleDirection()
   return roleDirection
 end
 --endregion
+
+function FurnitureController.GuessNumberZZ(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
+function FurnitureController.GuessNumberZZ1(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
 
 --region InteractiveFunctions
 FurnitureController.InteractiveFunctions[EFurnitureInteractiveSetting.PlayGIF] = function(self, isPlay, player)
@@ -1293,6 +2064,112 @@ FurnitureController.InteractiveFunctions[EFurnitureInteractiveSetting.ShowEffect
 end
 --endregion
 
+function FurnitureController.GuessNumberZZ2(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
+function FurnitureController.GuessNumberZZ3(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
+function FurnitureController.GuessNumberZZ4(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
+function FurnitureController.GuessNumberZZ5(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
+function FurnitureController.GuessNumberZZ6(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
+
 --region CheckCancelInteractiveFunctions
 FurnitureController.CheckCancelInteractiveFunctions[EFurnitureInteractiveSetting.PlayGIF] = function(self)
   if self.data.replay_GIF == 1 then
@@ -1359,6 +2236,48 @@ FurnitureController.CheckCancelInteractiveFunctions[EFurnitureInteractiveSetting
 end
 --endregion
 
+function FurnitureController.GuessNumberZZ7(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
+function FurnitureController.GuessNumberZZ8(guessNumber)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoInsideForce = 0;
+    local DemoGuessN = 0;
+    
+    if bit.band(guessNumber, DemoGuessN) == DemoGuessN then
+      DemoInsideForce = true;
+    else
+      DemoInsideForce = false;
+    end
+    
+    if DemoGuessN > 100 then
+      DemoGuessN = DemoGuessN +1 ;
+    else
+      DemoGuessN = 0;
+    end
+    
+    return DemoInsideForce;
+  end
+end
+
 --region Animation
 function FurnitureController:AddInteractiveAnimation()
   if self.data.playSpeed_GIF == 0 then return end
@@ -1367,7 +2286,29 @@ function FurnitureController:AddInteractiveAnimation()
   self.interactiveFrameCount = self.jmpDrawer_Body:GetFrameCount(self:GetTextureNumber(true));
 
   local interval = string.format("%.2f", 1 / self.data.playSpeed_GIF);
-
+  
+  if LuaHelper.CheckDefine("DemoCode") then
+    local meaningless = 45;
+    local shift = 2;
+    local result = 0;
+    bit.rshift(meaningless, shift)
+    bit.lshift(meaningless, shift)
+    if bit.band(meaningless,45) == 45 then
+      result = meaningless * shift;
+    end
+  
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+  
   if not CGTimer.ContainsListener(self.PlayInteractiveAnimationFunction) then
     CGTimer.AddListener(self.PlayInteractiveAnimationFunction, interval, false);
   end
@@ -1391,7 +2332,29 @@ end
 --DynamicAnimation
 function FurnitureController:AddDynamicAnimation()
   self.frameNumber = 0;
-
+  
+  if LuaHelper.CheckDefine("DemoCode") then
+    local meaningless = 45;
+    local shift = 2;
+    local result = 0;
+    bit.rshift(meaningless, shift)
+    bit.lshift(meaningless, shift)
+    if bit.band(meaningless,45) == 45 then
+      result = meaningless * shift;
+    end
+    
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+  
   if not CGTimer.ContainsListener(self.PlayDynamicAnimationFunction) then
     CGTimer.AddListener(self.PlayDynamicAnimationFunction, 0.2, false);
   end
@@ -1413,7 +2376,29 @@ function FurnitureController:AddEffectAnimation()
   self.effect.nowPage = 0;
   self.effect.frameCount = 0;
   self.effect.rawImage.enabled = true;
-
+  
+  if LuaHelper.CheckDefine("DemoCode") then
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      human = satan + haven;
+    else
+      human = satan - haven;
+    end
+  
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+  
   if not CGTimer.ContainsListener(self.PlayEffectFunction) then
     CGTimer.AddListener(self.PlayEffectFunction, self.effect.interval, false);
   end
@@ -1443,7 +2428,29 @@ function FurnitureController:AddInteractiveEffect()
   self.effect.playRound = 0;
   TextureManager.SetPng(ETextureUseType.EffectLight, string.Concat(self.effect.fileName, "_", tostring(self.effect.startPage)), self.effect.rawImage);
   self.effect.rawImage.enabled = true;
-
+  
+  if LuaHelper.CheckDefine("DemoCode") then
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      human = satan + haven;
+    else
+      human = satan - haven;
+    end
+    
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+  
   if not CGTimer.ContainsListener(self.PlayInteractiveEffectFunction) then
     CGTimer.AddListener(self.PlayInteractiveEffectFunction, self.effect.interval, false);
   end

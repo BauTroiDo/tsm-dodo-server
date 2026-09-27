@@ -66,16 +66,16 @@ ChessConstant = {
   EFFTIME_OUTPIECE = 3;    -- 流局 顯示多久
 
   -- *** 音效 ***
-  SOUND_CANBINGO = "Mp3/WA0044.mp3";  -- 可胡
-  SOUND_BEBINGO = "Mp3/WB0020.mp3";   -- 放槍
-  SOUND_ZIMO = "Mp3/WA0064.mp3";      -- 自摸
-  SOUND_BINGO = "Mp3/WA0035.mp3";     -- 胡
-  SOUND_2BINGO = "Mp3/WB0003.mp3";    -- 一炮雙響
-  SOUND_3BINGO = "Mp3/WB0015.mp3";    -- 一炮三響
-  SOUND_OUTPIECE = "Mp3/WA0012.mp3";  -- 流局
-  SOUND_COUNTDOWN = "Mp3/WA0045.mp3"; -- 倒數3秒
-  SOUND_PIECE = "Mp3/WB0007.mp3";     -- 出牌
-  SOUND_DEAL = "Mp3/WA0017.mp3";      -- 發牌
+  SOUND_CANBINGO = "AudioClip_WA0044";  -- 可胡
+  SOUND_BEBINGO = "AudioClip_WB0020";   -- 放槍
+  SOUND_ZIMO = "AudioClip_WA0064";      -- 自摸
+  SOUND_BINGO = "AudioClip_WA0035";     -- 胡
+  SOUND_2BINGO = "AudioClip_WB0003";    -- 一炮雙響
+  SOUND_3BINGO = "AudioClip_WB0015";    -- 一炮三響
+  SOUND_OUTPIECE = "AudioClip_WA0012";  -- 流局
+  SOUND_COUNTDOWN = "AudioClip_WA0045"; -- 倒數3秒
+  SOUND_PIECE = "AudioClip_WB0007";     -- 出牌
+  SOUND_DEAL = "AudioClip_WA0017";      -- 發牌
 }
 
 -- Region 自摸棋UI變數
@@ -141,6 +141,35 @@ function UIChessMahjong.Initialize(go)
   -- 初始化邏輯需要的參數
   this.InitValue();
   gameStatus = ChessConstant.GAME_NONE;
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  
 end
 
 function UIChessMahjong.InitializeMainChessMahjong(uiController)
@@ -247,6 +276,27 @@ function UIChessMahjong.InitializeMainChessMahjong(uiController)
 end
 
 function UIChessMahjong.OnOpen()
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   return true;
 end
 
@@ -332,16 +382,82 @@ function UIChessMahjong.OnClick_Help(checkShow)
 end
 
 function UIChessMahjong.OnClick_Bingo()
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  
   this.StopCountdown();
   this.SendFunctionMessage(ChessConstant.FUNCBTN_BINGO);
 end
 
 function UIChessMahjong.OnClick_Cancel()
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  
   this.StopCountdown();
   this.SendFunctionMessage(ChessConstant.FUNCBTN_CANCEL);
 end
 
 function UIChessMahjong.OnClick_Eat()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   this.StopCountdown();
   this.SendFunctionMessage(ChessConstant.FUNCBTN_EAT);
 end
@@ -352,6 +468,20 @@ function UIChessMahjong.OnClick_Mo()
 end
 
 function UIChessMahjong.OnClick_Piece(index)
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
   this.SendFunctionMessage(ChessConstant.FUNCBTN_PIECE, index);
 end
 
@@ -403,6 +533,39 @@ function UIChessMahjong.SetBtnStatus()
 
     --尚未正式進入遊戲
   if not this.CheckGameStatusIsRunning() then
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    
     return;
   end
 
@@ -448,6 +611,48 @@ end
 
 --[[
   設定Button的可用性，修改圖片與開關事件
+    if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
 ]]
 function UIChessMahjong.SetBtnEnableBy(btnRawImage, btnEvent, kind, isEnabled)
   -- Texture檔名結尾與按鈕使用的kind常數相同
@@ -586,6 +791,27 @@ function UIChessMahjong.RevToAllEndSincePlayerQuit(revQuitPlayerAryIdx)
   end
   --自己不秀
   if (quitPlayerIdx == myIdIdx) then
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
     return;
   end
 
@@ -763,6 +989,35 @@ end
   然後顯示玩家第五張棋子，若是自己吃摸牌，則必須更新牌面
   @param imageToMove 要操控移動的Image，移至正確位置後會隱藏
   @param isMe 是否為自己的boolean值
+    if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  
 ]]
 function UIChessMahjong.RevToEatOrMo(imageToMove, isMe)
   local nowPlayerDirection = this.GetNowPlayerDirection();
@@ -851,6 +1106,36 @@ end
 
 --[[
   丟牌動畫結束後，才檢查按鈕狀態
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
 ]]
 function UIChessMahjong.AfterDiscardPiece()
   if this.CheckIfNowPlayerIsMe() then
@@ -864,6 +1149,44 @@ end
   顯示第五張手牌
 ]]
 function UIChessMahjong.ShowFifthPiece(direction)
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
   this.SetFifthPieceColor(direction, Color.White);
 end
 
@@ -943,6 +1266,31 @@ end
 --[[
   顯示指定效果圖，並設定顯示時間 (秒)
   @param layer 效果圖的圖層順序 (數字越低在越上層，目前只支援最多3個圖層)
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
 ]]
 function UIChessMahjong.ShowEffectImage(layer, positionIndex, effectKind, delaySecond)
   local effectDirection = this.GetDirection(myIdIdx, positionIndex);
@@ -1111,6 +1459,37 @@ function UIChessMahjong.DisableAllFuncBtn()
 end
 
 --[[
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+  
   加入10000底自摸棋棋局
 ]]
 function UIChessMahjong.SignUp()
@@ -1215,6 +1594,32 @@ function UIChessMahjong.SendSignUp()
     -- 1為10000底 (舊版分100、1000底，新版改為10000底)
     sendBuffer:WriteByte(1);
     Network.Send(60, 4, sendBuffer);
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    
   end
 end
 
@@ -1243,6 +1648,26 @@ function UIChessMahjong.CheckIfPlayerCanBingo()
   if (allPlayers[myIdIdx].bingoStruct[1] ~= 0) then
     return true;
   end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   return false;
 end
 
@@ -1258,6 +1683,22 @@ end
   檢查是否可以摸牌
 ]]
 function UIChessMahjong.CheckIfPlayerCanMo()
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
         --有4張牌        --輪到你才可以摸             --沒有未開的牌可以摸
   return (allPlayers[myIdIdx].pieceNum == 4) and (nowPlayerIdx == myIdIdx) and (unOpenPieceNum > 0);
 end
@@ -1280,6 +1721,37 @@ end
 --[[
   取得棋局的結算結果，贏了多少、輸了多少
   (必須要在玩家胡牌後使用才準確，此時的BingoStruct才有胡牌結構)
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------  --5-----------------------------------------------------
+  --  if LuaHelper.CheckDefine("DemoCode") then
+  --   --
+  --  end
+  --  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+  
+  
 ]]
 function UIChessMahjong.GetMoneySettlement()
   local allResult = {};
@@ -1361,6 +1833,41 @@ end
   @param aryIdx 該員坐的位置
   @param lastOpenPiece 最後一張棄子
   @param unopenPieceNum 未開棋子數
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
 ]]
 function UIChessMahjong.CheckBingo(chessPlayer, aryIdx, lastOpenPiece, unopenPieceNum)
   -- 紀錄胡牌類型的table，初始化時全部設為0
@@ -1430,6 +1937,41 @@ function UIChessMahjong.CheckBingo(chessPlayer, aryIdx, lastOpenPiece, unopenPie
       -- 取得字
       local kind = pieceAry[i] % 10;
       --[[
+        --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
         -- 胡牌編號. (五美人將用不到 bingoStruct[4].[5])
         -- === 3張 ===. (紀錄第一張牌id)
         紅  帥仕相 = 11; 車馬炮 = 14; 兵兵兵 = 17;
@@ -1703,6 +2245,41 @@ end
 
 --[[
   將棋子移動回未發牌的狀態
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
 ]]
 function UIChessMahjong.MovePieceToNonDealingState(rawImage, sequence, x, y)
   local moveSpeed = 0.2;
@@ -1748,6 +2325,27 @@ end
 
 --[[
   將棋子設定為Right覆蓋的形式
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+   --
+  end
+  --6-----------------------------------------------------
+  
 ]]
 function UIChessMahjong.ChangePieceToRightCover(rawImage)
   this.ChangePieceToCover(rawImage, "ZMC_Piece_31");
@@ -1797,6 +2395,17 @@ function UIChessMahjong.GetDiscardedPieceDestination(direction)
   elseif (direction == ChessConstant.DIR_LEFT) then
     return Vector2.New(-320, 0);
   elseif (direction == ChessConstant.DIR_TOP) then
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    
     return Vector2.New(0, 112);
   elseif (direction == ChessConstant.DIR_RIGHT) then
     return Vector2.New(320, 0);
@@ -1869,6 +2478,26 @@ function UIChessMahjong.ShowEffectInSeconds(rawImage, effectKind, position, dela
     sequence:AppendCallback(callback);
   end
   sequence:Play();
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 --[[
@@ -1985,6 +2614,22 @@ end
 
 --[[
   顯示胡牌結果 (胡牌玩家是誰、誰放槍、胡牌種類、幾台)
+   --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+   --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
 ]]
 function UIChessMahjong.ShowBingoStruct()
   local loser = beBingoPlayerIdx;
@@ -2027,6 +2672,22 @@ end
   顯示金錢結算畫面
 ]]
 function UIChessMahjong.ShowMoneySettlement()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   -- 顯示操作用的按鈕
   rawImage_Btn_Exit.gameObject:SetActive(true);
   rawImage_Btn_Again.gameObject:SetActive(true);
@@ -2073,6 +2734,23 @@ function UIChessMahjong.CloseChessMahjongResult()
 end
 
 function UIChessMahjong.HideBingoStructUI()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  
   text_CountSum.text = "";
   text_ResultName.text = "";
   for i = 1, 3 do
@@ -2101,11 +2779,36 @@ function UIChessMahjong.OnClick_MoneySettlement()
 end
 
 function UIChessMahjong.OnClick_Exit()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   -- 離開棋局
   UI.Close(this);
 end
 
 function UIChessMahjong.OnClick_Again()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  
   --C:060-002 <繼續牌局>
   Network.Send(60, 2);
 end

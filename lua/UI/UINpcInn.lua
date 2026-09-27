@@ -52,7 +52,8 @@ end
 function UINpcInn.OnVisible(visible)
   if visible then
     UINpcInn.SetTagDatas();
-    UIFrame.Active(transform_FrameRect, string.Get(10074), this.OnClick_Close, this.OnClick_Help, this.OnClick_Tag, tagDatas, 1, 1);
+    UIFrame.Active(transform_FrameRect, string.Get(10074), this.OnClick_Close, this.OnClick_Help, this.OnClick_Tag,
+      tagDatas, 1, 1);
     this.UpdateUI(true);
   end
 end
@@ -127,7 +128,8 @@ function UINpcInn.OnInitialize_ScrollContent_Npc(scrollItems)
     scrollItems_Npc[itemIndex].image_Dispatch = scrollItems[itemIndex]:Find("Image_Dispatch"):GetComponent("Image");
     scrollItems_Npc[itemIndex].image_Empty = scrollItems[itemIndex]:Find("Image_Empty"):GetComponent("Image");
     scrollItems_Npc[itemIndex].image_Take = scrollItems[itemIndex]:Find("Image_Take"):GetComponent("Image");
-    scrollItems_Npc[itemIndex].text_Take = scrollItems_Npc[itemIndex].image_Take.transform:Find("Text_"):GetComponent("Text");
+    scrollItems_Npc[itemIndex].text_Take = scrollItems_Npc[itemIndex].image_Take.transform:Find("Text_"):GetComponent(
+      "Text");
     scrollItems_Npc[itemIndex].event_Take = scrollItems[itemIndex]:Find("Image_Take"):GetComponent("UIEvent");
     scrollItems_Npc[itemIndex].event_Take:SetListener(EventTriggerType.PointerClick, this.OnClick_Take);
     local tempEvent = scrollItems[itemIndex]:Find("Image_Lock"):GetComponent("UIEvent");
@@ -202,13 +204,18 @@ function UINpcInn.OnInitialize_ScrollContent_WarriorRepository(scrollItems)
     scrollItems_WarriorRepository[itemIndex].text_Name = scrollItems[itemIndex]:Find("Text_Name"):GetComponent("Text");
     scrollItems_WarriorRepository[itemIndex].text_Hp = scrollItems[itemIndex]:Find("Text_Hp"):GetComponent("Text");
     scrollItems_WarriorRepository[itemIndex].text_Lv = scrollItems[itemIndex]:Find("Text_Lv"):GetComponent("Text");
-    scrollItems_WarriorRepository[itemIndex].uiCareer = UICareerController.New(scrollItems[itemIndex]:Find("GameObject_Career"));
+    scrollItems_WarriorRepository[itemIndex].uiCareer = UICareerController.New(scrollItems[itemIndex]:Find(
+      "GameObject_Career"));
     scrollItems_WarriorRepository[itemIndex].image_Lock = scrollItems[itemIndex]:Find("Image_Lock"):GetComponent("Image");
-    scrollItems_WarriorRepository[itemIndex].image_Dispatch = scrollItems[itemIndex]:Find("Image_Dispatch"):GetComponent("Image");
-    scrollItems_WarriorRepository[itemIndex].image_Empty = scrollItems[itemIndex]:Find("Image_Empty"):GetComponent("Image");
+    scrollItems_WarriorRepository[itemIndex].image_Dispatch = scrollItems[itemIndex]:Find("Image_Dispatch"):GetComponent(
+      "Image");
+    scrollItems_WarriorRepository[itemIndex].image_Empty = scrollItems[itemIndex]:Find("Image_Empty"):GetComponent(
+      "Image");
     scrollItems_WarriorRepository[itemIndex].image_Take = scrollItems[itemIndex]:Find("Image_Take"):GetComponent("Image");
-    scrollItems_WarriorRepository[itemIndex].text_Take = scrollItems_WarriorRepository[itemIndex].image_Take.transform:Find("Text_"):GetComponent("Text");
-    scrollItems_WarriorRepository[itemIndex].event_Take = scrollItems[itemIndex]:Find("Image_Take"):GetComponent("UIEvent");
+    scrollItems_WarriorRepository[itemIndex].text_Take = scrollItems_WarriorRepository[itemIndex].image_Take.transform
+        :Find("Text_"):GetComponent("Text");
+    scrollItems_WarriorRepository[itemIndex].event_Take = scrollItems[itemIndex]:Find("Image_Take"):GetComponent(
+      "UIEvent");
     scrollItems_WarriorRepository[itemIndex].event_Take:SetListener(EventTriggerType.PointerClick, this.OnClick_Take);
     local tempEvent = scrollItems[itemIndex]:Find("Image_Lock"):GetComponent("UIEvent");
     tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_AddWarriorRepositorySpace);
@@ -230,10 +237,12 @@ function UINpcInn.OnItemChange_ScrollContent_WarriorRepository(dataIndex, itemIn
     end
     scrollItems_WarriorRepository[itemIndex].text_Hp.text = Inn.warriorRepository[warriorRepositoryId].hp;
     scrollItems_WarriorRepository[itemIndex].text_Lv.text = Inn.warriorRepository[warriorRepositoryId].level;
-    scrollItems_WarriorRepository[itemIndex].image_Dispatch.gameObject:SetActive(Inn.warriorRepository[warriorRepositoryId].status == ENpcInnStatus.Dispatch);
+    scrollItems_WarriorRepository[itemIndex].image_Dispatch.gameObject:SetActive(Inn.warriorRepository
+      [warriorRepositoryId].status == ENpcInnStatus.Dispatch);
     scrollItems_WarriorRepository[itemIndex].image_Take.sprite = UI.GetSprite("but064D");
     scrollItems_WarriorRepository[itemIndex].text_Take.text = string.Get(30022);
-    scrollItems_WarriorRepository[itemIndex].event_Take.gameObject:SetActive(Inn.warriorRepository[warriorRepositoryId].status ~= ENpcInnStatus.Dispatch);
+    scrollItems_WarriorRepository[itemIndex].event_Take.gameObject:SetActive(Inn.warriorRepository[warriorRepositoryId]
+      .status ~= ENpcInnStatus.Dispatch);
     scrollItems_WarriorRepository[itemIndex].event_Take.parameter = warriorRepositoryId;
   else
     scrollItems_WarriorRepository[itemIndex].text_Name.text = "";
@@ -246,7 +255,8 @@ function UINpcInn.OnItemChange_ScrollContent_WarriorRepository(dataIndex, itemIn
     scrollItems_WarriorRepository[itemIndex].event_Take.parameter = nil;
   end
 
-  scrollItems_WarriorRepository[itemIndex].image_Lock.gameObject:SetActive(dataIndex + 1 > Inn.currentWarriorRepositorySpace);
+  scrollItems_WarriorRepository[itemIndex].image_Lock.gameObject:SetActive(dataIndex + 1 >
+    Inn.currentWarriorRepositorySpace);
 
   return true;
 end
@@ -265,7 +275,8 @@ end
 
 function UINpcInn.UpdateContent()
   text_NpcSpace.text = string.Concat(table.Count(innNpcs), "/", tostring(Inn.currentSpace));
-  text_WarriorRepositorySpace.text = string.Concat(table.Count(warriorRepository), "/", tostring(Inn.currentWarriorRepositorySpace));
+  text_WarriorRepositorySpace.text = string.Concat(table.Count(warriorRepository), "/",
+    tostring(Inn.currentWarriorRepositorySpace));
 end
 
 function UINpcInn.UpdateInnNpc()
@@ -323,7 +334,8 @@ function UINpcInn.UpdateFollowNpc()
 
       followNpcs[i].text_Hp.text = followNpc:GetAttribute(EAttribute.Hp);
       followNpcs[i].text_Lv.text = followNpc:GetAttribute(EAttribute.Lv);
-      followNpcs[i].uiCareer:SetCareer(followNpc:GetAttribute(EAttribute.Turn), followNpc:GetAttribute(EAttribute.Element), followNpc:GetAttribute(EAttribute.Career), true);
+      followNpcs[i].uiCareer:SetCareer(followNpc:GetAttribute(EAttribute.Turn),
+        followNpc:GetAttribute(EAttribute.Element), followNpc:GetAttribute(EAttribute.Career), true);
       followNpcs[i].image_State.gameObject:SetActive(followNpc == Role.fightNpc);
       followNpcs[i].image_Empty.enabled = false;
     else
@@ -369,6 +381,38 @@ end
 -- UI Event Handlers
 
 function UINpcInn.OnClick_Close()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area = DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area = DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area = DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area = DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   UI.Close(UINpcInn);
   return true;
 end
@@ -489,7 +533,33 @@ function UINpcInn.OnClick_Save_Inn(uiEvent)
     return;
   end
 
-  this.CheckEquipUniqueBlood(followIndex, followNpc.npcId, true);
+  if allFull then
+    if exchangeInnIndex ~= 0 then
+      --C:031-004 <客棧交換武將> +客棧索引(1) +身上索引(1)
+      sendBuffer:Clear();
+      sendBuffer:WriteByte(exchangeInnIndex);
+      sendBuffer:WriteByte(followIndex);
+      Network.Send(31, 4, sendBuffer);
+    else
+      if exchangeFollowIndex == followIndex then
+        exchangeFollowIndex = 0;
+      else
+        exchangeFollowIndex = followIndex;
+      end
+
+      this.UpdateFollowNpc();
+    end
+  else
+    if table.Count(innNpcs) >= Inn.currentSpace then
+      ShowCenterMessage(string.Get(71276));
+      return;
+    end
+
+    --C:031-003 <客棧存武將> +身上索引(1)
+    sendBuffer:Clear();
+    sendBuffer:WriteByte(followIndex);
+    Network.Send(31, 3, sendBuffer);
+  end
 end
 
 function UINpcInn.OnClick_Save_WarriorRepository(uiEvent)
@@ -528,101 +598,46 @@ function UINpcInn.OnClick_Save_WarriorRepository(uiEvent)
       function(result)
         if result then
           Item.UnEquipAll(followIndex);
-          this.CheckEquipUniqueBlood(followIndex, followNpc.npcId, false);
+          this.CheckEquipedSoul(followIndex, followNpc);
         end
       end,
       string.Get(25094),
       Role.player
     );
   else
-    this.CheckEquipUniqueBlood(followIndex, followNpc.npcId, false);
+    this.CheckEquipedSoul(followIndex, followNpc);
   end
 end
 
-function UINpcInn.CheckEquipUniqueBlood(followIndex, npcId, bSaveInn)
-  table.Clear(UniqueBlood.nowEquipItems);
-  local bag = Item.GetBag(EThings.UniqueBloodEquip);
-  for k, v in pairs(bag) do
-    if v.equipId == npcId then
-      v.bagIndex = k;
-      table.insert(UniqueBlood.nowEquipItems, v);
-    end
-  end
-
-  local nowEquipCount = table.Count(UniqueBlood.nowEquipItems);
-  if Item.GetBagCount(EThings.UniqueBlood) + nowEquipCount > Item.currentUniqueBloodGrid then
-    ShowCenterMessage(string.Get(24049));
-    return;
-  end
-
-  if nowEquipCount > 0 then
+function UINpcInn.CheckEquipedSoul(followIndex, followNpc)
+  local equipedSoul = Soul.GetEquippedSoul(followNpc.npcId)
+  if equipedSoul ~= nil then
     ShowCheckMessage(
       function(result)
         if result then
-          for _, v in pairs(UniqueBlood.nowEquipItems) do
-            sendBuffer:Clear();
-            sendBuffer:WriteByte(2);
-            sendBuffer:WriteUInt16(npcId);
-            sendBuffer:WriteByte(followIndex);
-            sendBuffer:WriteInt64(v.sn);
-            Network.Send(121, 1, sendBuffer);
+          UISoul.UnEquip(2, equipedSoul, followIndex);
+          if Item.CheckSoulBag() then
+            ShowCenterMessage(string.Get(23708)); -- 靈魂空間已滿
+            return;
           end
 
-          if bSaveInn then
-            this.SendSaveInn(followIndex);
-          else
-            this.SendSaveWarrior(followIndex, npcId);
-          end
+          this.SendSaveWarrior(followIndex, followNpc.npcId);
         end
       end,
-      string.Get(25095),
+      string.Get(25093),
       Role.player
     );
   else
-    if bSaveInn then
-      this.SendSaveInn(followIndex);
-    else
-      this.SendSaveWarrior(followIndex, npcId);
-    end
+    this.SendSaveWarrior(followIndex, followNpc.npcId);
   end
 end
 
---C:122-002<存入武將倉庫> +跟隨武將編號(1) +NPCID(2)
+--C:122-002<存入武將倉庫> +跟隨武將編號(1)+NPCID(2)
 function UINpcInn.SendSaveWarrior(followIndex, npcId)
   sendBuffer:Clear();
   sendBuffer:WriteByte(followIndex);
   sendBuffer:WriteUInt16(npcId);
   Network.Send(122, 2, sendBuffer);
-end
-
-function UINpcInn.SendSaveInn(followIndex)
-  if allFull then
-    if exchangeInnIndex ~= 0 then
-      --C:031-004 <客棧交換武將> +客棧索引(1) +身上索引(1)
-      sendBuffer:Clear();
-      sendBuffer:WriteByte(exchangeInnIndex);
-      sendBuffer:WriteByte(followIndex);
-      Network.Send(31, 4, sendBuffer);
-    else
-      if exchangeFollowIndex == followIndex then
-        exchangeFollowIndex = 0;
-      else
-        exchangeFollowIndex = followIndex;
-      end
-
-      this.UpdateFollowNpc();
-    end
-  else
-    if table.Count(innNpcs) >= Inn.currentSpace then
-      ShowCenterMessage(string.Get(71276));
-      return;
-    end
-
-    --C:031-003 <客棧存武將> +身上索引(1)
-    sendBuffer:Clear();
-    sendBuffer:WriteByte(followIndex);
-    Network.Send(31, 3, sendBuffer);
-  end
 end
 
 function UINpcInn.OnClick_Tag(mainTag)

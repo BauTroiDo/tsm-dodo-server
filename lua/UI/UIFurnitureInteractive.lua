@@ -33,7 +33,25 @@ function UIFurnitureInteractive.Initialize(go)
   image_InteractiveRoot = uiController:FindImage("InteractiveRoot");
 
   local tempEvent;
-
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  
   for i = 1, table.Count(EFurnitureInteractive) do
     image_Interactive[i] = uiController:FindImage(string.Concat("Image_Interactive (", i, ")"));
     tempEvent = uiController:FindEvent(string.Concat("Image_Interactive (", i, ")"));
@@ -52,6 +70,18 @@ end
 
 function UIFurnitureInteractive.OnOpen(target)
   if target == nil then
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+  
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+  
     UI.Close(this);
     return
   end
@@ -77,6 +107,30 @@ end
 
 
 function UIFurnitureInteractive.OnClose()
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
   CGTimer.RemoveListener(this.OnDrag_Move);
   image_InteractiveRoot.rectTransform.localScale = Vector3.one;
   HouseEditorManager.UpdateAllBlockState();
@@ -151,6 +205,30 @@ function UIFurnitureInteractive.OnDrag_Move()
 end
 
 function UIFurnitureInteractive.OnRelease_Move()
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
   --顯示功能按鈕
   image_InteractiveRoot.rectTransform.localScale = Vector3.one;
   this.UpdateUIPosition();

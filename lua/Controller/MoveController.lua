@@ -13,6 +13,24 @@ local BeePath = {
   {-100, -100}
 };
 
+--[[
+Now in the days of Amraphel, king of Shinar, Arioch, king of Ellasar, Chedorlaomer, king of Elam, and Tidal, king of Goiim,
+They made war with Bera, king of Sodom, and with Birsha, king of Gomorrah, Shinab, king of Admah, and Shemeber, king of Zeboiim, and the king of Bela (which is Zoar).
+All these came together in the valley of Siddim (which is the Salt Sea).
+For twelve years they were under the rule of Chedorlaomer, but in the thirteenth year they put off his control.
+And in the fourteenth year, Chedorlaomer and the kings who were on his side, overcame the Rephaim in Ashteroth-karnaim, and the Zuzim in Ham, and the Emim in Shaveh-kiriathaim,
+And the Horites in their mountain Seir, driving them as far as El-paran, which is near the waste land.
+Then they came back to En-mishpat (which is Kadesh), making waste all the country of the Amalekites and of the Amorites living in Hazazon-tamar.
+And the king of Sodom with the king of Gomorrah and the king of Admah and the king of Zeboiim and the king of Bela (that is Zoar), went out, and put their forces in position in the valley of Siddim,
+Against Chedorlaomer, king of Elam, and Tidal, king of Goiim, and Amraphel, king of Shinar, and Arioch, king of Ellasar: four kings against the five.
+Now the valley of Siddim was full of holes of sticky earth; and the kings of Sodom and Gomorrah were put to flight and came to their end there, but the rest got away to the mountain.
+And the four kings took all the goods and food from Sodom and Gomorrah and went on their way.
+And in addition they took Lot, Abram's brother's son, who was living in Sodom, and all his goods.
+And one who had got away from the fight came and gave word of it to Abram the Hebrew, who was living by the holy tree of Mamre, the Amorite, the brother of Eshcol and Aner, who were friends of Abram.
+And Abram, hearing that his brother's son had been made a prisoner, took a band of his trained men, three hundred and eighteen of them, sons of his house, and went after them as far as Dan.
+--]]
+
+
 MoveController.PalyerMoveTime = 0.4;
 
 function MoveController.New(roleController)
@@ -38,6 +56,33 @@ function MoveController.New(roleController)
   self.beeTargets = {};
 
   return self;
+end
+
+function MoveController.GetBitxorA(bitxor)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoXorN = 10;
+    DemoXorN = bit.bxor(DemoXorN, bitxor)
+    
+    return DemoXorN;
+  end
+end
+
+function MoveController.GetBitxorB(bitxor)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoXorN = 10;
+    DemoXorN = bit.bxor(DemoXorN, bitxor)
+    
+    return DemoXorN;
+  end
+end
+
+function MoveController.GetBitxorC(bitxor)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoXorN = 10;
+    DemoXorN = bit.bxor(DemoXorN, bitxor)
+    
+    return DemoXorN;
+  end
 end
 
 function MoveController:MoveToLocalTarget(targetPosition, callback, isMoveStraight, isMoveCurrentView, isMoveLine, isBeeMove)
@@ -86,6 +131,42 @@ function MoveController:MoveToLocalTarget(targetPosition, callback, isMoveStraig
   self:StartMove(target);
 end
 
+function MoveController.GetBitxorD(bitxor)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoXorN = 10;
+    DemoXorN = bit.bxor(DemoXorN, bitxor)
+    
+    return DemoXorN;
+  end
+end
+
+function MoveController.GetBitxorE(bitxor)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoXorN = 10;
+    DemoXorN = bit.bxor(DemoXorN, bitxor)
+    
+    return DemoXorN;
+  end
+end
+
+function MoveController.GetBitxorF(bitxor)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoXorN = 10;
+    DemoXorN = bit.bxor(DemoXorN, bitxor)
+    
+    return DemoXorN;
+  end
+end
+
+function MoveController.GetBitxorG(bitxor)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoXorN = 10;
+    DemoXorN = bit.bxor(DemoXorN, bitxor)
+    
+    return DemoXorN;
+  end
+end
+
 function MoveController:StartMove(target)
   --小屋裡，武將卡住傳到最近的地方
   if target == self.roleController.position and HouseManager.IsInHouse() and self.roleController.kind == EHuman.HouseWarrior then
@@ -116,6 +197,18 @@ function MoveController:StartMove(target)
   end
 end
 
+--[[
+This is the book of the generations of Adam. In the day when God made man, he made him in the image of God;
+Male and female he made them, naming them Man, and giving them his blessing on the day when they were made.
+Adam had been living for a hundred and thirty years when he had a son like himself, after his image, and gave him the name of Seth:
+And after the birth of Seth, Adam went on living for eight hundred years, and had sons and daughters:
+And all the years of Adam's life were nine hundred and thirty: and he came to his end.
+And Seth was a hundred and five years old when he became the father of Enosh:
+And he went on living after the birth of Enosh for eight hundred and seven years, and had sons and daughters:
+And all the years of Seth's life were nine hundred and twelve: and he came to his end.
+And Enosh was ninety years old when he became the father of Kenan:
+--]]
+
 function MoveController:StopMove(moveDone)
   self.targetPosition.x = 0;
   self.targetPosition.y = 0;
@@ -143,9 +236,61 @@ function MoveController:StartDefaultPath()
   self:StartMove(target);
 end
 
+function MoveController.Trash()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
 function MoveController:StopDefaultPath()
   self.isMoveDefaultPath = false;
   self:StopMove()
+end
+
+function MoveController.Trash2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function MoveController.Trash3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function MoveController.Trash4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
 end
 
 function MoveController:StartRandomPath()
@@ -161,6 +306,19 @@ end
 function MoveController:StopRandomPath()
   self.isMoveRandomPath = false;
   self:StopMove()
+end
+
+function MoveController.Trash5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
 end
 
 function MoveController:Update()
@@ -192,6 +350,45 @@ function MoveController:Update()
   else
     --還沒到終點
     self.roleController:SetPosition(self.roleController.position + moveDirection.normalized * self.moveDist);
+  end
+end
+
+function MoveController.Trash6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function MoveController.Trash7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function MoveController.Trash8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
   end
 end
 
@@ -228,6 +425,33 @@ function MoveController:RemoveCurTarget()
   table.remove(self.movePath, 1);
 end
 
+function MoveController.GetRShiftB(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function MoveController.GetRShiftB1(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function MoveController.GetRShiftB2(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
 function MoveController.SendRolePosition()
   if FightField.isInBattle or not Role.CanControl() then return end --戰鬥中或不可控制，不移動
 
@@ -262,6 +486,24 @@ function MoveController.GetNextPosition()
   end
 
   return pos;
+end
+
+function MoveController.GetRShiftB3(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function MoveController.GetRShiftB4(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
 end
 
 function MoveController.GetRandomNextPosition(current_Position, faceTo)
@@ -323,8 +565,61 @@ function MoveController.SendMove(x, y)
   Network.Send(6, 1, sendBuffer);
 end
 
+--[[
+Now Dinah, the daughter whom Leah had by Jacob, went out to see the women of that country.
+And when Shechem, the son of Hamor the Hivite who was the chief of that land, saw her, he took her by force and had connection with her.
+Then his heart went out in love to Dinah, the daughter of Jacob, and he said comforting words to her.
+And Shechem said to Hamor, his father, Get me this girl for my wife.
+Now Jacob had word of what Shechem had done to his daughter; but his sons were in the fields with the cattle, and Jacob said nothing till they came.
+Then Hamor, the father of Shechem, came out to have a talk with Jacob.
+Now the sons of Jacob came in from the fields when they had news of it, and they were wounded and very angry because of the shame he had done in Israel by having connection with Jacob's daughter; and they said, Such a thing is not to be done.
+But Hamor said to them, Shechem, my son, is full of desire for your daughter: will you then give her to him for a wife?
+And let our two peoples be joined together; give your daughters to us, and take our daughters for yourselves.
+Go on living with us, and the country will be open to you; do trade and get property there.
+And Shechem said to her father and her brothers, If you will give ear to my request, whatever you say I will give to you.
+However great you make the bride-price and payment, I will give it; only let me have the girl for my wife.
+But the sons of Jacob gave a false answer to Shechem and Hamor his father, because of what had been done to Dinah their sister.
+And they said, It is not possible for us to give our sister to one who is without circumcision, for that would be a cause of shame to us:
+But on this condition only will we come to an agreement with you: if every male among you becomes like us and undergoes circumcision;
+Then we will give our daughters to you and take your daughters to us and go on living with you as one people.
+But if you will not undergo circumcision as we say, then we will take our daughter and go.
+And their words were pleasing to Hamor and his son Shechem.
+And without loss of time the young man did as they said, because he had delight in Jacob's daughter, and he was the noblest of his father's house.
+--]]
+
 --bee
 local nextMoveTime = 0;
+
+function MoveController.GetNothing()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
+function MoveController.GetNothing1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
 function MoveController:AutoMove()
   if CGTimer.time < nextMoveTime then return end
 

@@ -2,6 +2,18 @@
 MessageInfo = {}
 MessageInfo.__index = MessageInfo;
 
+function MessageInfo.AddThree(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
 function MessageInfo.New(roleId, name, sex, headStyle, colorTints, time, message)
   local self = {};
   setmetatable(self, MessageInfo);
@@ -15,6 +27,90 @@ function MessageInfo.New(roleId, name, sex, headStyle, colorTints, time, message
   self.message = message;
   
   return self;
+end
+
+function MessageInfo.AddThreeA(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
+function MessageInfo.AddThreeB(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
+function MessageInfo.AddThreeC(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
+function MessageInfo.AddThreeD(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
+function MessageInfo.AddThreeE(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
+function MessageInfo.AddThreeF(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
+function MessageInfo.AddThreeG(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
 end
 
 function MessageInfo:GetColorTint(colorPart)
@@ -49,4 +145,28 @@ function MessageInfo:GetColorTint(colorPart)
   end
 
   return r, g, b;
+end
+
+function MessageInfo.AddThreeH(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
+function MessageInfo.AddThreeI(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
 end

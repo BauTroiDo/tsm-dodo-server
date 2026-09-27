@@ -72,6 +72,30 @@ function UISocial.OnOpen(kind, options)
 end
 
 function UISocial.OnClose()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   if UI.IsVisible(UIAlert) then
     UI.Close(UIAlert);
   end
@@ -114,6 +138,14 @@ function UISocial.UpdateUI(refresh)
       event_SendAll:SetColor(Color.White);
     else
       event_SendAll:SetColor(Color.LightGray);
+      --3----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
     end
     
     for roleId in pairs(Social.friends) do
@@ -155,6 +187,14 @@ function UISocial.UpdateUI(refresh)
   else
     scrollContent_Friend:Reset(table.maxn(datas));
   end
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
 end
 
 function UISocial.CheckRedDot(mTag, subTag)
@@ -174,12 +214,37 @@ function UISocial.CheckRedDot(mTag, subTag)
 end
 
 function UISocial.OnClick_Close()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  
   UI.Close(UISocial);
 
   return true;
 end
 
 function UISocial.OnClick_Help(checkShow)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   if checkShow ~= true then
     UI.Open(UITutorialHint, 20, this);
   end
@@ -201,6 +266,30 @@ function UISocial.OnClick_Tag(tag)
 end
 
 function UISocial.OnClick_Search()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   ShowNameInput(string.Get(20502),
     function(name)
       if name == nil then return end
@@ -215,12 +304,46 @@ function UISocial.OnClick_Search()
 end
 
 function UISocial.OnClick_Friend(uiEvent)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  
   local playerInfo = uiEvent.parameter;
 
   UI.Open(UISocialFunction, playerInfo, ConvertPositionToUIScene(this.uiController.transform, uiEvent.eventData.position, this.uiController.canvas.worldCamera));
 end
 
 function UISocial.OnClick_Receive(uiEvent)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  
   local playerInfo = uiEvent.parameter;
 
   if playerInfo.friendFlag == nil then return end
@@ -260,7 +383,54 @@ function UISocial.OnClick_Send(uiEvent)
     ShowCenterMessage(string.Get(20513));
     return;
   end
-
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   --C:014-007 <好友送禮> +玩家ID(8)
   sendBuffer:Clear();
   sendBuffer:WriteInt64(playerInfo.roleId);
@@ -295,6 +465,14 @@ function UISocial.OnClick_ReceiveAll()
   --沒有禮物可收取
   if not Social.CheckCanReceiveGift() then
     ShowCenterMessage(string.Get(20512));
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
     return;
   end
   Social.ReceiveAllGift();
@@ -365,6 +543,14 @@ function UISocial.OnItemChange_ScrollContent_Friend(dataIndex, itemIndex)
       scrollItems_Friend[itemIndex].event_Send:SetColor(Color.LightGray);
     else
       scrollItems_Friend[itemIndex].event_Send:SetColor(Color.White);
+      --3----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
     end
 
   elseif currentTag == EUISocialTag.Black then
@@ -388,8 +574,8 @@ function UISocial.OnItemChange_ScrollContent_Friend(dataIndex, itemIndex)
   scrollItems_Friend[itemIndex].event_Receive.parameter = playerInfo;
   scrollItems_Friend[itemIndex].event_Send.parameter = playerInfo;
 
-  if currentTag == EUISocialTag.Friend and playerInfo.turn >= 1 and not Social.IsBlack(roleId) then
-    scrollItems_Friend[itemIndex].image_RedDot.gameObject:SetActive(Social.CheckVisitedFriendRedDot(roleId));
+  if currentTag == EUISocialTag.Friend and Social.CheckTurnStatus(playerInfo.level, playerInfo.turn) and not Social.IsBlack(roleId) then
+    scrollItems_Friend[itemIndex].image_RedDot.gameObject:SetActive(Social.CheckVisitedFriendRedDot(playerInfo));
   else
     scrollItems_Friend[itemIndex].image_RedDot.gameObject:SetActive(false);
   end
@@ -402,6 +588,14 @@ function UISocial.OnItemChange_ScrollContent_Friend(dataIndex, itemIndex)
   
   if Social.CheckCanSendGift() then
     event_SendAll:SetColor(Color.White);
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
   else
     event_SendAll:SetColor(Color.LightGray);
   end

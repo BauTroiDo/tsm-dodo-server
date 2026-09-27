@@ -16,7 +16,18 @@ function MissionAward.GetMissionOrderByStatus(activityId)
   local receivedAwardMission = {};
   local refresh = false;
   for _, value in ipairs(missionAwardDatas) do
-    if value.activityId == activityId then
+    if activityId ~= nil then
+      if value.activityId == activityId then
+        if value:HaveGetFlag() then
+          table.insert(receivedAwardMission, value);
+        elseif value:IsComplete() then
+          table.insert(completeMission, value);
+          refresh = true;
+        else
+          table.insert(inProgressMission, value);
+        end
+      end
+    else
       if value:HaveGetFlag() then
         table.insert(receivedAwardMission, value);
       elseif value:IsComplete() then
@@ -43,13 +54,26 @@ function MissionAward.GetMissionOrderByStatus(activityId)
 end
 
 function MissionAward.CheckCompeleteKind(conditionKind, roleCountIndex)
+  local festivalReddot = false;
+  local battlePassReddot = false;
   for _, value in ipairs(missionAwardDatas) do
     if value.conditions.kind == conditionKind and value.conditions.kindValue == roleCountIndex then
       if value:IsComplete() and not value:HaveGetFlag() then
-        BattlePass.UpdateRedDot();
-        UIFestival.UpdateRedDot();
+        if value.activityId == 98 and not festivalReddot then
+          festivalReddot = true;
+        elseif not battlePassReddot then
+          battlePassReddot = true;
+        end
       end
     end
+  end
+  
+  if festivalReddot then
+    RedDot.Add(ERedDot.Festival);
+  end
+  
+  if battlePassReddot then
+    BattlePass.UpdateRedDot();
   end
 end
 
@@ -78,17 +102,6 @@ function MissionAward.SendCompleteMission(missionID)
   Network.Send(77, 11, sendBuffer);
 end
 
-function MissionAward.SetContent()
-  for id, data in pairs(missionAwardDatas) do
-    if data.stringType == 1 then
-      data.content = string.format(string.Get(data.contentID), data.conditions.value);
-    elseif data.stringType == 2 then
-      data.content = string.format(string.Get(data.contentID), itemDatas[data.descriptionItemId].name,
-        data.conditions.value);
-    end
-  end
-end
-
 --[[
 S:077-011<活動協定> + 活動種類(1)
   種類122:<領通用任務獎勵> +結果(1)
@@ -96,6 +109,7 @@ S:077-011<活動協定> + 活動種類(1)
             1=成功 + 任務ID(2)
             2=未符合資格 + 任務ID(2)
             3=以領過 + 任務ID(2)
+            255=功能未開啟
 ]]--
 function MissionAward.ReceiveMissionAward(data)
   local result = data:ReadByte();

@@ -11,6 +11,92 @@ local tempX= 0;
 local tempY= 0;
 local aSpeed = 0;
 
+function Firework.EndOfLine()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function Firework.EndOfLine1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function Firework.EndOfLine2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function Firework.EndOfLine3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function Firework.EndOfLine4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+
 function Firework.New(index, kind, startX, startY, count)
   local self = {};
   setmetatable(self, Firework);
@@ -100,6 +186,57 @@ function Firework.Update()
           firework[i] = nil;
         end
       end  
+    end
+  end
+end
+
+function Firework.EndOfLine5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function Firework.EndOfLine6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function Firework.EndOfLine7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
     end
   end
 end

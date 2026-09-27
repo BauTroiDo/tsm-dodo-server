@@ -62,6 +62,26 @@ function UIActivity.Initialize(go)
 
   event_SelectMember = uiController:FindEvent("Image_SelectMember");
   event_SelectMember:SetListener(EventTriggerType.PointerClick, this.OnClick_SelectMember);
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
   
   --[[
   --tag
@@ -90,17 +110,37 @@ function UIActivity.Initialize(go)
       tagDatas[ui_c][i][2] = {};
       for j = 1, subPageCount do
         tagDatas[ui_c][i][2][j] = Activity.GetSubTagName(ui_c, i, j);
-      end
+      end 
     end
   end
   --完--
 end
 
 function UIActivity.OnClickAwardForCommonAward(uiEvent)
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
   UIItemInfo.Show(uiEvent.parameter);
 end
 
 function UIActivity.OnClickAwardForLuckyBag(uiEvent)
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
   UIItemInfo.ShowLuckyBag(uiEvent.parameter);
 end
 
@@ -130,6 +170,27 @@ function UIActivity.OnVisible(visible)
 end
 
 function UIActivity.OnClose()
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  
   CGTimer.RemoveListener(this.UpdateTime);
   this.nowShowUI_Kind = 0;
   return true;
@@ -184,6 +245,12 @@ function UIActivity.UpdateState(activityInfo)
     text_Go.text = string.Get(21253);
     event_Go:SetColor(Color.White);
 
+    if activityInfo.kind == EActivity.ArmyBattle then
+      if not Organization.CheckFlag(EOrgFlag.ArmyBattleRegistered) then
+        event_Go:SetColor(Color.LightGray);
+        text_Go.text = string.Get(24238);
+      end
+    end
   --已結束
   elseif state == 2 then
     text_Go.text = string.Get(21253);
@@ -201,17 +268,66 @@ function UIActivity.UpdateState(activityInfo)
           event_SelectMember.gameObject:SetActive(true);
         end
       end
+    elseif activityInfo.kind == EActivity.ArmyBattle then
+      if Organization.CheckFlag(EOrgFlag.ArmyBattleRegistered) then
+        event_Go:SetColor(Color.LightGray);
+        text_Go.text = string.Get(21813);
+      else
+        event_Go:SetColor(Color.White);
+        text_Go.text = string.Get(80017);
+      end
     end
   end
 end
 
 function UIActivity.OnClick_Close()
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  
   UI.Close(this);
 
   return true;
 end
 
 function UIActivity.OnClick_Help(checkShow)
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
   if checkShow ~= true then
     UI.Open(UITutorialHint, 0, this, activityInfo:GetActivityName(), activityInfo:GetDescription());
   end
@@ -226,6 +342,7 @@ function UIActivity.OnClick_Tag(mainTag, subTag)
   this.SetShowActivityInfo();
 
   this.UpdateUI();
+
   return true;
 end
 
@@ -246,17 +363,57 @@ function UIActivity.OnClick_Go()
   end
 
   if activityTimes[activityInfo.Id][1].state == 1 then
-    --C:077-003 <傳送入場> +活動ID(2)
-    sendBuffer:Clear();
-    sendBuffer:WriteUInt16(activityInfo.Id);
-    Network.Send(77, 3, sendBuffer);
+    if CheckFlag(activityInfo.bitFunction, 2) then
+      if Network.activityServerId ~= Network.serverId then
+        Network.isConnectingToActivityServer = true;
+        Network.ConnectToActivityServer();
+        return;
+      end
+    end
+
+    if activityInfo.kind == EActivity.ArmyBattle then
+      Network.Send(171, 7);
+    else
+      --C:077-003 <傳送入場> +活動ID(2)
+      sendBuffer:Clear();
+      sendBuffer:WriteUInt16(activityInfo.Id);
+      Network.Send(77, 3, sendBuffer);
+    end
 
     this.OnClick_Close();
   elseif activityTimes[activityInfo.Id][1].state == 3 then
-    --C:077-003 <傳送入場> +活動ID(2)
-    sendBuffer:Clear();
-    sendBuffer:WriteUInt16(activityInfo.Id);
-    Network.Send(77, 3, sendBuffer);
+
+    if CheckFlag(activityInfo.bitFunction, 2) then
+      if Network.activityServerId ~= Network.serverId then
+        Network.isConnectingToActivityServer = true;
+        Network.ConnectToActivityServer();
+        return;
+      end
+    end
+
+    if activityInfo.kind == EActivity.ArmyBattle then
+      if Organization.CheckFlag(EOrgFlag.ArmyBattleRegistered) then
+        ShowCenterMessage(string.Get(21813));
+      else
+        if Organization.IsChief(Role.playerId) or Organization.IsSubChief(Role.playerId) then
+          ShowCheckMessage(
+            function(result)
+              if result then
+                Network.Send(171, 7);
+              end
+            end,
+            string.Get(24234)
+          );
+        else
+          ShowCenterMessage(string.Get(21791));
+        end
+      end
+    else
+      --C:077-003 <傳送入場> +活動ID(2)
+      sendBuffer:Clear();
+      sendBuffer:WriteUInt16(activityInfo.Id);
+      Network.Send(77, 3, sendBuffer);
+    end
   end
 
   if activityInfo.kind == EActivity.CityScramble then
@@ -264,6 +421,12 @@ function UIActivity.OnClick_Go()
       ShowCenterMessage(string.Get(23085));
     end
   end
+end
+
+function UIActivity.TeleportToActivityScene()
+  sendBuffer:Clear();
+  sendBuffer:WriteUInt16(activityInfo.Id);
+  Network.Send(77, 3, sendBuffer);
 end
 
 function UIActivity.OnClick_SelectMember()
@@ -295,6 +458,11 @@ function UIActivity.UpdateOpenTime()
     return;
   end
 
+  if activityInfo.kind == EActivity.ArmyBattle then
+    text_OpenTime.text = "";
+    return;
+  end
+
   --開放日
   if openDay[this.GetDayOfWeek(tostring(CGTimer.serverTime.DayOfWeek))] ~= 1 then
     text_OpenTime.text = string.Get(20276);
@@ -315,8 +483,6 @@ function UIActivity.UpdateTime()
   if activityInfo == nil then return end
 
   text_Countdown = "";
-  --開放時段
-  --活動倒數開始或結束
 
   actTime = activityTimes[activityInfo.Id];
   
@@ -325,20 +491,20 @@ function UIActivity.UpdateTime()
       (CGTimer.serverTime.DayOfWeek ~= actTime[1].serverStartTime.DayOfWeek and CGTimer.serverTime.DayOfWeek ~= actTime[1].serverCloseTime.DayOfWeek) then
       text_OpenTime.text = string.Get(20377);  
     elseif DateTime.Compare(CGTimer.serverTime, actTime[1].serverStartTime) < 0 then 
-      text_Countdown = string.GetSecondSymbol(math.ceil(DateTime.Subtract(actTime[1].serverStartTime, CGTimer.serverTime).TotalSeconds));
-      text_Countdown = string.GetColorText(string.Concat(string.Get(80098), " ", text_Countdown), Color.Black);
-      text_OpenTime.text = string.Concat(string.Get(20277), " ", text_Countdown);
+    text_Countdown = string.GetSecondSymbol(math.ceil(DateTime.Subtract(actTime[1].serverStartTime, CGTimer.serverTime).TotalSeconds));
+    text_Countdown = string.GetColorText(string.Concat(string.Get(80098), " ", text_Countdown), Color.Black);
+    text_OpenTime.text = string.Concat(string.Get(20277), " ", text_Countdown); 
     elseif DateTime.Compare(CGTimer.serverTime, actTime[1].serverCloseTime) < 0 then 
-      text_Countdown = string.GetSecondSymbol(math.ceil(DateTime.Subtract(actTime[1].serverCloseTime, CGTimer.serverTime).TotalSeconds));
-      text_OpenTime.text = string.Concat(string.Get(80098), " ", text_Countdown);
+    text_Countdown = string.GetSecondSymbol(math.ceil(DateTime.Subtract(actTime[1].serverCloseTime, CGTimer.serverTime).TotalSeconds));
+    text_OpenTime.text = string.Concat(string.Get(80098), " ", text_Countdown); 
     else
-      text_OpenTime.text = string.Get(20377);
+    text_OpenTime.text = string.Get(20377);
     end
     return;
   end
 
   if DateTime.Compare(CGTimer.serverTime, this.GetLastActivityTime(actTime)) > 0 or CGTimer.serverTime.DayOfWeek ~= actTime[1].serverStartTime.DayOfWeek then
-    text_OpenTime.text = string.Get(20377);
+     text_OpenTime.text = string.Get(20377);
   elseif DateTime.Compare(CGTimer.serverTime, actTime[1].serverStartTime) < 0 then
     text_Countdown = string.GetSecondSymbol(math.ceil(DateTime.Subtract(actTime[1].serverStartTime, CGTimer.serverTime).TotalSeconds));
     text_Countdown = string.GetColorText(string.Concat(string.Get(80098), " ", text_Countdown), Color.Black);
@@ -346,12 +512,31 @@ function UIActivity.UpdateTime()
   elseif DateTime.Compare(CGTimer.serverTime, actTime[1].serverCloseTime) < 0 then
     text_Countdown = string.GetSecondSymbol(math.ceil(DateTime.Subtract(actTime[1].serverCloseTime, CGTimer.serverTime).TotalSeconds));
     text_OpenTime.text = string.Concat(string.Get(80098), " ", text_Countdown);
-  else
+   else
     text_OpenTime.text = string.Get(20377);
   end
 end
 
 function UIActivity.SetActivityTime()
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  
   local activityTime = Activity.GetActivityTime(activityInfo.Id);
   startDate = activityTime[1]:GetStartDate()
   endDate = activityTime[1]:GetEndDate()
@@ -370,16 +555,38 @@ function UIActivity.SetActivityTime()
   end
   text_WeekDay.text = string.format(string.Get(21292), text_WeekDay.text);
 
+  if activityInfo.kind == EActivity.ArmyBattle then
+    text_WeekDay.text = "";
+  end
+
   --開放時間
   text_Time.text = "";
-  for i = 1, table.Count(activityTime) do
-    if text_Time.text == "" then
-      text_Time.text = string.Concat(text_Time.text, string.TenDigits(activityTime[i].openHour), " : ", string.TenDigits(activityTime[i].openMinute), " ~ ", string.TenDigits(activityTime[i].closeHour), " : ", string.TenDigits(activityTime[i].closeMinute));
-    else
-      text_Time.text = string.Concat(text_Time.text, ", ", string.TenDigits(activityTime[i].openHour), " : ", string.TenDigits(activityTime[i].openMinute), " ~ ", string.TenDigits(activityTime[i].closeHour), " : ", string.TenDigits(activityTime[i].closeMinute));
+  --[[ 
+  如果開放日未設定則為全日活動，顯示格式為開放日~截止日
+  若有複數個則以逗號分開，且每三條日期換行顯示，如:
+  7/15~7/21, 7/23~7/29, 7/31~8/6
+  8/8~8/14, 8/16~8/22, 8/24~8/30
+  ]]
+  if activityTime[1].openDay == 0 then
+    text_Time.text = "\n";
+    for i = 1, table.Count(activityTime) do
+      if i % 3 ~= 1 then text_Time.text = string.Concat(text_Time.text, ", "); end
+      local startDay = string.Concat(activityTime[i].startMonth, "/", activityTime[i].startDay);
+      local endDay = string.Concat(activityTime[i].endMonth, "/", activityTime[i].endDay);
+      text_Time.text = string.Concat(text_Time.text, startDay, "~", endDay);
+      if i % 3 == 0 then text_Time.text = string.Concat(text_Time.text, "\n"); end
     end
+  else
+  -- 否則則以開放時段顯示
+    for i = 1, table.Count(activityTime) do
+      if text_Time.text == "" then
+        text_Time.text = string.Concat(text_Time.text, string.TenDigits(activityTime[i].openHour), " : ", string.TenDigits(activityTime[i].openMinute), " ~ ", string.TenDigits(activityTime[i].closeHour), " : ", string.TenDigits(activityTime[i].closeMinute));
+      else
+        text_Time.text = string.Concat(text_Time.text, ", ", string.TenDigits(activityTime[i].openHour), " : ", string.TenDigits(activityTime[i].openMinute), " ~ ", string.TenDigits(activityTime[i].closeHour), " : ", string.TenDigits(activityTime[i].closeMinute));
+      end
+    end
+    text_Time.text = string.format(string.Get(21293), text_Time.text);
   end
-  text_Time.text = string.format(string.Get(21293), text_Time.text);
 end
 
 function UIActivity.GetLastActivityTime(activityTime)
@@ -395,16 +602,17 @@ end
 
 --計算開放日
 function UIActivity.intTobit(num)
-  ret = {0,0,0,0,0,0,0};
-  local Count = 1;
-
-  while num~=1 and num~=0 do
-    ret[Count] = num%2;
-    Count = Count + 1;
-    num = math.modf(num/2);
+  local ret = { 0, 0, 0, 0, 0, 0, 0 };
+  local count = 1;
+  
+  while num ~= 1 and num ~= 0 do
+    ret[count] = num % 2;
+    count = count + 1;
+    num = math.modf(num / 2);
   end
-  ret[Count] = num;
-
+  
+  ret[count] = num;
+  
   return ret;
 end
 
@@ -418,6 +626,25 @@ end
 
 function UIActivity.GetDayOfWeek(weekday)
   if weekday == "Monday" then
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+  
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+  
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+  
+    
     return 1
   elseif weekday == "Tuesday" then
     return 2
@@ -464,6 +691,12 @@ function UIActivity.GetRecentActivity()
     end 
   end
   --完--
-
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  
   return 1, 1;
 end

@@ -20,11 +20,38 @@ function ThrowSkull:SetStone()
   elseif target.party_Kind == EFightParty.Right then       
     sinSita = 1/ math.sqrt(math.pow(SlopeRight, 2)+1);
     cosSita = SlopeRight / math.sqrt(math.pow(SlopeRight, 2)+1);
-    showPage = 1;      
+    showPage = 1;
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      --local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   else  --預設使用 Party_Left: 的設定      
     sinSita = 1/ math.sqrt(math.pow(SlopeLeft, 2)+1);
     cosSita = SlopeLeft / math.sqrt(math.pow(SlopeLeft, 2)+1);
     showPage = 2;
+    
   end
 
   for i=1, 5 do  

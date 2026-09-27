@@ -21,7 +21,7 @@ local transform_HideRoot;
 
 local image_HideAll;
 
--- minimap
+--minimap
 local rectTransform_BG;
 
 local text_Position;
@@ -67,9 +67,6 @@ local teamDatas = {};
 
 local mission_OriginalWidth;
 local renderTexture = nil;
-local teamFeatureTrigger = false;
-local teamMateIndex = 0;
-local minMissionCount = 1;
 
 function UIMiniMap.Initialize(go)  
   local uiController = go:GetComponent("UIController");
@@ -94,6 +91,39 @@ function UIMiniMap.Initialize(go)
 
   tempEvent = uiController:FindEvent("Image_HideAll");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_UISwitch);
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 
   --minimap
   rectTransform_BG = uiController:FindImage("Image_MiniMapBG").rectTransform;
@@ -153,15 +183,6 @@ function UIMiniMap.Initialize(go)
   gameObject_Top3 = uiController:FindGameObject("GameObject_Top3");
   tempEvent = gameObject_Deathmatch:GetComponent("UIEvent");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_DeathMatch);
-
-  --TeamFeature
-  gameObject_TeamFeature = uiController:FindGameObject("TeamFeature");
-  gameObject_Mask = uiController:FindGameObject("Image_Mask");
-  this.TeamFeatureInitialize();
-  event_Mask = gameObject_Mask:GetComponent("UIEvent");
-  event_Mask:SetListener(EventTriggerType.PointerClick, this.CloseTeamFeature);
-  gameObject_Mask:SetActive(false);
-  gameObject_TeamFeature:SetActive(false);
 
   local temp = nil;
   local rootObj = nil;
@@ -249,24 +270,24 @@ end
 
 function UIMiniMap.OnClick_UISwitch()
   this.UpdateVisible(not UI.showMainUI);
-  if not UI.showMainUI then
-    UICenterMessage.Clear();
-  end
 end
 
 --minimap
 function UIMiniMap.UpdateScene()
   if HouseManager.IsInHouse() then
-    text_SceneName.text = string.Concat(string.format(string.Get(23528), HouseManager.GetCurrentBuilding(), HouseManager.GetCurrentFloor()));
-    return
+    if SceneManager.sceneId == 10821 then
+      text_SceneName.text = SceneManager.sceneState.name;
+    else
+      text_SceneName.text = string.Concat(string.format(string.Get(23528), HouseManager.GetCurrentBuilding(), HouseManager.GetCurrentFloor()));
+    end
+  else
+    text_SceneName.text = SceneManager.sceneState.name;
   end
-
-  text_SceneName.text = SceneManager.sceneState.name;
 end
 
 function UIMiniMap.UpdatePosition()
   if Role.player ~= nil then
-    text_Position.text = string.Concat(string.Get(10126), ":", SceneManager.instanceId, " ", string.Get(49060), ":", math.floor(Role.player.position.x), ".", math.floor(Role.player.position.y));
+    text_Position.text = string.Concat(string.Get(49060), ":", math.floor(Role.player.position.x), ".", math.floor(Role.player.position.y));
   else
     text_Position.text = "";
   end
@@ -294,12 +315,42 @@ function UIMiniMap.OnClick_MapSwitch(uiEvent)
 end
 
 function UIMiniMap.OnClick_ChangeArea()
-  if BattleRoyale.GetBattleRoyaleState() then
-    ShowCenterMessage(string.Get(10135));
-    return
-  end
   --C:007-001 <要分區列表>
   Network.Send(7, 1);
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 --mission
@@ -357,16 +408,18 @@ function UIMiniMap.UpdateMission(refresh, showAll)
 
   local missionCount = table.maxn(missionDatas);
 
-  transform_MissionSize.gameObject:SetActive(missionCount > minMissionCount);
+  transform_MissionSize.gameObject:SetActive(missionCount > 2);
 
   if not UI.showAllMission then
-    missionCount = math.min(missionCount, minMissionCount);
+    missionCount = math.min(missionCount, 2);
     refresh = false;
   end
 
   if UI.showAllMission then
+    transform_Mission.sizeDelta = Vector2.New(205, 355);
     transform_MissionSize.localRotation = Quaternion.Euler(0, 0, 270);
   else
+    transform_Mission.sizeDelta = Vector2.New(205, 150);
     transform_MissionSize.localRotation = Quaternion.Euler(0, 0, 90);
   end
 
@@ -375,6 +428,8 @@ function UIMiniMap.UpdateMission(refresh, showAll)
   else
     scrollContent_Mission:Reset(missionCount);
   end
+
+  transform_MissionSize.localPosition = transform_Mission.localPosition + Vector3.New(transform_Mission.sizeDelta.x * -0.5, -transform_Mission.sizeDelta.y, 0);
 end
 
 function UIMiniMap.UpdateTeam()
@@ -422,7 +477,40 @@ end
 
 function UIMiniMap.OnClick_Team()
   if currentTag == EUIMainTag.Team then
-    UI.Open(UITeam);    
+    UI.Open(UITeam);
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
     return;
   end
 
@@ -474,18 +562,6 @@ function UIMiniMap.OnClick_MissionInfo(uiEvent)
   end
 
   MarkManager.Navigation(missionId);
-end
-
-function UIMiniMap.OnClick_ShowTeamFeature(uiEvent)
-  if teamFeatureTrigger and teamMateIndex == uiEvent.parameter then
-    teamFeatureTrigger = false;
-    elseif not teamFeatureTrigger then
-    teamFeatureTrigger = true;
-  end
-  gameObject_TeamFeature:SetActive(teamFeatureTrigger);
-  gameObject_Mask:SetActive(teamFeatureTrigger);
-  gameObject_TeamFeature.transform.position = {x = gameObject_TeamFeature.transform.position.x , y = uiEvent.gameObject.transform.position.y - 1, z = 0};
-  teamMateIndex = uiEvent.parameter;
 end
 
 function UIMiniMap.OnClick_TeamFind()
@@ -580,6 +656,39 @@ function UIMiniMap.OnItemChange_ScrollContent_Mission(dataIndex, itemIndex)
           description = string.Concat(description, "、");
         end
         --[[
+            --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
         if lastKind ~= condition.kind then
           description = string.Concat(description, string.Get(99653));
         else
@@ -630,10 +739,6 @@ function UIMiniMap.OnInitialize_ScrollContent_Team(scrollItems)
   for itemIndex = 0, scrollItems.Length - 1 do
     scrollItems_Team[itemIndex] = {};
     scrollItems_Team[itemIndex].image_BG = scrollItems[itemIndex]:Find("Image_BG"):GetComponent("Image");
-    scrollItems_Team[itemIndex].event_BG = scrollItems_Team[itemIndex].image_BG:GetComponent("UIEvent");
-    scrollItems_Team[itemIndex].event_BG:SetListener(EventTriggerType.PointerClick, this.OnClick_ShowTeamFeature);
-    scrollItems_Team[itemIndex].event_BG.parameter = itemIndex + 1;
-
     scrollItems_Team[itemIndex].event_TeamState = scrollItems[itemIndex]:Find("Image_Find"):GetComponent("UIEvent");
     scrollItems_Team[itemIndex].event_TeamState:SetListener(EventTriggerType.PointerClick, this.OnClick_TeamFind);
 
@@ -681,6 +786,39 @@ end
 
 function UIMiniMap.MissionCompleted()
   AnimationController.Play(5, gameObject_MissionEffect.transform, nil, nil, nil);
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 --deathMatch
@@ -734,59 +872,4 @@ function UIMiniMap.UpdateDeathMatch()
     objs_My.image_Sort.gameObject:SetActive(true);
     objs_My.image_Sort.sprite = UI.GetSprite( string.Concat("icon0", rank + 14));  
   end
-end
-function UIMiniMap.CloseTeamFeature()
-  gameObject_TeamFeature:SetActive(false);
-  gameObject_Mask:SetActive(false);
-  teamFeatureTrigger = false;
-end
-
---TeamFeature
-
-function UIMiniMap.TeamFeatureInitialize()
-    event_ChangeLeader = gameObject_TeamFeature.transform:Find("ChangeLeader"):GetComponent("UIEvent");
-    event_ChangeLeader:SetListener(EventTriggerType.PointerClick, this.ChangeLeader);
-
-    event_FreeMove = gameObject_TeamFeature.transform:Find("FreeMove"):GetComponent("UIEvent");
-    event_FreeMove:SetListener(EventTriggerType.PointerClick, this.FreeMove);
-
-    event_LeaveTeam = gameObject_TeamFeature.transform:Find("LeaveTeam"):GetComponent("UIEvent");
-    event_LeaveTeam:SetListener(EventTriggerType.PointerClick, this.LeaveTeam);
-
-    event_AddFriend = gameObject_TeamFeature.transform:Find("AddFriend"):GetComponent("UIEvent");
-    event_AddFriend:SetListener(EventTriggerType.PointerClick, this.AddFriend);
-
-end
-
-function UIMiniMap.ChangeLeader()
-  sendBuffer:Clear();
-  sendBuffer:WriteInt64(teamDatas[teamMateIndex].index);
-  Network.Send(13, 9, sendBuffer);
-  UIMiniMap.CloseTeamFeature();
-end
-
-function UIMiniMap.FreeMove()
-  local freeMove = Role.player.freeMove;
-  local numBoolean = 0;
-  UIMiniMap.CloseTeamFeature();
-  Role.player:ChangeFreeMove(not freeMove);
-
-  if Role.player.freeMove then
-    numBoolean = 1;
-  end
-
-  sendBuffer:Clear();
-  sendBuffer:WriteInt64(Role.playerId);
-  sendBuffer:WriteByte(numBoolean);
-  Network.Send(13, 15, sendBuffer);
-end
-
-function UIMiniMap.LeaveTeam()
-  Team.Leave();
-  UIMiniMap.CloseTeamFeature();
-end
-
-function UIMiniMap.AddFriend()
-  Social.Invite(teamDatas[teamMateIndex].index);
-  UIMiniMap.CloseTeamFeature();
 end

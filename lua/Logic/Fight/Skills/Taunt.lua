@@ -59,6 +59,32 @@ function Taunt:Update()
 
     self.centerPos = centerPos;
     self.step = 2;
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      --local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif self.step == 2 then 
     if me.arrive then 
       FightField.attack[self.humIdx]:SetLightWithOrder(1, EEffectLightDis.Body, 10301, 70, 1, 7, 7, EEffectLightTracer.Stand, self.centerPos.x, self.centerPos.y + 148, 30, true, 40);
@@ -74,6 +100,32 @@ function Taunt:Update()
       me:PlaySound(target.colm, target.row);         
       self.interval = 0.1;
       self.step = 3;
+      --1--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        local code = DemoCode.GetBitxor(20);
+        code = code * 10;
+      end
+      ---2--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        --local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        --local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     end
   elseif self.step == 3 then 
     self:UpdateShake();
@@ -93,7 +145,7 @@ function TauntMe:Update()
   local me = FightField.fightHum[self.humIdx];
   if self.step == 1 then     
     local newPos = me:GetChipPos();    
-    me:GetStatus(self.statusKind):SetLight(EEffectLightKind.Body1, 10139, 30, 1, 8, 8, EEffectLightTracer.Stand, newPos.x, newPos.y -30, 30, true, 30);
+    me:GetStatus(self.statusKind):SetLight(EEffectLightKind.Body1, 11081, 100, 1, 4, 4, EEffectLightTracer.Stand, newPos.x, newPos.y -60, 30, true, 30);
     self.step = 2;
   end
 end

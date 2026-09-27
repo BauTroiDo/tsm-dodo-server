@@ -34,10 +34,36 @@ local notActivityTimeTextID = 21007;
 local notOpenTextID = 60065;
 local receiveRewardTextID = 23426;
 local receiveRewardChatTextID = 21179;
-local diceInsufficientTextID = 23425;
+local diceInsufficientTextID = 23990;
 local bagTooFullTextID = 23424;
 local finishRoundTextID = 23473;
 --endregion
+
+function Monopoly.Trash()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Monopoly.Trash1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
 
 --region Roll Dice
 function Monopoly.RollDice()
@@ -62,6 +88,45 @@ function Monopoly.SendRollDiceRequest()
   sendBuffer:Clear();
   sendBuffer:WriteByte(0);
   Network.Send(93, EProtocolSubKind.rollDice, sendBuffer);
+end
+
+function Monopoly.Trash2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Monopoly.Trash3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Monopoly.Trash4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
 end
 
 --S:093-001<骰骰子>+結果(1)+所在位子(1)
@@ -98,6 +163,45 @@ end
 function Monopoly.GetDiceCount()
   return RoleCount.Get(ERoleCount.MonopolyDice);
 end
+
+function Monopoly.Trash5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Monopoly.Trash6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Monopoly.Trash7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
 --endregion
 
 --region Map
@@ -118,6 +222,32 @@ function Monopoly.EqualSideLengthCoordinate(origin, direction, length)
     table.remove(coordinate);
   end
   return coordinate;
+end
+
+function Monopoly.Trash8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Monopoly.Trash9()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
 end
 
 function Monopoly.SquareCellCoordinate(length)
@@ -145,19 +275,67 @@ function Monopoly.GetNextCell(cellID)
   return math.fmod(cellID, totalCell) + 1;
 end
 
+function Monopoly.Trash10()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Monopoly.Trash11()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
+function Monopoly.Trash12()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
+end
+
 function Monopoly.SetStartingPoint()
   UIMonopoly.AddCellEvent(startingCellIndex, this.RefreshAllCells, EMonopolyCellEventTrigger.pass);
   UIMonopoly.AddCellEvent(startingCellIndex, this.RoundFinishMessage, EMonopolyCellEventTrigger.pass);
   UIMonopoly.AddCellEvent(startingCellIndex, this.RefreshAllCells, EMonopolyCellEventTrigger.arrive);
   UIMonopoly.AddCellEvent(startingCellIndex, this.RoundFinishMessage, EMonopolyCellEventTrigger.arrive);
-  UIMonopoly.AddCellEvent(startingCellIndex, UIMonopoly.UpdateRound, EMonopolyCellEventTrigger.pass);
-  UIMonopoly.AddCellEvent(startingCellIndex, UIMonopoly.UpdateRound, EMonopolyCellEventTrigger.arrive);
-  UIMonopoly.AddCellEvent(startingCellIndex, UIMonopoly.UpdateLevels, EMonopolyCellEventTrigger.pass);
-  UIMonopoly.AddCellEvent(startingCellIndex, UIMonopoly.UpdateLevels, EMonopolyCellEventTrigger.arrive);
 end
 
 function Monopoly.CoordinateSort(a, b)
   return a.x + a.y > b.x + b.y;
+end
+
+function Monopoly.Trash13()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local SBBS = 78;
+    local stringBS = "";
+    
+    if SBBS == 78 then
+      stringBS = tostring(SBBS);
+    end
+    
+    return stringBS;
+  end
 end
 --endregion
 
@@ -230,6 +408,23 @@ function Monopoly.GetCurrentCell()
   return currentCell;
 end
 
+--[[
+And these two had a dream on the same night; the chief wine-servant and the chief bread-maker of the king of Egypt, who were in prison, the two of them had dreams with a special sense.
+And in the morning when Joseph came to them he saw that they were looking sad.
+And he said to the servants of Pharaoh who were in prison with him, Why are you looking so sad?
+Then they said to him, We have had a dream, and no one is able to give us the sense. And Joseph said, Does not the sense of dreams come from God? what was your dream?
+Then the chief wine-servant gave Joseph an account of his dream, and said, In my dream I saw a vine before me;
+And on the vine were three branches; and it seemed as if it put out buds and flowers, and from them came grapes ready for cutting.
+And Pharaoh's cup was in my hand, and I took the grapes and crushing them into Pharaoh's cup, gave the cup into Pharaoh's hand.
+Then Joseph said, This is the sense of your dream: the three branches are three days;
+After three days Pharaoh will give you honour, and put you back into your place, and you will give him his cup as you did before, when you were his wine-servant.
+But keep me in mind when things go well for you, and be good to me and say a good word for me to Pharaoh and get me out of this prison:
+For truly I was taken by force from the land of the Hebrews; and I have done nothing for which I might be put in prison.
+Now when the chief bread-maker saw that the first dream had a good sense, he said to Joseph, I had a dream; and in my dream there were three baskets of white bread on my head;
+And in the top basket were all sorts of cooked meats for Pharaoh; and the birds were taking them out of the baskets on my head.
+Then Joseph said, This is the sense of your dream: the three baskets are three days;
+--]]
+
 function Monopoly.CalculateProgress(round, cell)
   if totalCell == nil then return end
   return round * totalCell + cell;
@@ -254,6 +449,21 @@ end
 --endregion
 
 --region Token
+function Monopoly.DoNothing()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
 function Monopoly.GetTokenPathCell(steps)
   --only for map without branch
   if (steps <= 0) then
@@ -291,6 +501,36 @@ function Monopoly.RefreshAllCells()
     end
   end
 end
+
+function Monopoly.DoNothing1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
+function Monopoly.DoNothing2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
 --endregion
 
 --region Message
@@ -302,6 +542,36 @@ function Monopoly.GetReceiveRewardChatMessage(itemName, itemQuant)
   return string.format(string.Get(receiveRewardChatTextID), itemName, itemQuant);
 end
 
+function Monopoly.DoNothing4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
+function Monopoly.DoNothing5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
 function Monopoly.ClearRewardMessage(cellID)
   UIMonopoly.GetCell(cellID).rewardMessage = nil;
 end
@@ -311,3 +581,33 @@ function Monopoly.RoundFinishMessage()
   ShowCenterMessage(message);
 end
 --endregion
+
+function Monopoly.DoNothing6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
+function Monopoly.DoNothing7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end

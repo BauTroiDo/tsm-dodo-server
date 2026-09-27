@@ -100,15 +100,35 @@ ERoleCount = {
   MonopolyDice = 694,        --大富翁骰子
   SouvenirFeedbackExp = 696, --回饋獎勵經驗值
   EternalDungeon = 707,      --永恆地城
+  Sacrifice = 730,           --祭祀次數
   BattlePassExp = 791,       --通行證總積分
   BattleFreeLv = 792,        --通行證免費獎勵領取階段
   BattlePaidLv = 793,        --通行證付費獎勵領取階段
+  MarketCanUpload = 794,     --Web市集可上傳次數
+  SoulGachaCount = 795,      --靈魂抽累積次數
+  TokenExange = 824,         --代幣交換次數
   BuyGiftMaxMoney = 987,     --每日購買禮物金額上限
-  UniqueBloodPiece = 796,    -- 經脈
-  UniqueBloodBag = 801,      -- 經脈背包
   ArmySupportPoke = 821,     --支援戰戳戳樂次數
+  MarketTsGoldLimit = 1030,  --Web市集吞食幣每日可上傳次數
   WarriorRepository = 822,    --武將倉庫
 }
+
+--[[
+And these two had a dream on the same night; the chief wine-servant and the chief bread-maker of the king of Egypt, who were in prison, the two of them had dreams with a special sense.
+And in the morning when Joseph came to them he saw that they were looking sad.
+And he said to the servants of Pharaoh who were in prison with him, Why are you looking so sad?
+Then they said to him, We have had a dream, and no one is able to give us the sense. And Joseph said, Does not the sense of dreams come from God? what was your dream?
+Then the chief wine-servant gave Joseph an account of his dream, and said, In my dream I saw a vine before me;
+And on the vine were three branches; and it seemed as if it put out buds and flowers, and from them came grapes ready for cutting.
+And Pharaoh's cup was in my hand, and I took the grapes and crushing them into Pharaoh's cup, gave the cup into Pharaoh's hand.
+Then Joseph said, This is the sense of your dream: the three branches are three days;
+After three days Pharaoh will give you honour, and put you back into your place, and you will give him his cup as you did before, when you were his wine-servant.
+But keep me in mind when things go well for you, and be good to me and say a good word for me to Pharaoh and get me out of this prison:
+For truly I was taken by force from the land of the Hebrews; and I have done nothing for which I might be put in prison.
+Now when the chief bread-maker saw that the first dream had a good sense, he said to Joseph, I had a dream; and in my dream there were three baskets of white bread on my head;
+And in the top basket were all sorts of cooked meats for Pharaoh; and the birds were taking them out of the baskets on my head.
+Then Joseph said, This is the sense of your dream: the three baskets are three days;
+--]]
 
 RoleCount = {};
 local this = RoleCount;
@@ -154,13 +174,37 @@ function RoleCount.Initialize()
   this.Register(ERoleCount.CScratch_500, "LoginAward", UILoginAward.RefreshScratchRoleCount);
   this.Register(ERoleCount.CScratch_1000, "LoginAward", UILoginAward.RefreshScratchRoleCount);
   this.Register(ERoleCount.CScratch_Bonus, "LoginAward", UILoginAward.RefreshScratchRoleCount);
-  this.Register(ERoleCount.OrgBoss, "Army", Organization.OnBossTimesChanged);  
+  this.Register(ERoleCount.OrgBoss, "Army", Organization.OnBossTimesChanged);
+  this.Register(ERoleCount.Sacrifice, "Sacrifice", Requiem.UpdateSacrificePoints);
+  this.Register(ERoleCount.MarketCanUpload, "Market", Market.UpdateCanTradeCount);
   this.Register(ERoleCount.BattlePassExp, "BattlePass", BattlePass.UpdateExp);
   this.Register(ERoleCount.BattlePaidLv, "BattlePass", BattlePass.UpdateAwardTake);
   this.Register(ERoleCount.BattleFreeLv, "BattlePass", BattlePass.UpdateAwardTake);
-  this.Register(ERoleCount.UniqueBloodBag, "UniqueBloodBag", Item.RefreshRoleCount);
+  this.Register(ERoleCount.MonopolyRound, "MonopolyRound", UIMonopoly.UpdateRound);
   this.Register(ERoleCount.MonopolyDice, "MonopolyDice", UIMonopoly.UpdateDiceCount);
   this.Register(ERoleCount.WarriorRepository, "WarriorRepository", Inn.RefreshWarriorRepositoryCount);
+end
+
+function RoleCount.TestPas(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function RoleCount.TestPas1(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
 end
 
 function RoleCount.Register(kind, id, notifyFunc)
@@ -177,6 +221,17 @@ end
 
 function RoleCount.Clear()
   table.Clear(this.countDatas);
+end
+
+function RoleCount.TestPas2(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
 end
 
 function RoleCount.Set(index, value, max, endSetData)
@@ -223,10 +278,54 @@ function RoleCount.RoleCountUpdate(data)
   end
 end
 
+function RoleCount.TestPas3(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function RoleCount.TestPas4(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function RoleCount.TestPas5(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
 function RoleCount.Max(index)
   if this.countDatas[index] ~= nil then
     return this.countDatas[index].max;  
   else
     return 0;
+  end
+end
+
+function RoleCount.TestPas6(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
   end
 end

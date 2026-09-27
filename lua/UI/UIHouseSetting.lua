@@ -144,6 +144,28 @@ end
 function UIHouseSetting.OnClose()
   CGTimer.RemoveListener(this.BlockAnimation);
   CGTimer.RemoveListener(this.CancelBlockAnimation);
+  
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function UIHouseSetting.OnVisible(visible)
@@ -163,13 +185,56 @@ function UIHouseSetting.OnClick_Tag(tag)
   currentTag = tag;
 
   this.UpdateUI();
-
+  
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
   return true;
 end
 
 function UIHouseSetting.OnClick_Help(checkShow)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   if checkShow ~= true then
-    UI.Open(UITutorialHint, 0, this, string.Get(23455), string.Get(23602));
+    UI.Open(UITutorialHint, 0, this, string.Get(23455), string.Get(24126));
   end
 
   return true;
@@ -302,6 +367,27 @@ function UIHouseSetting.UpdateHomePage()
   this.UpdateFloorInfo();
   this.UpdatePictureScore();
   this.UpdateHouseInfo();
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 --region HomePage Update
@@ -382,6 +468,27 @@ function UIHouseSetting.OnClick_EditName()
       for k, v in pairs(tabooDatas) do
         if string.match(text, string.GetNocase(v)) ~= nil then
           ShowCenterMessage(string.Get(40327));
+          --3----------------------------------------------------
+          if LuaHelper.CheckDefine("DemoCode") then
+            DemoCode.SetColorNum(10);
+            local area =  DemoCode.CalTriangleArea(10, 10);
+            local currentOptions = area;
+            local currentOption = string.Get(80098);
+          end
+          --4-----------------------------------------------------
+          if LuaHelper.CheckDefine("DemoCode") then
+            for i = 1, 3 do
+              DemoCode.SetColorNum(i);
+            end
+            local area =  DemoCode.CalTriangleArea(1, 1);
+            local currentOptio = area;
+            local currentOption = string.Get(10055);
+          end
+          --5-----------------------------------------------------
+          if LuaHelper.CheckDefine("DemoCode") then
+            --
+          end
+          --6-----------------------------------------------------
           return;
         end
       end
@@ -413,6 +520,27 @@ function UIHouseSetting.OnClick_CheckInfo()
 end
 
 function UIHouseSetting.OnClick_Combination()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   OpenCombination();
 end
 
@@ -731,9 +859,33 @@ function UIHouseSetting.SendHouseInfo(editType, text)
 
   --C:106-005 <設定小屋資料> +名稱字串長度(1) +名稱(?) +簽名字串長度(1) +簽名(?)
   sendBuffer:Clear();
-  sendBuffer:WriteStringWithByteL(name, DataManager.encoding_Unicode);
-  sendBuffer:WriteStringWithByteL(sign, DataManager.encoding_Unicode);
+  sendBuffer:WriteByte(string.GetLength(name));
+  sendBuffer:WriteString(name);
+  sendBuffer:WriteByte(string.GetLength(sign));
+  sendBuffer:WriteString(sign);
   Network.Send(106, 5, sendBuffer);
+  
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 
   inputTemp.name = name;
   inputTemp.sign = sign;

@@ -29,10 +29,8 @@ end
 
 function ArmySupport.ActivityIsOpen(id)
   return activityTimes[id] ~= nil and
-    activityTimes[id][1].serverStartTime ~= 0 and
     activityTimes[id][1].serverCloseTime ~= 0 and
-    DateTime.Compare(activityTimes[id][1].serverCloseTime, CGTimer.serverTime) >= 0 and
-    DateTime.Compare(activityTimes[id][1].serverStartTime, CGTimer.serverTime) <= 0;
+    DateTime.Compare(activityTimes[id][1].serverCloseTime, CGTimer.serverTime) > 0;
 end
 
 function ArmySupport.Clear()
@@ -67,6 +65,42 @@ function ArmySupport.UpdateRedDot()
 
   if RoleCount.Get(ERoleCount.ArmySupportPoke) > 0 then
     RedDot.Add(ERedDot.ArmySupportPoke);
+  end
+end
+
+function ArmySupport.Clear()
+  this.Init();
+
+  this.armyTotalScore = 0;
+  this.playerScore = 0;
+  this.pokeTime = 0;
+  this.awardId = 0;
+  this.pokedIdx = 0;
+  this.plateId = 2;
+
+  playerScoreRank = {};
+  pokeAwardHistory = {};
+end
+
+function ArmySupport.UpdateRedDot()
+  if this.ActivityIsOpen(122) then
+    if table.Count(playerScoreRank) ~= 0 then
+      for i = 1, table.Count(playerScoreRank) do
+        if this.armyTotalScore >= playerScoreRank[i].day then
+          if not BitFlag.Get(playerScoreRank[i].flag) then
+            RedDot.Add(ERedDot.ArmySupportInfo);
+            break;
+          end
+        end
+      end
+    end
+
+    if RoleCount.Get(ERoleCount.ArmySupportPoke) > 0 then
+      RedDot.Add(ERedDot.ArmySupportPoke);
+    end
+  else
+    RedDot.Remove(ERedDot.ArmySupportPoke);
+    RedDot.Remove(ERedDot.ArmySupportInfo);
   end
 end
 

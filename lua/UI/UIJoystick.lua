@@ -41,12 +41,76 @@ function UIJoystick.Initialize(go)
 end
 
 function UIJoystick.OnOpen()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   this.Clear();
 
   return true;
 end
 
 function UIJoystick.OnClose()
+  
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   this.Clear();
 
   return true;
@@ -102,6 +166,28 @@ function UIJoystick.Update()
     joystickStartPosition.y = 0;
 
     joystickOnDrag = true;
+    
+      --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   --]]
   end
   
@@ -154,6 +240,12 @@ function UIJoystick.OnPress_Joystick(uiEvent)
     image_JoystickBG.rectTransform.anchoredPosition = joystickStartPosition;
   end
 
+  if uiEvent.eventData.pointerId == -2 then
+    if LuaHelper.IsStandalone or LuaHelper.IsAndroidPlatform then
+      return
+    end
+  end
+
   joystickTouchs[uiEvent.eventData.pointerId] = true;
 end
 
@@ -163,7 +255,12 @@ end
 
 function UIJoystick.OnClick_Scene(uiEvent)
   if joystickDragStart then return end
-  
+  if uiEvent.eventData.pointerId == -2 then
+    if LuaHelper.IsStandalone or LuaHelper.IsAndroidPlatform then
+      return
+    end
+  end
+
   local clickPosition = Scene.ConvertPositionToUIScene(uiEvent.eventData.position);
   clickPosition.y = -clickPosition.y;
   

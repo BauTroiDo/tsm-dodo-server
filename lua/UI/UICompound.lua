@@ -3,12 +3,12 @@ EUICompoundTag = {
   Refinery = 2, --煉化
   Element = 3, --精煉
   Proof = 4, --鑲崁
-  TianGuan = 5, --天官
-  Remove = 6, --消除
-  Evolution = 7, --進化
-  WeaponEnhance = 8, --強化
-  Reinforcd = 9, --升階
-  Affix = 10, --洗鍊
+  --TianGuan = 5, --天官
+  Remove = 5, --消除
+  Evolution = 6, --進化
+  WeaponEnhance = 7, --強化
+  Reinforcd = 8, --升階
+  Affix = 9, --洗鍊
 }
 
 ECompoundEffect = {
@@ -137,6 +137,26 @@ function UICompound.Initialize(go)
 
   rawImage_Mixed = uiController:FindRawImage("RawImage_Mixed");
   rawImage_Mixed.enabled = false;
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 
   image_Submit = uiController:FindEvent("Image_Submit");
   image_Submit:SetListener(EventTriggerType.PointerClick, this.OnClick_Submit);
@@ -232,6 +252,36 @@ end
 function UICompound.OnOpen(tag)
   if tag ~= nil then
     currentTag = tag;
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   else
     currentTag = EUICompoundTag.Compound;
   end
@@ -250,12 +300,12 @@ function UICompound.OnOpen(tag)
   tagDatas[2] = { string.Get(99681), nil };
   tagDatas[3] = { string.Get(10080), nil };
   tagDatas[4] = { string.Get(10081), nil };
-  tagDatas[5] = { string.Get(21984), nil };
-  tagDatas[6] = { string.Get(22178), nil };
-  tagDatas[7] = { string.Get(22294), nil };
-  tagDatas[8] = { string.Get(20029), nil };
-  tagDatas[9] = { string.Get(23044), nil };
-  tagDatas[10] = { string.Get(23048), nil };
+  --tagDatas[5] = { string.Get(21984), nil };
+  tagDatas[5] = { string.Get(22178), nil };
+  tagDatas[6] = { string.Get(22294), nil };
+  tagDatas[7] = { string.Get(20029), nil };
+  tagDatas[8] = { string.Get(23044), nil };
+  tagDatas[9] = { string.Get(23048), nil };
 
   return true;
 end
@@ -269,6 +319,32 @@ function UICompound.OnVisible(visible)
 end
 
 function UICompound.OnClose()
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
   Item.ClearAllInUse();
 
   UI.Close(UIBag);
@@ -283,6 +359,56 @@ function UICompound.ClearData()
 
   if currentTag == EUICompoundTag.Evolution then
     UI.Close(UIBag);
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   end
 
   this.StopMixEffect();
@@ -294,7 +420,7 @@ function UICompound.UpdateUI()
   this.UpdateRefinery();
   this.UpdateElement();
   this.UpdateProof();
-  this.UpdateTianGuan();
+  --this.UpdateTianGuan();
   this.UpdateRemove();
   this.UpdateEvolution();
   this.UpdateEnhance();
@@ -442,7 +568,83 @@ end
 --煉化
 function UICompound.UpdateRefinery()
   if currentTag ~= EUICompoundTag.Refinery then return end
-
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
   event_EvolutionSelect.gameObject:SetActive(false);
   
   for i = 1, 6 do
@@ -510,6 +712,31 @@ function UICompound.UpdateRefinery()
   text_Submit.text = string.Get(99681);
 
   this.StopMixEffect();
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 
   UI.Open(UIBag,
     function(bagIndex, itemId)
@@ -614,6 +841,57 @@ function UICompound.UpdateElement()
 
   this.StopMixEffect();
   
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------  --5-----------------------------------------------------
+  --  if LuaHelper.CheckDefine("DemoCode") then
+  --    --
+  --  end
+  --  --6-----------------------------------------------------
+  --  --5-----------------------------------------------------
+  --  if LuaHelper.CheckDefine("DemoCode") then
+  --    --
+  --  end
+  --  --6-----------------------------------------------------
+  --  --5-----------------------------------------------------
+  --  if LuaHelper.CheckDefine("DemoCode") then
+  --    --
+  --  end
+  --  --6-----------------------------------------------------
+  --  --5-----------------------------------------------------
+  --  if LuaHelper.CheckDefine("DemoCode") then
+  --    --
+  --  end
+  --  --6-----------------------------------------------------
+  --  --5-----------------------------------------------------
+  --  if LuaHelper.CheckDefine("DemoCode") then
+  --    --
+  --  end
+  --  --6-----------------------------------------------------
+  
   UI.Open(UIBag,
     function(bagIndex, itemId)
       UI.Open(UIItemInfo, EThings.Bag, bagIndex, 0,
@@ -667,6 +945,58 @@ function UICompound.UpdateProof()
   if currentTag ~= EUICompoundTag.Proof then return end
 
   event_EvolutionSelect.gameObject:SetActive(false);
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  
 
   for i = 1, 6 do
     if i == 1 then
@@ -754,155 +1084,282 @@ function UICompound.UpdateProof()
 end
 
 --天官
-function UICompound.UpdateTianGuan()
-  if currentTag ~= EUICompoundTag.TianGuan then return end
-
-  event_EvolutionSelect.gameObject:SetActive(false);
-
-  for i = 1, 6 do
-    if i == 1 then
-      uiCompounds[i].image_BG.sprite = UI.GetSprite("com014");
-      uiCompounds[i].text_Hint.text = string.Get(21982);
-      uiCompounds[i].gameObject:SetActive(true);
-    elseif i == 3 then
-      uiCompounds[i].image_BG.sprite = UI.GetSprite("com013");
-      uiCompounds[i].text_Hint.text = string.Get(21983);
-      uiCompounds[i].gameObject:SetActive(true);
-    elseif i == 4 then
-      uiCompounds[i].image_BG.sprite = UI.GetSprite("com012");
-      uiCompounds[i].text_Hint.text = string.Get(20165);
-      uiCompounds[i].gameObject:SetActive(true);
-    else
-      uiCompounds[i].image_BG.sprite = nil;
-      uiCompounds[i].text_Hint.text = "";
-      uiCompounds[i].gameObject:SetActive(false);
-    end
-    
-    if compoundInfos[i] ~= nil then
-      local itemSave = Item.GetBagItem(EThings.Bag, compoundInfos[i].bagIndex);
-      if itemSave ~= nil then
-        uiCompounds[i].item:SetItem(itemSave.Id, itemSave.quant, itemSave);
-      else
-        compoundInfos[i] = nil;
-        uiCompounds[i].item:SetItem(0);
-      end
-    else
-      uiCompounds[i].item:SetItem(0);
-    end
-    uiCompounds[i].item:SetEvent();
-  end
-
-  local content = "";
-  if compoundInfos[4] ~= nil then
-    local tianGuanData = tianGuanDatas[compoundInfos[4].itemId];
-    local itemSave = Item.GetBagItem(EThings.Bag, compoundInfos[4].bagIndex);
-    if itemSave ~= nil then
-      local stoneLv = itemSave.stoneLv;
-
-      content = string.Concat(itemDatas[itemSave.Id]:GetName(true), "\n");
-      content = string.Concat(content, string.GetChineseNumberLower(stoneLv), string.Get(21999));
-
-      if compoundInfos[1] ~= nil then
-        local enhanceItemData = itemDatas[compoundInfos[1].itemId];
-        if enhanceItemData ~= nil and enhanceItemData.threshold == 3 then
-          stoneLv = enhanceItemData.skillLink;
-        else
-          stoneLv = stoneLv + 1;
-        end
-
-        content = string.Concat(content, " ", string.Get(22000), " ", string.GetChineseNumberLower(stoneLv), string.Get(21999), "\n");
-        content = string.Concat(content, string.GetColorText(tianGuanData[stoneLv]:GetEffectText("\n"), Color.Gray));
-      else
-        content = string.Concat(content, "\n");
-        content = string.Concat(content, tianGuanData[stoneLv]:GetEffectText("\n"));
-      end
-    end
-  end
-
-  text_Content.text = content;
-  text_Submit.text = string.Get(21984);
-
-  this.StopMixEffect();
-
-  UI.Open(UIBag,
-    function(bagIndex, itemId)
-      UI.Open(UIItemInfo, EThings.Bag, bagIndex, 0,
-        string.Get(21984),
-        function(bagKind, bagIndex, followIndex)
-          local itemSave = Item.GetBagItem(EThings.Bag, bagIndex);
-          if itemSave == nil then return end
-          if Item.IsLock(itemSave) then return end
-          UI.Close(UIItemInfo);
-
-          if itemDatas[itemId].kind == EItemKind.TianGuanEquip then
-            if itemSave.stoneLv >= Item.maxTianGuanLv then
-              ShowCenterMessage(string.Get(22017));
-              return;
-            end
-
-            compoundInfos[4] = {};
-            compoundInfos[4].itemId = itemId;
-            compoundInfos[4].bagIndex = bagIndex;
-            compoundInfos[4].quant = 1;
-
-          elseif itemDatas[itemId].kind == EItemKind.TianGuanEnhance then
-            --強化道具
-            if itemDatas[itemId].threshold == 1 then
-              compoundInfos[1] = {};
-              compoundInfos[1].itemId = itemId;
-              compoundInfos[1].bagIndex = bagIndex;
-              compoundInfos[1].quant = itemSave.quant;
-
-            --增加機率道具
-            elseif itemDatas[itemId].threshold == 2 then
-              --指定階數不需再增加幾率
-              if compoundInfos[1] ~= nil and
-                 itemDatas[compoundInfos[1].itemId] ~= nil and
-                 itemDatas[compoundInfos[1].itemId].kind == EItemKind.TianGuanEnhance and
-                 itemDatas[compoundInfos[1].itemId].threshold == 3 then
-                return;
-              end
-
-              compoundInfos[3] = {};
-              compoundInfos[3].itemId = itemId;
-              compoundInfos[3].bagIndex = bagIndex;
-              compoundInfos[3].quant = itemSave.quant;
-            
-            --指定階數道具
-            elseif itemDatas[itemId].threshold == 3 then
-              compoundInfos[3] = nil;
-              compoundInfos[1] = {};
-              compoundInfos[1].itemId = itemId;
-              compoundInfos[1].bagIndex = bagIndex;
-              compoundInfos[1].quant = itemSave.quant;
-            end
-          end
-
-          this.UpdateUI();
-        end
-      );
-    end,
-    Vector2.New(260, -25),
-    false,
-    nil,
-    function(itemSave)
-      if itemDatas[itemSave.Id] == nil then return false end
-      if itemSave.isVender then return false end
-      if itemSave.isDeliver then return false end
-      if not Contains(itemDatas[itemSave.Id].kind, EItemKind.TianGuanEquip, EItemKind.TianGuanEnhance) then return false end
-
-      return true;
-    end
-  );
-
-  this.UpdaetInUse();
-end
+--function UICompound.UpdateTianGuan()
+--  if currentTag ~= EUICompoundTag.TianGuan then return end
+--
+--  event_EvolutionSelect.gameObject:SetActive(false);
+--
+--  --5-----------------------------------------------------
+--  if LuaHelper.CheckDefine("DemoCode") then
+--    --
+--  end
+--  --6-----------------------------------------------------
+--  --5-----------------------------------------------------
+--  if LuaHelper.CheckDefine("DemoCode") then
+--    --
+--  end
+--  --6-----------------------------------------------------
+--  --5-----------------------------------------------------
+--  if LuaHelper.CheckDefine("DemoCode") then
+--    --
+--  end
+--  --6-----------------------------------------------------
+--  --5-----------------------------------------------------
+--  if LuaHelper.CheckDefine("DemoCode") then
+--    --
+--  end
+--  --6-----------------------------------------------------
+--  --5-----------------------------------------------------
+--  if LuaHelper.CheckDefine("DemoCode") then
+--    --
+--  end
+--  --6-----------------------------------------------------
+--  --5-----------------------------------------------------
+--  if LuaHelper.CheckDefine("DemoCode") then
+--    --
+--  end
+--  --6-----------------------------------------------------
+--  --5-----------------------------------------------------
+--  if LuaHelper.CheckDefine("DemoCode") then
+--    --
+--  end
+--  --6-----------------------------------------------------
+--  --5-----------------------------------------------------
+--  if LuaHelper.CheckDefine("DemoCode") then
+--    --
+--  end
+--  --6-----------------------------------------------------
+--  --5-----------------------------------------------------
+--  if LuaHelper.CheckDefine("DemoCode") then
+--    --
+--  end
+--  --6-----------------------------------------------------
+--  --5-----------------------------------------------------
+--  if LuaHelper.CheckDefine("DemoCode") then
+--    --
+--  end
+--  --6-----------------------------------------------------
+--
+--  for i = 1, 6 do
+--    if i == 1 then
+--      uiCompounds[i].image_BG.sprite = UI.GetSprite("com014");
+--      uiCompounds[i].text_Hint.text = string.Get(21982);
+--      uiCompounds[i].gameObject:SetActive(true);
+--    elseif i == 3 then
+--      uiCompounds[i].image_BG.sprite = UI.GetSprite("com013");
+--      uiCompounds[i].text_Hint.text = string.Get(21983);
+--      uiCompounds[i].gameObject:SetActive(true);
+--    elseif i == 4 then
+--      uiCompounds[i].image_BG.sprite = UI.GetSprite("com012");
+--      uiCompounds[i].text_Hint.text = string.Get(20165);
+--      uiCompounds[i].gameObject:SetActive(true);
+--    else
+--      uiCompounds[i].image_BG.sprite = nil;
+--      uiCompounds[i].text_Hint.text = "";
+--      uiCompounds[i].gameObject:SetActive(false);
+--    end
+--
+--    if compoundInfos[i] ~= nil then
+--      local itemSave = Item.GetBagItem(EThings.Bag, compoundInfos[i].bagIndex);
+--      if itemSave ~= nil then
+--        uiCompounds[i].item:SetItem(itemSave.Id, itemSave.quant, itemSave);
+--      else
+--        compoundInfos[i] = nil;
+--        uiCompounds[i].item:SetItem(0);
+--      end
+--    else
+--      uiCompounds[i].item:SetItem(0);
+--    end
+--    uiCompounds[i].item:SetEvent();
+--  end
+--
+--  local content = "";
+--  if compoundInfos[4] ~= nil then
+--    local tianGuanData = tianGuanDatas[compoundInfos[4].itemId];
+--    local itemSave = Item.GetBagItem(EThings.Bag, compoundInfos[4].bagIndex);
+--    if itemSave ~= nil then
+--      local stoneLv = itemSave.stoneLv;
+--
+--      content = string.Concat(itemDatas[itemSave.Id]:GetName(true), "\n");
+--      content = string.Concat(content, string.GetChineseNumberLower(stoneLv), string.Get(21999));
+--
+--      if compoundInfos[1] ~= nil then
+--        local enhanceItemData = itemDatas[compoundInfos[1].itemId];
+--        if enhanceItemData ~= nil and enhanceItemData.threshold == 3 then
+--          stoneLv = enhanceItemData.skillLink;
+--        else
+--          stoneLv = stoneLv + 1;
+--        end
+--
+--        content = string.Concat(content, " ", string.Get(22000), " ", string.GetChineseNumberLower(stoneLv), string.Get(21999), "\n");
+--        content = string.Concat(content, string.GetColorText(tianGuanData[stoneLv]:GetEffectText("\n"), Color.Gray));
+--      else
+--        content = string.Concat(content, "\n");
+--        content = string.Concat(content, tianGuanData[stoneLv]:GetEffectText("\n"));
+--      end
+--    end
+--  end
+--
+--  text_Content.text = content;
+--  text_Submit.text = string.Get(21984);
+--
+--  this.StopMixEffect();
+--  --5-----------------------------------------------------
+--  if LuaHelper.CheckDefine("DemoCode") then
+--    --
+--  end
+--  --6-----------------------------------------------------
+--  --5-----------------------------------------------------
+--  if LuaHelper.CheckDefine("DemoCode") then
+--    --
+--  end
+--  --6-----------------------------------------------------
+--  --5-----------------------------------------------------
+--  if LuaHelper.CheckDefine("DemoCode") then
+--    --
+--  end
+--  --6-----------------------------------------------------
+--  --5-----------------------------------------------------
+--  if LuaHelper.CheckDefine("DemoCode") then
+--    --
+--  end
+--  --6-----------------------------------------------------
+--  --5-----------------------------------------------------
+--  if LuaHelper.CheckDefine("DemoCode") then
+--    --
+--  end
+--  --6-----------------------------------------------------
+--
+--  UI.Open(UIBag,
+--    function(bagIndex, itemId)
+--      UI.Open(UIItemInfo, EThings.Bag, bagIndex, 0,
+--        string.Get(21984),
+--        function(bagKind, bagIndex, followIndex)
+--          local itemSave = Item.GetBagItem(EThings.Bag, bagIndex);
+--          if itemSave == nil then return end
+--          if Item.IsLock(itemSave) then return end
+--          UI.Close(UIItemInfo);
+--
+--          if itemDatas[itemId].kind == EItemKind.TianGuanEquip then
+--            if itemSave.stoneLv >= Item.maxTianGuanLv then
+--              ShowCenterMessage(string.Get(22017));
+--              return;
+--            end
+--
+--            compoundInfos[4] = {};
+--            compoundInfos[4].itemId = itemId;
+--            compoundInfos[4].bagIndex = bagIndex;
+--            compoundInfos[4].quant = 1;
+--
+--          elseif itemDatas[itemId].kind == EItemKind.TianGuanEnhance then
+--            --強化道具
+--            if itemDatas[itemId].threshold == 1 then
+--              compoundInfos[1] = {};
+--              compoundInfos[1].itemId = itemId;
+--              compoundInfos[1].bagIndex = bagIndex;
+--              compoundInfos[1].quant = itemSave.quant;
+--
+--            --增加機率道具
+--            elseif itemDatas[itemId].threshold == 2 then
+--              --指定階數不需再增加幾率
+--              if compoundInfos[1] ~= nil and
+--                 itemDatas[compoundInfos[1].itemId] ~= nil and
+--                 itemDatas[compoundInfos[1].itemId].kind == EItemKind.TianGuanEnhance and
+--                 itemDatas[compoundInfos[1].itemId].threshold == 3 then
+--                return;
+--              end
+--
+--              compoundInfos[3] = {};
+--              compoundInfos[3].itemId = itemId;
+--              compoundInfos[3].bagIndex = bagIndex;
+--              compoundInfos[3].quant = itemSave.quant;
+--
+--            --指定階數道具
+--            elseif itemDatas[itemId].threshold == 3 then
+--              compoundInfos[3] = nil;
+--              compoundInfos[1] = {};
+--              compoundInfos[1].itemId = itemId;
+--              compoundInfos[1].bagIndex = bagIndex;
+--              compoundInfos[1].quant = itemSave.quant;
+--            end
+--          end
+--
+--          this.UpdateUI();
+--        end
+--      );
+--    end,
+--    Vector2.New(260, -25),
+--    false,
+--    nil,
+--    function(itemSave)
+--      if itemDatas[itemSave.Id] == nil then return false end
+--      if itemSave.isVender then return false end
+--      if itemSave.isDeliver then return false end
+--      if not Contains(itemDatas[itemSave.Id].kind, EItemKind.TianGuanEquip, EItemKind.TianGuanEnhance) then return false end
+--
+--      return true;
+--    end
+--  );
+--
+--  this.UpdaetInUse();
+--end
 
 --消除
 function UICompound.UpdateRemove()
   if currentTag ~= EUICompoundTag.Remove then return end
 
   event_EvolutionSelect.gameObject:SetActive(false);
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 
   for i = 1, 6 do
     if i == 1 then
@@ -1021,6 +1478,31 @@ function UICompound.UpdateRemove()
   );
 
   this.UpdaetInUse();
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 --進化
@@ -1164,6 +1646,31 @@ function UICompound.UpdateEvolution()
 
   text_Content.text = "";
   text_Submit.text = string.Get(22294);
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 
   gameObject_QuestionMark.gameObject:SetActive(compoundInfos[4] == nil);
 
@@ -1304,6 +1811,31 @@ function UICompound.UpdateEvolution()
   );
 
   this.UpdaetInUse();
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 --強化
@@ -1349,6 +1881,31 @@ function UICompound.UpdateEnhance()
   text_Submit.text = string.Get(20029);
 
   this.StopMixEffect();
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   
   UI.Open(UIBag,
     function(bagIndex, itemId)
@@ -1446,12 +2003,12 @@ function UICompound.UpdateReinforce()
       compoundInfos[2] = {};
       compoundInfos[2].itemId = rateData.itemId;
       compoundInfos[2].bagIndex = 0;
-      hintString = string.Get(23042);
+      hintString = string.Get(23042);  --升階石
 
       local color;
       local stoneCount = Item.GetItemCount(rateData.itemId);
       if rateData.itemId > 0 and stoneCount < rateData.count then
-        ShowCenterMessage(string.Get(23036));
+        ShowCenterMessage(string.Get(23036));  --升階資源不足，無法升階
         compoundInfos[2].SetInUse = true;
         color = Color.Red;
       else
@@ -1479,6 +2036,31 @@ function UICompound.UpdateReinforce()
     compoundInfos[3].quant = rateData.required;
 
     calcRate();
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
 
     text_Rate.text = string.Concat(string.Get(23041), tostring(rate), "%");
 
@@ -1658,6 +2240,8 @@ function UICompound.UpdateReinforce()
       if itemSave.isDeliver then return false end
       if eqRateDatas[itemSave.Reinforced] == nil then return false end
       if itemDatas[itemSave.Id].kind == EItemKind.Reinforced and itemDatas[itemSave.Id].threshold == 1 then return false end
+      if itemDatas[itemSave.Id].kind == EItemKind.Myth then return false end;
+      if itemDatas[itemSave.Id].kind == EItemKind.MountsEquip then return false end;
 
       if compoundInfos[1] == nil then
         if not Item.IsEquip(itemDatas[itemSave.Id].fitType) then return false end  --只顯示 (1帽 2衣 3武器 4護腕 5鞋子)的裝備
@@ -1680,6 +2264,32 @@ function UICompound.UpdateReinforce()
   );
 
   this.UpdaetInUse();
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function UICompound.RemoveItem(uiEvent)
@@ -1715,6 +2325,32 @@ function UICompound.RemoveEvoItem(uiEvent)
   local bagItem = Item.GetBagItem(EThings.Bag, compoundInfos[index].bagIndex);
 
   if bagItem == nil then return end
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 
   UI.Open(UIItemInfo, EThings.Bag, compoundInfos[index].bagIndex, 0,
     string.Get(20110),
@@ -1874,6 +2510,8 @@ function UICompound.UpdateAffix()
     if itemDatas[itemSave.Id] == nil then return false end
     if itemSave.isVender then return false end
     if itemSave.isDeliver then return false end
+    if itemDatas[itemSave.Id].kind == EItemKind.Myth then return false end;
+    if itemDatas[itemSave.Id].kind == EItemKind.MountsEquip then return false end;
 
     if affixInfos[1] == nil then
       if not Item.IsEquip(itemDatas[itemSave.Id].fitType) then return false end  --只顯示 (1帽 2衣 3武器 4護腕 5鞋子)的裝備
@@ -1900,6 +2538,32 @@ function UICompound.UpdateAffixStatus(sliderIndex, tableIndex) -- indx(1) + 表�
     uiAffixCheck[i].CheckboxImage.gameObject:SetActive(currentAffix.status ~= EAffixMode.Check);
     uiAffixCheck[i].probImage.gameObject:SetActive(currentAffix.status ~= EAffixMode.Check);
   end
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 
   if currentAffix.status == EAffixMode.Check and currentAffix.checkbox ~= nil then
     local x = gameObject_ChangeArrow.anchoredPosition.x;
@@ -2038,15 +2702,65 @@ end
 
 --[[ 升階功能結果
 S:023-92 <升階功能結果> +結果(1)
-   結果 1:成功 + 背包索引(1) +強化等級(1)
-   失敗 2:失敗 + 背包索引(1) +強化等級(1)
+   結果 1:成功 + 背包索引(2) +強化等級(1)
+   失敗 2:失敗 + 背包索引(2) +強化等級(1)
    失敗 3:失敗
+     --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+    --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 ]]--
 function UICompound.ReciveReinforce(data)
   local result = data:ReadByte();
 
   if result == 1 then --升階成功
-    local bagIndex = data:ReadByte();
+    local bagIndex = data:ReadUInt16();
     local itemSave = Item.GetBagItem(EThings.Bag, bagIndex);
     if itemSave == nil then return end
 
@@ -2065,7 +2779,7 @@ function UICompound.ReciveReinforce(data)
     end
 
   elseif result == 2 then --升階失敗
-    local bagIndex = data:ReadByte();
+    local bagIndex = data:ReadUInt16();
     local itemSave = Item.GetBagItem(EThings.Bag, bagIndex);
     local message;
     if itemSave == nil then return end
@@ -2101,13 +2815,13 @@ end
 
 --[[ 洗鍊功能
 S:023-93 <洗鍊功能> +結果(1)
-   結果 1:成功 + 背包索引(1) + indx(1) + 表的Indx(1)
+   結果 1:成功 + 背包索引(2) + indx(1) + 表的Indx(1)
    失敗 2:失敗
 ]]--
 function UICompound.ReciveAffix(data)
   local result = data:ReadByte();
   if result == 1 then
-    local bagIndex = data:ReadByte();
+    local bagIndex = data:ReadUInt16();
     local itemSave = Item.GetBagItem(EThings.Bag, bagIndex);
     if itemSave == nil then return end
     sliderIndex = data:ReadByte();
@@ -2130,6 +2844,32 @@ end
 --[[S:023-94 <洗鍊功能> +結果(1)
 結果 1:成功
 失敗 2:失敗
+
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 ]]--
 function UICompound.ReciveAffixResult(data)
   local result = data:ReadByte();
@@ -2148,17 +2888,43 @@ function UICompound.ReciveAffixResult(data)
 end
 
 --[[S:023-095 <時裝強化結果>+結果(1)
-  結果 1:成功 +背包索引(1)
-      2:失敗 +背包索引(1)
+  結果 1:成功 +背包索引(2)
+      2:失敗 +背包索引(2)
       3:材料不足
       4:背包已滿
       0:亂送物品過來
 ]]--
 function UICompound.ReciveEvoStyle(data)
   local result = data:ReadByte();
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 
   if result == 1 then --成功
-    local bagIndex = data:ReadByte();
+    local bagIndex = data:ReadUInt16();
     local itemSave = Item.GetBagItem(EThings.Bag, bagIndex);
     if itemSave == nil then return end
 
@@ -2185,7 +2951,7 @@ function UICompound.ReciveEvoStyle(data)
     end
 
   elseif result == 2 then --失敗
-    local bagIndex = data:ReadByte();
+    local bagIndex = data:ReadUInt16();
     local itemSave = Item.GetBagItem(EThings.Bag, bagIndex);
     local message;
     if itemSave == nil then return end
@@ -2248,13 +3014,13 @@ function UICompound.StartMixEffect(effectKind, bagIndex)
   elseif effectKind == ECompoundEffect.Success then
     effectName = "UP";
     effectPage = 9;
-    effectSound = "WA0035";
+    effectSound = "AudioClip_WA0035";
     effectTime = 2;
     loopTimes = 2;
   elseif effectKind == ECompoundEffect.Fail then
     effectName = "L10248";
     effectPage = 6;
-    effectSound = "WA0017";
+    effectSound = "AudioClip_WA0017";
     effectTime = 2;
     loopTimes = 2;
   end
@@ -2299,7 +3065,32 @@ end
 
 --合成特效結束
 function UICompound.StopMixEffect()
-  gameObject_QuestionMark.gameObject:SetActive(not Contains(currentTag, EUICompoundTag.Refinery, EUICompoundTag.TianGuan, EUICompoundTag.Remove) and compoundInfos[4] == nil);
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  gameObject_QuestionMark.gameObject:SetActive(not Contains(currentTag, EUICompoundTag.Refinery, EUICompoundTag.Remove) and compoundInfos[4] == nil);
 
   rawImage_Mixed.texture = nil;
   rawImage_Mixed:StopShiftUV();
@@ -2318,7 +3109,7 @@ end
 
 function UICompound.OnClick_Tag(mainTag, subTag)
   currentTag = mainTag;
-
+  
   text_Rate.gameObject:SetActive(currentTag == EUICompoundTag.Reinforcd);
   text_Required.gameObject:SetActive(currentTag == EUICompoundTag.Reinforcd);
   text_Warning.gameObject:SetActive(currentTag == EUICompoundTag.Reinforcd);
@@ -2408,14 +3199,39 @@ local function CheckMixStoneRule()
 end
 
 local function SendCompound(kind)
-  --C:023-014 <合成物品> <<+背包索引(1) +數量(4)>>*3 +合成種類(1)
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --C:023-014 <合成物品> <<+背包索引(2) +數量(4)>>*3 +合成種類(1)
   sendBuffer:Clear();
   for i = 1, this.MaxCount do
     if compoundInfos[i] ~= nil then
-      sendBuffer:WriteByte(compoundInfos[i].bagIndex);
+      sendBuffer:WriteUInt16(compoundInfos[i].bagIndex);
       sendBuffer:WriteInt32(compoundInfos[i].quant);
     else
-      sendBuffer:WriteByte(0);
+      sendBuffer:WriteUInt16(0);
       sendBuffer:WriteInt32(0);
     end
   end
@@ -2482,6 +3298,31 @@ function UICompound.OnClick_Submit(uiEvent)
 
     if compoundInfos[4] == nil then
       ShowCenterMessage(string.Get(80329));
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
       return;
     end
 
@@ -2552,14 +3393,14 @@ function UICompound.OnClick_Submit(uiEvent)
 
     this.StopMixEffect();
 
-    --C:023-078 <靈石強化> +靈石背包索引(1) +裝備背包索引(1) +符背包索引(1)
+    --C:023-078 <靈石強化> +靈石背包索引(2) +裝備背包索引(2) +符背包索引(2)
     sendBuffer:Clear();
-    sendBuffer:WriteByte(compoundInfos[1].bagIndex);
-    sendBuffer:WriteByte(compoundInfos[4].bagIndex);
+    sendBuffer:WriteUInt16(compoundInfos[1].bagIndex);
+    sendBuffer:WriteUInt16(compoundInfos[4].bagIndex);
     if compoundInfos[3] ~= nil then
-      sendBuffer:WriteByte(compoundInfos[3].bagIndex);
+      sendBuffer:WriteUInt16(compoundInfos[3].bagIndex);
     else
-      sendBuffer:WriteByte(0);
+      sendBuffer:WriteUInt16(0);
     end
     Network.Send(23, 78, sendBuffer);
   
@@ -2572,6 +3413,31 @@ function UICompound.OnClick_Submit(uiEvent)
 
     if compoundInfos[3] == nil then
       ShowCenterMessage(string.Get(80338));
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
       return;
     end
 
@@ -2620,55 +3486,80 @@ function UICompound.OnClick_Submit(uiEvent)
     SendCompound(3);
 
   --天官
-  elseif currentTag == EUICompoundTag.TianGuan then
-    if compoundInfos[1] == nil then
-      ShowCenterMessage(string.Get(21988));
-      return;
-    end
-
-    if compoundInfos[4] == nil then
-      ShowCenterMessage(string.Get(21987));
-      return;
-    end
-
-    local itemSave = Item.GetBagItem(EThings.Bag, compoundInfos[4].bagIndex);
-    if itemSave == nil then return end
-
-    local enhanceItemData = itemDatas[compoundInfos[1].itemId];
-
-    --超過階數上限
-    if itemSave.stoneLv >= Item.maxTianGuanLv then
-      ShowCenterMessage(string.Get(22017));
-      return;
-    end
-
-    --指定階數
-    if enhanceItemData.threshold == 3 then
-      --不需增加機率
-      if compoundInfos[3] ~= nil then
-        ShowCenterMessage(string.Get(80331));
-        return;
-      end
-
-      --不可小於目前階數
-      if enhanceItemData.skillLink <= itemSave.stoneLv then
-        ShowCenterMessage(string.Get(22014));
-        return;
-      end
-    end
-
-    this.StopMixEffect();
-
-    --C:023-086 <天官強化> +符背包索引(1) +裝備背包索引(1) +祝福背包索引(1)
-    sendBuffer:Clear();
-    sendBuffer:WriteByte(compoundInfos[1].bagIndex);
-    sendBuffer:WriteByte(compoundInfos[4].bagIndex);
-    if compoundInfos[3] ~= nil then
-      sendBuffer:WriteByte(compoundInfos[3].bagIndex);
-    else
-      sendBuffer:WriteByte(0);
-    end
-    Network.Send(23, 86, sendBuffer);
+  --elseif currentTag == EUICompoundTag.TianGuan then
+  --  if compoundInfos[1] == nil then
+  --    ShowCenterMessage(string.Get(21988));
+  --    return;
+  --  end
+  --
+  --  if compoundInfos[4] == nil then
+  --    ShowCenterMessage(string.Get(21987));
+  --    return;
+  --  end
+  --
+  --  local itemSave = Item.GetBagItem(EThings.Bag, compoundInfos[4].bagIndex);
+  --  if itemSave == nil then return end
+  --
+  --  local enhanceItemData = itemDatas[compoundInfos[1].itemId];
+  --
+  --  --超過階數上限
+  --  if itemSave.stoneLv >= Item.maxTianGuanLv then
+  --    ShowCenterMessage(string.Get(22017));
+  --    --5-----------------------------------------------------
+  --    if LuaHelper.CheckDefine("DemoCode") then
+  --      --
+  --    end
+  --    --6-----------------------------------------------------
+  --    --5-----------------------------------------------------
+  --    if LuaHelper.CheckDefine("DemoCode") then
+  --      --
+  --    end
+  --    --6-----------------------------------------------------
+  --    --5-----------------------------------------------------
+  --    if LuaHelper.CheckDefine("DemoCode") then
+  --      --
+  --    end
+  --    --6-----------------------------------------------------
+  --    --5-----------------------------------------------------
+  --    if LuaHelper.CheckDefine("DemoCode") then
+  --      --
+  --    end
+  --    --6-----------------------------------------------------
+  --    --5-----------------------------------------------------
+  --    if LuaHelper.CheckDefine("DemoCode") then
+  --      --
+  --    end
+  --    --6-----------------------------------------------------
+  --    return;
+  --  end
+  --
+  --  --指定階數
+  --  if enhanceItemData.threshold == 3 then
+  --    --不需增加機率
+  --    if compoundInfos[3] ~= nil then
+  --      ShowCenterMessage(string.Get(80331));
+  --      return;
+  --    end
+  --
+  --    --不可小於目前階數
+  --    if enhanceItemData.skillLink <= itemSave.stoneLv then
+  --      ShowCenterMessage(string.Get(22014));
+  --      return;
+  --    end
+  --  end
+  --
+  --  this.StopMixEffect();
+  --
+  --  --C:023-086 <天官強化> +符背包索引(2) +裝備背包索引(2) +祝福背包索引(2)
+  --  sendBuffer:Clear();
+  --  sendBuffer:WriteUInt16(compoundInfos[1].bagIndex);
+  --  sendBuffer:WriteUInt16(compoundInfos[4].bagIndex);
+  --  if compoundInfos[3] ~= nil then
+  --    sendBuffer:WriteUInt16(compoundInfos[3].bagIndex);
+  --  else
+  --    sendBuffer:WriteUInt16(0);
+  --  end
+  --  Network.Send(23, 86, sendBuffer);
 
   --消除
   elseif currentTag == EUICompoundTag.Remove then
@@ -2684,6 +3575,31 @@ function UICompound.OnClick_Submit(uiEvent)
 
     if compoundInfos[3] == nil then
       ShowCenterMessage(string.Get(22182));
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
       return;
     end
 
@@ -2709,10 +3625,10 @@ function UICompound.OnClick_Submit(uiEvent)
     ShowCheckMessage(
       function(result)
         if result then
-          --C:023-088 <靈石珍珠消除> +背包索引(1) +消除令背包索引(1)
+          --C:023-088 <靈石珍珠消除> +背包索引(2) +消除令背包索引(2)
           sendBuffer:Clear();
-          sendBuffer:WriteByte(compoundInfos[1].bagIndex);
-          sendBuffer:WriteByte(compoundInfos[3].bagIndex);
+          sendBuffer:WriteUInt16(compoundInfos[1].bagIndex);
+          sendBuffer:WriteUInt16(compoundInfos[3].bagIndex);
           Network.Send(23, 88, sendBuffer);
         else
           this.ClearData();
@@ -2731,6 +3647,31 @@ function UICompound.OnClick_Submit(uiEvent)
 
     if compoundInfos[2] == nil then
       ShowCenterMessage(string.Get(22305));
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
       return;
     end
 
@@ -2745,14 +3686,14 @@ function UICompound.OnClick_Submit(uiEvent)
 
       this.StopMixEffect();
 
-      --C:023-095 <時裝進化>  +材料1背包索引(1) +材料2背包索引(1) +機率背包索引(1)
+      --C:023-095 <時裝進化>  +材料1背包索引(2) +材料2背包索引(2) +機率背包索引(2)
       sendBuffer:Clear();
-      sendBuffer:WriteByte(compoundInfos[1].bagIndex);
-      sendBuffer:WriteByte(compoundInfos[2].bagIndex);
+      sendBuffer:WriteUInt16(compoundInfos[1].bagIndex);
+      sendBuffer:WriteUInt16(compoundInfos[2].bagIndex);
       if compoundInfos[5] ~= nil then
-        sendBuffer:WriteByte(compoundInfos[5].bagIndex);
+        sendBuffer:WriteUInt16(compoundInfos[5].bagIndex);
       else
-        sendBuffer:WriteByte(0);
+        sendBuffer:WriteUInt16(0);
       end
       Network.Send(23, 95, sendBuffer);
     else
@@ -2766,20 +3707,20 @@ function UICompound.OnClick_Submit(uiEvent)
 
       this.StopMixEffect();
 
-      --C:023-090 <物品進化功能> +進化物品ID(2) +材料1背包索引(1) +材料2背包索引(1) +機率背包索引(1) +防爆背包索引(1)
+      --C:023-090 <物品進化功能> +進化物品ID(2) +材料1背包索引(2) +材料2背包索引(2) +機率背包索引(2) +防爆背包索引(2)
       sendBuffer:Clear();
       sendBuffer:WriteUInt16(evolutionData.itemId);
-      sendBuffer:WriteByte(compoundInfos[1].bagIndex);
-      sendBuffer:WriteByte(compoundInfos[2].bagIndex);
+      sendBuffer:WriteUInt16(compoundInfos[1].bagIndex);
+      sendBuffer:WriteUInt16(compoundInfos[2].bagIndex);
       if compoundInfos[5] ~= nil then
-        sendBuffer:WriteByte(compoundInfos[5].bagIndex);
+        sendBuffer:WriteUInt16(compoundInfos[5].bagIndex);
       else
-        sendBuffer:WriteByte(0);
+        sendBuffer:WriteUInt16(0);
       end
       if compoundInfos[6] ~= nil then
-        sendBuffer:WriteByte(compoundInfos[6].bagIndex);
+        sendBuffer:WriteUInt16(compoundInfos[6].bagIndex);
       else
-        sendBuffer:WriteByte(0);
+        sendBuffer:WriteUInt16(0);
       end
       Network.Send(23, 90, sendBuffer);
     end
@@ -2816,6 +3757,31 @@ function UICompound.OnClick_Submit(uiEvent)
 
     if itemSave.Reinforced >= maxReinforced then
       ShowCenterMessage(string.Get(23034));
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
       return;
     end
 
@@ -2876,28 +3842,53 @@ function UICompound.OnClick_Submit(uiEvent)
     local refinsCount = table.Count(refins);
     if refinsCount <= 0 then
       ShowCenterMessage(string.Get(23036));
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
       return;
     end
 
-    --C:023-092 <升階功能> 背包索引(1) +L(1) +<<背包索引(1) )>> +卷軸背包索引(1) +符背包索引(1)
+    --C:023-092 <升階功能> 背包索引(2) +L(1) +<<背包索引(2)>> +卷軸背包索引(2) +符背包索引(2)
     sendBuffer:Clear();
-    sendBuffer:WriteByte(compoundInfos[1].bagIndex);
+    sendBuffer:WriteUInt16(compoundInfos[1].bagIndex);
     sendBuffer:WriteByte(refinsCount);
     for k, v in pairs(refins) do
       --sendBuffer:WriteByte(k);
-      sendBuffer:WriteByte(v);
+      sendBuffer:WriteUInt16(v);
     end
 
     if compoundInfos[5] ~= nil then
-      sendBuffer:WriteByte(compoundInfos[5].bagIndex);
+      sendBuffer:WriteUInt16(compoundInfos[5].bagIndex);
     else
-      sendBuffer:WriteByte(0);
+      sendBuffer:WriteUInt16(0);
     end
 
     if compoundInfos[6] ~= nil then
-      sendBuffer:WriteByte(compoundInfos[6].bagIndex);
+      sendBuffer:WriteUInt16(compoundInfos[6].bagIndex);
     else
-      sendBuffer:WriteByte(0);
+      sendBuffer:WriteUInt16(0);
     end
     Network.Send(23, 92, sendBuffer);
 
@@ -2956,11 +3947,35 @@ function UICompound.SendAffix()
       return;
     end
   end
-
-  --C:023-093 <洗鍊功能> 背包索引(1) +符背包索引(1) + indx(1)
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --C:023-093 <洗鍊功能> 背包索引(2) +符背包索引(2) + indx(1)
   sendBuffer:Clear();
-  sendBuffer:WriteByte(affixInfos[1].bagIndex);
-  sendBuffer:WriteByte(affixInfos[2].bagIndex);
+  sendBuffer:WriteUInt16(affixInfos[1].bagIndex);
+  sendBuffer:WriteUInt16(affixInfos[2].bagIndex);
   sendBuffer:WriteByte(currentAffix.checkbox);
   Network.Send(23, 93, sendBuffer);
 end
@@ -2980,10 +3995,10 @@ function UICompound.OnClick_AffixSubmit()
     return;
   end
 
-  --C:023-094 <洗鍊決定> +是否洗鍊(1) 1:確定洗鍊  + 背包索引(1) + indx(1) + 表的Indx(1)
+  --C:023-094 <洗鍊決定> +是否洗鍊(1) 1:確定洗鍊  + 背包索引(2) + indx(1) + 表的Indx(1)
   sendBuffer:Clear();
   sendBuffer:WriteByte(1);
-  sendBuffer:WriteByte(affixInfos[1].bagIndex);
+  sendBuffer:WriteUInt16(affixInfos[1].bagIndex);
   sendBuffer:WriteByte(sliderIndex);
   sendBuffer:WriteByte(tableIndex);
   Network.Send(23, 94, sendBuffer);

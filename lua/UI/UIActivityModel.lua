@@ -10,7 +10,7 @@ local gameObject_Activity;
 local gameObject_PageRoot;
 local gameObject_IconRoot;
 local gameObject_UIBingo;
-local gameObject_Monoply;
+local gameObject_Monoply
 
 local text_Title;
 local text_Description;
@@ -37,6 +37,7 @@ local nowActivity = {};
 local activityData = {};
 local missionsData = {};
 local pageData = {};
+local specialSystemFuncts = {};
 
 local isSendRefresh = false; --重刷新是否冷卻完畢
 local CONST_COIN_ITEM_ID = 29951;
@@ -165,6 +166,7 @@ function UIActivityModel.OnClick_CloseActivity()
   this.SetScrollMask(false);
   this.CloseSpecialActivity();
   CGTimer.RemoveListener(this.UpdateActivityTime);
+  specialSystemFuncts = {};
   this.UpdateUI();
 end
 
@@ -248,7 +250,9 @@ function UIActivityModel.UpdateEnterTime()
       if status == EFestivalStatus.Upcoming then
         scrollItems_Festival[i-1].text_Time.color = Color.Yellow;
       elseif status == EFestivalStatus.Open then
-        scrollItems_Festival[i-1].text_Time.color = Color.Cyan;
+        scrollItems_Festival[i-1].text_Time.color = Color.VeryLightBlue;
+      else
+        scrollItems_Festival[i-1].text_Time.color = Color.White;
       end
     end
   end
@@ -347,7 +351,6 @@ function UIActivityModel.UpdateCoin()
       ShowCenterMessage("!!!活動積分資料"..activityData.coin[i].id.."不存在!!!");
       return;
     end
-
     local iconItemId = ActivityModel.ActivityCoin[activityData.coin[i].id].itemId;
     itemDatas[CONST_COIN_ITEM_ID + i - 1].name = ActivityModel.ActivityCoin[activityData.coin[i].id].name;
     itemDatas[CONST_COIN_ITEM_ID + i - 1].iconId = itemDatas[iconItemId].iconId;
@@ -365,16 +368,27 @@ function UIActivityModel.UpdateActivityTime()
   if status == EFestivalStatus.Upcoming then
     text_Time.color = Color.Yellow;
   elseif status == EFestivalStatus.Open then
-    text_Time.color = Color.Cyan;
+    text_Time.color = Color.VeryLightBlue;
   end
 
   if Contains(status, EFestivalStatus.Upcoming, EFestivalStatus.Open, EFestivalStatus.ActivityEnd) then
     isAct = true;
+		if status == EFestivalStatus.ActivityEnd and not ActivityModel.ActivityData[ActivityModel.openActivityId].isEnd then
+      this.ActivityEndCallBack();
+      ActivityModel.ActivityData[ActivityModel.openActivityId].isEnd = true;
+    end
   end
 
   if not isAct and CGTimer.ContainsListener(this.UpdateActivityTime) then
     CGTimer.RemoveListener(this.UpdateActivityTime);
   end
+end
+
+function UIActivityModel.ActivityEndCallBack()
+  for i, func in ipairs(specialSystemFuncts) do
+    func();
+  end
+  specialSystemFuncts = {};
 end
 
 function UIActivityModel.OnInitialize_ScrollContent_Festival(scrollItems)
@@ -403,6 +417,17 @@ function UIActivityModel.OnItemChange_ScrollContent_Festival(dataIndex, itemInde
   scrollItems_Festival[itemIndex].text_Description.text = nowActivity[index].description;
   TextureManager.SetPng(ETextureUseType.UI, string.Concat( string.format("ActModelBanner_%03d", nowActivity[index].picture)),  scrollItems_Festival[itemIndex].getEvent.gameObject:GetComponent("RawImage"));
   scrollItems_Festival[itemIndex].getEvent.parameter = nowActivity[index].activityId;
+
+  local status, text = ActivityModel.GetActivityStatus(scrollItems_Festival[itemIndex].getEvent.parameter);
+  scrollItems_Festival[itemIndex].text_Time.text = text;
+  scrollItems_Festival[itemIndex].text_Award.text = ActivityModel.GetActivityStatusString(status);
+  if status == EFestivalStatus.Upcoming then
+    scrollItems_Festival[itemIndex].text_Time.color = Color.Yellow;
+  elseif status == EFestivalStatus.Open then
+    scrollItems_Festival[itemIndex].text_Time.color = Color.VeryLightBlue;
+  else
+    scrollItems_Festival[itemIndex].text_Time.color = Color.White;
+  end
 
   return true;
 end
@@ -639,6 +664,19 @@ function UIActivityModel.GetUIActivityModelRoot(specialActivity)
     return canvasGroup_Image_ScrollRectBG.gameObject, gameObject_UIBingo;  --送出BingoUI的Prefab跟ActivityModelUI的rootObject
   elseif specialActivity == ESpecialActivity.Monopoly then
     return canvasGroup_Image_ScrollRectBG.gameObject, gameObject_Monoply; --送出Monoply的Prefab跟ActivityModelUI的rootObject
+  end
+end
+
+function UIActivityModel.Subscribe(func)
+  table.insert(specialSystemFuncts, func)
+end
+
+function UIActivityModel.Describe(func)
+  for i, funct in ipairs(specialSystemFuncts) do
+    if funct == func then
+        table.remove(specialSystemFuncts, i)
+        break
+    end
   end
 end
 

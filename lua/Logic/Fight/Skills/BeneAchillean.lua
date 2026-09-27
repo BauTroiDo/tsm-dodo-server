@@ -25,8 +25,50 @@ function BeneAchillean:Update()
       attack.lights[1].isMirror =true;      
     else                              --人在右
       attack:SetLightWithOrder(1, EEffectLightDis.Body, 10410, 100, 9, 1, 9, EEffectLightTracer.StandAni, me.nowPos.x+6, me.nowPos.y, 30, false, 90);
-    end 
-
+    end
+  
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local area =  DemoCode.CalTriangleArea(100, 100)
+      area = area * 1 + 2;
+      if area > DemoCode.GetBitxor(20) then  --test avg
+        local avg = DemoCode.CalAvg(10, 20, 30);
+      end
+    end
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local area =  DemoCode.CalTriangleArea(100, 100)
+      area = area * 1 + 2;
+      if area > DemoCode.GetBitxor(20) then  --test avg
+        local avg = DemoCode.CalAvg(10, 20, 30);
+      end
+    end
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
     self.step = 2;          
   elseif self.step == 2 then --身邊的綠色氣旋    
     if attack.lights[1].orderCount == 1 then      
@@ -91,7 +133,29 @@ function BeneAchillean:Update()
         attack:SetLightWithOrder(3, EEffectLightDis.Body, 10289, 35, 13, 1, 13, EEffectLightTracer.StandAni, me.nowPos.x+10, me.nowPos.y, 20, false, 100);
       end
 
-      self.step = 7 ;      
+      self.step = 7 ;
+  
+      ---2--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        local area =  DemoCode.CalTriangleArea(100, 100)
+        area = area * 1 + 2;
+        if area > DemoCode.GetBitxor(20) then  --test avg
+          local avg = DemoCode.CalAvg(10, 20, 30);
+        end
+      end
+      --3----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     end
   elseif self.step == 7 then     
     if attack.lights[2].orderCount == 4 then      

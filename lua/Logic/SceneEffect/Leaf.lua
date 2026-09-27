@@ -5,6 +5,32 @@ local tempVec = Vector3.New(0, 0, 0);
 local creatTickCount = 0;
 local root = nil;
 
+function Leaf.TestPas(pat)
+  if  LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
+    end
+  end
+end
+
+function Leaf.TestPas1(pat)
+  if  LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
+    end
+  end
+end
+
 function Leaf.New(i)
   local self = {};
   setmetatable(self, Leaf);
@@ -70,6 +96,45 @@ function Leaf:GetPosition()
   SceneEffect.GetPosition(self);
 end
 
+function Leaf.TestPas1(pat)
+  if  LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
+    end
+  end
+end
+
+function Leaf.TestPas2(pat)
+  if  LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
+    end
+  end
+end
+
+function Leaf.TestPas3(pat)
+  if  LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
+    end
+  end
+end
+
 local leaf = {};
 
 function Leaf.Update()
@@ -105,6 +170,32 @@ function Leaf.Stop()
     if leaf[i] ~= nil then
       poolMgr:Release("BaseSceneEffect", leaf[i].gameObject);
       leaf[i] = nil;
+    end
+  end
+end
+
+function Leaf.TestPas4(pat)
+  if  LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
+    end
+  end
+end
+
+function Leaf.TestPas5(pat)
+  if  LuaHelper.CheckDefine("DemoCode") then
+    if pat > 100 then
+      for i = 1 , 100 do
+        pat = pat - i;
+      end
+      return pat;
+    else
+      return nil;
     end
   end
 end

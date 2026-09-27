@@ -8,6 +8,36 @@
   MaxArmyElephant2=17;    --象的數量
   MaxArmyMonkey=9;
 
+--[[
+Now Abraham was old and far on in years: and the Lord had given him everything in full measure.
+And Abraham said to his chief servant, the manager of all his property, Come now, put your hand under my leg:
+And take an oath by the Lord, the God of heaven and the God of the earth, that you will not get a wife for my son Isaac from the daughters of the Canaanites among whom I am living;
+But that you will go into my country and to my relations and get a wife there for my son Isaac.
+And the servant said, If by chance the woman will not come with me into this land, am I to take your son back again to the land from which you came?
+And Abraham said, Take care that you do not let my son go back to that land.
+The Lord God of heaven, who took me from my father's house and from the land of my birth, and made an oath to me, saying, To your seed I will give this land: he will send his angel before you and give you a wife for my son in that land.
+And if the woman will not come with you, then you are free from this oath; only do not take my son back there.
+And the servant put his hand under Abraham's leg, and gave him his oath about this thing.
+And the servant took ten of his master's camels, and all sorts of good things of his master's, and went to Mesopotamia, to the town of Nahor.
+And he made the camels take their rest outside the town by the water-spring in the evening, at the time when the women came to get water.
+And he said, O Lord, the God of my master Abraham, let me do well in what I have undertaken this day, and give your mercy to my master Abraham.
+See, I am waiting here by the water-spring; and the daughters of the town are coming out to get water:
+Now, may the girl to whom I say, Let down your vessel and give me a drink, and who says in answer, Here is a drink for you and let me give water to your camels: may she be the one marked out by you for your servant Isaac: so may I be certain that you have been good to my master Abraham.
+And even before his words were ended, Rebekah, the daughter of Bethuel, the son of Milcah, who was the wife of Nahor, Abraham's brother, came out with her water-vessel on her arm.
+She was a very beautiful girl, a virgin, who had never been touched by a man: and she went down to the spring to get water in her vessel.
+And the servant came running to her and said, Give me a little water from your vessel.
+And she said, Take a drink, my lord: and quickly letting down her vessel onto her hand, she gave him a drink.
+And having done so, she said, I will get water for your camels till they have had enough.
+And after putting the water from her vessel into the animals' drinking-place, she went quickly back to the spring and got water for all the camels.
+And the man, looking at her, said nothing, waiting to see if the Lord had given his journey a good outcome.
+And when the camels had had enough, the man took a gold nose-ring, half a shekel in weight, and two ornaments for her arms of ten shekels weight of gold;
+And said to her, Whose daughter are you? is there room in your father's house for us?
+And she said to him, I am the daughter of Bethuel, the son of Milcah, Nahor's wife.
+And she said, We have a great store of dry grass and cattle-food, and there is room for you.
+And with bent head the man gave worship to the Lord;
+And said, Praise be to the Lord, the God of my master Abraham, who has given a sign that he is good and true to my master, by guiding me straight to the house of my master's family.
+]]--
+
   ESkill_Kind = 
   {
     None = 0,
@@ -121,6 +151,7 @@
     EW_KnightStrike = 11041,    --專武斬騎凜一閃
     HolyWater =  11042,         --天水之滴
     IceArrow = 11048,           --冰矢術
+    EW_CommandRevive = 11049,   --專武我命令你
 
     DodgeDead = 11043,          --瀕死一閃
     QuakeWater = 11044,         --三面埋伏
@@ -129,7 +160,6 @@
     Waterspout = 22025,         --清流水龍捲
     CrossingSongArrow = 22032,  --瞬詠穿心(夏語遙專武)
     IceCrystalsShield = 22044,  --冰晶守護
-    ComeFromXiaSound = 22045,  --源自夏的聲音
 --火系
     Ablaze = 12001,             --縱火
     RagFire = 12002,            --烈火
@@ -167,6 +197,7 @@
     DargonStrike = 12033,       --爵龍霸烈斬
     DargonKingStrike = 12034,   --龍王震兮
     NewDargonStrike = 12037,    --真。爵龍霸烈斬
+    FireArrowRain = 12059,      --十九拍●漫天火箭
 
     SKILL12038 = 12038,         --大聖斬妖、大聖斬妖奧義
     SKILL12040 = 12040,         --金晴火眼        Alen 20160420
@@ -185,6 +216,7 @@
     EW_SeaOfFire = 12051,       --專武陽炎
     EW_HealthDrawer = 12052,    --專武式鬼吸魂
     EW_GoldShieldFire =12057,   --專武被動 火破金鐘
+    EW_DragonBreathInstantKill = 12058, --專武龍息瞬殺
 
 --風系
     DriveWind = 13001,          --御風術
@@ -235,6 +267,7 @@
     WhirlWindParty = 13050,    --開派對囉
     DragonTransfer = 13051,   --巴龍風障
     WhirlWindCard = 13052,     --旋風卡(卡片技能)
+    NewWindShotBall = 13053,  --真．裂風散彈
 
     LightDragon = 22040,        --青龍皓月
     YiMuLightning = 22043,      --憶母狂雷
@@ -292,6 +325,7 @@
     IceBound3 = 20026,          --三人冰封
     WhirlWind3 = 20027,         --三人旋風
     WhirlWind6 = 13046,         --六人旋風(無盡風暴)
+    BaguaWhirlWind6 = 21044,    --奇門八卦(三人旋風改)
     Gale3 = 20028,              --三人暴風
     TigerCast = 20029,          --白虎頭
 
@@ -316,9 +350,11 @@
     Lightning = 20053, --雷擊 
     Dis6Status = 20054,  --六人狀解    
     Chaos2 = 20055,    --雙人混亂
-    
+
     ZhangFeiLoudShout = 22041,  --俺乃張翼德
---器械
+    ShadowShield = 40001,   --御影靈盾
+
+    --器械
     ArrowTower = 16001,         --井闌
     CityWall = 16002,           --城門
     DashCar = 20009,         --衝車
@@ -405,6 +441,8 @@
     SKILL22022 = 22022,        --22022權傾萬里(比照箭舞九天+30%攻) Added by LH_20170118
     KingWindMove = 22026,     --霸氣烈刃(風動痕修改)
     IdelHalo = 22046,     --偶像光環
+    NewLightArrow = 22047,   --真‧光矛術
+    TyrantPride = 22050, -- 梟雄傲色
     MonkeyHairSplit = 22052, -- 猴毛分身術
 
     --暗
@@ -434,12 +472,22 @@
     EW_YaoWeiFenWu = 23029, --專武被動 曜威奮武
     FateStrike = 23032, -- 乾坤一擲
     Unbreakable = 23033, --金鋼不壞
+    SaintShower = 23035, --沐聖護佑
+    SwordWillShatterSky = 23036, -- 劍志破天
+    Crackling = 23037, -- 噼哩啪啦
+    SwordSlashNineSky = 41001, -- 劍斬九天
+    SexyFox = 41002, -- 傾世魅狐
+    FlameBreakSky = 41003, -- 熾焰破天
+    ImmortalArtDemonSlayingSlash = 41004, --仙訣‧破魔斬 
+    EmperorAura = 42001, -- 帝王之氣
+    CharmingBody = 42002, -- 天生魅體
+    PureYangLotusHeart = 42003, -- 純陽蓮心
+    DisillusionEye = 42004, -- 幻滅天眼
     RedSnakeRobSoul = 45001, --赤蛇奪魂
     RagingDragonWindErosion = 45002, --狂龍風蝕
     DestructiveBeauty = 45003, --傾國傾城
     BattleCryChangban = 46001, --喝斷長坂
     RagingDragonMoonSlash = 46002, --狂龍破月
-    BeautifulFace = 46003, --閉月之顏
     ThreeStrategy = 51001, --三略伐謀
 
     --狀態(不對應技能ID)

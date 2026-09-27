@@ -30,7 +30,19 @@ function UIGMFight.Initialize(go)
 
   tempEvent = uiController:FindEvent("Image_ViewRemove");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_ViewRemove);
-
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  
   for i = 0, 1 do --0左 1右
     teamGroup[i] = {};
     teamGroup[i].gameObect = uiController:FindGameObject(string.Concat("Image_TeamBG",i));
@@ -48,6 +60,12 @@ function UIGMFight.Initialize(go)
 end
 
 function UIGMFight.OnOpen()
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
   this.UpdateUI();
   return true;
 end
@@ -88,6 +106,36 @@ function UIGMFight.UpdateUI()
 end
 
 function UIGMFight.OnClick_Add(event)
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
   local parameter = event.parameter;
   local teamLeaders = {};
   selectOption = {};
@@ -159,6 +207,30 @@ function UIGMFight.OnClick_EnterFight(event)
   if table.Count(data_Team[0]) <= 0 or table.Count(data_Team[1]) <= 0 then 
     return 
   end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
   sendBuffer:Clear()
   sendBuffer:WriteInt64(data_Team[0][1]);
   sendBuffer:WriteInt64(data_Team[1][1]);
@@ -171,6 +243,30 @@ function UIGMFight.OnClick_EnterFight(event)
 end
 
 function UIGMFight.OnClick_Close(event)
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
   UI.Close(UIGMFight);
 end
 

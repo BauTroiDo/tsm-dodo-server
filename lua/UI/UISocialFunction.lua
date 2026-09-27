@@ -133,6 +133,39 @@ function UISocialFunction.Initialize(go)
   
   event_OrgKick = uiController:FindEvent("Image_OrgKick");
   event_OrgKick:SetListener(EventTriggerType.PointerClick, this.OnClick_OrgKick);
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
 end
 
 function UISocialFunction.OnOpen(playerInfo, position, orgFunction, detailInfo)
@@ -215,6 +248,30 @@ function UISocialFunction.OnOpen(playerInfo, position, orgFunction, detailInfo)
   else
     image_Mask:CrossFadeAlpha(0, 0, true);
     image_InfoBG.gameObject:SetActive(false);
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
   end
 
   currentPlayerInfo = playerInfo;
@@ -233,6 +290,14 @@ function UISocialFunction.OnOpen(playerInfo, position, orgFunction, detailInfo)
     event_RemoveFriend.gameObject:SetActive(true);
   else
     event_AddFriend.gameObject:SetActive(true);
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
   end
 
   --black
@@ -270,13 +335,13 @@ function UISocialFunction.OnOpen(playerInfo, position, orgFunction, detailInfo)
   isDirty = 0;
 
   --贈禮版
-  event_GoSendGift.gameObject:SetActive(HouseBoard.FeatureIsOpen() and Social.IsFriend(currentPlayerInfo.roleId) and not Social.IsBlack(currentPlayerInfo.roleId) and Social.CheckTurnStatus(currentPlayerInfo.turn));
+  event_GoSendGift.gameObject:SetActive(HouseBoard.FeatureIsOpen() and Social.IsFriend(currentPlayerInfo.roleId) and not Social.IsBlack(currentPlayerInfo.roleId) and Social.CheckTurnStatus(currentPlayerInfo.level, currentPlayerInfo.turn));
   --進入小屋
   local id = Function.FindId(EFunction.House, 3);
 
   if currentPlayerInfo.turn ~= nil and Function.CheckShow(id) then
-    event_GoToHouse.gameObject:SetActive(not Social.IsBlack(currentPlayerInfo.roleId) and Social.CheckTurnStatus(currentPlayerInfo.turn));
-    image_RedDot.gameObject:SetActive(Social.CheckVisitedFriendRedDot(currentPlayerInfo.roleId));
+    event_GoToHouse.gameObject:SetActive(not Social.IsBlack(currentPlayerInfo.roleId) and Social.CheckTurnStatus(currentPlayerInfo.level, currentPlayerInfo.turn));
+    image_RedDot.gameObject:SetActive(Social.CheckVisitedFriendRedDot(currentPlayerInfo));
   else
     event_GoToHouse.gameObject:SetActive(false);
   end
@@ -285,6 +350,38 @@ function UISocialFunction.OnOpen(playerInfo, position, orgFunction, detailInfo)
 end
 
 function UISocialFunction.OnClose()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   jmpDrawer_Role:Disable();
 
   if bodyEffect ~= nil then
@@ -306,10 +403,42 @@ function UISocialFunction.Update()
 end
 
 function UISocialFunction.OnClick_Close()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   UI.Close(UISocialFunction);
 end
 
 function UISocialFunction.OnClick_Info()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   UI.Close(UISocialFunction);
   
   --C:014-009 <查詢玩家資訊> +玩家ID(8) +L(1) +名字(L)
@@ -333,6 +462,30 @@ function UISocialFunction.OnClick_AddFriend()
 end
 
 function UISocialFunction.OnClick_RemoveFriend()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   if Social.friends[currentPlayerInfo.roleId] == nil then
     ShowCenterMessage("Player Not Friend !!");
     return;
@@ -354,6 +507,23 @@ function UISocialFunction.OnClick_RemoveFriend()
 end
 
 function UISocialFunction.OnClick_AddBlack()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  
   UI.Close(UISocialFunction);
 
   Social.AddBlack(currentPlayerInfo.roleId, currentPlayerInfo.name);
@@ -392,6 +562,22 @@ function UISocialFunction.OnClick_OrgCheif()
 end
 
 function UISocialFunction.OnClick_OrgSubCheif()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   UI.Close(UISocialFunction);
   
   local memberInfo = Organization.members[currentPlayerInfo.roleId];
@@ -431,6 +617,23 @@ function UISocialFunction.OnClick_OrgSubCheif()
 end
 
 function UISocialFunction.OnClick_OrgMember()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  
   UI.Close(UISocialFunction);
   
   local memberInfo = Organization.members[currentPlayerInfo.roleId];
@@ -452,6 +655,23 @@ function UISocialFunction.OnClick_OrgMember()
 end
 
 function UISocialFunction.OnClick_OrgKick()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  
   UI.Close(UISocialFunction);
   
   local memberInfo = Organization.members[currentPlayerInfo.roleId];

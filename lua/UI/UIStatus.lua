@@ -6,12 +6,11 @@ EUIStatusTag = {
   Astrolabe = 5,
   Profile = 6,
   Breakthrough = 7,
-  AttSet = 8,
-  Sell = 9,
-  ChatPaste = 10,
-  FightEquip = 11,
-  FightStyle = 12,
-  OutfitStyle = 13,
+  Sell = 8,
+  ChatPaste = 9,
+  FightEquip = 10,
+  FightStyle = 11,
+  OutfitStyle = 12,
 }
 
 local EUIStatusGameObject =
@@ -26,8 +25,9 @@ local EUIStatusGameObject =
   Astrolabe = 8,
   Breakthrough = 9,
   OutfitStyle = 10,
-  AttSet = 11,
+  DetailGameobject = 11,
 }
+
 
 UIStatus = {}
 local this = UIStatus;
@@ -39,6 +39,7 @@ this.uiController = nil;
 local transform_FrameRect;
 
 local UIStatusGameObject = {}
+
 
 local gameObject_UpgradeLvs = {};
 local gameObject_UpgradeItem;
@@ -85,7 +86,6 @@ local text_UpgradeItems = {};
 local text_CurrentUpgradeSkill;
 local text_NextUpgradeSkill;
 local text_BarValue;
-local text_AttSetName;
 
 local rawImage_CurrentUpgradeSkill;
 local rawImage_NextUpgradeSkill;
@@ -93,32 +93,31 @@ local rawImage_NextUpgradeSkill;
 local item_Upgrades = {};
 
 local attComponents = {};
-local attSetComponents = {};
-local editingAttSet = false;
 
 local event_AttributeSubmit;
 local event_AttributeReset;
 
 --Breakthrough
+local event_ResetBreakthrough;
 local scrollContent_Breakthrough;
 local scrollItems_Breakthrough = {};
 local text_BreakthroughLevel;
 
 --Moral
 local text_Morals = {};
-local radar_Moral;
 
 --Equip
 local item_Equips = {};
-local event_AllUnEquip;
 
 --OutfitStyle
+local image_SwitchRedDot;
 local image_CategoryHead;
 local image_CategoryBody;
 local image_CategoryWrist;
 local image_CategoryFoot;
 local image_CategoryHand;
 local image_SwitchOutfitStyle;
+local event_switchOutfitStyle;
 local switchOutfitStyle;
 local text_collectTitle;
 local gameObject_styleTagInfo;
@@ -127,13 +126,7 @@ local gameObject_switchOutfitStyleButText;
 local text_switchOutfitStyleButText;
 
 --Detail
-local gameObject_TreasureDetailRoot;
-
-local treasureDetailUI;
-local detailUI;
 local detailArrow;
-
-local image_OtherDetail;
 
 --Astrolabe
 local text_AstrolabePoint;
@@ -147,17 +140,10 @@ local rawImage_AstrolabePoint;
 local rawImage_AstrolabeStar = {};
 local rawImage_AstrolabeBall = {};
 
---AttSet
-local gameObject_AttSetFunction;
-local gameObject_EditAttSetFunction;
-local scrollContent_AttSet;
-local scrollItems_AttSet = {};
-local text_AttSetSumPoint;
-local text_AttSetRemainPoint;
+local event_AstrolabeUp;
 
 --var
 local showDetail = false;
-local showTreasureDetail = false;
 local tagOffset = 0;
 local currentTag = EUIStatusTag.Status;
 local currentFollowIndex = 0;
@@ -168,12 +154,65 @@ local mainTag;
 local attributeFastPoint = 100;
 local currentOutfitSyleCategory = 0;
 local outfitStyleIdTempSave = 0;
-local attSetRemainPoint = 0;
-local convertPage = 0;
 
 local tagDatas = {};
 
 function UIStatus.Initialize(go)
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+  ---
+-----1--------------------------------------------------------------
+  --  if LuaHelper.CheckDefine("DemoCode") then
+  --    local code = DemoCode.GetBitxor(20);
+  --    code = code * 10;
+  --  end
+  --  ---2--------------------------------------------------------------
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+-----1--------------------------------------------------------------
+  --  if LuaHelper.CheckDefine("DemoCode") then
+  --    local code = DemoCode.GetBitxor(20);
+  --    code = code * 10;
+  --  end
+  --  ---2--------------------------------------------------------------
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+-----1--------------------------------------------------------------
+  --  if LuaHelper.CheckDefine("DemoCode") then
+  --    local code = DemoCode.GetBitxor(20);
+  --    code = code * 10;
+  --  end
+  --  ---2--------------------------------------------------------------
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+-----1--------------------------------------------------------------
+  --  if LuaHelper.CheckDefine("DemoCode") then
+  --    local code = DemoCode.GetBitxor(20);
+  --    code = code * 10;
+  --  end
+  --  ---2--------------------------------------------------------------
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
   local uiController = go:GetComponent("UIController");
   this.uiController = uiController;
   this.uiController.onOpen = this.OnOpen;
@@ -189,65 +228,20 @@ function UIStatus.Initialize(go)
   UIStatusGameObject[EUIStatusGameObject.Status] = uiController:FindGameObject("Status");
   UIStatusGameObject[EUIStatusGameObject.Equip] = uiController:FindGameObject("Equip");
   UIStatusGameObject[EUIStatusGameObject.Moral] = uiController:FindGameObject("Moral");
-  UIStatusGameObject[EUIStatusGameObject.Detail] = uiController:FindGameObject("Detail");
+  UIStatusGameObject[EUIStatusGameObject.DetailGameobject] = uiController:FindGameObject("Image_DetailBG");
+  UIStatusGameObject[EUIStatusGameObject.Detail] = UIStatusDetail.New(uiController:FindGameObject("Image_DetailBG"));
   UIStatusGameObject[EUIStatusGameObject.BarValue] = uiController:FindGameObject("BarValue");
   UIStatusGameObject[EUIStatusGameObject.Astrolabe] = uiController:FindGameObject("Astrolabe");
   UIStatusGameObject[EUIStatusGameObject.Breakthrough] = uiController:FindGameObject("GameObject_Breakthrough");
   UIStatusGameObject[EUIStatusGameObject.OutfitStyle] = uiController:FindGameObject("OutfitStyle");
-  UIStatusGameObject[EUIStatusGameObject.AttSet] = uiController:FindGameObject("AttSet");
 
   for i = 1, 2 do
     gameObject_UpgradeLvs[i] = uiController:FindGameObject(string.Concat("UpgradeLv (", i, ")"));
   end
-
   gameObject_UpgradeItem = uiController:FindGameObject("UpgradeItem");
   gameObject_UpgradeSkill = uiController:FindGameObject("UpgradeSkill");
 
   --Role
-  this.InitRole(uiController);
-
-  --Status
-  this.InitStatus(uiController);
-
-  --Moral
-  for i = 1, 5 do
-    text_Morals[i] = uiController:FindText(string.Concat("Text_Moral (", i, ")"));
-  end
-
-  radar_Moral = UIStatusGameObject[EUIStatusGameObject.Moral].transform:Find("Radar"):GetComponent("UIPolygon");
-
-  --Equip
-  for i = 1, Role.maxEquip do
-    item_Equips[i] = UIItemController.New(uiController:FindGameObject(string.Concat("Image_EquipBG (", i, ")")).transform, this.OnClick_Equip, i);
-  end
-
-  text_BarValue = uiController:FindText("Text_BarValue");
-
-  tempEvent = uiController:FindEvent("Image_Switch");
-  tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_SwitchOutfitStyle);
-  event_AllUnEquip = uiController:FindEvent("Image_AllUnEquip");
-  event_AllUnEquip:SetListener(EventTriggerType.PointerClick, this.OnClick_AllUnEquip);
-
-  switchOutfitStyle = uiController:FindGameObject("Image_Switch");
-  image_SwitchOutfitStyle = uiController:FindImage("Image_Switch");
-
-  --Astrolabe
-  this.InitAstrolabe(uiController, tempEvent);
-
-  --OutfitStyle
-  this.InitOutfitStyle(uiController,tempEvent);
-
-  --AttSet
-  this.InitAttSet(uiController, tempEvent);
-
-  --Details
-  this.InitAllDetail(uiController, tempEvent);
-
-  --Breakthrough
-  this.InitBreakthrough(uiController, tempEvent);
-end
-
-function UIStatus.InitRole(uiController, tempEvent)
   uiCareer = UICareerController.New(uiController:FindGameObject("GameObject_Career"));
 
   jmpDrawer_Role = uiController:FindRawImage("RawImage_Role").gameObject:AddComponent(typeof(JmpDrawer));
@@ -266,12 +260,12 @@ function UIStatus.InitRole(uiController, tempEvent)
   slider_Hp = uiController:FindSlider("Slider_Hp");
   slider_Sp = uiController:FindSlider("Slider_Sp");
   slider_Exp = uiController:FindSlider("Slider_Exp");
-
+  
   image_Prev =  uiController:FindGameObject("Image_Prev");
   tempEvent = uiController:FindEvent("Image_Prev");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_SwitchRole);
   tempEvent.parameter = -1;
-
+  
   image_Next =  uiController:FindGameObject("Image_Next");
   tempEvent = uiController:FindEvent("Image_Next");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_SwitchRole);
@@ -282,9 +276,8 @@ function UIStatus.InitRole(uiController, tempEvent)
 
   event_ChgName = uiController:FindEvent("Image_ChgName");
   event_ChgName:SetListener(EventTriggerType.PointerClick, this.OnClick_ChgName);
-end
 
-function UIStatus.InitStatus(uiController)
+  --Status
   text_Point = uiController:FindText("Text_Point");
   text_AttributePoint = uiController:FindText("Text_AttributePoint");
   text_AttributeSubmit = uiController:FindText("Text_AttributeSubmit");
@@ -338,20 +331,20 @@ function UIStatus.InitStatus(uiController)
     attComponents[i].text_Add = tempParent:Find("Text_Add"):GetComponent("Text");
 
     attComponents[i].event_Add = tempParent:Find("Image_Add"):GetComponent("UIEvent");
-    attComponents[i].event_Add:SetListener(EventTriggerType.PointerClick, this.OnClick_AttributeChange);
-    attComponents[i].event_Add.parameter = {["index"] = i, ["value"] = 1 };
+    attComponents[i].event_Add:SetListener(EventTriggerType.PointerClick, this.OnClick_AttributeAdd);
+    attComponents[i].event_Add.parameter = i;
 
     attComponents[i].event_Dec = tempParent:Find("Image_Dec"):GetComponent("UIEvent");
-    attComponents[i].event_Dec:SetListener(EventTriggerType.PointerClick, this.OnClick_AttributeChange);
-    attComponents[i].event_Dec.parameter = {["index"] = i, ["value"] = -1 };
+    attComponents[i].event_Dec:SetListener(EventTriggerType.PointerClick, this.OnClick_AttributeDec);
+    attComponents[i].event_Dec.parameter = i;
 
-    attComponents[i].event_FastAdd = tempParent:Find("Image_FastAdd"):GetComponent("UIEvent");
-    attComponents[i].event_FastAdd:SetListener(EventTriggerType.PointerClick, this.OnClick_AttributeChange);
-    attComponents[i].event_FastAdd.parameter = {["index"] = i, ["value"] = attributeFastPoint };
+    attComponents[i].event_Add = tempParent:Find("Image_FastAdd"):GetComponent("UIEvent");
+    attComponents[i].event_Add:SetListener(EventTriggerType.PointerClick, this.OnClick_AttributeFastAdd);
+    attComponents[i].event_Add.parameter = i;
 
-    attComponents[i].event_FastDec = tempParent:Find("Image_FastDec"):GetComponent("UIEvent");
-    attComponents[i].event_FastDec:SetListener(EventTriggerType.PointerClick, this.OnClick_AttributeChange);
-    attComponents[i].event_FastDec.parameter = {["index"] = i, ["value"] = -attributeFastPoint };
+    attComponents[i].event_Dec = tempParent:Find("Image_FastDec"):GetComponent("UIEvent");
+    attComponents[i].event_Dec:SetListener(EventTriggerType.PointerClick, this.OnClick_AttributeFastDec);
+    attComponents[i].event_Dec.parameter = i;
 
   end
 
@@ -360,9 +353,98 @@ function UIStatus.InitStatus(uiController)
 
   event_AttributeReset = uiController:FindEvent("Image_AttributeReset");
   event_AttributeReset:SetListener(EventTriggerType.PointerClick, this.OnClick_AttributeReset);
+
+  --Moral
+  for i = 1, 5 do
+    text_Morals[i] = uiController:FindText(string.Concat("Text_Moral (", i, ")"));
+  end
+
+  radar_Moral = UIStatusGameObject[EUIStatusGameObject.Moral].transform:Find("Radar"):GetComponent("UIPolygon");
+
+  --Equip
+  for i = 1, Role.maxEquip do
+    item_Equips[i] = UIItemController.New(uiController:FindGameObject(string.Concat("Image_EquipBG (", i, ")")).transform, this.OnClick_Equip, i);
+  end
+
+  text_BarValue = uiController:FindText("Text_BarValue");
+  event_switchOutfitStyle = uiController:FindEvent("Image_Switch");
+  event_switchOutfitStyle:SetListener(EventTriggerType.PointerClick, this.OnClick_SwitchOutfitStyle);
+  switchOutfitStyle = uiController:FindGameObject("Image_Switch");
+  image_SwitchOutfitStyle = uiController:FindImage("Image_Switch");
+  
+  --Detail
+  detailArrow = uiController:FindGameObject("DetailArrow");
+
+  tempEvent = uiController:FindEvent("Image_Detail");
+  tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_Detail);
+
+  tempEvent = uiController:FindEvent("Image_DetailPrev");
+  tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_SwitchRole);
+  tempEvent.parameter = -1;
+
+  tempEvent = uiController:FindEvent("Image_DetailNext");
+  tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_SwitchRole);
+  tempEvent.parameter = 1;
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+
+  --Astrolabe
+  this.InitAstrolabe(uiController);
+
+  --OutfitStyle
+  this.InitOutfitStyle(uiController);
+  
+  --Breakthrough
+  event_ResetBreakthrough = uiController:FindEvent("Image_ResetBreakthrough");
+  event_ResetBreakthrough:SetListener(EventTriggerType.PointerClick, this.OnClick_ResetBreakthrough);
+  text_BreakthroughLevel = uiController:FindText("Text_BreakthroughLevel");
+  scrollContent_Breakthrough = uiController:FindScrollContent("ScrollContent_Breakthrough");
+  scrollContent_Breakthrough.onInitialize = this.OnInitialize_BreakthroughScrollContent;
+  scrollContent_Breakthrough.onItemChange = this.OnItemChange_BreakthroughScrollContent;
+  scrollContent_Breakthrough:Initialize(Breakthrough.GetBreakthroughLevel());
 end
 
-function UIStatus.InitAstrolabe(uiController, tempEvent)
+function UIStatus.InitAstrolabe(uiController)
   local tempTransform = UIStatusGameObject[EUIStatusGameObject.Astrolabe].transform:Find("Attribute");
   text_AstrolabePoint = tempTransform:Find("Function"):Find("GameObject"):Find("Text_AstrolabePoint"):GetComponent("Text");
   text_AstrolabeMoney = tempTransform:Find("Function"):Find("GameObject"):Find("Text_AstrolabeMoney"):GetComponent("Text");
@@ -382,22 +464,24 @@ function UIStatus.InitAstrolabe(uiController, tempEvent)
     rawImage_AstrolabeBall[i] = tempTransform:Find(string.Concat("RawImage_AstrolabeBall (", i , ")")):GetComponent("UIRawImage");
   end
 
-  tempEvent = uiController:FindEvent("Image_AstrolabeUp");
-  tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_AstrolabeUp);
+  event_AstrolabeUp = uiController:FindEvent("Image_AstrolabeUp");
+  event_AstrolabeUp:SetListener(EventTriggerType.PointerClick, this.OnClick_AstrolabeUp);
 end
 
-function UIStatus.InitOutfitStyle(uiController, tempEvent)
+function UIStatus.InitOutfitStyle(uiController)
   gameObject_styleTagInfo = uiController:FindGameObject("Text_StyleTagInfo");
   text_styleTagInfo = uiController:FindText("Text_StyleTagInfo");
   gameObject_switchOutfitStyleButText = uiController:FindGameObject("Text_SwitchOutfitStyleButText");
   text_switchOutfitStyleButText = uiController:FindText("Text_SwitchOutfitStyleButText");
   
+  image_SwitchRedDot = uiController:FindImage("Image_SwitchRedDot");
   image_CategoryHead = uiController:FindImage("Image_Head");
   image_CategoryBody = uiController:FindImage("Image_Body");
   image_CategoryWrist = uiController:FindImage("Image_Wrist");
   image_CategoryFoot = uiController:FindImage("Image_Foot");
   image_CategoryHand = uiController:FindImage("Image_Hand");
   
+  local tempEvent;
   tempEvent = uiController:FindEvent("Image_Head");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_ChangeCategory);
   tempEvent.parameter = EItemFitType.Style_Head;
@@ -415,115 +499,30 @@ function UIStatus.InitOutfitStyle(uiController, tempEvent)
   tempEvent.parameter = EItemFitType.Style_Hand;
   
   text_collectTitle = uiController:FindText("Text_CollectTitle");
-end
-
-function UIStatus.InitAttSet(uiController, tempEvent)
-  local root = uiController:FindGameObject("AttSet");
-  text_AttSetSumPoint = uiController:FindText("Text_AttSetSumPoint");
-  text_AttSetRemainPoint = uiController:FindText("Text_AttSetRemainPoint");
-  text_AttSetName = uiController:FindText("Text_AttSetName");
-
-  gameObject_AttSetFunction = uiController:FindGameObject("AttSetFunction");
-  gameObject_EditAttSetFunction = uiController:FindGameObject("EditAttSetFunction");
-
-  tempEvent = uiController:FindEvent("Image_EditSetName");
-  tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_ChangeSetName);
-
-  tempEvent = uiController:FindEvent("Image_EditAttSet");
-  tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_EditAttSet);
-
-  tempEvent = uiController:FindEvent("Image_ApplyAttSet");
-  tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_ApplyAttSet);
-
-  tempEvent = uiController:FindEvent("Image_ClearAttSet");
-  tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_ClearAttSet);
-
-  tempEvent = uiController:FindEvent("Image_CancelAttSet");
-  tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_CancelAttSet);
-  
-  tempEvent = uiController:FindEvent("Image_SaveAttSet");
-  tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_SaveAttSet);
-
-  local attributeRoot = root.transform:Find("Attribute");
-
-  for i = 1, 6 do
-    local tempParent = attributeRoot.transform:Find(string.Concat("Image_AttributeBG (", i, ")"));
-
-    attSetComponents[i] = {};
-    attSetComponents[i].add = 0;
-
-    attSetComponents[i].text_Attribute = tempParent:Find("Text_Attribute"):GetComponent("Text");
-
-    --add
-    attSetComponents[i].image_PointBG = tempParent:Find("Image_PointBG"):GetComponent("Image");
-    attSetComponents[i].event_Enter = attSetComponents[i].image_PointBG:GetComponent("UIEvent");
-    attSetComponents[i].event_Enter:SetListener(EventTriggerType.PointerClick, this.OnClick_EnterAttSet);
-    attSetComponents[i].event_Enter.parameter = i;
-
-    tempParent = attSetComponents[i].image_PointBG.transform;
-
-    attSetComponents[i].text_Add = tempParent:Find("Text_Add"):GetComponent("Text");
-
-    attSetComponents[i].event_Add = tempParent:Find("Image_Add"):GetComponent("UIEvent");
-    attSetComponents[i].event_Add:SetListener(EventTriggerType.PointerClick, this.OnClick_AttributeChange);
-    attSetComponents[i].event_Add.parameter = {["index"] = i, ["value"] = 1 };
-
-    attSetComponents[i].event_Dec = tempParent:Find("Image_Dec"):GetComponent("UIEvent");
-    attSetComponents[i].event_Dec:SetListener(EventTriggerType.PointerClick, this.OnClick_AttributeChange);
-    attSetComponents[i].event_Dec.parameter = {["index"] = i, ["value"] = -1 };
-
-    attSetComponents[i].event_FastAdd = tempParent:Find("Image_FastAdd"):GetComponent("UIEvent");
-    attSetComponents[i].event_FastAdd:SetListener(EventTriggerType.PointerClick, this.OnClick_AttributeChange);
-    attSetComponents[i].event_FastAdd.parameter = {["index"] = i, ["value"] = attributeFastPoint };
-
-    attSetComponents[i].event_FastDec = tempParent:Find("Image_FastDec"):GetComponent("UIEvent");
-    attSetComponents[i].event_FastDec:SetListener(EventTriggerType.PointerClick, this.OnClick_AttributeChange);
-    attSetComponents[i].event_FastDec.parameter = {["index"] = i, ["value"] = -attributeFastPoint };
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
   end
-end
-
-function UIStatus.InitAllDetail(uiController, tempEvent)
-  --Detail
-  detailUI = UIStatusDetail.New(uiController:FindGameObject("DetailRoot").transform);
-
-  detailArrow = uiController:FindGameObject("DetailArrow");
-
-  tempEvent = uiController:FindEvent("Image_Detail");
-  tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_Detail);
-
-  tempEvent = uiController:FindEvent("Image_DetailPrev");
-  tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_SwitchRole);
-  tempEvent.parameter = -1;
-
-  tempEvent = uiController:FindEvent("Image_DetailNext");
-  tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_SwitchRole);
-  tempEvent.parameter = 1;
-
-  --OtherDetail
-  gameObject_TreasureDetailRoot = uiController:FindGameObject("TreasureDetailRoot");
-  treasureDetailUI = UITreasureDetail.New(gameObject_TreasureDetailRoot.transform);
-
-  tempEvent = uiController:FindEvent("Image_OtherDetail");
-  tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_OtherDetail);
-
-  image_OtherDetail = tempEvent:GetComponent("Image");
-end
-
-function UIStatus.InitBreakthrough(uiController, tempEvent)
-  tempEvent = uiController:FindEvent("Image_ResetBreakthrough");
-  tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_ResetBreakthrough);
-
-  text_BreakthroughLevel = uiController:FindText("Text_BreakthroughLevel");
-
-  scrollContent_Breakthrough = uiController:FindScrollContent("ScrollContent_Breakthrough");
-  scrollContent_Breakthrough.onInitialize = this.OnInitialize_BreakthroughScrollContent;
-  scrollContent_Breakthrough.onItemChange = this.OnItemChange_BreakthroughScrollContent;
-  scrollContent_Breakthrough:Initialize(Breakthrough.GetBreakthroughLevel());
-
-  scrollContent_AttSet = uiController:FindScrollContent("ScrollContent_AttSet");
-  scrollContent_AttSet.onInitialize = this.OnInitialize_ScrollContentAttSet;
-  scrollContent_AttSet.onItemChange = this.OnItemChange_ScrollContentAttSet;
-  scrollContent_AttSet:Initialize(Status.GetAttSetCount());
+  ---2--------------------------------------------------------------
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
 end
 
 function UIStatus.OnOpen(tag, role)
@@ -545,11 +544,8 @@ function UIStatus.OnOpen(tag, role)
       end
     end
   end
-
   showDetail = false;
-  showTreasureDetail = false;
   upgradeNpcId = 0;
-
   return true;
 end
 
@@ -560,24 +556,29 @@ function UIStatus.OnVisible(visible)
     tagDatas[EUIStatusTag.Moral] = { string.Get(20323), nil };
     tagDatas[EUIStatusTag.Equip] = { string.Get(50331), nil };
     tagDatas[EUIStatusTag.Style] = { string.Get(99685), nil };
-    tagDatas[EUIStatusTag.Astrolabe] = { string.Get(22602), nil };
+  
+    if not Contains(SceneManager.sceneId, 10821, 10853) then
+      tagDatas[EUIStatusTag.Astrolabe] = { string.Get(22602), nil };
+    end
 
+    local featureOffset = 1;
     if HouseBoard.FeatureIsOpen() then
-      EUIStatusTag.Profile = table.Count(tagDatas) + 1;
-      tagDatas[EUIStatusTag.Profile] = { string.Get(23355), nil };
-    else
-      EUIStatusTag.Profile = 0;
+      if not Contains(SceneManager.sceneId, 10821, 10853) then
+        featureOffset = 0;
+        tagDatas[EUIStatusTag.Profile] = { string.Get(23355), nil };
+      end
     end
 
     if Breakthrough.CheckBreakthrough() then
-      EUIStatusTag.Breakthrough = table.Count(tagDatas) + 1;
+      EUIStatusTag.Breakthrough = 7;
+      EUIStatusTag.Breakthrough = EUIStatusTag.Breakthrough - featureOffset;
       tagDatas[EUIStatusTag.Breakthrough] = { string.Get(23571), nil };
     else
-      EUIStatusTag.Breakthrough = 0;
+      tagDatas[EUIStatusTag.Breakthrough] = nil;
+      if currentTag == EUIStatusTag.Breakthrough then
+        currentTag = EUIStatusTag.Status;
+      end
     end
-
-    EUIStatusTag.AttSet = table.Count(tagDatas) + 1;
-    tagDatas[EUIStatusTag.AttSet] = {string.Get(24159), nil};
 
     tagOffset = 0;
     if currentTag == EUIStatusTag.Sell then
@@ -606,6 +607,36 @@ function UIStatus.OnVisible(visible)
 end
 
 function UIStatus.OnClose()
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+-----1--------------------------------------------------------------
+  --  if LuaHelper.CheckDefine("DemoCode") then
+  --    local code = DemoCode.GetBitxor(20);
+  --    code = code * 10;
+  --  end
+  --  ---2--------------------------------------------------------------
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+  ---
+--- --5-----------------------------------------------------
+  --  if LuaHelper.CheckDefine("DemoCode") then
+  --   --
+  --  end
+  --  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
   jmpDrawer_Role:Disable();
   outfitStyleIdTempSave = 0;
   
@@ -625,80 +656,37 @@ function UIStatus.OnClose()
     end
   end
 
-  if Hotkey.GetEditMode() ~= EHotkeyEditMode.None then
-    Hotkey.Close();
-  end
+  Hotkey.Close(EUseSource.UIItemInfo);
 
   if UI.IsVisible(UIAlert) then
     UI.Close(UIAlert);
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   end
 end
 
-function UIStatus.OnClick_Close()
-  UI.Close(UIStatus);
+function UIStatus.Update()
+  if astrolabeShowTimer > 0 then
+    astrolabeShowTimer = astrolabeShowTimer - CGTimer.deltaTime;
 
-  return true;
-end
-
-function UIStatus.OnClick_Help(checkShow)
-  if currentTag == EUIStatusTag.Status then
-    if checkShow ~= true then
-      UI.Open(UITutorialHint, 11, this);
-    end
-  elseif currentTag == EUIStatusTag.Moral then
-    if checkShow ~= true then
-      UI.Open(UITutorialHint, 12, this);
-    end
-  elseif currentTag == EUIStatusTag.Astrolabe then
-    if checkShow ~= true then
-      UI.Open(UITutorialHint, 44, this);
-    end
-  elseif HouseBoard.FeatureIsOpen() and currentTag == EUIStatusTag.Profile then
-    if checkShow ~= true then
-      UI.Open(UITutorialHint, 0, this, string.Get(23356), string.Get(23616));
-    end
-  elseif currentTag == EUIStatusTag.Style or currentTag == EUIStatusTag.OutfitStyle then
-    if checkShow ~= true then
-      UI.Open(UITutorialHint, 59, this);
-    end
-  elseif currentTag == EUIStatusTag.AttSet then
-    if checkShow ~= true then
-      UI.Open(UITutorialHint, 77, this);
-    end
-  else
-    return false;
-  end
-
-  return true;
-end
-
-function UIStatus.OnClick_Tag(mainTag, subTag)
-  if Contains(currentTag, EUIStatusTag.Sell, EUIStatusTag.ChatPaste) then return false end
-
-  if Contains(currentTag, EUIStatusTag.FightEquip, EUIStatusTag.FightStyle) then
-    if FightField.GetConFightRoleKind() == EHuman.FollowNpc then
-      if not Contains(mainTag + tagOffset, EUIStatusTag.FightEquip) then
-        return false;
-      end
+    if astrolabeShowTimer > 0 then
+      LuaHelper.SetColor(image_AstrolabeMask, LuaHelper.GetColor(255, 255, 255, 255 * ((Astrolabe.levelUpShowTime - astrolabeShowTimer) / Astrolabe.levelUpShowTime)));
     else
-      if not Contains(mainTag + tagOffset, EUIStatusTag.FightEquip, EUIStatusTag.FightStyle) then
-        return false;
-      end
+      astrolabeShowTimer = 0;
+      LuaHelper.SetColor(image_AstrolabeMask, Color.Alpha);
+
+      ShowCenterMessage(string.Get(71331));
+      this.UpdateAstrolabe();
     end
   end
-
-  currentTag = mainTag + tagOffset;
-
-  if Contains(currentTag, EUIStatusTag.Style,EUIStatusTag.OutfitStyle, EUIStatusTag.FightStyle, EUIStatusTag.AttSet) then
-    currentFollowIndex = 0;
-    currentRole = Role.player;
-  end
-
-  upgradeNpcId = 0;
-
-  this.UpdateUI(true, true);
-
-  return true;
 end
 
 function UIStatus.CheckRedDot(mTag, subTag)
@@ -707,13 +695,15 @@ function UIStatus.CheckRedDot(mTag, subTag)
   else
     mainTag = mTag;
   end
-
+  
   if mainTag == EUIStatusTag.Status then
     return RedDot.Check(ERedDot.AttributePoint);
   elseif mainTag == EUIStatusTag.Equip then
     return RedDot.Check(ERedDot.Bag);
   elseif mainTag == EUIStatusTag.Breakthrough then
     return RedDot.Check(ERedDot.Breakthrough);
+  elseif mainTag == EUIStatusTag.Style then
+    return RedDot.Check(ERedDot.OutfitStyle);
   end
 
   if HouseBoard.FeatureIsOpen() then
@@ -725,32 +715,38 @@ function UIStatus.CheckRedDot(mTag, subTag)
   return false;
 end
 
-  --region update
+function UIStatus.IsCurrentTag(tag)
+  return tag == currentTag;
+end
+
+function UIStatus.IsCurrentRole(role)
+  return role == currentRole;
+end
+
 function UIStatus.UpdateUI(reopenBag, reset)
   if HouseBoard.FeatureIsOpen() then
-    UIStatusGameObject[EUIStatusGameObject.Role]:SetActive(not Contains(currentTag, EUIStatusTag.Astrolabe, EUIStatusTag.Profile, EUIStatusTag.AttSet));
+    UIStatusGameObject[EUIStatusGameObject.Role]:SetActive(currentTag ~= EUIStatusTag.Astrolabe and currentTag ~=EUIStatusTag.Profile);
   else
-    UIStatusGameObject[EUIStatusGameObject.Role]:SetActive(not Contains(currentTag, EUIStatusTag.Astrolabe, EUIStatusTag.AttSet));
+    UIStatusGameObject[EUIStatusGameObject.Role]:SetActive(currentTag ~= EUIStatusTag.Astrolabe);
   end
 
   UIStatusGameObject[EUIStatusGameObject.Bar]:SetActive(not showDetail and Contains(currentTag, EUIStatusTag.Status, EUIStatusTag.Moral))
   UIStatusGameObject[EUIStatusGameObject.Status]:SetActive(currentTag == EUIStatusTag.Status);
   UIStatusGameObject[EUIStatusGameObject.Moral]:SetActive(currentTag == EUIStatusTag.Moral);
   UIStatusGameObject[EUIStatusGameObject.Equip]:SetActive(not showDetail and Contains(currentTag, EUIStatusTag.Equip, EUIStatusTag.Style,EUIStatusTag.OutfitStyle, EUIStatusTag.Sell, EUIStatusTag.ChatPaste, EUIStatusTag.FightEquip, EUIStatusTag.FightStyle));
-  UIStatusGameObject[EUIStatusGameObject.Detail]:SetActive(showDetail);
+  UIStatusGameObject[EUIStatusGameObject.DetailGameobject].gameObject:SetActive(showDetail);
   UIStatusGameObject[EUIStatusGameObject.BarValue]:SetActive(Contains(currentTag, EUIStatusTag.Equip, EUIStatusTag.Style, EUIStatusTag.FightEquip, EUIStatusTag.FightStyle));
   UIStatusGameObject[EUIStatusGameObject.Astrolabe]:SetActive(currentTag == EUIStatusTag.Astrolabe);
   UIStatusGameObject[EUIStatusGameObject.Breakthrough]:SetActive(currentTag == EUIStatusTag.Breakthrough and Breakthrough.CheckBreakthrough());
   UIStatusGameObject[EUIStatusGameObject.OutfitStyle]:SetActive(not showDetail and Contains(currentTag, EUIStatusTag.OutfitStyle));
-  UIStatusGameObject[EUIStatusGameObject.AttSet]:SetActive(currentTag == EUIStatusTag.AttSet);
-
-  event_AllUnEquip.gameObject:SetActive(false);
   switchOutfitStyle:SetActive(not showDetail and Contains(currentTag, EUIStatusTag.Style, EUIStatusTag.OutfitStyle));
   image_Prev:SetActive(not Contains(currentTag, EUIStatusTag.Style, EUIStatusTag.OutfitStyle));
   image_Next:SetActive(not Contains(currentTag, EUIStatusTag.Style, EUIStatusTag.OutfitStyle));
   gameObject_styleTagInfo:SetActive(not showDetail and Contains(currentTag, EUIStatusTag.Style, EUIStatusTag.OutfitStyle));
   gameObject_switchOutfitStyleButText:SetActive(not showDetail and Contains(currentTag, EUIStatusTag.Style, EUIStatusTag.OutfitStyle));
- 
+  image_SwitchRedDot.gameObject:SetActive(RedDot.Check(ERedDot.OutfitStyle));
+  
+  
   if reopenBag == true then
     UI.Close(UIBag);
   end
@@ -770,7 +766,6 @@ function UIStatus.UpdateUI(reopenBag, reset)
   this.UpdateAstrolabe();
   this.UpdateHomePage();
   this.UpdateBreakthrough(reopenBag);
-  this.UpdateAttSet(reset);
 end
 
 function UIStatus.UpdateRole()
@@ -788,7 +783,28 @@ function UIStatus.UpdateRole()
     jmpDrawer_Role:GenerateAndDraw(currentRole.data:GetAtlasParams(currentRole.titleId, ERolePose.Prepare + 1));
     jmpDrawer_Role.offsetY = 0;
   end
-
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  
   if currentRole.kind == EHuman.FollowNpc then
     if currentRole.data.canGrow == 0 then
       text_Name.text = string.GetColorText(currentRole.name, Color.Orange);
@@ -815,6 +831,27 @@ function UIStatus.UpdateRole()
   event_ChgName.gameObject:SetActive(not showDetail and currentTag ~= EUIStatusTag.Breakthrough and currentFollowIndex == 0);
 
   this.UpdateBar();
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
 end
 
 function UIStatus.UpdateBar()
@@ -851,20 +888,201 @@ function UIStatus.UpdateBar()
   text_BarValue.text = string.Concat(text_FullHp.text, "\n", text_FullSp.text, "\n", text_Exp.text);
 end
 
+function UIStatus.SetExpSlider(sliderExp, textExp, textFullExp, level, exp, turn)
+  if (turn >= 3 and level >= Role.playerMaxLv + Role.playerTurn3MaxLv) or (turn < 3 and level == Role.playerMaxLv) then
+    sliderExp.maxValue = 1;
+    sliderExp.value = 1;
+    textExp.text = "100%";
+    textFullExp.text = string.Get(40475);
+  else
+    sliderExp.maxValue = Calc.GetUpExp(level + 1, turn);
+    sliderExp.value = exp - Calc.GetNeedTExp(level, turn);
+    textExp.text = string.Concat(math.floor((sliderExp.value / sliderExp.maxValue) * 100), "%");
+    textFullExp.text = string.Concat(sliderExp.value, "/", sliderExp.maxValue);
+  end
+end
+
 function UIStatus.UpdateStatus(reset)
+
   if currentTag ~= EUIStatusTag.Status then return end
   if currentRole == nil then return end
-
   RedDot.Remove(ERedDot.AttributePoint);
+  local equipAdd = 0;
+  local otherAdd = 0;
+  local percentValue = 0;
+  local shineAtts = Calc.GetCollectNFT();
 
-  local baseValue;
-  local equipAdd;
-  local otherAdd;
-
-  for i = 1, 6 do
-    baseValue, equipAdd, otherAdd = Status.GetStatusAttribute(currentRole, i);
-    attComponents[i].text_Attribute.text = baseValue + equipAdd + otherAdd;
+  --Int
+  equipAdd = currentRole:GetAttribute(EAttribute.EquipInt);
+  otherAdd = 0;
+  if currentRole == Role.player then
+    otherAdd = otherAdd + DrugBuff.GetAttribute(EDrugAttribute.Int);
+    otherAdd = otherAdd + DrugBuff.timeBuffs[ETimeBuff.IntUp].value;
+    otherAdd = otherAdd + Astrolabe.GetAttribute(EAstrolabeAttribute.Int);
+    otherAdd = otherAdd + currentRole:GetAttribute(EAttribute.Buff, EAttribute.Int);
+    otherAdd = otherAdd + currentRole:GetAttribute(EAttribute.Turn3Int);
+    otherAdd = otherAdd + math.floor((Mounts.GetAttribute(EAttribute.Int) + Mounts.GetAttribute(EAttribute.EquipInt)) * Mounts.collectionBonus);
+    --NFT收集加成
+    if shineAtts[EAttribute.Int] ~= nil then
+      otherAdd = otherAdd + shineAtts[EAttribute.Int];
+    end
+  elseif currentRole == Role.fightNpc then
+    otherAdd = otherAdd + DrugBuff.GetAttribute(EDrugAttribute.Int);
   end
+  otherAdd = otherAdd + CollectStyle.GetAttribute(EAttribute.Int);
+  otherAdd = otherAdd + CollectCard.GetAttribute(EAttribute.Int);
+  
+  percentValue = math.round(currentRole:GetAttribute(EAttribute.Int) * (100 + currentRole:GetAttribute(EAttribute.IntPercent)) * 0.01);
+  attComponents[1].text_Attribute.text = percentValue + equipAdd + otherAdd;
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --Atk
+  equipAdd = currentRole:GetAttribute(EAttribute.EquipAtk);
+  otherAdd = 0;
+  if currentRole == Role.player then
+    otherAdd = otherAdd + DrugBuff.GetAttribute(EDrugAttribute.Atk);
+    otherAdd = otherAdd + DrugBuff.timeBuffs[ETimeBuff.AtkUp].value;
+    otherAdd = otherAdd + Astrolabe.GetAttribute(EAstrolabeAttribute.Atk);
+    otherAdd = otherAdd + currentRole:GetAttribute(EAttribute.Buff, EAttribute.Atk);
+    otherAdd = otherAdd + currentRole:GetAttribute(EAttribute.Turn3Atk);
+    otherAdd = otherAdd + math.floor((Mounts.GetAttribute(EAttribute.Atk) + Mounts.GetAttribute(EAttribute.EquipAtk)) * Mounts.collectionBonus);
+    --NFT收集加成
+    if shineAtts[EAttribute.Atk] ~= nil then
+      otherAdd = otherAdd + shineAtts[EAttribute.Atk];
+    end
+  elseif currentRole == Role.fightNpc then
+    otherAdd = otherAdd + DrugBuff.GetAttribute(EDrugAttribute.Atk);
+  end
+  otherAdd = otherAdd + CollectStyle.GetAttribute(EAttribute.Atk);
+  otherAdd = otherAdd + CollectCard.GetAttribute(EAttribute.Atk);
+  
+  percentValue = math.round(currentRole:GetAttribute(EAttribute.Atk) * (100 + currentRole:GetAttribute(EAttribute.AtkPercent)) * 0.01);
+  attComponents[2].text_Attribute.text = percentValue + equipAdd + otherAdd;
+
+  --Def
+  equipAdd = currentRole:GetAttribute(EAttribute.EquipDef);
+  otherAdd = 0;
+  if currentRole == Role.player then
+    otherAdd = otherAdd + DrugBuff.GetAttribute(EDrugAttribute.Def);
+    otherAdd = otherAdd + DrugBuff.timeBuffs[ETimeBuff.DefUp].value;
+    otherAdd = otherAdd + Astrolabe.GetAttribute(EAstrolabeAttribute.Def);
+    otherAdd = otherAdd + currentRole:GetAttribute(EAttribute.Buff, EAttribute.Def);
+    otherAdd = otherAdd + currentRole:GetAttribute(EAttribute.Turn3Def);
+    otherAdd = otherAdd + math.floor((Mounts.GetAttribute(EAttribute.Def) + Mounts.GetAttribute(EAttribute.EquipDef)) * Mounts.collectionBonus);
+    --NFT收集加成
+    if shineAtts[EAttribute.Def] ~= nil then
+      otherAdd = otherAdd + shineAtts[EAttribute.Def];
+    end
+  elseif currentRole == Role.fightNpc then
+    otherAdd = otherAdd + DrugBuff.GetAttribute(EDrugAttribute.Def);
+  end
+  otherAdd = otherAdd + CollectStyle.GetAttribute(EAttribute.Def);
+  otherAdd = otherAdd + CollectCard.GetAttribute(EAttribute.Def);
+  
+  percentValue = math.round(currentRole:GetAttribute(EAttribute.Def) * (100 + currentRole:GetAttribute(EAttribute.DefPercent)) * 0.01);
+  attComponents[3].text_Attribute.text = percentValue + equipAdd + otherAdd;
+
+  --Hpx
+  equipAdd = currentRole:GetAttribute(EAttribute.EquipHpx);
+  otherAdd = 0;
+  if currentRole == Role.player then
+    otherAdd = otherAdd + DrugBuff.GetAttribute(EDrugAttribute.Hpx);
+    otherAdd = otherAdd + DrugBuff.timeBuffs[ETimeBuff.HpxUp].value;
+    otherAdd = otherAdd + Astrolabe.GetAttribute(EAstrolabeAttribute.Hpx);
+    otherAdd = otherAdd + currentRole:GetAttribute(EAttribute.Buff, EAttribute.Hpx);
+    otherAdd = otherAdd + currentRole:GetAttribute(EAttribute.Turn3Hpx);
+    --NFT收集加成
+    if shineAtts[EAttribute.Hpx] ~= nil then
+      otherAdd = otherAdd + shineAtts[EAttribute.Hpx];
+    end
+  elseif currentRole == Role.fightNpc then
+    otherAdd = otherAdd + DrugBuff.GetAttribute(EDrugAttribute.Hpx);
+  end
+  otherAdd = otherAdd + CollectStyle.GetAttribute(EAttribute.Hpx);
+  otherAdd = otherAdd + CollectCard.GetAttribute(EAttribute.Hpx);
+
+  attComponents[4].text_Attribute.text = currentRole:GetAttribute(EAttribute.Hpx) + equipAdd + otherAdd;
+
+  --Spx
+  equipAdd = currentRole:GetAttribute(EAttribute.EquipSpx);
+  otherAdd = 0;
+  if currentRole == Role.player then
+    otherAdd = otherAdd + DrugBuff.GetAttribute(EDrugAttribute.Spx);
+    otherAdd = otherAdd + DrugBuff.timeBuffs[ETimeBuff.SpxUp].value;
+    otherAdd = otherAdd + Astrolabe.GetAttribute(EAstrolabeAttribute.Spx);
+    otherAdd = otherAdd + currentRole:GetAttribute(EAttribute.Buff, EAttribute.Spx);
+    otherAdd = otherAdd + currentRole:GetAttribute(EAttribute.Turn3Spx);
+    --NFT收集加成
+    if shineAtts[EAttribute.Spx] ~= nil then
+      otherAdd = otherAdd + shineAtts[EAttribute.Spx];
+    end
+  elseif currentRole == Role.fightNpc then
+    otherAdd = otherAdd + DrugBuff.GetAttribute(EDrugAttribute.Spx);
+  end
+  otherAdd = otherAdd + CollectStyle.GetAttribute(EAttribute.Spx);
+  otherAdd = otherAdd + CollectCard.GetAttribute(EAttribute.Spx);
+
+  attComponents[5].text_Attribute.text = currentRole:GetAttribute(EAttribute.Spx) + equipAdd + otherAdd;
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --Agi
+  equipAdd = currentRole:GetAttribute(EAttribute.EquipAgi);
+  otherAdd = 0;
+  if currentRole == Role.player then
+    otherAdd = otherAdd + DrugBuff.GetAttribute(EDrugAttribute.Agi);
+    otherAdd = otherAdd + DrugBuff.timeBuffs[ETimeBuff.AgiUp].value;
+    otherAdd = otherAdd + Astrolabe.GetAttribute(EAstrolabeAttribute.Agi);
+    otherAdd = otherAdd + currentRole:GetAttribute(EAttribute.Buff, EAttribute.Agi);
+    otherAdd = otherAdd + currentRole:GetAttribute(EAttribute.Turn3Agi);
+    --NFT收集加成
+    if shineAtts[EAttribute.Agi] ~= nil then
+      otherAdd = otherAdd + shineAtts[EAttribute.Agi];
+    end
+  elseif currentRole == Role.fightNpc then
+    otherAdd = otherAdd + DrugBuff.GetAttribute(EDrugAttribute.Agi);
+  end
+  otherAdd = otherAdd + CollectStyle.GetAttribute(EAttribute.Agi);
+  otherAdd = otherAdd + CollectCard.GetAttribute(EAttribute.Agi);
+
+  attComponents[6].text_Attribute.text = currentRole:GetAttribute(EAttribute.Agi) + equipAdd + otherAdd;
 
   if reset then
     for i = 1, 6 do
@@ -920,11 +1138,73 @@ function UIStatus.UpdateStatusAdd()
     end
 
     --point
+   -- text_Point.text = "POINT";
     text_Point.text = string.Get(22450);
     text_AttributePoint.text = point - count;
 
     --submit
     if count > 0 then
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+  
       event_AttributeSubmit.gameObject:SetActive(true);
       event_AttributeSubmit:SetColor(Color.White);
 
@@ -948,6 +1228,8 @@ function UIStatus.UpdateStatusAdd()
       end
     end
   else
+    --local shineAtts = Calc.GetCollectNFT();
+    
     for i = 1, 6 do
       --lock
       attComponents[i].image_Lock.gameObject:SetActive(i == currentRole.data.graspPill.index);
@@ -974,28 +1256,40 @@ function UIStatus.UpdateStatusAdd()
 
       if i == 1 then
         oriValue = currentRole:GetAttribute(EAttribute.Int);
-        equipAdd = currentRole:GetAttribute(EAttribute.EquipInt);
+        equipAdd = currentRole:GetAttribute(EAttribute.EquipInt) + math.round(currentRole:GetAttribute(EAttribute.Int) * (currentRole:GetAttribute(EAttribute.IntPercent) * 0.01));
         if currentRole == Role.fightNpc then
           otherAdd = DrugBuff.GetAttribute(EDrugAttribute.Int);
         end
         otherAdd = otherAdd + CollectCard.GetAttribute(EAttribute.Int);
         otherAdd = otherAdd + CollectStyle.GetAttribute(EAttribute.Int);
+        --NFT收集加成
+        --if shineAtts[EAttribute.Int] ~= nil then
+        --  otherAdd = otherAdd + shineAtts[EAttribute.Int];
+        --end
       elseif i == 2 then
         oriValue = currentRole:GetAttribute(EAttribute.Atk);
-        equipAdd = currentRole:GetAttribute(EAttribute.EquipAtk);
+        equipAdd = currentRole:GetAttribute(EAttribute.EquipAtk) + math.round(currentRole:GetAttribute(EAttribute.Atk) * (currentRole:GetAttribute(EAttribute.AtkPercent) * 0.01));
         if currentRole == Role.fightNpc then
           otherAdd = DrugBuff.GetAttribute(EDrugAttribute.Atk);
         end
         otherAdd = otherAdd + CollectCard.GetAttribute(EAttribute.Atk);
         otherAdd = otherAdd + CollectStyle.GetAttribute(EAttribute.Atk);
+        --NFT收集加成
+        --if shineAtts[EAttribute.Atk] ~= nil then
+        --  otherAdd = otherAdd + shineAtts[EAttribute.Atk];
+        --end
       elseif i == 3 then
         oriValue = currentRole:GetAttribute(EAttribute.Def);
-        equipAdd = currentRole:GetAttribute(EAttribute.EquipDef);
+        equipAdd = currentRole:GetAttribute(EAttribute.EquipDef) + math.round(currentRole:GetAttribute(EAttribute.Def) * (currentRole:GetAttribute(EAttribute.DefPercent) * 0.01));
         if currentRole == Role.fightNpc then
           otherAdd = DrugBuff.GetAttribute(EDrugAttribute.Def);
         end
         otherAdd = otherAdd + CollectCard.GetAttribute(EAttribute.Def);
         otherAdd = otherAdd + CollectStyle.GetAttribute(EAttribute.Def);
+        --NFT收集加成
+        --if shineAtts[EAttribute.Def] ~= nil then
+        --  otherAdd = otherAdd + shineAtts[EAttribute.Def];
+        --end
       elseif i == 4 then
         oriValue = currentRole:GetAttribute(EAttribute.Hpx);
         equipAdd = currentRole:GetAttribute(EAttribute.EquipHpx);
@@ -1004,6 +1298,31 @@ function UIStatus.UpdateStatusAdd()
         end
         otherAdd = otherAdd + CollectCard.GetAttribute(EAttribute.Hpx);
         otherAdd = otherAdd + CollectStyle.GetAttribute(EAttribute.Hpx);
+        --NFT收集加成
+        --if shineAtts[EAttribute.Hpx] ~= nil then
+        --  otherAdd = otherAdd + shineAtts[EAttribute.Hpx];
+        --end
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+
       elseif i == 5 then
         oriValue = currentRole:GetAttribute(EAttribute.Spx);
         equipAdd = currentRole:GetAttribute(EAttribute.EquipSpx);
@@ -1012,6 +1331,10 @@ function UIStatus.UpdateStatusAdd()
         end
         otherAdd = otherAdd + CollectCard.GetAttribute(EAttribute.Spx);
         otherAdd = otherAdd + CollectStyle.GetAttribute(EAttribute.Spx);
+        --NFT收集加成
+        --if shineAtts[EAttribute.Spx] ~= nil then
+        --  otherAdd = otherAdd + shineAtts[EAttribute.Spx];
+        --end
       elseif i == 6 then
         oriValue = currentRole:GetAttribute(EAttribute.Agi);
         equipAdd = currentRole:GetAttribute(EAttribute.EquipAgi);
@@ -1020,20 +1343,52 @@ function UIStatus.UpdateStatusAdd()
         end
         otherAdd = otherAdd + CollectCard.GetAttribute(EAttribute.Agi);
         otherAdd = otherAdd + CollectStyle.GetAttribute(EAttribute.Agi);
+        --NFT收集加成
+        --if shineAtts[EAttribute.Agi] ~= nil then
+        --  otherAdd = otherAdd + shineAtts[EAttribute.Agi];
+        --end
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+
+        
       end
 
       if Role.rebornKind == 1 then
         rebornValue = oriValue + Role.rebornAttributes[i];
+        if oriValue > rebornValue then
+          attComponents[i].text_Reborn.text = string.GetColorText(tostring(attComponents[i].text_Attribute.text + Role.rebornAttributes[i]), Color.Red);
+        elseif oriValue < rebornValue then
+          attComponents[i].text_Reborn.text = string.GetColorText(tostring(attComponents[i].text_Attribute.text + Role.rebornAttributes[i]), Color.DarkGreen);
+        else
+          attComponents[i].text_Reborn.text = string.GetColorText(tostring(attComponents[i].text_Attribute.text + Role.rebornAttributes[i]), Color.Black);
+        end
       elseif Role.rebornKind == 2 then
         rebornValue = npcDatas[currentRole.npcId].attributes[i] + Role.rebornAttributes[i];
-      end
-
-      if oriValue > rebornValue then
-        attComponents[i].text_Reborn.text = string.GetColorText(tostring(rebornValue + equipAdd + otherAdd), Color.Red);
-      elseif oriValue < rebornValue then
-        attComponents[i].text_Reborn.text = string.GetColorText(tostring(rebornValue + equipAdd + otherAdd), Color.DarkGreen);
-      else
-        attComponents[i].text_Reborn.text = string.GetColorText(tostring(rebornValue + equipAdd + otherAdd), Color.Black);
+        if oriValue > rebornValue then
+          attComponents[i].text_Reborn.text = string.GetColorText(tostring(rebornValue + equipAdd + otherAdd), Color.Red);
+        elseif oriValue < rebornValue then
+          attComponents[i].text_Reborn.text = string.GetColorText(tostring(rebornValue + equipAdd + otherAdd), Color.DarkGreen);
+        else
+          attComponents[i].text_Reborn.text = string.GetColorText(tostring(rebornValue + equipAdd + otherAdd), Color.Black);
+        end
       end
 
       --add
@@ -1100,6 +1455,27 @@ function UIStatus.UpdateStatusAdd()
       elseif Role.rebornKind == 2 then
         text_AttributeSubmit.text = string.Get(20990);
         text_AttributeReset.text = string.Get(20073);
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+
       end
 
     else
@@ -1178,6 +1554,48 @@ function UIStatus.UpdateStatusAdd()
         end
 
         text_AttributeReset.text = string.Get(71293);
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+  
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+
       end
     end
   end
@@ -1214,7 +1632,9 @@ function UIStatus.UpdateEquip(reopenBag)
       nil,
       nil,
       true,
-      false
+      false,
+      nil,
+      true
     );
   end
 
@@ -1225,6 +1645,81 @@ function UIStatus.UpdateEquip(reopenBag)
   for i = 1, Role.maxEquip do
     this.ShowRoleEquips(Item.GetBagItem(EThings.Equip, i, currentFollowIndex), i);
   end
+end
+
+function UIStatus.OpenLauncherBar(bagKind, bagIndex, followIndex)
+  if not Contains(Role.player.war, EWar.None, EWar.Guest) then
+    ShowCenterMessage(string.Get(80099));
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+  
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+  
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+  
+    return;
+  end
+
+  local itemSave = Item.GetBagItem(bagKind, bagIndex);
+  if itemSave == nil then return end
+
+  Hotkey.Show(Role.player, EHotkeyDisplayMode.SingleItem, itemSave.Id);
 end
 
 function UIStatus.UpdateStyle(reopenBag)
@@ -1243,7 +1738,7 @@ function UIStatus.UpdateStyle(reopenBag)
         if itemSave.isVender then return false end
         if itemSave.isDeliver then return false end
         if fashionStressDatas[itemSave.Id] ~= nil then return true end
-
+      
         return false;
       end,
       true,
@@ -1263,7 +1758,7 @@ end
 function UIStatus.UpdateOutfitStyle(reopenbag)
   if currentTag ~= EUIStatusTag.OutfitStyle then return end
   --outfit背包
-
+  
   if reopenbag == true then
     UI.Open(UIBag,
       function(bagIndex, itemId)
@@ -1286,21 +1781,42 @@ function UIStatus.UpdateOutfitStyle(reopenbag)
       EThings.OutfitStyleInCollection
     );
   end
-
+  
   --身上裝備
   item_Equips[EItemFitType.Equip_Spec].transform.parent.gameObject:SetActive(false);
-
+  
   if currentRole == nil then return end
-
+  
   for i = EItemFitType.OutfitStyle_Head, EItemFitType.OutfitStyle_Boots do
     this.ShowRoleEquips(Item.GetBagItem(EThings.Equip, i, 0),i - EItemFitType.Equip_Spec - Role.maxOutfitStyle);
   end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+
 
 end
 
 function UIStatus.UpdateOutfitStyleHintAndIcon()
   if not Contains(currentTag, EUIStatusTag.Style, EUIStatusTag.OutfitStyle) then return end
-
+  
   if currentTag == EUIStatusTag.Style then
     image_SwitchOutfitStyle.sprite = UI.GetSprite("but261D");
     text_switchOutfitStyleButText.text = string.Get(23643);
@@ -1337,12 +1853,7 @@ function UIStatus.OpenItemInfo(itemId, bagIndex)
     elseif itemData.kind == EItemKind.CityWeapon then
       UI.Open(UIItemInfo, EThings.Bag, bagIndex, currentFollowIndex, string.Get(22120), Item.DropItem);
     else
-      convertPage = UILoginAward.GetConverItemPage(itemData.Id);
-      if convertPage > 0 then
-        UI.Open(UIItemInfo, EThings.Bag, bagIndex, currentFollowIndex, string.Get(98025), Item.DropItem, string.Get(20253), this.ShowConvertPage);
-      else
-        UI.Open(UIItemInfo, EThings.Bag, bagIndex, currentFollowIndex, string.Get(98025), Item.DropItem);
-      end
+      UI.Open(UIItemInfo, EThings.Bag, bagIndex, currentFollowIndex, string.Get(98025), Item.DropItem);
     end
   elseif BlissBagData.IsBlissBag(itemId) then
     if itemData.specialAbility  ==  EItemUseKind.LockBlissBag then
@@ -1350,12 +1861,7 @@ function UIStatus.OpenItemInfo(itemId, bagIndex)
     elseif itemData.specialAbility == EItemUseKind.ArmyBlissBag then
       UI.Open(UIItemInfo, EThings.Bag, bagIndex, currentFollowIndex, string.Get(98025), Item.DropItem, string.Get(22885), Item.UseItem);
     else
-      convertPage = UILoginAward.GetConverItemPage(itemData.Id);
-      if convertPage > 0 then
-        UI.Open(UIItemInfo, EThings.Bag, bagIndex, currentFollowIndex, string.Get(98025), Item.DropItem, string.Get(20253), this.ShowConvertPage, string.Get(40314), Item.UseItem);
-      else
-        UI.Open(UIItemInfo, EThings.Bag, bagIndex, currentFollowIndex, string.Get(98025), Item.DropItem, string.Get(40314), Item.UseItem);
-      end
+      UI.Open(UIItemInfo, EThings.Bag, bagIndex, currentFollowIndex, string.Get(98025), Item.DropItem, string.Get(40314), Item.UseItem);
     end
   elseif Item.CheckHotKeyItemID(itemId) then
     UI.Open(UIItemInfo, EThings.Bag, bagIndex, currentFollowIndex, string.Get(98025), Item.DropItem, string.Get(40314), Item.UseItem, string.Get(98026), this.OpenLauncherBar);
@@ -1368,6 +1874,27 @@ function UIStatus.OpenItemInfo(itemId, bagIndex)
       UI.Open(UIItemInfo, EThings.Bag, bagIndex, currentFollowIndex, string.Get(98025), Item.DropItem, string.Get(21026), Item.Dismantle,string.Get(20165), Item.UseItem, string.Get(20869), ExclusiveWeapon.ViewSkill);
     else
       UI.Open(UIItemInfo, EThings.Bag, bagIndex, currentFollowIndex, string.Get(98025), Item.DropItem, string.Get(20165), Item.UseItem);
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+
     end
   elseif Item.IsTypeOfEquips(itemData.fitType) then
     local styleFinded = false;
@@ -1391,56 +1918,50 @@ function UIStatus.OpenItemInfo(itemId, bagIndex)
             break;
           end
         end
-
+        
         if styleFinded then
           break;
         end
       end
       if Item.IsDismantle(itemData) then
-        convertPage = UILoginAward.GetConverItemPage(itemData.Id);
-        if convertPage > 0 then
-          UI.Open(UIItemInfo, EThings.Bag, bagIndex, currentFollowIndex, string.Get(98025), Item.DropItem, string.Get(21026), Item.Dismantle, string.Get(20253), this.ShowConvertPage, string.Get(20165), outfitStylefunction, styleText, styleFunc);
-        else
-          UI.Open(UIItemInfo, EThings.Bag, bagIndex, currentFollowIndex, string.Get(98025), Item.DropItem, string.Get(21026), Item.Dismantle, string.Get(20165), outfitStylefunction, styleText, styleFunc);
-        end
-
+        UI.Open(UIItemInfo, EThings.Bag, bagIndex, currentFollowIndex, string.Get(98025), Item.DropItem, string.Get(21026), Item.Dismantle, string.Get(20165), outfitStylefunction, styleText, styleFunc);
       else
         UI.Open(UIItemInfo, EThings.Bag, bagIndex, currentFollowIndex, string.Get(98025), Item.DropItem, string.Get(20165), outfitStylefunction, styleText, styleFunc);
       end
     else
       if Item.IsDismantle(itemData) then
-        convertPage = UILoginAward.GetConverItemPage(itemData.Id);
-        if convertPage > 0 then
-          UI.Open(UIItemInfo, EThings.Bag, bagIndex, currentFollowIndex, string.Get(98025), Item.DropItem, string.Get(21026), Item.Dismantle, string.Get(20253), this.ShowConvertPage, string.Get(20165), Item.UseItem);
-        else
-          UI.Open(UIItemInfo, EThings.Bag, bagIndex, currentFollowIndex, string.Get(98025), Item.DropItem, string.Get(21026), Item.Dismantle, string.Get(20165), Item.UseItem);
-        end
+        UI.Open(UIItemInfo, EThings.Bag, bagIndex, currentFollowIndex, string.Get(98025), Item.DropItem, string.Get(21026), Item.Dismantle, string.Get(20165), Item.UseItem);
       else
-        convertPage = UILoginAward.GetConverItemPage(itemData.Id);
-        if convertPage > 0 then
-          UI.Open(UIItemInfo, EThings.Bag, bagIndex, currentFollowIndex, string.Get(98025), Item.DropItem, string.Get(20253), this.ShowConvertPage, string.Get(20165), Item.UseItem);
-        else
-          UI.Open(UIItemInfo, EThings.Bag, bagIndex, currentFollowIndex, string.Get(98025), Item.DropItem, string.Get(20165), Item.UseItem);
-        end
+        UI.Open(UIItemInfo, EThings.Bag, bagIndex, currentFollowIndex, string.Get(98025), Item.DropItem, string.Get(20165), Item.UseItem);
       end
     end
   else
     if Item.IsDismantle(itemData) then
-      convertPage = UILoginAward.GetConverItemPage(itemData.Id);
-      if convertPage > 0 then
-        UI.Open(UIItemInfo, EThings.Bag, bagIndex, currentFollowIndex, string.Get(98025), Item.DropItem, string.Get(21026), Item.Dismantle, string.Get(20253), this.ShowConvertPage, string.Get(40314), Item.UseItem);
-      else
-        UI.Open(UIItemInfo, EThings.Bag, bagIndex, currentFollowIndex, string.Get(98025), Item.DropItem, string.Get(21026), Item.Dismantle, string.Get(40314), Item.UseItem);
-      end
-
+      UI.Open(UIItemInfo, EThings.Bag, bagIndex, currentFollowIndex, string.Get(98025), Item.DropItem, string.Get(21026), Item.Dismantle, string.Get(40314), Item.UseItem);
     else
-      convertPage = UILoginAward.GetConverItemPage(itemData.Id);
-      if convertPage > 0 then
-        UI.Open(UIItemInfo, EThings.Bag, bagIndex, currentFollowIndex, string.Get(98025), Item.DropItem, string.Get(20253), this.ShowConvertPage, string.Get(40314), Item.UseItem);
-      else
-        UI.Open(UIItemInfo, EThings.Bag, bagIndex, currentFollowIndex, string.Get(98025), Item.DropItem, string.Get(40314), Item.UseItem);
-      end
+      UI.Open(UIItemInfo, EThings.Bag, bagIndex, currentFollowIndex, string.Get(98025), Item.DropItem, string.Get(40314), Item.UseItem);
     end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+
   end
 end
 
@@ -1458,7 +1979,27 @@ end
 
 function UIStatus.UpdateSell()
   if currentTag ~= EUIStatusTag.Sell then return end
-
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
   UI.Open(UIBag,
     function(bagIndex, itemId)
       UI.Open(UIItemInfo, EThings.Bag, bagIndex, 0,
@@ -1477,17 +2018,17 @@ function UIStatus.UpdateSell()
               function(value)
                 if value == nil or tonumber(value) <= 0 then return end
 
-                --C:027-002 <賣東西> +背包索引(1) +數量(4)
+                --C:027-002 <賣東西> +背包索引(2) +數量(4)
                 sendBuffer:Clear();
-                sendBuffer:WriteByte(bagIndex);
+                sendBuffer:WriteUInt16(bagIndex);
                 sendBuffer:WriteInt32(math.min(itemSave.quant, tonumber(value)));
                 Network.Send(27, 2, sendBuffer);
               end
             );
           else
-            --C:027-002 <賣東西> +背包索引(1) +數量(4)
+            --C:027-002 <賣東西> +背包索引(2) +數量(4)
             sendBuffer:Clear();
-            sendBuffer:WriteByte(bagIndex);
+            sendBuffer:WriteUInt16(bagIndex);
             sendBuffer:WriteInt32(1);
             Network.Send(27, 2, sendBuffer);
           end
@@ -1603,6 +2144,27 @@ function UIStatus.UpdateFightStyle(reopenBag)
           funName = string.Get(20165); --裝備
         else
           funName = string.Get(40314); --使用
+          --5-----------------------------------------------------
+          if LuaHelper.CheckDefine("DemoCode") then
+            --
+          end
+          --6-----------------------------------------------------
+          --5-----------------------------------------------------
+          if LuaHelper.CheckDefine("DemoCode") then
+            --
+          end
+          --6-----------------------------------------------------
+          --5-----------------------------------------------------
+          if LuaHelper.CheckDefine("DemoCode") then
+            --
+          end
+          --6-----------------------------------------------------
+          --5-----------------------------------------------------
+          if LuaHelper.CheckDefine("DemoCode") then
+            --
+          end
+          --6-----------------------------------------------------
+
         end
 
         UI.Open(UIItemInfo, EThings.Bag, bagIndex, currentFollowIndex, funName, Item.UseItem);
@@ -1638,23 +2200,29 @@ function UIStatus.UpdateFightStyle(reopenBag)
 end
 
 function UIStatus.UpdateDetail()
-  if not showDetail then
-    showTreasureDetail = false;
-    gameObject_TreasureDetailRoot:SetActive(showTreasureDetail);
-    return;
+  if not showDetail then return end
+  UIStatusGameObject[EUIStatusGameObject.Detail]:ShowInfo(currentRole, attComponents);
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
   end
-
-  if not showTreasureDetail then
-    image_OtherDetail.sprite = UI.GetSprite("but318D");
-  else
-    image_OtherDetail.sprite = UI.GetSprite("but318L");
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
   end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 
-  detailArrow:SetActive(not Contains(currentTag,EUIStatusTag.Breakthrough ,EUIStatusTag.Style, EUIStatusTag.OutfitStyle));
-  gameObject_TreasureDetailRoot:SetActive(showTreasureDetail and Contains(currentTag, EUIStatusTag.Status ,EUIStatusTag.Moral));
-
-  detailUI:ShowInfo(currentRole, attComponents);
-  treasureDetailUI:ShowInfo();
 end
 
 function UIStatus.UpdateAstrolabe()
@@ -1664,13 +2232,6 @@ function UIStatus.UpdateAstrolabe()
 
   local needPoint = 0;
   local needMoney = 0;
-
-  if astrolabeShowTimer > 0 and not CGTimer.ContainsListener(this.UpdateAstrolabeAnimation) then
-    CGTimer.AddListener(this.UpdateAstrolabeAnimation, CGTimer.deltaTime);
-  else
-    CGTimer.RemoveListener(this.UpdateAstrolabeAnimation);
-  end
-
   if Astrolabe.starLv[nextStar] < Astrolabe.maxAstrolabeLv then
     needPoint = astrolabeDatas[nextStar].attributes[Astrolabe.starLv[nextStar] + 1].needPoint;
     needMoney = math.pow(Astrolabe.starLv[nextStar] + 1, 2) * 10000;
@@ -1701,7 +2262,6 @@ function UIStatus.UpdateAstrolabe()
 
   TextureManager.SetPng(ETextureUseType.UI, "Astrolabe_BG", rawImage_AstrolabeBG);
   TextureManager.SetPng(ETextureUseType.UI, "Astrolabe_BadoB07", rawImage_AstrolabePoint);
-
   for i = 1, Astrolabe.maxAstrolabe do
     TextureManager.SetPng(ETextureUseType.UI, "Astrolabe_Ball", rawImage_AstrolabeBall[i]);
 
@@ -1715,22 +2275,6 @@ function UIStatus.UpdateAstrolabe()
   end
 end
 
-function UIStatus.UpdateAstrolabeAnimation()
-  if astrolabeShowTimer > 0 then
-    astrolabeShowTimer = astrolabeShowTimer - CGTimer.deltaTime;
-
-    if astrolabeShowTimer > 0 then
-      LuaHelper.SetColor(image_AstrolabeMask, LuaHelper.GetColor(255, 255, 255, 255 * ((Astrolabe.levelUpShowTime - astrolabeShowTimer) / Astrolabe.levelUpShowTime)));
-    else
-      astrolabeShowTimer = 0;
-      LuaHelper.SetColor(image_AstrolabeMask, Color.Alpha);
-
-      ShowCenterMessage(string.Get(71331));
-      this.UpdateAstrolabe();
-    end
-  end
-end
-
 function UIStatus.UpdateHomePage()
   if not HouseBoard.FeatureIsOpen() then return end
   if currentTag == EUIStatusTag.Profile then
@@ -1738,14 +2282,33 @@ function UIStatus.UpdateHomePage()
     HouseBoard.SendOpenBoardRequest(Role.playerId);
   else
     UI.Close(UIHouseBoard, true);
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+
   end
 end
 
 function UIStatus.UpdateBreakthrough(reopenBag)
   if currentTag ~= EUIStatusTag.Breakthrough then return end
-
   RedDot.Remove(ERedDot.Breakthrough);
-
   if currentRole ~= Role.player then
     currentRole = Role.player;
     text_Name.text = currentRole.name;
@@ -1769,99 +2332,139 @@ function UIStatus.UpdateBreakthrough(reopenBag)
 
   Breakthrough.UpdateBreakthroughBar();
   UIStatus.RefreshBreakthrough();
-
   text_BreakthroughLevel.text = Breakthrough.GetBreakthroughLevelText();
 end
 
-function UIStatus.UpdateAttSet(reset)
-  if currentTag ~= EUIStatusTag.AttSet then return end
+function UIStatus.AstrolabeLevelUp()
+  astrolabeShowTimer = Astrolabe.levelUpShowTime;
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 
-  if reset then
-    this.UpdateAttSetEditing(false);
+end
+
+function UIStatus.OnClick_Close()
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  UI.Close(UIStatus);
+
+  return true;
+end
+
+function UIStatus.OnClick_Help(checkShow)
+  if currentTag == EUIStatusTag.Status then
+    if checkShow ~= true then
+      UI.Open(UITutorialHint, 11, this);
+    end
+  elseif currentTag == EUIStatusTag.Moral then
+    if checkShow ~= true then
+      UI.Open(UITutorialHint, 12, this);
+    end
+  elseif currentTag == EUIStatusTag.Astrolabe then
+    if checkShow ~= true then
+      UI.Open(UITutorialHint, 44, this);
+    end
+  elseif HouseBoard.FeatureIsOpen() and currentTag == EUIStatusTag.Profile then
+    if checkShow ~= true then
+      UI.Open(UITutorialHint, 0, this, string.Get(23356), string.Get(24127));
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+
+    end
+  elseif currentTag == EUIStatusTag.Style or currentTag == EUIStatusTag.OutfitStyle then
+    if checkShow ~= true then
+      UI.Open(UITutorialHint, 59, this);
+    end
   else
-    this.UpdateAttSetEditing();
+    return false;
   end
 
-  this.UpdateAttSetAttribute();
-  this.UpdateAttSetAdd();
-  this.UpdateAttSetName();
+  return true;
 end
 
-function UIStatus.UpdateAttSetName()
-  text_AttSetName.text = Status.GetCurrentAttSet().name;
-  scrollContent_AttSet:Refresh();
-end
+function UIStatus.OnClick_Tag(mainTag, subTag)
+  if Contains(currentTag, EUIStatusTag.Sell, EUIStatusTag.ChatPaste) then return false end
 
-function UIStatus.UpdateAttSetAttribute()
-  local baseValue;
-  local equipAdd;
-  local otherAdd;
-  local attSet = Status.GetCurrentAttSet();
-  local sumPoints = 0;
-
-  for i = 1, 6 do
-    baseValue, equipAdd, otherAdd = Status.GetStatusAttribute(currentRole, i);
-    baseValue = attSet.att[i];
-    sumPoints = sumPoints + baseValue;
-
-    local attText;
-
-    if equipAdd >= 0 then
-      attText = string.Concat(" + ", equipAdd)
+  if Contains(currentTag, EUIStatusTag.FightEquip, EUIStatusTag.FightStyle) then
+    if FightField.GetConFightRoleKind() == EHuman.FollowNpc then
+      if not Contains(mainTag + tagOffset, EUIStatusTag.FightEquip) then
+        return false;
+      end
     else
-      attText = equipAdd;
+      if not Contains(mainTag + tagOffset, EUIStatusTag.FightEquip, EUIStatusTag.FightStyle) then
+        return false;
+      end
     end
-
-    if otherAdd >= 0 then
-      attText = string.Concat(attText, " + ", otherAdd)
-    else
-      attText = string.Concat(attText, otherAdd)
-    end
-
-    attText = string.Concat(attText, " = ", (baseValue + equipAdd + otherAdd));
-    attText = string.GetColorText(attText, Color.Black);
-    attText = string.Concat(baseValue, attText);
-    attSetComponents[i].text_Attribute.text = attText;
   end
 
-  text_AttSetName.text = attSet.name;
-  text_AttSetSumPoint.text = sumPoints;
+  currentTag = mainTag + tagOffset;
+
+  if Contains(currentTag, EUIStatusTag.Style,EUIStatusTag.OutfitStyle, EUIStatusTag.FightStyle) then
+    currentFollowIndex = 0;
+    currentRole = Role.player;
+  end
+
+  upgradeNpcId = 0;
+
+  this.UpdateUI(true, true);
+
+  return true;
 end
 
-function UIStatus.UpdateAttSetEditing(editing)
-  if editing ~= nil then
-    editingAttSet = editing;
-  end
-
-  text_AttSetRemainPoint.gameObject:SetActive(editingAttSet);
-  gameObject_AttSetFunction:SetActive(not editingAttSet);
-  gameObject_EditAttSetFunction:SetActive(editingAttSet);
-
-  for i = 1, 6 do
-    attSetComponents[i].image_PointBG.gameObject:SetActive(editingAttSet);
-  end
-end
-
-function UIStatus.UpdateAttSetAdd()
-  if editingAttSet then
-    attSetRemainPoint = currentRole:GetAttribute(EAttribute.AttrPoint);
-
-    for i = 1, 6 do
-      attSetComponents[i].text_Add.text = attSetComponents[i].add;
-      attSetRemainPoint = attSetRemainPoint + Status.GetStatusAttribute(currentRole, i) - attSetComponents[i].add;
-    end
-
-    if attSetRemainPoint < 0 then
-      text_AttSetRemainPoint.text = string.GetColorText(attSetRemainPoint, Color.Red);
-    else
-      text_AttSetRemainPoint.text = attSetRemainPoint;
-    end
-  end
-end
-
---endregion
-
-  --region onclick
 function UIStatus.OnClick_Equip(uiEvent)
   if currentTag == EUIStatusTag.Sell then return end
   if not Contains(currentTag, EUIStatusTag.Equip, EUIStatusTag.Style, EUIStatusTag.OutfitStyle, EUIStatusTag.ChatPaste, EUIStatusTag.FightEquip, EUIStatusTag.FightStyle) then return end
@@ -1874,10 +2477,10 @@ function UIStatus.OnClick_Equip(uiEvent)
   elseif currentTag == EUIStatusTag.OutfitStyle then
     fitType = fitType + EItemFitType.Equip_Spec + Role.maxOutfitStyle;
   end
-
+  
   local  itemSave;
   if currentTag ~= EUIStatusTag.OutfitStyle then
-    itemSave = Item.GetBagItem(EThings.Equip, fitType, currentFollowIndex);
+     itemSave = Item.GetBagItem(EThings.Equip, fitType, currentFollowIndex);
   end
 
   if currentTag == EUIStatusTag.ChatPaste then
@@ -1902,6 +2505,27 @@ function UIStatus.OnClick_Equip(uiEvent)
     if itemSave ~= nil and itemDatas[itemSave.Id] ~= nil and itemDatas[itemSave.Id].kind == EItemKind.ExclusiveWeapon then
       UI.Open(UIItemInfo, EThings.Equip, fitType, currentFollowIndex, string.Get(98003), Item.UnEquip, string.Get(20869), ExclusiveWeapon.ViewSkill);
     else
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+  
       UI.Open(UIItemInfo, EThings.Equip, fitType, currentFollowIndex, string.Get(98003), Item.UnEquip);
     end
   end
@@ -1950,8 +2574,29 @@ function UIStatus.OnClick_SwitchRole(uiEvent)
   this.UpdateUI(nil, true);
 end
 
-function UIStatus.OnClick_Share()
+function UIStatus.OnClick_Share(uiEvent)
   Chat.AddNpcMessage(currentRole);
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+
 end
 
 function UIStatus.OnClick_AttributeEnter(uiEvent)
@@ -1969,8 +2614,64 @@ function UIStatus.OnClick_AttributeEnter(uiEvent)
   );
 end
 
+function UIStatus.OnClick_AttributeAdd(uiEvent)
+  local index = uiEvent.parameter;
+
+  if tonumber(text_AttributePoint.text) < 1 then return end
+
+  attComponents[index].add = attComponents[index].add + 1;
+
+  this.UpdateStatusAdd();
+  this.UpdateDetail();
+end
+
+function UIStatus.OnClick_AttributeDec(uiEvent)
+  local index = uiEvent.parameter;
+
+  if attComponents[index].add < 1 then return end
+
+  attComponents[index].add = attComponents[index].add - 1;
+
+  this.UpdateStatusAdd();
+  this.UpdateDetail();
+end
+
+function UIStatus.OnClick_AttributeFastAdd(uiEvent)
+  local index = uiEvent.parameter;
+  local attributePoint = tonumber(text_AttributePoint.text);
+  if attributePoint < 1 then return end
+  local addPoint;
+  if attributePoint < attributeFastPoint then
+    addPoint = attributePoint;
+  else
+    addPoint = attributeFastPoint;
+  end
+  attComponents[index].add = attComponents[index].add + addPoint;
+
+  this.UpdateStatusAdd();
+  this.UpdateDetail();
+end
+
+function UIStatus.OnClick_AttributeFastDec(uiEvent)
+  local index = uiEvent.parameter;
+  local decreasePoint;
+  if attComponents[index].add < 1 then return end
+  if attComponents[index].add < attributeFastPoint then
+    decreasePoint = attComponents[index].add;
+  else
+    decreasePoint = attributeFastPoint;
+  end
+
+  attComponents[index].add = attComponents[index].add - decreasePoint;
+
+  this.UpdateStatusAdd();
+  this.UpdateDetail();
+
+end
+
 function UIStatus.OnClick_AttributeLock(uiEvent)
-  if currentRole.kind ~= EHuman.Player then
+  if currentRole.kind == EHuman.Player then
+  else
     --領悟丹
     if Contains(currentRole.data.canGrow, 0, 2) then
       ShowCenterMessage(string.Get(40333));
@@ -1991,14 +2692,77 @@ function UIStatus.OnClick_AttributeLock(uiEvent)
       UISell.Launch(18, nil, currentRole.index);
     elseif uiEvent.parameter == 2 then
       UISell.Launch(19, nil, currentRole.index);
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+
     elseif uiEvent.parameter == 3 then
       UISell.Launch(20, nil, currentRole.index);
     elseif uiEvent.parameter == 4 then
       UISell.Launch(21, nil, currentRole.index);
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+
     elseif uiEvent.parameter == 5 then
       UISell.Launch(22, nil, currentRole.index);
     elseif uiEvent.parameter == 6 then
       UISell.Launch(23, nil, currentRole.index);
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+
     end
   end
 end
@@ -2018,9 +2782,36 @@ function UIStatus.OnClick_AttributeSubmit()
     end
 
     for i = 1, 6 do
-      Status.SendAddAttribute(currentRole, i, attComponents[i].add);
+      if attComponents[i].add > 0 then
+        --C:008-001 <設定屬性> +武將索引(2) +種類(1) +數值(4) +參數(1)
+        sendBuffer:Clear();
+        if currentRole == Role.player then
+          sendBuffer:WriteUInt16(0);
+        else
+          sendBuffer:WriteUInt16(currentRole.index);
+        end
+
+        if i == 1 then
+          sendBuffer:WriteByte(EAttribute.Int);
+        elseif i == 2 then
+          sendBuffer:WriteByte(EAttribute.Atk);
+        elseif i == 3 then
+          sendBuffer:WriteByte(EAttribute.Def);
+        elseif i == 4 then
+          sendBuffer:WriteByte(EAttribute.Hpx);
+        elseif i == 5 then
+          sendBuffer:WriteByte(EAttribute.Spx);
+        elseif i == 6 then
+          sendBuffer:WriteByte(EAttribute.Agi);
+        end
+
+        sendBuffer:WriteInt32(attComponents[i].add);
+        sendBuffer:WriteByte(0);
+        Network.Send(8, 1, sendBuffer);
+      end
     end
     this.UpdateStatus();
+
   else
     if currentRole.npcId == Role.rebornNpcId then
       if Role.rebornKind == 1 then
@@ -2087,6 +2878,27 @@ function UIStatus.OnClick_AttributeSubmit()
 
         if Contains(currentRole.data.canGrow, 0, 2) then
           ShowCenterMessage(string.Get(40333));
+          --5-----------------------------------------------------
+          if LuaHelper.CheckDefine("DemoCode") then
+            --
+          end
+          --6-----------------------------------------------------
+          --5-----------------------------------------------------
+          if LuaHelper.CheckDefine("DemoCode") then
+            --
+          end
+          --6-----------------------------------------------------
+          --5-----------------------------------------------------
+          if LuaHelper.CheckDefine("DemoCode") then
+            --
+          end
+          --6-----------------------------------------------------
+          --5-----------------------------------------------------
+          if LuaHelper.CheckDefine("DemoCode") then
+            --
+          end
+          --6-----------------------------------------------------
+  
           return;
         end
 
@@ -2102,7 +2914,6 @@ function UIStatus.OnClick_AttributeReset()
     ShowCenterMessage(string.Get(80099));
     return;
   end
-
   if currentRole.kind == EHuman.Player then
     if tonumber(text_AttributePoint.text) < currentRole:GetAttribute(EAttribute.AttrPoint) then
       --取消投點
@@ -2123,7 +2934,29 @@ function UIStatus.OnClick_AttributeReset()
       count = count + currentRole:GetAttribute(EAttribute.Agi);
 
       if count == 0 then return end
-      Status.SendResetAttribute();
+
+      UISell.Launch(15);
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+
     end
   else
     if currentRole.npcId == Role.rebornNpcId then
@@ -2169,28 +3002,29 @@ function UIStatus.OnClick_AttributeReset()
 
         --脫胎換骨
         UISell.Launch(16, nil, currentRole.index);
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+        --5-----------------------------------------------------
+        if LuaHelper.CheckDefine("DemoCode") then
+          --
+        end
+        --6-----------------------------------------------------
+
       end
     end
-  end
-end
-
-function UIStatus.OnClick_AttributeChange(uiEvent)
-  local index = uiEvent.parameter.index;
-  local change = uiEvent.parameter.value;
-  local points;
-  if currentTag == EUIStatusTag.Status then
-    points = tonumber(text_AttributePoint.text);
-  end
-
-  if currentTag == EUIStatusTag.Status then
-    local add = Status.ChangeAtt(attComponents[index].add, change, points);
-    attComponents[index].add = add;
-    this.UpdateStatusAdd();
-    this.UpdateDetail();
-  elseif currentTag == EUIStatusTag.AttSet then
-    local add = Status.ChangeAtt(attSetComponents[index].add, change);
-    attSetComponents[index].add = add;
-    this.UpdateAttSetAdd();
   end
 end
 
@@ -2200,14 +3034,6 @@ function UIStatus.OnClick_Detail()
   showDetail = not showDetail;
 
   this.UpdateUI();
-end
-
-function UIStatus.OnClick_OtherDetail()
-  if not showDetail or not Contains(currentTag, EUIStatusTag.Status ,EUIStatusTag.Moral) then return end
-
-  showTreasureDetail = not showTreasureDetail;
-
-  this.UpdateDetail();
 end
 
 function UIStatus.OnClick_ChgName()
@@ -2224,7 +3050,28 @@ function UIStatus.OnClick_ChgName()
         ShowCenterMessage(string.Get(80099));
         return;
       end
-
+  
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+  
       --C:067-001 <檢查名字> +L(1) +名字(L)
       sendBuffer:Clear();
       sendBuffer:WriteStringWithByteL(text);
@@ -2240,7 +3087,6 @@ function UIStatus.OnClick_AstrolabeUp()
     ShowCenterMessage(string.Get(80099));
     return;
   end
-
   if astrolabeShowTimer > 0 then return end
 
   if Astrolabe.starLv[Astrolabe.maxAstrolabe] >= Astrolabe.maxAstrolabeLv then
@@ -2262,6 +3108,27 @@ function UIStatus.OnClick_AstrolabeUp()
 
   if Role.GetPlayerGold() < nextLv * nextLv * 10000 then
     ShowCenterMessage(string.Get(71334));
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+  
     return;
   end
 
@@ -2271,13 +3138,28 @@ function UIStatus.OnClick_AstrolabeUp()
   Network.Send(78, 1, sendBuffer);
 end
 
+function UIStatus.OpenOutfitStyleInfo(itemId, bagIndex)
+  if currentTag ~= EUIStatusTag.OutfitStyle then return end
+  local outfitFunction;
+  for k, v in pairs(collectStyleDatas) do
+    for i = 1, 5 do
+      if v.itemId[i] == itemId then
+        outfitFunction = function()
+          this.SendEquipOutfitStyle(k,i);
+        end
+        break;
+      end
+    end
+  end
+  UI.Open(UIItemInfo, EThings.None, itemId, itemDatas[itemId], string.Get(20165),outfitFunction);
+end
+
 function UIStatus.OnClick_ChangeCategory(uiEvent)
   if currentOutfitSyleCategory ~= uiEvent.parameter then
     currentOutfitSyleCategory = uiEvent.parameter;
   else
     currentOutfitSyleCategory = 0;
   end
-
   this.UpdateUI(true);
 end
 
@@ -2285,99 +3167,124 @@ function UIStatus.OnClick_SwitchOutfitStyle()
   if currentTag == EUIStatusTag.Style then
     currentTag = EUIStatusTag.OutfitStyle;
     ShowCenterMessage(string.Get(23637));
+    RedDot.Remove(ERedDot.OutfitStyle);
   else
     currentOutfitSyleCategory = 0;
     currentTag = EUIStatusTag.Style;
     ShowCenterMessage(string.Get(23638));
   end
-
   this.UpdateUI(true);
 end
 
-function UIStatus.OnClick_AllUnEquip()
-  Item.UnEquipAll();
-end
-
-function UIStatus.GetCurrentFollowIndex()
-  return currentFollowIndex;
-end
-
-function UIStatus.OnClick_EnterAttSet(uiEvent)
-  local index = uiEvent.parameter;
-  ShowCountInput(string.Get(21280), 0, Status.GetAttSetMaxPoints(),
-    function(text)
-      if text == nil then return end
-      attSetComponents[index].add = tonumber(text);
-      this.UpdateAttSetAdd();
-    end
-  );
-end
-
-function UIStatus.OnClick_SelectAttSet(uiEvent)
-  if editingAttSet then return end
-
-  Status.SelectAttSet(uiEvent.parameter);
-  local attSet = Status.GetCurrentAttSet();
-
-  for i = 1, 6 do
-    attSetComponents[i].add = attSet.att[i];
-  end
-
-  this.UpdateAttSet();
-end
-
-function UIStatus.OnClick_ChangeSetName(uiEvent)
-  ShowNameInput(string.Get(24159),
-    function(name)
-      if name == nil then return end
-      Status.ChangeAttSetName(name);
-    end,
-    12);
-end
-
-function UIStatus.OnClick_EditAttSet()
-  this.UpdateAttSetEditing(true);
-  this.ResetAttSetAdd();
-  this.UpdateAttSetAdd();
-end
-
-function UIStatus.OnClick_ApplyAttSet()
-  Status.ApplyAttSet(currentRole);
-end
-
-function UIStatus.OnClick_ClearAttSet()
-  for i = 1, 6 do
-    attSetComponents[i].add = 0;
-  end
-
-  this.UpdateAttSetAdd();
-end
-
-function UIStatus.OnClick_CancelAttSet()
-  this.UpdateAttSetEditing(false);
-  this.UpdateAttSetAttribute();
-end
-
-function UIStatus.OnClick_SaveAttSet()
-  if attSetRemainPoint < 0 then
-    ShowCenterMessage(string.Get(24508));
+function UIStatus.SendEquipOutfitStyle(id, index) --收集冊ID, 部位
+  if Role.player.war ~= EWar.None then
+    ShowCenterMessage(string.Get(80099));
     return;
   end
-
-  for i = 1, 6 do
-    Status.SetAttributeSet(i, attSetComponents[i].add);
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
   end
-
-  Status.SaveCurrentAttSet();
-  this.UpdateAttSetEditing(false);
-  this.UpdateAttSetAttribute();
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  
+  --C:023-124 <穿顯示時裝外觀>+ 收集冊ID(2) + 部位索引(1)
+  sendBuffer:Clear();
+  sendBuffer:WriteUInt16(id);
+  sendBuffer:WriteByte(index);
+  Network.Send(23, 124, sendBuffer);
 end
 
-function UIStatus.OnClick_ResetBreakthrough()
-  UISell.Launch(62);
+function UIStatus.SendUnEquipOutfitStyle(bagKind, bagIndex, followIndex) --
+  if Role.player.war ~= EWar.None then
+    ShowCenterMessage(string.Get(80099));
+    return;
+  end
+  
+  local index = bagIndex - EItemFitType.Equip_Spec  - Role.maxOutfitStyle
+  
+  --C:023-125 <脫顯示時裝外觀>+ 部位索引(1)
+  sendBuffer:Clear();
+  sendBuffer:WriteByte(index);
+  Network.Send(23, 125, sendBuffer);
 end
 
---endregion
+function UIStatus.SendEquipOutfitStyleFromBag(id, index, itemId) --時裝id, 部位
+  if Role.player.war ~= EWar.None then
+    ShowCenterMessage(string.Get(80099));
+    return;
+  end
+  
+  outfitStyleIdTempSave = itemId;
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --C:023-126 <從背包直接穿顯示時裝外觀>+ 收集冊ID(2) + 部位索引(1)
+  sendBuffer:Clear();
+  sendBuffer:WriteUInt16(id);
+  sendBuffer:WriteByte(index);
+  Network.Send(23, 126, sendBuffer);
+end
+
+function UIStatus.StoreOutfitStyleFromBag(data) --穿時裝成功或失敗
+  local result = data:ReadByte();
+  if result == 1 then
+    Item.SetBagItem(EThings.OutfitStyleInCollection, Item.GetBagCount(EThings.OutfitStyleInCollection) + 1,  itemDatas[outfitStyleIdTempSave], true);
+    ShowCenterMessage(string.Concat(itemDatas[outfitStyleIdTempSave]:GetName(true), string.Get(50023)));
+    outfitStyleIdTempSave = 0;
+    RedDot.Add(ERedDot.OutfitStyle);
+  end
+  
+  this.UpdateUI();
+end
+
+function UIStatus.CheckOutfitStyleEquiped(itemId)
+  local itemSave;
+  for i = EItemFitType.OutfitStyle_Head, EItemFitType.OutfitStyle_Boots do
+    itemSave = Item.GetBagItem(EThings.Equip, i, 0);
+    if itemSave ~= nil and itemDatas[itemSave.Id] ~= nil then
+      if itemId == itemSave.Id then
+        return true;
+      end
+    end
+  end
+  return false;
+end
 
 function UIStatus.OnInitialize_BreakthroughScrollContent(scrollItems)
   for itemIndex = 0, scrollItems.Length - 1 do
@@ -2396,186 +3303,11 @@ function UIStatus.OnItemChange_BreakthroughScrollContent(dataIndex, itemIndex)
   scrollItems_Breakthrough[itemIndex].item:SetItem(data.itemID, data.itemCount);
   scrollItems_Breakthrough[itemIndex].item:SetCheckMark(data.complete);
   local slider = scrollItems_Breakthrough[itemIndex].slider;
-  slider.maxValue = data.exp;
   slider.value = data.currentExp;
+  slider.maxValue = data.exp;
   scrollItems_Breakthrough[itemIndex].value.text = data.expValueText;
   scrollItems_Breakthrough[itemIndex].fullValue.text = data.expFullValueText;
   return true
-end
-
-function UIStatus.OnInitialize_ScrollContentAttSet(scrollItems)
-  for itemIndex = 0, scrollItems.Length - 1 do
-    scrollItems_AttSet[itemIndex] = {};
-    local scrollItem = scrollItems_AttSet[itemIndex];
-    scrollItem.setName = scrollItems[itemIndex]:Find("Text_SetName"):GetComponent("Text");
-    scrollItem.image_Select = scrollItems[itemIndex]:Find("Image_Select"):GetComponent("Image");
-    scrollItem.event = scrollItems[itemIndex]:GetComponent("UIEvent");
-    scrollItem.event:SetListener(EventTriggerType.PointerClick, this.OnClick_SelectAttSet);
-  end
-end
-
-function UIStatus.OnItemChange_ScrollContentAttSet(dataIndex, itemIndex)
-  local index = dataIndex + 1;
-  local scrollItem = scrollItems_AttSet[itemIndex];
-  scrollItem.setName.text = Status.GetAttSetNames(index);
-  scrollItem.event.parameter = index;
-  scrollItem.image_Select.enabled = index == Status.GetCurrentAttSetIndex();
-  return true
-end
-
-function UIStatus.ShowConvertPage()
-  UILoginAward.ShowConvertPage(convertPage);
-end
-
-function UIStatus.OpenLauncherBar(bagKind, bagIndex, followIndex)
-  if not Contains(Role.player.war, EWar.None, EWar.Guest) then
-    ShowCenterMessage(string.Get(80099));
-    return;
-  end
-
-  local itemSave = Item.GetBagItem(bagKind, bagIndex);
-  if itemSave == nil then return end
-
-  Hotkey.SetCurrentSelectId(itemSave.Id, EHotkeyUI.Sub);
-  Hotkey.Show(EHotkeyMode.ItemInfo);
-end
-
-function UIStatus.OpenOutfitStyleInfo(itemId, bagIndex)
-  if currentTag ~= EUIStatusTag.OutfitStyle then return end
-
-  local outfitFunction;
-
-  for k, v in pairs(collectStyleDatas) do
-    for i = 1, 5 do
-      if v.itemId[i] == itemId then
-        outfitFunction = function()
-          this.SendEquipOutfitStyle(k,i);
-        end
-        break;
-      end
-    end
-  end
-
-  UI.Open(UIItemInfo, EThings.None, itemId, itemDatas[itemId], string.Get(20165),outfitFunction);
-end
-
-function UIStatus.OpenProfile()
-  if currentTag == EUIStatusTag.Profile then
-    UI.Open(UIHouseBoard);
-  end
-end
-
-function UIStatus.ShowLockBlissBag(bagKind, bagIndex, followIndex)
-  UIItemInfo.ShowLockBlissBag(bagIndex, followIndex);
-end
-
-function UIStatus.ShowRoleEquips(itemSave, i)
-  if itemSave ~= nil and itemDatas[itemSave.Id] ~= nil then
-    item_Equips[i]:SetItem(itemSave.Id, itemSave.quant, itemSave);
-  else
-    item_Equips[i]:SetItem(0);
-  end
-end
-
-function UIStatus.SendEquipOutfitStyle(id, index) --收集冊ID, 部位
-  if Role.player.war ~= EWar.None then
-    ShowCenterMessage(string.Get(80099));
-    return;
-  end
-  
-  --C:023-124 <穿顯示時裝外觀>+ 收集冊ID(2) + 部位索引(1)
-  sendBuffer:Clear();
-  sendBuffer:WriteUInt16(id);
-  sendBuffer:WriteByte(index);
-  Network.Send(23, 124, sendBuffer);
-end
-
-function UIStatus.SendUnEquipOutfitStyle(bagKind, bagIndex, followIndex) --
-  if Role.player.war ~= EWar.None then
-    ShowCenterMessage(string.Get(80099));
-    return;
-  end
-
-  if BattleRoyale.InBattleRoyaleScene() then
-    return
-  end
-
-  local index = bagIndex - EItemFitType.Equip_Spec  - Role.maxOutfitStyle
-  
-  --C:023-125 <脫顯示時裝外觀>+ 部位索引(1)
-  sendBuffer:Clear();
-  sendBuffer:WriteByte(index);
-  Network.Send(23, 125, sendBuffer);
-end
-
-function UIStatus.SendEquipOutfitStyleFromBag(id, index, itemId) --時裝id, 部位
-  if Role.player.war ~= EWar.None then
-    ShowCenterMessage(string.Get(80099));
-    return;
-  end
-  
-  outfitStyleIdTempSave = itemId;
-  
-  --C:023-126 <從背包直接穿顯示時裝外觀>+ 收集冊ID(2) + 部位索引(1)
-  sendBuffer:Clear();
-  sendBuffer:WriteUInt16(id);
-  sendBuffer:WriteByte(index);
-  Network.Send(23, 126, sendBuffer);
-end
-
-function UIStatus.IsCurrentTag(tag)
-  return tag == currentTag;
-end
-
-function UIStatus.IsCurrentRole(role)
-  return role == currentRole;
-end
-
-function UIStatus.SetExpSlider(sliderExp, textExp, textFullExp, level, exp, turn)
-  if (turn >= 3 and level >= Role.playerMaxLv + Role.playerTurn3MaxLv) or (turn < 3 and level == Role.playerMaxLv) then
-    sliderExp.maxValue = 1;
-    sliderExp.value = 1;
-    textExp.text = "100%";
-    textFullExp.text = string.Get(40475);
-  else
-    sliderExp.maxValue = Calc.GetUpExp(level + 1, turn);
-    sliderExp.value = exp - Calc.GetNeedTExp(level, turn);
-    textExp.text = string.Concat(math.floor((sliderExp.value / sliderExp.maxValue) * 100), "%");
-    textFullExp.text = string.Concat(sliderExp.value, "/", sliderExp.maxValue);
-  end
-end
-
-function UIStatus.AstrolabeLevelUp()
-  astrolabeShowTimer = Astrolabe.levelUpShowTime;
-end
-
-function UIStatus.StoreOutfitStyleFromBag(data) --穿時裝成功或失敗
-  local result = data:ReadByte();
-  if result == 1 then
-    Item.SetBagItem(EThings.OutfitStyleInCollection, Item.GetBagCount(EThings.OutfitStyleInCollection) + 1,  itemDatas[outfitStyleIdTempSave], true);
-    ShowCenterMessage(string.Concat(itemDatas[outfitStyleIdTempSave]:GetName(true), string.Get(50023)));
-    outfitStyleIdTempSave = 0;
-  end
-  
-  UIFrame.SwitchTab(EUIStatusTag.Style);
-  currentOutfitSyleCategory = 0;
-  currentTag = EUIStatusTag.OutfitStyle;
-  this.UpdateUI(true);
-end
-
-function UIStatus.CheckOutfitStyleEquiped(itemId)
-  local itemSave;
-
-  for i = EItemFitType.OutfitStyle_Head, EItemFitType.OutfitStyle_Boots do
-    itemSave = Item.GetBagItem(EThings.Equip, i, 0);
-    if itemSave ~= nil and itemDatas[itemSave.Id] ~= nil then
-      if itemId == itemSave.Id then
-        return true;
-      end
-    end
-  end
-
-  return false;
 end
 
 function UIStatus.RefreshBreakthrough()
@@ -2583,6 +3315,10 @@ function UIStatus.RefreshBreakthrough()
   if currentTag ~= EUIStatusTag.Breakthrough then return end
   text_BreakthroughLevel.text = Breakthrough.GetBreakthroughLevelText();
   scrollContent_Breakthrough:Refresh();
+end
+
+function UIStatus.OnClick_ResetBreakthrough()
+  UISell.Launch(62);
 end
 
 function UIStatus.SetBreakthroughRedDot()
@@ -2603,14 +3339,33 @@ function UIStatus.CheckDataGetUpgradeLvIcon(lv)
   if npcUpgradeDatas[lv] ~= nil then
     return npcUpgradeDatas[lv].UpgradeLvIcon;
   else
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+  
     return 0;
   end
 end
 
-function UIStatus.ResetAttSetAdd()
-  local attSet = Status.GetCurrentAttSet();
-
-  for i = 1, 6 do
-    attSetComponents[i].add = attSet.att[i];
+function UIStatus.OpenProfile()
+  if currentTag == EUIStatusTag.Profile then
+    UI.Open(UIHouseBoard);
   end
 end

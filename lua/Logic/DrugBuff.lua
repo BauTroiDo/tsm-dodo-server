@@ -66,12 +66,12 @@ this.timeBuffs = {};
 this.timeBuffs[ETimeBuff.VipBenefit] = { time = nil, value = nil, text = 71269, itemId = 46577 }; --暢玩卡
 this.timeBuffs[ETimeBuff.EquipProtect] = { time = nil, value = nil, text = 71359, itemId = 46992 }; --守護者之心
 this.timeBuffs[ETimeBuff.DoubleExp] = { time = nil, value = nil, text = 80464, itemId = 46925 }; --經驗加倍
-this.timeBuffs[ETimeBuff.IntUp] = { time = nil, value = 0, text = 20037, itemId = 27301 }; --知力上升
-this.timeBuffs[ETimeBuff.AtkUp] = { time = nil, value = 0, text = 20038, itemId = 27302 }; --攻擊力上升
-this.timeBuffs[ETimeBuff.DefUp] = { time = nil, value = 0, text = 20039, itemId = 27303 }; --防禦力上升
-this.timeBuffs[ETimeBuff.AgiUp] = { time = nil, value = 0, text = 20042, itemId = 27305 }; --敏捷上升
-this.timeBuffs[ETimeBuff.HpxUp] = { time = nil, value = 0, text = 20040, itemId = 27304 }; --體力增幅上升
-this.timeBuffs[ETimeBuff.SpxUp] = { time = nil, value = 0, text = 20041, itemId = 0 }; --魔力增幅上升
+this.timeBuffs[ETimeBuff.IntUp] = { time = nil, value = 0, text = 20037, itemId = 46502 }; --知力上升
+this.timeBuffs[ETimeBuff.AtkUp] = { time = nil, value = 0, text = 20038, itemId = 46501 }; --攻擊力上升
+this.timeBuffs[ETimeBuff.DefUp] = { time = nil, value = 0, text = 0, itemId = 0 }; --防禦力上升
+this.timeBuffs[ETimeBuff.AgiUp] = { time = nil, value = 0, text = 0, itemId = 0 }; --敏捷上升
+this.timeBuffs[ETimeBuff.HpxUp] = { time = nil, value = 0, text = 0, itemId = 0 }; --體力增幅上升
+this.timeBuffs[ETimeBuff.SpxUp] = { time = nil, value = 0, text = 0, itemId = 0 }; --魔力增幅上升
 
 this.fightBuffs = {};
 
@@ -93,6 +93,47 @@ function DrugBuff.Clear()
       this.timeBuffs[k].value = 0;
     end
   end
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function DrugBuff.SetTimeBuff(kind, time, value)
@@ -110,9 +151,7 @@ function DrugBuff.SetTimeBuff(kind, time, value)
       this.timeBuffs[kind].value = nil;
     end
   end
-
-  Role.SetAttribute(EHuman.Player, Role.playerId, kind + EAttribute.BuffInt - ETimeBuff.IntUp, value);
-
+  
   if UI.IsVisible(UIMain) then
     UIMain.UpdateBuff();
   end
@@ -128,14 +167,6 @@ function DrugBuff.GetTimeBuff(kind)
   end
   
   return nil;
-end
-
-function DrugBuff.GetTimeBuffValue(kind)
-  if this.timeBuffs[kind] ~= nil and this.timeBuffs[kind].time ~= nil and DateTime.Compare(CGTimer.serverTime, this.timeBuffs[kind].time) < 0 then
-    return this.timeBuffs[kind].value
-  else
-    return 0
-  end
 end
 
 function DrugBuff.CheckTimeBuff()
@@ -176,6 +207,47 @@ function DrugBuff.SetOpenCount(openCount)
   if UI.IsVisible(UIMain) then
     UIMain.UpdateBuff();
   end
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function DrugBuff.GetAttribute(kind)
@@ -233,7 +305,47 @@ end
 
 function DrugBuff.ClearFightBuff()
   table.Clear(this.fightBuffs);
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   if UI.IsVisible(UIMain) then
     UIMain.UpdateBuff();
   end

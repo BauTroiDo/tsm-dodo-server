@@ -117,6 +117,27 @@ function UIHouseEditor.Initialize(go)
   this.uiController.onClose = this.OnClose;
 
   image_Mask = uiController:FindImage("Image_Mask");
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 
   event_Panel = uiController:FindEvent("Image_Mask");
   event_Panel:SetPassEvent(EventTriggerType.PointerClick);
@@ -253,6 +274,27 @@ function UIHouseEditor.OnOpen()
 end
 
 function UIHouseEditor.OnClose()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   local cameraCurrentOriginalPosition = Vector2.New(cameraOriginalPosition.x, cameraOriginalPosition.y + Scene.playerOffsetY);
   Scene.UpdateCamera(cameraCurrentOriginalPosition);
   Scene.SetCameraSize(Scene.CameraDefaultSize);
@@ -295,6 +337,27 @@ function UIHouseEditor.OnDrag_Panel()
 end
 
 function UIHouseEditor.OnRelease_Panel(uiEvent)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   touches[uiEvent.eventData.pointerId] = nil;
   CGTimer.RemoveListener(this.OnDrag_Panel);
   CGTimer.RemoveListener(this.OnZoom_DoubleTouch);
@@ -530,11 +593,53 @@ function UIHouseEditor.UpdateFurnituresByCurrentSecondSubKind()
 end
 
 function UIHouseEditor.OnClick_FurnishingMainKind()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   this.SetMainKind(EHouseEditorMainKind.FurnishingKind);
   this.CloseInputFieldName();
 end
 
 function UIHouseEditor.OnClick_DecorateMainKind()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   this.SetMainKind(EHouseEditorMainKind.DecorateKind);
   this.CloseInputFieldName();
 end
@@ -583,6 +688,27 @@ function UIHouseEditor.OnClick_ShowEditorUI()
 end
 
 function UIHouseEditor.OnClick_CloseEditorMode()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   FurnitureManager.SendFurnitureData();
 end
 
@@ -725,6 +851,9 @@ function UIHouseEditor.UpdateFurnitureInfo(Id)
     image_Gacha.color = LuaHelper.GetColor(255, 0, 0, 200);
     event_Gacha.parameter = false;
     text_Gacha.text = string.Get(23622);
+  elseif furnitureData.level == 5 then
+    event_Gacha.parameter = false;
+    text_Gacha.text = "NFT商品";
   else
     image_Gacha.color = Color.White;
     event_Gacha.parameter = true;
@@ -739,6 +868,27 @@ function UIHouseEditor.UpdateFurnitureInfo(Id)
 end
 
 function UIHouseEditor.UpdateScoreInfo()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   local text_decorateScore = string.Get(23466);
   text_ScoreInfo.text = string.Concat(text_decorateScore, ": ", HouseManager.GetCurrentFloorScore());
 end
@@ -847,6 +997,27 @@ function UIHouseEditor.ConditionOfUpdateFurnitures(furnitureData)
       return true;
     end
   elseif furnitureData.kind == current_SecondSubKind then
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
     return true;
   elseif current_SecondSubKind ~= 0 and furnitureData.seriesNumber == current_SecondSubKind then
     return true;

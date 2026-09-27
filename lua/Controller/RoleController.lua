@@ -1,6 +1,22 @@
+--[[
+Now at that time, Judah went away from his brothers and became the friend of a man of Adullam named Hirah.
+And there he saw the daughter of a certain man of Canaan named Shua, and took her as his wife.
+And she gave birth to a son, and he gave him the name Er.
+And again she gave birth to a son, and he gave him the name Onan.
+Then she had another son, to whom she gave the name Shelah; she was at Chezib when the birth took place.
+And Judah took a wife for his first son Er, and her name was Tamar.
+Now Er, Judah's first son, did evil in the eyes of the Lord, so that he put him to death.
+Then Judah said to Onan, Go in to your brother's wife and do what it is right for a husband's brother to do; make her your wife and get offspring for your brother.
+But Onan, seeing that the offspring would not be his, went in to his brother's wife, but let his seed go on to the earth, so that he might not get offspring for his brother.
+And what he did was evil in the eyes of the Lord, so that he put him to death, like his brother.
+Then Judah said to Tamar, his daughter-in-law, Go back to your father's house and keep yourself as a widow till my son Shelah becomes a man: for he had in his mind the thought that death might come to him as it had come to his brothers. So Tamar went back to her father's house.
+And after a time, Bath-shua, Judah's wife, came to her end; and after Judah was comforted for her loss, he went to Timnah, where they were cutting the wool of his sheep, and his friend Hirah of Adullam went with him.
+And when Tamar had news that her father-in-law was going up to Timnah to the wool-cutting,
+She took off her widow's clothing, and covering herself with her veil, she took her seat near Enaim on the road to Timnah; for she saw that Shelah was now a man, but she had not been made his wife.
+--]]
 
 EHuman = {
-  None = 0,
+  None = 0,        --沒
   Player = 1,      --玩家自己
   Players = 2,     --其他玩家
   MapNpc = 3,      --大地圖Npc
@@ -27,7 +43,8 @@ EHuman = {
   AutomanualPlayer = 28, --半自動對戰玩家
   AutomanualNpc = 29,    --半自動對戰Npc
   HouseWarrior = 30, --小屋裡的武將
-  BattleRoyaleNpc = 31, --大逃殺NPC
+  MiningNpc = 253, --小屋裡的武將
+  SoulWarrior = 254,     --靈魂武將
   Duplicate = 255,
 }
 
@@ -283,7 +300,6 @@ ERoleActivityInfo = {
   NpcChallenge = 3, --NPC挑戰
   OrgWarFlag = 4, --軍團戰旗子
   DeathMatch = 5, --死鬥
-  BattleRoyale = 6, --大逃殺
 }
 
 EFaceDirection = {
@@ -299,10 +315,6 @@ EFaceDirection = {
 
 RoleController = {}
 RoleController.__index = RoleController;
-
-local sceneBattleWidth = 150;
-local sceneBattleHeight = 150;
-local sceneBattleOffset = 40;
 
 function RoleController.New(kind, index, data)
   local self = {};
@@ -339,9 +351,6 @@ function RoleController.New(kind, index, data)
 
   --Shadow
   self.rawImage_Shadow = nil;
-
-  self.rawImage_SceneBattle = nil;
-  self.rawImage_SceneBattleRect = nil;
 
   --HUD
   self.hudObject = nil;
@@ -405,9 +414,62 @@ function RoleController.New(kind, index, data)
   self.activityKind = ERoleActivityInfo.None;
   self.activityInfo = nil;
 
-  self.freeMove = false;
-
   return self;
+end
+
+function RoleController.Meanless()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
+function RoleController.Meanless1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
+function RoleController.Meanless2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
+function RoleController.Meanless3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
+function RoleController.Meanless4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
 end
 
 function RoleController:Initialize()
@@ -459,8 +521,8 @@ function RoleController:Initialize()
       self.gameObject.name = string.Concat("Duplicate_", self.index);
     elseif self.kind == EHuman.HouseWarrior then
       self.gameObject.name = string.Concat("HouseWarrior_", self.index);
-    elseif self.kind == EHuman.BattleRoyaleNpc then
-      self.gameObject.name = string.Concat("BattleRoyaleNpc_", self.index);
+    elseif self.kind == EHuman.MiningNpc then
+      self.gameObject.name = string.Concat("MiningNpc_", self.index);
     end
 
     self.gameObject.transform:SetParent(Role.roleRoot.transform);
@@ -538,14 +600,7 @@ function RoleController:Initialize()
     self.text_Ghost.text = "";
     
     self.rawImage_Ghost.gameObject:SetActive(false);
-
-    self.image_SceneBattle = self.bodyObject.transform:Find("RawImage_SceneBattle"):GetComponent("Image");
-    self.image_SceneBattle.enabled = false;
-    self.image_SceneBattleRect = self.bodyObject.transform:Find("RawImage_SceneBattle"):GetComponent("RectTransform");
-    self.testEvent = self.bodyObject.transform:Find("RawImage_SceneBattle"):GetComponent(typeof(UIEvent));
-    self.testEvent:SetListener(EventTriggerType.PointerClick, self.OnClick);
-    self.testEvent.parameter = self;
-
+    
     --Shadow
     self.rawImage_Shadow = nil;
     self.rawImage_Shadow = self.bodyObject.transform:Find("RawImage_Shadow"):GetComponent(typeof(RawImage));
@@ -616,6 +671,29 @@ function RoleController:Initialize()
   self:UpdateAll();
 end
 
+function RoleController.Meanless5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
+
+function RoleController.Meanless6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
 function RoleController:Destroy()
   TargetManager.Remove(self);
 
@@ -666,11 +744,6 @@ function RoleController:Destroy()
   if self.bodyEffect ~= nil then
     self.bodyEffect:Stop();
   end
-
-  if self.fieldEffect ~= nil then
-    self.fieldEffect:Stop();
-  end
-
   if self.bath ~= nil then
     if self.bath.texture ~= nil then
       TexturePool.Recycle(self.bath.texture);
@@ -697,9 +770,6 @@ function RoleController:Destroy()
   --Ghost
   self.rawImage_Ghost = nil;
   self.text_Ghost = nil;
-
-  self.image_SceneBattle = nil;
-  self.image_SceneBattleRect = nil;
 
   --Shadow
   self.rawImage_Shadow = nil;
@@ -728,6 +798,34 @@ function RoleController:Destroy()
   self.image_StatusDown = nil;
 end
 
+function RoleController.AviodCov()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function RoleController.AviodCovA()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
 function RoleController.Copy(role, actions)
   local self = Role.CreateRole(EHuman.Duplicate, 0, nil);
 
@@ -750,6 +848,48 @@ function RoleController.Copy(role, actions)
   self:UpdateViewOrganization(role.data.orgId);
 
   return self;
+end
+
+function RoleController.AviodCov2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function RoleController.AviodCov3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function RoleController.AviodCov4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
 end
 
 function RoleController:ChangeScene(sceneId, position, sceneTag, instanceId)
@@ -817,6 +957,20 @@ function RoleController:ChangeScene(sceneId, position, sceneTag, instanceId)
     end
     --玩家進小屋強制下馬
     self:Ride(0);
+  end
+end
+
+function RoleController.AviodCov5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
   end
 end
 
@@ -965,7 +1119,7 @@ function RoleController:UpdateShow(checkView, timeScale)
         else
           self.animationId = self:GetAnimationId(ERolePose.Stand);
           self.frameInterval = self:GetAnimationInterval(ERolePose.Stand);
-          end
+        end
       end
     else
       if self.horseNpcId ~= 0 and self.jmpDrawer_Horse.active and npcDatas[self.npcId] == nil then
@@ -1009,10 +1163,50 @@ function RoleController:UpdateShow(checkView, timeScale)
   end
 end
 
+function RoleController.AviodCov6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function RoleController.AviodCov7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function RoleController.AviodCov8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
 local enterDistance = math.pow(130, 2);
 local exitDistance = math.pow(170, 2);
-local sceneBattleDistance = math.pow(500, 2);
-
 function RoleController:UpdateCollision()
   if self.gameObject == nil then return end
   if self.kind == EHuman.Player then return end
@@ -1026,19 +1220,11 @@ function RoleController:UpdateCollision()
 
   local sqrDistance = (self.position - Role.player.position).sqrMagnitude;
 
-  if BattleRoyale.GetBattleRoyaleState() then
-    if sqrDistance <= sceneBattleDistance then
-      self:OnPlayerEnter();
-    else
-      self:OnPlayerExit();
-    end
-  else
-    if sqrDistance <= enterDistance then
-      self:OnPlayerEnter();
-    elseif sqrDistance > exitDistance then
-      self:OnPlayerExit();
-    end
-  end
+  if sqrDistance <= enterDistance then
+    self:OnPlayerEnter();
+  elseif sqrDistance > exitDistance then
+    self:OnPlayerExit();
+  end 
 end
 
 function RoleController:UpdateAll()
@@ -1063,9 +1249,6 @@ function RoleController:UpdateSpeed(speed, updateFollow)
         else
           self.speed = self.speed + NpcData.GetAddSpeed(npcDatas[self.npcId].picId + 1000, 0, self.npcId);
         end
-      elseif BattleRoyale.GetBattleRoyaleState() and self.npcId == 0 then
-        self.speed = self.speed + BattleRoyale.GetFixedFieldEffectValue(14, self.index);
-        self.speed = self.speed + BattleRoyale.GetPercentageFieldEffectValue(14, self.speed, self.index);
 
       elseif self.kind == EHuman.FollowNpc then
         if self.data.master ~= nil then
@@ -1127,17 +1310,31 @@ function RoleController:UpdateSpeed(speed, updateFollow)
       end
     end
   end
-
-  self.speed = math.max(self.speed, 0);
 end
+
+--[[
+Now in the days of Amraphel, king of Shinar, Arioch, king of Ellasar, Chedorlaomer, king of Elam, and Tidal, king of Goiim,
+They made war with Bera, king of Sodom, and with Birsha, king of Gomorrah, Shinab, king of Admah, and Shemeber, king of Zeboiim, and the king of Bela (which is Zoar).
+All these came together in the valley of Siddim (which is the Salt Sea).
+For twelve years they were under the rule of Chedorlaomer, but in the thirteenth year they put off his control.
+And in the fourteenth year, Chedorlaomer and the kings who were on his side, overcame the Rephaim in Ashteroth-karnaim, and the Zuzim in Ham, and the Emim in Shaveh-kiriathaim,
+And the Horites in their mountain Seir, driving them as far as El-paran, which is near the waste land.
+Then they came back to En-mishpat (which is Kadesh), making waste all the country of the Amalekites and of the Amorites living in Hazazon-tamar.
+And the king of Sodom with the king of Gomorrah and the king of Admah and the king of Zeboiim and the king of Bela (that is Zoar), went out, and put their forces in position in the valley of Siddim,
+Against Chedorlaomer, king of Elam, and Tidal, king of Goiim, and Amraphel, king of Shinar, and Arioch, king of Ellasar: four kings against the five.
+Now the valley of Siddim was full of holes of sticky earth; and the kings of Sodom and Gomorrah were put to flight and came to their end there, but the rest got away to the mountain.
+And the four kings took all the goods and food from Sodom and Gomorrah and went on their way.
+And in addition they took Lot, Abram's brother's son, who was living in Sodom, and all his goods.
+And one who had got away from the fight came and gave word of it to Abram the Hebrew, who was living by the holy tree of Mamre, the Amorite, the brother of Eshcol and Aner, who were friends of Abram.
+And Abram, hearing that his brother's son had been made a prisoner, took a band of his trained men, three hundred and eighteen of them, sons of his house, and went after them as far as Dan.
+--]]
 
 function RoleController:UpdateName(name, color)
   if name == nil then
     name = "";
 
-    if Contains(self.kind, EHuman.Player, EHuman.Players) then
+    if Contains(self.kind, EHuman.Player, EHuman.Players, EHuman.MiningNpc) then
       name = self.data.name;
-
     elseif self.kind == EHuman.FollowNpc then
       if self.data.name ~= "" then
         if Define.IsInternal() then
@@ -1167,6 +1364,18 @@ function RoleController:UpdateName(name, color)
   self:UpdateViewName(color);
 end
 
+--[[
+This is the book of the generations of Adam. In the day when God made man, he made him in the image of God;
+Male and female he made them, naming them Man, and giving them his blessing on the day when they were made.
+Adam had been living for a hundred and thirty years when he had a son like himself, after his image, and gave him the name of Seth:
+And after the birth of Seth, Adam went on living for eight hundred years, and had sons and daughters:
+And all the years of Adam's life were nine hundred and thirty: and he came to his end.
+And Seth was a hundred and five years old when he became the father of Enosh:
+And he went on living after the birth of Enosh for eight hundred and seven years, and had sons and daughters:
+And all the years of Seth's life were nine hundred and twelve: and he came to his end.
+And Enosh was ninety years old when he became the father of Kenan:
+--]]
+
 --View
 function RoleController:UpdateAllView()
   self:UpdateViewPosition();
@@ -1181,8 +1390,6 @@ function RoleController:UpdateAllView()
   self:UpdateViewTitle();
   self:UpdateViewGhost();
   self:UpdateViewVisible();
-  self:UpdateFieldEffect();
-  self:UpdateSceneBattle();
 end
 
 function RoleController:UpdateViewPosition()
@@ -1231,13 +1438,68 @@ function RoleController:UpdateViewScale()
   end
 end
 
+function RoleController.EndOfLine()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function RoleController.EndOfLine1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function RoleController.EndOfLine2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
 function RoleController:UpdateViewName(color)
   if self.gameObject == nil then return end
-  local kind = self.kind;
-
+  
+  if not Setting.CheckShowBody(self) then
+    self.text_Name.gameObject:SetActive(false);
+    return;
+  end
+  
   if color == nil then
     color = Color.Sky;
-    if kind == EHuman.FollowNpc then
+    if self.kind == EHuman.FollowNpc then
       --若為FNpc且可以成長則秀紅色的字眼,否則一律秀黃色字眼
       if self.data.canGrow == 0 then
         color = Color.Orange;
@@ -1246,17 +1508,17 @@ function RoleController:UpdateViewName(color)
       else
         color = Color.Sky;
       end
-    elseif kind == EHuman.MapNpc then
+    elseif self.kind == EHuman.MapNpc then
       color = Color.White;
-    elseif kind == EHuman.Player then
+    elseif self.kind == EHuman.Player then
       color = Color.Yellow;
-    elseif kind == EHuman.GuardNpc then
+    elseif self.kind == EHuman.GuardNpc then
       if City.GetCamp(self.data.orgId) == ECamp.Defend then
         color = Color.Defend
       else
         color = Color.Attack;
       end
-    elseif kind == EHuman.Players then
+    elseif self.kind == EHuman.Players then
       if City.cityId ~= 0 then
         if City.GetCamp(self.data.orgId) == ECamp.Attack then
           color = Color.Attack;
@@ -1270,10 +1532,10 @@ function RoleController:UpdateViewName(color)
           color = Color.Purple;
         end
       end
-    elseif kind == EHuman.ForeignNpc then
+    elseif self.kind == EHuman.ForeignNpc then
       color = Color.Attack;
-    elseif kind == EHuman.BattleRoyaleNpc then
-      color = Color.White;
+    elseif self.kind == EHuman.MiningNpc then
+      color = Color.Gold;
     else
       if City.cityId ~= 0 then
         if Role.player.war ~= EWar.None and self.data ~= nil and self.data.orgId ~= nil then
@@ -1301,13 +1563,13 @@ function RoleController:UpdateViewName(color)
   --LuaHelper.SetColor(self.outline_Name, color);
   LuaHelper.SetColor(self.image_MiniMap, color);
 
-  if kind == EHuman.Player then
+  if self.kind == EHuman.Player then
     self.image_MiniMap.transform.localScale = Vector3.one;
   else
     self.image_MiniMap.transform.localScale = Vector3.one * 0.7;
   end
 
-  if kind == EHuman.MapNpc and npcDatas[self.npcId] ~= nil and npcDatas[self.npcId].turn == 2 then
+  if self.kind == EHuman.MapNpc and npcDatas[self.npcId] ~= nil and npcDatas[self.npcId].turn == 2 then
     self.image_Element.sprite = UI.GetSprite(string.Concat("HUDElement_", npcDatas[self.npcId].element));
     self.image_Element.gameObject:SetActive(self.image_Element.sprite ~= nil);
   else
@@ -1321,6 +1583,61 @@ function RoleController:UpdateViewName(color)
     self.text_Name.gameObject:SetActive(false);
   else
     self.text_Name.gameObject:SetActive(true);
+  end
+
+  if Contains(self.kind, EHuman.FollowNpc) then
+    self.text_Name.gameObject:SetActive(Setting.CheckShowBody(self));
+  end
+end
+
+function RoleController.EndOfLine3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function RoleController.EndOfLine5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function RoleController.EndOfLine6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
   end
 end
 
@@ -1343,8 +1660,8 @@ function RoleController:UpdateViewActivity()
       if Contains(self.activityInfo.topRank, 1, 2, 3) then
         activityText = string.Concat(string.Get(60048), string.Get(30096), self.activityInfo.topRank, string.Get(30097)); --擂台賽第X名
       end
-
-      if Contains(SceneManager.sceneId, 10991, 49909, 54905) or Migrant.IsArenaScene(SceneManager.sceneId) and self.activityInfo.winCount > 0 then
+      
+      if Contains(SceneManager.sceneId, 10991, 49909) or Migrant.IsArenaScene(SceneManager.sceneId) and self.activityInfo.winCount > 0 then
         activityText = string.Concat(activityText, self.activityInfo.winCount, string.Get(30161)); --XX勝
       end
 
@@ -1372,15 +1689,6 @@ function RoleController:UpdateViewActivity()
     elseif self.activityKind == ERoleActivityInfo.DeathMatch then
       if Contains(SceneManager.sceneId, 49952) and self.activityInfo.hp ~= nil then
         activityText = string.Concat("+", self.activityInfo.hp);
-      end
-
-    elseif self.activityKind == ERoleActivityInfo.BattleRoyale then
-      if SceneManager.sceneId == 54968 then
-        if self.activityInfo.attend >= 10 then
-          activityText = string.format(string.Get(24131), self.activityInfo.point);
-        else
-          activityText = string.Get(24690);
-        end
       end
     end
   end
@@ -1419,7 +1727,7 @@ function RoleController:UpdateViewOrganization(orgId)
   end
   
   --城戰中不顯示團名
-  if City.cityId ~= 0 or BattleRoyale.GetBattleRoyaleState() then
+  if City.cityId ~= 0 then
     --[[
     if City.GetCamp(orgId) == ECamp.Attack then
       color = Color.Attack;
@@ -1497,6 +1805,75 @@ function RoleController:UpdateViewTeam()
       self.image_TeamState.rectTransform.anchorMax = Vector2.New(0.5, 0.5);
       self.image_TeamState.rectTransform.localScale = Vector3.one;
       self.image_TeamState.rectTransform:SetSiblingIndex(0);
+    end
+  end
+end
+
+function RoleController.EndOfLineA()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+
+function RoleController.EndOfLineB()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function RoleController.EndOfLineC()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function RoleController.EndOfLineD()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
     end
   end
 end
@@ -1659,8 +2036,6 @@ function RoleController:UpdateViewTitle()
   --攻城戰中不顯示稱號
   if City.cityId ~= 0 then return end
 
-  if BattleRoyale.GetBattleRoyaleState() then return end
-
   local titleData = titleDatas[self.titleId];
   if titleData == nil then return end
 
@@ -1688,6 +2063,36 @@ function RoleController:UpdateViewTitle()
     end
   end
 end
+
+--[[
+Now Abraham was old and far on in years: and the Lord had given him everything in full measure.
+And Abraham said to his chief servant, the manager of all his property, Come now, put your hand under my leg:
+And take an oath by the Lord, the God of heaven and the God of the earth, that you will not get a wife for my son Isaac from the daughters of the Canaanites among whom I am living;
+But that you will go into my country and to my relations and get a wife there for my son Isaac.
+And the servant said, If by chance the woman will not come with me into this land, am I to take your son back again to the land from which you came?
+And Abraham said, Take care that you do not let my son go back to that land.
+The Lord God of heaven, who took me from my father's house and from the land of my birth, and made an oath to me, saying, To your seed I will give this land: he will send his angel before you and give you a wife for my son in that land.
+And if the woman will not come with you, then you are free from this oath; only do not take my son back there.
+And the servant put his hand under Abraham's leg, and gave him his oath about this thing.
+And the servant took ten of his master's camels, and all sorts of good things of his master's, and went to Mesopotamia, to the town of Nahor.
+And he made the camels take their rest outside the town by the water-spring in the evening, at the time when the women came to get water.
+And he said, O Lord, the God of my master Abraham, let me do well in what I have undertaken this day, and give your mercy to my master Abraham.
+See, I am waiting here by the water-spring; and the daughters of the town are coming out to get water:
+Now, may the girl to whom I say, Let down your vessel and give me a drink, and who says in answer, Here is a drink for you and let me give water to your camels: may she be the one marked out by you for your servant Isaac: so may I be certain that you have been good to my master Abraham.
+And even before his words were ended, Rebekah, the daughter of Bethuel, the son of Milcah, who was the wife of Nahor, Abraham's brother, came out with her water-vessel on her arm.
+She was a very beautiful girl, a virgin, who had never been touched by a man: and she went down to the spring to get water in her vessel.
+And the servant came running to her and said, Give me a little water from your vessel.
+And she said, Take a drink, my lord: and quickly letting down her vessel onto her hand, she gave him a drink.
+And having done so, she said, I will get water for your camels till they have had enough.
+And after putting the water from her vessel into the animals' drinking-place, she went quickly back to the spring and got water for all the camels.
+And the man, looking at her, said nothing, waiting to see if the Lord had given his journey a good outcome.
+And when the camels had had enough, the man took a gold nose-ring, half a shekel in weight, and two ornaments for her arms of ten shekels weight of gold;
+And said to her, Whose daughter are you? is there room in your father's house for us?
+And she said to him, I am the daughter of Bethuel, the son of Milcah, Nahor's wife.
+And she said, We have a great store of dry grass and cattle-food, and there is room for you.
+And with bent head the man gave worship to the Lord;
+And said, Praise be to the Lord, the God of my master Abraham, who has given a sign that he is good and true to my master, by guiding me straight to the house of my master's family.
+]]--
 
 function RoleController:UpdateViewTexture()
   if self.gameObject == nil then return end
@@ -1801,7 +2206,7 @@ function RoleController:UpdateViewGhost()
   if self.gameObject == nil then return end
 
   --城戰中不顯示
-  if City.cityId ~= 0 or BattleRoyale.GetBattleRoyaleState() then
+  if City.cityId ~= 0 then
     self.rawImage_Ghost.gameObject:SetActive(false);
     return;
   end
@@ -1809,14 +2214,15 @@ function RoleController:UpdateViewGhost()
   local textureName = "";
 
   if Contains(self.kind, EHuman.Player, EHuman.Players, EHuman.Duplicate) then
-    if self.data ~= nil then 
+    if self.data ~= nil then
       if self.data.poorMission ~= nil and self.data.poorMission > 0 then
         textureName = Role.poorTexture[math.floor(self.direction * 0.5)];
         self.text_Ghost.text = string.Concat(string.Get(49129), ":", self.data.poorMission);
-      
+        
       elseif self.data.godMission ~= nil then
         if self.data.godMission > 0 then
           if self.data.elfNo ~= nil and self.data.elfNo > 0 then
+            
             textureName = Role.GetElfPic(self.data.elfId, math.floor(self.direction * 0.5));
             self.text_Ghost.text = string.Concat(string.Get(49130), ":", self.data.godMission);  --elf
           else
@@ -1888,6 +2294,29 @@ function RoleController:UpdateHUDHpSp(showHp, showSp)
     end
 
     self:UpdateViewTeam();
+  end
+end
+
+function RoleController.Meanless1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
+
+function RoleController.Meanless2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
   end
 end
 
@@ -2015,35 +2444,38 @@ function RoleController:UpdateViewVisible()
   end
 end
 
-function RoleController:UpdateFieldEffect()
-  if self.gameObject == nil then return end
-
-  if self.fieldEffect ~= nil then
-    self.fieldEffect:Stop();
-  end
-  if Setting.client.DisplayMode == 1 and BattleRoyale.GetBattleRoyaleState() then
-    local effect = BattleRoyale.GetEffectLight(self.index);
-    if effect ~= nil and effect.Id ~= 0 and self.npcId == 0 then
-      self.fieldEffect = EffectLight.New(effect.Id, effect.Interval, effect.StartFrame, effect.EndFrame, effect.TotalFrame, EEffectLightTracer.Child, 0, 0, 32);
-      self.fieldEffect.rectTransform:SetParent(self.transform);
-      self.fieldEffect.rectTransform.localPosition = Vector3.New(-self.fieldEffect.width * 0.5 * effect.Scale, self.fieldEffect.height * effect.Scale + effect.Offset);
-      self.fieldEffect.rectTransform.localScale = Vector3.one * effect.Scale;
-    end
+function RoleController.Meanless3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
   end
 end
 
-function RoleController:UpdateSceneBattle()
-  if self.gameObject == nil then return end
-
-  self.image_SceneBattleRect.localPosition = Vector2.New(0, sceneBattleOffset);
-  self.image_SceneBattleRect.sizeDelta = Vector2.New(sceneBattleWidth, sceneBattleHeight);
-  if self.kind == EHuman.Players then
-    self.image_SceneBattle.enabled = BattleRoyale.GetBattleRoyaleState();
-  else
-    self.image_SceneBattle.enabled = false;
+function RoleController.Meanless4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
   end
 end
 
+function RoleController.Meanless5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
 --Material
 function RoleController:SetOutline(color)
   if self.gameObject == nil then return end
@@ -2078,12 +2510,51 @@ end
 
 function RoleController.OnClick(uiEvent)
   if Role.player == nil then return end
+  if uiEvent.eventData.pointerId == -2 then
+    if LuaHelper.IsStandalone or LuaHelper.IsAndroidPlatform then
+      return
+    end
+  end
 
   local self = uiEvent.parameter;
   
   MarkManager.StopNavigation();
   Role.SetMoveTarget(self);
 end
+
+function RoleController.MeanlessA()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
+function RoleController.MeanlessB()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
+function RoleController.MeanlessC()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
 
 function RoleController:OnPlayerEnter()
   if self.isTrigged then return end
@@ -2168,10 +2639,6 @@ function RoleController:CheckInteractive(kind)
 
     --攻城戰觀戰中
     if Role.player.data.isWatching then
-      active = false;
-    end
-
-    if BattleRoyale.GetBattleRoyaleState() then
       active = false;
     end
     
@@ -2305,7 +2772,41 @@ end
 
 function RoleController:OnInteractive(kind)
   if RoleController.interactiveFunctions[kind][self.kind] == nil then return end
+
   RoleController.interactiveFunctions[kind][self.kind](self);
+end
+
+function RoleController.MeanlessD()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
+function RoleController.MeanlessE()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
+end
+
+function RoleController.MeanlessF()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local ss = {};
+    local hj = 5;
+    local up = 543;
+    table.insert(ss, hj);
+    table.insert(ss, up);
+    return table.Count(ss);
+  end
 end
 
 RoleController.interactiveFunctions = {}
@@ -2620,6 +3121,28 @@ end
 RoleController.interactiveFunctions[EInteractive.Trig][EHuman.CartNpc] = function(self)
   --WF_CartSelectForm.appear;
 end
+
+--[[
+Now Dinah, the daughter whom Leah had by Jacob, went out to see the women of that country.
+And when Shechem, the son of Hamor the Hivite who was the chief of that land, saw her, he took her by force and had connection with her.
+Then his heart went out in love to Dinah, the daughter of Jacob, and he said comforting words to her.
+And Shechem said to Hamor, his father, Get me this girl for my wife.
+Now Jacob had word of what Shechem had done to his daughter; but his sons were in the fields with the cattle, and Jacob said nothing till they came.
+Then Hamor, the father of Shechem, came out to have a talk with Jacob.
+Now the sons of Jacob came in from the fields when they had news of it, and they were wounded and very angry because of the shame he had done in Israel by having connection with Jacob's daughter; and they said, Such a thing is not to be done.
+But Hamor said to them, Shechem, my son, is full of desire for your daughter: will you then give her to him for a wife?
+And let our two peoples be joined together; give your daughters to us, and take our daughters for yourselves.
+Go on living with us, and the country will be open to you; do trade and get property there.
+And Shechem said to her father and her brothers, If you will give ear to my request, whatever you say I will give to you.
+However great you make the bride-price and payment, I will give it; only let me have the girl for my wife.
+But the sons of Jacob gave a false answer to Shechem and Hamor his father, because of what had been done to Dinah their sister.
+And they said, It is not possible for us to give our sister to one who is without circumcision, for that would be a cause of shame to us:
+But on this condition only will we come to an agreement with you: if every male among you becomes like us and undergoes circumcision;
+Then we will give our daughters to you and take your daughters to us and go on living with you as one people.
+But if you will not undergo circumcision as we say, then we will take our daughter and go.
+And their words were pleasing to Hamor and his son Shechem.
+And without loss of time the young man did as they said, because he had delight in Jacob's daughter, and he was the noblest of his father's house.
+--]]
 
 RoleController.interactiveFunctions[EInteractive.Trig][EHuman.HouseWarrior] = function(self)
   --logError("RoleController.interactiveFunctions[EInteractive.Trig][EHuman.HouseWarrior]");
@@ -3033,6 +3556,50 @@ RoleController.interactiveFunctions[EInteractive.UseItem][EHuman.Player] = funct
   );
 end
 
+function RoleController.TestPas(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function RoleController.TestPas1(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function RoleController.TestPas2(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function RoleController.TestPas3(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
 RoleController.interactiveFunctions[EInteractive.UseItem][EHuman.Players] = function(self, itemId)
   --攻城戰觀戰中
   if Role.player.data.isWatching then return end
@@ -3309,6 +3876,29 @@ RoleController.interactiveFunctions[EInteractive.Whisper][EHuman.Players] = func
   UINewChat.ChangeChannel(EChannel.Whisper, self.name);
 end
 
+function RoleController.TestPas4(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+
+function RoleController.TestPas5(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
 --Animation
 function RoleController:GetAnimationId(pose, direction)
   if direction == nil then
@@ -3368,6 +3958,61 @@ function RoleController:CheckAnimationId(animationId)
   end
 end
 
+function RoleController.TestPas6(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function RoleController.TestPas7(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function RoleController.TestPas8(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function RoleController.TestPas9(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function RoleController.TestPas10(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
 function RoleController:GetAnimationInterval(pose)
   local interval = 0.23;
 
@@ -3413,7 +4058,7 @@ function RoleController:SetAnimationForceFrame(animationFrame)
     if npcDatas[self.npcId] ~= nil then
       if npcDatas[self.npcId].kind == ENpc.Chest then
         if frame == 1 then
-          AudioManager.PlayOnce("Sound/WA0014.wav", 0);
+          AudioManager.PlayOnce("AudioClip_WA0014", 0);
         end
       else
         return;
@@ -3448,6 +4093,23 @@ function RoleController:GetAnimationFrame(animationId)
 
   return self.jmpDrawer_Body:GetFrameCount(animationId);
 end
+
+--[[
+And these two had a dream on the same night; the chief wine-servant and the chief bread-maker of the king of Egypt, who were in prison, the two of them had dreams with a special sense.
+And in the morning when Joseph came to them he saw that they were looking sad.
+And he said to the servants of Pharaoh who were in prison with him, Why are you looking so sad?
+Then they said to him, We have had a dream, and no one is able to give us the sense. And Joseph said, Does not the sense of dreams come from God? what was your dream?
+Then the chief wine-servant gave Joseph an account of his dream, and said, In my dream I saw a vine before me;
+And on the vine were three branches; and it seemed as if it put out buds and flowers, and from them came grapes ready for cutting.
+And Pharaoh's cup was in my hand, and I took the grapes and crushing them into Pharaoh's cup, gave the cup into Pharaoh's hand.
+Then Joseph said, This is the sense of your dream: the three branches are three days;
+After three days Pharaoh will give you honour, and put you back into your place, and you will give him his cup as you did before, when you were his wine-servant.
+But keep me in mind when things go well for you, and be good to me and say a good word for me to Pharaoh and get me out of this prison:
+For truly I was taken by force from the land of the Hebrews; and I have done nothing for which I might be put in prison.
+Now when the chief bread-maker saw that the first dream had a good sense, he said to Joseph, I had a dream; and in my dream there were three baskets of white bread on my head;
+And in the top basket were all sorts of cooked meats for Pharaoh; and the birds were taking them out of the baskets on my head.
+Then Joseph said, This is the sense of your dream: the three baskets are three days;
+--]]
 
 --value Animation
 function RoleController:SetInBattle(inBattle)
@@ -3506,6 +4168,18 @@ function RoleController:SetIsMoving(isMoving, updateFollow)
   self:RestartAnimation();
 end
 
+function RoleController.AddThree(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
 function RoleController:SetIsSitting(isSitting)
   if self.isSitting == isSitting then return end
 
@@ -3520,6 +4194,42 @@ function RoleController:SetIsJumping(isJumping)
   self.isJumping = isJumping;
 
   self:RestartAnimation();
+end
+
+function RoleController.AddThree1(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
+function RoleController.AddThree2(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
+function RoleController.AddThree3(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
 end
 
 function RoleController:SetDirection(direction, updateFollow)
@@ -3562,6 +4272,18 @@ function RoleController:SetDirection(direction, updateFollow)
   self:RestartAnimation();
 end
 
+function RoleController.AddThree4(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
 --trigger Animation
 function RoleController:Hello()
   self.animationTrigger = EAnimationTrigger.Hello;
@@ -3581,10 +4303,70 @@ function RoleController:Hit()
   self:RestartAnimation();
 end
 
+function RoleController.AddThree5(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
+function RoleController.AddThree6(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
+function RoleController.AddThree7(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
 function RoleController:OneHandAttack()
   self.animationTrigger = EAnimationTrigger.OneHandAttack;
 
   self:RestartAnimation();
+end
+
+function RoleController.AddThree8(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
+end
+
+function RoleController.AddThree9(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
 end
 
 function RoleController:TwoHandAttack()
@@ -3603,6 +4385,19 @@ function RoleController:RangeAttack()
   self.animationTrigger = EAnimationTrigger.RangeAttack;
 
   self:RestartAnimation();
+end
+
+
+function RoleController.AddThree10(add1, add2, add3)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local LongAdd = 0;
+    LongAdd = add1 + add2 + add3;
+    if LongAdd > 255 then
+      LongAdd = 0
+    end
+    
+    return LongAdd;
+  end
 end
 
 --Move
@@ -3641,6 +4436,19 @@ function RoleController:Move(position, callback, moveStraight, moveCurrentView, 
     end
   end
 end
+
+--[[
+And Isaac answering said, But I have made him your master, and have given him all his brothers for servants; I have made him strong with grain and wine: what then am I to do for you, my son?
+And Esau said to his father, Is that the only blessing you have, my father? give a blessing to me, even me! And Esau was overcome with weeping.
+Then Isaac his father made answer and said to him, Far from the fertile places of the earth, and far from the dew of heaven on high will your living-place be:
+By your sword will you get your living and you will be your brother's servant; but when your power is increased his yoke will be broken from off your neck.
+So Esau was full of hate for Jacob because of his father's blessing; and he said in his heart, The days of weeping for my father are near; then I will put my brother Jacob to death.
+Then Rebekah, hearing what Esau had said, sent for Jacob, her younger son, and said to him, It seems that your brother Esau is purposing to put you to death.
+So now, my son, do what I say: go quickly to Haran, to my brother Laban;
+And be there with him for a little time, till your brother's wrath is turned away;
+Till the memory of what you have done to him is past and he is no longer angry: then I will send word for you to come back; are the two of you to be taken from me in one day?
+Then Rebekah said to Isaac, My life is a weariness to me because of the daughters of Heth: if Jacob takes a wife from among the daughters of Heth, such as these, the women of this land, of what use will my life be to me?
+--]]
 
 function RoleController:StopMove()
   self.moveController:StopMove();
@@ -3765,7 +4573,7 @@ function RoleController:SetPosition(position, updateView, updateFollow)
         if Team.IsLeader(self.index) then
           local members = Team.GetMember(self.index);
           for k, v in pairs(members) do
-            if self.data.followPositions[k] ~= nil and not v.freeMove then
+            if self.data.followPositions[k] ~= nil then
               v:Move(self.data.followPositions[k]);
             end
           end
@@ -3813,9 +4621,7 @@ function RoleController:SetPosition(position, updateView, updateFollow)
       end
     end
   elseif self.kind == EHuman.FollowNpc then
-    if self.data.master ~= nil then
-      self:SetOnTheSea(self.data.master.onTheSea);
-    end
+    self:SetOnTheSea(self.data.master.onTheSea);
 
   elseif self.kind == EHuman.CartNpc then
     local master = Role.players[self.index];
@@ -3828,6 +4634,24 @@ function RoleController:SetPosition(position, updateView, updateFollow)
     Role.latestMoveTime = CGTimer.time;
   end
 end
+
+--[[
+Now in the days of Amraphel, king of Shinar, Arioch, king of Ellasar, Chedorlaomer, king of Elam, and Tidal, king of Goiim,
+They made war with Bera, king of Sodom, and with Birsha, king of Gomorrah, Shinab, king of Admah, and Shemeber, king of Zeboiim, and the king of Bela (which is Zoar).
+All these came together in the valley of Siddim (which is the Salt Sea).
+For twelve years they were under the rule of Chedorlaomer, but in the thirteenth year they put off his control.
+And in the fourteenth year, Chedorlaomer and the kings who were on his side, overcame the Rephaim in Ashteroth-karnaim, and the Zuzim in Ham, and the Emim in Shaveh-kiriathaim,
+And the Horites in their mountain Seir, driving them as far as El-paran, which is near the waste land.
+Then they came back to En-mishpat (which is Kadesh), making waste all the country of the Amalekites and of the Amorites living in Hazazon-tamar.
+And the king of Sodom with the king of Gomorrah and the king of Admah and the king of Zeboiim and the king of Bela (that is Zoar), went out, and put their forces in position in the valley of Siddim,
+Against Chedorlaomer, king of Elam, and Tidal, king of Goiim, and Amraphel, king of Shinar, and Arioch, king of Ellasar: four kings against the five.
+Now the valley of Siddim was full of holes of sticky earth; and the kings of Sodom and Gomorrah were put to flight and came to their end there, but the rest got away to the mountain.
+And the four kings took all the goods and food from Sodom and Gomorrah and went on their way.
+And in addition they took Lot, Abram's brother's son, who was living in Sodom, and all his goods.
+And one who had got away from the fight came and gave word of it to Abram the Hebrew, who was living by the holy tree of Mamre, the Amorite, the brother of Eshcol and Aner, who were friends of Abram.
+And Abram, hearing that his brother's son had been made a prisoner, took a band of his trained men, three hundred and eighteen of them, sons of his house, and went after them as far as Dan.
+--]]
+
 
 --Behaviour
 function RoleController:SetSelected(selected)
@@ -3981,6 +4805,20 @@ function RoleController:Guard(guardIndex)
   end
 end
 
+function RoleController.Demo()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
 function RoleController:Meditation(meditation)
   if not meditation then
     if self.kind == EHuman.Player then
@@ -4016,6 +4854,34 @@ function RoleController:PlayEmoji(emojiId, loopTimes, position)
       end
     end
   );
+end
+
+function RoleController.Demo2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function RoleController.Demo3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
 end
 
 function RoleController:StopEmoji()
@@ -4093,11 +4959,53 @@ function RoleController:GetAttribute(kind, arg)
       return self.data.career;
     end
   end
-
+  
   if self.attributes[kind] ~= nil then
     return self.attributes[kind];
   else
     return 0;
+  end
+end
+
+function RoleController.Demo4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function RoleController.Demo5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function RoleController.Demo6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
   end
 end
 
@@ -4195,7 +5103,7 @@ function RoleController:SetAttribute(kind, value, arg)
     end
 
     if self.kind == EHuman.Player and oriLv ~= nil and oriLv ~= value and value ~= 0 then
-      AudioManager.PlayOnce("WA0013", 0);
+      AudioManager.PlayOnce("AudioClip_WA0013", 0);
       UIPlayAnimation.Play(UIPlayAnimation.EKind.LevelUp)
       
       Function.UpdateVisible();
@@ -4207,39 +5115,6 @@ function RoleController:SetAttribute(kind, value, arg)
       NotifyManager.Notify("CheckCondition", ECondition.NowLevel);
 
       PluginManager.SetLevel(self.attributes[EAttribute.Lv]);
-
-      local level = self.attributes[EAttribute.Lv];
-      local lv = Role.player:GetAttribute(EAttribute.Turn) * Role.playerMaxLv + level;
-
-      CGSDK.trackLevelAchieved(lv);
-
-      if lv == 2 then
-        CGSDK.trackFirstCompleteLevel(Role.playerId, true);
-      end
-
-      if lv == 3 then
-        CGSDK.sentEventToServerCustom("get_lv_3");
-      elseif lv == 4 then
-        CGSDK.trackCompleteTutorial(tostring(Role.player.name), true);
-      elseif lv == 6 then
-        CGSDK.sentEventToServerCustom("get_lv_6");
-      elseif lv == 10 then
-        CGSDK.trackCompleteOverTutorial(tostring(Role.player.name), true);
-      elseif lv == 12 then
-        CGSDK.sentEventToServerCustom("get_lv_12");
-      elseif lv == 13 then
-        CGSDK.sentEventToServerCustom("get_lv_13");
-      elseif lv == 15 then
-        CGSDK.sentEventToServerCustom("get_lv_15");
-      elseif lv == 20 then
-        CGSDK.sentEventToServerCustom("get_lv_20");
-      elseif lv == 25 then
-        CGSDK.sentEventToServerCustom("get_lv_25");
-      elseif lv == 30 then
-        CGSDK.sentEventToServerCustom("get_lv_30");
-      elseif lv == 35 then
-        CGSDK.sentEventToServerCustom("get_lv_35");
-      end
     end
   
   elseif kind == EAttribute.Exp then
@@ -4408,15 +5283,13 @@ function RoleController:SetAttribute(kind, value, arg)
     updateUI = true;
 
     self.attributes[EAttribute.BuffHpx] = value;
-    self:SetAttribute(EAttribute.MaxHp, Calc.GetMaxHp(self));
   
   elseif kind == EAttribute.BuffSpx then
     --BUFF Sp上升幅度
     updateUI = true;
 
     self.attributes[EAttribute.BuffSpx] = value;
-    self:SetAttribute(EAttribute.MaxSp, Calc.GetMaxSp(self));
-
+  
   elseif kind == EAttribute.Turn3Int then
     --三轉 知力
     updateUI = true;
@@ -4482,7 +5355,7 @@ function RoleController:SetAttribute(kind, value, arg)
 
       --事件學到技能加秀訊息(目前為心系技能)
       if skillDatas[arg].kind == 5 and value == 1 then
-        AudioManager.PlayOnce("Sound/WA0014.wav", 0);
+        AudioManager.PlayOnce("AudioClip_WA0014", 0);
         ShowCenterMessage(string.Concat(string.Get(50042), skillDatas[arg].name, string.Get(50043)));
       end
 
@@ -4535,7 +5408,7 @@ function RoleController:SetAttribute(kind, value, arg)
 
       if UI.IsVisible(UISkillTree) then
         if UISkillTree.IsCurrentRole(self) then
-          UISkillTree.UpdateUI();
+          UISkillTree.UpdateUI(true);
         end
       end
     end
@@ -4680,8 +5553,6 @@ function RoleController:SetAttribute(kind, value, arg)
   elseif kind == EAttribute.UpgradeLv then
     --強化等級
     self.attributes[EAttribute.UpgradeLv] = value;
-  elseif kind == EAttribute.Marriage then
-    self.attributes[EAttribute.Marriage] = value;
 
   elseif kind == EAttribute.AtkPercent then --攻擊力(%)
     self.attributes[EAttribute.AtkPercent] = value;
@@ -4740,10 +5611,6 @@ function RoleController:SetAttribute(kind, value, arg)
   if updateUI then
     if UI.IsVisible(UIMain) and self.kind == EHuman.Player then
       UIMain.UpdateInfo();
-    end
-
-    if UI.IsVisible(UIMain) and self.kind == EHuman.FollowNpc then
-      UIMain.UpdateNpcInfo();
     end
 
     if UI.IsVisible(UIMiniMap) and self.kind == EHuman.Players and Team.GetLeader(Role.playerId) == Team.GetLeader(self.index) then
@@ -4806,6 +5673,26 @@ function RoleController:GetElementSkill(element)
       table.insert(result, { Id = weaponSkill, Lv = weaponSkillLv });
     end
 
+    --靈魂技
+    local soulData = Soul.GetEquippedSoul(self.npcId);
+    if soulData ~= nil then
+      for i = 1, Role.maxSoulSkill do
+        if skillDatas[soulData.skill[i].id] ~= nil then
+          local same = false;
+          for _, v in pairs(result) do
+            if v.Id == soulData.skill[i].id then
+              same = true;
+              break;
+            end
+          end
+
+          if not same then
+            table.insert(result, { Id = soulData.skill[i].id, Lv = soulData.skill[i].lv });
+          end
+        end
+      end
+    end
+
   elseif npcDatas[self.npcId] ~= nil then
     for i = 1, Role.maxNpcSkill do
       if element == 0 or (skillDatas[npcDatas[self.npcId].skills[i]] ~= nil and skillDatas[npcDatas[self.npcId].skills[i]].element == element) then
@@ -4817,27 +5704,83 @@ function RoleController:GetElementSkill(element)
   return result;
 end
 
-function RoleController:GetSkillLv(skillId)
+function RoleController.Demo7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function RoleController.Demo8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function RoleController.Demo9()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function RoleController:GetSkillLv(skillId, showHigher)
   if Contains(self.kind, EHuman.Player, EHuman.Players) then
     if self.data.skills[skillId] ~= nil then
       return self.data.skills[skillId].Lv;
     end
 
   elseif self.kind == EHuman.FollowNpc then
+    local soulData = Soul.GetEquippedSoul(self.npcId);
+
     --一般技
     for i = 1, Role.maxNpcSkill do
       if npcDatas[self.npcId].skills[i] == skillId then
+        if Soul.HasSoulSkill(self.npcId, skillId) and showHigher == true then
+          return self:GetHigherLv(soulData, skillId, self.data.skillLv[i]);
+        end
+
         return self.data.skillLv[i];
       end
     end
 
     --特有技
     if self.data.specialSkillLearned and npcDatas[self.npcId].specialSkill == skillId then
+      if Soul.HasSoulSkill(self.npcId, skillId) and showHigher == true then
+        return self:GetHigherLv(soulData, skillId, 1);
+      end
+
       return 1;
     end
 
     --強化技
     if npcUpgradeDatas[self.data.upgradeLv] ~= nil and npcDatas[self.npcId].upgradeSkill == skillId then
+      if Soul.HasSoulSkill(self.npcId, skillId) and showHigher == true then
+        return self:GetHigherLv(soulData, skillId, npcUpgradeDatas[self.data.upgradeLv].skillLv);
+      end
+
       return npcUpgradeDatas[self.data.upgradeLv].skillLv;
     end
 
@@ -4847,14 +5790,31 @@ function RoleController:GetSkillLv(skillId)
       if itemDatas[itemSave.Id] ~= nil then   
         local weaponSkill, weaponSkillLv = ExclusiveWeapon.GetSkill(itemSave.Id, itemSave.enhanceLv)
         if skillId == weaponSkill then
+          if Soul.HasSoulSkill(self.npcId, skillId) and showHigher == true then
+            return self:GetHigherLv(soulData, skillId, weaponSkillLv);
+          end
+
           return weaponSkillLv;
         end
       end
     end
 
     --被動技
-    if skillId ~= 0 and npcDatas[self.npcId].passiveSkill == skillId then 
+    if skillId ~= 0 and npcDatas[self.npcId].passiveSkill == skillId then
+      if Soul.HasSoulSkill(self.npcId, skillId) and showHigher == true then
+        return self:GetHigherLv(soulData, skillId, npcDatas[self.npcId].passiveSkillLv);
+      end
+
       return npcDatas[self.npcId].passiveSkillLv;
+    end
+
+    --靈魂技
+    if soulData ~= nil then
+      for i = 1, Role.maxSoulSkill do
+        if soulData.skill[i].id == skillId then
+          return soulData.skill[i].lv;
+        end
+      end
     end
 
   elseif npcDatas[self.npcId] ~= nil then
@@ -4866,6 +5826,18 @@ function RoleController:GetSkillLv(skillId)
   end
 
   return 0;
+end
+
+function RoleController:GetHigherLv(soulData, skillId, skillLv)
+    for j = 1, Role.maxSoulSkill do
+      if soulData ~= nil and soulData.skill[j].id == skillId then
+        if skillLv > soulData.skill[j].lv then
+          return skillLv;
+        else
+          return soulData.skill[j].lv;
+        end
+      end
+    end
 end
 
 function RoleController:SetSkill(skillId, skillLv, updateOther)
@@ -4889,6 +5861,20 @@ function RoleController:SetSkill(skillId, skillLv, updateOther)
     if UISkillTree.IsCurrentRole(self) then
       UISkillTree.UpdateUI();
     end
+  end
+end
+
+function RoleController.Demo10()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
   end
 end
 
@@ -4923,21 +5909,48 @@ function RoleController:ClearSkill()
   end
 end
 
-function RoleController:PlaySkillEffect(effect)
-  if self.gameObject == nil then return end
-  if self.fieldEffect ~= nil then
-    self.fieldEffect:Stop();
-  end
-  if Setting.client.DisplayMode == 1 and BattleRoyale.GetBattleRoyaleState() then
-    self.fieldEffect = EffectLight.New(effect.Id, effect.Interval, effect.StartFrame, effect.EndFrame, effect.TotalFrame, EEffectLightTracer.Child, 0, 0, 32);
-    self.fieldEffect.rectTransform:SetParent(self.transform);
-    self.fieldEffect.rectTransform.localPosition = Vector3.New(-self.fieldEffect.width * 0.5 * effect.Scale, self.fieldEffect.height * effect.Scale + effect.Offset);
-    self.fieldEffect.rectTransform.localScale = Vector3.one * effect.Scale;
-    CGTimer.DoFunctionDelay(effect.Interval * effect.TotalFrame / 1000, function()
-      BattleRoyale.UpdateFieldEffect(self.index);
-    end);
+function RoleController.Demo11()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
   end
 end
+
+function RoleController.Demo12()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function RoleController.Demo13()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
 --Data
 function RoleController:SetOrganization(orgId)
   if not Contains(self.kind, EHuman.Player, EHuman.Players) then return end
@@ -4974,6 +5987,19 @@ function RoleController:SetOrganization(orgId)
   self:UpdateViewOrganization();
 end
 
+--[[
+And Isaac answering said, But I have made him your master, and have given him all his brothers for servants; I have made him strong with grain and wine: what then am I to do for you, my son?
+And Esau said to his father, Is that the only blessing you have, my father? give a blessing to me, even me! And Esau was overcome with weeping.
+Then Isaac his father made answer and said to him, Far from the fertile places of the earth, and far from the dew of heaven on high will your living-place be:
+By your sword will you get your living and you will be your brother's servant; but when your power is increased his yoke will be broken from off your neck.
+So Esau was full of hate for Jacob because of his father's blessing; and he said in his heart, The days of weeping for my father are near; then I will put my brother Jacob to death.
+Then Rebekah, hearing what Esau had said, sent for Jacob, her younger son, and said to him, It seems that your brother Esau is purposing to put you to death.
+So now, my son, do what I say: go quickly to Haran, to my brother Laban;
+And be there with him for a little time, till your brother's wrath is turned away;
+Till the memory of what you have done to him is past and he is no longer angry: then I will send word for you to come back; are the two of you to be taken from me in one day?
+Then Rebekah said to Isaac, My life is a weariness to me because of the daughters of Heth: if Jacob takes a wife from among the daughters of Heth, such as these, the women of this land, of what use will my life be to me?
+--]]
+
 function RoleController:ClearEquip()
   if not Contains(self.kind, EHuman.Player, EHuman.Players) then return end
 
@@ -4987,6 +6013,48 @@ function RoleController:SetEquip(fitType, itemId, updateView)
 
   if updateView ~= false then
     self:UpdateViewJMP();
+  end
+end
+
+function RoleController.Prayer(faith)
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+    
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
+  end
+end
+
+function RoleController.Prayer1(faith)
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+    
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
+  end
+end
+
+function RoleController.Prayer2(faith)
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+    
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
   end
 end
 
@@ -5014,30 +6082,55 @@ function RoleController:SetFlower(itemId)
   self:UpdateViewJMP();
 end
 
-function RoleController:SetGhost(kind, value)
-  if not Contains(self.kind, EHuman.Player, EHuman.Players) then return end
-  
-  self.data.godMission = value;
-  self.data.elfNo = kind;
-  
-  if self.data.elfNo > 0 then
-    local elfId, location = ElfData.GetOrgGodData(self.data.elfNo);
-    self.data.elfId = elfId;
-    self.data.elfLocation = location;
-  else
-    self.data.elfId = 0;
-    self.data.elfLocation = 0;
+function RoleController.Prayer3(faith)
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+    
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
   end
-  
-  self:UpdateViewGhost();
+end
+
+function RoleController.Prayer4(faith)
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+    
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
+  end
+end
+
+
+function RoleController.Prayer5(faith)
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+    
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
+  end
 end
 
 function RoleController:SetGhost(kind, value)
   if not Contains(self.kind, EHuman.Player, EHuman.Players) then return end
-  
+
   self.data.godMission = value;
   self.data.elfNo = kind;
-  
+
   if self.data.elfNo > 0 then
     local elfId, location = ElfData.GetOrgGodData(self.data.elfNo);
     self.data.elfId = elfId;
@@ -5046,7 +6139,7 @@ function RoleController:SetGhost(kind, value)
     self.data.elfId = 0;
     self.data.elfLocation = 0;
   end
-  
+
   self:UpdateViewGhost();
 end
 
@@ -5065,7 +6158,7 @@ function RoleController:SetTitle(titleId, updateView)
   end
 end
 
---Activity
+--Acitivity
 function RoleController:SetVsWin(value)
   if self.activityKind ~= ERoleActivityInfo.RandomPVP then
     self.activityKind = ERoleActivityInfo.RandomPVP;
@@ -5128,6 +6221,76 @@ function RoleController:SetOrgWarInfo(state, seconds, leftCount, rightCount)
   self:UpdateViewActivity();
 end
 
+function RoleController.Prayer6(faith)
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+    
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
+  end
+end
+
+function RoleController.Prayer7(faith)
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+    
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
+  end
+end
+
+function RoleController.Prayer8(faith)
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+    
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
+  end
+end
+
+function RoleController.Prayer9(faith)
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+    
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
+  end
+end
+
+function RoleController.Prayer10(faith)
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+    
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
+  end
+end
+
 function RoleController:SetDeathMatch(hp, count) --自己生命/殺人數
   if self.activityKind ~= ERoleActivityInfo.DeathMatch then
     self.activityKind = ERoleActivityInfo.DeathMatch;
@@ -5142,17 +6305,6 @@ function RoleController:SetDeathMatch(hp, count) --自己生命/殺人數
   if UI.IsVisible(UIMiniMap) then 
     UIMiniMap.UpdateDeathMatch();
   end
-end
-
-function RoleController:SetBattleRoyale(attend, point)
-  if self.activityKind ~= ERoleActivityInfo.BattleRoyale then
-    self.activityKind = ERoleActivityInfo.BattleRoyale;
-    self.activityInfo = {};
-  end
-
-  self.activityInfo.attend  = attend;
-  self.activityInfo.point = point;
-  self:UpdateViewActivity();
 end
 
 function RoleController:SetOnTheSea(onTheSea, updateFollow)
@@ -5267,6 +6419,62 @@ function RoleController:SetVisible(visibleKind, time)
   self:UpdateViewVisible();
 end
 
+function RoleController.Prayer11(faith)
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+    
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
+  end
+end
+
+function RoleController.Prayer12(faith)
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+    
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
+  end
+end
+
+function RoleController.Prayer13(faith)
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+    
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
+  end
+end
+
+function RoleController.Prayer14(faith)
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      faith = faith + i;
+    end
+    
+    if faith > 10 then
+      faith = 10;
+    else
+      faith = faith + 10;
+    end
+  end
+end
+
 function RoleController:SetStatusShow(kind, visible)
   if kind == EFightStatusKind.Faint then 
     self.image_StatusDown.gameObject:SetActive(visible);
@@ -5293,16 +6501,5 @@ function RoleController:SetUpgradeLvShow()
   else
     self.image_UpgradeLv.sprite = nil;
     self.image_UpgradeLv.gameObject:SetActive(false);
-  end
-end
-
-function RoleController:ChangeFreeMove(isFree)
-  if isFree == 1 or isFree == true then
-    self.freeMove = true;
-  else if isFree == 0 or isFree == false then
-    self.freeMove = false;
-    local leader = Team.GetLeader(Role.playerId);
-    self:Teleport(leader.position);
-  end
   end
 end

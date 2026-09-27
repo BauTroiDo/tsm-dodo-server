@@ -15,7 +15,9 @@ local text_Score;
 local text_Page;
 local text_Empty;
 local text_Claim;
+local text_CalcScore;
 local image_Reward;
+local image_CalcScoreMask;
 
 local scrollContent_LeaderboardSimple;
 local scrollItems_LeaderboardSimple = {};
@@ -27,6 +29,7 @@ local maxInfo = 6;
 local currentPage = 1;
 local currentBoardKind = 0;
 local currentLeaderboardId = 0;
+local board;
 local totalPage = 1;
 local lastClickRefreshTime = nil;
 local CLICK_DELAY = 30;
@@ -48,13 +51,16 @@ function UILeaderboardSimple.Initialize(go)
   text_Page = uiController:FindText("Text_Page");
   text_Empty = uiController:FindText("Text_Empty");
   text_Claim = uiController:FindText("Text_Claim");
+  text_CalcScore = uiController:FindText("Text_CalcScore");
   image_Reward = uiController:FindImage("Image_Reward");
+  image_CalcScoreMask = uiController:FindImage("Image_CalcScoreMask");
 
   scrollContent_LeaderboardSimple = uiController:FindScrollContent("ScrollContent_Leaderboard");
   scrollContent_LeaderboardSimple.onInitialize = this.OnInitialize_scrollContent_LeaderboardSimple;
   scrollContent_LeaderboardSimple.onItemChange = this.OnItemChange_scrollContent_LeaderboardSimple;
   scrollContent_LeaderboardSimple:Initialize(1);
 
+  text_CalcScore.text = string.Get(25027); --結算中
   local tempEvent = uiController:FindEvent("Image_Prev");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_PrevPage);
 
@@ -66,13 +72,17 @@ function UILeaderboardSimple.Initialize(go)
 end
 
 function UILeaderboardSimple.OnOpen(boardKind, leaderboardId)
+  UIActivityModel.Subscribe(function()
+    image_CalcScoreMask.gameObject:SetActive(true)
+  end);
   log("UILeaderboardSimple.OnOpen: leaderboardId: " .. leaderboardId);
+  this.SendRequest(boardKind, leaderboardId);
 	local playerCount = LeaderboardSimpleData.GetBoardPlayersCount(boardKind, leaderboardId);
   local rank = LeaderboardSimpleData.GetRank(boardKind, leaderboardId);
   local score = LeaderboardSimpleData.GetSelfScore(boardKind, leaderboardId);
+  board = LeaderboardSimpleData.GetSelfBoard(boardKind, leaderboardId);
 
   text_Empty.gameObject:SetActive(true);
-
   currentBoardKind = boardKind;
   currentLeaderboardId = leaderboardId;
 
@@ -81,7 +91,7 @@ function UILeaderboardSimple.OnOpen(boardKind, leaderboardId)
   end
 
   UIActivityModel.SetOnClick_Refresh(this.OnClick_Refresh);
-  this.UpdateUI(leaderboardId, math.ceil(rank / UILeaderboardSimple.pageRawAmount), math.ceil( playerCount / this.pageRawAmount), rank, score, LeaderboardSimpleData.GetSelfBoard(boardKind, leaderboardId).players);
+  this.UpdateUI(leaderboardId, math.ceil(rank / UILeaderboardSimple.pageRawAmount), math.ceil( playerCount / this.pageRawAmount), rank, score, board.players);
   if not CGTimer.ContainsListener(this.UpdateBoard) then
     CGTimer.AddListener(this.UpdateBoard, 180, true);
   end
@@ -171,7 +181,7 @@ function UILeaderboardSimple.UpdateUI(leaderboardId, page, maxPage, myRank, mySc
   end
 
   text_Empty.gameObject:SetActive(table.maxn(datas) <= 0);
-
+  this.SetCalcMask();
   scrollContent_LeaderboardSimple:Reset(math.min(table.maxn(datas), maxInfo));
   this.UpdatePage();
   this.CheckActivityEnd();
@@ -234,12 +244,13 @@ function UILeaderboardSimple.OnInitialize_scrollContent_LeaderboardSimple(scroll
 end
 
 function UILeaderboardSimple.OnItemChange_scrollContent_LeaderboardSimple(dataIndex, itemIndex)
-  if table.Count(LeaderboardSimpleData.GetSelfBoard(currentBoardKind, currentLeaderboardId)) <= 0 then return true end
-  local rankPlayers = LeaderboardSimpleData.GetSelfBoard(currentBoardKind, currentLeaderboardId).players[dataIndex + 1];
+  board = LeaderboardSimpleData.GetSelfBoard(currentBoardKind, currentLeaderboardId);
+  if table.Count(board) <= 0 then return true end
+  local rankPlayers = board.players[dataIndex + 1];
   if rankPlayers == nil then
 		return false ;
   else
-    text_Empty.gameObject:SetActive(table.Count(LeaderboardSimpleData.GetSelfBoard(currentBoardKind, currentLeaderboardId).players) <= 0);
+    text_Empty.gameObject:SetActive(table.Count(board.players) <= 0);
 	end
 
 
@@ -298,7 +309,7 @@ end
 function UILeaderboardSimple.CheckActivityEnd()
   if currentBoardKind == EBoardKind.ActivityModel then
     local status, statusString = ActivityModel.GetActivityStatus(ActivityModel.openActivityId);
-    if status == EFestivalStatus.ActivityEnd then
+    if status == EFestivalStatus.ActivityEnd and board.status == EBoardStatus.Reward then
       if not ActivityModel.PlayerAwardCount[currentLeaderboardId * ActivityModel.MISSION_INDEX + 1] or ActivityModel.PlayerAwardCount[currentLeaderboardId * ActivityModel.MISSION_INDEX + 1].get == 0 then
         if LeaderboardSimpleData.GetRank(currentBoardKind, currentLeaderboardId) ~= 0 then
           image_Reward.sprite = UI.GetSprite("but001D");
@@ -370,4 +381,15 @@ end
 
 function UILeaderboardSimple.SetScore(score)
   text_Score.text = tostring(score);
+end
+
+function UILeaderboardSimple.SetCalcMask()
+  board = LeaderboardSimpleData.GetSelfBoard(currentBoardKind, currentLeaderboardId);
+  local status, statusString = ActivityModel.GetActivityStatus(ActivityModel.openActivityId);
+  image_CalcScoreMask.gameObject:SetActive(false);
+  if not text_Empty.gameObject.activeSelf and board.status ~= EBoardStatus.Reward  then
+    if status == EFestivalStatus.ActivityEnd and not image_CalcScoreMask.gameObject.activeSelf then
+      image_CalcScoreMask.gameObject:SetActive(true);
+    end
+  end
 end

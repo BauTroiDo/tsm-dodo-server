@@ -7,6 +7,21 @@ EFightPointStatus = {
   Finished = 3
 }
 
+function FightPointEffect.Donothing()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
 function FightPointEffect.GenerateBezierPath(ctrlPoints, totalNum)    --產生貝茲路徑
   local path = {};
   path.point = {};
@@ -16,6 +31,36 @@ function FightPointEffect.GenerateBezierPath(ctrlPoints, totalNum)    --產生�
   end
 
   return path;
+end
+
+function FightPointEffect.Donothing1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
+function FightPointEffect.Donothing2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
 end
 
 function FightPointEffect.Bezier(ctrlPoints, keyNum, totalNum)    --產生貝茲曲線某一指點定節點座標
@@ -71,6 +116,51 @@ function FightPointEffect.GenerateDirection(points)             --路線產出�
 
   directions.dirs[n - 1] = this.Direction(points[n - 2], points[n - 1]);
   return directions;
+end
+
+function FightPointEffect.Donothing3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
+function FightPointEffect.Donothing4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
+function FightPointEffect.Donothing5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
 end
 
 function FightPointEffect.Direction(firstPoint, secondPoint)    --兩點找出一方向
@@ -194,6 +284,36 @@ function FightPointEffect.PlayFightEffectA(rawImage, patternWidth, patternHeight
   return status;
 end
 
+function FightPointEffect.Donothing6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
+function FightPointEffect.Donothing7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
 function FightPointEffect.Test()
   local test = {};
   table.insert(test, EFightPointStatus.Processing);
@@ -220,5 +340,35 @@ function FightPointEffect.Test()
     logError("test and test2 Equal");
   else
     logError("Not Equal");
+  end
+end
+
+function FightPointEffect.Donothing8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
+  end
+end
+
+function FightPointEffect.Donothing9()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local nothing = {};
+    local nthing = {};
+    for i = 1, 10 do
+      table.insert(nothing, i, 100)
+    end
+    if table.Count(nothing) ~= 0 then
+      for k,v in ipairs(nothing) do
+        table.insert(nthing, v)
+      end
+    end
   end
 end

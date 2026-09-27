@@ -1,146 +1,178 @@
 --region MovieSound.lua
 
+--[[
+Now Dinah, the daughter whom Leah had by Jacob, went out to see the women of that country.
+And when Shechem, the son of Hamor the Hivite who was the chief of that land, saw her, he took her by force and had connection with her.
+Then his heart went out in love to Dinah, the daughter of Jacob, and he said comforting words to her.
+And Shechem said to Hamor, his father, Get me this girl for my wife.
+Now Jacob had word of what Shechem had done to his daughter; but his sons were in the fields with the cattle, and Jacob said nothing till they came.
+Then Hamor, the father of Shechem, came out to have a talk with Jacob.
+Now the sons of Jacob came in from the fields when they had news of it, and they were wounded and very angry because of the shame he had done in Israel by having connection with Jacob's daughter; and they said, Such a thing is not to be done.
+But Hamor said to them, Shechem, my son, is full of desire for your daughter: will you then give her to him for a wife?
+And let our two peoples be joined together; give your daughters to us, and take our daughters for yourselves.
+Go on living with us, and the country will be open to you; do trade and get property there.
+And Shechem said to her father and her brothers, If you will give ear to my request, whatever you say I will give to you.
+However great you make the bride-price and payment, I will give it; only let me have the girl for my wife.
+But the sons of Jacob gave a false answer to Shechem and Hamor his father, because of what had been done to Dinah their sister.
+And they said, It is not possible for us to give our sister to one who is without circumcision, for that would be a cause of shame to us:
+But on this condition only will we come to an agreement with you: if every male among you becomes like us and undergoes circumcision;
+Then we will give our daughters to you and take your daughters to us and go on living with you as one people.
+But if you will not undergo circumcision as we say, then we will take our daughter and go.
+And their words were pleasing to Hamor and his son Shechem.
+And without loss of time the young man did as they said, because he had delight in Jacob's daughter, and he was the noblest of his father's house.
+--]]
 
 local SoundList = 
 {
-  "Sound\\10.wav",
-  "Sound\\20.wav",
-  "Sound\\21.wav",
-  "Sound\\30.wav",
-  "Sound\\31.wav",
-  "Sound\\32.wav",
-  "Sound\\40.wav",
-  "Sound\\41.wav",
-  "Sound\\42.wav",
-  "Sound\\43.wav",
-  "Sound\\50.wav",
-  "Sound\\51.wav",
-  "Sound\\52.wav",
-  "Sound\\m004.wav",
-  "Sound\\WA0001.wav",
-  "Sound\\WA0002.wav",
-  "Sound\\WA0003.wav",
-  "Sound\\WA0004.wav",
-  "Sound\\WA0005.wav",
-  "Sound\\WA0006.wav",
-  "Sound\\WA0007.wav",
-  "Sound\\WA0008.wav",
-  "Sound\\WA0009.wav",
-  "Sound\\WA0010.wav",
-  "Sound\\WA0011.wav",
-  "Sound\\WA0012.wav",
-  "Sound\\WA0013.wav",
-  "Sound\\WA0014.wav",
-  "Sound\\WA0017.wav",
-  "Sound\\WA0018.wav",
-  "Sound\\WA0019.wav",
-  "Sound\\WA0020.wav",
-  "Sound\\WA0021.wav",
-  "Sound\\WA0022.wav",
-  "Sound\\WA0023.wav",
-  "Sound\\WA0024.wav",
-  "Sound\\WA0025.wav",
-  "Sound\\WA0026.wav",
-  "Sound\\WA0027.wav",
-  "Sound\\WA0028.wav",
-  "Sound\\WA0029.wav",
-  "Sound\\WA0030.wav",
-  "Sound\\WA0031.wav",
-  "Sound\\WA0032.wav",
-  "Sound\\WA0033.wav",
-  "Sound\\WA0034.wav",
-  "Sound\\WA0035.wav",
-  "Sound\\WA0036.wav",
-  "Sound\\WA0037.wav",
-  "Sound\\WA0038.wav",
-  "Sound\\WA0040.wav",
-  "Sound\\WA0041.wav",
-  "Sound\\WA0042.wav",
-  "Sound\\WA0043.wav",
-  "Sound\\WA0044.wav",
-  "Sound\\WA0045.wav",
-  "Sound\\WA0046.wav",
-  "Sound\\WA0047.wav",
-  "Sound\\WA0048.wav",
-  "Sound\\WA0049.wav",
-  "Sound\\WA0051.wav",
-  "Sound\\WA0052.wav",
-  "Sound\\WA0053.wav",
-  "Sound\\WA0054.wav",
-  "Sound\\WA0055.wav",
-  "Sound\\WA0056.wav",
-  "Sound\\WA0057.wav",
-  "Sound\\WA0058.wav",
-  "Sound\\WA0059.wav",
-  "Sound\\WA0060.wav",
-  "Sound\\WA0061.wav",
-  "Sound\\WA0062.wav",
-  "Sound\\WA0063.wav",
-  "Sound\\WA0064.wav",                     
+  "Audio/AudioClip_10.mp3",
+  "Audio/AudioClip_20.mp3",
+  "Audio/AudioClip_21.mp3",
+  "Audio/AudioClip_30.mp3",
+  "Audio/AudioClip_31.mp3",
+  "Audio/AudioClip_32.mp3",
+  "Audio/AudioClip_40.mp3",
+  "Audio/AudioClip_41.mp3",
+  "Audio/AudioClip_42.mp3",
+  "Audio/AudioClip_43.mp3",
+  "Audio/AudioClip_50.mp3",
+  "Audio/AudioClip_51.mp3",
+  "Audio/AudioClip_52.mp3",
+  "Audio/AudioClip_004.mp3",
+  "Audio/AudioClip_WA0001.mp3",
+  "Audio/AudioClip_WA0002.mp3",
+  "Audio/AudioClip_WA0003.mp3",
+  "Audio/AudioClip_WA0004.mp3",
+  "Audio/AudioClip_WA0005.mp3",
+  "Audio/AudioClip_WA0006.mp3",
+  "Audio/AudioClip_WA0007.mp3",
+  "Audio/AudioClip_WA0008.mp3",
+  "Audio/AudioClip_WA0009.mp3",
+  "Audio/AudioClip_WA0010.mp3",
+  "Audio/AudioClip_WA0011.mp3",
+  "Audio/AudioClip_WA0012.mp3",
+  "Audio/AudioClip_WA0013.mp3",
+  "Audio/AudioClip_WA0014.mp3",
+  "Audio/AudioClip_WA0017.mp3",
+  "Audio/AudioClip_WA0018.mp3",
+  "Audio/AudioClip_WA0019.mp3",
+  "Audio/AudioClip_WA0020.mp3",
+  "Audio/AudioClip_WA0021.mp3",
+  "Audio/AudioClip_WA0022.mp3",
+  "Audio/AudioClip_WA0023.mp3",
+  "Audio/AudioClip_WA0024.mp3",
+  "Audio/AudioClip_WA0025.mp3",
+  "Audio/AudioClip_WA0026.mp3",
+  "Audio/AudioClip_WA0027.mp3",
+  "Audio/AudioClip_WA0028.mp3",
+  "Audio/AudioClip_WA0029.mp3",
+  "Audio/AudioClip_WA0030.mp3",
+  "Audio/AudioClip_WA0031.mp3",
+  "Audio/AudioClip_WA0032.mp3",
+  "Audio/AudioClip_WA0033.mp3",
+  "Audio/AudioClip_WA0034.mp3",
+  "Audio/AudioClip_WA0035.mp3",
+  "Audio/AudioClip_WA0036.mp3",
+  "Audio/AudioClip_WA0037.mp3",
+  "Audio/AudioClip_WA0038.mp3",
+  "Audio/AudioClip_WA0040.mp3",
+  "Audio/AudioClip_WA0041.mp3",
+  "Audio/AudioClip_WA0042.mp3",
+  "Audio/AudioClip_WA0043.mp3",
+  "Audio/AudioClip_WA0044.mp3",
+  "Audio/AudioClip_WA0045.mp3",
+  "Audio/AudioClip_WA0046.mp3",
+  "Audio/AudioClip_WA0047.mp3",
+  "Audio/AudioClip_WA0048.mp3",
+  "Audio/AudioClip_WA0049.mp3",
+  "Audio/AudioClip_WA0051.mp3",
+  "Audio/AudioClip_WA0052.mp3",
+  "Audio/AudioClip_WA0053.mp3",
+  "Audio/AudioClip_WA0054.mp3",
+  "Audio/AudioClip_WA0055.mp3",
+  "Audio/AudioClip_WA0056.mp3",
+  "Audio/AudioClip_WA0057.mp3",
+  "Audio/AudioClip_WA0058.mp3",
+  "Audio/AudioClip_WA0059.mp3",
+  "Audio/AudioClip_WA0060.mp3",
+  "Audio/AudioClip_WA0061.mp3",
+  "Audio/AudioClip_WA0062.mp3",
+  "Audio/AudioClip_WA0063.mp3",
+  "Audio/AudioClip_WA0064.mp3",
   --資料片二
-  "Sound\\WA0065.wav",--龍吼
-  "Sound\\WA0066.wav",--擊地
-  "Sound\\WA0067.wav",--鳳叫
-  "Sound\\WA0068.wav",--拍翅
-  "Sound\\WA0069.wav",--集氣
-  "Sound\\WB0002.wav",
-  "Sound\\WB0003.wav",
-  "Sound\\WB0004.wav",
-  "Sound\\WB0005.wav",
-  "Sound\\WB0006.wav",
-  "Sound\\WB0007.wav",
-  "Sound\\WB0008.wav",
-  "Sound\\WB0009.wav",
-  "Sound\\WB0010.wav",
-  "Sound\\WB0011.wav",
-  "Sound\\WB0012.wav",
-  "Sound\\WB0013.wav",
-  "Sound\\WB0014.wav",
-  "Sound\\WB0015.wav",
-  "Sound\\WB0016.wav",
-  "Sound\\WB0017.wav",
-  "Sound\\WB0018.wav",
-  "Sound\\WB0019.wav",
-  "Sound\\WB0020.wav",
-  "Sound\\WC0001.wav",
-  "Sound\\WC0002.wav",
-  "Sound\\WC0003.wav",
-  "Sound\\WC0004.wav",
-  "Sound\\WC0005.wav",
-  "Sound\\WC0006.wav",
-  "Sound\\WC0007.wav",
-  "Sound\\WC0008.wav",
-  "Sound\\WC0009.wav",
-  "Sound\\WC0010.wav",
-  "Sound\\WC0012.wav",  --109
-  "Sound\\Wd0001.wav",  --110
-  "Sound\\Wd0002.wav",  --111
-  "Mp3s\\WM0001.mp3",   --112
-  "Mp3s\\WM0002.mp3",   --113
-  "Mp3s\\WM0003.mp3",   --114
-  "Mp3s\\WM0004.mp3",   --115
-  "Mp3s\\WM0005.mp3",   --116
-  "Mp3s\\WM0006.mp3",   --117
-  "Mp3s\\WM0007.mp3",   --118
+  "Audio/AudioClip_WA0065.mp3",--龍吼
+  "Audio/AudioClip_WA0066.mp3",--擊地
+  "Audio/AudioClip_WA0067.mp3",--鳳叫
+  "Audio/AudioClip_WA0068.mp3",--拍翅
+  "Audio/AudioClip_WA0069.mp3",--集氣
+  "Audio/AudioClip_WB0002.mp3",
+  "Audio/AudioClip_WB0003.mp3",
+  "Audio/AudioClip_WB0004.mp3",
+  "Audio/AudioClip_WB0005.mp3",
+  "Audio/AudioClip_WB0006.mp3",
+  "Audio/AudioClip_WB0007.mp3",
+  "Audio/AudioClip_WB0008.mp3",
+  "Audio/AudioClip_WB0009.mp3",
+  "Audio/AudioClip_WB0010.mp3",
+  "Audio/AudioClip_WB0011.mp3",
+  "Audio/AudioClip_WB0012.mp3",
+  "Audio/AudioClip_WB0013.mp3",
+  "Audio/AudioClip_WB0014.mp3",
+  "Audio/AudioClip_WB0015.mp3",
+  "Audio/AudioClip_WB0016.mp3",
+  "Audio/AudioClip_WB0017.mp3",
+  "Audio/AudioClip_WB0018.mp3",
+  "Audio/AudioClip_WB0019.mp3",
+  "Audio/AudioClip_WB0020.mp3",
+  "Audio/AudioClip_WC0001.mp3",
+  "Audio/AudioClip_WC0002.mp3",
+  "Audio/AudioClip_WC0003.mp3",
+  "Audio/AudioClip_WC0004.mp3",
+  "Audio/AudioClip_WC0005.mp3",
+  "Audio/AudioClip_WC0006.mp3",
+  "Audio/AudioClip_WC0007.mp3",
+  "Audio/AudioClip_WC0008.mp3",
+  "Audio/AudioClip_WC0009.mp3",
+  "Audio/AudioClip_WC0010.mp3",
+  "Audio/AudioClip_WC0012.mp3",  --109
+  "Audio/AudioClip_Wd0001.mp3",  --110
+  "Audio/AudioClip_Wd0002.mp3",  --111
+  "Audio/AudioClip_WM0001.mp3",   --112
+  "Audio/AudioClip_WM0002.mp3",   --113
+  "Audio/AudioClip_WM0003.mp3",   --114
+  "Audio/AudioClip_WM0004.mp3",   --115
+  "Audio/AudioClip_WM0005.mp3",   --116
+  "Audio/AudioClip_WM0006.mp3",   --117
+  "Audio/AudioClip_WM0007.mp3",   --118
   --2004/11/29
-  "Mp3s\\WM0008.mp3",   --119
-  "Mp3s\\WM0009.mp3",   --120
-  "Mp3s\\WM00010.mp3",  --121
-  "Mp3s\\WM00011.mp3",  --122
-  "Sound\\WA0070.wav",  --123
-  "Sound\\WA0071.wav",  --124
-  "Sound\\WA0072.wav",  --125
-  "Sound\\WA0073.wav",  --126
-  "Sound\\WA0074.wav",  --127
-  "Sound\\WA0075.wav",  --128
-  "Sound\\WC0013.wav",  --129
-  "Sound\\WC0014.wav",  --130
-  "Sound\\WC0015.wav",  --131
-  "Sound\\WC0016.wav"   
+  "Audio/AudioClip_WM0008.mp3",   --119
+  "Audio/AudioClip_WM0009.mp3",   --120
+  "Audio/AudioClip_WM00010.mp3",  --121
+  "Audio/AudioClip_WM00011.mp3",  --122
+  "Audio/AudioClip_WA0070.mp3",  --123
+  "Audio/AudioClip_WA0071.mp3",  --124
+  "Audio/AudioClip_WA0072.mp3",  --125
+  "Audio/AudioClip_WA0073.mp3",  --126
+  "Audio/AudioClip_WA0074.mp3",  --127
+  "Audio/AudioClip_WA0075.mp3",  --128
+  "Audio/AudioClip_WC0013.mp3",  --129
+  "Audio/AudioClip_WC0014.mp3",  --130
+  "Audio/AudioClip_WC0015.mp3",  --131
+  "Audio/AudioClip_WC0016.mp3"
 }
 
 MovieSound = {};
 local this = MovieSound;
+
+function MovieSound.Script()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
 
 function MovieSound.PlayMovieSound(soundID)
   local path = SoundList[soundID];
@@ -149,3 +181,35 @@ function MovieSound.PlayMovieSound(soundID)
   end
 end
 --endregion
+
+function MovieSound.Script1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+function MovieSound.Script2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function MovieSound.Script3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end

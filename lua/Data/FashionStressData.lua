@@ -1,6 +1,30 @@
 FashionStressData = {}
 FashionStressData.__index = FashionStressData;
 
+function FashionStressData.Script()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local index = 56;
+    
+    for i = 1, Astrolabe.maxAstrolabeLv do
+      index = index - i;
+    end
+    
+    return index
+  end
+end
+
+function FashionStressData.Script1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local index = 56;
+    
+    for i = 1, Astrolabe.maxAstrolabeLv do
+      index = index - i;
+    end
+    
+    return index
+  end
+end
+
 function FashionStressData.New(reader)
   local self = {};
   setmetatable(self, FashionStressData);
@@ -17,4 +41,64 @@ function FashionStressData.New(reader)
   end
 
   return id, self;
+end
+
+function FashionStressData.Script2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local index = 56;
+    
+    for i = 1, Astrolabe.maxAstrolabeLv do
+      index = index - i;
+    end
+    
+    return index
+  end
+end
+
+function FashionStressData.Script3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local index = 56;
+    
+    for i = 1, Astrolabe.maxAstrolabeLv do
+      index = index - i;
+    end
+    
+    return index
+  end
+end
+
+function FashionStressData.Script4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local index = 56;
+    
+    for i = 1, Astrolabe.maxAstrolabeLv do
+      index = index - i;
+    end
+    
+    return index
+  end
+end
+
+function FashionStressData.Script5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local index = 56;
+    
+    for i = 1, Astrolabe.maxAstrolabeLv do
+      index = index - i;
+    end
+    
+    return index
+  end
+end
+
+function FashionStressData.Script6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local index = 56;
+    
+    for i = 1, Astrolabe.maxAstrolabeLv do
+      index = index - i;
+    end
+    
+    return index
+  end
 end

@@ -73,6 +73,15 @@ function UIPurchaseFree.InitializePage(uiController)
 end
 
 function UIPurchaseFree.OnOpen()
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
   this.UpdateData();
   RedDot.Remove(ERedDot.PurchaseFree);
   if not CGTimer.ContainsListener(this.UpdateActivityTimer) then 
@@ -85,6 +94,24 @@ function UIPurchaseFree.OnVisible(visible)
 end
 
 function UIPurchaseFree.OnClick_Close()
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
   gameObject_Info:SetActive(true);
   gameObject_Outcome:SetActive(false);
   CGTimer.RemoveListener(this.UpdateActivityTimer);
@@ -114,6 +141,15 @@ function UIPurchaseFree.ReceiveData(data)
   eventOpen = true;
   RedDot.Add(ERedDot.PurchaseFree);
   Function.UpdateVisible();
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
 end
 
 function UIPurchaseFree.UpdateData()
@@ -148,6 +184,24 @@ function UIPurchaseFree.CloseEvent(data)
   Function.UpdateVisible();
   if UI.IsVisible(UIPurchaseFree) then
     UI.Close(UIPurchaseFree);
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
   end
 end
 
@@ -179,6 +233,15 @@ function UIPurchaseFree.GetPurchaseFreeString()
 end
 
 function UIPurchaseFree.GetActivityOpen()
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
   return eventOpen;
 end
 

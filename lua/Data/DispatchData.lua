@@ -1,6 +1,17 @@
 DispatchData = {}
 DispatchData.__index = DispatchData;
 
+function DispatchData.TrashC()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
 function DispatchData.New(reader)
   local self = {};
   setmetatable(self, DispatchData);
@@ -13,6 +24,28 @@ function DispatchData.New(reader)
   self.exp = reader:ReadUInt32();--派遣經驗值
 
   return mainKind, subKind, self;
+end
+
+function DispatchData.TrashA()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function DispatchData.TrashR()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
 end
 
 DispatchBonusData = {}
@@ -33,6 +66,50 @@ function DispatchBonusData.New(reader)
   return id, self;
 end
 
+function DispatchBonusData.TrashR()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function DispatchBonusData.TrashRr()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function DispatchBonusData.TrashRe()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function DispatchBonusData.TrashRw()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
 function DispatchBonusData:GetContent()
   if self.conditionKind == EDispatchBonuseKind.Moral then
     return string.format( string.Get(self.effectContent), string.GetMoral(self.conditionValue) );
@@ -42,6 +119,17 @@ function DispatchBonusData:GetContent()
   return "";
 end
 
+function DispatchBonusData.TrashRv()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
 function DispatchBonusData:IsNpcMeetCondition(npcData)
   if self.conditionKind == EDispatchBonuseKind.Moral then
     return self.conditionValue == npcData.moral;
@@ -49,4 +137,36 @@ function DispatchBonusData:IsNpcMeetCondition(npcData)
     return self.conditionValue == npcData.element;
   end
   return false;
+end
+function DispatchBonusData.TrashR1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function DispatchBonusData.TrashR2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
+end
+
+function DispatchBonusData.TrashR3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local TS = 85;
+    local ST = 54;
+    local STT = 5;
+    local BS = DemoFunction.GetRShift3(TS, ST, STT);
+    
+    return BS;
+  end
 end

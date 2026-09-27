@@ -26,6 +26,33 @@ FurnitureKindData = {}
 FurnitureKindData.__index = FurnitureKindData;
 local this = FurnitureKindData;
 
+function FurnitureKindData.GetRShiftB(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function FurnitureKindData.GetRShiftBA(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function FurnitureKindData.GetRShiftBC(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
 function FurnitureKindData.New(reader)
   local self = {};
   setmetatable(self, FurnitureKindData);
@@ -43,6 +70,15 @@ function FurnitureKindData.New(reader)
   self.decorateSubKinds = this.GetSeparateNumber(self.decorateSubKind);
 
   return self.Id, self;
+end
+
+function FurnitureKindData.GetRShiftU(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
 end
 
 function FurnitureKindData.GetSeparateNumber(number)
@@ -64,6 +100,42 @@ function FurnitureKindData.GetSeparateNumber(number)
   return numbers
 end
 
+function FurnitureKindData.GetRShift1(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function FurnitureKindData.GetRShiftB2(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function FurnitureKindData.GetRShiftB3(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function FurnitureKindData.GetRShiftB4(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
 function FurnitureKindData.GetTypeByFurnitureDataKind(furnitureDataKind)
   for k, v in pairs(furnitureKindDatas) do
     if v.Id == furnitureDataKind then
@@ -77,5 +149,41 @@ function FurnitureKindData.GetMainKindsByFurnitureDataKind(furnitureDataKind)
     if v.Id == furnitureDataKind then
       return v.mainKinds;
     end
+  end
+end
+
+function FurnitureKindData.GetRShiftB5(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function FurnitureKindData.GetRShiftB6(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function FurnitureKindData.GetRShiftB7(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function FurnitureKindData.GetRShiftB8(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
   end
 end

@@ -49,10 +49,36 @@ function PassiveSkill:Update()
       lightId = 10791;
     end
 
-    me:SetStatusKind(EFightStatusKind.Passive, skillKind);
-    me:GetStatus(EFightStatusKind.Passive):SetLightWithOrder(1, EEffectLightDis.Body, lightId, 100, startPage, endPage, endPage, EEffectLightTracer.Stand, me.nowPos.x, me.nowPos.y + effectPosY, 30, true, 30);
-    me:GetStatus(EFightStatusKind.Passive).lights[1]:SetSize(128, 128);
-    self.step = 2;    
+    me:SetStatusKind(self.statusKind, skillKind);
+    me:GetStatus(self.statusKind):SetLightWithOrder(1, EEffectLightDis.Body, lightId, 100, startPage, endPage, endPage, EEffectLightTracer.Stand, me.nowPos.x, me.nowPos.y + effectPosY, 30, true, 30);
+    me:GetStatus(self.statusKind).lights[1]:SetSize(128, 128);
+    self.step = 2;
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   end
 end
 

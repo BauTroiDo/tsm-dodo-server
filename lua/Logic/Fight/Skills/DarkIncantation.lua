@@ -127,6 +127,35 @@ function DarkIncantation:Update()
     FightField.SetShake(true); --地震
     self.stRendOldTime = CGTimer.time;
     self.stRendInterval = interval;
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local area =  DemoCode.CalTriangleArea(100, 100)
+      area = area * 1 + 2;
+      if area > DemoCode.GetBitxor(20) then  --test avg
+        local avg = DemoCode.CalAvg(10, 20, 30);
+      end
+    end
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
     self.step = 2;
   elseif self.step == 2 then  --第二步    
     if self.attack.lights[1].orderCount == 7 then --等待 天符咒 播放完畢後，停頓 150毫秒      
@@ -145,7 +174,36 @@ function DarkIncantation:Update()
     --第三步
     if self:CheckInterval() then      
       self.attack:StopLight(1);
-      self.step = 4;      
+      self.step = 4;
+      ---2--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        local area =  DemoCode.CalTriangleArea(100, 100)
+        area = area * 1 + 2;
+        if area > DemoCode.GetBitxor(20) then  --test avg
+          local avg = DemoCode.CalAvg(10, 20, 30);
+        end
+      end
+      --3----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        --local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     else    
       if (CGTimer.time - self.stRendOldTime) * FightField.timeScale >= self.stRendInterval then
         --若光影尚未到達目的地且等待地裂光影時間已到，則再設一道地裂光影

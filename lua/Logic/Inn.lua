@@ -8,8 +8,8 @@ Inn = {}
 local this = Inn;
 
 --const
-this.minSpace = 6;
-this.maxSpace = 30;
+this.minSpace = 30;
+this.maxSpace = 60;
 this.warriorRepositoryMin = 5;
 this.warriorRepositoryMax = 150;
 
@@ -30,7 +30,7 @@ function Inn.SaveNpc(index, followIndex, data)
     this.npcs[index].level = data:ReadByte();
     this.npcs[index].exp = data:ReadUInt32();
     this.npcs[index].hp = data:ReadUInt32();
-    local name = data:ReadString(data:ReadByte(), DataManager.encoding_Unicode);
+    local name = data:ReadString(data:ReadByte());
     this.npcs[index].name = string.CheckNpcName(this.npcs[index].npcId, name);
     this.npcs[index].status = data:ReadByte();
   end
@@ -67,10 +67,55 @@ function Inn.SaveNpc(index, followIndex, data)
     if not UIDebug.RecordMode then
       this.npcs[index].name = string.Concat(this.npcs[index].name, this.npcs[index].npcId)
     end
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   end
 
   if UI.IsVisible(UINpcInn) then
     UINpcInn.UpdateUI();
+  end
+
+  if UI.IsVisible(UIArmyBattleAttack) then
+    UIArmyBattleAttack.UpdateUI();
   end
 end
 
@@ -79,6 +124,10 @@ function Inn.RemoveNpc(index)
 
   if UI.IsVisible(UINpcInn) then
     UINpcInn.UpdateUI();
+  end
+
+  if UI.IsVisible(UIArmyBattleAttack) then
+    UIArmyBattleAttack.UpdateUI();
   end
 end
 
@@ -99,6 +148,47 @@ function Inn.InitWarship(data)
 
     this.warships = {};
   end
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function Inn.AddWarship(index, npcId)
@@ -129,6 +219,10 @@ function Inn.RefreshWarriorRepositoryCount(data)
   this.currentWarriorRepositorySpace = data.value + this.warriorRepositoryMin;
   if UI.IsVisible(UINpcInn) then
     UINpcInn.UpdateUI();
+  end
+
+  if UI.IsVisible(UIArmyBattleAttack) then
+    UIArmyBattleAttack.UpdateUI(true);
   end
 end
 

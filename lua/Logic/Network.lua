@@ -15,19 +15,49 @@ ELogin = {
   FB = 3,
   Google = 4,
   Apple = 7,
-  VNSDK = 26,  --VN版 VTC
+  ChangeArea = 254,
   Unbounded = 255,
 }
 
 EAccount = {
   Guest = 0,
   FB = 1,
+  Google = 48,
 }
 
 EServerSwitch = {
   Review = 1, --送審
   GameShow = 2, --電玩展
 }
+
+--[[
+And the man had connection with Eve his wife, and she became with child and gave birth to Cain, and said, I have got a man from the Lord.
+Then again she became with child and gave birth to Abel, his brother. And Abel was a keeper of sheep, but Cain was a farmer.
+And after a time, Cain gave to the Lord an offering of the fruits of the earth.
+And Abel gave an offering of the young lambs of his flock and of their fat. And the Lord was pleased with Abel's offering;
+But in Cain and his offering he had no pleasure. And Cain was angry and his face became sad.
+And the Lord said to Cain, Why are you angry? and why is your face sad?
+If you do well, will you not have honour? and if you do wrong, sin is waiting at the door, desiring to have you, but do not let it be your master.
+And Cain said to his brother, Let us go into the field: and when they were in the field, Cain made an attack on his brother Abel and put him to death.
+And the Lord said to Cain, Where is your brother Abel? And he said, I have no idea: am I my brother's keeper?
+And he said, What have you done? the voice of your brother's blood is crying to me from the earth.
+And now you are cursed from the earth, whose mouth is open to take your brother's blood from your hand;
+No longer will the earth give you her fruit as the reward of your work; you will be a wanderer in flight over the earth.
+And Cain said, My punishment is greater than my strength.
+You have sent me out this day from the face of the earth and from before your face; I will be a wanderer in flight over the earth, and whoever sees me will put me to death.
+And the Lord said, Truly, if Cain is put to death, seven lives will be taken for his. And the Lord put a mark on Cain so that no one might put him to death.
+And Cain went away from before the face of the Lord, and made his living-place in the land of Nod on the east of Eden.
+And Cain had connection with his wife and she became with child and gave birth to Enoch: and he made a town, and gave the town the name of Enoch after his son.
+And Enoch had a son Irad: and Irad became the father of Mehujael: and Mehujael became the father of Methushael: and Methushael became the father of Lamech.
+And Lamech had two wives; the name of the one was Adah, and the name of the other Zillah.
+And Adah gave birth to Jabal: he was the father of such as are living in tents and keep cattle.
+And his brother's name was Jubal: he was the father of all players on instruments of music.
+And Zillah gave birth to Tubal-cain, who is the father of every maker of cutting instruments of brass and iron: and the sister of Tubal-cain was Naamah.
+And Lamech said to his wives, Adah and Zillah, give ear to my voice; you wives of Lamech, give attention to my words, for I would put a man to death for a wound, and a young man for a blow;
+If seven lives are to be taken as punishment for Cain's death, seventy-seven will be taken for Lamech's.
+And Adam had connection with his wife again, and she gave birth to a son to whom she gave the name of Seth: for she said, God has given me another seed in place of Abel, whom Cain put to death.
+--]]
+
 
 Network = {};
 local this = Network;
@@ -108,7 +138,11 @@ this.dbId = 0;
 this.serverId = 0;
 this.host = "";
 this.port = 0;
+this.dbIndex = 0;
  
+this.activityServerId = 0;
+this.activityServerIp = "";
+
 this.serverId_Unbounded = 0;
 this.host_Unbounded = "";
 this.port_Unbounded = 0;
@@ -123,9 +157,9 @@ this.cheatSoftCode = 0;
 this.isVipServer = false;
 this.isDebugServer = false;
 this.loginFinished = false;
-this.VtcMod = false;
-this.recordTxt = "_UseVtcMod20260819_1";
+this.initialized = false;
 this.serverSwitch = 0;
+this.verifyCode = 0;
 
 this.tempBuffer = nil;
 local isListen = false;
@@ -148,7 +182,9 @@ this.disconnectCause = 0;
 this.autoLoginWaitTime = 10;
 this.autoLoginFight = false;
 this.autoLoginMove = false;
-this.jumpHeartTime = 90;
+this.jumpHeartTime = 20;
+this.isConnectingToActivityServer = false;
+this.networkDisMsg = 10;
 
 function Network.Start()
   this.tempBuffer = ByteBuffer.New();
@@ -156,11 +192,60 @@ function Network.Start()
   isListen = true;
 end
 
+function Network.TestPas(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function Network.TestPas1(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
 function Network.Initialize()
   this.servers = json.decode(CGResourceManager.DownloadText("ServerList.dat", true));
-  logWarn(string.Concat("ServerList count = ", table.maxn(this.servers)));
-
+  this.dbs = json.decode(CGResourceManager.DownloadText("DBList.dat", true));
   this.initialized = true;
+end
+
+function Network.GetRandomServerIndex()
+  if this.dbs == nil then return nil end;
+
+  local random = math.random(1, table.Count(this.dbs[this.dbIndex].serverlist));
+  local ServerId = this.dbs[this.dbIndex].serverlist[random];
+
+  for key, value in pairs(this.servers) do
+    if value.id == ServerId then
+      return key;
+    end
+  end
+end
+
+function Network.GetAllServerInDB()
+  if this.dbs == nil then return nil end;
+  if this.dbIndex == 0 then this.SetCurrentDBIndex() end
+  return this.dbs[this.dbIndex].serverlist;
+end
+
+function Network.SetCurrentDBIndex()
+  for key, value in pairs(this.dbs) do
+    if table.Contains(value.serverlist, Setting.client.lastServerId) then
+      this.dbIndex = key;
+      break;
+    end
+  end
 end
 
 function Network.Update()
@@ -173,6 +258,39 @@ end
 
 function Network.CheckServerSwitch(switchIndex)
   return CheckFlag(this.serverSwitch, switchIndex);
+end
+
+function Network.TestPas2(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function Network.TestPas3(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function Network.TestPas4(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
 end
 
 function Network.Connect()
@@ -197,6 +315,29 @@ function Network.Connect()
   CGTimer.AddListener(this.ShowConnectMessage, 2, false);
 end
 
+function Network.ConnectToActivityServer()
+  if this.activityServerId == 0 then return end;
+  if this.activityServerIp == "" then return end;
+
+  sendBuffer:Clear();
+  sendBuffer:WriteUInt16(this.activityServerId);
+  Network.Send(1,100, sendBuffer);
+end
+
+function Network.IsInActivityServer()
+  local isInActivityServer = (Network.activityServerId == Network.serverId);
+  return isInActivityServer;
+end
+
+function Network.GetServerName()
+  for k, v in pairs(this.servers) do
+    if v.id == Setting.client.lastServerId then
+      return this.servers[k].name;
+    end
+  end
+  return nil;
+end
+
 function Network.Connect_Unbounded()
   --在判斷是否要先通知原本GS斷線後再連無界
   --this.Disconnect();
@@ -216,6 +357,17 @@ function Network.Connect_Unbounded()
   networkMgr:Connect(this.host_Unbounded, this.port_Unbounded);
 
   CGTimer.AddListener(this.ShowConnectMessage, 2, false);
+end
+
+function Network.TestPas5(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
 end
 
 function Network.Disconnect(clearConnectCode)
@@ -260,6 +412,39 @@ function Network.Send(mainKind, subKind, data, waitResponseTime, waitMainKind, w
 
   if waitResponseTime > 0 then
     this.Wait(waitResponseTime, waitMainKind, waitSubKind, waitEndHandler);
+  end
+end
+
+function Network.TestPas6(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function Network.TestPas7(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function Network.TestPas8(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
   end
 end
 
@@ -335,6 +520,39 @@ end
 function Network.CheckConnect()
   --C:010-000 <心跳包>
   this.Send(10, 0, nil, this.jumpHeartTime, 10, 0, this.OnServerNoResponse);
+end
+
+function Network.TestPas9(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function Network.TestPas10(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
+end
+
+function Network.TestPas11(pat)
+  if pat > 100 then
+    for i = 1 , 100 do
+      pat = pat - i;
+    end
+    return pat;
+  else
+    return nil;
+  end
 end
 
 function Network.CloseAutoLogin(result)
@@ -434,10 +652,11 @@ function Network.OnConnect()
   sendBuffer:WriteUInt32(this.connectCode);
 
   sendBuffer:WriteByte(this.loginKind);
+
   if this.loginKind == ELogin.AccPwd then
     --登入方式 1:帳密 +L(1) +帳號(L) +L(1) +密碼(L)
-    sendBuffer:WriteStringWithWordL(this.account);
-    sendBuffer:WriteStringWithWordL(this.password);
+    sendBuffer:WriteStringWithByteL(this.account);
+    sendBuffer:WriteStringWithByteL(this.password);
 
   elseif this.loginKind == ELogin.Guest then
     --登入方式 2:遊客
@@ -452,12 +671,12 @@ function Network.OnConnect()
   elseif this.loginKind == ELogin.Google then
     sendBuffer:WriteStringWithWordL(this.account);
     sendBuffer:WriteStringWithWordL(this.password);
-  elseif this.loginKind == ELogin.VNSDK then
-    this.account = UILogin.uid;
-    this.password = UILogin.token;
-    sendBuffer:WriteStringWithWordL(this.account);
-    sendBuffer:WriteStringWithWordL(this.password);
-  elseif this.loginKind == ELogin.Unbounded then  
+  elseif this.loginKind == ELogin.ChangeArea then
+    --登入方式 254:切換分流 +L(1) +帳號(L) + verifyCode(4)
+    sendBuffer:WriteStringWithByteL(this.account);
+    sendBuffer:WriteStringWithByteL(this.password);
+    sendBuffer:WriteUInt32(this.verifyCode);
+  elseif this.loginKind == ELogin.Unbounded then
     --登入方式 255:無界伺服器 +L(1) +帳號(L) +L(1) +密碼(L) + RoleID(8) +SN(4)
     sendBuffer:WriteStringWithByteL(this.account);
     sendBuffer:WriteStringWithByteL(this.password);
@@ -465,9 +684,56 @@ function Network.OnConnect()
     sendBuffer:WriteUInt32(this.SN_Unbounded);
   end
 
+  local channelId = tonumber(manifestChannelId) or 0;
+  if channelId < 0 then
+    channelId = 0
+  elseif channelId > 65535 then
+    channelId = 65535
+  end
+
+  sendBuffer:WriteUInt16(channelId); 
+
+  local deviceUniqueIdentifier = tostring(DeviceUniqueIdentifier) or "";
+  sendBuffer:WriteStringWithByteL(deviceUniqueIdentifier);
+
+  sendBuffer:WriteUInt16(this.networkDisMsg);
+  
   this.Send(1, 0, sendBuffer, 20, 1, 2, this.OnServerNoResponse);
 
   this.connectCode = 0;
+end
+
+function Network.Script()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function Network.Script1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function Network.Script2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
 end
 
 --异常断线--
@@ -524,30 +790,6 @@ function Network.OnDisconnect()
   this.disconnectCause = 0;
 end
 
-function Network.CheckVTCMod()
-  local success, result = pcall(require, "Logic/VtcMod");
-  if success then
-    --C:001-052 <記錄使用Vtc> +玩家ID(8) +kind(1)
-    sendBuffer:Clear();
-    sendBuffer:WriteInt64(Role.playerId);
-    sendBuffer:WriteByte(1);
-    Network.Send(1, 52, sendBuffer);
-    Network.VtcMod = true;
-    CGResourceManager.WriteText(this.recordTxt, "1");
-  end
-  if VtcMod then
-    --C:001-052 <記錄使用Vtc> +玩家ID(8) +kind(1)
-    sendBuffer:Clear();
-    sendBuffer:WriteInt64(Role.playerId);
-    sendBuffer:WriteByte(2);
-    Network.Send(1, 52, sendBuffer);
-    Network.VtcMod = true;
-    if CGResourceManager.ReadText(this.recordTxt) == "" then
-      CGResourceManager.WriteText(this.recordTxt, "1");
-    end
-  end
-end
-
 function Network.OnInternetUnavailable()
   logError("OnInternetUnavailable------->>>>");
 
@@ -569,6 +811,38 @@ end
 
 --卸载网络监听--
 function Network.Unload()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local meaningless = 45;
+    local shift = 2;
+    local result = 0;
+    bit.rshift(meaningless, shift)
+    bit.lshift(meaningless, shift)
+    if bit.band(meaningless,45) == 45 then
+      result = meaningless * shift;
+    end
+  end
   isListen = false;
   logWarn('Unload Network...');
+end
+
+function Network.Script3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function Network.Script4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
 end

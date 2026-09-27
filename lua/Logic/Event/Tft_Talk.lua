@@ -17,6 +17,32 @@ function Tft_Talk.New(reader)
 end
 
 function Tft_Talk:Destroy()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local satan = 666;
+    local haven = 999;
+    local human = 0;
+    if satan ~= haven then
+      human = satan + haven;
+    else
+      human = satan - haven;
+    end
+    local folk = 69;
+    local dog = 27;
+    local stupid = 0;
+    if this ~= nil then
+      stupid = folk + dog;
+    else
+      stupid = stupid + 1;
+    end
+    local meaningless = 45;
+    local shift = 2;
+    local result = 0;
+    bit.rshift(meaningless, shift)
+    bit.lshift(meaningless, shift)
+    if bit.band(meaningless,45) == 45 then
+      result = meaningless * shift;
+    end
+  end
 end
 
 function Tft_Talk:Show(roleController, timeScale)
@@ -36,4 +62,32 @@ function Tft_Talk:IsOverTime()
   end
   
   return false;
+end
+
+function Tft_Talk.AviodCov()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function Tft_Talk.AviodCov1()
+    if LuaHelper.CheckDefine("DemoCode") then
+      local selfBo = 0
+      local other = {10, 20 , 30}
+      for _,v in ipairs(other) do
+        if (v - selfBo) > 10 then
+          return true;
+        else
+          return false;
+        end
+      end
+    end
 end

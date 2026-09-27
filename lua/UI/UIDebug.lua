@@ -1,4 +1,4 @@
-
+local json = require 'cjson'
 --後面有資料
 local argumentFunctions = {};
 table.insert(argumentFunctions, { 1, "加貨幣", "種類", "數量" });
@@ -53,13 +53,17 @@ table.insert(argumentFunctions, { 49, "城鎮設定刷新分鐘間隔", "分鐘(
 table.insert(argumentFunctions, { 50, "武將強化等級", "武將索引", "LV"});
 table.insert(argumentFunctions, { 51, "永恆地城", "樓層"});
 table.insert(argumentFunctions, { 53, "全伺服器紅包", "索引", "編號"});
-table.insert(argumentFunctions, { 54, "九宮格直接領獎", "九宮格流水號(串表的水號)"});
 table.insert(argumentFunctions, { 55, "大富翁強制移動", "步數"});
-table.insert(argumentFunctions, { 56, "大逃殺", "kind", "數值1", "數值2"});
-table.insert(argumentFunctions, { 57, "VIP", "EXP"});
-table.insert(argumentFunctions, { 68, "以指定數值新增奇魂(不指定填0)", "數量", "奇魂編號", "等級", "副屬性編號", "副屬性增加編號"});
-table.insert(argumentFunctions, { 69, "刪除全奇魂"});
-table.insert(argumentFunctions, { 70, "祕寶", "kind", "ID", "數量"});
+table.insert(argumentFunctions, { 56, "加神話裝備等級(內容數值隨機)", "背包索引", "等級"});
+table.insert(argumentFunctions, { 60, "刪除靈魂"});
+table.insert(argumentFunctions, { 61, "以指定數值新增靈魂(不指定填0)", "物品ID", "等級", "星等", "攻擊力", "防禦力", "知力", "敏捷", "HP上升", "SP上升", "技能1 ID", "技能2 ID", "技能3 ID", "技能4 ID", "屬性"});
+table.insert(argumentFunctions, { 62, "新增神裝", "物品ID", "等級", "子屬性1", "子屬性數值1", "子屬性2", "子屬性數值2", "子屬性3", "子屬性數值3", "子屬性4", "子屬性數值4"});
+table.insert(argumentFunctions, { 63, "加魂點", "魂點"});
+table.insert(argumentFunctions, { 64, "加鎮魂Boss", "位置", "BossID", "強制覆蓋:1是, 0否"});
+table.insert(argumentFunctions, { 65, "改祭祀累計次數", "種類0:次數/1:下限/2:上限", "數值"});
+table.insert(argumentFunctions, { 66, "指定祭祀獎項", "獎項ID", "倍率"});
+table.insert(argumentFunctions, { 67, "改魂點掉落倍率", "魂點倍率"});
+table.insert(argumentFunctions, { 80, "清空盤面"});
 table.insert(argumentFunctions, { 81, "戳指定格/獎項, 0不指定", "指定格子", "指定獎項(流水號)"});
 table.insert(argumentFunctions, { 82, "清支援戰積分", "kind", "1=清roleCount"});
 table.insert(argumentFunctions, { 83, "支援戰洞洞樂連戳", "數量"});
@@ -94,7 +98,8 @@ table.insert(argumentFunctions, { 230, "調整家具圖片偏移", "X", "Y", "Z"
 table.insert(argumentFunctions, { 231, "直接生成大量家具", "家具ID", "數量" });
 table.insert(argumentFunctions, { 232, "查串表資料", "串表名稱", "id"});
 table.insert(argumentFunctions, { 233, "調整家具特效", "X", "Y", "Z", "特效縮放", "高度偏移量"});
-table.insert(argumentFunctions, { 234, "調整戰場效果特效", "狀態id", "特效編號", "更新間隔毫秒", "起始張數", "結束張數", "總張數", "特效縮放", "高度偏移量"});
+table.insert(argumentFunctions, { 234, "大量祭祀", "倍率", "數量"});
+table.insert(argumentFunctions, { 235, "大富翁角色強制位移", "x", "y", "z"});
 
 --後面無資料
 local noneArgumentFunctions = {};
@@ -106,6 +111,8 @@ table.insert(noneArgumentFunctions, { 106, "清座騎資料" });
 table.insert(noneArgumentFunctions, { 107, "跳過新手場景" });
 table.insert(noneArgumentFunctions, { 108, "PVP跨天" });
 table.insert(noneArgumentFunctions, { 109, "城鎮爭奪刷新地圖" });
+table.insert(noneArgumentFunctions, { 110, "重設祭祀累計目標" });
+table.insert(noneArgumentFunctions, { 111, "查詢目前祭祀狀態" });
 table.insert(noneArgumentFunctions, { 112, "清福神" });
 
 --不用送協定
@@ -133,9 +140,7 @@ table.insert(noneArgumentFunctions, { 222, "測試準備二轉" });
 table.insert(noneArgumentFunctions, { 223, "測試準備三轉" });
 table.insert(noneArgumentFunctions, { 224, "加所有家具數量" });
 table.insert(noneArgumentFunctions, { 225, "新增未持有家具" });
-table.insert(noneArgumentFunctions, { 226, "塞滿背包"});
-table.insert(noneArgumentFunctions, { 227, "大逃殺道具"});
-table.insert(noneArgumentFunctions, { 228, "大逃殺裝備"});
+table.insert(noneArgumentFunctions, { 226, "塞背包"});
 
 UIDebug = {};
 local this = UIDebug;
@@ -143,7 +148,6 @@ local this = UIDebug;
 this.name = "UIDebug";
 this.uiController = nil;
 this.RecordMode = false;
-this.customLogin = false;
 
 local image_Mask;
 
@@ -157,6 +161,7 @@ local dropdown_Skill;
 
 local inputField_Args = {};
 local inputField_RoleId;
+local image_Switch;
 
 this.testSkillList = {};
 
@@ -195,6 +200,7 @@ function UIDebug.Initialize(go)
   
   tempEvent = uiController:FindEvent("Image_Switch");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_Switch);
+  image_Switch = tempEvent.gameObject:GetComponent("Image");
 end
 
 function UIDebug.OnOpen()
@@ -225,6 +231,12 @@ function UIDebug.OnOpen()
   this.UpdateUI();
   
   scrollContent_Function:Reset(table.maxn(noneArgumentFunctions));
+  
+  if LuaHelper.CheckDefine("ReleaseTest") then
+    LuaHelper.SetColor(image_Switch, Color.Alpha);
+  else
+    LuaHelper.SetColor(image_Switch, Color.White);
+  end
   
   return true;
 end
@@ -260,7 +272,7 @@ function UIDebug.OnClick_Switch(sender)
   text_Info.text = string.Concat(text_Info.text, "\n移動速度: ", Role.player.speed);
 end
 
--- Argument Function
+--Argument Function
 function UIDebug.OnClick_Reset(sender)
   for k, v in pairs(inputField_Args) do
     v.text = "";
@@ -372,6 +384,11 @@ function UIDebug.OnClick_Send(sender)
     if kind == 1 then --背包
       local bag, bagSize, quantSize = Item.GetBag(EThings.Bag);
       table.Dump(bag);
+  
+      if LuaHelper.CheckDefine("DemoCode") then
+        local code = DemoCode.GetBitxor(20);
+      end
+      
     elseif kind == 2 then --錢莊
       local bag, bagSize, quantSize = Item.GetBag(EThings.Bank);
       table.Dump(bag);
@@ -547,7 +564,7 @@ function UIDebug.OnClick_Send(sender)
 
   elseif argumentFunctions[functionId][1] == 232 then
     if string.IsNullOrEmpty(inputField_Args[1].text) then return end
-    local dataName = string.Concat(inputField_Args[1].text, "Datas");
+    local dataName = inputField_Args[1].text;
     local dataID = tonumber(inputField_Args[2].text);
     local dataTable = _G[dataName];
     if dataTable == nil then
@@ -594,37 +611,29 @@ function UIDebug.OnClick_Send(sender)
     end
   elseif argumentFunctions[functionId][1] == 234 then
     if string.IsNullOrEmpty(inputField_Args[1].text) then return end
-    local index = tonumber(inputField_Args[1].text);
-    local effects = fieldEffectDatas[index];
-    if effects == nil then
-      return
+    if string.IsNullOrEmpty(inputField_Args[2].text) then return end
+    Requiem.SendSacrifice(tonumber(inputField_Args[1].text), tonumber(inputField_Args[2].text));
+  elseif argumentFunctions[functionId][1] == 235 then
+    local x, y, z;
+    if not string.IsNullOrEmpty(inputField_Args[1].text) then
+      x = tonumber(inputField_Args[1].text);
     end
-    for k, v in pairs(fieldEffectDatas[index]) do
-      if fieldEffectDatas[index][k].effect.Id == 0 then
-        return
-      end
-      if not string.IsNullOrEmpty(inputField_Args[2].text) then
-        fieldEffectDatas[index][k].effect.Id = tonumber(inputField_Args[2].text);
-      end
-      if not string.IsNullOrEmpty(inputField_Args[3].text) then
-        fieldEffectDatas[index][k].effect.Interval = tonumber(inputField_Args[3].text);
-      end
-      if not string.IsNullOrEmpty(inputField_Args[4].text) then
-        fieldEffectDatas[index][k].effect.StartFrame = tonumber(inputField_Args[4].text);
-      end
-      if not string.IsNullOrEmpty(inputField_Args[5].text) then
-        fieldEffectDatas[index][k].effect.EndFrame = tonumber(inputField_Args[5].text);
-      end
-      if not string.IsNullOrEmpty(inputField_Args[6].text) then
-        fieldEffectDatas[index][k].effect.TotalFrame = tonumber(inputField_Args[6].text);
-      end
-      if not string.IsNullOrEmpty(inputField_Args[7].text) then
-        fieldEffectDatas[index][k].effect.Scale = tonumber(inputField_Args[7].text) * 0.001;
-      end
-      if not string.IsNullOrEmpty(inputField_Args[8].text) then
-        fieldEffectDatas[index][k].effect.Offset = tonumber(inputField_Args[8].text);
-      end
+    if not string.IsNullOrEmpty(inputField_Args[2].text) then
+      y = tonumber(inputField_Args[2].text);
     end
+    if not string.IsNullOrEmpty(inputField_Args[3].text) then
+      z = tonumber(inputField_Args[3].text);
+    end
+    if x == nil then
+      x = 0;
+    end
+    if y == nil then
+      y = 0;
+    end
+    if z == nil then
+      z = 0;
+    end
+    UIMonopoly.ForceSetTokenPosition(Vector3.New(x, y, z));
   end
 end
 
@@ -712,26 +721,6 @@ function UIDebug.OnClick_Function(sender)
     this.AddNewFurnitures();
   elseif kind == 226 then
     this.FillBag();
-  elseif kind == 227 then
-    for dataIndex, data in pairs(battleRoyaleHotkeyDatas) do
-      for k, v in pairs(battleRoyaleHotkeyDatas[dataIndex]) do
-        if dataIndex ~= EHotkeyType.Equip then
-          sendBuffer:Clear();
-          sendBuffer:WriteInt64(Role.playerId);
-          sendBuffer:WriteUInt32(v);
-          sendBuffer:WriteUInt32(20);
-          Network.Send(100, 2, sendBuffer);
-        end
-      end
-    end
-  elseif kind == 228 then
-    for k, v in pairs(battleRoyaleHotkeyDatas[EHotkeyType.Equip]) do
-      sendBuffer:Clear();
-      sendBuffer:WriteInt64(Role.playerId);
-      sendBuffer:WriteUInt32(v);
-      sendBuffer:WriteUInt32(1);
-      Network.Send(100, 2, sendBuffer);
-    end
   end
 end
 
@@ -972,7 +961,7 @@ function UIDebug.CreateALotFurnitures(id ,number)
 end
 
 function UIDebug.FillBag()
-  local randomItems = RandomSampleTable(itemDatas, Item.GetBagLeftCount(EThings.Bag));
+  local randomItems = RandomSampleTable(itemDatas, math.min(Item.GetBagLeftCount(EThings.Bag), 100));
   for k, v in pairs(randomItems) do
     sendBuffer:Clear();
     sendBuffer:WriteInt64(Role.playerId);

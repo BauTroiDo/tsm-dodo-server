@@ -51,7 +51,25 @@ function UITrade.Initialize(go)
   this.uiController = uiController;
   this.uiController.onOpen = this.OnOpen;
   this.uiController.onClose = this.OnClose;
-
+  
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
   local tempEvent;
 
   gameObject_TargetItem = uiController:FindGameObject("Image_TargetItemBG");
@@ -111,6 +129,16 @@ function UITrade.Initialize(go)
 end
 
 function UITrade.OnOpen(kind, roleId)
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
   tradeRole = Role.players[roleId];
 
   if tradeRole == nil then return false end
@@ -155,11 +183,27 @@ function UITrade.OnOpen(kind, roleId)
   this.UpdateCheck();
   this.UpdateTarget();
   this.UpdateSelf();
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
 
   return true;
 end
 
 function UITrade.OnClose()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   jmpDrawer_TargetNpc:Disable();
   jmpDrawer_SelfNpc:Disable();
 
@@ -202,6 +246,14 @@ function UITrade.UpdateCheck()
 end
 
 function UITrade.UpdateTarget(data)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   if currentKind == EUITrade.Item then
     if data ~= nil then
       --S:025-003 <交易物品確認> +金錢(4) <<+物品ID(2) +數量(1) +損壞度(1) +屬性(1) +屬性值(1) +抵抗(1) +成長值(4)>>
@@ -301,10 +353,26 @@ function UITrade.UpdateTarget(data)
 end
 
 function UITrade.SetTargetEquipYube(index, yube)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
 end
 
 function UITrade.UpdateSelf()
   if currentKind == EUITrade.Item then
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
   elseif currentKind == EUITrade.Npc then
     inputField_SelfGold.text = 0;
 
@@ -347,10 +415,26 @@ function UITrade.UpdateSelf()
 end
 
 function UITrade.OnClick_Close()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   UI.Close(UITrade);
 end
 
 function UITrade.OnClick_Check()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   if checked then return end
 
   checked = true;
@@ -360,13 +444,13 @@ function UITrade.OnClick_Check()
   if currentKind == EUITrade.Item then
     local selections = UIBag.GetSelect();
 
-    --C:025-002 <交易物品上傳> +交易金額(4) <<+交易物品背包索引(1)>> 
+    --C:025-002 <交易物品上傳> +交易金額(4) <<+交易物品背包索引(2)>>
     sendBuffer:Clear();
     sendBuffer:WriteInt32(tonumber(inputField_SelfGold.text));
 
     for i = 1, Item.MaxThingGrid do
       if selections[i] then
-        sendBuffer:WriteByte(i);
+        sendBuffer:WriteUInt16(i);
       end
     end
 
@@ -381,6 +465,14 @@ function UITrade.OnClick_Check()
 end
 
 function UITrade.OnClick_Trade()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   if not checked then return end
   
   if currentKind == EUITrade.Item then
@@ -397,6 +489,14 @@ function UITrade.OnClick_Trade()
 end
 
 function UITrade.OnClick_SwitchNpc(uiEvent)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   if checked then return end
   
   if uiEvent.parameter > 0 then

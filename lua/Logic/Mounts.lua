@@ -24,6 +24,51 @@ this.currentNpcId = 0;
 this.collectionCount = 0;
 this.collectionBonus = 1;
 
+local getNFTFlagId = {};
+
+function Mounts.AviodCov()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function Mounts.AviodCov1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function Mounts.AddNFTMountRedDot(flagId)
+  getNFTFlagId[flagId] = true;
+  RedDot.Add(ERedDot.NFTCollectMount);
+end
+
+function Mounts.GetNFTMountRedDotCount()
+  return table.Count(getNFTFlagId);
+end
+
+function Mounts.DeleteNFTMountRedDot(getFlag)
+  if getNFTFlagId[getFlag] ~= nil then
+    getNFTFlagId[getFlag] = nil;
+  end
+end
+
 function Mounts.Clear()
   this.level = 1;
 
@@ -33,11 +78,40 @@ function Mounts.Clear()
   end
 
   table.Clear(attributes);
+  table.Clear(getNFTFlagId);
 
   this.currentNpcId = 0;
 
   this.collectionCount = 0;
   this.collectionBonus = 1;
+end
+
+function Mounts.AviodCov2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function Mounts.AviodCov3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
 end
 
 --Set
@@ -72,6 +146,48 @@ function Mounts.SetLevel(level)
 
   if Role.player ~= nil then
     Role.player:UpdateSpeed();
+  end
+end
+
+function Mounts.AviodCov4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function Mounts.AviodCov5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function Mounts.AviodCov6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
   end
 end
 
@@ -131,6 +247,48 @@ function Mounts.SetCurrent(npcId)
   Function.UpdateVisible();
 end
 
+function Mounts.AviodCov7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function Mounts.AviodCov8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function Mounts.AviodCov9()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
 function Mounts.UpdateCollection()
   this.collectionCount = 0;
   this.collectionBonus = 1;
@@ -184,6 +342,48 @@ function Mounts.GetAttributeProgress(kind, point)
   return level, point, needPoint;
 end
 
+function Mounts.AviodCov11()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function Mounts.AviodCov12()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function Mounts.AviodCov13()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
 function Mounts.SetAttribute(kind, value, arg)
   attributes[kind] = value;
 
@@ -225,6 +425,34 @@ function Mounts.OnMoneyChange()
 
   if UI.IsVisible(UIMounts) then
     UIMounts.UpdateUI();
+  end
+end
+
+function Mounts.AviodCov14()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function Mounts.AviodCov15()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
   end
 end
 
@@ -321,6 +549,37 @@ function Mounts.OnLostItem(itemId)
   end
 end
 
+--[[
+Now Abraham was old and far on in years: and the Lord had given him everything in full measure.
+And Abraham said to his chief servant, the manager of all his property, Come now, put your hand under my leg:
+And take an oath by the Lord, the God of heaven and the God of the earth, that you will not get a wife for my son Isaac from the daughters of the Canaanites among whom I am living;
+But that you will go into my country and to my relations and get a wife there for my son Isaac.
+And the servant said, If by chance the woman will not come with me into this land, am I to take your son back again to the land from which you came?
+And Abraham said, Take care that you do not let my son go back to that land.
+The Lord God of heaven, who took me from my father's house and from the land of my birth, and made an oath to me, saying, To your seed I will give this land: he will send his angel before you and give you a wife for my son in that land.
+And if the woman will not come with you, then you are free from this oath; only do not take my son back there.
+And the servant put his hand under Abraham's leg, and gave him his oath about this thing.
+And the servant took ten of his master's camels, and all sorts of good things of his master's, and went to Mesopotamia, to the town of Nahor.
+And he made the camels take their rest outside the town by the water-spring in the evening, at the time when the women came to get water.
+And he said, O Lord, the God of my master Abraham, let me do well in what I have undertaken this day, and give your mercy to my master Abraham.
+See, I am waiting here by the water-spring; and the daughters of the town are coming out to get water:
+Now, may the girl to whom I say, Let down your vessel and give me a drink, and who says in answer, Here is a drink for you and let me give water to your camels: may she be the one marked out by you for your servant Isaac: so may I be certain that you have been good to my master Abraham.
+And even before his words were ended, Rebekah, the daughter of Bethuel, the son of Milcah, who was the wife of Nahor, Abraham's brother, came out with her water-vessel on her arm.
+She was a very beautiful girl, a virgin, who had never been touched by a man: and she went down to the spring to get water in her vessel.
+And the servant came running to her and said, Give me a little water from your vessel.
+And she said, Take a drink, my lord: and quickly letting down her vessel onto her hand, she gave him a drink.
+And having done so, she said, I will get water for your camels till they have had enough.
+And after putting the water from her vessel into the animals' drinking-place, she went quickly back to the spring and got water for all the camels.
+And the man, looking at her, said nothing, waiting to see if the Lord had given his journey a good outcome.
+And when the camels had had enough, the man took a gold nose-ring, half a shekel in weight, and two ornaments for her arms of ten shekels weight of gold;
+And said to her, Whose daughter are you? is there room in your father's house for us?
+And she said to him, I am the daughter of Bethuel, the son of Milcah, Nahor's wife.
+And she said, We have a great store of dry grass and cattle-food, and there is room for you.
+And with bent head the man gave worship to the Lord;
+And said, Praise be to the Lord, the God of my master Abraham, who has given a sign that he is good and true to my master, by guiding me straight to the house of my master's family.
+]]--
+
+
 function Mounts.OnGetCollection(flagId)
   this.UpdateCollection();
 
@@ -345,6 +604,19 @@ function Mounts.GetMountsName(flagId)
   return "";
 end
 
+function Mounts.Demo()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
 --Function
 function Mounts.LevelUp()
   if Role.player.war ~= EWar.None then
@@ -355,11 +627,6 @@ function Mounts.LevelUp()
   local mountsLv = Mounts.level;
 
   if mountsGrowDatas[mountsLv] == nil then return end
-
-  if mountsLv >= UIVIP.GetVIPLevel(EVIPPermission.Mount) + 10 then
-    ShowCenterMessage(string.Get(25062));
-    return;
-  end
 
   if mountsGrowDatas[mountsLv + 1] == nil then
     ShowCenterMessage(string.Get(20582));
@@ -378,10 +645,36 @@ function Mounts.LevelUp()
     return;
   end
 
-  --C:079-003 <座騎升級> +背包索引(1)
+  --C:079-003 <座騎升級> +背包索引(2)
   sendBuffer:Clear();
-  sendBuffer:WriteByte(Item.GetItemIndex(mountsGrowDatas[mountsLv].upItemId));
+  sendBuffer:WriteUInt16(Item.GetItemIndex(mountsGrowDatas[mountsLv].upItemId));
   Network.Send(79, 3, sendBuffer);
+end
+
+function Mounts.Demo1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function Mounts.Demo2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
 end
 
 function Mounts.AttributeUp(kind, showMessage, justCheck)
@@ -416,10 +709,10 @@ function Mounts.AttributeUp(kind, showMessage, justCheck)
   end
   
   if not justCheck then
-    --C:079-004 <座騎投點> +種類(1) +背包索引(1)
+    --C:079-004 <座騎投點> +種類(1) +背包索引(2)
     sendBuffer:Clear();
     sendBuffer:WriteByte(kind);
-    sendBuffer:WriteByte(itemIndex);
+    sendBuffer:WriteUInt16(itemIndex);
     Network.Send(79, 4, sendBuffer);
   end
 
@@ -443,6 +736,32 @@ function Mounts.Mount()
   Network.Send(79, 1);
 end
 
+function Mounts.Demo3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function Mounts.Demo4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
 function Mounts.Dismount()
   if Role.player.war ~= EWar.None then
     ShowCenterMessage(string.Get(80099));
@@ -451,4 +770,30 @@ function Mounts.Dismount()
   
   --C:079-002 <下座騎>
   Network.Send(79, 2);
+end
+
+function Mounts.Demo5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
+function Mounts.Demo6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
 end

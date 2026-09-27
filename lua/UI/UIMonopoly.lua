@@ -45,7 +45,6 @@ local text_Title;
 local text_LeftDiceCount;
 local text_TokenLeftSteps;
 local text_Round;
-local text_Level;
 
 local tokenLeftStepsTextOffset = Vector3.New(0, 110, 0);
 --endregion
@@ -147,8 +146,6 @@ function UIMonopoly.Initialize(go)
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_Help);
   tempEvent = uiController:FindEvent("Image_Close");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_Close);
-  tempEvent = uiController:FindEvent("Image_Leaderboard");
-  tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_Leaderboard);
 
   tokenCanvasSortingOrder = uiController.canvas.sortingOrder + 2;
 
@@ -223,7 +220,6 @@ function UIMonopoly.Initialize(go)
   text_Title = uiController:FindText("Text_Title");
   text_LeftDiceCount = uiController:FindText("Text_LeftDiceCount");
   text_Round = uiController:FindText("Text_Round");
-  text_Level = uiController:FindText("Text_Level");
 
   text_TokenLeftSteps = uiController:FindText("Text_TokenLeftSteps");
   gameObject_TokenLeftSteps = uiController:FindGameObject("Text_TokenLeftSteps");
@@ -235,6 +231,28 @@ function UIMonopoly.Initialize(go)
   image_AutoSwitch.sprite = UI.GetSwitchSprite(false);
   tempEvent = uiController:FindEvent("Image_Auto");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_AutoSwitch);
+
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function UIMonopoly.Update()
@@ -266,15 +284,31 @@ function UIMonopoly.OnOpen(festivalData)
   this.SwitchRollDiceButtonType(ERollDiceButtonType.rollDice);
   openFlag = true;
   this.UpdateProgress();
-
   return true
 end
 
-function UIMonopoly.OnClick_Leaderboard()
-  UI.Open(UILeaderboard, 46);
-end
-
 function UIMonopoly.OnClick_Close()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   if tokenMoving then
     return
   end
@@ -298,6 +332,28 @@ function UIMonopoly.OnClick_RollDice()
   UICenterMessage.Clear();
   this.SetTokenMoveFlag(true);
   Monopoly.RollDice();
+  
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function UIMonopoly.UpdateTime()
@@ -356,7 +412,6 @@ function UIMonopoly.UpdateUI()
   TextureManager.SetPng(ETextureUseType.None, diceResultImageName, rawImage_StillDice);
   this.UpdateDiceCount();
   this.UpdateRound();
-  this.UpdateLevels();
 end
 
 function UIMonopoly.UpdateRound()
@@ -364,16 +419,6 @@ function UIMonopoly.UpdateRound()
     return
   end
   text_Round.text = string.format(string.Get(24061), RoleCount.Get(ERoleCount.MonopolyRound));
-end
-
-function UIMonopoly.UpdateLevels()
-  local currentRound = RoleCount.Get(ERoleCount.MonopolyRound)
-  local roundIndex = math.min(currentRound, MonopolyRewardData.GetRoundCount());
-  local level = MonopolyRewardData.GetRoundLevel(roundIndex);
-  if not UI.IsVisible(UIMonopoly) then
-    return
-  end
-  text_Level.text = string.format(string.Get(24728), level);
 end
 --endregion
 
@@ -418,6 +463,28 @@ function UIMonopoly.GetCell(cellID)
   if mapKeys[cellID] == nil then
     return nil
   end
+  
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   local key = mapKeys[cellID];
   return allCells[key.x][key.y].cell;
 end
@@ -440,7 +507,7 @@ function UIMonopoly.SetCellReward(cellID, rewardItemID, rewardItemCount)
   cell.item = UIItemController.New(cell.itemImage);
   cell.item:SetItem(rewardItemID, rewardItemCount);
   local item = itemDatas[rewardItemID];
-  if item.specialAbility == EItemUseKind.ItemUse_216 then
+  if item.specialAbility == EItemUseKind.ItemUse_216 or item.kind == EItemKind.DoroCard then
     return
   end
   local itemName = itemDatas[rewardItemID]:GetName();
@@ -608,6 +675,27 @@ end
 
 --move content rect opposite direction
 function UIMonopoly.GetMapFocusPosition(position)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   return -position;
 end
 --endregion
@@ -881,6 +969,27 @@ function UIMonopoly.CheckTokenInSight(mapPosition, tokenPosition)
     token:UpdateShow(false, 1);
   else
     token.gameObject:SetActive(false);
+    --3----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   end
 end
 

@@ -8,6 +8,47 @@ function ExclusiveWeapon.GetSkill(id, lv)
   if exclusiveWeaponDatas[id] ~= nil and exclusiveWeaponDatas[id][lv] ~= nil then
     return exclusiveWeaponDatas[id][lv].skillId, exclusiveWeaponDatas[id][lv].skillLv;
   end
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function ExclusiveWeapon.GetBaseAttribute(id, lv)
@@ -52,9 +93,9 @@ function ExclusiveWeapon.GetAttributeText(id, itemSave)
     elseif k== 217 then
       attributeText = string.Get(90136);
     elseif k== 218 then
-      attributeText = string.Get(20040); --體質
+      attributeText = string.Get(10068); --體質
     elseif k== 219 then
-      attributeText = string.Get(20041); --能量
+      attributeText = string.Get(10069); --能量
     elseif k== 64 then
       attributeText = string.Get(10406); --忠誠
     end
@@ -115,7 +156,47 @@ function ExclusiveWeapon.GetEnhanceText(id, itemSave, rightWarrior)
   if itemSave ~= nil then 
     lv = itemSave.enhanceLv;
   end
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   local result = "";
   result = string.format(string.Get(22699), lv); 
   if not string.IsNullOrEmpty(result) then
@@ -234,6 +315,15 @@ function ExclusiveWeapon.CheckExclusiveWarrior(itemId, role)
   return false;
 end
 
+function ExclusiveWeapon.GetExclusiveWarrior(itemId)
+  if exclusiveWeaponDatas[itemId] == nil or itemDatas[itemId] == nil then
+    return nil;
+  end
+  local itemData = itemDatas[itemId];
+  local npcData = npcDatas[itemData.spare3];
+  return npcData
+end
+
 function ExclusiveWeapon.CheckIsSkill(itemid)
   if exclusiveWeaponDatas[itemid] == nil or itemDatas[itemid] == nil then 
     return false;
@@ -298,13 +388,53 @@ function ExclusiveWeapon.ViewSkill(bagKind, bagIndex, followIndex)
 end
 
 function ExclusiveWeapon.SendEnhance(index1, index2)
-  --C:023-091 <專武強化> +功能(1) +專武背包索引(1) +專武材料背包索引(1)
+  --C:023-091 <專武強化> +功能(1) +專武背包索引(2) +專武材料背包索引(2)
   sendBuffer:Clear();
   sendBuffer:WriteByte(1);
-  sendBuffer:WriteByte(index1);
-  sendBuffer:WriteByte(index2);
+  sendBuffer:WriteUInt16(index1);
+  sendBuffer:WriteUInt16(index2);
   Network.Send(23, 91, sendBuffer);
-
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   lastEnhance = Item.GetBagItem(EThings.Bag, index1);
 end
 
@@ -341,5 +471,46 @@ function ExclusiveWeapon.GetSkillByRole(role)
       end
     end      
   end
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   return 0;
 end

@@ -2,6 +2,17 @@
 MapNpcData = {}
 MapNpcData.__index = MapNpcData;
 
+function MapNpcData.Script()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
 function MapNpcData.New()
   local self = {};
   setmetatable(self, MapNpcData);
@@ -29,6 +40,28 @@ function MapNpcData.New()
   self.eggThrowTime = 0; --轉蛋所掉出來的時間
 
   return self;
+end
+
+function MapNpcData.ScriptC()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function MapNpcData.Script()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
 end
 
 --二代武將
@@ -74,9 +107,53 @@ function ChildData.New(data)
   return self;
 end
 
+function ChildData.ScriptA()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function ChildData.ScriptB()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
 --跟隨武將
 FollowNpcData = {}
 FollowNpcData.__index = FollowNpcData;
+
+function FollowNpcData.ScriptB()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function FollowNpcData.ScriptC()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
 
 function FollowNpcData.New()
   local self = {};
@@ -118,9 +195,42 @@ function FollowNpcData.New()
   return self;
 end
 
+function FollowNpcData.ScriptCF()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function FollowNpcData.ScriptCG()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
 --城戰器械NPC
 GuardNpcData = {}
 GuardNpcData.__index = GuardNpcData;
+
+function GuardNpcData.ScriptCG()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
 
 function GuardNpcData.New()
   local self = {};
@@ -141,9 +251,53 @@ function GuardNpcData.New()
   return self;
 end
 
+function GuardNpcData.ScriptCGd()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
 --寵物
 PetNpcData = {}
 PetNpcData.__index = PetNpcData;
+
+function PetNpcData.ScriptCGd()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function PetNpcData.Scripta()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function PetNpcData.Scriptb()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
 
 function PetNpcData.New()
   local self = {};
@@ -166,9 +320,42 @@ function ForeignNpcData.New()
   return self;
 end
 
+function ForeignNpcData.Scriptb()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
 --馬車
 CartNpcData = {}
 CartNpcData.__index = CartNpcData;
+
+function CartNpcData.ScriptA()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function CartNpcData.ScriptB()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
 
 function CartNpcData.New()
   local self = {};
@@ -184,6 +371,50 @@ end
 HouseWarriorData = {}
 HouseWarriorData.__index = HouseWarriorData;
 
+function HouseWarriorData.ScriptB()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function HouseWarriorData.Script()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function HouseWarriorData.ScriptC()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function HouseWarriorData.ScriptD()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
 function HouseWarriorData.New()
   local self = {};
   setmetatable(self, HouseWarriorData);
@@ -191,13 +422,48 @@ function HouseWarriorData.New()
   return self;
 end
 
---大逃殺NPC
-BattleRoyaleNpcData = {}
-BattleRoyaleNpcData.__index = BattleRoyaleNpcData;
+function HouseWarriorData.ScriptE()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
 
-function BattleRoyaleNpcData.New()
+function HouseWarriorData.ScriptF()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+--挖礦NPC
+MiningNpcData = {}
+MiningNpcData.__index = MiningNpcData;
+
+function MiningNpcData.ScriptD()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function MiningNpcData.New(name)
   local self = {};
-  setmetatable(self, BattleRoyaleNpcData);
+  setmetatable(self, MiningNpcData);
+
+  self.name = name;
 
   return self;
 end
@@ -281,6 +547,39 @@ function PlayerData.New()
   return self;
 end
 
+function PlayerData.Script1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function PlayerData.Script2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function PlayerData.Script3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
 function PlayerData.Copy(data)
   local self = {};
   setmetatable(self, PlayerData);
@@ -333,6 +632,28 @@ function PlayerData.Copy(data)
   self.flowerId = data.flowerId;
 
   return self;
+end
+
+function PlayerData.Script4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function PlayerData.Script5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
 end
 
 function PlayerData:CheckShowEquip(fitType)
@@ -419,6 +740,39 @@ function PlayerData:CheckShowEquip(fitType)
   return true;
 end
 
+function PlayerData.Script6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function PlayerData.Script7()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function PlayerData.Script8()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
 local bodyPicId = 0;
 local hairPicId = 0;
 local helmPicId = 0;
@@ -434,6 +788,17 @@ local colorTint2 = 0;
 local colorTint3 = 0;
 local colorTint4 = 0;
 local colorTint5 = 0;
+
+function PlayerData.Script9()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
 
 function PlayerData:GetAtlasParams(titleId, ...)
   bodyPicId = self:GetPicId(ERolePart.Body);
@@ -496,6 +861,50 @@ function PlayerData:GetAtlasParams(titleId, ...)
   colorTint5 = colorTint5 + r * 100 + g * 10 + b;
 
   return bodyPicId, hairPicId, helmPicId, wristPicId, bootsPicId, clothesPicId, equipPicId, weaponPicId, capePicId, colorTint1, colorTint2, colorTint3, colorTint4, colorTint5, ...;
+end
+
+function PlayerData.Script10()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function PlayerData.Script11()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function PlayerData.Script12()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function PlayerData.Script13()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
 end
 
 function PlayerData:GetColorTint(colorPart, ignoreEquip)
@@ -627,6 +1036,28 @@ function PlayerData:GetColorTint(colorPart, ignoreEquip)
   return math.floor(r), math.floor(g), math.floor(b);
 end
 
+function PlayerData.Script14()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function PlayerData.Script15()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
 function PlayerData:GetPicId(part, ignoreEquip)
   if part == ERolePart.Body then
     if self.sex == 1 then
@@ -728,4 +1159,37 @@ function PlayerData:GetEquipPicId(fitType)
   end
   
   return 0;
+end
+
+function PlayerData.Script15()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function PlayerData.Script16()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
+end
+
+function PlayerData.Script17()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BBS = 54;
+    for i = 1, 5 do
+      BBS = BBS + i;
+    end
+    
+    return BBS;
+  end
 end

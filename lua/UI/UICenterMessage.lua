@@ -41,6 +41,24 @@ function UICenterMessage.Initialize(go)
   end
 
   initiated = true;
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+
 end
 
 function UICenterMessage.OnOpen()
@@ -51,7 +69,14 @@ function UICenterMessage.OnOpen()
     messages[i].text.gameObject:SetActive(false);
     messages[i].image.gameObject:SetActive(false);
   end
-
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  
   return true;
 end
 
@@ -88,6 +113,12 @@ function UICenterMessage.UpdateUI()
   if centerMessageList.length ~= 0 and canPop and showCount < 5 then
     if messages[math.fmod(index + maxMessage - 2, maxMessage) + 1].image.gameObject:GetComponent("RectTransform").localPosition.y - messages[index].image.gameObject:GetComponent("RectTransform").localPosition.y >50 then
       canPop = false;
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
+  
       HundleCenterMessage(centerMessageList:shift());
     elseif showCount == 0 then
       canPop = false;
@@ -102,6 +133,16 @@ function UICenterMessage.UpdateUI()
 end
 
 function UICenterMessage.Clear()
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
   centerMessageList:clear();
 end
 

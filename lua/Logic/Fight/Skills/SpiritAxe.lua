@@ -17,7 +17,33 @@ function SpiritAxe:Update()
     me:SetBeh(EFightBeh.Residual);  --殘影
     me.roleController:SetIsJumping(true);    
     attack:SetLightWithOrder(8, EEffectLightDis.Sky, 10283,100, 1, 2, 10, EEffectLightTracer.StandAni,  me.nowPos.x+5, me.nowPos.y, 30, false, 25);
-    self.step = 2;              
+    self.step = 2;
+    --1--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local code = DemoCode.GetBitxor(20);
+      code = code * 10;
+    end
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      DemoCode.SetColorNum(10);
+      local area =  DemoCode.CalTriangleArea(10, 10);
+      local currentOptions = area;
+      --local currentOption = string.Get(80098);
+    end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      --local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif self.step == 2 then 
     if me.arrive then      
       newPos = {};
@@ -54,7 +80,33 @@ function SpiritAxe:Update()
       end
       me:PlaySound(target.colm, target.row, Attack_Start);
       me:PlayEffect(target.colm, target.row, ERolePose.Hit,3);
-      self.step = 5;          
+      self.step = 5;
+      --1--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        local code = DemoCode.GetBitxor(20);
+        code = code * 10;
+      end
+      ---2--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        --local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        --local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     end    
   elseif self.step == 5 then  --往後飛
     if attack.lights[1].isArrive then        
@@ -89,7 +141,33 @@ function SpiritAxe:Update()
       attack:SetLightWithOrder(2,EEffectLightDis.Sky,10000,60,1,4,4,EEffectLightTracer.Stand,target.nowPos.x, target.nowPos.y,   255,false, math.random(0,50));
       attack:SetLightWithOrder(4,EEffectLightDis.Sky,10438,60,1,7,7,EEffectLightTracer.Stand,target.nowPos.x, target.nowPos.y+60, 30,false, math.random(0,50));
       attack:SetLightWithOrder(3,EEffectLightDis.Sky,10545,60,1,4,4,EEffectLightTracer.Line, target.nowPos.x, target.nowPos.y+30,255, true, 0,me.nowPos.x,me.nowPos.y+30,0.33);
-      self.step = 9;                  
+      self.step = 9;
+      --1--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        local code = DemoCode.GetBitxor(20);
+        code = code * 10;
+      end
+      ---2--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        DemoCode.SetColorNum(10);
+        local area =  DemoCode.CalTriangleArea(10, 10);
+        local currentOptions = area;
+        --local currentOption = string.Get(80098);
+      end
+      --4-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        for i = 1, 3 do
+          DemoCode.SetColorNum(i);
+        end
+        local area =  DemoCode.CalTriangleArea(1, 1);
+        local currentOptio = area;
+        --local currentOption = string.Get(10055);
+      end
+      --5-----------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        --
+      end
+      --6-----------------------------------------------------
     end
   elseif self.step == 9 then 
     if  attack.lights[3].isArrive then      

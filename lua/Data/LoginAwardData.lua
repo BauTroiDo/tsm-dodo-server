@@ -1,6 +1,20 @@
 LoginAwardData = {};
 LoginAwardData.__index = LoginAwardData;
 
+function LoginAwardData.Demo()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
 function LoginAwardData.New(reader)
   local self = {};
   setmetatable(self, LoginAwardData);
@@ -25,6 +39,48 @@ function LoginAwardData.New(reader)
   return self;
 end
 
+function LoginAwardData.Demo1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function LoginAwardData.Demo2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function LoginAwardData.Demo3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
 function LoginAwardData.Add(group, day, items, quants, changeItemId, changeQuant, roleCount, flag, actRule)
   local self = {};
   setmetatable(self, LoginAwardData);
@@ -40,4 +96,32 @@ function LoginAwardData.Add(group, day, items, quants, changeItemId, changeQuant
   self.actRule = actRule;
 
   return self;
+end
+
+function LoginAwardData.Demo4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
+end
+
+function LoginAwardData.Demo5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local BS = 78;
+    local SB = 25;
+    local result = 0;
+    
+    if bit.band(SB,45) == 45 then
+      result = BS * SB;
+    end
+    
+    return result;
+  end
 end

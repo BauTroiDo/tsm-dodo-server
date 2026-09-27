@@ -25,6 +25,47 @@ function BitFlag.Init(data)
   UICollectBook.CheckWarriorRedDot();
   Organization.UpdateSignRedDot();
   BattlePass.UpdateRedDot();
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function BitFlag.Get(flagId)
@@ -32,10 +73,20 @@ function BitFlag.Get(flagId)
 end
 
 function BitFlag.Set(flagId, value)
+  if Between(flagId, 3201, 6000) then
+    for k, v in pairs(collectWarriorDatas)do
+      if flagId == v.getFlag and not BitFlag.Get(v.getFlag) and v.shineValue > 0 then
+        ShowCenterMessage(string.format(string.Get(23825), v.shineValue));
+      end
+    end
+  end
+  
   foreverFlags = SetFlag(foreverFlags, flagId, value);
 
   if Between(flagId, 1001, 1299) then
     Mounts.OnGetCollection(flagId);
+  
+    UICollectBook.CheckNFTMountsRedDot();
   end
 
   if Between(flagId, 1600, 3000) or Between(flagId, 3201, 6000) then
@@ -45,6 +96,10 @@ function BitFlag.Set(flagId, value)
   if Between(flagId, 3001, 3200) then
     CollectCard.AddCollectCardSortRedDot(flagId);
     UICollectBook.CheckCardSortRedDot();
+  end
+  
+  if Between(flagId, 6881, 6930) then
+    UICollectBook.CheckNFTCardRedDot();
   end
 
   if Between(flagId, 1490, 1499) then

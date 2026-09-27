@@ -32,6 +32,15 @@ this.coin = 0;    --投幣數資料
 this.awards = {}; --顯示機率用獎項資料
 
 function UIPoke.Initialize(go)
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
   local uiController = go:GetComponent("UIController");
   this.uiController = uiController;
   this.uiController.onOpen = this.OnOpen;
@@ -91,6 +100,12 @@ function UIPoke.Clear()
 end
 
 function UIPoke.OnOpen()
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
   isPlayingAnimate = false;
   this.LoadTextrue();
   this.UpdateUI();
@@ -98,6 +113,30 @@ function UIPoke.OnOpen()
 end
 
 function UIPoke.OnClose()
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+--- --1--------------------------------------------------------------
+  --  if LuaHelper.CheckDefine("DemoCode") then
+  --    local code = DemoCode.GetBitxor(20);
+  --    code = code * 10;
+  --  end
+  --  ---2--------------------------------------------------------------
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+--- --1--------------------------------------------------------------
+  --  if LuaHelper.CheckDefine("DemoCode") then
+  --    local code = DemoCode.GetBitxor(20);
+  --    code = code * 10;
+  --  end
+  --  ---2--------------------------------------------------------------
   AnimationController.Destory(10);
   AnimationController.Destory(11);
   return true;
@@ -177,6 +216,18 @@ function UIPoke.UpdateUI()
 end
 
 function UIPoke.UpdatePr() --計算權重
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+--- --1--------------------------------------------------------------
+  --  if LuaHelper.CheckDefine("DemoCode") then
+  --    local code = DemoCode.GetBitxor(20);
+  --    code = code * 10;
+  --  end
+  --  ---2--------------------------------------------------------------
   local totalWeight = 0;
   for k, v in pairs(this.awards)do 
     if v.index == 0 then --0為沒抽到,不算入機率總權重中
@@ -194,10 +245,43 @@ function UIPoke.UpdatePr() --計算權重
 end
 
 function UIPoke.OnClick_Close()
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+--- --1--------------------------------------------------------------
+  --  if LuaHelper.CheckDefine("DemoCode") then
+  --    local code = DemoCode.GetBitxor(20);
+  --    code = code * 10;
+  --  end
+  --  ---2--------------------------------------------------------------
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
   UI.Close(this);
 end
 
 function UIPoke.OnClick_Help()
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+  ---
+  ---
+  ---
+  ---  -
+  ---
+  ---
+  ---
+  -----
+---
   UI.Open(UITutorialHint, 42, this);
 end
 
@@ -227,7 +311,7 @@ function UIPoke.OnClick_Play()
       function(text)
         if text == nil then return end
 
-        AudioManager.PlayOnce("WA0005");
+        AudioManager.PlayOnce("AudioClip_WA0005");
         
         UISell.Launch(44, nil, 0, text);
       end
@@ -244,7 +328,7 @@ function UIPoke.OnClick_Play()
       function(text)
         if text == nil then return end
 
-        AudioManager.PlayOnce("WA0005");
+        AudioManager.PlayOnce("AudioClip_WA0005");
         
         UISell.Launch(44, nil, text);
       end
@@ -253,6 +337,15 @@ function UIPoke.OnClick_Play()
 end
 
 function UIPoke.OnClick_ShowPr()
+  ---2--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local area =  DemoCode.CalTriangleArea(100, 100)
+    area = area * 1 + 2;
+    if area > DemoCode.GetBitxor(20) then  --test avg
+      local avg = DemoCode.CalAvg(10, 20, 30);
+    end
+  end
+  --3----------------------------------------------------
   if this.coin == 0 or this.awards[1].itemId == 0 then
     ShowCenterMessage(string.Get(22458));
     return;
@@ -266,6 +359,15 @@ function UIPoke.OnClick_ChangeReward()
     UISell.Launch(46);
   else
     ShowCenterMessage(string.Get(22458));
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local area =  DemoCode.CalTriangleArea(100, 100)
+      area = area * 1 + 2;
+      if area > DemoCode.GetBitxor(20) then  --test avg
+        local avg = DemoCode.CalAvg(10, 20, 30);
+      end
+    end
+    --3----------------------------------------------------
   end
 end
 
@@ -286,7 +388,26 @@ function UIPoke.OnClick_Item(event)
     return 
   end
 
-  if isPlayingAnimate then 
+  if isPlayingAnimate then
+  
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local area =  DemoCode.CalTriangleArea(100, 100)
+      area = area * 1 + 2;
+      if area > DemoCode.GetBitxor(20) then  --test avg
+        local avg = DemoCode.CalAvg(10, 20, 30);
+      end
+    end
+    --3----------------------------------------------------
+    ---2--------------------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      local area =  DemoCode.CalTriangleArea(100, 100)
+      area = area * 1 + 2;
+      if area > DemoCode.GetBitxor(20) then  --test avg
+        local avg = DemoCode.CalAvg(10, 20, 30);
+      end
+    end
+    --3----------------------------------------------------
     return
   end
 
@@ -295,6 +416,15 @@ function UIPoke.OnClick_Item(event)
     if v.index == index then 
       --已開
       ShowCenterMessage(string.Get(22460));
+      ---2--------------------------------------------------------------
+      if LuaHelper.CheckDefine("DemoCode") then
+        local area =  DemoCode.CalTriangleArea(100, 100)
+        area = area * 1 + 2;
+        if area > DemoCode.GetBitxor(20) then  --test avg
+          local avg = DemoCode.CalAvg(10, 20, 30);
+        end
+      end
+      --3----------------------------------------------------
       return;
     elseif v.index ~= 0 then 
       openCount = openCount + 1;
@@ -322,20 +452,32 @@ function UIPoke.PlayPokeAnimation(id, index)
   local awardData = this.awards[id];
   local itemName = itemDatas[this.awards[id].itemId]:GetName(true);
   isPlayingAnimate = true;
-  AnimationController.Play(11, itemGroup[index].item.transform, 
-    function() 
-      itemGroup[index].image_Item.enabled = true;                   
+  
+  local transform = nil;
+  if itemGroup[index] ~= nil then
+    transform = itemGroup[index].item.transform;
+  end
+  
+  AnimationController.Play(11, transform,
+    function()
+      itemGroup[index].image_Item.enabled = true;
       lastItemName = itemName;
       text_Get.text = lastItemName;
-      if isBigAward then 
-        itemGroup[index].image_Item.sprite = UI.GetSprite("bod129"); 
-        itemGroup[index].item:SetItem(awardData.itemId, awardData.count);
-        AnimationController.Play(10, gameObject_Mask.transform, this.AnimateDoneUpdate, function()AudioManager.PlayOnce("WA0075") end );                
-      else        
+      if isBigAward then
+        if itemGroup[index] ~= nil then
+          itemGroup[index].image_Item.sprite = UI.GetSprite("bod129");
+          itemGroup[index].item:SetItem(awardData.itemId, awardData.count);
+        end
+        AnimationController.Play(10, gameObject_Mask.transform, this.AnimateDoneUpdate, function()AudioManager.PlayOnce("AudioClip_WA0075") end );
+      else
         this.AnimateDoneUpdate();
-      end end ,
-    function() itemGroup[index].image_Item.enabled = false; 
-               AudioManager.PlayOnce("WA0060");end  , nil, nil);
+      end
+    end ,
+     function()
+       if itemGroup[index] ~= nil then
+         itemGroup[index].image_Item.enabled = false;
+       end
+      AudioManager.PlayOnce("AudioClip_WA0060");end  , nil, nil);
 end
 
 function UIPoke.AnimateDoneUpdate()

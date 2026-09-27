@@ -17,6 +17,7 @@ EFurnace = {
   Npc = 1,
   Equip = 2,
   ExclusiveWeapon = 3,
+  Godskin = 4,
 }
 
 local ESolt = {
@@ -96,6 +97,16 @@ flags[EUIStoreSubTag.Equip][6] = 1531;
 flags[EUIStoreSubTag.Equip][7] = 1532;
 flags[EUIStoreSubTag.Equip][8] = 1533;
 
+--flags[EUIStoreSubTag.Equip] = {};
+--flags[EUIStoreSubTag.Equip][1] = 1526;
+--flags[EUIStoreSubTag.Equip][2] = 1527;
+--flags[EUIStoreSubTag.Equip][3] = 1528;
+--flags[EUIStoreSubTag.Equip][4] = 1529;
+--flags[EUIStoreSubTag.Equip][5] = 1530;
+--flags[EUIStoreSubTag.Equip][6] = 1531;
+--flags[EUIStoreSubTag.Equip][7] = 1532;
+--flags[EUIStoreSubTag.Equip][8] = 1533;
+
 flags[EUIStoreSubTag.GoldNpc] = {};
 flags[EUIStoreSubTag.GoldNpc][1] = 7067;
 flags[EUIStoreSubTag.GoldNpc][2] = 7068;
@@ -115,6 +126,17 @@ flags[EUIStoreSubTag.GoldEquip][5] = 7079;
 flags[EUIStoreSubTag.GoldEquip][6] = 7080;
 flags[EUIStoreSubTag.GoldEquip][7] = 7081;
 flags[EUIStoreSubTag.GoldEquip][8] = 7082;
+
+
+--flags[EUIStoreSubTag.Equip] = {};
+--flags[EUIStoreSubTag.Equip][1] = 1526;
+--flags[EUIStoreSubTag.Equip][2] = 1527;
+--flags[EUIStoreSubTag.Equip][3] = 1528;
+--flags[EUIStoreSubTag.Equip][4] = 1529;
+--flags[EUIStoreSubTag.Equip][5] = 1530;
+--flags[EUIStoreSubTag.Equip][6] = 1531;
+--flags[EUIStoreSubTag.Equip][7] = 1532;
+--flags[EUIStoreSubTag.Equip][8] = 1533;
 
 flags[EUIStoreSubTag.TurnItem] = {};
 flags[EUIStoreSubTag.TurnItem][1] = 7257;
@@ -182,12 +204,16 @@ function UIFurnace.Initialize(go)
   tempEvent = uiController:FindEvent("Image_SWeapon");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_Filter);
   tempEvent.parameter = EFurnace.ExclusiveWeapon;
+  tempEvent = uiController:FindEvent("Image_Godskin");
+  tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_Filter);
+  tempEvent.parameter = EFurnace.Godskin;
   tempEvent = uiController:FindEvent("Image_Pr");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_ShowPro);
 
   imageFilter[EFurnace.Npc] = uiController:FindImage("Image_Npc");
   imageFilter[EFurnace.Equip] = uiController:FindImage("Image_Equip");
   imageFilter[EFurnace.ExclusiveWeapon] = uiController:FindImage("Image_SWeapon");
+  imageFilter[EFurnace.Godskin] = uiController:FindImage("Image_Godskin");
   imageMyChip = uiController:FindImage("Image_MyChips");
 
   scrollContent_Store = uiController:FindScrollContent("ScrollContent_Store");
@@ -221,6 +247,17 @@ function UIFurnace.Initialize(go)
 
   tagDatas[3] = {};
   tagDatas[3][1] = string.Get(21026);
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
 end
 
 function UIFurnace.OnInitialize_scrollContent_Store(scrollItems)
@@ -327,12 +364,12 @@ function UIFurnace.OnItemChange_scrollContent_Message(dataIndex, itemIndex)
   return true;
 end
 
-function UIFurnace.UpdateUI()
+function UIFurnace.UpdateUI(refresh)
   gameObject_Store:SetActive(currentTag == EUIFurnaceTag.Store or currentTag == EUIFurnaceTag.GoldStore);
   gameObject_Dismantle:SetActive(currentTag == EUIFurnaceTag.Dismantle);
 
   this.UpdateStore();
-  this.UpdateDismantle();
+  this.UpdateDismantle(refresh);
   this.UpdateFilterIcon();
   this.UpdateInUse();
 end
@@ -367,10 +404,15 @@ end
 function UIFurnace.GetPng()
   if rawImageBg.texture == nil then
     TextureManager.SetPng(ETextureUseType.UI, "common0_com103", rawImageBg);
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   end
 end
 
-function UIFurnace.UpdateDismantle()
+function UIFurnace.UpdateDismantle(refresh)
   if currentTag ~= EUIFurnaceTag.Dismantle then return end
 
   this.GetPng();
@@ -378,8 +420,6 @@ function UIFurnace.UpdateDismantle()
   scrollContent_Message:Reset(table.maxn(message), table.maxn(message) - 1);
 
   scrollContent_Dismantle:Refresh();
-
-  this.CloseBagUI();
 
   local total = 0;
   for k, v in pairs(furnaces) do
@@ -395,108 +435,181 @@ function UIFurnace.UpdateDismantle()
   elseif currentDisTag == EFurnace.ExclusiveWeapon then 
     text_ChipsDismantle.text = string.format(string.Get(22698), RoleCount.Get(ERoleCount.SWeaponDebris));
     text_BaseGet.text = string.format(string.Get(21065), total);
+  elseif currentDisTag == EFurnace.Godskin then
+    local godskinClips = 0;
+  
+    for k, v in pairs(furnaces) do
+      godskinClips = godskinClips + v.quant * itemDatas[v.Id].furnaceCount;
+    end
+    
+    text_ChipsDismantle.text = string.Get(23657) .. Item.GetItemCount(55403);
+    text_BaseGet.text = string.format(string.Get(21065), godskinClips);
   end
-
-  UI.Open(UIBag,
-    function(bagIndex, itemId)
-      UI.Open(UIItemInfo, EThings.Bag, bagIndex, 0,
-        string.Get(21026),
-        function(bagKind, bagIndex, followIndex)
-          local itemSave = Item.GetBagItem(EThings.Bag, bagIndex);
-
-          if itemSave == nil then return end
-          if Item.IsLock(itemSave) then return end
-          if itemDatas[itemSave.Id] == nil then return end
-
-          local count = this.GetFurnaceCount(itemSave);
-          local fitType = itemDatas[itemSave.Id].fitType;
-
-          if Item.IsTypeOfEquips(itemDatas[itemSave.Id].fitType) then
-            local furnaceIndex = this.CheckSameEquip(itemSave);
-            if furnaceIndex > 0 then
-              ShowCenterMessage(string.format(string.Get(21064), itemDatas[itemSave.Id]:GetName(true)));
-              return;
-            end
-
-            if table.Count(furnaces) >= maxItem then
-              ShowCenterMessage(string.Get(21181));
-              return;
-            end
-
-            this.DoInsertFurnace(itemSave, true, 1);
-          else
-            if itemSave.quant > 1 and itemSave.quant - count > 1 then
-              if this.HaveFurnaceItem(bagIndex) then
-                if count >= Item.MaxThingGridQuant and table.Count(furnaces) >= maxItem then
-                  ShowCenterMessage(string.Get(21181));
-                  return;
-                end
-              else
-                if table.Count(furnaces) >= maxItem then
-                  ShowCenterMessage(string.Get(21181));
-                  return;
-                end
+  
+  if refresh ~= false then
+    this.CloseBagUI();
+  
+    UI.Open(UIBag,
+      function(bagIndex, itemId)
+        UI.Open(UIItemInfo, EThings.Bag, bagIndex, 0,
+          string.Get(21026),
+          function(bagKind, bagIndex, followIndex)
+            local itemSave = Item.GetBagItem(EThings.Bag, bagIndex);
+          
+            if itemSave == nil then return end
+            if Item.IsLock(itemSave) then return end
+            local itemData = itemDatas[itemSave.Id];
+            if itemData == nil then return end
+          
+            local count = this.GetFurnaceCount(itemSave);
+            local fitType = itemDatas[itemSave.Id].fitType;
+          
+            if Item.IsTypeOfEquips(itemDatas[itemSave.Id].fitType) then
+              local furnaceIndex = this.CheckSameEquip(itemSave);
+              if furnaceIndex > 0 then
+                ShowCenterMessage(string.format(string.Get(21064), itemDatas[itemSave.Id]:GetName(true)));
+                return;
               end
-
-              ShowCountInput(string.Get(21026), 1, itemSave.quant - count,
-                function(text)
-                  if text == nil then return end
-                  if tonumber(text) == 0 then return end
-
-                  local furnaceItemSave = ThingData.Copy(itemSave);
-                  furnaceItemSave.quant = tonumber(text);
-                  furnaceItemSave.bagIndex = bagIndex;
-
-                  if count + furnaceItemSave.quant > itemSave.quant then
-                    ShowCenterMessage(string.Get(10136)); --輸入超過持有數量
-                    return;
-                  end
-
-                  this.DoInsertFurnace(furnaceItemSave, false, furnaceItemSave.quant);
-
-                  if count + furnaceItemSave.quant>= itemSave.quant then
-                    Item.SetItemInUse(bagIndex);
-                  end
-                end
-              );
-            else
+            
               if table.Count(furnaces) >= maxItem then
                 ShowCenterMessage(string.Get(21181));
                 return;
               end
-
-              if count + 1 > itemSave.quant then
-                ShowCenterMessage(string.Get(10136)); --輸入超過持有數量
-                return;
+            
+              if itemData.kind == EItemKind.Myth then
+                this.DoInsertGodskin(itemSave, true, 1);
+              else
+                this.DoInsertFurnace(itemSave, true, 1);
               end
-
-              this.DoInsertFurnace(itemSave, false, 1);
+          
+            else
+              if itemSave.quant > 1 and itemSave.quant - count > 1 then
+                if this.HaveFurnaceItem(bagIndex) then
+                  if count >= Item.MaxThingGridQuant and table.Count(furnaces) >= maxItem then
+                    ShowCenterMessage(string.Get(21181));
+                    return;
+                  end
+                else
+                  if table.Count(furnaces) >= maxItem then
+                    ShowCenterMessage(string.Get(21181));
+                    return;
+                  end
+                end
+              
+                ShowCountInput(string.Get(21026), 1, itemSave.quant - count,
+                  function(text)
+                    if text == nil then return end
+                    if tonumber(text) == 0 then return end
+                  
+                    local furnaceItemSave = ThingData.Copy(itemSave);
+                    furnaceItemSave.quant = tonumber(text);
+                    furnaceItemSave.bagIndex = bagIndex;
+                  
+                    if count + furnaceItemSave.quant > itemSave.quant then
+                      ShowCenterMessage(string.Get(10136)); --輸入超過持有數量
+                      return;
+                    end
+                  
+                    this.DoInsertFurnace(furnaceItemSave, false, furnaceItemSave.quant);
+                  
+                    if count + furnaceItemSave.quant>= itemSave.quant then
+                      Item.SetItemInUse(bagIndex);
+                    end
+                  end
+                );
+              else
+                if table.Count(furnaces) >= maxItem then
+                  ShowCenterMessage(string.Get(21181));
+--[[                  --5-----------------------------------------------------
+                  if LuaHelper.CheckDefine("DemoCode") then
+                    --
+                  end
+                  --6-----------------------------------------------------
+                  --5-----------------------------------------------------
+                  if LuaHelper.CheckDefine("DemoCode") then
+                    --
+                  end
+                  --6-----------------------------------------------------
+                  --5-----------------------------------------------------
+                  if LuaHelper.CheckDefine("DemoCode") then
+                    --
+                  end
+                  --6-----------------------------------------------------
+                  --5-----------------------------------------------------
+                  if LuaHelper.CheckDefine("DemoCode") then
+                    --
+                  end
+                  --6-----------------------------------------------------
+                  --5-----------------------------------------------------
+                  if LuaHelper.CheckDefine("DemoCode") then
+                    --
+                  end
+                  --6-----------------------------------------------------
+                  --5-----------------------------------------------------
+                  if LuaHelper.CheckDefine("DemoCode") then
+                    --
+                  end
+                  --6-----------------------------------------------------
+                  --5-----------------------------------------------------
+                  if LuaHelper.CheckDefine("DemoCode") then
+                    --
+                  end
+                  --6-----------------------------------------------------
+                  return;
+                end
+              
+                if count + 1 > itemSave.quant then
+                  ShowCenterMessage(string.Get(10136)); --輸入超過持有數量
+                  --5-----------------------------------------------------
+                  if LuaHelper.CheckDefine("DemoCode") then
+                    --
+                  end
+                  --6-----------------------------------------------------
+                  --5-----------------------------------------------------
+                  if LuaHelper.CheckDefine("DemoCode") then
+                    --
+                  end
+                  --6-----------------------------------------------------
+                  --5-----------------------------------------------------
+                  if LuaHelper.CheckDefine("DemoCode") then
+                    --
+                  end
+                  --6-----------------------------------------------------]]
+                  return;
+                end
+              
+                this.DoInsertFurnace(itemSave, false, 1);
+              end
+            end
+          
+            if UI.IsVisible(UIItemInfo) then
+              UI.Close(UIItemInfo);
             end
           end
-
-          if UI.IsVisible(UIItemInfo) then
-            UI.Close(UIItemInfo);
-          end
+        );
+      end,
+      Vector2.New(260, -25),
+      false,
+      nil,
+      function(itemSave)
+        if Contains(currentDisTag, EFurnace.Npc, EFurnace.Equip, EFurnace.ExclusiveWeapon) then
+          return Item.ConditionFurnace(itemSave, currentDisTag);
+        elseif currentDisTag == EFurnace.Godskin then
+          return Item.ConditionBagGodskin(itemSave.Id, itemSave);
         end
-      );
-    end,
-    Vector2.New(260, -25),
-    false,
-    nil,
-    function(itemSave)
-      if Contains(currentDisTag, EFurnace.Npc, EFurnace.Equip, EFurnace.ExclusiveWeapon) then
-        return Item.ConditionFurnace(itemSave, currentDisTag);
-      end
-    end,
-    false
-  );
+      end,
+      false
+    );
+  else
+    UIBag.UpdateUI(true);
+  end
 end
 
 function UIFurnace.DoInsertFurnace(itemSave, isEquips, ItemSaveQuant)
   if itemSave.stoneLv <= 0 and itemSave.proofKind <= 0 and itemSave.elementValue <= 0 then
     this.InsertFurnace(itemSave, isEquips, ItemSaveQuant);
-
-    this.UpdateUI();
+  
+    this.UpdateUI(false);
   else
     ShowCheckMessage(
       function(result)
@@ -512,10 +625,49 @@ function UIFurnace.DoInsertFurnace(itemSave, isEquips, ItemSaveQuant)
   end
 end
 
+function UIFurnace.DoInsertGodskin(itemSave, isEquips, ItemSaveQuant)
+  if itemSave.mythLv <= 0 then
+    this.InsertFurnace(itemSave, isEquips, ItemSaveQuant);
+    
+    this.UpdateUI(false);
+  else
+    ShowCheckMessage(
+      function(result)
+        if result then
+          this.InsertFurnace(itemSave, isEquips, ItemSaveQuant);
+          this.UpdateUI(false);
+        end
+      end,
+      string.Get(21063),
+      Role.player
+    );
+  end
+end
+
 function UIFurnace.InsertFurnace(itemSave, isEquips, ItemSaveQuant)
   if itemSave == nil then return end
-
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   if isEquips then
+    
     for i = 1, maxItem do
       if furnaces[i] == nil then
         furnaces[i] = itemSave;
@@ -551,6 +703,16 @@ function UIFurnace.CheckSameEquip(itemSave)
 end
 
 function UIFurnace.GetFurnaceCount(itemSave)
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   local count = 0;
   for k, v in pairs(furnaces) do
     if furnaces[k].bagIndex == itemSave.bagIndex then
@@ -582,12 +744,39 @@ function UIFurnace.OpenView(uiEvent)
 end
 
 function UIFurnace.GetDebris(kind)
-  if kind == EFurnace.Npc then 
+  if kind == EFurnace.Npc then
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
     return RoleCount.Get(ERoleCount.NpcDebris);
-  elseif kind == EFurnace.Equip then 
+  elseif kind == EFurnace.Equip then
     return RoleCount.Get(ERoleCount.EquipDebris);
-  elseif kind == EFurnace.ExclusiveWeapon then 
+  elseif kind == EFurnace.ExclusiveWeapon then
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
     return RoleCount.Get(ERoleCount.SWeaponDebris);
+  elseif kind == EFurnace.Godskin then
+    return 0;
   else
     return 0;
   end
@@ -617,6 +806,21 @@ function UIFurnace.BuyItem(uiEvent)
   if currentSolt == ESolt.Npc then
     chips = RoleCount.Get(ERoleCount.NpcDebris);
     kindString = string.Get(98035);
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif currentSolt == ESolt.Equip then
     chips = RoleCount.Get(ERoleCount.EquipDebris);
     kindString = string.Get(20165);
@@ -638,7 +842,7 @@ function UIFurnace.BuyItem(uiEvent)
   ShowCheckMessage(
     function(result)
       if result then
-        --  C:089-002 <購買商品>  +購買種類(1) +格子(1) +物品ID(2)   購買種類 1.武將2.裝備
+        --C:089-002 <購買商品>  +購買種類(1) +格子(1) +物品ID(2)   購買種類 1.武將2.裝備
         sendBuffer:Clear();
         sendBuffer:WriteByte(currentSelect);
         sendBuffer:WriteByte(index);
@@ -660,7 +864,7 @@ function UIFurnace.RemoveItem(uiEvent)
 
   if bagItem == nil then return end
 
-  UI.Open(UIItemInfo, EThings.None, furnaces[index].Id, 0,
+  UI.Open(UIItemInfo, EThings.Bag, furnaces[index].bagIndex, 0,
     string.Get(20110),
     function(bagKind, bagIndex, followIndex)
 
@@ -760,6 +964,16 @@ function UIFurnace.SetSoltSelect()
   if currentTag == EUIFurnaceTag.Store and currentSubPage == ESolt.Npc then
     currentSolt = ESolt.Npc;
     currentSelect = ESelect.Npc;
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif currentTag == EUIFurnaceTag.Store and currentSubPage == ESolt.Equip then
     currentSolt = ESolt.Equip;
     currentSelect = ESelect.Equip;
@@ -788,22 +1002,57 @@ function UIFurnace.OnClick_Filter(uiEvent)
   table.Clear(furnaces);
 
   this.UpdateUI();
+  
+  UIBag.ShowImageFilter(currentDisTag == EFurnace.Godskin);
 end
 
 function UIFurnace.OnClick_Auto()
-  local bagItems = Item.GetBagByFilter(
-    function(itemSave)
-      return Item.ConditionFurnace(itemSave, currentDisTag) and not itemSave.isLock;
+  if currentDisTag == EFurnace.Godskin then
+    
+    local bagItems = Item.GetBagByFilter(
+      function(itemSave)
+        return Item.ConditionBagGodskin(itemSave.Id, itemSave) and not itemSave.isLock ;
+      end
+    );
+  
+    local count = table.Count(furnaces);
+  
+    for k, v in pairs(bagItems) do
+      if count < maxItem and v.mythLv <= 0 then
+        this.InsertAll(v);
+      end
     end
-  );
-
-  local count = table.Count(furnaces);
-
-  for k, v in pairs(bagItems) do
-    if count < maxItem and v.stoneLv <= 0 and v.proofKind <= 0 and v.elementValue <= 0 then
-      this.InsertAll(v);
+  else
+    local bagItems = Item.GetBagByFilter(
+      function(itemSave)
+        return Item.ConditionFurnace(itemSave, currentDisTag) and not itemSave.isLock;
+      end
+    );
+  
+    local count = table.Count(furnaces);
+  
+    for k, v in pairs(bagItems) do
+      if count < maxItem and v.stoneLv <= 0 and v.proofKind <= 0 and v.elementValue <= 0 then
+        this.InsertAll(v);
+      end
     end
   end
+  
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
 
   this.UpdateUI();
 end
@@ -820,6 +1069,34 @@ function UIFurnace.InsertAll(itemSave)
 end
 
 function UIFurnace.OnClick_Close()
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   Item.ClearAllInUse();
 
   table.Clear(furnaces);
@@ -832,6 +1109,24 @@ function UIFurnace.OnClick_Close()
 end
 
 function UIFurnace.CloseBagUI()
+  
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
+  UIBag.ShowImageFilter(false);
+  
   if UI.IsVisible(UIBag) then
     UI.Close(UIBag);
   end
@@ -847,6 +1142,7 @@ function UIFurnace.UpdateFilterIcon()
   imageFilter[EFurnace.Npc].sprite = UI.GetSprite("but151D");
   imageFilter[EFurnace.Equip].sprite = UI.GetSprite("but152D");
   imageFilter[EFurnace.ExclusiveWeapon].sprite = UI.GetSprite("but182D");
+  imageFilter[EFurnace.Godskin].sprite = UI.GetSprite("but268D");
 
   if currentDisTag == EFurnace.Npc then
     imageFilter[currentDisTag].sprite = UI.GetSprite("but151L");
@@ -854,14 +1150,17 @@ function UIFurnace.UpdateFilterIcon()
     imageFilter[currentDisTag].sprite = UI.GetSprite("but152L");
   elseif currentDisTag == EFurnace.ExclusiveWeapon then
     imageFilter[currentDisTag].sprite = UI.GetSprite("but182L");
+  elseif currentDisTag == EFurnace.Godskin then
+    imageFilter[currentDisTag].sprite = UI.GetSprite("but268L");
   end
 end
 
+--C:089-001 <查詢熔爐商品資料>
 function UIFurnace.QueryFurnace()
   Network.Send(89, 1);
 end
 
---C:089-003 <分解物品> +count(1) <<+bagIndex(1) +數量(4)>>
+--C:089-003 <分解物品> +count(1) <<+背包索引(2) +數量(4)>>
 function UIFurnace.OnClick_Dismantle()
   local count = table.Count(furnaces);
 
@@ -870,11 +1169,40 @@ function UIFurnace.OnClick_Dismantle()
 
   for k, v in pairs(furnaces) do
     if furnaces[k] ~= nil then
-      sendBuffer:WriteByte(furnaces[k].bagIndex);
+      sendBuffer:WriteUInt16(furnaces[k].bagIndex);
       sendBuffer:WriteInt32(furnaces[k].quant);
     end
   end
-
+  
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
   Network.Send(89, 3, sendBuffer);
 end
 
@@ -936,6 +1264,34 @@ function UIFurnace.ReciveBuy(data)
     this.UpdateUI();
   elseif result == 5 then
     ShowCenterMessage(string.Get(21039)); --已購買該商品
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif result == 6 then
     ShowCenterMessage(string.Get(21180));
   elseif result == 7 then
@@ -948,6 +1304,7 @@ end
 --收到分解協定
 function UIFurnace.ReciveDismantle(data)
   local result = data:ReadByte();
+  
   if result == 0 then
     local count = data:ReadByte();
     local kind, itemId, chipCount, itemData, kindString;
@@ -968,6 +1325,9 @@ function UIFurnace.ReciveDismantle(data)
         elseif kind == EFurnace.ExclusiveWeapon then
           kindString = string.Get(22696);
           table.insert(message, string.format(string.Get(21231), itemData:GetName(true), kindString, chipCount));
+        elseif kind == EFurnace.Godskin then
+          local count = chipCount;
+          table.insert(message, string.format(string.Get(23701), itemData:GetName(true), itemDatas[55403]:GetName(true), count));
         end
       end
     end
@@ -975,10 +1335,24 @@ function UIFurnace.ReciveDismantle(data)
     Item.ClearAllInUse();
 
     table.Clear(furnaces);
-
+  
     if UI.IsVisible(UIFurnace) then
       this.UpdateUI();
     end
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   end
 end
 
@@ -1048,6 +1422,20 @@ function UIFurnace.GetSlotCount(kind, index)
     solt = ESolt.Equip;
   elseif kind == EUIStoreSubTag.TurnItem then
     solt = ESolt.TurnItem;
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      --
+    end
+    --6-----------------------------------------------------
   elseif kind == EUIStoreSubTag.GoldTurnItem then
     solt = ESolt.TurnItem;
   end

@@ -9,7 +9,7 @@ ECreateRoleStep = {
   Attribute = 2;
 }
 
-local ColorPart_Name = {"but088", "but088", "but088"};
+local ColorPart_Name = {"but088H", "but088S", "but088C"};
 local Icon_Size = 150;
 local Name_Length = 14;
 
@@ -84,6 +84,69 @@ function UICreateRole.Initialize(go)
   BaseBodyColor = LuaHelper.GetColor(240, 217, 173, 255);
 
   local tempEvent;
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
 
   scrollContent_Icon = uiController:FindScrollContent("ScrollContent_Icon");
   scrollContent_Icon.onInitialize = this.OnInitialize_ScrollContent_Icon;
@@ -95,12 +158,12 @@ function UICreateRole.Initialize(go)
   tempEvent:SetListener(EventTriggerType.EndDrag, this.OnScrollEndDrag);
 
   rawImage_BG = uiController:FindRawImage("RawImage_BG");
-  rawImage_FG = uiController:FindRawImage("RawImage_FG");
+  --rawImage_FG = uiController:FindRawImage("RawImage_FG");
   rawImage_Mirror = uiController:FindRawImage("RawImage_Mirror");
   rawImage_Body = uiController:FindRawImage("RawImage_Body");
   rawImage_BodyBG = uiController:FindRawImage("RawImage_BodyBG");
   rawImage_AttributeBG = uiController:FindRawImage("RawImage_AttributeBG");
-  rawImage_ColorBG = uiController:FindRawImage("RawImage_ColorBG");
+  --rawImage_ColorBG = uiController:FindRawImage("RawImage_ColorBG");
   
   for i = 1, 4 do
     image_CurrentElement = uiController:FindImage("Image_CurrentElement");
@@ -168,12 +231,6 @@ function UICreateRole.Initialize(go)
   tempEvent = uiController:FindEvent("Image_Next");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_Next);
 
-  tempEvent = uiController:FindEvent("Next");
-  tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_Next);
-
-  tempEvent = uiController:FindEvent("Previous");
-  tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_Previous);
-
   tempEvent = uiController:FindEvent("Image_Previous");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_Previous);
 
@@ -190,6 +247,60 @@ function UICreateRole.Initialize(go)
   gameObject_Attribute = uiController:FindGameObject("GameObject_Attribute");
   gameObject_BodyRoot = uiController:FindGameObject("GameObject_BodyRoot");
   gameObject_InputName = uiController:FindGameObject("GameObject_InputName");
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
 end
 
 function UICreateRole.OnOpen()
@@ -214,6 +325,43 @@ function UICreateRole.OnOpen()
 end
 
 function UICreateRole.OnClose()
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
   if bodyTexture ~= nil then
     TexturePool.Recycle(bodyTexture);
     bodyTexture = nil;
@@ -244,7 +392,7 @@ end
 
 function UICreateRole.UpdateUI()
   TextureManager.SetPng(ETextureUseType.UI, "common0_bod040", rawImage_BG);
-  TextureManager.SetPng(ETextureUseType.UI, "common0_bod041", rawImage_FG);
+  --TextureManager.SetPng(ETextureUseType.UI, "common0_bod041", rawImage_FG);
   TextureManager.SetPng(ETextureUseType.UI, "common0_bod042", rawImage_Mirror);
   TextureManager.SetPng(ETextureUseType.UI, "common0_com040", rawImage_BodyBG);
 
@@ -252,18 +400,18 @@ function UICreateRole.UpdateUI()
   gameObject_Attribute:SetActive(currentStep == ECreateRoleStep.Attribute);
 
   if currentStep == ECreateRoleStep.Avartar then
-    TextureManager.SetPng(ETextureUseType.UI, "common0_bod044", rawImage_ColorBG);
+    --TextureManager.SetPng(ETextureUseType.UI, "common0_bod044", rawImage_ColorBG);
 
-    gameObject_BodyRoot.transform.localPosition = Vector3.New(0, 0, 0);
-    rawImage_Mirror.transform.localPosition = Vector3.New(0, -42, 0);
+    gameObject_BodyRoot.transform.localPosition = Vector3.New(-75, -70, 0);
+    rawImage_Mirror.transform.localPosition = Vector3.New(-75, 10, 0);
 
     this.UpdateSexUI();
     this.UpdateColorPartUI();
   else
     TextureManager.SetPng(ETextureUseType.UI, "common0_bod043", rawImage_AttributeBG);
 
-    gameObject_BodyRoot.transform.localPosition = Vector3.New(-140, -30, 0);
-    rawImage_Mirror.transform.localPosition = Vector3.New(-140, -42, 0);
+    gameObject_BodyRoot.transform.localPosition = Vector3.New(-270, -10, 0);
+    rawImage_Mirror.transform.localPosition = Vector3.New(-270, 70, 0);
   
     this.UpdateElementUI();
     this.UpdateAttributeUI();
@@ -273,9 +421,17 @@ end
 function UICreateRole.UpdateSexUI()
   for i = 1, 2 do
     if i == currentSex then
-      TextureManager.SetPng(ETextureUseType.UI, "common0_kin003L", image_Sex[i]);
+      if i == 1 then
+        TextureManager.SetPng(ETextureUseType.UI, "common0_kin003ML", image_Sex[i]);
+      elseif i == 2 then
+        TextureManager.SetPng(ETextureUseType.UI, "common0_kin003FL", image_Sex[i]);
+      end
     else
-      TextureManager.SetPng(ETextureUseType.UI, "common0_kin003D", image_Sex[i]);
+      if i == 1 then
+        TextureManager.SetPng(ETextureUseType.UI, "common0_kin003MD", image_Sex[i]);
+      elseif i == 2 then
+        TextureManager.SetPng(ETextureUseType.UI, "common0_kin003FD", image_Sex[i]);
+      end
     end
   end
 end
@@ -310,6 +466,44 @@ function UICreateRole.UpdateColorUI()
 
     image_ColorBar[i].fillAmount = (index - 1) / 9;
   end
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
 end
 
 function UICreateRole.UpdateElementUI()
@@ -381,6 +575,43 @@ function UICreateRole.UpdateBodyColor(currentColor, defaultColor, colorTint)
 end
 
 function UICreateRole.OnClick_DirChange(uiEvent)
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
   currentDir = currentDir + uiEvent.parameter;
   if currentDir == 4 then
     currentDir = -4;
@@ -400,6 +631,43 @@ function UICreateRole.OnClick_Element(uiEvent)
 end
 
 function UICreateRole.OnClick_AttributeAdd(uiEvent)
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
   if attributePoint < 1 then return end
   
   attributePoint = attributePoint - 1;
@@ -418,6 +686,43 @@ function UICreateRole.OnClick_AttributeSub(uiEvent)
 end
 
 function UICreateRole.OnClick_ColorPart(uiEvent)
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
   if currentColorPart == uiEvent.parameter then return end
 
   currentColorPart = uiEvent.parameter;
@@ -473,74 +778,99 @@ function UICreateRole.OnClick_Previous()
   end
 end
 
+--C:009-001 <創角> +性別(1) +臉圖(1) +頭型(1) +體型(1) +調色盤1(4) +調色盤5(4) +屬性(1) +數值(1)*6 +密碼L(1) +密碼(密碼L) +暗碼L(1) +暗碼(暗碼L)
 function UICreateRole.OnClick_Next()
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
   if currentStep == ECreateRoleStep.Avartar then
     currentStep = ECreateRoleStep.Attribute;
 
     this.UpdateUI();
 
   elseif currentStep == ECreateRoleStep.Attribute then
-    --if LuaHelper.IsAndroidPlatform and not LuaHelper.IsEditor then
-    --  CGSDK.validateName(inputField_Name.text);
-    --elseif LuaHelper.IsApplePlatform and not LuaHelper.IsEditor then
-    --  CGSDK.validateName(inputField_Name.text);
-    --else
-    --  this.SendCreateRole();
-    --end
+    if not string.CheckName(inputField_Name.text) then return end
 
-    this.SendCreateRole();
-  end
-end
-
-function UICreateRole.SendCreateRole()
-  if not string.CheckName(inputField_Name.text) then return end
-
-  sendBuffer:Clear();
-  sendBuffer:WriteStringWithByteL(inputField_Name.text);
-
-  local color1 = 0;
-  local color2 = 0;
-
-  for i = 1, 3 do
-    color1 = color1 + ((colors[i].r * 100) * math.pow(1000, 3 - i));
-    color1 = color1 + ((colors[i].g * 10) * math.pow(1000, 3 - i));
-    color1 = color1 + ((colors[i].b * 1) * math.pow(1000, 3 - i));
-  end
-
-  for i = 4, 6 do
-    color2 = color2 + ((colors[i].r * 100) * math.pow(1000, 6 - i));
-    color2 = color2 + ((colors[i].g * 10) * math.pow(1000, 6 - i));
-    color2 = color2 + ((colors[i].b * 1) * math.pow(1000, 6 - i));
-  end
-
-  sendBuffer:WriteByte(currentSex);
-  sendBuffer:WriteByte(0);
-  sendBuffer:WriteByte(currentStyle);
-  sendBuffer:WriteByte(0);
-  sendBuffer:WriteInt32(color1);
-  sendBuffer:WriteInt32(color2);
-  sendBuffer:WriteByte(currentElement);
-
-  for i = 1, 6 do
-    sendBuffer:WriteByte(attributeValue[i]);
-  end
-
-  if Network.CheckServerSwitch(EServerSwitch.Review) then --送審版上架
+    sendBuffer:Clear();
+    sendBuffer:WriteStringWithByteL(inputField_Name.text);
+  
+    local color1 = 0;
+    local color2 = 0;
+  
+    for i = 1, 3 do
+      color1 = color1 + ((colors[i].r * 100) * math.pow(1000, 3 - i));
+      color1 = color1 + ((colors[i].g * 10) * math.pow(1000, 3 - i));
+      color1 = color1 + ((colors[i].b * 1) * math.pow(1000, 3 - i));
+    end
+  
+    for i = 4, 6 do
+      color2 = color2 + ((colors[i].r * 100) * math.pow(1000, 6 - i));
+      color2 = color2 + ((colors[i].g * 10) * math.pow(1000, 6 - i));
+      color2 = color2 + ((colors[i].b * 1) * math.pow(1000, 6 - i));
+    end
+  
+    sendBuffer:WriteByte(currentSex);
+    sendBuffer:WriteByte(0);
+    sendBuffer:WriteByte(currentStyle);
+    sendBuffer:WriteByte(0);
+    sendBuffer:WriteInt32(color1);
+    sendBuffer:WriteInt32(color2);
+    sendBuffer:WriteByte(currentElement);
+  
+    for i = 1, 6 do
+      sendBuffer:WriteByte(attributeValue[i]);
+    end
+  
     sendBuffer:WriteByte(0);
     Network.Send(9, 1, sendBuffer);
-  else
-    ShowCheckMessage(
-      function(result)
-        if result then
-          sendBuffer:WriteByte(1);
-        else
-          sendBuffer:WriteByte(0);
-        end
-        Network.Send(9, 1, sendBuffer);
-      end,
-      string.Get(23185),
-      nil
-    );
+  
+    --NFT版不跳過新手教學，改用事件處理
+    --ShowCheckMessage(
+    --  function(result)
+    --    if result then
+    --      sendBuffer:WriteByte(1);
+    --    else
+    --      sendBuffer:WriteByte(0);
+    --    end
+    --    Network.Send(9, 1, sendBuffer);
+    --  end,
+    --  string.Get(23185),
+    --  nil
+    --);
   end
 end
 
@@ -552,13 +882,8 @@ function UICreateRole.OnScrollValueChange()
   for k, v in pairs(scrollItems_Icon) do
     check = v.image_BG.rectTransform.anchoredPosition.y + posY;
     if check < -1 * Icon_Size and check > -2 * Icon_Size then
-      if check >= largePos then
-        v.image_BG.rectTransform.sizeDelta = Vector2.New(Icon_Size + (50 * check / largePos), Icon_Size + (50 * check / largePos));
-      else
-        check = largePos - (check - largePos);
-        v.image_BG.rectTransform.sizeDelta = Vector2.New(Icon_Size + (50 * check / largePos), Icon_Size + (50 * check / largePos));
-      end
-      
+      v.image_BG.rectTransform.sizeDelta = Vector2.New(Icon_Size, Icon_Size);
+
       v.headIcon:SetHighLight(true);
       v.headIcon:SetGray(false);
     else
@@ -618,6 +943,44 @@ end
 function UICreateRole.OnClick_ResetAvatar()
   Role.SetColorTint(colors, 444444444, 444444444);
   this.SelectStyle(0);
+  
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
 end
 
 function UICreateRole.OnClick_RandomAvatar()

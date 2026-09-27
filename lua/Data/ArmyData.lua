@@ -58,6 +58,19 @@ function ArmyArchitectureData.New(reader)
   return lv, self;
 end
 
+function ArmyArchitectureData.Demo()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
 ArmySignData = {}
 ArmySignData.__index = ArmySignData;
 
@@ -82,6 +95,19 @@ function ArmySignData.New(reader)
   return lv, self;
 end
 
+function ArmySignData.Demo()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
 ArmyAwardData = {}
 ArmyAwardData.__index = ArmyAwardData;
 
@@ -95,6 +121,19 @@ function ArmyAwardData.New(reader)
   return self;
 end
 
+function ArmyAwardData.Demo()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
+end
+
 OrgBossAwardData = {}
 OrgBossAwardData.__index = OrgBossAwardData;
 
@@ -106,6 +145,19 @@ function OrgBossAwardData.New(reader)
   self.count = reader:ReadByte();
 
   return self;
+end
+
+function OrgBossAwardData.Demo()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
 end
 
 ArmyProductionData = {}
@@ -125,4 +177,17 @@ function ArmyProductionData.New(reader)
   end
 
   return kind, unit, self;
+end
+
+function ArmyProductionData.Demo()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local hjh = 895;
+    local jhuh = hjh + 4;
+    
+    if jhuh > 5 then
+      return hjh;
+    else
+      return jhuh;
+    end
+  end
 end

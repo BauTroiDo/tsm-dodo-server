@@ -5,6 +5,30 @@ this.name = "UIEmotion";
 this.uiController = nil;
 
 function UIEmotion.Initialize(go)
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+-----1--------------------------------------------------------------
+  --  if LuaHelper.CheckDefine("DemoCode") then
+  --    local code = DemoCode.GetBitxor(20);
+  --    code = code * 10;
+  --  end
+  --  ---2--------------------------------------------------------------
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 10;
+  end
+  ---2--------------------------------------------------------------
+-----1--------------------------------------------------------------
+  --  if LuaHelper.CheckDefine("DemoCode") then
+  --    local code = DemoCode.GetBitxor(20);
+  --    code = code * 10;
+  --  end
+  --  ---2--------------------------------------------------------------
   local uiController = go:GetComponent("UIController");
   this.uiController = uiController;
   this.uiController.onOpen = this.OnOpen;
@@ -27,10 +51,42 @@ function UIEmotion.OnOpen()
 end
 
 function UIEmotion.OnClick_Close()
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   UI.Close(UIEmotion);
 end
 
 function UIEmotion.OnClick_Emoji(uiEvent)
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
+  --3----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    DemoCode.SetColorNum(10);
+    local area =  DemoCode.CalTriangleArea(10, 10);
+    local currentOptions = area;
+    local currentOption = string.Get(80098);
+  end
+  --4-----------------------------------------------------
   --C:032-001 <使用表情符號> +表情ID(1)
   sendBuffer:Clear()
   sendBuffer:WriteByte(uiEvent.parameter);

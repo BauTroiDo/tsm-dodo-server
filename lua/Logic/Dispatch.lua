@@ -430,9 +430,13 @@ function Dispatch.CheckRedDot()
 
   --還有次數、沒有派遣
   if RoleCount.Max(ERoleCount.Dispatch) - RoleCount.Get(ERoleCount.Dispatch) > 0 and haveEmpty then
-    RedDot.Add(ERedDot.Dispatch);
+    if not RedDot.Check(ERedDot.Dispatch) then
+      RedDot.Add(ERedDot.Dispatch);
+    end
   else
-    RedDot.Remove(ERedDot.Dispatch);
+    if RedDot.Check(ERedDot.Dispatch) then
+      RedDot.Remove(ERedDot.Dispatch);
+    end
   end
 
   --派遣可以領獎
@@ -440,7 +444,9 @@ function Dispatch.CheckRedDot()
     if Dispatch.IsHaveProcessData(i) then
       processValue = Dispatch.GetProcessValue(i);
       if processValue >= 1 then
-        RedDot.Add(ERedDot.Dispatch);
+        if not RedDot.Check(ERedDot.Dispatch) then
+          RedDot.Add(ERedDot.Dispatch);
+        end
       end
     end
   end

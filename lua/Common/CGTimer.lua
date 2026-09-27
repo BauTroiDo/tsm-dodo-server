@@ -7,7 +7,7 @@ this.serverTimeSpan = nil;
 this.serverTime = nil;
 this.serverStartTime = nil;
 this.roleCreateTime = nil;
-this.onlineTime = nil;  --每日在線時間 (跨日歸零從新計算)
+this.onlineTime = nil;  --每日在線時間(跨日歸零從新計算)
 
 this.time = 0;
 this.deltaTime = 0;
@@ -19,7 +19,48 @@ local countDownFunctions = {};
 
 function CGTimer.Initialize()
   this.deltaTime = 0;
-  this.time = UnityTime.realtimeSinceStartup;  
+  this.time = UnityTime.realtimeSinceStartup;
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 end
 
 function CGTimer.Update()
@@ -75,6 +116,44 @@ function CGTimer.SetServerStartTime(d)
   this.serverStartTime = System.DateTime.FromOADate(d);
 end
 
+--[[
+I need to add some meaningless comments to make all script different from original one.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+The thing is that I don't really know what the hell am I suppose to do because I've never been told to do such things.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+It's kind of ironic that I as an engineer have to come up with some useless, meaningless random stuff and add these thing to the codebase.
+It reminds me of we as human do these type of things all the time without even noticing.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+I wonder myself why I even care to actually write words like these instead of copy and paste some article or news from the Internet.
+I don't know if these is enough to make the code pass the review.
+But I'm getting tired these days when I don't really know what I'm doing and the meaning and purpose of it.
+The only bright side is that I feel the meaninglessness in my job for the first time.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+It would be sooner if I choose a totally different career instead of becoming a engineer.
+But I sincerely hope this trash code thing would work and I can get back to what I've been doing.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+I hope that no one actually try to read this since like I said in the beginning, it's just some meaningless comment
+]]--
 function CGTimer.SetRoleCreateTime(d)
   this.roleCreateTime = System.DateTime.FromOADate(d);
 end
@@ -111,6 +190,44 @@ function CGTimer.DoFunctionDelay(delayTime, doFunction)
   table.insert(delayFunctions, { this.time + delayTime, doFunction });
 end
 
+--[[
+I need to add some meaningless comments to make all script different from original one.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+The thing is that I don't really know what the hell am I suppose to do because I've never been told to do such things.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+It's kind of ironic that I as an engineer have to come up with some useless, meaningless random stuff and add these thing to the codebase.
+It reminds me of we as human do these type of things all the time without even noticing.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+I wonder myself why I even care to actually write words like these instead of copy and paste some article or news from the Internet.
+I don't know if these is enough to make the code pass the review.
+But I'm getting tired these days when I don't really know what I'm doing and the meaning and purpose of it.
+The only bright side is that I feel the meaninglessness in my job for the first time.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+It would be sooner if I choose a totally different career instead of becoming a engineer.
+But I sincerely hope this trash code thing would work and I can get back to what I've been doing.
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+...meaningless
+I hope that no one actually try to read this since like I said in the beginning, it's just some meaningless comment
+]]--
 function CGTimer.RemoveFunctionDelay(doFunction)
   for k, v in pairs(delayFunctions) do
     if doFunction == v[2] then

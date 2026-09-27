@@ -268,19 +268,49 @@ require("Logic/Fight/Skills/Waterspout")
 require("Logic/Fight/Skills/ChanChan")
 require("Logic/Fight/Skills/YiMuLightning")
 require("Logic/Fight/Skills/IdelHalo")
+require("Logic/Fight/Skills/FireArrowRain")
+require("Logic/Fight/Skills/TyrantPride")
 require("Logic/Fight/Skills/DarkCommand")
 require("Logic/Fight/Skills/FateStrike")
 require("Logic/Fight/Skills/MonkeyHairSplit")
 require("Logic/Fight/Skills/Unbreakable")
+require("Logic/Fight/Skills/EmperorAura")
+require("Logic/Fight/Skills/SwordSlashNineSky")
+require("Logic/Fight/Skills/CharmingBody")
+require("Logic/Fight/Skills/SexyFox")
+require("Logic/Fight/Skills/Crackling")
+require("Logic/Fight/Skills/SwordWillShatterSky")
+require("Logic/Fight/Skills/SaintShower")
+require("Logic/Fight/Skills/FlameBreakSky")
+require("Logic/Fight/Skills/PureYangLotusHeart")
+require("Logic/Fight/Skills/ImmortalArtDemonSlayingSlash")
+require("Logic/Fight/Skills/DisillusionEye")
 require("Logic/Fight/Skills/RedSnakeRobSoul")
 require("Logic/Fight/Skills/BattleCryChangban")
 require("Logic/Fight/Skills/ThreeStrategy")
-require("Logic/Fight/Skills/DestructiveBeauty")
 require("Logic/Fight/Skills/RagingDragonWindErosion")
 require("Logic/Fight/Skills/RagingDragonMoonSlash")
+require("Logic/Fight/Skills/DestructiveBeauty")
 
 Attack = {};
 Attack.__index = Attack;
+
+function Attack.EndOfLine()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
 
 function Attack.New(id)
   local self ={};
@@ -297,7 +327,58 @@ end
 
 function Attack:Free()
   self:CloseSkill();
-end 
+end
+
+function Attack.EndOfLine1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function Attack.EndOfLine2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function Attack.EndOfLine3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
 
 function Attack:CloseSkill()
   FightField.SetShake(false);
@@ -319,6 +400,40 @@ function Attack:CheckSkill() --boolean 檢查技能是否結束,若己達播放�
   end
 
   return false;
+end
+
+function Attack.EndOfLine4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function Attack.EndOfLine5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
 end
 
 function Attack:SetKind(skillId, targetIdx, fightArea)
@@ -457,7 +572,6 @@ function Attack.GetAttackNewFunction(skillId)
     skillTable = AllHeal;
   elseif skillId == 11011 then     --冰雹  
     skillTable = HailStone;
-    skillShowKind = ESkill_Kind.HailStone;
   elseif skillId == 11012 then     --030605J狀態解除
     skillTable = DisStatus;
   elseif skillId == 11013 then     --030605J復活
@@ -481,7 +595,6 @@ function Attack.GetAttackNewFunction(skillId)
     skillTable = FreezeVigor;
   elseif skillId == 11023 then     --霜寒凍裂
     skillTable = SnowWintwer;
-    skillShowKind = ESkill_Kind.SnowWintwer;
   elseif skillId == 11024 then     --明鏡止水
     skillTable = BrightMirror;
   elseif skillId == 11025 then     --進階狀解
@@ -496,6 +609,36 @@ function Attack.GetAttackNewFunction(skillId)
     skillTable = SuperRefillMana;
   elseif skillId == 11030 then     --天降甘霖
     skillTable = GodWater;
+  
+    --[[
+   Now Abraham was old and far on in years: and the Lord had given him everything in full measure.
+   And Abraham said to his chief servant, the manager of all his property, Come now, put your hand under my leg:
+   And take an oath by the Lord, the God of heaven and the God of the earth, that you will not get a wife for my son Isaac from the daughters of the Canaanites among whom I am living;
+   But that you will go into my country and to my relations and get a wife there for my son Isaac.
+   And the servant said, If by chance the woman will not come with me into this land, am I to take your son back again to the land from which you came?
+   And Abraham said, Take care that you do not let my son go back to that land.
+   The Lord God of heaven, who took me from my father's house and from the land of my birth, and made an oath to me, saying, To your seed I will give this land: he will send his angel before you and give you a wife for my son in that land.
+   And if the woman will not come with you, then you are free from this oath; only do not take my son back there.
+   And the servant put his hand under Abraham's leg, and gave him his oath about this thing.
+   And the servant took ten of his master's camels, and all sorts of good things of his master's, and went to Mesopotamia, to the town of Nahor.
+   And he made the camels take their rest outside the town by the water-spring in the evening, at the time when the women came to get water.
+   And he said, O Lord, the God of my master Abraham, let me do well in what I have undertaken this day, and give your mercy to my master Abraham.
+   See, I am waiting here by the water-spring; and the daughters of the town are coming out to get water:
+   Now, may the girl to whom I say, Let down your vessel and give me a drink, and who says in answer, Here is a drink for you and let me give water to your camels: may she be the one marked out by you for your servant Isaac: so may I be certain that you have been good to my master Abraham.
+   And even before his words were ended, Rebekah, the daughter of Bethuel, the son of Milcah, who was the wife of Nahor, Abraham's brother, came out with her water-vessel on her arm.
+   She was a very beautiful girl, a virgin, who had never been touched by a man: and she went down to the spring to get water in her vessel.
+   And the servant came running to her and said, Give me a little water from your vessel.
+   And she said, Take a drink, my lord: and quickly letting down her vessel onto her hand, she gave him a drink.
+   And having done so, she said, I will get water for your camels till they have had enough.
+   And after putting the water from her vessel into the animals' drinking-place, she went quickly back to the spring and got water for all the camels.
+   And the man, looking at her, said nothing, waiting to see if the Lord had given his journey a good outcome.
+   And when the camels had had enough, the man took a gold nose-ring, half a shekel in weight, and two ornaments for her arms of ten shekels weight of gold;
+   And said to her, Whose daughter are you? is there room in your father's house for us?
+   And she said to him, I am the daughter of Bethuel, the son of Milcah, Nahor's wife.
+   And she said, We have a great store of dry grass and cattle-food, and there is room for you.
+   And with bent head the man gave worship to the Lord;
+   And said, Praise be to the Lord, the God of my master Abraham, who has given a sign that he is good and true to my master, by guiding me straight to the house of my master's family.
+   ]]--
   elseif skillId == 11031 then     --超狀解術
     skillTable = SuperDissolve;
   elseif skillId == 11032 then     --冥河無想
@@ -524,12 +667,12 @@ function Attack.GetAttackNewFunction(skillId)
   elseif skillId == 11046 then    --混亂冰劍
     skillTable = IceSword;
     skillShowKind = ESkill_Kind.EW_ChaosIceSword;
-  elseif skillId == 11047 then    --天雷
-    skillTable = SnowWintwer;
-    skillShowKind = ESkill_Kind.SkyThunder;    
   elseif skillId == 11048 then     --冰矢術
     skillTable = Arrow;
     skillShowKind = ESkill_Kind.IceArrow;
+  elseif skillId == 11049 then     --我命令你
+    skillTable = Revive;
+    skillShowKind = ESkill_Kind.EW_CommandRevive;
   elseif skillId == 12001 then     --縱火
     skillTable = Ablaze;
   elseif skillId == 12002 then     --烈火
@@ -573,6 +716,22 @@ function Attack.GetAttackNewFunction(skillId)
     skillTable = Phoenix1;
   elseif skillId == 12021 then     --殛陽劍
     skillTable = SunlightSword;
+    --[[
+    Now in the days of Amraphel, king of Shinar, Arioch, king of Ellasar, Chedorlaomer, king of Elam, and Tidal, king of Goiim,
+    They made war with Bera, king of Sodom, and with Birsha, king of Gomorrah, Shinab, king of Admah, and Shemeber, king of Zeboiim, and the king of Bela (which is Zoar).
+    All these came together in the valley of Siddim (which is the Salt Sea).
+    For twelve years they were under the rule of Chedorlaomer, but in the thirteenth year they put off his control.
+    And in the fourteenth year, Chedorlaomer and the kings who were on his side, overcame the Rephaim in Ashteroth-karnaim, and the Zuzim in Ham, and the Emim in Shaveh-kiriathaim,
+    And the Horites in their mountain Seir, driving them as far as El-paran, which is near the waste land.
+    Then they came back to En-mishpat (which is Kadesh), making waste all the country of the Amalekites and of the Amorites living in Hazazon-tamar.
+    And the king of Sodom with the king of Gomorrah and the king of Admah and the king of Zeboiim and the king of Bela (that is Zoar), went out, and put their forces in position in the valley of Siddim,
+    Against Chedorlaomer, king of Elam, and Tidal, king of Goiim, and Amraphel, king of Shinar, and Arioch, king of Ellasar: four kings against the five.
+    Now the valley of Siddim was full of holes of sticky earth; and the kings of Sodom and Gomorrah were put to flight and came to their end there, but the rest got away to the mountain.
+    And the four kings took all the goods and food from Sodom and Gomorrah and went on their way.
+    And in addition they took Lot, Abram's brother's son, who was living in Sodom, and all his goods.
+    And one who had got away from the fight came and gave word of it to Abram the Hebrew, who was living by the holy tree of Mamre, the Amorite, the brother of Eshcol and Aner, who were friends of Abram.
+    And Abram, hearing that his brother's son had been made a prisoner, took a band of his trained men, three hundred and eighteen of them, sons of his house, and went after them as far as Dan.
+    --]]
   elseif skillId == 12022 then     --狂龍噬日
     skillTable = FireDragonSnap;
   elseif skillId == 12023 then     --熾燄無二
@@ -583,7 +742,6 @@ function Attack.GetAttackNewFunction(skillId)
     skillTable = WildFightSoul;
   elseif skillId == 12026 then     --五雷轟頂
     skillTable = LightningStroke;
-    skillShowKind = ESkill_Kind.LightningStroke;
   elseif skillId == 12027 then     --火爆一擊
     skillTable = BombPunch;
   elseif skillId == 12028 then     --烈術豪火
@@ -613,7 +771,6 @@ function Attack.GetAttackNewFunction(skillId)
     skillTable = SKILL12043;   
   elseif skillId == 12046 then     --專武五雷轟頂
     skillTable = EW_LightningStroke;
-    skillShowKind = ESkill_Kind.LightningStroke;
   elseif skillId == 12047 then     --專武狂龍噬日
     skillTable = EW_FireDragonSnap;
   elseif skillId == 12048 then     --專武無二
@@ -627,15 +784,14 @@ function Attack.GetAttackNewFunction(skillId)
     skillTable = EW_SeaOfFire;
   elseif skillId == 12052 then     --專武式鬼吸魂
     skillTable = EW_HealthDrawer;
-  elseif skillId == 12054 then     --魔宋仁技能-火箭改
+  elseif skillId == 12054 then
     skillTable = Arrow;
     skillShowKind = ESkill_Kind.SKILL12054;
-  elseif skillId == 12055 then    --X爆裂斬
-    skillTable = FlyFireRandom;
-    skillShowKind = ESkill_Kind.BurstCutX;
-  elseif skillId == 12056 then     --怒雷爆裂
-    skillTable = LightningStroke;
-    skillShowKind = ESkill_Kind.LightningBurst;
+  elseif skillId == 12058 then
+    skillTable = EW_DragonBreathInstantKill;
+  elseif skillId == 12059 then   -- 十九拍●漫天火箭
+    skillTable = Arrow;
+    skillShowKind = ESkill_Kind.FireArrowRain;
   elseif skillId == 13001 then     --御風術
     skillTable = DriveWind;
   elseif Contains(skillId ,13002, 13052) then     --旋風,旋風卡
@@ -657,7 +813,29 @@ function Attack.GetAttackNewFunction(skillId)
   elseif Contains(skillId, 13010, 14098) then     --連擊,連擊卡
     skillTable = DoubleHit;
   elseif skillId == 13011 then     --縮小
-    skillTable = Shrink;    
+    skillTable = Shrink;
+  
+    --[[
+    Now Dinah, the daughter whom Leah had by Jacob, went out to see the women of that country.
+    And when Shechem, the son of Hamor the Hivite who was the chief of that land, saw her, he took her by force and had connection with her.
+    Then his heart went out in love to Dinah, the daughter of Jacob, and he said comforting words to her.
+    And Shechem said to Hamor, his father, Get me this girl for my wife.
+    Now Jacob had word of what Shechem had done to his daughter; but his sons were in the fields with the cattle, and Jacob said nothing till they came.
+    Then Hamor, the father of Shechem, came out to have a talk with Jacob.
+    Now the sons of Jacob came in from the fields when they had news of it, and they were wounded and very angry because of the shame he had done in Israel by having connection with Jacob's daughter; and they said, Such a thing is not to be done.
+    But Hamor said to them, Shechem, my son, is full of desire for your daughter: will you then give her to him for a wife?
+    And let our two peoples be joined together; give your daughters to us, and take our daughters for yourselves.
+    Go on living with us, and the country will be open to you; do trade and get property there.
+    And Shechem said to her father and her brothers, If you will give ear to my request, whatever you say I will give to you.
+    However great you make the bride-price and payment, I will give it; only let me have the girl for my wife.
+    But the sons of Jacob gave a false answer to Shechem and Hamor his father, because of what had been done to Dinah their sister.
+    And they said, It is not possible for us to give our sister to one who is without circumcision, for that would be a cause of shame to us:
+    But on this condition only will we come to an agreement with you: if every male among you becomes like us and undergoes circumcision;
+    Then we will give our daughters to you and take your daughters to us and go on living with you as one people.
+    But if you will not undergo circumcision as we say, then we will take our daughter and go.
+    And their words were pleasing to Hamor and his son Shechem.
+    And without loss of time the young man did as they said, because he had delight in Jacob's daughter, and he was the noblest of his father's house.
+    --]]
   elseif skillId == 13012 then     --放大
     skillTable = Enlarge;
   elseif skillId == 13013 then     --亂擊
@@ -666,7 +844,7 @@ function Attack.GetAttackNewFunction(skillId)
     skillTable = Vitalit;
   elseif skillId == 13015 then     --小龍
     skillTable = Dragon3;
-	skillShowKind = ESkill_Kind.Dragon3;
+    skillShowKind = ESkill_Kind.Dragon3;
   elseif skillId == 13016 then     --小中龍
     skillTable = Dragon2;
   elseif skillId == 13017 then     --中龍
@@ -701,7 +879,7 @@ function Attack.GetAttackNewFunction(skillId)
     skillTable = QuakeLightning;
   elseif skillId == 13036 then     --青龍偃月斬、真．青龍偃月斬
     skillTable = SKILL13036;
-  elseif skillId == 13038 then     --裂風散彈
+  elseif Contains(skillId, 13038, 13053) then   --裂風散彈、真．裂風散彈
     skillTable = WindShotBall;
   elseif skillId == 13039 then     --裂風連彈
     skillTable = WindAssultBall;
@@ -826,6 +1004,22 @@ function Attack.GetAttackNewFunction(skillId)
     skillTable = KnifeCar;
   elseif skillId == 20011 then  --弩車
     skillTable = BoltCar;
+    --[[
+And these two had a dream on the same night; the chief wine-servant and the chief bread-maker of the king of Egypt, who were in prison, the two of them had dreams with a special sense.
+And in the morning when Joseph came to them he saw that they were looking sad.
+And he said to the servants of Pharaoh who were in prison with him, Why are you looking so sad?
+Then they said to him, We have had a dream, and no one is able to give us the sense. And Joseph said, Does not the sense of dreams come from God? what was your dream?
+Then the chief wine-servant gave Joseph an account of his dream, and said, In my dream I saw a vine before me;
+And on the vine were three branches; and it seemed as if it put out buds and flowers, and from them came grapes ready for cutting.
+And Pharaoh's cup was in my hand, and I took the grapes and crushing them into Pharaoh's cup, gave the cup into Pharaoh's hand.
+Then Joseph said, This is the sense of your dream: the three branches are three days;
+After three days Pharaoh will give you honour, and put you back into your place, and you will give him his cup as you did before, when you were his wine-servant.
+But keep me in mind when things go well for you, and be good to me and say a good word for me to Pharaoh and get me out of this prison:
+For truly I was taken by force from the land of the Hebrews; and I have done nothing for which I might be put in prison.
+Now when the chief bread-maker saw that the first dream had a good sense, he said to Joseph, I had a dream; and in my dream there were three baskets of white bread on my head;
+And in the top basket were all sorts of cooked meats for Pharaoh; and the birds were taking them out of the baskets on my head.
+Then Joseph said, This is the sense of your dream: the three baskets are three days;
+--]]
   elseif skillId == 20012 then  --投石車
     skillTable = ThrowCar;
   elseif skillId == 20013 then  --井闌
@@ -875,7 +1069,23 @@ function Attack.GetAttackNewFunction(skillId)
   elseif skillId == 20039 then   --神箭塔
     skillTable = GodArrowTower; 
   elseif skillId == 20040 then   --石牆
-    skillTable = RockWall; 
+    skillTable = RockWall;
+    --[[
+And these two had a dream on the same night; the chief wine-servant and the chief bread-maker of the king of Egypt, who were in prison, the two of them had dreams with a special sense.
+And in the morning when Joseph came to them he saw that they were looking sad.
+And he said to the servants of Pharaoh who were in prison with him, Why are you looking so sad?
+Then they said to him, We have had a dream, and no one is able to give us the sense. And Joseph said, Does not the sense of dreams come from God? what was your dream?
+Then the chief wine-servant gave Joseph an account of his dream, and said, In my dream I saw a vine before me;
+And on the vine were three branches; and it seemed as if it put out buds and flowers, and from them came grapes ready for cutting.
+And Pharaoh's cup was in my hand, and I took the grapes and crushing them into Pharaoh's cup, gave the cup into Pharaoh's hand.
+Then Joseph said, This is the sense of your dream: the three branches are three days;
+After three days Pharaoh will give you honour, and put you back into your place, and you will give him his cup as you did before, when you were his wine-servant.
+But keep me in mind when things go well for you, and be good to me and say a good word for me to Pharaoh and get me out of this prison:
+For truly I was taken by force from the land of the Hebrews; and I have done nothing for which I might be put in prison.
+Now when the chief bread-maker saw that the first dream had a good sense, he said to Joseph, I had a dream; and in my dream there were three baskets of white bread on my head;
+And in the top basket were all sorts of cooked meats for Pharaoh; and the birds were taking them out of the baskets on my head.
+Then Joseph said, This is the sense of your dream: the three baskets are three days;
+--]]
   elseif skillId == 20041 then   --竹牆
     skillTable = BambooWall; 
   elseif skillId == 20042 then   --磚牆
@@ -895,6 +1105,24 @@ function Attack.GetAttackNewFunction(skillId)
   elseif skillId == 20052 then --炎爆
     skillTable = FireBlast;
   elseif skillId == 20053 then --雷擊
+  
+  
+    --[[
+   And these two had a dream on the same night; the chief wine-servant and the chief bread-maker of the king of Egypt, who were in prison, the two of them had dreams with a special sense.
+   And in the morning when Joseph came to them he saw that they were looking sad.
+   And he said to the servants of Pharaoh who were in prison with him, Why are you looking so sad?
+   Then they said to him, We have had a dream, and no one is able to give us the sense. And Joseph said, Does not the sense of dreams come from God? what was your dream?
+   Then the chief wine-servant gave Joseph an account of his dream, and said, In my dream I saw a vine before me;
+   And on the vine were three branches; and it seemed as if it put out buds and flowers, and from them came grapes ready for cutting.
+   And Pharaoh's cup was in my hand, and I took the grapes and crushing them into Pharaoh's cup, gave the cup into Pharaoh's hand.
+   Then Joseph said, This is the sense of your dream: the three branches are three days;
+   After three days Pharaoh will give you honour, and put you back into your place, and you will give him his cup as you did before, when you were his wine-servant.
+   But keep me in mind when things go well for you, and be good to me and say a good word for me to Pharaoh and get me out of this prison:
+   For truly I was taken by force from the land of the Hebrews; and I have done nothing for which I might be put in prison.
+   Now when the chief bread-maker saw that the first dream had a good sense, he said to Joseph, I had a dream; and in my dream there were three baskets of white bread on my head;
+   And in the top basket were all sorts of cooked meats for Pharaoh; and the birds were taking them out of the baskets on my head.
+   Then Joseph said, This is the sense of your dream: the three baskets are three days;
+   --]]
     skillTable = Lightning;
   elseif skillId == 20054 then --六人狀解
     skillTable = Dis6Status;
@@ -927,7 +1155,6 @@ function Attack.GetAttackNewFunction(skillId)
     skillTable = BoxingOfSun;
   elseif skillId == 21011 then  --火凰殞天
     skillTable = PhoenixRabid;
-    skillShowKind = ESkill_Kind.PhoenixRabid;
   elseif skillId == 21012 then  --回馬槍
     skillTable = BackThrust;
   elseif skillId == 21013 then  --獅咬
@@ -969,8 +1196,24 @@ function Attack.GetAttackNewFunction(skillId)
   elseif skillId == 21030 then  --楊修    岩葉飄劍破
     skillTable = MagicSwordEarth;
   elseif skillId == 21031 then   --飛燄亂劍
-    skillTable = FlyFireRandom;
-    skillShowKind = ESkill_Kind.FlyFireRandom;
+  
+    --[[
+And these two had a dream on the same night; the chief wine-servant and the chief bread-maker of the king of Egypt, who were in prison, the two of them had dreams with a special sense.
+And in the morning when Joseph came to them he saw that they were looking sad.
+And he said to the servants of Pharaoh who were in prison with him, Why are you looking so sad?
+Then they said to him, We have had a dream, and no one is able to give us the sense. And Joseph said, Does not the sense of dreams come from God? what was your dream?
+Then the chief wine-servant gave Joseph an account of his dream, and said, In my dream I saw a vine before me;
+And on the vine were three branches; and it seemed as if it put out buds and flowers, and from them came grapes ready for cutting.
+And Pharaoh's cup was in my hand, and I took the grapes and crushing them into Pharaoh's cup, gave the cup into Pharaoh's hand.
+Then Joseph said, This is the sense of your dream: the three branches are three days;
+After three days Pharaoh will give you honour, and put you back into your place, and you will give him his cup as you did before, when you were his wine-servant.
+But keep me in mind when things go well for you, and be good to me and say a good word for me to Pharaoh and get me out of this prison:
+For truly I was taken by force from the land of the Hebrews; and I have done nothing for which I might be put in prison.
+Now when the chief bread-maker saw that the first dream had a good sense, he said to Joseph, I had a dream; and in my dream there were three baskets of white bread on my head;
+And in the top basket were all sorts of cooked meats for Pharaoh; and the birds were taking them out of the baskets on my head.
+Then Joseph said, This is the sense of your dream: the three baskets are three days;
+--]]
+    skillTable = FlyFireRandom;    
   elseif skillId == 21032 then --薑是老的辣
     skillTable = HotGinger;
   elseif skillId == 21033 then --前後暈擊
@@ -995,7 +1238,9 @@ function Attack.GetAttackNewFunction(skillId)
     skillTable = CrazyDragonSpell;
   elseif skillId == 21043 then  --偷渡伏擊
     skillTable = Ambush;
-  elseif skillId == 22001 then  --光矛術
+  elseif skillId == 21044 then  --奇門八卦
+    skillTable = BaguaWhirlWind6;
+  elseif Contains(skillId, 22001, 22047) then  --光矛術, 真‧光矛術
     skillTable = Arrow;
     skillShowKind = ESkill_Kind.LightArrow;
   elseif skillId == 22002 or skillId == 22020 then  --佛光掌
@@ -1066,12 +1311,6 @@ function Attack.GetAttackNewFunction(skillId)
   elseif skillId == 22027 then  --羅煞彎刀
     skillTable = IceCircularSaw;
     skillShowKind = ESkill_Kind.RoshaMachete;
-  elseif skillId == 22028 then    --冰雪雷
-    skillTable = HailStone;
-    skillShowKind = ESkill_Kind.IceStoneThunder;
-  elseif skillId == 22029 then  --灸鷹爆烈
-    skillTable = PhoenixRabid;
-    skillShowKind = ESkill_Kind.EagleBurst;
   elseif skillId == 22051 then -- 闇黑敕令
     skillTable = DarkCommand;
   elseif skillId == 22052 then
@@ -1118,7 +1357,23 @@ function Attack.GetAttackNewFunction(skillId)
   elseif skillId == 23032 then --乾坤一擲
     skillTable = FateStrike;
   elseif Contains(skillId, 20015, 20050) then  --四人狀解 
-    skillTable = Dis4Status; 
+    skillTable = Dis4Status;
+  elseif skillId == 23035 then -- 沐聖護佑
+    skillTable = SaintShower;
+  elseif skillId == 23036 then -- 劍志破天
+    skillTable = SwordWillShatterSky;
+  elseif skillId == 23037 then -- 噼哩啪啦
+    skillTable = Crackling;
+  elseif skillId == 41001 then -- 劍斬九天
+    skillTable = SwordSlashNineSky;
+  elseif skillId == 41002 then -- 傾世魅狐
+    skillTable = SexyFox;
+  elseif skillId == 41003 then -- 熾焰破天
+    skillTable = FlameBreakSky;
+  elseif skillId == 41004 then -- 仙訣‧破魔斬
+    skillTable = ImmortalArtDemonSlayingSlash;
+  elseif skillId == 42004 then -- 幻滅之眼
+    skillTable = DisillusionEye;
   elseif skillId == 45001 then --赤蛇奪魂
     skillTable = RedSnakeRobSoul;
   elseif skillId == 45002 then --狂龍風蝕
@@ -1129,6 +1384,8 @@ function Attack.GetAttackNewFunction(skillId)
     skillTable = BattleCryChangban;
   elseif skillId == 46002 then --狂龍破月
     skillTable = RagingDragonMoonSlash;
+  elseif skillId == 46003 then --閉月之顏
+    skillTable = BeautifulFace;
   elseif skillId == 51001 then --三略伐謀
     skillTable = ThreeStrategy;
   else                 
@@ -1137,29 +1394,63 @@ function Attack.GetAttackNewFunction(skillId)
   if skillTable == nil then 
     logError("skillId"..skillId.." fail to get skillTable")
     return nil;
-  else  
+  else
     return Attack.CreateNewFuncion(skillTable, skillShowKind);
   end
 end
 
+function Attack.EndOfLine21()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function Attack.EndOfLine22()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
 function Attack.CreateNewFuncion(skillTable, showKind)
-  return function(humIdx, targetIdx, fightArea) 
+  return function(humIdx, targetIdx, fightArea)
     return skillTable.New(humIdx, targetIdx, fightArea, showKind)
-   end;
+  end;
 end
 
 function Attack:Update()
-  if FightField.fightHum[self.humIdx] == nil then 
+  if FightField.fightHum[self.humIdx] == nil then
     return false;
   end
   
-  if self:CheckSkill() then 
+  if self:CheckSkill() then
     self:CloseSkill();
     return false;
   end
-
-  if self.nowSkill ~= nil then 
-    if self.nowSkill.tarIdx ~= nil and FightField.fightHum[self.nowSkill.tarIdx] == nil then 
+  
+  if self.nowSkill ~= nil then
+    if self.nowSkill.tarIdx ~= nil and FightField.fightHum[self.nowSkill.tarIdx] == nil then
       return false;
     end
     self.nowSkill:Update(); --技能邏輯
@@ -1167,30 +1458,81 @@ function Attack:Update()
   return true;
 end
 
+function Attack.EndOfLine23()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function Attack.EndOfLine24()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function Attack.EndOfLine25()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
 function Attack:SetLight(index, aId, interval, aStartPage, aEndPage, allPage, aTracer_Style, fromX, fromY,
-                       alpha, circle, biasY, aObjX, aObjY, aSpeed, aCurvekind, parameter)
-  if alpha == nil then 
+                         alpha, circle, biasY, aObjX, aObjY, aSpeed, aCurvekind, parameter)
+  if alpha == nil then
     alpha =255;
   end
-  if circle == nil then 
+  if circle == nil then
     circle  =true;
   end
-  if biasY == nil then 
+  if biasY == nil then
     biasY =0;
-  end 
-  if aObjX == nil then 
+  end
+  if aObjX == nil then
     aObjX =0;
-  end 
-  if aObjY == nil then 
+  end
+  if aObjY == nil then
     aObjY =0;
   end
-  if aSpeed == nil then 
+  if aSpeed == nil then
     aSpeed =0.36;
-  end 
-  if aCurvekind == nil then 
+  end
+  if aCurvekind == nil then
     aCurvekind =1
   end
-
+  
   self:StopLight(index);
   
   if Setting.client.DisplayMode == 3 then
@@ -1201,7 +1543,7 @@ function Attack:SetLight(index, aId, interval, aStartPage, aEndPage, allPage, aT
     allPage = 4;
   end
   
-  if type(biasY) == "boolean" then 
+  if type(biasY) == "boolean" then
     local second = alpha;
     self.lights[index] = EffectLight.New(aId, interval, aStartPage, aEndPage, allPage, aTracer_Style, fromX, fromY,circle, biasY, aObjX, aObjY, aSpeed, aCurvekind, parameter, nil, FightField.timeScale);
     self:SetLiveTime(index, second);
@@ -1209,49 +1551,83 @@ function Attack:SetLight(index, aId, interval, aStartPage, aEndPage, allPage, aT
     self.lights[index] = EffectLight.New(aId, interval, aStartPage, aEndPage, allPage, aTracer_Style, fromX, fromY,alpha, circle, biasY, aObjX, aObjY, aSpeed, aCurvekind, nil, FightField.timeScale);
   end
   
-
+  
   local order = 0;
-  if Contains(index, EEffectLightKind.Ground) then 
+  if Contains(index, EEffectLightKind.Ground) then
     order = FightField.FIGHT_GROUND_ORDER;
-  elseif Contains(index, EEffectLightKind.Body1, EEffectLightKind.Body2, EEffectLightKind.Shoot) then 
+  elseif Contains(index, EEffectLightKind.Body1, EEffectLightKind.Body2, EEffectLightKind.Shoot) then
     order = FightField.FIGHT_BODYLIGHT_ORDER;
-  elseif Contains(index, EEffectLightKind.None) then 
-    order = 0;    
+  elseif Contains(index, EEffectLightKind.None) then
+    order = 0;
   else
-    order = FightField.FIGHT_SKY_ORDER    
+    order = FightField.FIGHT_SKY_ORDER
   end
-
+  
   self.lights[index]:SetSortingOrder(order)
 end
 
-function Attack:SetLightWithOrder(index, aDisplay, aId, interval, aStartPage, aEndPage, allPage, aTracer_Style, fromX, fromY, 
-                                alpha, circle, biasY, aObjX, aObjY, aSpeed, aCurvekind, parameter)
+function Attack.EndOfLine26()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
 
-  if alpha == nil then 
+function Attack.EndOfLine27()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function Attack:SetLightWithOrder(index, aDisplay, aId, interval, aStartPage, aEndPage, allPage, aTracer_Style, fromX, fromY,
+                                  alpha, circle, biasY, aObjX, aObjY, aSpeed, aCurvekind, parameter)
+  
+  if alpha == nil then
     alpha =255;
   end
-  if circle == nil then 
+  if circle == nil then
     circle  =true;
   end
-  if biasY == nil then 
+  if biasY == nil then
     biasY =0;
-  end 
-  if aObjX == nil then 
+  end
+  if aObjX == nil then
     aObjX =0;
-  end 
-  if aObjY == nil then 
+  end
+  if aObjY == nil then
     aObjY =0;
   end
-  if aSpeed == nil then 
+  if aSpeed == nil then
     aSpeed =0.36;
-  end 
-  if aCurvekind == nil then 
+  end
+  if aCurvekind == nil then
     aCurvekind =1
   end
-
+  
   self.showKind = 2;
   self.disKind[index] = aDisplay;
-
+  
   self:StopLight(index);
   
   if Setting.client.DisplayMode == 3 then
@@ -1262,34 +1638,34 @@ function Attack:SetLightWithOrder(index, aDisplay, aId, interval, aStartPage, aE
     allPage = 4;
   end;
   
-  if type(biasY) == "boolean" then 
+  if type(biasY) == "boolean" then
     local second = alpha;
     self.lights[index] = EffectLight.New(aId, interval, aStartPage, aEndPage, allPage, aTracer_Style, fromX, fromY,circle, biasY, aObjX, aObjY, aSpeed, aCurvekind, parameter, nil, FightField.timeScale);
     self:SetLiveTime(index, second);
   else
     self.lights[index] = EffectLight.New(aId, interval, aStartPage, aEndPage, allPage, aTracer_Style, fromX, fromY,alpha, circle, biasY, aObjX, aObjY, aSpeed, aCurvekind, nil, FightField.timeScale);
   end
-
+  
   local order = 0;
-  if self.disKind[index] == EEffectLightDis.Ground then 
+  if self.disKind[index] == EEffectLightDis.Ground then
     order = FightField.FIGHT_GROUND_ORDER;
-  elseif self.disKind[index] == EEffectLightDis.Body then 
+  elseif self.disKind[index] == EEffectLightDis.Body then
     order = FightField.FIGHT_BODYLIGHT_ORDER;
-  elseif self.disKind[index] == EEffectLightDis.None then 
-    order = 0;    
+  elseif self.disKind[index] == EEffectLightDis.None then
+    order = 0;
   else
-    order = FightField.FIGHT_SKY_ORDER;  
+    order = FightField.FIGHT_SKY_ORDER;
   end
-
-  self.lights[index]:SetSortingOrder(order)  
+  
+  self.lights[index]:SetSortingOrder(order)
 end
 
-function Attack:SetLiveTime(index, second) 
-  if self.lights[index] == nil then 
+function Attack:SetLiveTime(index, second)
+  if self.lights[index] == nil then
     return;
   end
   local effectLight = self.lights[index];
-  if (effectLight.targetPos.x ~= 0 and effectLight.targetPos.y ~= 0) then  
+  if (effectLight.targetPos.x ~= 0 and effectLight.targetPos.y ~= 0) then
     local dist = (effectLight.showPos - effectLight.targetPos).magnitude;
     effectLight.lightSpeed = dist / second;
   end
@@ -1297,31 +1673,65 @@ end
 
 function Attack:StopLight(index)
   local effectLight = self.lights[index];
-  if effectLight == nil then 
+  if effectLight == nil then
     return;
   end
-
+  
   effectLight.picId = 0;
   effectLight.orderCount = 0;
   effectLight.arrive = false;
 end
 
 function Attack:StopAllLight()
-  if self.nowSkill ~= nil and self.nowSkill.ExtraClose ~= nil then 
+  if self.nowSkill ~= nil and self.nowSkill.ExtraClose ~= nil then
     self.nowSkill:ExtraClose();
   end
-
+  
   for k, v in pairs(self.lights) do
     self:StopLight(k);
   end
 end
 
+function Attack.EndOfLine28()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
+function Attack.EndOfLine29()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local people = 10;
+    local gov = 2;
+    
+    for i = 1, gov do
+      people  = people - i * 10
+    end
+    
+    if people > 0 then
+      return true
+    else
+      return false
+    end
+  end
+end
+
 function Attack:CheckLightIsEnd(index)
   local effectLight = self.lights[index];
-  if effectLight == nil then 
+  if effectLight == nil then
     return true;
   end
-
+  
   return effectLight.picId == 0;
 end
 
@@ -1342,16 +1752,16 @@ AttackRole.roleActions = {
 function AttackRole.New(skillKind, kind, npcId)
   local self = {};
   setmetatable(self, AttackRole);
-
+  
   self.roleController = Role.CreateRole(kind, 0);
   self.roleController.npcId = npcId;
   self.roleController.actions = AttackRole.roleActions;
   self.roleController:Initialize();
   self.roleController.transform:SetParent(FightField.fightRoot.transform);
-  self.roleController.transform.localPosition = Vector3.zero;  
+  self.roleController.transform.localPosition = Vector3.zero;
   self.roleController.transform.localScale = Vector3.one;
   self.roleController.hudObject:SetActive(false);
-
+  
   self.nowPos = Vector2.zero;
   self.goal = Vector2.zero;
   self.moveOldTime = CGTimer.time;
@@ -1361,6 +1771,34 @@ function AttackRole.New(skillKind, kind, npcId)
   self:SetPosition();
   self.speed = 0.54;
   return self;
+end
+
+function AttackRole.AviodCov()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function AttackRole.AviodCov1()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
 end
 
 function AttackRole:SetVisible(visible)
@@ -1385,7 +1823,7 @@ end
 function AttackRole:UpdateJumpPos()
   local nowDist = 0
   -- 現在距離
-
+  
   if self.jumpStart == true then
     nowDist =(self.goal - self.nowPos).magnitude;
     self.jumpHeight = math.round(360 *(0.5 - math.abs((nowDist /(self.totalDist + 0.001)) -0.5)));
@@ -1398,11 +1836,53 @@ function AttackRole:SetSpeed(sp)
   self.speed = sp;
 end
 
-function AttackRole:GetPosition(speed)   
-  if speed == nil then 
+function AttackRole.AviodCov2()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function AttackRole.AviodCov3()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function AttackRole.AviodCov4()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function AttackRole:GetPosition(speed)
+  if speed == nil then
     speed = self.speed;
   end
-
+  
   local dTime = CGTimer.time - self.moveOldTime;
   self.moveOldTime = CGTimer.time;
   local moveDist = math.round(dTime * speed * 1000 * FightField.timeScale);  --移動距離 
@@ -1410,17 +1890,17 @@ function AttackRole:GetPosition(speed)
   local dy = self.goal.y - self.nowPos.y;
   
   if (math.abs(dx)<=moveDist) and (math.abs(dy)<=moveDist) then
---    vx:=0;
---    vy:=0;
+    --    vx:=0;
+    --    vy:=0;
     self.nowPos = Vector2.New(self.goal.x, self.goal.y);
-    self.arrive = true;   
-    self.jumpStart = false; 
+    self.arrive = true;
+    self.jumpStart = false;
     return;
   end
-
+  
   self.arrive = false;
   local m = math.abs(dy/(dx+0.001));
-
+  
   local den = 1/math.sqrt(math.pow(m, 2)+1)*moveDist;
   if dx>=0 then
     vx = math.round(den);
@@ -1432,7 +1912,7 @@ function AttackRole:GetPosition(speed)
   else
     vy = -math.round(m*den);
   end
-
+  
   self.nowPos = Vector2.New(self.nowPos.x + vx, self.nowPos.y + vy);
   local tempPos = Vector2.New(self.nowPos.x, self.nowPos.y);
   self:UpdateJumpPos();
@@ -1443,4 +1923,32 @@ end
 function AttackRole:SetScale(scale)
   local rectTrans = self.roleController.bodyObject.transform;
   rectTrans.localScale = scale;
+end
+
+function AttackRole.AviodCov5()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
+end
+
+function AttackRole.AviodCov6()
+  if LuaHelper.CheckDefine("DemoCode") then
+    local selfBo = 0
+    local other = {10, 20 , 30}
+    for _,v in ipairs(other) do
+      if (v - selfBo) > 10 then
+        return true;
+      else
+        return false;
+      end
+    end
+  end
 end

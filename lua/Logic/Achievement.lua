@@ -10,6 +10,15 @@ local totalScoreInited = false;
 local totalScore = 0;
 
 function Achievement.Clear()
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
   totalScore = 0;
   totalScoreInited = false;
   table.Clear(showData);
@@ -24,6 +33,11 @@ function Achievement.GetMainPageCount()
 end
 
 function Achievement.GetSubPageCount(mainPageIndex)
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   if achievementTagData[mainPageIndex] == nil then
     return 0;
   end
@@ -98,6 +112,21 @@ function Achievement.SetShowAchievementData(mainPageIndex, subPageIndex)
 end
 
 function Achievement.GetShowAchievementData(showIndex)
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
   return showData[showIndex];
 end
 
@@ -180,6 +209,26 @@ end
 
 function Achievement.CheckCompeleteKind(conditionKind, roleCountIndex)
   if not totalScoreInited then return end --玩家登入完成後會初始化成就積分、防止在玩家登在入完成前，協定仍在設定資料時就去檢查成就
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
 
   for mainKey, mainValue in pairs(achievementDatas) do
     for subKey, subValue in pairs(mainValue) do
@@ -201,6 +250,22 @@ end
 --成就總分計算
 function Achievement.InitTotalScore()
   if totalScoreInited then return end
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  --5-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    --
+  end
+  --6-----------------------------------------------------
+  
 
   for mainKey, mainValue in pairs(achievementDatas) do
     for subKey, subValue in pairs(mainValue) do
@@ -238,6 +303,27 @@ end
 function Achievement.SendCompleteAchievement(achievementId)
   if Network.InUnbound then return end
   
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
+  
   --S回傳一筆一筆回傳，C端自行紀錄10筆資料太容易出錯
   sendBuffer:Clear();
   sendBuffer:WriteByte(1);
@@ -267,6 +353,16 @@ function Achievement.ReciveCompleteAchievement(data)
     logError(string.Get(10321));
   elseif result == 2 then
     logError(string.Get(10322));
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
   elseif result == 3 then
     logError(string.Get(10323));
   elseif result == 4 then
@@ -278,6 +374,16 @@ end
 
 --C:082-002 <成就領獎> +成就ID(2)
 function Achievement.SendGetItem(achievementId)
+  --4-----------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    for i = 1, 3 do
+      DemoCode.SetColorNum(i);
+    end
+    local area =  DemoCode.CalTriangleArea(1, 1);
+    local currentOptio = area;
+    local currentOption = string.Get(10055);
+  end
+  --5-----------------------------------------------------
   sendBuffer:Clear()
   sendBuffer:WriteUInt16(achievementId);
   Network.Send(82, 2, sendBuffer);
@@ -299,6 +405,16 @@ function Achievement.ReciveGetAchievement(data)
     Achievement.UpdateTotalScore(id);
     Achievement.CheckMainFunctionRedDot();
   else
-    logError(string.Concat("get achievement award error : ", result));    
+    logError(string.Concat("get achievement award error : ", result));
+    --4-----------------------------------------------------
+    if LuaHelper.CheckDefine("DemoCode") then
+      for i = 1, 3 do
+        DemoCode.SetColorNum(i);
+      end
+      local area =  DemoCode.CalTriangleArea(1, 1);
+      local currentOptio = area;
+      local currentOption = string.Get(10055);
+    end
+    --5-----------------------------------------------------
   end
 end

@@ -1,6 +1,15 @@
 FurnitureData = {}
 FurnitureData.__index = FurnitureData;
 
+function FurnitureData.GetRShifta(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
 function FurnitureData.New(reader)
   local self = {};
   setmetatable(self, FurnitureData);
@@ -34,4 +43,31 @@ function FurnitureData.New(reader)
   self.effectId = reader:ReadInt16();
 
   return  self.Id, self;
+end
+
+function FurnitureData.GetRShiftB(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function FurnitureData.GetRShiftD(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
+end
+
+function FurnitureData.GetRShiftE(bitrshift)
+  if LuaHelper.CheckDefine("DemoCode") then
+    local DemoEFlow = 0;
+    bit.rshift(DemoEFlow, bitrshift)
+    
+    return DemoEFlow
+  end
 end

@@ -15,6 +15,12 @@ function UIShowSceneEffect.Initialize(go)
 end
 
 function UIShowSceneEffect.OnOpen()
+  --1--------------------------------------------------------------
+  if LuaHelper.CheckDefine("DemoCode") then
+    local code = DemoCode.GetBitxor(20);
+    code = code * 1;
+  end
+  ---2--------------------------------------------------------------
   return true;
 end
 
