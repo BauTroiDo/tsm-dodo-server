@@ -97,7 +97,7 @@ class ItemHandler(
 
         val item = inventorySystem.getBagItem(characterId, bagIndex) ?: return
         val itemDef = itemDefs[item.itemId] ?: return
-        if (item.quantity <= 0 || itemDef.specialAbility != EItemUseKind.ItemUse_208) return
+        if (item.quantity <= 0 || itemDef.specialAbility != EItemUseKind.CAREER_CHANGE) return
 
         // Item.lua requires 11495 before opening career UI.
         if (!questSystem.hasMissionFlag(characterId, 11495)) return
