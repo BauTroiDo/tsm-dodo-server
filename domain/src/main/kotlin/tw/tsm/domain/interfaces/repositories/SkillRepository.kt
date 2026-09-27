@@ -9,6 +9,18 @@ data class Turn2SkillState(
     val heroSkills: Map<Int, Int> = emptyMap()
 )
 
+data class Turn3State(
+    val element: Int = 0,
+    val exp: Long = 0,
+    val intelligence: Int = 0,
+    val atk: Int = 0,
+    val def: Int = 0,
+    val agi: Int = 0,
+    val hpx: Int = 0,
+    val spx: Int = 0,
+    val skills: Map<Int, Int> = emptyMap()
+)
+
 interface SkillRepository {
     /**
      * 載入角色所有已學技能
@@ -29,4 +41,10 @@ interface SkillRepository {
 
     /** 全量保存二轉天珠與英雄技能槽。 */
     suspend fun saveTurn2State(characterId: Long, state: Turn2SkillState) {}
+
+    /** 載入三轉獨立成長資料。 */
+    suspend fun findTurn3State(characterId: Long): Turn3State = Turn3State()
+
+    /** 保存三轉獨立成長資料。 */
+    suspend fun saveTurn3State(characterId: Long, state: Turn3State) {}
 }
