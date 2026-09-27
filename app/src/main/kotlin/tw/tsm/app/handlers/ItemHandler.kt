@@ -66,9 +66,53 @@ class ItemHandler(
             17 -> handlePetEquip(session, data)
             18 -> handlePetUnequip(session, data)
             19 -> handlePetDropEquip(session, data)
+            46 -> handleRebirth(session, data, targetTurn = 1)
+            54 -> handleRebirth(session, data, targetTurn = 2)
+            81 -> handleRebirth(session, data, targetTurn = 3)
             73 -> handleFlyPoint(session, data)
             else -> logger.warn { "未處理的物品子協定：subKind=$subKind" }
         }
+    }
+
+    /**
+     * C:023-046/054/081 玩家一/二/三轉。
+     * Lua UITurn wire: hair(1)+color1(Int32LE)+color2(Int32LE)+[career(1) for turn 2/3].
+     *
+     * Quest/item eligibility is intentionally not invented here. The server still enforces
+     * strict monotonic turn progression, packet length, career domain and in-game state.
+     */
+    private suspend fun handleRebirth(session: GameSession, data: ByteArray, targetTurn: Int) {
+        val expected = if (targetTurn == 1) 9 else 10
+        if (data.size != expected) return
+        val characterId = session.roleId.toLong()
+        val state = playerStateManager.getState(characterId) ?: return
+
+        synchronized(state) {
+            if (state.turn + 1 != targetTurn) return
+        }
+
+        val reader = PacketReader(data)
+        val hair = reader.readUByte()
+        val color1 = reader.readIntLE()
+        val color2 = reader.readIntLE()
+        val career = if (targetTurn >= 2) reader.readUByte() else 0
+        if (targetTurn >= 2 && career !in 1..4) return
+
+        characterRepository.updateTurnAppearance(characterId, hair, color1, color2)
+        characterRepository.updateTurnCareer(characterId, targetTurn, career)
+
+        synchronized(state) {
+            state.turn = targetTurn
+            state.career = career
+        }
+        session.hair = hair
+        session.color1 = color1
+        session.color2 = color2
+
+        // Re-send authoritative player appearance so Role attributes Turn/Career update immediately.
+        val record = characterRepository.findById(characterId) ?: return
+        responseSender.sendPlayerAppear(session, session.playerId, record, session.serverId)
+        logger.info { "${session.characterName} rebirth success: turn=$targetTurn career=$career hair=$hair" }
     }
 
     /**
