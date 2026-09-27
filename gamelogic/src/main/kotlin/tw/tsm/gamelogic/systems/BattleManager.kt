@@ -13,6 +13,7 @@ import tw.tsm.domain.data.NpcDef
 import tw.tsm.domain.data.NpcDropDef
 import tw.tsm.domain.data.NpcUpgradeDef
 import tw.tsm.domain.data.SkillDef
+import tw.tsm.domain.data.SceneSetDef
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.repositories.SkillRepository
@@ -49,7 +50,8 @@ class BattleManager(
     private val itemDefs: Map<Int, tw.tsm.domain.data.ItemDef> = emptyMap(),
     private val skillRepository: SkillRepository? = null,
     private val characterRepository: CharacterRepository? = null,
-    private val npcUpgradeDefs: Map<Int, NpcUpgradeDef> = emptyMap()
+    private val npcUpgradeDefs: Map<Int, NpcUpgradeDef> = emptyMap(),
+    private val sceneSetDefs: Map<Int, SceneSetDef> = emptyMap()
 ) {
     /** 戰鬥道具解析器（無狀態，全戰鬥共用） */
     private val battleItemResolver = BattleItemResolver(inventorySystem, itemDefs)
@@ -60,6 +62,12 @@ class BattleManager(
      * 參數：(session, playerId, playerWin)
      */
     var onBattleEndCallback: (suspend (GameSession, Long, Boolean) -> Unit)? = null
+    companion object {
+        private const val SCENE_LIMIT_NO_CATCH_BIT = 1 shl 6
+        private const val NPC_KIND_ELEPHANT = 22
+        private const val RIDING_SKILL_ID = 14034
+    }
+
     /** 所有進行中的戰鬥（battleId → BattleInstance） */
     private val battles = ConcurrentHashMap<Long, BattleInstance>()
 
@@ -78,7 +86,15 @@ class BattleManager(
         battle.catchOwnerValidator = validator@{ playerId, npcId ->
             val session = battle.playerSessions[playerId] ?: return@validator false
             val pc = petSystem.getCache(session.roleId.toLong()) ?: return@validator false
+            // SceneManager.CheckLimit(sceneId, ESceneLimit.NoCatch): NoCatch=7,
+            // stored in SceneData.limits[1] as bit 64.
+            if ((sceneSetDefs[session.mapId]?.limit1 ?: 0) and SCENE_LIMIT_NO_CATCH_BIT != 0) return@validator false
             if (pc.follow.size >= PetSystem.MAX_FOLLOW) return@validator false
+            val npcDef = npcDefs[npcId] ?: return@validator false
+            // DVT ENpc.Elephant=22 requires learned riding skill 14034.
+            if (npcDef.kind == NPC_KIND_ELEPHANT &&
+                (skillSystem?.getCache(session.roleId.toLong())?.skills?.get(RIDING_SKILL_ID) ?: 0) <= 0
+            ) return@validator false
             val duplicate = pc.follow.values.any { it.npcId == npcId } ||
                 pc.cart.values.any { it.npcId == npcId } ||
                 pc.inn.values.any { it.npcId == npcId } ||
