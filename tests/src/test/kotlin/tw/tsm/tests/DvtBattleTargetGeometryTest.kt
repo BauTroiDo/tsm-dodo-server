@@ -53,4 +53,23 @@ class DvtBattleTargetGeometryTest {
         val grid = fullSide(*cells.toTypedArray())
         assertEquals(cells, coords(grid.resolveTargets(EFightArea.ALL, 3, 2, true)))
     }
+    @Test
+    fun `revive selection accepts dead target and never falls back to living fighter`() {
+        val grid = BattleGrid()
+        val dead = fighter(1, 2, 2).also { it.hp = 0; it.isDead = true }
+        val living = fighter(2, 3, 2)
+        grid.place(dead)
+        grid.place(living)
+
+        assertEquals(
+            listOf(dead),
+            grid.resolveTargets(EFightArea.SINGLE, 2, 2, false, deadTargetsOnly = true)
+        )
+        assertEquals(
+            emptyList<BattleFighter>(),
+            grid.resolveTargets(EFightArea.SINGLE, 3, 2, false, deadTargetsOnly = true)
+        )
+    }
+
+
 }
