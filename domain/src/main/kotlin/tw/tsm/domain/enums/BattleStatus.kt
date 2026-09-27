@@ -21,7 +21,8 @@ enum class BattleStatus(val id: Int) {
     POISON(12),         // 中毒（每回合損失 HP）
     CHAOS(13),          // 混亂（隨機攻擊友軍）
     TARDY(14),          // 遲緩（敏捷減半）
-    LANDSLIP(15);       // 土崩陣
+    LANDSLIP(15),
+    TAUNT(16);       // 土崩陣
 
     companion object {
         private val map = entries.associateBy { it.id }
