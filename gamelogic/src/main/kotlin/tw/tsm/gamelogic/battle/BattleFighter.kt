@@ -99,7 +99,7 @@ class BattleFighter(
     val isAlive: Boolean get() = !isDead && hp > 0
 
     /** 是否被控場（無法行動） */
-    val isStunned: Boolean get() = groupedStatuses.values.any { BattleStatus.isStunStatus(it.status) } || BattleStatus.isStunStatus(statusEffect)
+    val isStunned: Boolean get() = groupedStatuses.values.any { BattleStatus.isStunStatus(it.status) }
 
     fun setGroupedStatus(group: Int, status: BattleStatus, rounds: Int, skillId: Int, appliedRound: Int) {
         if (group <= 0 || status == BattleStatus.NONE) return
