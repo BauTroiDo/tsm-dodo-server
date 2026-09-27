@@ -284,9 +284,16 @@ class LoginService(
             spx = playerData.spx,
             element = playerData.element,
             turn = record.turn,
+            career = record.career,
             attrPoint = playerData.attrPoint,
             skillPoint = playerData.skillPoint,
-            equipBonus = equipBonus
+            equipBonus = equipBonus,
+            turn3Int = turn3State.intelligence,
+            turn3Atk = turn3State.atk,
+            turn3Def = turn3State.def,
+            turn3Agi = turn3State.agi,
+            turn3Hpx = turn3State.hpx,
+            turn3Spx = turn3State.spx
         )
         // Tải điểm kinh nghiệm (EXP) từ DB
         playerStateManager.getState(record.id)?.exp = record.exp
