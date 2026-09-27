@@ -1136,14 +1136,14 @@ class BattleManager(
         // Other equipment IDs are still serialized as before.
         val equipIds = equips.values.map { it.itemId }.toIntArray()
         val specialEquipId = equips[6]?.itemId ?: 0
-        val normalSkills = skillSystem?.getCache(charId)?.skills?.filterValues { it > 0 }?.keys.orEmpty()
-        val turn3Skills = skillRepository
+        val normalSkillLevels = skillSystem?.getCache(charId)?.skills?.filterValues { it > 0 }.orEmpty()
+        val turn3SkillLevels = skillRepository
             ?.findTurn3State(charId)
             ?.skills
             ?.filterValues { it > 0 }
-            ?.keys
             .orEmpty()
-        val learnedSkills = (normalSkills + turn3Skills).toIntArray()
+        val learnedSkillLevels = normalSkillLevels + turn3SkillLevels
+        val learnedSkills = learnedSkillLevels.keys.toIntArray()
 
         return BattleFighter(
             roleId = session.playerId,
@@ -1162,6 +1162,7 @@ class BattleManager(
             agi = state.agi + state.equipAgi + state.turn3Agi,
             intelligence = state.intelligence + state.equipInt + state.turn3Int,
             skills = learnedSkills,
+            skillLevels = learnedSkillLevels,
             turn = state.turn,
             career = state.career,
             turn3Element = session.turn3Element,
