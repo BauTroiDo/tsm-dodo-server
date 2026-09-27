@@ -91,7 +91,7 @@ class SkillSystem(
      * @param upgrades Danh sách các cặp (skillId, targetLevel) cần nâng cấp
      * @return Danh sách các cặp (skillId, newLevel) thực tế đã nâng cấp thành công
      */
-    fun upgradeSkills(characterId: Long, upgrades: List<Pair<Int, Int>>, playerTurn: Int = 0): List<Pair<Int, Int>> {
+    fun upgradeSkills(characterId: Long, upgrades: List<Pair<Int, Int>>, playerTurn: Int = 0, allowTurn2: Boolean = false): List<Pair<Int, Int>> {
         val sc = cache[characterId] ?: return emptyList()
         // UISkillTree.SendSkill uses pairs(): dependency order is not a contract.
         synchronized(sc) {
@@ -103,6 +103,7 @@ class SkillSystem(
             val opposite = when (sc.element) { 1 -> 3; 2 -> 4; 3 -> 1; 4 -> 2; else -> -1 }
             for ((id, target) in upgrades) {
                 val def = skillDefs[id] ?: return emptyList()
+                if (!allowTurn2 && (id in ALL_TURN2_BASE_SKILLS || id in HERO_SKILL_IDS)) return emptyList()
                 val from = sc.skills[id] ?: 0
                 if (id in forbidden || def.element == opposite || target !in 1..minOf(255, def.maxLv) ||
                     target < from || from < 0 || def.learnPoint < 0 || def.levelUpPoint < 0) return emptyList()
@@ -171,6 +172,8 @@ class SkillSystem(
             if (heroSlots.map { it.first }.distinct().size != heroSlots.size ||
                 heroSlots.any { (slot, id) -> slot !in 6..13 || id !in HERO_SKILL_IDS }) return false
             if (heroSlots.any { (slot, _) -> sc.heroSkills.containsKey(slot) }) return false
+            if (heroSlots.map { it.second }.distinct().size != heroSlots.size ||
+                heroSlots.any { (_, id) -> id in sc.heroSkills.values || (sc.skills[id] ?: 0) > 0 }) return false
             if (heroSlots.any { (_, id) -> upgrades.none { it.first == id && it.second == 1 } }) return false
             if (addBalls.size > sc.availableTurn2Balls) return false
 
@@ -195,7 +198,7 @@ class SkillSystem(
                 }) return false
 
             val needsSkillChange = upgrades.any { (id, target) -> target > (sc.skills[id] ?: 0) }
-            val changed = if (upgrades.isEmpty()) emptyList() else upgradeSkills(characterId, upgrades, playerTurn)
+            val changed = if (upgrades.isEmpty()) emptyList() else upgradeSkills(characterId, upgrades, playerTurn, allowTurn2 = true)
             if (needsSkillChange && changed.isEmpty()) return false
 
             sc.availableTurn2Balls -= addBalls.size
