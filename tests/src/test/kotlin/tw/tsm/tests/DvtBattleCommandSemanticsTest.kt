@@ -219,18 +219,19 @@ class DvtBattleCommandSemanticsTest {
 
 
     @Test
-    fun `Lua self only skill rejects another target`() {
-        val selfOnlyId = 20006
-        val actor = fighter(1, 2, 0, intArrayOf(selfOnlyId))
-        val ally = fighter(2, 3, 0)
-        val battle = fixture(actor, ally, mapOf(selfOnlyId to skill(6)))
+    fun `Lua self only skills reject another target`() {
+        for (selfOnlyId in listOf(13008, 14002, 20006)) {
+            val actor = fighter(1, 2, 0, intArrayOf(selfOnlyId))
+            val ally = fighter(2, 3, 0)
+            val battle = fixture(actor, ally, mapOf(selfOnlyId to skill(6)))
 
-        assertFalse(battle.setPlayerAction(
-            actor.roleId, actor.col, actor.row,
-            BattleAction(BattleAction.KIND_SKILL, selfOnlyId, ally.col, ally.row)
-        ))
-        assertFalse(actor.hasActed)
-        assertEquals(null, actor.pendingAction)
+            assertFalse(battle.setPlayerAction(
+                actor.roleId, actor.col, actor.row,
+                BattleAction(BattleAction.KIND_SKILL, selfOnlyId, ally.col, ally.row)
+            ), "skill $selfOnlyId must reject a non-self target")
+            assertFalse(actor.hasActed)
+            assertEquals(null, actor.pendingAction)
+        }
     }
 
     @Test
