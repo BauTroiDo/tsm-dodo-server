@@ -79,13 +79,13 @@ class BattleCommandHandler(
             }
         }
 
-        battleManager.handlePlayerAction(
+        val accepted = battleManager.handlePlayerAction(
             session.playerId, srcCol, srcRow,
             BattleAction(actionKind, skillId, tgtCol, tgtRow)
         )
 
-        // S:053-005 確認動作設定完成 — 客戶端收到後切換到下一個可控角色
-        sendActSetOK(session, srcCol, srcRow)
+        // Chỉ ACK hành động mà battle authoritative đã chấp nhận.
+        if (accepted) sendActSetOK(session, srcCol, srcRow)
     }
 
     /**
@@ -105,13 +105,13 @@ class BattleCommandHandler(
 
         logger.debug { "${session.characterName} 戰鬥使用道具：itemId=$itemId 目標($tgtCol,$tgtRow)" }
 
-        battleManager.handlePlayerAction(
+        val accepted = battleManager.handlePlayerAction(
             session.playerId, srcCol, srcRow,
             BattleAction(BattleAction.KIND_ITEM, itemId, tgtCol, tgtRow)
         )
 
-        // S:053-005 確認動作設定完成
-        sendActSetOK(session, srcCol, srcRow)
+        // S:053-005 chỉ xác nhận khi action thực sự được ghi vào battle.
+        if (accepted) sendActSetOK(session, srcCol, srcRow)
     }
 
     /**
