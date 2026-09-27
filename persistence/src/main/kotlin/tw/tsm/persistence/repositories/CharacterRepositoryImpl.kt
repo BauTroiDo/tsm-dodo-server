@@ -312,4 +312,13 @@ class CharacterRepositoryImpl : CharacterRepository {
             "spr" to Characters.spr
         )
     }
+
+    override suspend fun updateAttrPoint(characterId: Long, newAttrPoint: Int) {
+        suspendTransaction {
+            Characters.update({ Characters.id eq characterId }) {
+                it[Characters.attrPoint] = newAttrPoint
+            }
+        }
+    }
+
 }
