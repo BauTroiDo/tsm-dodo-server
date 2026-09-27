@@ -72,6 +72,8 @@ class BattleFighter(
     var statusRounds: Int = 0,
     /** Skill that applied the current status; echoed when the status is restored. */
     var statusSkillId: Int = 0,
+    /** Battle round in which the current status was inflicted. */
+    var statusAppliedRound: Int = -1,
 
     /** 本回合是否已行動（跨執行緒：Netty 寫入 / 協程讀取） */
     @Volatile var hasActed: Boolean = false,
