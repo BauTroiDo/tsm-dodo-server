@@ -738,16 +738,24 @@ class BattleManager(
             }
         }
 
-        // 1. S:050-001 — DVT client starts an animation as soon as RevAttackSkill parses
-        // an action. Sending every AGI action in one packet starts player/NPC animations in
-        // the same frame. Pace commands sequentially, matching the original server model.
-        for ((index, actionResult) in roundResult.actionResults.withIndex()) {
-            val skillData = serializeSkillResults(listOf(actionResult))
+        // 1. S:050-001 — PC-original execution model:
+        // independent commands are separate packets, but a physical same-target combo chain
+        // is serialized into the SAME packet so DVT starts those combo animations together.
+        val actionGroups = mutableListOf<MutableList<ActionResult>>()
+        for (actionResult in roundResult.actionResults) {
+            if (actionResult.comboWithPrevious && actionGroups.isNotEmpty()) {
+                actionGroups.last().add(actionResult)
+            } else {
+                actionGroups.add(mutableListOf(actionResult))
+            }
+        }
+        for ((index, group) in actionGroups.withIndex()) {
+            val skillData = serializeSkillResults(group)
             for (session in battle.playerSessions.values) {
                 responseSender.sendBattleSkillResult(session, skillData)
             }
-            if (index < roundResult.actionResults.lastIndex) {
-                delay(actionPlaybackDelayMs(actionResult))
+            if (index < actionGroups.lastIndex) {
+                delay(actionPlaybackDelayMs(group.last()))
             }
         }
 
