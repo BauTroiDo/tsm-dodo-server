@@ -122,4 +122,43 @@ class DvtBattleStatusExecutionTest {
         assertFalse(targetResult.attrChanges.any { it.attrKind == EAttribute.HP })
         assertEquals(BattleStatus.SAME_HEART, ally.groupedStatuses[2]?.status)
     }
+    @Test
+    fun `modeled status identity with non-status attribute stays on damage path`() {
+        // 13007 is client-mapped DizzyAtk/Seal, but status identity alone must not
+        // classify a skill as status-only. SkillData.attribute remains authoritative.
+        val skillId = 13007
+        val resolver = BattleSkillResolver(
+            mapOf(skillId to skill(EAttribute.ATK, fightWayValue = 1, rounds = 3))
+        )
+        val attacker = fighter(1, col = 2, row = 0)
+        val target = fighter(2, col = 0, row = 0).also { it.agi = 0 }
+        val grid = BattleGrid().also {
+            it.place(attacker)
+            it.place(target)
+        }
+
+        var observedDamage = false
+        repeat(100) {
+            target.hp = 1000
+            target.clearAllGroupedStatuses()
+
+            val result = resolver.resolveSkill(
+                attacker = attacker,
+                grid = grid,
+                skillId = skillId,
+                targetCol = target.col,
+                targetRow = target.row,
+                terrain = 0,
+                currentRound = 7
+            )
+
+            if (result.targets.single().attrChanges.any { it.attrKind == EAttribute.HP && !it.isPositive }) {
+                observedDamage = true
+            }
+        }
+
+        assertTrue(observedDamage)
+    }
+
+
 }
