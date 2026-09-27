@@ -34,6 +34,9 @@ interface CharacterRepository {
     /** 更新轉生次數與二轉職業。 */
     suspend fun updateTurnCareer(characterId: Long, turn: Int, career: Int)
 
+    /** 更新轉生後外觀。 */
+    suspend fun updateTurnAppearance(characterId: Long, hair: Int, color1: Int, color2: Int)
+
     /**
      * 更新角色位置（斷線/登出時儲存）
      */
