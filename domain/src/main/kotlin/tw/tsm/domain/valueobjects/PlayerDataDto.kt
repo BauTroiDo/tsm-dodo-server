@@ -6,6 +6,7 @@ package tw.tsm.domain.valueobjects
  * 來源：protocal.lua protocolTable[5][3] → Role.ReceivePlayerData(data)
  */
 import tw.tsm.domain.interfaces.repositories.CharacterRecord
+import tw.tsm.domain.interfaces.repositories.Turn3State
 import tw.tsm.domain.interfaces.StatCalculator
 
 data class PlayerDataDto(
@@ -82,7 +83,8 @@ data class PlayerDataDto(
         fun fromCharacterRecord(
             record: CharacterRecord,
             statCalc: StatCalculator,
-            equipBonus: EquipBonusData = EquipBonusData.EMPTY
+            equipBonus: EquipBonusData = EquipBonusData.EMPTY,
+            turn3: Turn3State = Turn3State()
         ): PlayerDataDto {
             // 六圍 → 戰鬥屬性映射
             val intelligence = record.int_
@@ -128,7 +130,16 @@ data class PlayerDataDto(
                 equipMaxHp = equipBonus.equipMaxHp,
                 equipMaxSp = equipBonus.equipMaxSp,
                 equipHpx = equipBonus.equipHpx,
-                equipSpx = equipBonus.equipSpx
+                equipSpx = equipBonus.equipSpx,
+                turn3Element = turn3.element,
+                turn3Exp = turn3.exp,
+                turn3Int = turn3.intelligence,
+                turn3Atk = turn3.atk,
+                turn3Def = turn3.def,
+                turn3Agi = turn3.agi,
+                turn3Hpx = turn3.hpx,
+                turn3Spx = turn3.spx,
+                turn3Skills = turn3.skills.toList()
             )
         }
     }
