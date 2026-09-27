@@ -19,6 +19,8 @@ private val logger = KotlinLogging.logger {}
 class BattleSkillResolver(
     private val skillDefs: Map<Int, SkillDef>
 ) {
+    private val FRIENDLY_ONLY_FIGHT_WAYS = setOf(6, 7, 8, 14)
+
     /** Mirrors SkillData:GetFightArea(skillLv) from the Lua client. */
     private fun getFightArea(skill: SkillDef, skillLv: Int): Int {
         return when (skill.fightWayGrowType) {
@@ -71,6 +73,7 @@ class BattleSkillResolver(
         val skillLv = if (skill == null) 1 else (attacker.skillLevels[skillId] ?: 1).coerceIn(1, 10)
         val fightArea = skill?.let { getFightArea(it, skillLv) } ?: 1
         val isHeal = skill != null && BattleDamageCalc.isHealSkill(skill)
+        val targetsFriendlySide = skill != null && skill.fightWay in FRIENDLY_ONLY_FIGHT_WAYS
 
         // Lua SkillData rule: requireSp == 1 means consume ALL current SP.
         val requiredSp = skill?.requireSp ?: 0
@@ -85,8 +88,8 @@ class BattleSkillResolver(
             else -> requiredSp
         }
         // 決定目標列表 before mutation. A stale/invalid target must not burn SP.
-        val targets = if (isHeal) {
-            // 回復技能：對友方施放
+        val targets = if (targetsFriendlySide) {
+            // Client target legality is driven by fightWay; friendly utility/dispel is not always HP heal.
             grid.resolveTargets(fightArea, targetCol, targetRow, !attacker.isPlayerSide)
         } else {
             grid.resolveTargets(fightArea, targetCol, targetRow, attacker.isPlayerSide, isCombo = comboMultiplier > 1.0)
