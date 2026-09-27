@@ -100,7 +100,7 @@ class BattleFighter(
 
     /** Seal prevents acting; client IsCanControl also blocks command input while Chaos is active. */
     val isStunned: Boolean get() = groupedStatuses.values.any { BattleStatus.isStunStatus(it.status) }
-    val isCommandBlocked: Boolean get() = isStunned || groupedStatuses.values.any { it.status == BattleStatus.CHAOS }
+    val isCommandBlocked: Boolean get() = isStunned || groupedStatuses.values.any { it.status == BattleStatus.CHAOS || it.status == BattleStatus.TAUNT }
     /** A queued command can become invalid before its AGI turn if a control status lands mid-round. */
     val isActionBlocked: Boolean get() = isCommandBlocked
 
