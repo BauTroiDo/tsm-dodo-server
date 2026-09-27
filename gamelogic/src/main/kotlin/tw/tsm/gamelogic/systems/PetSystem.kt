@@ -268,7 +268,7 @@ class PetSystem(
      *
      * @return Vị trí (slot) trong xe ngựa, -1 nếu thất bại
      */
-    fun storeToCart(characterId: Long, followSlot: Int): Int {
+    fun storeToCart(characterId: Long, followSlot: Int, capacity: Int = MAX_CART): Int {
         val pc = cache[characterId] ?: return -1
         synchronized(pc) {
             val pet = pc.follow[followSlot] ?: return -1
@@ -277,7 +277,7 @@ class PetSystem(
             if (pc.fightNpcId == pet.npcId) return -1
 
             // Tìm vị trí trống trong xe ngựa
-            val cartSlot = (1..MAX_CART).firstOrNull { !pc.cart.containsKey(it) } ?: return -1
+            val cartSlot = (1..capacity.coerceIn(0, MAX_CART)).firstOrNull { !pc.cart.containsKey(it) } ?: return -1
 
             // Di chuyển
             pc.follow.remove(followSlot)

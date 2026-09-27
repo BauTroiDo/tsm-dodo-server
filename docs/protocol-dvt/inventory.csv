@@ -56,16 +56,16 @@ C2S,14,9,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effect
 C2S,14,10,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/UI/UILeaderboard.lua:267,
 C2S,14,18,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Logic/Social.lua:411,app/src/main/kotlin/tw/tsm/app/handlers/FriendHandler.kt:29
 C2S,14,19,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Logic/Social.lua:439,app/src/main/kotlin/tw/tsm/app/handlers/FriendHandler.kt:29
-C2S,15,2,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/UI/UITeam.lua:822; lua/UI/UITeam.lua:832,app/src/main/kotlin/tw/tsm/app/handlers/FollowNpcHandler.kt:24
+C2S,15,2,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/UI/UITeam.lua:822; lua/UI/UITeam.lua:832,app/src/main/kotlin/tw/tsm/app/handlers/FollowNpcHandler.kt:27
 C2S,15,4,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/Controller/RoleController.lua:3078,
 C2S,15,5,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/Controller/RoleController.lua:3026,
 C2S,15,6,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/UI/UITeam.lua:653,
-C2S,15,10,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/UI/UIArmyBattleAttack.lua:390; lua/UI/UITeam.lua:774,app/src/main/kotlin/tw/tsm/app/handlers/FollowNpcHandler.kt:24
-C2S,15,11,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/UI/UIArmyBattleAttack.lua:486; lua/UI/UITeam.lua:913,app/src/main/kotlin/tw/tsm/app/handlers/FollowNpcHandler.kt:24
-C2S,15,12,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/UI/UIArmyBattleAttack.lua:373; lua/UI/UIArmyBattleAttack.lua:469; lua/UI/UITeam.lua:757; lua/UI/UITeam.lua:896,app/src/main/kotlin/tw/tsm/app/handlers/FollowNpcHandler.kt:24
+C2S,15,10,PARTIAL,PARTIAL,"Cart transition uses saved full pet data (S15:8), removes replaced follow role on swap, validates exact byte slots and IN_GAME; capacity 0/2/4 by rebirth. DvtCartTransitionTest. Scene broadcast and in-battle restrictions still require audit.",lua/UI/UIArmyBattleAttack.lua:390; lua/UI/UITeam.lua:774,app/src/main/kotlin/tw/tsm/app/handlers/FollowNpcHandler.kt:27
+C2S,15,11,PARTIAL,PARTIAL,"Cart transition uses saved full pet data (S15:8), removes replaced follow role on swap, validates exact byte slots and IN_GAME; capacity 0/2/4 by rebirth. DvtCartTransitionTest. Scene broadcast and in-battle restrictions still require audit.",lua/UI/UIArmyBattleAttack.lua:486; lua/UI/UITeam.lua:913,app/src/main/kotlin/tw/tsm/app/handlers/FollowNpcHandler.kt:27
+C2S,15,12,PARTIAL,PARTIAL,"Cart transition uses saved full pet data (S15:8), removes replaced follow role on swap, validates exact byte slots and IN_GAME; capacity 0/2/4 by rebirth. DvtCartTransitionTest. Scene broadcast and in-battle restrictions still require audit.",lua/UI/UIArmyBattleAttack.lua:373; lua/UI/UIArmyBattleAttack.lua:469; lua/UI/UITeam.lua:757; lua/UI/UITeam.lua:896,
 C2S,16,1,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/Logic/FightField.lua:2468,
-C2S,19,1,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/UI/UITeam.lua:697,app/src/main/kotlin/tw/tsm/app/handlers/FollowNpcDeployHandler.kt:24
-C2S,19,2,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/UI/UITeam.lua:687,app/src/main/kotlin/tw/tsm/app/handlers/FollowNpcDeployHandler.kt:24
+C2S,19,1,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/UI/UITeam.lua:697,app/src/main/kotlin/tw/tsm/app/handlers/FollowNpcDeployHandler.kt:25
+C2S,19,2,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/UI/UITeam.lua:687,
 C2S,20,1,PARTIAL,PARTIAL,EventManager triggers use UInt16 IDs; advance/choice routes exist. EVE evaluator baseline has 8 failing tests; event semantics cannot be declared MATCH.,lua/Logic/Event/EventManager.lua:380,app/src/main/kotlin/tw/tsm/app/handlers/NpcEventHandler.kt:31
 C2S,20,2,PARTIAL,PARTIAL,EventManager triggers use UInt16 IDs; advance/choice routes exist. EVE evaluator baseline has 8 failing tests; event semantics cannot be declared MATCH.,lua/Logic/Event/EventManager.lua:380,app/src/main/kotlin/tw/tsm/app/handlers/NpcEventHandler.kt:31
 C2S,20,3,PARTIAL,PARTIAL,EventManager triggers use UInt16 IDs; advance/choice routes exist. EVE evaluator baseline has 8 failing tests; event semantics cannot be declared MATCH.,lua/Logic/Event/EventManager.lua:380,app/src/main/kotlin/tw/tsm/app/handlers/NpcEventHandler.kt:31
@@ -125,8 +125,8 @@ C2S,25,42,MISSING,MISSING,No literal route/writer found; inspect dynamic candida
 C2S,27,1,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/UI/UIShop.lua:131,app/src/main/kotlin/tw/tsm/app/handlers/NpcTradeHandler.kt:31
 C2S,27,2,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/UI/UINpcStore.lua:444; lua/UI/UIStatus.lua:2025; lua/UI/UIStatus.lua:2033,app/src/main/kotlin/tw/tsm/app/handlers/NpcTradeHandler.kt:31
 C2S,27,3,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/UI/UINpcStore.lua:446,app/src/main/kotlin/tw/tsm/app/handlers/NpcTradeHandler.kt:31
-C2S,28,1,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/UI/UISkillHint.lua:141; lua/UI/UISkillHint.lua:175; lua/UI/UISkillTree.lua:1728,app/src/main/kotlin/tw/tsm/app/handlers/SkillUpgradeHandler.kt:26
-C2S,28,2,MISSING,MISSING,Registered branch exists but only logs TODO: no pet skill upgrade operation. UISkillTree.lua:1765-1770 supplies follow index + skill records. Do not treat route presence as implementation.,lua/UI/UISkillHint.lua:148; lua/UI/UISkillHint.lua:182; lua/UI/UISkillTree.lua:1770,app/src/main/kotlin/tw/tsm/app/handlers/SkillUpgradeHandler.kt:26
+C2S,28,1,PARTIAL,PARTIAL,"Atomic target-level batch; dependency order independent of Lua pairs; ANY learned prerequisite; first-point element cost; rejects opposed element, forbidden summon/special IDs, negative/overflow cost, duplicates and partial records. DvtSkillBatchTest/DvtSkillRulesTest. Tier/tree eligibility still incomplete.",lua/UI/UISkillHint.lua:141; lua/UI/UISkillHint.lua:175; lua/UI/UISkillTree.lua:1728,app/src/main/kotlin/tw/tsm/app/handlers/SkillUpgradeHandler.kt:29
+C2S,28,2,MISSING,PARTIAL,"Normal unarmed follow pets: target-level batch validated atomically, correct first-point cost and ANY prerequisite, persisted via PetSystem; authoritative S8:2 response. DvtPetSkillTest/DvtSkillWireTest. Soul and armed pets are rejected until exclusive-weapon/soul tables are implemented. No live-client or database integration verification.",lua/UI/UISkillHint.lua:148; lua/UI/UISkillHint.lua:182; lua/UI/UISkillTree.lua:1770,app/src/main/kotlin/tw/tsm/app/handlers/SkillUpgradeHandler.kt:29
 C2S,28,5,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/UI/UISkillTree.lua:1720,
 C2S,30,1,MISMATCH,PARTIAL,"Fixed index UInt16 + quantity Int32 from UIBank.lua:671-678; mocks verify decoded operations, malformed payload rejection and batch alignment; no DB integration claim.",lua/UI/UIBank.lua:679,app/src/main/kotlin/tw/tsm/app/handlers/BankHandler.kt:32
 C2S,30,2,MISMATCH,PARTIAL,"Fixed index UInt16 + quantity Int32 from UIBank.lua:671-678; mocks verify decoded operations, malformed payload rejection and batch alignment; no DB integration claim.",lua/UI/UIBank.lua:679,app/src/main/kotlin/tw/tsm/app/handlers/BankHandler.kt:32
@@ -502,8 +502,8 @@ S2C,6,2,MISSING,MISSING,No literal route/writer found; inspect dynamic candidate
 S2C,7,0,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:1229,app/src/main/kotlin/tw/tsm/app/response/SceneResponseSender.kt:49
 S2C,7,1,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:1240,app/src/main/kotlin/tw/tsm/app/response/SceneResponseSender.kt:22
 S2C,7,2,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:1273,app/src/main/kotlin/tw/tsm/app/response/SceneResponseSender.kt:35
-S2C,8,1,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:1304,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:25
-S2C,8,2,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/Common/protocal.lua:1320,
+S2C,8,1,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:1304,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:32
+S2C,8,2,MISSING,PARTIAL,"Added FollowNpc branch: Byte human=4, UInt16 slot, Byte attribute, Byte sign=1, Int32 absolute value, Int32 skillId arg. Independent JDK wire test. Only pet skill and skill-point attributes are emitted; other human/attribute branches remain unaudited.",lua/Common/protocal.lua:1320,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:21
 S2C,8,3,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/Common/protocal.lua:1338,
 S2C,8,4,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/Common/protocal.lua:1355,
 S2C,8,5,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/Common/protocal.lua:1368,
@@ -514,7 +514,7 @@ S2C,8,9,MISSING,MISSING,No literal route/writer found; inspect dynamic candidate
 S2C,8,10,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/Common/protocal.lua:1428,
 S2C,8,11,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:1446,app/src/main/kotlin/tw/tsm/app/response/PartyPetResponseSender.kt:292
 S2C,8,12,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/Common/protocal.lua:1464,
-S2C,8,13,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:1471,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:71
+S2C,8,13,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:1471,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:78
 S2C,8,14,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/Common/protocal.lua:1478,
 S2C,8,15,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/Common/protocal.lua:1498,
 S2C,9,1,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:1518,app/src/main/kotlin/tw/tsm/app/response/LoginResponseSender.kt:270
@@ -522,18 +522,18 @@ S2C,9,3,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects
 S2C,9,4,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/Common/protocal.lua:1552,
 S2C,9,5,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/Common/protocal.lua:1564,
 S2C,10,0,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:1599,app/src/main/kotlin/tw/tsm/app/handlers/KeepaliveHandler.kt:25; app/src/main/kotlin/tw/tsm/app/response/LoginResponseSender.kt:289
-S2C,11,0,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:1616,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:100
-S2C,11,1,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:1623,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:109
-S2C,11,3,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:1643,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:118
-S2C,11,4,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:1650,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:130
-S2C,11,5,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:1683,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:141
+S2C,11,0,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:1616,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:107
+S2C,11,1,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:1623,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:116
+S2C,11,3,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:1643,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:125
+S2C,11,4,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:1650,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:137
+S2C,11,5,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:1683,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:148
 S2C,11,6,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/Common/protocal.lua:1692,
 S2C,11,7,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/Common/protocal.lua:1703,
 S2C,11,9,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/Common/protocal.lua:1709,
-S2C,11,10,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:1721,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:148
+S2C,11,10,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:1721,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:155
 S2C,11,11,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/Common/protocal.lua:1728,
 S2C,11,12,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/Common/protocal.lua:1734,
-S2C,11,250,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:1743,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:91
+S2C,11,250,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:1743,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:98
 S2C,12,0,MATCH,MATCH,"Wire layout reviewed against protocal.lua:1758 and tested including equipment count, outfit count, title; no claim of end-to-end scene behavior.",lua/Common/protocal.lua:1759,app/src/main/kotlin/tw/tsm/app/response/SceneResponseSender.kt:66
 S2C,13,1,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:1823,app/src/main/kotlin/tw/tsm/app/response/PartyPetResponseSender.kt:21
 S2C,13,2,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/Common/protocal.lua:1831,
@@ -860,8 +860,8 @@ S2C,31,14,MISSING,MISSING,No literal route/writer found; inspect dynamic candida
 S2C,31,15,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:6915,app/src/main/kotlin/tw/tsm/app/response/InnResponseSender.kt:140
 S2C,32,1,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:6929,app/src/main/kotlin/tw/tsm/app/handlers/EmoteHandler.kt:65
 S2C,32,2,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:6951,app/src/main/kotlin/tw/tsm/app/handlers/EmoteHandler.kt:107; app/src/main/kotlin/tw/tsm/app/handlers/EmoteHandler.kt:124
-S2C,33,1,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:6982,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:235
-S2C,33,2,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:7011,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:243
+S2C,33,1,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:6982,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:242
+S2C,33,2,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:7011,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:250
 S2C,34,1,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/Common/protocal.lua:7028,
 S2C,34,2,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/Common/protocal.lua:7035,
 S2C,35,1,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/Common/protocal.lua:7080,
@@ -1064,15 +1064,15 @@ S2C,48,1,MISSING,MISSING,No literal route/writer found; inspect dynamic candidat
 S2C,48,2,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/Common/protocal.lua:10418,
 S2C,48,3,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/Common/protocal.lua:10428,
 S2C,48,4,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/Common/protocal.lua:10435,
-S2C,50,1,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:10451,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:161
-S2C,50,2,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:10460,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:168
-S2C,51,1,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:10470,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:183
-S2C,52,1,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:10480,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:192
+S2C,50,1,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:10451,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:168
+S2C,50,2,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:10460,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:175
+S2C,51,1,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:10470,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:190
+S2C,52,1,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:10480,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:199
 S2C,52,2,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/Common/protocal.lua:10488,
-S2C,53,1,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:10498,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:201
+S2C,53,1,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:10498,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:208
 S2C,53,2,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/Common/protocal.lua:10504,
-S2C,53,3,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:10510,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:208
-S2C,53,4,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:10517,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:221
+S2C,53,3,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:10510,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:215
+S2C,53,4,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:10517,app/src/main/kotlin/tw/tsm/app/response/BattleResponseSender.kt:228
 S2C,53,5,PARTIAL,PARTIAL,"Static route/writer found; payload, state, side effects not fully verified.",lua/Common/protocal.lua:10524,app/src/main/kotlin/tw/tsm/app/handlers/BattleCommandHandler.kt:123; gamelogic/src/main/kotlin/tw/tsm/gamelogic/systems/BattleManager.kt:1024
 S2C,53,6,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/Common/protocal.lua:10531,
 S2C,53,7,MISSING,MISSING,No literal route/writer found; inspect dynamic candidates before implementation.,lua/Common/protocal.lua:10538,

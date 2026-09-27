@@ -78,85 +78,52 @@ class SkillSystem(
     /**
      * Người chơi nâng cấp kỹ năng (C:028-001)
      *
-     * Một lần có thể nâng nhiều kỹ năng, xử lý lần lượt từng kỹ năng.
+     * Một lần nâng nhiều kỹ năng: xác minh cả batch và prerequisite trước khi trừ điểm.
      *
      * @param upgrades Danh sách các cặp (skillId, targetLevel) cần nâng cấp
      * @return Danh sách các cặp (skillId, newLevel) thực tế đã nâng cấp thành công
      */
     fun upgradeSkills(characterId: Long, upgrades: List<Pair<Int, Int>>): List<Pair<Int, Int>> {
         val sc = cache[characterId] ?: return emptyList()
-        val result = mutableListOf<Pair<Int, Int>>()
-
-        // synchronized bảo vệ tính nguyên tử của việc trừ skillPoint và chỉnh sửa map skills
+        // UISkillTree.SendSkill uses pairs(): dependency order is not a contract.
         synchronized(sc) {
-            for ((skillId, targetLevel) in upgrades) {
-                val def = skillDefs[skillId]
-                if (def == null) {
-                    logger.warn { "Nâng cấp kỹ năng thất bại: charId=$characterId skillId=$skillId kỹ năng không tồn tại" }
-                    continue
+            if (upgrades.isEmpty() || upgrades.map { it.first }.distinct().size != upgrades.size) return emptyList()
+            val proposed = sc.skills.toMutableMap()
+            val pending = mutableSetOf<Int>()
+            var cost = 0L
+            val forbidden = setOf(14026, 14077, 10016, 11016, 12016, 13015, 22011, 23011)
+            val opposite = when (sc.element) { 1 -> 3; 2 -> 4; 3 -> 1; 4 -> 2; else -> -1 }
+            for ((id, target) in upgrades) {
+                val def = skillDefs[id] ?: return emptyList()
+                val from = sc.skills[id] ?: 0
+                if (id in forbidden || def.element == opposite || target !in 1..minOf(255, def.maxLv) ||
+                    target < from || from < 0 || def.learnPoint < 0 || def.levelUpPoint < 0) return emptyList()
+                if (target == from) continue
+                val first = if (from == 0) def.learnPoint.toLong() *
+                    (if (def.element in 1..4 && def.element != sc.element) 2 else 1) else 0L
+                cost += first + (target - maxOf(from, 1)).toLong() * def.levelUpPoint
+                proposed[id] = target
+                if (from == 0) pending.add(id)
+            }
+            if (sc.skillPoint < 0 || cost > sc.skillPoint) return emptyList()
+            val learned = sc.skills.filterValues { it > 0 }.keys.toMutableSet()
+            while (pending.isNotEmpty()) {
+                val ready = pending.filter { id ->
+                    val prerequisites = skillDefs.getValue(id).preSkills.filter { it in skillDefs }
+                    prerequisites.isEmpty() || prerequisites.any { it in learned }
                 }
-
-                val currentLevel = sc.skills[skillId] ?: 0
-                if (targetLevel <= currentLevel) continue
-                if (targetLevel > def.maxLv) {
-                    logger.warn { "Nâng cấp kỹ năng thất bại: charId=$characterId skillId=$skillId vượt quá cấp tối đa ${def.maxLv}" }
-                    continue
-                }
-
-                // Kiểm tra kỹ năng tiên quyết
-                if (!checkPrerequisites(sc, def)) {
-                    logger.warn { "Nâng cấp kỹ năng thất bại: charId=$characterId skillId=$skillId chưa thỏa mãn kỹ năng tiên quyết" }
-                    continue
-                }
-
-                // Tính toán điểm cần thiết (bao gồm phạt khác hệ nguyên tố)
-                val cost = calculateCost(def, currentLevel, targetLevel, sc.element)
-                if (sc.skillPoint < cost) {
-                    logger.warn { "Nâng cấp kỹ năng thất bại: charId=$characterId skillId=$skillId không đủ điểm (cần $cost, có ${sc.skillPoint})" }
-                    continue
-                }
-
-                // Trừ điểm, thăng cấp
-                sc.skillPoint -= cost
-                sc.skills[skillId] = targetLevel
+                if (ready.isEmpty()) return emptyList()
+                learned.addAll(ready)
+                pending.removeAll(ready.toSet())
+            }
+            val result = upgrades.filter { (id, target) -> target > (sc.skills[id] ?: 0) }
+            if (result.isNotEmpty()) {
+                sc.skills.putAll(proposed)
+                sc.skillPoint -= cost.toInt()
                 sc.dirty = true
-                result.add(skillId to targetLevel)
-
-                logger.info { "Nâng cấp kỹ năng: charId=$characterId ${def.name} $currentLevel→$targetLevel tiêu hao $cost điểm, còn lại ${sc.skillPoint}" }
             }
+            return result
         }
-
-        return result
-    }
-
-    /**
-     * Kiểm tra các kỹ năng tiên quyết đã học hay chưa
-     */
-    private fun checkPrerequisites(sc: SkillCache, def: SkillDef): Boolean {
-        for (preSkillId in def.preSkills) {
-            if (preSkillId > 0 && !sc.skills.containsKey(preSkillId)) {
-                return false
-            }
-        }
-        return true
-    }
-
-    /**
-     * Tính toán điểm cần để nâng cấp
-     *
-     * Cấp đầu tiên cần learnPoint, các cấp sau mỗi cấp cần levelUpPoint.
-     * Logic KERO: Khi hệ của kỹ năng khác với hệ của nhân vật, chi phí cơ bản ×2.
-     *
-     * @param playerElement Hệ nguyên tố của nhân vật (dùng để phán đoán phạt khác hệ)
-     */
-    private fun calculateCost(def: SkillDef, fromLevel: Int, toLevel: Int, playerElement: Int): Int {
-        val elementPenalty = if (def.element > 0 && def.element != playerElement) 2 else 1
-        var cost = 0
-        for (lv in (fromLevel + 1)..toLevel) {
-            val baseCost = if (lv == 1) def.learnPoint else def.levelUpPoint
-            cost += baseCost * elementPenalty
-        }
-        return cost
     }
 
     /**

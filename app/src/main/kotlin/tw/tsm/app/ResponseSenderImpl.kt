@@ -406,6 +406,9 @@ class ResponseSenderImpl(worldManager: WorldManager) : ResponseSender {
     override fun sendSetAttribute(session: SessionSender, attrKind: Int, value: Int, isPositive: Boolean, arg: Int) =
         battle.sendSetAttribute(session, attrKind, value, isPositive, arg)
 
+    override fun sendFollowNpcAttribute(session: SessionSender, slot: Int, attrKind: Int, value: Int, arg: Int) =
+        battle.sendFollowNpcAttribute(session, slot, attrKind, value, arg)
+
     override fun sendEquipBonusUpdate(session: SessionSender, bonus: EquipBonusData, maxHp: Long, maxSp: Int, hp: Long, sp: Int) =
         battle.sendEquipBonusUpdate(session, bonus, maxHp, maxSp, hp, sp)
 

@@ -2,6 +2,7 @@ package tw.tsm.app.handlers
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import tw.tsm.domain.constants.Opcodes
+import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.PacketHandler
 import tw.tsm.domain.interfaces.ResponseSender
@@ -24,6 +25,9 @@ class FollowNpcDeployHandler(
     override val mainKind: Int = Opcodes.FOLLOW_NPC_DEPLOY
 
     override suspend fun handle(session: GameSession, subKind: Int, data: ByteArray) {
+        if (session.state != SessionState.IN_GAME) return
+        val expected = when (subKind) { 1 -> 2; 2 -> 0; else -> return }
+        if (data.size != expected) return
         val characterId = session.roleId.toLong()
         if (characterId <= 0) return
 

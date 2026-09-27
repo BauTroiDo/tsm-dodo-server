@@ -129,10 +129,20 @@
     "baseline_status": "PARTIAL",
     "note": "Network.lua:640-701 has channelId/deviceId/networkDisMsg tail ignored by server; account/guest supported, third-party/254/255 not complete. Version 258 matches. Login response truncation fixed separately."
   },
-  "C2S:28:2": {
-    "status": "MISSING",
+  "S2C:8:2": {
+    "status": "PARTIAL",
     "baseline_status": "MISSING",
-    "note": "Registered branch exists but only logs TODO: no pet skill upgrade operation. UISkillTree.lua:1765-1770 supplies follow index + skill records. Do not treat route presence as implementation."
+    "note": "Added FollowNpc branch: Byte human=4, UInt16 slot, Byte attribute, Byte sign=1, Int32 absolute value, Int32 skillId arg. Independent JDK wire test. Only pet skill and skill-point attributes are emitted; other human/attribute branches remain unaudited."
+  },
+  "C2S:28:1": {
+    "status": "PARTIAL",
+    "baseline_status": "PARTIAL",
+    "note": "Atomic target-level batch; dependency order independent of Lua pairs; ANY learned prerequisite; first-point element cost; rejects opposed element, forbidden summon/special IDs, negative/overflow cost, duplicates and partial records. DvtSkillBatchTest/DvtSkillRulesTest. Tier/tree eligibility still incomplete."
+  },
+  "C2S:28:2": {
+    "status": "PARTIAL",
+    "baseline_status": "MISSING",
+    "note": "Normal unarmed follow pets: target-level batch validated atomically, correct first-point cost and ANY prerequisite, persisted via PetSystem; authoritative S8:2 response. DvtPetSkillTest/DvtSkillWireTest. Soul and armed pets are rejected until exclusive-weapon/soul tables are implemented. No live-client or database integration verification."
   },
   "S2C:3:0": {
     "status": "PARTIAL",
@@ -193,5 +203,20 @@
     "status": "PARTIAL",
     "baseline_status": "PARTIAL",
     "note": "EventManager triggers use UInt16 IDs; advance/choice routes exist. EVE evaluator baseline has 8 failing tests; event semantics cannot be declared MATCH."
+  },
+  "C2S:15:10": {
+    "status": "PARTIAL",
+    "baseline_status": "PARTIAL",
+    "note": "Cart transition uses saved full pet data (S15:8), removes replaced follow role on swap, validates exact byte slots and IN_GAME; capacity 0/2/4 by rebirth. DvtCartTransitionTest. Scene broadcast and in-battle restrictions still require audit."
+  },
+  "C2S:15:11": {
+    "status": "PARTIAL",
+    "baseline_status": "PARTIAL",
+    "note": "Cart transition uses saved full pet data (S15:8), removes replaced follow role on swap, validates exact byte slots and IN_GAME; capacity 0/2/4 by rebirth. DvtCartTransitionTest. Scene broadcast and in-battle restrictions still require audit."
+  },
+  "C2S:15:12": {
+    "status": "PARTIAL",
+    "baseline_status": "PARTIAL",
+    "note": "Cart transition uses saved full pet data (S15:8), removes replaced follow role on swap, validates exact byte slots and IN_GAME; capacity 0/2/4 by rebirth. DvtCartTransitionTest. Scene broadcast and in-battle restrictions still require audit."
   }
 }

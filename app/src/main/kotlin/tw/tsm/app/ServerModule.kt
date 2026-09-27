@@ -249,6 +249,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { QuestSystem(get(), get<GameDataManager>().markDefs) }
     single { BitFlagSystem(get(), get<GameDataManager>().guideLastBitFlagId) }
     single { SkillSystem(get(), get(), get<GameDataManager>().skillDefs) }
+    single { PetSkillSystem(get(), get<GameDataManager>().npcDefs, get<GameDataManager>().skillDefs) }
     single { PartySystem() }
     single { PetSystem(get(), get<StatSystem>()) }
     single {
@@ -345,9 +346,9 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { BattleManageHandler(get(), get(), get()) }
     single { BattleCommandHandler(get()) }
     single { PlayerStatusHandler(get(), get(), get(), get()) }
-    single { SkillUpgradeHandler(get(), get(), get()) }
+    single { SkillUpgradeHandler(get(), get(), get(), get()) }
     single { PartyHandler(get(), get(), get()) }
-    single { FollowNpcHandler(get(), get()) }
+    single { FollowNpcHandler(get(), get(), get()) }
     single { FollowNpcDeployHandler(get(), get()) }
     single { PkSettingHandler(get()) }
     single { StatHandler(get(), get(), get(), get<StatSystem>(), get()) }

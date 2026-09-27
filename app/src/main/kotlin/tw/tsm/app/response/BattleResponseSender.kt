@@ -16,9 +16,16 @@ class BattleResponseSender {
 
     // ── 屬性修改 (mainKind=8) ──
 
+    /** S:008-002: absolute attribute value for the owner's follow pet. */
+    fun sendFollowNpcAttribute(session: SessionSender, slot: Int, attrKind: Int, value: Int, arg: Int) {
+        session.send(PacketWriter(16)
+            .writeByte(8).writeByte(2).writeByte(0)
+            .writeByte(4).writeShortLE(slot).writeByte(attrKind).writeByte(1)
+            .writeIntLE(value).writeIntLE(arg).toByteArray())
+    }
+
     /**
      * S:008-001 主角屬性修改
-     *
      * 格式：+attrKind(1) +sign(1) +value(4LE) +arg(4LE)
      */
     fun sendSetAttribute(session: SessionSender, attrKind: Int, value: Int, isPositive: Boolean, arg: Int) {

@@ -2,6 +2,10 @@
 
 Nguồn: [BauTroiDo/tsm-dodo-server](https://github.com/BauTroiDo/tsm-dodo-server), branch `main`, commit `59c2e0a81c3d4443aa1aad3584d216096256cf16` — `Update lua da vu tru`. Đây là HEAD tải trực tiếp từ GitHub khi bắt đầu audit. Lua được giữ nguyên; bản vá chỉ sửa Kotlin, thêm test và tài liệu/công cụ audit. Thay đổi nằm ở checkout cục bộ, chưa commit/push lên GitHub.
 
+Cập nhật bước tiếp theo: xem [STAGE2.md](STAGE2.md) — 38 test DVT pass; full suite 151 test, 8 lỗi EVE baseline. Các kết quả 19/132 test bên dưới là lịch sử bước đầu.
+
+Kết quả mới nhất: [STAGE3.md](STAGE3.md) — 51/51 DVT pass; full 164 test, 8 lỗi baseline. STAGE2 là lịch sử bước trước.
+
 ## Phạm vi và cách đọc kết quả
 
 Quét đủ **792 file Lua**, **543 call site gửi** (gồm `this.Send` trong Network.lua), **1.448 callback nhận** trong protocal.lua, **39 handler được ServerModule đăng ký**, **57 constant trong object Opcodes**. Đối chiếu writer trong toàn bộ module Kotlin, gồm các ResponseSender và header gửi trực tiếp. Tài liệu `C:/S:` trong protocal.lua có **1.907 dòng** được giữ riêng trong JSON để không nhầm comment với đường chạy thật.
@@ -11,13 +15,13 @@ Inventory gồm **1.902 cặp direction/main/sub**: 453 C→S, 1.448 callback S�
 | Trạng thái | Baseline | Sau bản vá |
 |---|---:|---:|
 | MATCH | 1 | 11 |
-| PARTIAL | 319 | 332 |
-| MISSING | 1558 | 1558 |
+| PARTIAL | 319 | 334 |
+| MISSING | 1558 | 1556 |
 | MISMATCH | 24 | 1 |
 
 - **MATCH**: phạm vi wire contract đã đối chiếu và có test đọc độc lập/golden bytes. Không đồng nghĩa cả subsystem đã chạy end-to-end.
 - **PARTIAL**: có route/writer, nhưng payload, nhánh, game logic hoặc profile chưa chứng minh đầy đủ. Những lỗi wire đã sửa nhưng chưa có integration test vẫn có thể là PARTIAL.
-- **MISSING**: chưa tìm thấy route/writer nghiệp vụ tương ứng trong source; có cả callback client tùy chọn, chức năng nâng cấp, debug và callback rỗng. Đây **không phải 1.558 hệ thống cần viết mới**. Nhánh `28:2` chỉ log TODO cũng được đánh dấu MISSING.
+- **MISSING**: chưa tìm thấy route/writer nghiệp vụ tương ứng trong source; có cả callback client tùy chọn, chức năng nâng cấp, debug và callback rỗng. Đây **không phải 1.558 hệ thống cần viết mới**. Nhánh `28:2` đã chuyển từ MISSING sang PARTIAL ở bước tiếp theo; xem STAGE2.md.
 - **MISMATCH**: có bằng chứng lệch contract. `baseline_status` giữ kết quả trước vá; `status` phản ánh kết quả sau vá. 23 cặp protocol đã sửa; constant Elf/reconnect được ghi thêm bên dưới.
 
 `inventory.csv` để lọc nhanh; `inventory.json` chứa từng call site, callback alias, route/writer Kotlin, lý do phân loại, comment spec, opcode constants và các trường hợp động. Bộ quét bỏ comment/chuỗi, giữ số dòng, nhận diện sub mặc định 0, callback gán bằng tên hàm, range dispatch và chỉ lấy constant trong object Opcodes (không trộn ProtocolEvent). Đây là static inventory với review thủ công các luồng ưu tiên, **chưa phải chứng nhận hành vi cho toàn bộ 1.902 cặp**.
@@ -32,14 +36,14 @@ Nhóm dưới đây theo main opcode để tiện lọc; một opcode có thể 
 | Character | 1 | 13 | 11 | 0 |
 | Scene/Map | 1 | 14 | 25 | 0 |
 | NPC/EVE/Quest | 0 | 24 | 94 | 0 |
-| Item/Pet/Skill | 7 | 85 | 155 | 0 |
-| Battle | 0 | 29 | 35 | 0 |
+| Item/Pet/Skill | 7 | 86 | 154 | 0 |
+| Battle | 0 | 30 | 34 | 0 |
 
 1. **Login:** `S 1:2` thiếu Int32 chẩn đoán cuối nhánh thành công; `S 0:0` thiếu hai Int32. Đã sửa. `Network.lua:640-701` còn gửi metadata channel/device/networkDisMsg chưa được dùng; login bên thứ ba và chuyển server chưa đầy đủ. Version 258 khớp.
 2. **Character:** `S 5:3` ghi dư HP/SP sau turn3Skills; `Role.ReceivePlayerData` tái sử dụng biến hp/sp đọc đầu gói, không đọc lại. Đã bỏ 6 byte dư. `3:0` đúng thứ tự trường đã xem nhưng còn hardcode một số dữ liệu nhân vật; encoding tên cần xác nhận qua ByteBuffer/native client, không kết luận từ tên hàm.
 3. **Scene/Map:** test `S 12:0` xác nhận trang bị, outfit count rồi title đúng thứ tự Lua. Giới hạn single-area và những chức năng MapNpc chưa phát packet được giữ PARTIAL/MISSING; không thêm thông báo thành công giả.
 4. **NPC/EVE/Quest:** `20:1..6` nhận qua alias `EventManager.ReceiveCommonEvent`, không phải anonymous function; inventory đã tính đầy đủ. Trigger/advance/choice có route thật. 8 lỗi baseline của evaluator khiến chưa thể xác nhận chuỗi quest end-to-end. Không đổi evaluator khi chưa có đối chiếu semantics Lua đủ chắc.
-5. **Item/Pet/Skill:** DVT dùng UInt16 cho ô túi đồ/ngân hàng nhưng Byte cho slot kho phụ, pet và vị trí trang bị. Đã sửa những luồng cơ bản có bằng chứng, gồm gửi/rút, sắp xếp, dùng/vứt đồ và mặc/tháo trang bị. Pet skill upgrade `C 28:2` có nhánh TODO, vẫn MISSING. `ThingData` non-NFT là 35 byte; nhánh NFT thêm 21 byte, chưa biết define runtime nên chưa tuyên bố hỗ trợ profile NFT.
+5. **Item/Pet/Skill:** DVT dùng UInt16 cho ô túi đồ/ngân hàng nhưng Byte cho slot kho phụ, pet và vị trí trang bị. Đã sửa những luồng cơ bản có bằng chứng, gồm gửi/rút, sắp xếp, dùng/vứt đồ và mặc/tháo trang bị. Pet skill upgrade `C 28:2` đã triển khai cho pet thường không cầm vũ khí; còn PARTIAL, xem STAGE2.md. `ThingData` non-NFT là 35 byte; nhánh NFT thêm 21 byte, chưa biết define runtime nên chưa tuyên bố hỗ trợ profile NFT.
 6. **Battle:** giải được `Network.Send(50, kind)` thành sub 1/2; thứ tự tọa độ, action UInt16 và hai check byte khớp parser. Logic/check-byte/result toàn trận vẫn PARTIAL. Xóa constant RECONNECT=50 không được dùng để tránh nhầm với BATTLE_COMMAND.
 
 **Mismatch còn lại:** `S 13:15` của PartyPetResponseSender có writer nhưng không có callback ĐVT. Chưa có bằng chứng packet thay thế nên giữ nguyên và báo rõ, không tự đổi sang opcode khác.

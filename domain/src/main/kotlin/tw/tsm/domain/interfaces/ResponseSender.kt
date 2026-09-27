@@ -1116,6 +1116,9 @@ interface ResponseSender {
      */
     fun sendSetAttribute(session: SessionSender, attrKind: Int, value: Int, isPositive: Boolean, arg: Int = 0)
 
+    /** S:008-002: FollowNpc(4), index UInt16, attribute Byte, sign Byte, value/arg Int32. */
+    fun sendFollowNpcAttribute(session: SessionSender, slot: Int, attrKind: Int, value: Int, arg: Int = 0)
+
     /**
      * 發送裝備加成更新（8 筆 S:008-001 + MaxHP/HP/MaxSP/SP）
      *
