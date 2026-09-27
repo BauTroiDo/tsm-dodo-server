@@ -74,6 +74,7 @@ class BattleSkillResolver(
         val fightArea = skill?.let { getFightArea(it, skillLv) } ?: 1
         val isHeal = skill != null && BattleDamageCalc.isHealSkill(skill)
         val targetsFriendlySide = skill != null && skill.fightWay in FRIENDLY_ONLY_FIGHT_WAYS
+        val targetsDeadFriendly = skill?.fightWay == 8
         val clearGroups = clearGroups(skillId)
         val isPureDispel = clearGroups.isNotEmpty() && skill != null && skill.fightWay in FRIENDLY_ONLY_FIGHT_WAYS
 
@@ -92,7 +93,13 @@ class BattleSkillResolver(
         // 決定目標列表 before mutation. A stale/invalid target must not burn SP.
         val targets = if (targetsFriendlySide) {
             // Client target legality is driven by fightWay; friendly utility/dispel is not always HP heal.
-            grid.resolveTargets(fightArea, targetCol, targetRow, !attacker.isPlayerSide)
+            grid.resolveTargets(
+                fightArea,
+                targetCol,
+                targetRow,
+                !attacker.isPlayerSide,
+                deadTargetsOnly = targetsDeadFriendly
+            )
         } else {
             grid.resolveTargets(fightArea, targetCol, targetRow, attacker.isPlayerSide, isCombo = comboMultiplier > 1.0)
         }
@@ -211,7 +218,13 @@ class BattleSkillResolver(
                                 // 回復
                                 val actual = minOf(change.value.toLong(), target.maxHp - target.hp).toInt()
                                 target.hp = (target.hp + actual).coerceAtMost(target.maxHp)
-                                if (actual > 0) allAttrChanges.add(BattleAttrChange(EAttribute.HP, actual, true))
+                                if (actual > 0) {
+                                    allAttrChanges.add(BattleAttrChange(EAttribute.HP, actual, true))
+                                    if (targetsDeadFriendly && target.hp > 0) {
+                                        target.isDead = false
+                                        target.isFlyOut = false
+                                    }
+                                }
                             } else {
                                 // 傷害
                                 lastRawDamage = change.value  // 保留原始未 cap 傷害
