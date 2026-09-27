@@ -97,13 +97,13 @@ data class PlayerDataDto(
             val maxHp = statCalc.calculateMaxHp(
                 level = record.level, hpx = totalHpx,
                 equipMaxHp = equipBonus.equipMaxHp, extraHp = 0,
-                turn = 0, career = 0, turn3Lv = 0
+                turn = record.turn, career = record.career, turn3Lv = 0
             )
             val totalSpx = spx + equipBonus.equipSpx
             val maxSp = statCalc.calculateMaxSp(
                 level = record.level, spx = totalSpx,
                 equipMaxSp = equipBonus.equipMaxSp, extraSp = 0,
-                turn = 0, career = 0, turn3Lv = 0
+                turn = record.turn, career = record.career, turn3Lv = 0
             )
 
             return PlayerDataDto(
@@ -117,6 +117,7 @@ data class PlayerDataDto(
                 hpx = hpx,
                 spx = spx,
                 level = record.level,
+                skillPoint = record.skillPoint,
                 attrPoint = record.attrPoint,
                 maxHp = maxHp,
                 maxSp = maxSp,
