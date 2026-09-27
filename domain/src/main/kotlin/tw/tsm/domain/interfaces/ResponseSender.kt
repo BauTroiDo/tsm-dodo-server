@@ -1655,6 +1655,12 @@ interface ResponseSender {
      * 格式：+數量(2B LE) <<+索引(2B LE) +數值(4B LE unsigned) +上限(4B LE signed)>>
      */
     fun sendRoleCountUpdate(session: SessionSender, counts: Map<Int, Pair<Int, Int>>)
+    /** S:023-069 玩家轉職/轉生外觀與 turn/career 同步。 */
+    fun sendPlayerCareerChange(
+        session: SessionSender, playerId: Long, hair: Int,
+        color1: Int, color2: Int, turn: Int, career: Int
+    )
+
 }
 
 /**
