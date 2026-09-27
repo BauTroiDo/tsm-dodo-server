@@ -3,6 +3,7 @@ package tw.tsm.gamelogic.battle
 import io.github.oshai.kotlinlogging.KotlinLogging
 import tw.tsm.domain.constants.BattleConstants
 import tw.tsm.domain.constants.EHuman
+import tw.tsm.domain.constants.EWarStyle
 import tw.tsm.domain.data.NpcDef
 import tw.tsm.domain.data.NpcDropDef
 import tw.tsm.domain.enums.BattleStatus
@@ -23,6 +24,8 @@ class BattleInstance(
     val battleId: Long,
     /** 戰鬥類型（EWar） */
     val warType: Int,
+    /** DVT ffWar_Style，透過 S:011-010 傳給 client；不可由 EWar 猜測。 */
+    val warStyle: Int = EWarStyle.NORMAL,
     /** 地質資訊（影響背景） */
     val terrain: Int,
     /** 事件編號（Eve_FightData 的 eveNo） */
