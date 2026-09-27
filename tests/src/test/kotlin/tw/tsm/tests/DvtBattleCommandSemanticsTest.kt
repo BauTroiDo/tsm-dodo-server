@@ -20,10 +20,10 @@ import tw.tsm.gamelogic.battle.BattleItemResolver
 import tw.tsm.gamelogic.battle.BattleSkillResolver
 
 class DvtBattleCommandSemanticsTest {
-    private fun fighter(id: Long, col: Int, row: Int, learnedSkills: IntArray = intArrayOf()) = BattleFighter(
+    private fun fighter(id: Long, col: Int, row: Int, learnedSkills: IntArray = intArrayOf(), elementValue: Int = 1, specialEquipId: Int = 0) = BattleFighter(
         roleId=id, kind=EHuman.PLAYER, name="f$id", col=col, row=row,
-        maxHp=1000, maxSp=500, hp=1000, sp=500, level=1, element=1,
-        atk=100, def=10, agi=100, intelligence=100, skills=learnedSkills
+        maxHp=1000, maxSp=500, hp=1000, sp=500, level=1, element=elementValue,
+        atk=100, def=10, agi=100, intelligence=100, skills=learnedSkills, specialEquipItemId=specialEquipId
     )
 
     private fun skill(fightWayValue: Int) = mockk<SkillDef> {
@@ -152,6 +152,22 @@ class DvtBattleCommandSemanticsTest {
         assertFalse(battle.setPlayerAction(actor.roleId, actor.col, actor.row, action))
         assertFalse(actor.hasActed)
         assertEquals(null, actor.pendingAction)
+    }
+
+
+    @Test
+    fun `earth summon requires Lua emblem mapping`() {
+        val summonId = 10016
+        val target = fighter(2, 0, 0)
+        val valid = fighter(1, 2, 0, intArrayOf(summonId), elementValue=1, specialEquipId=23086)
+        val validBattle = fixture(valid, target, mapOf(summonId to skill(1)))
+        val action = BattleAction(BattleAction.KIND_SKILL, summonId, target.col, target.row)
+        assertTrue(validBattle.setPlayerAction(valid.roleId, valid.col, valid.row, action))
+
+        val invalid = fighter(3, 2, 0, intArrayOf(summonId), elementValue=1, specialEquipId=23087)
+        val invalidTarget = fighter(4, 0, 0)
+        val invalidBattle = fixture(invalid, invalidTarget, mapOf(summonId to skill(1)))
+        assertFalse(invalidBattle.setPlayerAction(invalid.roleId, invalid.col, invalid.row, action))
     }
 
 
