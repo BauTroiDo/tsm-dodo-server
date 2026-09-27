@@ -161,4 +161,47 @@ class DvtBattleStatusExecutionTest {
     }
 
 
+    @Test
+    fun `dispel exposes exactly the lua groups it clears`() {
+        // 10009 is listed by Lua SealSkill + VarySkill as a clear skill, but not
+        // by Faint/Spec/Strong. S:050-001 must expose those exact Attr_Kind groups.
+        val skillId = 10009
+        val resolver = BattleSkillResolver(
+            mapOf(skillId to skill(EAttribute.VARY, fightWayValue = 6, rounds = 0))
+        )
+        val attacker = fighter(1, col = 2, row = 0)
+        val ally = fighter(2, col = 2, row = 1).also {
+            it.setGroupedStatus(1, BattleStatus.ICE_BOUND, 3, 11014, 1)
+            it.setGroupedStatus(2, BattleStatus.BOUNDARY, 3, 10010, 1)
+            it.setGroupedStatus(3, BattleStatus.POISON, 3, 14015, 1)
+        }
+        val grid = BattleGrid().also {
+            it.place(attacker)
+            it.place(ally)
+        }
+
+        val result = resolver.resolveSkill(
+            attacker = attacker,
+            grid = grid,
+            skillId = skillId,
+            targetCol = ally.col,
+            targetRow = ally.row,
+            terrain = 0,
+            currentRound = 7
+        )
+
+        assertFalse(ally.groupedStatuses.containsKey(1))
+        assertFalse(ally.groupedStatuses.containsKey(2))
+        assertEquals(BattleStatus.POISON, ally.groupedStatuses[3]?.status)
+
+        val attrs = result.targets.single().attrChanges.map { it.attrKind }.toSet()
+        assertTrue(EAttribute.SEAL in attrs)
+        assertTrue(EAttribute.VARY in attrs)
+        assertFalse(EAttribute.FAINT in attrs)
+        assertFalse(EAttribute.SPEC in attrs)
+        assertFalse(EAttribute.STRONG in attrs)
+        assertFalse(EAttribute.HP in attrs)
+    }
+
+
 }
