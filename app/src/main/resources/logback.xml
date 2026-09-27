@@ -1,0 +1,37 @@
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/tsm_dodo.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/tsm_dodo.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Netty 日誌降級 -->
+    <logger name="io.netty" level="WARN"/>
+
+    <!-- Exposed SQL 日誌（INFO 會記錄每條 SQL，生產環境用 WARN） -->
+    <logger name="Exposed" level="WARN"/>
+
+    <!-- 高頻雜訊降級 -->
+    <logger name="tw.tsm.gamelogic.systems.WorldManager" level="INFO"/>
+    <logger name="tw.tsm.network.PacketDispatchHandler" level="INFO"/>
+    <logger name="tw.tsm.app.handlers.BattleCommandHandler" level="INFO"/>
+
+    <!-- 事件條件評估診斷（顯示條件 class/param/ops 判定結果） -->
+    <logger name="tw.tsm.gamelogic.systems.EveConditionEvaluator" level="DEBUG"/>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FILE"/>
+    </root>
+</configuration>

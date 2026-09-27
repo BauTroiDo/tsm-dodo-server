@@ -1,0 +1,392 @@
+=== 未映射 (type=0/7, cls=7) pStyle 事件完整上下文（前 40 件） ===
+
+## scene=10951 eve=8
+  cond#1 class=0 param=0 pStyle=0 ops=0 val=0 toResult=1 andNum=1 subItem=0
+    result#1 type=6 cls=3 param=2 pStyle=0 val=0 meanNo=1 group=0
+  cond#2 class=10 param=1 pStyle=30 ops=0 val=0 toResult=2 andNum=1 subItem=0
+    result#1 type=7 cls=7 param=0 pStyle=8 val=0 meanNo=0 group=0
+  cond#3 class=10 param=1 pStyle=31 ops=0 val=0 toResult=3 andNum=1 subItem=0
+    result#1 type=7 cls=7 param=0 pStyle=7 val=0 meanNo=0 group=0
+
+## scene=11031 eve=16
+  cond#1 class=0 param=0 pStyle=0 ops=0 val=0 toResult=1 andNum=1 subItem=0
+    result#1 type=7 cls=7 param=0 pStyle=7 val=0 meanNo=0 group=0
+
+## scene=11031 eve=21
+  cond#1 class=13 param=1 pStyle=1 ops=6 val=3 toResult=1 andNum=1 subItem=0
+    result#1 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37733 group=0
+    result#2 type=7 cls=7 param=0 pStyle=34 val=0 meanNo=0 group=0
+  cond#2 class=13 param=1 pStyle=1 ops=5 val=3 toResult=2 andNum=2 subItem=0
+    result#1 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37733 group=0
+    result#2 type=7 cls=7 param=0 pStyle=34 val=0 meanNo=0 group=0
+  cond#3 class=13 param=2 pStyle=3 ops=0 val=0 toResult=2 andNum=0 subItem=0
+  cond#4 class=13 param=1 pStyle=1 ops=5 val=3 toResult=4 andNum=2 subItem=0
+    result#1 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37734 group=0
+    result#2 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37735 group=0
+    result#3 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37736 group=0
+    result#4 type=7 cls=7 param=0 pStyle=34 val=0 meanNo=0 group=0
+  cond#5 class=13 param=2 pStyle=1 ops=0 val=0 toResult=4 andNum=0 subItem=0
+  cond#6 class=13 param=1 pStyle=1 ops=5 val=3 toResult=6 andNum=2 subItem=0
+    result#1 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37734 group=0
+    result#2 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37735 group=0
+    result#3 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37736 group=0
+    result#4 type=7 cls=7 param=0 pStyle=34 val=0 meanNo=0 group=0
+  cond#7 class=13 param=2 pStyle=2 ops=0 val=0 toResult=6 andNum=0 subItem=0
+
+## scene=11041 eve=16
+  cond#1 class=0 param=0 pStyle=0 ops=0 val=0 toResult=1 andNum=1 subItem=0
+    result#1 type=7 cls=7 param=0 pStyle=7 val=0 meanNo=0 group=0
+
+## scene=11041 eve=21
+  cond#1 class=13 param=1 pStyle=1 ops=6 val=4 toResult=1 andNum=1 subItem=0
+    result#1 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37733 group=0
+    result#2 type=7 cls=7 param=0 pStyle=34 val=0 meanNo=0 group=0
+  cond#2 class=13 param=1 pStyle=1 ops=5 val=4 toResult=2 andNum=2 subItem=0
+    result#1 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37733 group=0
+    result#2 type=7 cls=7 param=0 pStyle=34 val=0 meanNo=0 group=0
+  cond#3 class=13 param=2 pStyle=3 ops=0 val=0 toResult=2 andNum=0 subItem=0
+  cond#4 class=13 param=1 pStyle=1 ops=5 val=4 toResult=4 andNum=2 subItem=0
+    result#1 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37734 group=0
+    result#2 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37735 group=0
+    result#3 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37736 group=0
+    result#4 type=7 cls=7 param=0 pStyle=34 val=0 meanNo=0 group=0
+  cond#5 class=13 param=2 pStyle=1 ops=0 val=0 toResult=4 andNum=0 subItem=0
+  cond#6 class=13 param=1 pStyle=1 ops=5 val=4 toResult=6 andNum=2 subItem=0
+    result#1 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37734 group=0
+    result#2 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37735 group=0
+    result#3 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37736 group=0
+    result#4 type=7 cls=7 param=0 pStyle=34 val=0 meanNo=0 group=0
+  cond#7 class=13 param=2 pStyle=2 ops=0 val=0 toResult=6 andNum=0 subItem=0
+
+## scene=12001 eve=14
+  cond#1 class=0 param=0 pStyle=0 ops=0 val=0 toResult=1 andNum=1 subItem=0
+    result#1 type=1 cls=7 param=0 pStyle=0 val=0 meanNo=19032 group=0
+    result#2 type=7 cls=7 param=0 pStyle=8 val=0 meanNo=0 group=0
+
+## scene=12001 eve=18
+  cond#1 class=0 param=0 pStyle=0 ops=0 val=0 toResult=1 andNum=1 subItem=0
+    result#1 type=7 cls=7 param=0 pStyle=7 val=0 meanNo=0 group=0
+
+## scene=12001 eve=64
+  cond#1 class=7 param=0 pStyle=1 ops=1 val=30 toResult=1 andNum=1 subItem=0
+    result#1 type=1 cls=3 param=42 pStyle=0 val=0 meanNo=45702 group=0
+  cond#2 class=7 param=0 pStyle=1 ops=2 val=29 toResult=2 andNum=2 subItem=0
+    result#1 type=1 cls=3 param=42 pStyle=0 val=0 meanNo=45700 group=0
+  cond#3 class=14 param=2 pStyle=2 ops=0 val=0 toResult=2 andNum=0 subItem=0
+  cond#4 class=7 param=0 pStyle=1 ops=2 val=29 toResult=4 andNum=2 subItem=0
+    result#1 type=6 cls=3 param=42 pStyle=0 val=0 meanNo=34 group=0
+  cond#5 class=14 param=2 pStyle=1 ops=0 val=0 toResult=4 andNum=0 subItem=0
+  cond#6 class=10 param=34 pStyle=30 ops=0 val=0 toResult=6 andNum=2 subItem=0
+    result#1 type=1 cls=3 param=42 pStyle=0 val=0 meanNo=45697 group=0
+  cond#7 class=14 param=2 pStyle=3 ops=0 val=0 toResult=6 andNum=0 subItem=0
+  cond#8 class=10 param=34 pStyle=30 ops=0 val=0 toResult=8 andNum=4 subItem=0
+    result#1 type=1 cls=7 param=0 pStyle=0 val=0 meanNo=14341 group=0
+  cond#9 class=14 param=2 pStyle=4 ops=0 val=0 toResult=8 andNum=0 subItem=0
+  cond#10 class=7 param=0 pStyle=1 ops=2 val=29 toResult=8 andNum=0 subItem=0
+  cond#11 class=7 param=2 pStyle=1 ops=0 val=0 toResult=8 andNum=0 subItem=0
+  cond#12 class=10 param=34 pStyle=30 ops=0 val=0 toResult=12 andNum=4 subItem=0
+    result#1 type=1 cls=3 param=42 pStyle=0 val=0 meanNo=45698 group=0
+    result#2 type=10 cls=7 param=1 pStyle=27 val=0 meanNo=0 group=0
+  cond#13 class=14 param=2 pStyle=4 ops=0 val=0 toResult=12 andNum=0 subItem=0
+  cond#14 class=7 param=0 pStyle=1 ops=2 val=29 toResult=12 andNum=0 subItem=0
+  cond#15 class=7 param=2 pStyle=2 ops=0 val=0 toResult=12 andNum=0 subItem=0
+  cond#16 class=10 param=34 pStyle=31 ops=0 val=0 toResult=16 andNum=1 subItem=0
+    result#1 type=1 cls=3 param=42 pStyle=0 val=0 meanNo=45699 group=0
+  cond#17 class=10 param=34 pStyle=32 ops=0 val=0 toResult=17 andNum=1 subItem=0
+    result#1 type=7 cls=7 param=0 pStyle=38 val=0 meanNo=0 group=0
+
+## scene=12003 eve=32
+  cond#1 class=0 param=0 pStyle=0 ops=0 val=0 toResult=1 andNum=1 subItem=0
+    result#1 type=7 cls=7 param=0 pStyle=17 val=0 meanNo=0 group=0
+
+## scene=12071 eve=16
+  cond#1 class=0 param=0 pStyle=0 ops=0 val=0 toResult=1 andNum=1 subItem=0
+    result#1 type=7 cls=7 param=0 pStyle=7 val=0 meanNo=0 group=0
+
+## scene=12071 eve=21
+  cond#1 class=13 param=1 pStyle=1 ops=6 val=1 toResult=1 andNum=1 subItem=0
+    result#1 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37733 group=0
+    result#2 type=7 cls=7 param=0 pStyle=34 val=0 meanNo=0 group=0
+  cond#2 class=13 param=1 pStyle=1 ops=5 val=1 toResult=2 andNum=2 subItem=0
+    result#1 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37733 group=0
+    result#2 type=7 cls=7 param=0 pStyle=34 val=0 meanNo=0 group=0
+  cond#3 class=13 param=2 pStyle=3 ops=0 val=0 toResult=2 andNum=0 subItem=0
+  cond#4 class=13 param=1 pStyle=1 ops=5 val=1 toResult=4 andNum=2 subItem=0
+    result#1 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37734 group=0
+    result#2 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37735 group=0
+    result#3 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37736 group=0
+    result#4 type=7 cls=7 param=0 pStyle=34 val=0 meanNo=0 group=0
+  cond#5 class=13 param=2 pStyle=1 ops=0 val=0 toResult=4 andNum=0 subItem=0
+  cond#6 class=13 param=1 pStyle=1 ops=5 val=1 toResult=6 andNum=2 subItem=0
+    result#1 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37734 group=0
+    result#2 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37735 group=0
+    result#3 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37736 group=0
+    result#4 type=7 cls=7 param=0 pStyle=34 val=0 meanNo=0 group=0
+  cond#7 class=13 param=2 pStyle=2 ops=0 val=0 toResult=6 andNum=0 subItem=0
+
+## scene=12081 eve=16
+  cond#1 class=0 param=0 pStyle=0 ops=0 val=0 toResult=1 andNum=1 subItem=0
+    result#1 type=7 cls=7 param=0 pStyle=7 val=0 meanNo=0 group=0
+
+## scene=12081 eve=21
+  cond#1 class=13 param=1 pStyle=1 ops=6 val=2 toResult=1 andNum=1 subItem=0
+    result#1 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37733 group=0
+    result#2 type=7 cls=7 param=0 pStyle=34 val=0 meanNo=0 group=0
+  cond#2 class=13 param=1 pStyle=1 ops=5 val=2 toResult=2 andNum=2 subItem=0
+    result#1 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37733 group=0
+    result#2 type=7 cls=7 param=0 pStyle=34 val=0 meanNo=0 group=0
+  cond#3 class=13 param=2 pStyle=3 ops=0 val=0 toResult=2 andNum=0 subItem=0
+  cond#4 class=13 param=1 pStyle=1 ops=5 val=2 toResult=4 andNum=2 subItem=0
+    result#1 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37734 group=0
+    result#2 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37735 group=0
+    result#3 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37736 group=0
+    result#4 type=7 cls=7 param=0 pStyle=34 val=0 meanNo=0 group=0
+  cond#5 class=13 param=2 pStyle=1 ops=0 val=0 toResult=4 andNum=0 subItem=0
+  cond#6 class=13 param=1 pStyle=1 ops=5 val=2 toResult=6 andNum=2 subItem=0
+    result#1 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37734 group=0
+    result#2 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37735 group=0
+    result#3 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37736 group=0
+    result#4 type=7 cls=7 param=0 pStyle=34 val=0 meanNo=0 group=0
+  cond#7 class=13 param=2 pStyle=2 ops=0 val=0 toResult=6 andNum=0 subItem=0
+
+## scene=12180 eve=6
+  cond#1 class=0 param=0 pStyle=0 ops=0 val=0 toResult=1 andNum=1 subItem=0
+    result#1 type=6 cls=3 param=7 pStyle=0 val=0 meanNo=4 group=0
+  cond#2 class=10 param=4 pStyle=30 ops=0 val=0 toResult=2 andNum=1 subItem=0
+    result#1 type=1 cls=3 param=7 pStyle=0 val=0 meanNo=33108 group=0
+    result#2 type=1 cls=3 param=7 pStyle=0 val=0 meanNo=33109 group=0
+    result#3 type=0 cls=2 param=11493 pStyle=1 val=1 meanNo=0 group=0
+  cond#3 class=10 param=4 pStyle=31 ops=0 val=0 toResult=3 andNum=1 subItem=0
+    result#1 type=1 cls=3 param=7 pStyle=0 val=0 meanNo=33110 group=0
+    result#2 type=1 cls=3 param=7 pStyle=0 val=0 meanNo=33111 group=0
+    result#3 type=1 cls=3 param=7 pStyle=0 val=0 meanNo=33112 group=0
+    result#4 type=1 cls=3 param=7 pStyle=0 val=0 meanNo=33113 group=0
+  cond#4 class=10 param=4 pStyle=32 ops=0 val=0 toResult=4 andNum=1 subItem=0
+    result#1 type=7 cls=7 param=0 pStyle=22 val=0 meanNo=0 group=0
+
+## scene=12711 eve=5
+  cond#1 class=0 param=0 pStyle=0 ops=0 val=0 toResult=1 andNum=1 subItem=0
+    result#1 type=1 cls=3 param=3 pStyle=0 val=0 meanNo=28300 group=0
+    result#2 type=7 cls=7 param=0 pStyle=20 val=0 meanNo=0 group=0
+
+## scene=12721 eve=9
+  cond#1 class=0 param=0 pStyle=0 ops=0 val=0 toResult=1 andNum=1 subItem=0
+    result#1 type=1 cls=3 param=1 pStyle=0 val=0 meanNo=42858 group=0
+    result#2 type=6 cls=3 param=1 pStyle=0 val=0 meanNo=2 group=0
+  cond#2 class=10 param=2 pStyle=30 ops=0 val=0 toResult=2 andNum=1 subItem=0
+    result#1 type=1 cls=3 param=1 pStyle=0 val=0 meanNo=42867 group=0
+    result#2 type=1 cls=3 param=1 pStyle=0 val=0 meanNo=42868 group=0
+    result#3 type=1 cls=3 param=1 pStyle=0 val=0 meanNo=42869 group=0
+    result#4 type=1 cls=3 param=1 pStyle=0 val=0 meanNo=42870 group=0
+    result#5 type=1 cls=3 param=1 pStyle=0 val=0 meanNo=46183 group=0
+    result#6 type=1 cls=3 param=1 pStyle=0 val=0 meanNo=46184 group=0
+  cond#3 class=10 param=2 pStyle=31 ops=0 val=0 toResult=3 andNum=2 subItem=0
+    result#1 type=1 cls=3 param=1 pStyle=0 val=0 meanNo=42933 group=0
+  cond#4 class=7 param=18 pStyle=1 ops=0 val=0 toResult=3 andNum=0 subItem=1
+  cond#5 class=10 param=2 pStyle=31 ops=0 val=0 toResult=5 andNum=3 subItem=0
+    result#1 type=1 cls=3 param=1 pStyle=0 val=0 meanNo=46326 group=0
+  cond#6 class=7 param=18 pStyle=2 ops=0 val=0 toResult=5 andNum=0 subItem=0
+  cond#7 class=2 param=11980 pStyle=1 ops=2 val=29 toResult=5 andNum=0 subItem=0
+  cond#8 class=10 param=2 pStyle=31 ops=0 val=0 toResult=8 andNum=6 subItem=0
+    result#1 type=1 cls=3 param=1 pStyle=0 val=0 meanNo=42872 group=0
+    result#2 type=1 cls=3 param=1 pStyle=0 val=0 meanNo=42873 group=0
+    result#3 type=1 cls=3 param=1 pStyle=0 val=0 meanNo=46011 group=0
+    result#4 type=1 cls=3 param=1 pStyle=0 val=0 meanNo=46012 group=0
+    result#5 type=10 cls=7 param=1 pStyle=22 val=0 meanNo=0 group=0
+  cond#9 class=7 param=18 pStyle=2 ops=0 val=0 toResult=8 andNum=0 subItem=0
+  cond#10 class=7 param=15 pStyle=3 ops=2 val=1 toResult=8 andNum=0 subItem=0
+  cond#11 class=7 param=15 pStyle=1 ops=0 val=0 toResult=8 andNum=0 subItem=0
+  cond#12 class=12 param=5 pStyle=0 ops=5 val=0 toResult=8 andNum=0 subItem=0
+  cond#13 class=2 param=11980 pStyle=2 ops=0 val=0 toResult=8 andNum=0 subItem=0
+  cond#14 class=10 param=2 pStyle=31 ops=0 val=0 toResult=14 andNum=2 subItem=0
+    result#1 type=1 cls=3 param=1 pStyle=0 val=0 meanNo=42867 group=0
+    result#2 type=1 cls=3 param=1 pStyle=0 val=0 meanNo=42868 group=0
+    result#3 type=1 cls=3 param=1 pStyle=0 val=0 meanNo=42869 group=0
+    result#4 type=1 cls=3 param=1 pStyle=0 val=0 meanNo=42870 group=0
+    result#5 type=1 cls=3 param=1 pStyle=0 val=0 meanNo=42871 group=0
+  cond#15 class=7 param=18 pStyle=2 ops=0 val=0 toResult=14 andNum=0 subItem=0
+  cond#16 class=10 param=2 pStyle=32 ops=0 val=0 toResult=16 andNum=2 subItem=0
+    result#1 type=7 cls=7 param=0 pStyle=36 val=0 meanNo=0 group=0
+  cond#17 class=7 param=18 pStyle=1 ops=0 val=0 toResult=16 andNum=0 subItem=2
+  cond#18 class=10 param=2 pStyle=32 ops=0 val=0 toResult=18 andNum=2 subItem=0
+    result#1 type=1 cls=3 param=1 pStyle=0 val=0 meanNo=42875 group=0
+  cond#19 class=7 param=18 pStyle=2 ops=0 val=0 toResult=18 andNum=0 subItem=0
+  cond#20 class=10 param=2 pStyle=32 ops=0 val=0 toResult=20 andNum=2 subItem=0
+    result#1 type=1 cls=3 param=1 pStyle=0 val=0 meanNo=42906 group=0
+  cond#21 class=7 param=18 pStyle=1 ops=0 val=0 toResult=20 andNum=0 subItem=4
+  cond#22 class=10 param=2 pStyle=32 ops=0 val=0 toResult=22 andNum=2 subItem=0
+    result#1 type=1 cls=3 param=1 pStyle=0 val=0 meanNo=42876 group=0
+  cond#23 class=7 param=18 pStyle=1 ops=0 val=0 toResult=22 andNum=0 subItem=3
+  cond#24 class=10 param=2 pStyle=32 ops=0 val=0 toResult=24 andNum=2 subItem=0
+    result#1 type=1 cls=3 param=1 pStyle=0 val=0 meanNo=42907 group=0
+  cond#25 class=7 param=18 pStyle=1 ops=0 val=0 toResult=24 andNum=0 subItem=5
+  cond#26 class=10 param=2 pStyle=33 ops=0 val=0 toResult=26 andNum=4 subItem=0
+    result#1 type=0 cls=2 param=11980 pStyle=1 val=10 meanNo=0 group=1
+    result#2 type=0 cls=2 param=11980 pStyle=1 val=20 meanNo=0 group=1
+  cond#27 class=7 param=18 pStyle=1 ops=0 val=0 toResult=26 andNum=0 subItem=3
+  cond#28 class=2 param=11980 pStyle=2 ops=0 val=0 toResult=26 andNum=0 subItem=0
+  cond#29 class=2 param=3 pStyle=1 ops=0 val=0 toResult=26 andNum=0 subItem=0
+  cond#30 class=2 param=11980 pStyle=1 ops=5 val=10 toResult=30 andNum=1 subItem=0
+    result#1 type=1 cls=3 param=1 pStyle=0 val=0 meanNo=42879 group=0
+    result#2 type=6 cls=3 param=1 pStyle=0 val=0 meanNo=1 group=0
+
+## scene=12911 eve=3
+  cond#1 class=0 param=0 pStyle=0 ops=0 val=0 toResult=1 andNum=1 subItem=0
+    result#1 type=1 cls=3 param=3 pStyle=0 val=0 meanNo=13844 group=0
+    result#2 type=6 cls=3 param=3 pStyle=0 val=0 meanNo=1 group=0
+  cond#2 class=10 param=1 pStyle=30 ops=0 val=0 toResult=2 andNum=1 subItem=0
+    result#1 type=1 cls=3 param=3 pStyle=0 val=0 meanNo=13894 group=0
+    result#2 type=7 cls=7 param=0 pStyle=14 val=0 meanNo=0 group=0
+  cond#3 class=10 param=1 pStyle=31 ops=0 val=0 toResult=3 andNum=2 subItem=0
+    result#1 type=1 cls=3 param=3 pStyle=0 val=0 meanNo=10562 group=0
+  cond#4 class=7 param=2 pStyle=1 ops=0 val=0 toResult=3 andNum=0 subItem=0
+  cond#5 class=10 param=1 pStyle=31 ops=0 val=0 toResult=5 andNum=2 subItem=0
+    result#1 type=1 cls=3 param=3 pStyle=0 val=0 meanNo=13897 group=0
+    result#2 type=0 cls=1 param=46047 pStyle=1 val=1 meanNo=0 group=0
+  cond#6 class=7 param=2 pStyle=2 ops=0 val=0 toResult=5 andNum=0 subItem=0
+
+## scene=18001 eve=15
+  cond#1 class=0 param=0 pStyle=0 ops=0 val=0 toResult=1 andNum=1 subItem=0
+    result#1 type=1 cls=7 param=0 pStyle=0 val=0 meanNo=19032 group=0
+    result#2 type=7 cls=7 param=0 pStyle=8 val=0 meanNo=0 group=0
+
+## scene=19031 eve=16
+  cond#1 class=0 param=0 pStyle=0 ops=0 val=0 toResult=1 andNum=1 subItem=0
+    result#1 type=7 cls=7 param=0 pStyle=7 val=0 meanNo=0 group=0
+
+## scene=19031 eve=21
+  cond#1 class=13 param=1 pStyle=1 ops=6 val=5 toResult=1 andNum=1 subItem=0
+    result#1 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37733 group=0
+    result#2 type=7 cls=7 param=0 pStyle=34 val=0 meanNo=0 group=0
+  cond#2 class=13 param=1 pStyle=1 ops=5 val=5 toResult=2 andNum=2 subItem=0
+    result#1 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37733 group=0
+    result#2 type=7 cls=7 param=0 pStyle=34 val=0 meanNo=0 group=0
+  cond#3 class=13 param=2 pStyle=3 ops=0 val=0 toResult=2 andNum=0 subItem=0
+  cond#4 class=13 param=1 pStyle=1 ops=5 val=5 toResult=4 andNum=2 subItem=0
+    result#1 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37734 group=0
+    result#2 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37735 group=0
+    result#3 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37736 group=0
+    result#4 type=7 cls=7 param=0 pStyle=34 val=0 meanNo=0 group=0
+  cond#5 class=13 param=2 pStyle=1 ops=0 val=0 toResult=4 andNum=0 subItem=0
+  cond#6 class=13 param=1 pStyle=1 ops=5 val=5 toResult=6 andNum=2 subItem=0
+    result#1 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37734 group=0
+    result#2 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37735 group=0
+    result#3 type=1 cls=3 param=19 pStyle=0 val=0 meanNo=37736 group=0
+    result#4 type=7 cls=7 param=0 pStyle=34 val=0 meanNo=0 group=0
+  cond#7 class=13 param=2 pStyle=2 ops=0 val=0 toResult=6 andNum=0 subItem=0
+
+## scene=21002 eve=27
+  cond#1 class=0 param=0 pStyle=0 ops=0 val=0 toResult=1 andNum=1 subItem=0
+    result#1 type=1 cls=7 param=0 pStyle=0 val=0 meanNo=19032 group=0
+    result#2 type=7 cls=7 param=0 pStyle=8 val=0 meanNo=0 group=0
+
+## scene=49403 eve=7
+  cond#1 class=0 param=0 pStyle=0 ops=0 val=0 toResult=1 andNum=1 subItem=0
+    result#1 type=7 cls=7 param=0 pStyle=33 val=0 meanNo=0 group=0
+
+## scene=49409 eve=7
+  cond#1 class=0 param=0 pStyle=0 ops=0 val=0 toResult=1 andNum=1 subItem=0
+    result#1 type=7 cls=7 param=0 pStyle=33 val=0 meanNo=0 group=0
+
+## scene=49413 eve=7
+  cond#1 class=0 param=0 pStyle=0 ops=0 val=0 toResult=1 andNum=1 subItem=0
+    result#1 type=7 cls=7 param=0 pStyle=33 val=0 meanNo=0 group=0
+
+## scene=49419 eve=7
+  cond#1 class=0 param=0 pStyle=0 ops=0 val=0 toResult=1 andNum=1 subItem=0
+    result#1 type=7 cls=7 param=0 pStyle=33 val=0 meanNo=0 group=0
+
+## scene=49423 eve=7
+  cond#1 class=0 param=0 pStyle=0 ops=0 val=0 toResult=1 andNum=1 subItem=0
+    result#1 type=7 cls=7 param=0 pStyle=33 val=0 meanNo=0 group=0
+
+## scene=49429 eve=7
+  cond#1 class=0 param=0 pStyle=0 ops=0 val=0 toResult=1 andNum=1 subItem=0
+    result#1 type=7 cls=7 param=0 pStyle=33 val=0 meanNo=0 group=0
+
+## scene=49433 eve=7
+  cond#1 class=0 param=0 pStyle=0 ops=0 val=0 toResult=1 andNum=1 subItem=0
+    result#1 type=7 cls=7 param=0 pStyle=33 val=0 meanNo=0 group=0
+
+## scene=49439 eve=7
+  cond#1 class=0 param=0 pStyle=0 ops=0 val=0 toResult=1 andNum=1 subItem=0
+    result#1 type=7 cls=7 param=0 pStyle=33 val=0 meanNo=0 group=0
+
+## scene=49443 eve=7
+  cond#1 class=0 param=0 pStyle=0 ops=0 val=0 toResult=1 andNum=1 subItem=0
+    result#1 type=7 cls=7 param=0 pStyle=33 val=0 meanNo=0 group=0
+
+## scene=49449 eve=7
+  cond#1 class=0 param=0 pStyle=0 ops=0 val=0 toResult=1 andNum=1 subItem=0
+    result#1 type=7 cls=7 param=0 pStyle=33 val=0 meanNo=0 group=0
+
+=== conditionClass=13 細項分佈 ===
+scenes: [11031, 11041, 11202, 11203, 11264, 11265, 12071, 12081, 12180, 12205, 12206, 12244, 12266, 12267, 19031, 19201, 19263]
+param=0 pStyle=1 ops=1 val=1 count=11
+param=0 pStyle=1 ops=2 val=0 count=3
+param=1 pStyle=1 ops=5 val=1 count=8
+param=1 pStyle=1 ops=5 val=2 count=8
+param=1 pStyle=1 ops=5 val=3 count=8
+param=1 pStyle=1 ops=5 val=4 count=8
+param=1 pStyle=1 ops=5 val=5 count=8
+param=1 pStyle=1 ops=6 val=1 count=2
+param=1 pStyle=1 ops=6 val=2 count=2
+param=1 pStyle=1 ops=6 val=3 count=2
+param=1 pStyle=1 ops=6 val=4 count=2
+param=1 pStyle=1 ops=6 val=5 count=2
+param=1 pStyle=2 ops=0 val=0 count=10
+param=2 pStyle=1 ops=0 val=0 count=10
+param=2 pStyle=2 ops=0 val=0 count=10
+param=2 pStyle=3 ops=0 val=0 count=5
+
+=== 未支援 resultClass（type=0/7 才需處理）出現位置 ===
+resultClass=11 共 35 筆
+    scene=11572 eve=2 type=0 param=0 pStyle=1 val=50
+    scene=11572 eve=2 type=0 param=0 pStyle=3 val=100
+    scene=11572 eve=2 type=0 param=0 pStyle=4 val=100
+    scene=11572 eve=2 type=0 param=0 pStyle=5 val=100
+    scene=11572 eve=2 type=0 param=0 pStyle=2 val=100
+    scene=26522 eve=5 type=0 param=0 pStyle=1 val=100
+    scene=26522 eve=5 type=0 param=0 pStyle=2 val=100
+    scene=26522 eve=5 type=0 param=0 pStyle=3 val=100
+    scene=26522 eve=5 type=0 param=0 pStyle=4 val=100
+    scene=26522 eve=5 type=0 param=0 pStyle=5 val=100
+    scene=26525 eve=10 type=0 param=0 pStyle=1 val=500
+    scene=26525 eve=10 type=0 param=0 pStyle=2 val=1000
+    scene=26525 eve=10 type=0 param=0 pStyle=3 val=1000
+    scene=26525 eve=10 type=0 param=0 pStyle=4 val=300
+    scene=26525 eve=10 type=0 param=0 pStyle=5 val=100
+resultClass=13 共 89 筆
+    scene=10989 eve=4 type=0 param=0 pStyle=1 val=52
+    scene=11021 eve=11 type=0 param=0 pStyle=1 val=40
+    scene=12001 eve=51 type=0 param=0 pStyle=1 val=12
+    scene=12001 eve=51 type=0 param=0 pStyle=1 val=13
+    scene=12001 eve=97 type=0 param=0 pStyle=1 val=12
+    scene=12001 eve=97 type=0 param=0 pStyle=1 val=13
+    scene=12002 eve=19 type=0 param=0 pStyle=1 val=49
+    scene=12003 eve=24 type=0 param=0 pStyle=1 val=69
+    scene=12003 eve=24 type=0 param=0 pStyle=1 val=70
+    scene=12003 eve=24 type=0 param=0 pStyle=1 val=71
+    scene=12003 eve=24 type=0 param=0 pStyle=1 val=72
+    scene=12003 eve=24 type=0 param=0 pStyle=1 val=73
+    scene=12003 eve=24 type=0 param=0 pStyle=1 val=74
+    scene=12003 eve=24 type=0 param=0 pStyle=1 val=75
+    scene=12003 eve=24 type=0 param=0 pStyle=1 val=76
+resultClass=14 共 33 筆
+    scene=10852 eve=19 type=0 param=1 pStyle=1 val=1
+    scene=10951 eve=34 type=0 param=1 pStyle=1 val=1
+    scene=10951 eve=34 type=0 param=1 pStyle=2 val=1
+    scene=10951 eve=34 type=0 param=1 pStyle=3 val=0
+    scene=12002 eve=28 type=0 param=189 pStyle=1 val=1
+    scene=12002 eve=28 type=0 param=189 pStyle=1 val=10
+    scene=12002 eve=28 type=0 param=189 pStyle=1 val=20
+    scene=12002 eve=29 type=0 param=189 pStyle=1 val=1
+    scene=12002 eve=29 type=0 param=189 pStyle=1 val=5
+    scene=12002 eve=29 type=0 param=189 pStyle=1 val=10
+    scene=12002 eve=29 type=0 param=189 pStyle=1 val=50
+    scene=12003 eve=71 type=0 param=189 pStyle=1 val=1
+    scene=12003 eve=71 type=0 param=189 pStyle=1 val=5
+    scene=12003 eve=71 type=0 param=189 pStyle=1 val=10
+    scene=12003 eve=71 type=0 param=189 pStyle=1 val=50
+resultClass=15 共 1 筆
+    scene=10821 eve=3 type=0 param=1 pStyle=1 val=0

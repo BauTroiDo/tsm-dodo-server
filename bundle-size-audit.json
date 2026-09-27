@@ -1,0 +1,12 @@
+[
+  {
+    "name": "common0_bod040",
+    "expected": 136000,
+    "actual": 925169
+  },
+  {
+    "name": "common0_bod152",
+    "expected": 930720,
+    "actual": 2000761
+  }
+]

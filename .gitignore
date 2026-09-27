@@ -1,0 +1,137 @@
+# ============================================================
+# TS ONLINE / TSM DODO - GITIGNORE
+# ============================================================
+
+# ---------- SECRETS / PRIVATE KEYS ----------
+*.key
+*.pfx
+*.p12
+*.jks
+*.keystore
+
+.env
+.env.*
+!.env.example
+
+# Tuyệt đối không upload private certificate keys
+cdn/cert/*.key
+
+# ---------- KOTLIN / GRADLE ----------
+.gradle/
+**/.gradle/
+
+build/
+**/build/
+
+out/
+**/out/
+
+*.class
+
+# ---------- INTELLIJ IDEA ----------
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# ---------- VS CODE ----------
+.vscode/
+
+# ---------- LOGS ----------
+*.log
+logs/
+**/logs/
+
+# ---------- TEMP / CACHE ----------
+*.tmp
+*.temp
+*.cache
+*.bak
+*.old
+*.swp
+*.swo
+*~
+
+tmp/
+temp/
+cache/
+
+# ---------- WINDOWS ----------
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ---------- MAC ----------
+.DS_Store
+
+# ---------- ARCHIVES / BACKUPS ----------
+*.zip
+*.7z
+*.rar
+*.tar
+*.gz
+
+backup/
+backups/
+
+# ---------- DATABASE BACKUPS ----------
+*.sql.gz
+*.dump
+
+# ---------- RUNTIME PID ----------
+*.pid
+# =========================================================
+# LARGE GAME DATA - KHÔNG ĐƯA LÊN GITHUB
+# =========================================================
+
+# CDN runtime/resources
+cdn/
+
+# APK
+*.apk
+*.aab
+
+# Archives
+*.zip
+*.7z
+*.rar
+*.tar
+*.gz
+
+# Compiled/binary output
+*.class
+*.exe
+*.dll
+
+# Gradle/build
+.gradle/
+**/.gradle/
+build/
+**/build/
+out/
+**/out/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Secrets
+*.key
+*.pfx
+*.p12
+*.jks
+*.keystore
+.env
+.env.*
+
+# Logs/temp
+*.log
+*.tmp
+*.bak
+*.old
+
+# Windows
+Thumbs.db
+Desktop.ini

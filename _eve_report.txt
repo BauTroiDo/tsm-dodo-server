@@ -1,0 +1,566 @@
+=== Eve.emg 全量分析 ===
+場景目錄 3823 筆，解析成功 3823，失敗 0
+事件 25457 / 條件 77001 / 結果 164910
+
+--- conditionClass 分佈（*=伺服器未支援） ---
+class=0   count=17857  scenes=3746
+class=1   count=4704   scenes=781
+class=2   count=29381  scenes=1990
+class=3   count=783    scenes=497
+class=4   count=36     scenes=16
+class=5   count=142    scenes=51
+class=7   count=8531   scenes=1148
+class=8   count=6242   scenes=1100
+class=9   count=2102   scenes=388
+class=10  count=6055   scenes=822
+class=11  count=76     scenes=76
+class=12  count=662    scenes=124
+class=13  count=99     scenes=17 *未支援*
+class=14  count=291    scenes=47
+class=15  count=4      scenes=2
+class=16  count=9      scenes=6 *未支援*
+class=17  count=16     scenes=2 *未支援*
+class=18  count=11     scenes=3
+
+--- 未支援 conditionClass 範例 ---
+class=13 scene=11031 eve=21 name=靴糾李 param=1 pStyle=1 ops=6 val=3
+class=13 scene=11031 eve=21 name=靴糾李 param=1 pStyle=1 ops=5 val=3
+class=13 scene=11031 eve=21 name=靴糾李 param=2 pStyle=3 ops=0 val=0
+class=13 scene=11031 eve=21 name=靴糾李 param=1 pStyle=1 ops=5 val=3
+class=13 scene=11031 eve=21 name=靴糾李 param=2 pStyle=1 ops=0 val=0
+class=13 scene=11031 eve=21 name=靴糾李 param=1 pStyle=1 ops=5 val=3
+class=13 scene=11031 eve=21 name=靴糾李 param=2 pStyle=2 ops=0 val=0
+class=13 scene=11031 eve=23 name=靴糾李 param=1 pStyle=1 ops=5 val=3
+class=16 scene=12721 eve=15 name=旨絆78 param=65167 pStyle=1 ops=2 val=0
+class=16 scene=12721 eve=15 name=旨絆78 param=65167 pStyle=1 ops=5 val=0
+class=16 scene=24401 eve=8 name=靴糾李 param=20059 pStyle=1 ops=2 val=0
+class=16 scene=25481 eve=13 name=危跺約燼 param=22945 pStyle=1 ops=1 val=1
+class=16 scene=25481 eve=13 name=危跺約燼 param=22945 pStyle=1 ops=2 val=0
+class=16 scene=25481 eve=13 name=危跺約燼 param=22945 pStyle=1 ops=1 val=1
+class=16 scene=32101 eve=4 name=綏深糠慈 param=29348 pStyle=1 ops=2 val=0
+class=16 scene=32102 eve=4 name=綏深糠慈 param=29347 pStyle=1 ops=2 val=0
+class=17 scene=12721 eve=16 name=字倖杏粗 param=0 pStyle=1 ops=5 val=0
+class=17 scene=12721 eve=16 name=字倖杏粗 param=0 pStyle=1 ops=5 val=0
+class=17 scene=12721 eve=16 name=字倖杏粗 param=0 pStyle=1 ops=5 val=0
+class=17 scene=12721 eve=16 name=字倖杏粗 param=0 pStyle=1 ops=5 val=0
+class=17 scene=12721 eve=16 name=字倖杏粗 param=3 pStyle=3 ops=5 val=0
+class=17 scene=12721 eve=16 name=字倖杏粗 param=0 pStyle=2 ops=6 val=10
+class=17 scene=12721 eve=16 name=字倖杏粗 param=3 pStyle=3 ops=5 val=0
+class=17 scene=12721 eve=16 name=字倖杏粗 param=0 pStyle=2 ops=5 val=10
+
+--- conditionClass=7 param 分佈（*=未支援） ---
+param=0   count=2695
+param=1   count=106 *未支援*
+param=2   count=2972
+param=3   count=325
+param=4   count=8 *未支援*
+param=5   count=838
+param=6   count=568
+param=7   count=54 *未支援*
+param=8   count=468 *未支援*
+param=9   count=41 *未支援*
+param=10  count=176 *未支援*
+param=11  count=10 *未支援*
+param=12  count=97 *未支援*
+param=14  count=32 *未支援*
+param=15  count=20 *未支援*
+param=16  count=77
+param=18  count=38 *未支援*
+param=19  count=6 *未支援*
+
+--- conditionClass 細項 Top 60（class,param,pStyle,ops） ---
+class=0 param=0 pStyle=0 ops=0 count=17857
+class=8 param=0 pStyle=1 ops=0 count=1821
+class=7 param=0 pStyle=1 ops=2 count=1581
+class=7 param=2 pStyle=2 ops=0 count=1499
+class=7 param=2 pStyle=1 ops=0 count=1238
+class=8 param=0 pStyle=2 ops=0 count=1183
+class=8 param=0 pStyle=3 ops=0 count=1129
+class=9 param=0 pStyle=1 ops=6 count=959
+class=10 param=1 pStyle=30 ops=0 count=944
+class=9 param=0 pStyle=1 ops=5 count=756
+class=10 param=1 pStyle=31 ops=0 count=599
+class=7 param=5 pStyle=2 ops=0 count=496
+class=7 param=0 pStyle=1 ops=1 count=452
+class=7 param=8 pStyle=1 ops=5 count=438
+class=10 param=2 pStyle=30 ops=0 count=419
+class=3 param=1 pStyle=4 ops=5 count=410
+class=7 param=6 pStyle=3 ops=6 count=366
+class=7 param=5 pStyle=1 ops=0 count=342
+class=2 param=12106 pStyle=1 ops=5 count=337
+class=10 param=3 pStyle=30 ops=0 count=314
+class=2 param=2 pStyle=10 ops=0 count=266
+class=10 param=2 pStyle=31 ops=0 count=253
+class=10 param=3 pStyle=31 ops=0 count=215
+class=2 param=2 pStyle=9 ops=0 count=213
+class=10 param=1 pStyle=32 ops=0 count=200
+class=7 param=6 pStyle=3 ops=5 count=198
+class=7 param=0 pStyle=1 ops=4 count=191
+class=14 param=0 pStyle=0 ops=2 count=183
+class=12 param=0 pStyle=1 ops=5 count=173
+class=8 param=1 pStyle=1 ops=0 count=169
+class=10 param=4 pStyle=30 ops=0 count=164
+class=7 param=0 pStyle=3 ops=6 count=163
+class=12 param=0 pStyle=1 ops=2 count=157
+class=7 param=0 pStyle=2 ops=5 count=157
+class=10 param=5 pStyle=30 ops=0 count=150
+class=7 param=0 pStyle=3 ops=5 count=149
+class=3 param=2 pStyle=4 ops=5 count=139
+class=8 param=1 pStyle=2 ops=0 count=136
+class=8 param=1 pStyle=3 ops=0 count=136
+class=2 param=12130 pStyle=1 ops=5 count=127
+class=10 param=6 pStyle=30 ops=0 count=125
+class=10 param=4 pStyle=31 ops=0 count=124
+class=2 param=10037 pStyle=3 ops=5 count=123
+class=2 param=10715 pStyle=3 ops=5 count=121
+class=2 param=11958 pStyle=1 ops=5 count=119
+class=7 param=10 pStyle=1 ops=2 count=119
+class=7 param=2 pStyle=4 ops=2 count=116
+class=2 param=11912 pStyle=1 ops=5 count=112
+class=10 param=2 pStyle=32 ops=0 count=111
+class=10 param=5 pStyle=31 ops=0 count=107
+class=7 param=3 pStyle=6 ops=5 count=105
+class=8 param=2 pStyle=1 ops=0 count=103
+class=10 param=7 pStyle=30 ops=0 count=99
+class=2 param=10690 pStyle=7 ops=5 count=99
+class=2 param=11616 pStyle=1 ops=5 count=96
+class=2 param=11612 pStyle=1 ops=5 count=95
+class=2 param=11606 pStyle=1 ops=5 count=95
+class=2 param=10691 pStyle=4 ops=5 count=94
+class=1 param=29204 pStyle=1 ops=2 count=90
+class=5 param=0 pStyle=1 ops=2 count=87
+
+--- resultType 分佈 ---
+type=0   count=55156
+type=1   count=70455
+type=2   count=10058
+type=3   count=23504
+type=4   count=211
+type=5   count=230
+type=6   count=2617
+type=7   count=727
+type=8   count=226
+type=9   count=1611
+type=10  count=115
+
+--- resultClass 分佈（*=伺服器未支援） ---
+class=0   count=23734
+class=1   count=8248
+class=2   count=11852
+class=3   count=90514
+class=4   count=34
+class=5   count=402
+class=7   count=28125
+class=8   count=485
+class=10  count=1337
+class=11  count=35 *未支援*
+class=12  count=21 *未支援*
+class=13  count=89 *未支援*
+class=14  count=33 *未支援*
+class=15  count=1 *未支援*
+
+--- (type,class,pStyle) 組合 Top 80 ---
+type=1 cls=3 pStyle=0 count=54764 scenes=[10701,10801,10802,10803,10804]
+type=3 cls=0 pStyle=0 count=23504 scenes=[10803,10804,10851,10920,10951]
+type=0 cls=3 pStyle=3 count=17104 scenes=[10821,10852,10951,10965,10966]
+type=1 cls=7 pStyle=0 count=15670 scenes=[10801,10802,10803,10804,10805]
+type=0 cls=3 pStyle=4 count=13341 scenes=[10821,10852,10965,10966,10995]
+type=2 cls=7 pStyle=0 count=10058 scenes=[10801,10802,10803,10804,10805]
+type=0 cls=2 pStyle=1 count=8861  scenes=[10801,10802,10803,10821,10851]
+type=0 cls=1 pStyle=1 count=7901  scenes=[10851,10852,10853,10854,10855]
+type=0 cls=2 pStyle=3 count=2381  scenes=[10851,10852,10961,10965,10966]
+type=6 cls=3 pStyle=0 count=2378  scenes=[10821,10851,10852,10853,10854]
+type=0 cls=10 pStyle=2 count=1335  scenes=[10851,10852,10853,10854,10855]
+type=9 cls=3 pStyle=2 count=1178  scenes=[11031,11041,11423,11431,11505]
+type=0 cls=7 pStyle=6 count=860   scenes=[10851,11002,11003,11012,11242]
+type=0 cls=3 pStyle=5 count=788   scenes=[10852,10951,11131,11171,11173]
+type=9 cls=3 pStyle=1 count=433   scenes=[10801,10995,11301,11423,12001]
+type=0 cls=2 pStyle=2 count=372   scenes=[10821,10991,10994,12002,12003]
+type=0 cls=8 pStyle=2 count=357   scenes=[10851,10963,10964,10992,11011]
+type=0 cls=5 pStyle=1 count=325   scenes=[11501,11502,11503,11504,11505]
+type=0 cls=3 pStyle=1 count=315   scenes=[10994,11001,11011,11012,11172]
+type=6 cls=7 pStyle=0 count=239   scenes=[10965,10966,10992,11000,11031]
+type=0 cls=1 pStyle=0 count=237   scenes=[10802,10803,10804,10805,10806]
+type=0 cls=2 pStyle=4 count=220   scenes=[12011,12041,12061,12064,12421]
+type=4 cls=3 pStyle=0 count=211   scenes=[11011,11012,11307,11502,12005]
+type=5 cls=0 pStyle=1 count=198   scenes=[10802,10803,10804,10805,10806]
+type=7 cls=7 pStyle=3 count=166   scenes=[11001,11011,11021,11032,11033]
+type=7 cls=7 pStyle=5 count=130   scenes=[10986,10991,10992,10994,11021]
+type=0 cls=8 pStyle=1 count=128   scenes=[10851,12001,12003,12108,12304]
+type=7 cls=7 pStyle=1 count=108   scenes=[11012,11021,11261,11262,11263]
+type=0 cls=7 pStyle=1 count=90    scenes=[10993,11241,11242,12001,12003]
+type=0 cls=13 pStyle=1 count=82    scenes=[10989,11021,12001,12002,12003]
+type=0 cls=5 pStyle=2 count=77    scenes=[11031,11041,12001,12002,12005]
+type=7 cls=7 pStyle=6 count=76    scenes=[11001,11012,11021,11031,11041]
+type=7 cls=7 pStyle=4 count=55    scenes=[11241,11242,11243,11244,12007]
+type=0 cls=1 pStyle=2 count=55    scenes=[12003,12922,12923,12924,12925]
+type=0 cls=1 pStyle=3 count=55    scenes=[12061,49944,49984,49986,49990]
+type=8 cls=7 pStyle=18 count=55    scenes=[49801,49802,49803,49941,54827]
+type=7 cls=7 pStyle=2 count=50    scenes=[11261,11262,11263,12261,12262]
+type=0 cls=7 pStyle=3 count=46    scenes=[10951,12064,12180,12711,13181]
+type=0 cls=7 pStyle=4 count=40    scenes=[12002,12003,12004,12005,12015]
+type=0 cls=4 pStyle=1 count=34    scenes=[10802,11569,12001,12031,12093]
+type=7 cls=7 pStyle=15 count=32    scenes=[11261,12261,12262,12263,13261]
+type=0 cls=14 pStyle=1 count=31    scenes=[10852,10951,12002,12003,12011]
+type=5 cls=0 pStyle=2 count=28    scenes=[10801,10802,10803,10804,10805]
+type=0 cls=7 pStyle=5 count=28    scenes=[11301,11801,11811,12003,12065]
+type=0 cls=7 pStyle=2 count=26    scenes=[10951,11002,11301,11801,12012]
+type=1 cls=12 pStyle=0 count=21    scenes=[12721,12722]
+type=7 cls=7 pStyle=34 count=20    scenes=[11031,11041,12071,12081,19031]
+type=0 cls=2 pStyle=5 count=17    scenes=[12003,12061,62002,62011,62013]
+type=8 cls=7 pStyle=30 count=16    scenes=[12406,12418]
+type=8 cls=7 pStyle=31 count=16    scenes=[12407,12419]
+type=10 cls=7 pStyle=13 count=16    scenes=[49211,49212,49213,49214,49215]
+type=10 cls=7 pStyle=1 count=12    scenes=[11303,11304,11305,11306,12180]
+type=7 cls=7 pStyle=27 count=11    scenes=[49221,49222,49223,49224,49225]
+type=7 cls=7 pStyle=29 count=11    scenes=[49221,49222,49223,49224,49225]
+type=7 cls=7 pStyle=31 count=10    scenes=[49403,49409,49413,49419,49423]
+type=7 cls=7 pStyle=32 count=10    scenes=[49403,49409,49413,49419,49423]
+type=7 cls=7 pStyle=33 count=10    scenes=[49403,49409,49413,49419,49423]
+type=10 cls=7 pStyle=30 count=10    scenes=[49943]
+type=10 cls=7 pStyle=6 count=9     scenes=[12180,54911,54912,54913,54921]
+type=7 cls=7 pStyle=7 count=7     scenes=[10951,11031,11041,12001,12071]
+type=8 cls=7 pStyle=19 count=7     scenes=[11031,11041,12071,12081,12901]
+type=8 cls=7 pStyle=20 count=7     scenes=[11031,11041,12071,12081,12901]
+type=8 cls=7 pStyle=21 count=7     scenes=[11031,11041,12071,12081,12901]
+type=8 cls=7 pStyle=22 count=7     scenes=[11031,11041,12071,12081,12901]
+type=8 cls=7 pStyle=23 count=7     scenes=[11031,11041,12071,12081,12901]
+type=8 cls=7 pStyle=24 count=7     scenes=[11031,11041,12071,12081,12901]
+type=8 cls=7 pStyle=25 count=7     scenes=[11031,11041,12071,12081,12901]
+type=8 cls=7 pStyle=26 count=7     scenes=[11031,11041,12071,12081,12901]
+type=8 cls=7 pStyle=27 count=7     scenes=[11031,11041,12071,12081,12901]
+type=8 cls=7 pStyle=28 count=7     scenes=[11031,11041,12071,12081,12901]
+type=8 cls=7 pStyle=29 count=7     scenes=[11031,11041,12071,12081,12901]
+type=0 cls=11 pStyle=1 count=7     scenes=[11572,26522,26525,57523]
+type=0 cls=11 pStyle=3 count=7     scenes=[11572,26522,26525,57523]
+type=0 cls=11 pStyle=4 count=7     scenes=[11572,26522,26525,57523]
+type=0 cls=11 pStyle=5 count=7     scenes=[11572,26522,26525,57523]
+type=0 cls=11 pStyle=2 count=7     scenes=[11572,26522,26525,57523]
+type=0 cls=13 pStyle=2 count=7     scenes=[12926,12928,12933,12934,12936]
+type=8 cls=7 pStyle=3 count=6     scenes=[12901,15901]
+type=8 cls=7 pStyle=4 count=6     scenes=[12901,15901]
+type=10 cls=7 pStyle=14 count=6     scenes=[49211,49212,49213,49214,49215]
+
+--- resultClass=7 各 pStyle（*=未映射） ---
+pStyle=0   total=25967 *未映射*
+    scene=10801 eve=1 name=靴糾李 type=1 param=0 val=0
+    scene=10801 eve=1 name=靴糾李 type=1 param=0 val=0
+    scene=10801 eve=1 name=靴糾李 type=1 param=0 val=0
+    scene=10801 eve=1 name=靴糾李 type=1 param=0 val=0
+    scene=10801 eve=1 name=靴糾李 type=1 param=0 val=0
+    scene=10801 eve=2 name=靴糾李 type=1 param=0 val=0
+    scene=10801 eve=2 name=靴糾李 type=1 param=0 val=0
+    scene=10801 eve=4 name=靴糾李 type=1 param=0 val=0
+pStyle=1   total=212
+    scene=10993 eve=12 name=靴糾李 type=0 param=3 val=99
+    scene=10993 eve=12 name=靴糾李 type=0 param=3 val=98
+    scene=10993 eve=12 name=靴糾李 type=0 param=3 val=97
+    scene=10993 eve=12 name=靴糾李 type=0 param=3 val=96
+    scene=11012 eve=16 name=靴糾李 type=7 param=0 val=0
+    scene=11021 eve=9 name=靴糾李 type=7 param=0 val=0
+    scene=11241 eve=2 name=靴糾李 type=0 param=0 val=0
+    scene=11242 eve=2 name=靴糾李 type=0 param=0 val=0
+pStyle=2   total=82
+    scene=10951 eve=3 name=靴糾李 type=0 param=1 val=1
+    scene=11002 eve=11 name=靴糾李 type=0 param=2 val=50
+    scene=11002 eve=12 name=靴糾李 type=0 param=2 val=50
+    scene=11261 eve=2 name=靴糾李 type=7 param=0 val=0
+    scene=11262 eve=2 name=靴糾李 type=7 param=0 val=0
+    scene=11263 eve=2 name=靴糾李 type=7 param=0 val=0
+    scene=11301 eve=4 name=蜊守D5 type=0 param=2 val=100
+    scene=11301 eve=12 name=蜊守斧革 type=0 param=2 val=500
+pStyle=3   total=220
+    scene=10951 eve=1 name=靴糾李 type=0 param=1 val=1
+    scene=11001 eve=5 name=靴糾李 type=7 param=0 val=0
+    scene=11011 eve=6 name=靴糾李 type=7 param=0 val=0
+    scene=11011 eve=12 name=靴糾李 type=7 param=0 val=0
+    scene=11021 eve=10 name=靴糾李 type=7 param=0 val=0
+    scene=11032 eve=2 name=靴糾李 type=7 param=0 val=0
+    scene=11033 eve=6 name=靴糾李 type=7 param=0 val=0
+    scene=11034 eve=7 name=靴糾李 type=7 param=0 val=0
+pStyle=4   total=103
+    scene=11241 eve=2 name=靴糾李 type=7 param=0 val=0
+    scene=11242 eve=2 name=靴糾李 type=7 param=0 val=0
+    scene=11243 eve=2 name=靴糾李 type=7 param=0 val=0
+    scene=11244 eve=2 name=靴糾李 type=7 param=0 val=0
+    scene=12002 eve=5 name=靴糾李 type=0 param=2 val=5
+    scene=12003 eve=28 name=靴糾李 type=10 param=1 val=0
+    scene=12003 eve=62 name=28翟燧 type=0 param=1 val=2
+    scene=12003 eve=64 name=29翟燧 type=0 param=1 val=1
+pStyle=5   total=162
+    scene=10986 eve=5 name=靴糾李 type=7 param=0 val=0
+    scene=10991 eve=3 name=靴糾李 type=7 param=0 val=0
+    scene=10992 eve=3 name=靴糾李 type=7 param=0 val=0
+    scene=10994 eve=3 name=靴糾李 type=7 param=0 val=0
+    scene=11021 eve=6 name=靴糾李 type=7 param=0 val=0
+    scene=11241 eve=2 name=靴糾李 type=7 param=0 val=0
+    scene=11242 eve=2 name=靴糾李 type=7 param=0 val=0
+    scene=11243 eve=2 name=靴糾李 type=7 param=0 val=0
+pStyle=6   total=947
+    scene=10851 eve=4 name=靴糾李 type=0 param=1 val=12
+    scene=10851 eve=11 name=靴糾李 type=0 param=1 val=29
+    scene=10851 eve=11 name=靴糾李 type=0 param=1 val=29
+    scene=10851 eve=11 name=靴糾李 type=0 param=1 val=29
+    scene=10851 eve=11 name=靴糾李 type=0 param=1 val=29
+    scene=11001 eve=11 name=靴糾李 type=7 param=0 val=0
+    scene=11002 eve=13 name=靴糾李 type=0 param=1 val=500
+    scene=11003 eve=8 name=靴糾李 type=0 param=1 val=1000
+pStyle=7   total=11 *未映射*
+    scene=10951 eve=8 name=靴糾李 type=7 param=0 val=0
+    scene=11031 eve=16 name=靴糾李 type=7 param=0 val=0
+    scene=11041 eve=16 name=靴糾李 type=7 param=0 val=0
+    scene=12001 eve=18 name=靴糾李 type=7 param=0 val=0
+    scene=12071 eve=16 name=靴糾李 type=7 param=0 val=0
+    scene=12081 eve=16 name=靴糾李 type=7 param=0 val=0
+    scene=12180 eve=3 name=靴糾李 type=10 param=2 val=0
+    scene=12901 eve=12 name=靴糾李 type=8 param=0 val=0
+pStyle=8   total=7 *未映射*
+    scene=10951 eve=8 name=靴糾李 type=7 param=0 val=0
+    scene=12001 eve=14 name=靴糾李 type=7 param=0 val=0
+    scene=12901 eve=12 name=靴糾李 type=8 param=0 val=0
+    scene=15901 eve=12 name=靴糾李 type=8 param=0 val=0
+    scene=18001 eve=15 name=靴糾李 type=7 param=0 val=0
+    scene=21002 eve=27 name=靴糾李 type=7 param=0 val=0
+    scene=55003 eve=5 name=靴糾李 type=10 param=1 val=0
+pStyle=9   total=5 *未映射*
+    scene=12901 eve=13 name=靴糾李 type=8 param=0 val=0
+    scene=12901 eve=14 name=靴糾李 type=8 param=0 val=0
+    scene=15901 eve=13 name=靴糾李 type=8 param=0 val=0
+    scene=15901 eve=14 name=靴糾李 type=8 param=0 val=0
+    scene=55003 eve=5 name=靴糾李 type=10 param=1 val=0
+pStyle=10  total=10
+    scene=11264 eve=2 name=靴糾李 type=7 param=0 val=0
+    scene=11265 eve=2 name=靴糾李 type=7 param=0 val=0
+    scene=12266 eve=2 name=靴糾李 type=7 param=0 val=0
+    scene=12267 eve=2 name=靴糾李 type=7 param=0 val=0
+    scene=12901 eve=13 name=靴糾李 type=8 param=0 val=0
+    scene=12901 eve=14 name=靴糾李 type=8 param=0 val=0
+    scene=15901 eve=13 name=靴糾李 type=8 param=0 val=0
+    scene=15901 eve=14 name=靴糾李 type=8 param=0 val=0
+pStyle=11  total=8 *未映射*
+    scene=12001 eve=56 name=靴糾李 type=10 param=1 val=0
+    scene=12180 eve=5 name=靴糾李 type=10 param=1 val=0
+    scene=12180 eve=7 name=靴糾李 type=10 param=1 val=0
+    scene=12180 eve=8 name=靴糾李 type=10 param=1 val=0
+    scene=12901 eve=13 name=靴糾李 type=8 param=0 val=0
+    scene=12901 eve=14 name=靴糾李 type=8 param=0 val=0
+    scene=15901 eve=13 name=靴糾李 type=8 param=0 val=0
+    scene=15901 eve=14 name=靴糾李 type=8 param=0 val=0
+pStyle=12  total=7
+    scene=10965 eve=17 name=嚴嚴撻 type=10 param=1 val=0
+    scene=10966 eve=17 name=嚴嚴撻 type=10 param=1 val=0
+    scene=12901 eve=13 name=靴糾李 type=8 param=0 val=0
+    scene=12901 eve=14 name=靴糾李 type=8 param=0 val=0
+    scene=15901 eve=13 name=靴糾李 type=8 param=0 val=0
+    scene=15901 eve=14 name=靴糾李 type=8 param=0 val=0
+    scene=55002 eve=4 name=靴糾李 type=7 param=0 val=0
+pStyle=13  total=21
+    scene=12901 eve=13 name=靴糾李 type=8 param=0 val=0
+    scene=12901 eve=14 name=靴糾李 type=8 param=0 val=0
+    scene=12911 eve=4 name=靴糾李 type=7 param=0 val=0
+    scene=15901 eve=13 name=靴糾李 type=8 param=0 val=0
+    scene=15901 eve=14 name=靴糾李 type=8 param=0 val=0
+    scene=49211 eve=3 name=靴糾李 type=10 param=1 val=0
+    scene=49212 eve=3 name=靴糾李 type=10 param=1 val=0
+    scene=49213 eve=3 name=靴糾李 type=10 param=1 val=0
+pStyle=14  total=11 *未映射*
+    scene=12901 eve=13 name=靴糾李 type=8 param=0 val=0
+    scene=12901 eve=14 name=靴糾李 type=8 param=0 val=0
+    scene=12911 eve=3 name=靴糾李 type=7 param=0 val=0
+    scene=15901 eve=13 name=靴糾李 type=8 param=0 val=0
+    scene=15901 eve=14 name=靴糾李 type=8 param=0 val=0
+    scene=49211 eve=3 name=靴糾李 type=10 param=1 val=0
+    scene=49212 eve=3 name=靴糾李 type=10 param=1 val=0
+    scene=49213 eve=3 name=靴糾李 type=10 param=1 val=0
+pStyle=15  total=42
+    scene=11261 eve=2 name=靴糾李 type=7 param=0 val=0
+    scene=12261 eve=2 name=靴糾李 type=7 param=0 val=0
+    scene=12262 eve=2 name=靴糾李 type=7 param=0 val=0
+    scene=12263 eve=1 name=靴糾李 type=7 param=0 val=0
+    scene=12901 eve=13 name=靴糾李 type=8 param=0 val=0
+    scene=12901 eve=14 name=靴糾李 type=8 param=0 val=0
+    scene=13261 eve=2 name=靴糾李 type=7 param=0 val=0
+    scene=13262 eve=2 name=靴糾李 type=7 param=0 val=0
+pStyle=16  total=11 *未映射*
+    scene=11031 eve=15 name=靴糾李 type=8 param=0 val=0
+    scene=11041 eve=13 name=靴糾李 type=8 param=0 val=0
+    scene=12071 eve=12 name=靴糾李 type=8 param=0 val=0
+    scene=12081 eve=13 name=靴糾李 type=8 param=0 val=0
+    scene=19031 eve=15 name=靴糾李 type=8 param=0 val=0
+    scene=49211 eve=4 name=靴糾李 type=10 param=1 val=0
+    scene=49212 eve=4 name=靴糾李 type=10 param=1 val=0
+    scene=49213 eve=4 name=靴糾李 type=10 param=1 val=0
+pStyle=17  total=12 *未映射*
+    scene=11031 eve=19 name=靴糾李 type=8 param=0 val=0
+    scene=11041 eve=19 name=靴糾李 type=8 param=0 val=0
+    scene=12003 eve=32 name=靴糾李 type=7 param=0 val=0
+    scene=12071 eve=19 name=靴糾李 type=8 param=0 val=0
+    scene=12081 eve=19 name=靴糾李 type=8 param=0 val=0
+    scene=19031 eve=19 name=靴糾李 type=8 param=0 val=0
+    scene=49211 eve=5 name=靴糾李 type=10 param=1 val=0
+    scene=49212 eve=5 name=靴糾李 type=10 param=1 val=0
+pStyle=18  total=62 *未映射*
+    scene=49211 eve=5 name=靴糾李 type=10 param=1 val=0
+    scene=49212 eve=5 name=靴糾李 type=10 param=1 val=0
+    scene=49213 eve=5 name=靴糾李 type=10 param=1 val=0
+    scene=49214 eve=5 name=靴糾李 type=10 param=1 val=0
+    scene=49215 eve=5 name=靴糾李 type=10 param=1 val=0
+    scene=49216 eve=5 name=靴糾李 type=10 param=1 val=0
+    scene=49801 eve=4 name=靴糾李 type=8 param=0 val=0
+    scene=49801 eve=5 name=靴糾李 type=8 param=0 val=0
+pStyle=19  total=9 *未映射*
+    scene=11031 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=11041 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12071 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12081 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12901 eve=15 name=靴糾李 type=8 param=0 val=0
+    scene=15901 eve=15 name=靴糾李 type=8 param=0 val=0
+    scene=19031 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=49910 eve=2 name=靴糾李 type=10 param=1 val=0
+pStyle=20  total=9 *未映射*
+    scene=11031 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=11041 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12071 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12081 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12711 eve=5 name=靴糾李 type=7 param=0 val=0
+    scene=12901 eve=15 name=靴糾李 type=8 param=0 val=0
+    scene=15901 eve=15 name=靴糾李 type=8 param=0 val=0
+    scene=19031 eve=22 name=靴糾李 type=8 param=0 val=0
+pStyle=21  total=9
+    scene=11031 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=11041 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12071 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12081 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12901 eve=15 name=靴糾李 type=8 param=0 val=0
+    scene=15901 eve=15 name=靴糾李 type=8 param=0 val=0
+    scene=19031 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=49910 eve=2 name=靴糾李 type=10 param=1 val=0
+pStyle=22  total=10 *未映射*
+    scene=11031 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=11041 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12071 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12081 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12180 eve=6 name=靴糾李 type=7 param=0 val=0
+    scene=12721 eve=9 name=旨絆345 type=10 param=1 val=0
+    scene=12721 eve=18 name=旨絆9� type=10 param=1 val=0
+    scene=12901 eve=15 name=靴糾李 type=8 param=0 val=0
+pStyle=23  total=9 *未映射*
+    scene=11031 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=11041 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12071 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12081 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12721 eve=10 name=旨絆678 type=10 param=1 val=0
+    scene=12901 eve=15 name=靴糾李 type=8 param=0 val=0
+    scene=15901 eve=15 name=靴糾李 type=8 param=0 val=0
+    scene=19031 eve=22 name=靴糾李 type=8 param=0 val=0
+pStyle=24  total=9 *未映射*
+    scene=11031 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=11041 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12071 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12081 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12721 eve=15 name=旨絆78 type=10 param=1 val=0
+    scene=12901 eve=15 name=靴糾李 type=8 param=0 val=0
+    scene=15901 eve=15 name=靴糾李 type=8 param=0 val=0
+    scene=19031 eve=22 name=靴糾李 type=8 param=0 val=0
+pStyle=25  total=11 *未映射*
+    scene=11031 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=11041 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12003 eve=66 name=靴糾李 type=10 param=1 val=1
+    scene=12003 eve=66 name=靴糾李 type=10 param=1 val=5
+    scene=12003 eve=66 name=靴糾李 type=10 param=1 val=10
+    scene=12071 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12081 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12901 eve=15 name=靴糾李 type=8 param=0 val=0
+pStyle=26  total=9 *未映射*
+    scene=11031 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=11041 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12071 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12081 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12180 eve=11 name=攜攜撻 type=10 param=1 val=0
+    scene=12901 eve=15 name=靴糾李 type=8 param=0 val=0
+    scene=15901 eve=15 name=靴糾李 type=8 param=0 val=0
+    scene=19031 eve=22 name=靴糾李 type=8 param=0 val=0
+pStyle=27  total=19
+    scene=11031 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=11041 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12001 eve=64 name=靴糾李 type=10 param=1 val=0
+    scene=12071 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12081 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12901 eve=15 name=靴糾李 type=8 param=0 val=0
+    scene=15901 eve=15 name=靴糾李 type=8 param=0 val=0
+    scene=19031 eve=22 name=靴糾李 type=8 param=0 val=0
+pStyle=28  total=10 *未映射*
+    scene=11031 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=11041 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12001 eve=73 name=靴糾李 type=10 param=1 val=1
+    scene=12001 eve=73 name=靴糾李 type=10 param=1 val=5
+    scene=12001 eve=73 name=靴糾李 type=10 param=1 val=10
+    scene=12071 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12081 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12901 eve=15 name=靴糾李 type=8 param=0 val=0
+pStyle=29  total=19
+    scene=11031 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=11041 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12001 eve=92 name=靴糾李 type=10 param=1 val=0
+    scene=12071 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12081 eve=22 name=靴糾李 type=8 param=0 val=0
+    scene=12901 eve=15 name=靴糾李 type=8 param=0 val=0
+    scene=15901 eve=15 name=靴糾李 type=8 param=0 val=0
+    scene=19031 eve=22 name=靴糾李 type=8 param=0 val=0
+pStyle=30  total=27
+    scene=12406 eve=4 name=攸住問獲 type=8 param=0 val=0
+    scene=12406 eve=5 name=攸住問獲 type=8 param=0 val=0
+    scene=12406 eve=6 name=攸住問獲 type=8 param=0 val=0
+    scene=12406 eve=7 name=攸住問獲 type=8 param=0 val=0
+    scene=12406 eve=8 name=攸住問獲 type=8 param=0 val=0
+    scene=12406 eve=9 name=攸住問獲 type=8 param=0 val=0
+    scene=12406 eve=10 name=攸住問獲 type=8 param=0 val=0
+    scene=12406 eve=11 name=攸住問獲 type=8 param=0 val=0
+pStyle=31  total=27 *未映射*
+    scene=12407 eve=3 name=電齪件 type=8 param=0 val=0
+    scene=12407 eve=4 name=電齪件 type=8 param=0 val=0
+    scene=12407 eve=5 name=電齪件 type=8 param=0 val=0
+    scene=12407 eve=6 name=電齪件 type=8 param=0 val=0
+    scene=12407 eve=7 name=電齪件 type=8 param=0 val=0
+    scene=12407 eve=8 name=電齪件 type=8 param=0 val=0
+    scene=12407 eve=9 name=電齪件 type=8 param=0 val=0
+    scene=12407 eve=10 name=電齪件 type=8 param=0 val=0
+pStyle=32  total=10
+    scene=49403 eve=6 name=靴糾李 type=7 param=0 val=0
+    scene=49409 eve=5 name=靴糾李 type=7 param=0 val=0
+    scene=49413 eve=6 name=靴糾李 type=7 param=0 val=0
+    scene=49419 eve=5 name=靴糾李 type=7 param=0 val=0
+    scene=49423 eve=6 name=靴糾李 type=7 param=0 val=0
+    scene=49429 eve=5 name=靴糾李 type=7 param=0 val=0
+    scene=49433 eve=6 name=靴糾李 type=7 param=0 val=0
+    scene=49439 eve=5 name=靴糾李 type=7 param=0 val=0
+pStyle=33  total=10 *未映射*
+    scene=49403 eve=7 name=靴糾李 type=7 param=0 val=0
+    scene=49409 eve=7 name=靴糾李 type=7 param=0 val=0
+    scene=49413 eve=7 name=靴糾李 type=7 param=0 val=0
+    scene=49419 eve=7 name=靴糾李 type=7 param=0 val=0
+    scene=49423 eve=7 name=靴糾李 type=7 param=0 val=0
+    scene=49429 eve=7 name=靴糾李 type=7 param=0 val=0
+    scene=49433 eve=7 name=靴糾李 type=7 param=0 val=0
+    scene=49439 eve=7 name=靴糾李 type=7 param=0 val=0
+pStyle=34  total=20 *未映射*
+    scene=11031 eve=21 name=靴糾李 type=7 param=0 val=0
+    scene=11031 eve=21 name=靴糾李 type=7 param=0 val=0
+    scene=11031 eve=21 name=靴糾李 type=7 param=0 val=0
+    scene=11031 eve=21 name=靴糾李 type=7 param=0 val=0
+    scene=11041 eve=21 name=靴糾李 type=7 param=0 val=0
+    scene=11041 eve=21 name=靴糾李 type=7 param=0 val=0
+    scene=11041 eve=21 name=靴糾李 type=7 param=0 val=0
+    scene=11041 eve=21 name=靴糾李 type=7 param=0 val=0
+pStyle=35  total=5
+    scene=11031 eve=23 name=靴糾李 type=7 param=0 val=0
+    scene=11041 eve=23 name=靴糾李 type=7 param=0 val=0
+    scene=12071 eve=23 name=靴糾李 type=7 param=0 val=0
+    scene=12081 eve=23 name=靴糾李 type=7 param=0 val=0
+    scene=19031 eve=23 name=靴糾李 type=7 param=0 val=0
+pStyle=36  total=1 *未映射*
+    scene=12721 eve=9 name=旨絆345 type=7 param=0 val=0
+pStyle=38  total=1 *未映射*
+    scene=12001 eve=64 name=靴糾李 type=7 param=0 val=0
+pStyle=39  total=1
+    scene=59411 eve=10 name=攜釋煞畔 type=7 param=0 val=0

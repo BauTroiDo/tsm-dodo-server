@@ -1,0 +1,20 @@
+{
+  "game_root_dir": "C:\\Server-Game\\tsm_dodo",
+  "gamedata_dir": "C:\\Server-Game\\tsm_dodo\\gamedata",
+  "cdn_dir": "C:\\Server-Game\\tsm_dodo\\cdn\\mirror\\tsr\\2.4.76\\ResourcesPacked",
+  "logs_dir": "C:\\Server-Game\\tsm_dodo\\logs",
+  "db_host": "127.0.0.1",
+  "db_port": 3307,
+  "db_user": "root",
+  "db_pass": "Jzuqmy8u@123",
+  "db_name": "tsm_dodo",
+  "remote_host": "192.168.1.69",
+  "remote_port": 22,
+  "remote_user": "Administrator",
+  "remote_pass": "Jzuqmy8u@123",
+  "cdn_port": 443,
+  "game_port": 6613,
+  "log_source": "auto",
+  "theme": "dark",
+  "auto_scroll": true
+}

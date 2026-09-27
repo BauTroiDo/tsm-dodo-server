@@ -1,0 +1,14 @@
+{
+  "java_home": "C:\\Program Files/Java\\jdk-21.0.10",
+  "python_path": "C:\\Users\\Administrator\\AppData\\Local\\Programs\\Python\\Python314\\python.EXE",
+  "mysql_info": "running",
+  "adb_path": "",
+  "cdn_port": 443,
+  "game_port": 6613,
+  "mysql_host": "192.168.1.69",
+  "mysql_port": 3307,
+  "mysql_user": "root",
+  "mysql_password": "Jzuqmy8u@123",
+  "mysql_database": "tsm_dodo",
+  "auto_sync_mirror": true
+}

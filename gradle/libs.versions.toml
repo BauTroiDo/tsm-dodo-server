@@ -1,0 +1,62 @@
+[versions]
+kotlin = "2.3.0"
+coroutines = "1.10.2"
+netty = "4.1.131.Final"
+exposed = "1.0.0"
+hikari = "6.2.1"
+mysql = "9.2.0"
+koin = "4.1.1"
+logback = "1.5.16"
+kotlin-logging = "7.0.4"
+bcrypt = "0.10.2"
+junit5 = "5.11.4"
+kotest = "5.9.1"
+mockk = "1.13.16"
+serialization-json = "1.8.1"
+typesafe-config = "1.4.3"
+
+[libraries]
+# Kotlin 協程
+coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
+
+# Netty 網路層
+netty-all = { module = "io.netty:netty-all", version.ref = "netty" }
+
+# Exposed ORM
+exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
+exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposed" }
+exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
+exposed-java-time = { module = "org.jetbrains.exposed:exposed-java-time", version.ref = "exposed" }
+
+# 資料庫
+hikari = { module = "com.zaxxer:HikariCP", version.ref = "hikari" }
+mysql-connector = { module = "com.mysql:mysql-connector-j", version.ref = "mysql" }
+
+# DI
+koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
+koin-test = { module = "io.insert-koin:koin-test", version.ref = "koin" }
+
+# 日誌
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+kotlin-logging = { module = "io.github.oshai:kotlin-logging-jvm", version.ref = "kotlin-logging" }
+
+# JSON 序列化
+serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization-json" }
+
+# 設定
+typesafe-config = { module = "com.typesafe:config", version.ref = "typesafe-config" }
+
+# 密碼雜湊
+bcrypt = { module = "at.favre.lib:bcrypt", version.ref = "bcrypt" }
+
+# 測試
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit5" }
+junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit5" }
+kotest-runner = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
+kotest-assertions = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

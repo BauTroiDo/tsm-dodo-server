@@ -1,0 +1,117 @@
+package tw.tsm.app.handlers
+
+import io.github.oshai.kotlinlogging.KotlinLogging
+import tw.tsm.domain.constants.EAttribute
+import tw.tsm.domain.constants.Opcodes
+import tw.tsm.domain.enums.SessionState
+import tw.tsm.domain.interfaces.GameSession
+import tw.tsm.domain.interfaces.PacketHandler
+import tw.tsm.domain.interfaces.ResponseSender
+import tw.tsm.domain.interfaces.StatCalculator
+import tw.tsm.domain.interfaces.repositories.CharacterRepository
+import tw.tsm.gamelogic.systems.PlayerStateManager
+import tw.tsm.gamelogic.systems.SkillSystem
+import tw.tsm.protocol.PacketReader
+
+private val logger = KotlinLogging.logger {}
+
+/**
+ * 屬性配點處理器（mainKind = 8）
+ *
+ * 子 opcode：
+ * - C:008-001 屬性配點（Status.lua → 加點按鈕）
+ *
+ * 📖 協定來源：protocal.lua protocolTable[8][1]
+ * 📖 封包格式：+charIndex(2) +attrKind(1) +addPoints(4) +reserved(1)
+ */
+class StatHandler(
+    private val playerStateManager: PlayerStateManager,
+    private val characterRepository: CharacterRepository,
+    private val responseSender: ResponseSender,
+    private val statCalc: StatCalculator,
+    private val skillSystem: SkillSystem
+) : PacketHandler {
+
+    override val mainKind: Int = Opcodes.BATTLE
+
+    override suspend fun handle(session: GameSession, subKind: Int, data: ByteArray) {
+        when (subKind) {
+            1 -> handleAllocateStat(session, data)
+            13 -> handleRequestSkillData(session)
+            else -> logger.trace { "未處理的 C:008-$subKind" }
+        }
+    }
+
+    private fun handleRequestSkillData(session: GameSession) {
+        val charId = session.roleId.toLong()
+        val sc = skillSystem.getCache(charId)
+        if (sc != null) {
+            responseSender.sendPlayerSkillData(session, sc.element, sc.skillPoint, sc.skills)
+        }
+    }
+
+    /**
+     * 處理屬性配點 (C:008-001)
+     *
+     * 封包格式：+charIndex(2 UInt16 LE) +attrKind(1) +addPoints(4 Int32 LE) +reserved(1)
+     * attrKind: 27=Int, 28=Atk, 29=Def, 30=Agi, 31=Hpx, 32=Spx
+     */
+    private suspend fun handleAllocateStat(session: GameSession, data: ByteArray) {
+        if (session.state != SessionState.IN_GAME) {
+            logger.warn { "配點：未進入遊戲 state=${session.state}" }
+            return
+        }
+
+        val reader = PacketReader(data)
+        val charIndex = reader.readUShortLE()  // 角色索引（目前只有單角色，忽略）
+        val attrKind = reader.readUByte()
+        val addPoints = reader.readIntLE()
+        if (reader.isReadable) reader.readUByte()  // reserved
+
+        if (addPoints <= 0) return
+
+        val charId = session.roleId.toLong()
+
+        logger.debug { "C:008-001 配點：charId=$charId attrKind=$attrKind addPoints=$addPoints" }
+
+        // PlayerStateManager 處理驗證 + 更新記憶體狀態
+        val result = playerStateManager.allocateStat(charId, attrKind, addPoints)
+        if (result == null) {
+            logger.warn { "配點被拒絕：charId=$charId attrKind=$attrKind addPoints=$addPoints" }
+            return
+        }
+
+        // 持久化到 DB
+        characterRepository.addStatPoint(charId, result.dbColumn, addPoints, result.newAttrPoint)
+
+        // S:008-001 回應 — 屬性新值
+        responseSender.sendSetAttribute(session, attrKind, result.newValue, isPositive = true)
+
+        // S:008-001 回應 — 剩餘屬性點數
+        responseSender.sendSetAttribute(session, EAttribute.ATTR_POINT, result.newAttrPoint, isPositive = true)
+
+        // 如果配的是 HPX 或 SPX，需要重算 MaxHP/MaxSP（透過 PlayerStateManager 保護 synchronized）
+        val state = playerStateManager.getState(charId)
+        if (state != null && (attrKind == EAttribute.HPX || attrKind == EAttribute.SPX)) {
+            if (attrKind == EAttribute.HPX) {
+                val newMaxHp = statCalc.calculateMaxHp(
+                    level = state.level, hpx = state.hpx,
+                    equipMaxHp = state.equipMaxHp, extraHp = 0,
+                    turn = state.turn, career = state.career, turn3Lv = 0
+                )
+                val (maxHp, hp) = playerStateManager.updateMaxHp(charId, newMaxHp) ?: return
+                responseSender.sendSetAttribute(session, EAttribute.MAX_HP, maxHp.toInt(), isPositive = true)
+                responseSender.sendSetAttribute(session, EAttribute.HP, hp.toInt(), isPositive = true)
+            } else {
+                val newMaxSp = statCalc.calculateMaxSp(
+                    level = state.level, spx = state.spx,
+                    equipMaxSp = state.equipMaxSp, extraSp = 0,
+                    turn = state.turn, career = state.career, turn3Lv = 0
+                )
+                val (maxSp, sp) = playerStateManager.updateMaxSp(charId, newMaxSp) ?: return
+                responseSender.sendSetAttribute(session, EAttribute.MAX_SP, maxSp, isPositive = true)
+                responseSender.sendSetAttribute(session, EAttribute.SP, sp, isPositive = true)
+            }
+        }
+    }
+}
