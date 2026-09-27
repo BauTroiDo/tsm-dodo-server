@@ -265,6 +265,7 @@ class UISellHandler(
             element = target,
             skills = state.skills.filterKeys { it in allowed }
         ))
+        session.turn3Element = target
         responseSender.sendUiSellSuccess(session, sellId)
         logger.info { "${session.characterName} changed Turn3 element=$target" }
     }
