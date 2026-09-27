@@ -218,4 +218,42 @@ class DvtBattleCommandSemanticsTest {
     }
 
 
+    @Test
+    fun `LifePK rejects escape command at queue time`() {
+        val actor = fighter(1, 2, 0)
+        val target = fighter(2, 0, 0)
+        val grid = BattleGrid().also { it.place(actor); it.place(target) }
+        val battle = BattleInstance(
+            battleId=1, warType=0, terrain=0, eventNo=0, grid=grid,
+            skillResolver=BattleSkillResolver(emptyMap()),
+            itemResolver=mockk<BattleItemResolver>(relaxed=true),
+            involvedNpcDefs=emptyList(),
+            warStyle=tw.tsm.domain.constants.EWarStyle.LIFE_PK
+        ).also { it.addFighter(actor); it.addFighter(target) }
+
+        assertFalse(battle.setPlayerAction(
+            actor.roleId, actor.col, actor.row,
+            BattleAction(BattleAction.KIND_ESCAPE, BattleConstants.ESCAPE_SKILL_ID, actor.col, actor.row)
+        ))
+    }
+
+    @Test
+    fun `WorldBoss rejects escape command at queue time`() {
+        val actor = fighter(1, 2, 0)
+        val target = fighter(2, 0, 0)
+        val grid = BattleGrid().also { it.place(actor); it.place(target) }
+        val battle = BattleInstance(
+            battleId=1, warType=0, terrain=0, eventNo=0, grid=grid,
+            skillResolver=BattleSkillResolver(emptyMap()),
+            itemResolver=mockk<BattleItemResolver>(relaxed=true),
+            involvedNpcDefs=emptyList(),
+            warStyle=tw.tsm.domain.constants.EWarStyle.WORLD_BOSS
+        ).also { it.addFighter(actor); it.addFighter(target) }
+
+        assertFalse(battle.setPlayerAction(
+            actor.roleId, actor.col, actor.row,
+            BattleAction(BattleAction.KIND_ESCAPE, BattleConstants.ESCAPE_SKILL_ID, actor.col, actor.row)
+        ))
+    }
+
 }
