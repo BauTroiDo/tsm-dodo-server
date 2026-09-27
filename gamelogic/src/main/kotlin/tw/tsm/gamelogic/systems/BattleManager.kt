@@ -1066,9 +1066,17 @@ class BattleManager(
                 logger.info { "升級：charId=$charId 升了 $levelsGained 級 → Lv.${state.level} 技能點+$skillPointGain 屬性點+$attrPointGain" }
             }
 
-            // Persist the same cumulative EXP semantics sent to DVT so relog keeps the bar.
-            characterRepository?.updateExpAndLevel(charId, state.exp, state.level)
         }
+
+        // Repository I/O is suspendable; keep it outside synchronized(state).
+        // Snapshot after the atomic EXP/level mutation so persistence matches the client state.
+        val persistedExp: Long
+        val persistedLevel: Int
+        synchronized(state) {
+            persistedExp = state.exp
+            persistedLevel = state.level
+        }
+        characterRepository?.updateExpAndLevel(charId, persistedExp, persistedLevel)
     }
 
     /**
