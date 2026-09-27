@@ -1100,6 +1100,11 @@ class BattleManager(
 
         val equips = inventorySystem.getEquipment(charId)
         val equipIds = equips.values.map { it.itemId }.toIntArray()
+        val normalSkills = skillSystem?.getCache(charId)?.skills?.filterValues { it > 0 }?.keys.orEmpty()
+        val turn3Skills = runBlocking {
+            skillRepository?.findTurn3State(charId)?.skills?.filterValues { it > 0 }?.keys.orEmpty()
+        }
+        val learnedSkills = (normalSkills + turn3Skills).toIntArray()
 
         return BattleFighter(
             roleId = session.playerId,
@@ -1117,6 +1122,7 @@ class BattleManager(
             def = state.def + state.equipDef + state.turn3Def,
             agi = state.agi + state.equipAgi + state.turn3Agi,
             intelligence = state.intelligence + state.equipInt + state.turn3Int,
+            skills = learnedSkills,
             turn = state.turn,
             career = state.career,
             sex = session.sex,
