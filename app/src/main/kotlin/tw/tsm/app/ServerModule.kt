@@ -281,7 +281,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
         }
     }
     single {
-        BattleManager(get(), get<GameDataManager>().skillDefs, get<GameDataManager>().npcDefs, get(), get(), get<PetSystem>(), get<MoneySystem>(), get<StatSystem>(), get(), get<GameDataManager>().npcDropTable, get<SkillSystem>(), get<MacroBoxSystem>(), get<GameDataManager>().itemDefs).also { bm ->
+        BattleManager(get(), get<GameDataManager>().skillDefs, get<GameDataManager>().npcDefs, get(), get(), get<PetSystem>(), get<MoneySystem>(), get<StatSystem>(), get(), get<GameDataManager>().npcDropTable, get<SkillSystem>(), get<MacroBoxSystem>(), get<GameDataManager>().itemDefs, get<SkillRepository>()).also { bm ->
             // 戰鬥結束回呼 → EveFlowController 恢復事件流程
             bm.onBattleEndCallback = { session, playerId, playerWin ->
                 get<EveFlowController>().resumeAfterBattle(session, playerId, playerWin)
