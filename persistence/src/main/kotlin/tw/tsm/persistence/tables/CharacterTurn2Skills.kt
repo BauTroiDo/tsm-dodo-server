@@ -10,10 +10,10 @@ import org.jetbrains.exposed.v1.core.Table
 object CharacterTurn2Skills : Table("character_turn2_skills") {
     val characterId = long("character_id")
     val kind = integer("kind")
-    val index = integer("slot_index")
+    val slotIndex = integer("slot_index")
     val value = integer("value").default(0)
 
-    override val primaryKey = PrimaryKey(characterId, kind, index)
+    override val primaryKey = PrimaryKey(characterId, kind, slotIndex)
 
     init { index(false, characterId) }
 }
