@@ -22,7 +22,13 @@ enum class BattleStatus(val id: Int) {
     CHAOS(13),          // 混亂（隨機攻擊友軍）
     TARDY(14),          // 遲緩（敏捷減半）
     LANDSLIP(15),
-    TAUNT(16);       // 土崩陣
+    TAUNT(16),
+    TRAITOR(17),
+    STOOL(18),
+    THUNDER_FIRE(19),
+    HEALTH_DRAWER(20),
+    WEAK_PERCENT(21),
+    EW_COMMON_FAINT(22);       // 土崩陣
 
     companion object {
         private val map = entries.associateBy { it.id }
