@@ -726,6 +726,16 @@ class BattleManager(
      * 若拆成多包發送，後到的封包會把還在播放中的技能演出整批清除（特效被腰斬），
      * 且每包都被客戶端誤認為新回合開始。協定外層 <<…>> 重複結構即為此設計。
      */
+    /**
+     * DVT SkillData exposes spendSecond as its timing field. The client has no
+     * animation-complete ACK, so command pacing must be server-side.
+     * Basic/special commands without SkillData use the conservative one-second floor.
+     */
+    private fun actionPlaybackDelayMs(action: ActionResult): Long {
+        val seconds = skillDefs[action.skillId]?.spendSecond ?: 0
+        return maxOf(BattleConstants.MIN_ACTION_PLAYBACK_DELAY_MS, seconds * 1000L)
+    }
+
     private suspend fun broadcastRoundResult(battle: BattleInstance, roundResult: RoundResult) {
         // 0. 逃跑成功者 — 先發 S:011-001 讓角色離開戰場
         for (escape in roundResult.escapeResults) {
@@ -734,11 +744,16 @@ class BattleManager(
             }
         }
 
-        // 1. S:050-001 技能攻擊結果 — 整回合單一封包
-        if (roundResult.actionResults.isNotEmpty()) {
-            val skillData = serializeSkillResults(roundResult.actionResults)
+        // 1. S:050-001 — DVT client starts an animation as soon as RevAttackSkill parses
+        // an action. Sending every AGI action in one packet starts player/NPC animations in
+        // the same frame. Pace commands sequentially, matching the original server model.
+        for ((index, actionResult) in roundResult.actionResults.withIndex()) {
+            val skillData = serializeSkillResults(listOf(actionResult))
             for (session in battle.playerSessions.values) {
                 responseSender.sendBattleSkillResult(session, skillData)
+            }
+            if (index < roundResult.actionResults.lastIndex) {
+                delay(actionPlaybackDelayMs(actionResult))
             }
         }
 
