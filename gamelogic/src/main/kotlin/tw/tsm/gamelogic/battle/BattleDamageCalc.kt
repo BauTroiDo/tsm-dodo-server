@@ -76,7 +76,7 @@ object BattleDamageCalc {
 
         val pvpMultiplier = if (target.isHumanPlayer || target.kind == EHuman.FOLLOW_NPC) 0.5 else 1.0
 
-        val statusMultiplier = if (target.statusEffect == BattleStatus.ICE_BOUND) 1.5 else 1.0
+        val statusMultiplier = if (target.groupedStatuses.values.any { it.status == BattleStatus.ICE_BOUND }) 1.5 else 1.0
 
         val defendMultiplier = if (target.isDefending) 0.5 else 1.0
 
