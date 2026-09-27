@@ -274,4 +274,27 @@ class BattleResponseSender {
             .writeByte(if (joinEnabled) 1 else 0)
         session.send(writer.toByteArray())
     }
+
+    /** S:023-069 玩家轉職/轉生外觀同步。 */
+    fun sendPlayerCareerChange(
+        session: GameSession,
+        playerId: Long,
+        hair: Int,
+        color1: Int,
+        color2: Int,
+        turn: Int,
+        career: Int
+    ) {
+        session.send(
+            PacketWriter()
+                .writeByte(23).writeByte(69).writeByte(0)
+                .writeLongLE(playerId)
+                .writeByte(hair)
+                .writeIntLE(color1)
+                .writeIntLE(color2)
+                .writeByte(turn)
+                .writeByte(career)
+                .toByteArray()
+        )
+    }
 }
