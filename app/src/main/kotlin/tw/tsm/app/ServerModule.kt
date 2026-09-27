@@ -288,7 +288,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             }
         }
     }
-    single { LoginService(get(), get(), get(), get(), get(), get<PointSystem>(), get(), get(), get<EveEventStateMachine>(), get(), get(), get(), get(), get(), get(), get<RoleCountSystem>(), get<FlyPointSystem>(), get<MailSystem>(), get<FriendSystem>(), get<GameDataManager>().eveData, get<GameDataManager>().itemDefs) }
+    single { LoginService(get(), get(), get(), get(), get(), get<PointSystem>(), get(), get(), get<EveEventStateMachine>(), get(), get(), get(), get(), get(), get(), get<SkillRepository>(), get<RoleCountSystem>(), get<FlyPointSystem>(), get<MailSystem>(), get<FriendSystem>(), get<GameDataManager>().eveData, get<GameDataManager>().itemDefs) }
 
     // Eve 事件系統（拆分後的 9 個子服務）
     single {
