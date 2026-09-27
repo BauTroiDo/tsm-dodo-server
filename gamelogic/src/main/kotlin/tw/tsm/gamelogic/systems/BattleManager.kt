@@ -14,6 +14,7 @@ import tw.tsm.domain.data.NpcDropDef
 import tw.tsm.domain.data.SkillDef
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.ResponseSender
+import tw.tsm.domain.interfaces.repositories.SkillRepository
 import tw.tsm.domain.valueobjects.FollowNpcData
 import tw.tsm.gamelogic.battle.*
 import tw.tsm.protocol.BattleRoleData
@@ -43,7 +44,8 @@ class BattleManager(
     private val npcDropTable: Map<Int, List<NpcDropDef>> = emptyMap(),
     private val skillSystem: SkillSystem? = null,
     private val macroBoxSystem: MacroBoxSystem? = null,
-    private val itemDefs: Map<Int, tw.tsm.domain.data.ItemDef> = emptyMap()
+    private val itemDefs: Map<Int, tw.tsm.domain.data.ItemDef> = emptyMap(),
+    private val skillRepository: SkillRepository? = null
 ) {
     /** 戰鬥道具解析器（無狀態，全戰鬥共用） */
     private val battleItemResolver = BattleItemResolver(inventorySystem, itemDefs)
@@ -888,7 +890,18 @@ class BattleManager(
      *
      * 累加經驗 → 檢查升級 → 重算 maxHP/maxSP → 通知客戶端
      */
-    private fun distributeExp(session: GameSession, charId: Long, state: PlayerState, expGain: Long) {
+    private suspend fun distributeExp(session: GameSession, charId: Long, state: PlayerState, expGain: Long) {
+        if (state.turn >= 3) {
+            val repo = skillRepository ?: return
+            val turn3 = repo.findTurn3State(charId)
+            val newExp = (turn3.exp + expGain).coerceAtLeast(0)
+            repo.saveTurn3State(charId, turn3.copy(exp = newExp))
+            // RoleController.SetAttribute(EAttribute.Exp) routes attr 36 into turn3Info.exp when Turn == 3.
+            // Keep using wire EXP=36; 253 is an internal direct Turn3 attribute.
+            responseSender.sendSetAttribute(session, EAttribute.EXP, newExp.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(), true)
+            logger.info { "三轉經驗：charId=$charId +$expGain → $newExp" }
+            return
+        }
         synchronized(state) {
             state.exp += expGain
             // 通知客戶端經驗變化（EAttribute.EXP = 36）
