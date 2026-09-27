@@ -63,8 +63,8 @@ object BattleConstants {
     /** DVT FightRoleController.DoClick: 15002 只允許目標最多高施放者 5 級。 */
     const val MANUAL_CATCH_LEVEL_DIFF = 5
 
-    /** 捕捉技能 ID 集合 */
-    val CATCH_SKILL_IDS = setOf(CATCH_HAND, CATCH_NET_FAIL, CATCH_NET_SUCCESS, CATCH_NET_FAIL_2, CATCH_NET_SUCCESS_2)
+    /** C→S manual catch command: DVT FightRoleController.DoClick only sends CatchNet=15002. */
+    val CATCH_COMMAND_SKILL_IDS = setOf(CATCH_NET_FAIL)
 
     // ── 防禦技能 ID ──
     /** 防禦（FightField.lua: 17001） */
