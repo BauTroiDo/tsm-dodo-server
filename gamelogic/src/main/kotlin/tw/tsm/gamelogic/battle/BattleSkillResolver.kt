@@ -186,10 +186,10 @@ class BattleSkillResolver(
 
                 // 施加狀態異常
                 if (calcResult.inflictedStatus != tw.tsm.domain.enums.BattleStatus.NONE) {
-                    target.statusEffect = calcResult.inflictedStatus
-                    target.statusRounds = calcResult.statusRounds
-                    target.statusSkillId = skillId
-                    target.statusAppliedRound = currentRound
+                    val group = modeledStatusGroup(calcResult.inflictedStatus)
+                    if (group > 0) {
+                        target.setGroupedStatus(group, calcResult.inflictedStatus, calcResult.statusRounds, skillId, currentRound)
+                    }
                 }
 
                 // 死亡判定
@@ -224,12 +224,9 @@ class BattleSkillResolver(
      * status belongs to a group this skill clears.
      */
     private fun clearModeledStatus(target: BattleFighter, skillId: Int) {
-        val group = modeledStatusGroup(target.statusEffect)
-        if (group == 0 || group !in clearGroups(skillId)) return
-        target.statusEffect = tw.tsm.domain.enums.BattleStatus.NONE
-        target.statusRounds = 0
-        target.statusSkillId = 0
-        target.statusAppliedRound = -1
+        for (group in clearGroups(skillId)) {
+            target.clearGroupedStatus(group)
+        }
     }
 
     private fun modeledStatusGroup(status: tw.tsm.domain.enums.BattleStatus): Int = when (status) {
