@@ -1135,7 +1135,11 @@ class BattleManager(
         // Keep the SPECIAL slot authoritative for Light/Dark summon validation.
         // Other equipment IDs are still serialized as before.
         val equipIds = equips.values.map { it.itemId }.toIntArray()
-        val specialEquipId = equips[6]?.itemId ?: 0
+        val weaponItem = equips[3]
+        val specialEquip = equips[6]
+        val specialEquipId = specialEquip?.itemId ?: 0
+        val weaponItemId = weaponItem?.itemId ?: 0
+        val weaponItemKind = weaponItem?.let { itemDefs[it.itemId]?.kind } ?: 0
         val normalSkillLevels = skillSystem?.getCache(charId)?.skills?.filterValues { it > 0 }.orEmpty()
         val turn3SkillLevels = skillRepository
             ?.findTurn3State(charId)
@@ -1167,6 +1171,9 @@ class BattleManager(
             career = state.career,
             turn3Element = session.turn3Element,
             specialEquipItemId = specialEquipId,
+            specialEquipDamage = specialEquip?.damage ?: 0,
+            weaponItemId = weaponItemId,
+            weaponItemKind = weaponItemKind,
             sex = session.sex,
             face = session.face,
             hair = session.hair,
