@@ -220,6 +220,7 @@ object BattleDamageCalc {
     private val CHAOS_SKILLS = setOf(11046, 14021, 20014, 20020, 20055, 23009, 23007, 23022, 20051, 14065, 21041, 20058, 41002)
     private val TARDY_SKILLS = setOf(10016, 10017, 10018, 10019, 11045, 14097, 21001, 21028, 23027)
     private val LANDSLIP_SKILLS = setOf(10025)
+private val TAUNT_SKILLS = setOf(10042, 10045, 22030)
 
 }
 
