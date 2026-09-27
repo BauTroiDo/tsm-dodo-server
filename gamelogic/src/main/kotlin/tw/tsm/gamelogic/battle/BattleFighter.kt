@@ -70,6 +70,8 @@ class BattleFighter(
     var isDefending: Boolean = false,
     var statusEffect: BattleStatus = BattleStatus.NONE,
     var statusRounds: Int = 0,
+    /** Skill that applied the current status; echoed when the status is restored. */
+    var statusSkillId: Int = 0,
 
     /** 本回合是否已行動（跨執行緒：Netty 寫入 / 協程讀取） */
     @Volatile var hasActed: Boolean = false,
