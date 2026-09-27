@@ -2332,7 +2332,7 @@ function UIStatus.OnClick_ChangeSetName(uiEvent)
       if name == nil then return end
       Status.ChangeAttSetName(name);
     end,
-    6);
+    12);
 end
 
 function UIStatus.OnClick_EditAttSet()

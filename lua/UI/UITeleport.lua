@@ -1,9 +1,9 @@
 EUITeleportTag = {
-  Skypoint = 1,  --天行
-  Memory = 2,    --記憶傳送
-  FightArea = 3, --練功區
+  Skypoint = 1,       --天行
+  Memory = 2,         --記憶傳送
+  FightArea = 3,      --練功區
   LimitFightArea = 4, --限時練功區
-  Turn = 5, --轉生
+  Turn = 5,           --轉生
 }
 
 UITeleport = {}

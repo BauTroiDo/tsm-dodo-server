@@ -133,42 +133,16 @@ function StoreValue.Buy(platform, index, tradeType)
     else
       if tradeType > 1 then
         UI.Open(UIMallPaySelect, index);
-      else
-        if platform == EPlatform.MyCard then
-          MyCard.PcBuy(index);
-        elseif platform == EPlatform.NewebPay then
-          MyCard.NewebPay(index);
-        elseif platform == EPlatform.NineCard or platform == EPlatform.ULong then
-          if index == BattlePass.battlePassStorValueIndex then
-            UI.Open(UIMyCardInput, platform, EMyCardInputKind.BattlePass);
-          else
-            UI.Open(UIMyCardInput, platform, EMyCardInputKind.Others);
-          end
-        end
       end
     end
   else
-    if platform == EPlatform.Android or platform == EPlatform.IOS then
-      IAP.PurchaseProduct(StoreValue.GetIAPIndex(index));
-    elseif platform == EPlatform.MyCard then
-      if Define.IsDebugMode() then
-        if index == BattlePass.battlePassStorValueIndex then
-          UI.Open(UIMyCardInput, platform, EMyCardInputKind.BattlePass);
-        else
-          UI.Open(UIMyCardInput, platform, EMyCardInputKind.Others);
-        end
-      else
-        MyCard.Buy(index, tradeType);
-      end
-    elseif platform == EPlatform.AliPay then
-      AliPay.Buy(index);
-    elseif platform == EPlatform.NineCard or platform == EPlatform.ULong or platform == EPlatform.NewebPay then
-      if index == BattlePass.battlePassStorValueIndex then
-        UI.Open(UIMyCardInput, platform, EMyCardInputKind.BattlePass);
-      else
-        UI.Open(UIMyCardInput, platform, EMyCardInputKind.Others);
-      end
-    end
+    local gameType = "110";
+    local customData = string.Concat(gameType, "_", Network.account, "_", Network.dbId, "_", Network.serverId);
+    local productId = IAPData.GetVNProduct();
+    local iapIndex = StoreValue.GetIAPIndex(index);
+    logError(" index : " .. index);
+    logError(" productId : " .. productId[iapIndex]);
+    CGSDK.buyInAppItem(productId[iapIndex], customData);
   end
 end
 

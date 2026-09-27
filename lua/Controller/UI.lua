@@ -136,6 +136,7 @@ require "UI/UITreasure"
 require "UI/UIActivityModel"
 require "UI/UIBingo"
 require "UI/UIActivityMonopoly"
+require "UI/UIAgeAlert"
 require "UI/UILeaderboardSimple"
 
 Color = {
@@ -799,6 +800,7 @@ end
 local closeException = {
   UICenterMessage,
   UIMarqueeMessage,
+  UIAgeAlert,
 }
 
 function UI.CloseAll()

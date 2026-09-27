@@ -143,6 +143,7 @@ local this = UIDebug;
 this.name = "UIDebug";
 this.uiController = nil;
 this.RecordMode = false;
+this.customLogin = false;
 
 local image_Mask;
 
@@ -259,7 +260,7 @@ function UIDebug.OnClick_Switch(sender)
   text_Info.text = string.Concat(text_Info.text, "\n移動速度: ", Role.player.speed);
 end
 
---Argument Function
+-- Argument Function
 function UIDebug.OnClick_Reset(sender)
   for k, v in pairs(inputField_Args) do
     v.text = "";

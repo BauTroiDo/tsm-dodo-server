@@ -135,3 +135,5 @@ out/
 # Windows
 Thumbs.db
 Desktop.ini
+__pycache__/
+*.py[cod]

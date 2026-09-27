@@ -7,7 +7,7 @@ this.serverTimeSpan = nil;
 this.serverTime = nil;
 this.serverStartTime = nil;
 this.roleCreateTime = nil;
-this.onlineTime = nil;  --每日在線時間(跨日歸零從新計算)
+this.onlineTime = nil;  --每日在線時間 (跨日歸零從新計算)
 
 this.time = 0;
 this.deltaTime = 0;

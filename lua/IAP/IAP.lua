@@ -11,17 +11,8 @@ function IAP.Init()
   if isIAPInit then return end
 
   if not LuaHelper.IsStandalone then
-    if LuaHelper.CheckDefine("ThirdParty") then
-      if LuaHelper.CheckDefine("HK") then
-        MyCard.Init();
-        AliPay.Init();
-      elseif LuaHelper.CheckDefine("TW") then
-        MyCard.Init();
-      end
-    else
-      LuaHelper.InitIAP( this.PurchaseSucess, this.PurchaseFail, this.QueryPurchase, IAPData.GetProductName(), IAPData.GetPublicKey() );
-      LuaHelper.QueryReceipt();
-    end
+    LuaHelper.InitIAP( this.PurchaseSucess, this.PurchaseFail, this.QueryPurchase, IAPData.GetProductName(), IAPData.GetPublicKey() );
+    LuaHelper.QueryReceipt();
   end
 
   isIAPInit = true;

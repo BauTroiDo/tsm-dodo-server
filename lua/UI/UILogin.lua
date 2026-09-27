@@ -5,6 +5,9 @@ this.name = "UILogin";
 this.uiController = nil;
 this.loginKind = 1; --ELogin.AccPwd
 this.loginToken = 0;
+this.uid = 0;
+this.token = 0;
+
 
 --ui
 local gameObjcet_Server;
@@ -73,6 +76,7 @@ function UILogin.Initialize(go)
 
   local tempEvent = uiController:FindEvent("Image_FB");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_FB);
+  tempEvent.gameObject:SetActive(false);
 
   local tempEvent = uiController:FindEvent("Image_Apple");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_Apple);
@@ -102,6 +106,7 @@ function UILogin.Initialize(go)
 end
 
 function UILogin.OnOpen()
+
   local loadingGO = GameObject.Find("UI_Loading");
   if loadingGO ~= nil then
     loadingGO:SetActive(false);
@@ -151,7 +156,19 @@ function UILogin.OnOpen()
 
   this.UpdateUI();
 
+  CGTimer.AddListener(this.AlertMessage, 300, true);
+
+  CGSDK.TrackEvent("vtc_complete_load_server_list");
+
+  if LuaHelper.CheckDefine("VN") then
+    UI.Open(UIAgeAlert);
+  end
+
   return true;
+end
+
+function UILogin.AlertMessage()
+  ShowCenterMessage("Chơi game quá 180 Phút một ngày sẽ ảnh hưởng đến sức khoẻ.");
 end
 
 function UILogin.Update()
@@ -164,21 +181,39 @@ function UILogin.UpdateUI()
   TextureManager.SetPng(ETextureUseType.UI, "common0_bod101", rawImage_ServerBG);
 
   if currentIndex > 0 then
-    --輸入帳密
-    gameObjcet_Server:SetActive(false);
-    gameObject_Account:SetActive(true);
+    if LuaHelper.CheckDefine("VN") and not LuaHelper.IsEditor then
 
-    text_ServerTittle.text = Network.servers[currentIndex].name;
+      if string.IsNullOrEmpty(inputField_Account.text) then
+        inputField_Account.text = this.uid;
+      end
+
+      if string.IsNullOrEmpty(inputField_Password.text) then
+        inputField_Password.text = this.token;
+      end
+
+      gameObjcet_Server:SetActive(true);
+      gameObject_Account:SetActive(false);
+      text_ServerTittle.text = Network.servers[currentIndex].name;
+
+      if UIDebug.customLogin then
+        gameObjcet_Server:SetActive(false);
+        gameObject_Account:SetActive(true);
+        text_ServerTittle.text = Network.servers[currentIndex].name;
+      end
+    else
+      --輸入帳密
+      gameObjcet_Server:SetActive(false);
+      gameObject_Account:SetActive(true);
+      text_ServerTittle.text = Network.servers[currentIndex].name;
+    end
   else
     --伺服器列表
     gameObjcet_Server:SetActive(true);
     gameObject_Account:SetActive(false);
-    
-    scrollContent_Server:Reset(table.maxn(Network.servers));
-
     text_ServerTittle.text = string.Get(20798);
   end
 
+  scrollContent_Server:Reset(table.maxn(Network.servers));
   gameObject_LastRecordBG:SetActive(lastServerIndex > 0);
   if lastServerIndex > 0 then
     text_LastServer.text = string.Concat(string.Get(20799), ":",  Network.servers[lastServerIndex].name);
@@ -216,8 +251,9 @@ end
 
 function UILogin.OnClick_Server(uiEvent)
   currentIndex = uiEvent.parameter;
-
-  this.UpdateUI();
+  inputField_Account.text = this.uid;
+  inputField_Password.text = this.token;
+  this.OnClick_Connect();
 end
 
 function UILogin.OnClick_Guest()
@@ -323,18 +359,27 @@ function UILogin.OnClick_Connect()
 
   nowAccount = inputField_Account.text;
   
-  this.loginKind = ELogin.AccPwd;
-  Network.loginKind = ELogin.AccPwd;
-  Network.account = inputField_Account.text;
-  Network.password = inputField_Password.text;
+  if LuaHelper.CheckDefine("VN") and not LuaHelper.IsEditor then
+    Network.loginKind = ELogin.VNSDK;
+    Network.account = this.uid;
+    Network.password = this.token;
+
+    if UIDebug.customLogin then
+      Network.loginKind = ELogin.AccPwd;
+      Network.account = inputField_Account.text;
+      Network.password = inputField_Password.text;
+    end
+  else
+    Network.loginKind = ELogin.AccPwd;
+    Network.account = inputField_Account.text;
+    Network.password = inputField_Password.text;
+  end
+
   Network.serverId = Network.servers[currentIndex].id;
   Network.host = Network.servers[currentIndex].host;
   Network.port = Network.servers[currentIndex].port;
-  Network.connectCode = 0;
 
   Network.Connect();
-
-  this.UpdateUI();
 end
 
 function UILogin.OnClick_Cancel()

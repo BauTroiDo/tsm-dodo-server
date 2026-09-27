@@ -13,9 +13,9 @@ this.uiController = nil;
 
 --ui
 local maxTextAward = 6;
-local slotMachineColor = {yellow = LuaHelper.GetColor(246,244,196,255),
-                          blue = LuaHelper.GetColor(162,230,209,255),
-                          red = LuaHelper.GetColor(255,133,153,255)};
+local slotMachineColor = {yellow = LuaHelper.GetColor(246, 244, 196, 255),
+                          blue = LuaHelper.GetColor(162, 230, 209, 255),
+                          red = LuaHelper.GetColor(255, 133, 153, 255)};
 local rawImage_Light = {};
 local uiRawImage_Light = {};
 local rawImage_ItemBoard = {};

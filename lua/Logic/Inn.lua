@@ -30,7 +30,7 @@ function Inn.SaveNpc(index, followIndex, data)
     this.npcs[index].level = data:ReadByte();
     this.npcs[index].exp = data:ReadUInt32();
     this.npcs[index].hp = data:ReadUInt32();
-    local name = data:ReadString(data:ReadByte());
+    local name = data:ReadString(data:ReadByte(), DataManager.encoding_Unicode);
     this.npcs[index].name = string.CheckNpcName(this.npcs[index].npcId, name);
     this.npcs[index].status = data:ReadByte();
   end

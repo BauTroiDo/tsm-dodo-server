@@ -42,8 +42,8 @@ this.chanelTittle[6] = 20939;
 this.chanelTittle[7] = 20940;
 this.chanelTittle[8] = 24797;
 this.chanelTittle[11] = 20927;
-                               --中文           注音          ASCII       全形符號      半型英數字符號      雙引號        ˊ       ˇ     ˊ     ˙
-this.chatRegexPattern = "^[\\u4E00-\\u9FA5\\u3105-\\u3129\\x20-\\x7E\\u3000-\\u301f\\uff01-\\uff5e\\u201c\\u201d\\u02ca\\u02c7\\u02cb\\u02d9\\u2027]*$";
+--越文           中文           注音          ASCII       全形符號      半型英數字符號      雙引號        ˊ       ˇ     ˊ     ˙
+this.chatRegexPattern = "^[\\u00C0-\\u1EF9\\u4E00-\\u9FA5\\u3105-\\u3129\\x20-\\x7E\\u3000-\\u301f\\uff01-\\uff5e\\u201c\\u201d\\u02ca\\u02c7\\u02cb\\u02d9\\u2027]*$";
 
 --var
 this.hornItem = 46029;

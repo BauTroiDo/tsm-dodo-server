@@ -1749,7 +1749,7 @@ function FightRoleController:SealSkill(skillId)
   elseif Contains(skillId, 10004, 20025, 20049) then  --樹精, 三人樹精 ,超級樹精
     status = EStatus.Clump;    
     skill = ESkill_Kind.Clump;    
-  elseif Contains(skillId, 13002, 13015, 13016, 13017, 13018, 13046, 13050, 13052, 20027, 20048, 21042,46002) then --旋風, 青龍, 三人旋風 ,超級旋風, 旋風卡, 無盡風暴,開派對囉, 諸葛狂龍咒
+  elseif Contains(skillId, 13002, 13015, 13016, 13017, 13018, 13046, 13050, 13052, 20027, 20048, 21042) then --旋風, 青龍, 三人旋風 ,超級旋風, 旋風卡, 無盡風暴,開派對囉, 諸葛狂龍咒
     status = EStatus.WhirlWind;    
     skill = ESkill_Kind.WhirlWind;    
   elseif Contains(skillId, 13007,20016,20020,13029, 23015, 23027,13041, 21033, 13044, 22041, 22043,22052) then --暈擊,x,x,山嵐, 暈斬, 肉包衝鋒, 俺乃張翼德 憶母狂雷

@@ -22,7 +22,6 @@ local text_SpecContent = {};
 local fightElfNo = 0; --出戰的小精靈no
 local feedCount = 0;
 local currentElfNo = 0;
-local currentSelected = 0;
 local orgExpGod = 999;  --原本預設的福神
 local maxExpGod = 65535;  --最大可餵食福神數量
 local expGodId = 46037;  --福神
@@ -130,10 +129,11 @@ function UIElf.OnOpen()
   
   this.ClearAttText();
   
+  for i, v in pairs(scrollItems_List) do
+    v.selected.gameObject:SetActive(false);
+  end
+  
   text_Total.text = string.format(string.Get(23749), this.GetTotalElfCount());
-
-  currentSelected = 0;
-  this.UpdateUI();
   
   return true;
 end
@@ -444,16 +444,18 @@ function UIElf.OnClick_Elf(uiEvent)
   this.UpdateClickedElf(uiEvent.parameter);
 end
 
-function UIElf.OnClick_Selected(uiEvent)
-  currentSelected = uiEvent.parameter;
-
-  this.UpdateUI();
-end
-
 function UIElf.UpdateClickedElf(index)
   currentElfNo = this.GetElfNo(index);
   
   this.UpdateInfo(index);
+  
+  for i, v in pairs(scrollItems_List) do
+    v.selected.gameObject:SetActive(false);
+  end
+  
+  if scrollItems_List[index - 1] ~= nil then
+    scrollItems_List[index - 1].selected.gameObject:SetActive(true);
+  end
 end
 
 function UIElf.GetElfNo(index)
@@ -561,9 +563,6 @@ function UIElf.OnInitialize_ScrollContent_List(scrollItems)
     scrollItems_List[itemIndex].text_Name = scrollItems[itemIndex]:Find("Text_Name"):GetComponent("Text");
     scrollItems_List[itemIndex].used = scrollItems[itemIndex]:Find("Image_Used");
     scrollItems_List[itemIndex].selected = scrollItems[itemIndex]:Find("Image_Selected");
-    scrollItems_List[itemIndex].frame = scrollItems[itemIndex]:GetComponent("UIEvent");
-    scrollItems_List[itemIndex].frame:SetListener(EventTriggerType.PointerClick, this.OnClick_Selected);
-    scrollItems_List[itemIndex].frame.parameter = itemIndex;
   end
 end
 
@@ -585,8 +584,7 @@ function UIElf.OnItemChange_ScrollContent_List(dataIndex, itemIndex)
   scrollItems_List[itemIndex].used.gameObject:SetActive(fightElfNo == elfData.no);
   scrollItems_List[itemIndex].text_Name.text = string.Get(elfData.name);
   scrollItems_List[itemIndex].event_BG.parameter = index;
-  scrollItems_List[itemIndex].frame.parameter = index;
-  scrollItems_List[itemIndex].selected.gameObject:SetActive(index == currentSelected);
+
   return true;
 end
 

@@ -480,55 +480,67 @@ function UICreateRole.OnClick_Next()
     this.UpdateUI();
 
   elseif currentStep == ECreateRoleStep.Attribute then
-    if not string.CheckName(inputField_Name.text) then return end
+    --if LuaHelper.IsAndroidPlatform and not LuaHelper.IsEditor then
+    --  CGSDK.validateName(inputField_Name.text);
+    --elseif LuaHelper.IsApplePlatform and not LuaHelper.IsEditor then
+    --  CGSDK.validateName(inputField_Name.text);
+    --else
+    --  this.SendCreateRole();
+    --end
 
-    sendBuffer:Clear();
-    sendBuffer:WriteStringWithByteL(inputField_Name.text);
-  
-    local color1 = 0;
-    local color2 = 0;
-  
-    for i = 1, 3 do
-      color1 = color1 + ((colors[i].r * 100) * math.pow(1000, 3 - i));
-      color1 = color1 + ((colors[i].g * 10) * math.pow(1000, 3 - i));
-      color1 = color1 + ((colors[i].b * 1) * math.pow(1000, 3 - i));
-    end
-  
-    for i = 4, 6 do
-      color2 = color2 + ((colors[i].r * 100) * math.pow(1000, 6 - i));
-      color2 = color2 + ((colors[i].g * 10) * math.pow(1000, 6 - i));
-      color2 = color2 + ((colors[i].b * 1) * math.pow(1000, 6 - i));
-    end
-  
-    sendBuffer:WriteByte(currentSex);
-    sendBuffer:WriteByte(0);
-    sendBuffer:WriteByte(currentStyle);
-    sendBuffer:WriteByte(0);
-    sendBuffer:WriteInt32(color1);
-    sendBuffer:WriteInt32(color2);
-    sendBuffer:WriteByte(currentElement);
-  
-    for i = 1, 6 do
-      sendBuffer:WriteByte(attributeValue[i]);
-    end
+    this.SendCreateRole();
+  end
+end
 
-    if Network.CheckServerSwitch(EServerSwitch.Review) then --送審版上架
-      sendBuffer:WriteByte(0);
-      Network.Send(9, 1, sendBuffer);
-    else
-      ShowCheckMessage(
-        function(result)
-          if result then
-            sendBuffer:WriteByte(1);
-          else
-            sendBuffer:WriteByte(0);
-          end
-          Network.Send(9, 1, sendBuffer);
-        end,
-        string.Get(23185),
-        nil
-      );
-    end
+function UICreateRole.SendCreateRole()
+  if not string.CheckName(inputField_Name.text) then return end
+
+  sendBuffer:Clear();
+  sendBuffer:WriteStringWithByteL(inputField_Name.text);
+
+  local color1 = 0;
+  local color2 = 0;
+
+  for i = 1, 3 do
+    color1 = color1 + ((colors[i].r * 100) * math.pow(1000, 3 - i));
+    color1 = color1 + ((colors[i].g * 10) * math.pow(1000, 3 - i));
+    color1 = color1 + ((colors[i].b * 1) * math.pow(1000, 3 - i));
+  end
+
+  for i = 4, 6 do
+    color2 = color2 + ((colors[i].r * 100) * math.pow(1000, 6 - i));
+    color2 = color2 + ((colors[i].g * 10) * math.pow(1000, 6 - i));
+    color2 = color2 + ((colors[i].b * 1) * math.pow(1000, 6 - i));
+  end
+
+  sendBuffer:WriteByte(currentSex);
+  sendBuffer:WriteByte(0);
+  sendBuffer:WriteByte(currentStyle);
+  sendBuffer:WriteByte(0);
+  sendBuffer:WriteInt32(color1);
+  sendBuffer:WriteInt32(color2);
+  sendBuffer:WriteByte(currentElement);
+
+  for i = 1, 6 do
+    sendBuffer:WriteByte(attributeValue[i]);
+  end
+
+  if Network.CheckServerSwitch(EServerSwitch.Review) then --送審版上架
+    sendBuffer:WriteByte(0);
+    Network.Send(9, 1, sendBuffer);
+  else
+    ShowCheckMessage(
+      function(result)
+        if result then
+          sendBuffer:WriteByte(1);
+        else
+          sendBuffer:WriteByte(0);
+        end
+        Network.Send(9, 1, sendBuffer);
+      end,
+      string.Get(23185),
+      nil
+    );
   end
 end
 

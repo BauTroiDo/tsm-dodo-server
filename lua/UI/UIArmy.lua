@@ -1691,10 +1691,10 @@ function UIArmy.CloseSignUI()
 end
 
 function UIArmy.OnChange_Declaration(text)
-  local convertedString = LuaHelper.StringToBytes(DataManager.encoding_Big5, inputField_Declaration.text);
-  if string.len(convertedString) > 200 then
+  local convertedString = LuaHelper.StringToBytes(DataManager.encoding_Unicode, inputField_Declaration.text);
+  if string.len(convertedString) > 50 then
     convertedString = string.sub(convertedString, 1, 200);
-    inputField_Declaration.text = LuaHelper.BytesToString(DataManager.encoding_Big5, convertedString);
+    inputField_Declaration.text = LuaHelper.BytesToString(DataManager.encoding_Unicode, convertedString);
   end
 end
 

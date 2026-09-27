@@ -63,6 +63,19 @@ function UILoading.OnClose()
   return true;
 end
 
+function UILoading.SetSDKBG(visable)
+  if rawImage_LoadingBG ~= nil then
+    if visable then
+      if not UI.IsVisible(UIloading) then
+        UI.Open(UILoading);
+        this.CloseAll();
+      end
+    end
+
+    rawImage_LoadingBG.gameObject:SetActive(visable);
+  end
+end
+
 function UILoading.CloseAll()
   gameObject_sliderLoading:SetActive(false);
   text_Loading.gameObject:SetActive(false);

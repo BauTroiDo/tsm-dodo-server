@@ -32,7 +32,7 @@ local imeage_Channels = {};
 --var
 local serverName = "default";
 
---[[
+--[[ 
 local currentTag = 1;
 local currentSubPage = 1;
 
@@ -171,16 +171,16 @@ function UISetting.UpdateUI()
   end
 
   for k, v in pairs(event_Functions) do
-    if (k == 3 or k == 4) and Network.CheckServerSwitch(EServerSwitch.Review) then --3客服、4官網送審版本關閉
+    if (k == 3 or k == 4 or k == 5) and Network.CheckServerSwitch(EServerSwitch.Review) then --送審版本關閉
       v.gameObject:SetActive(false);
     else
       v.gameObject:SetActive(Function.CheckShow(229 + k));
     end
   
     --安卓平台關閉刪除帳號按鈕
-    if LuaHelper.IsAndroidPlatform and k == 6 then
-      v.gameObject:SetActive(false);
-    end
+    --if LuaHelper.IsAndroidPlatform and k == 6 then
+    --  v.gameObject:SetActive(false);
+    --end
   end
 end
 
@@ -192,21 +192,13 @@ function UISetting.OnClick_Close()
   return true;
 end
 
---[[
-function UISetting.OnClick_Tag(mainTag, subTag)
-  currentTag = mainTag;
-  currentSubPage = subTag;
-
-  this.UpdateUI();
-
-  return true;
+function UISetting.ShowLoginForm()
+  CGSDK.showLoginForm();
 end
---]]
 
 function UISetting.OnClick_Function(uiEvent)
   if uiEvent.parameter == 1 then
     --離開遊戲
-    --GoogleAnalytics.Call("LogEvent", this.name, GAEventAction.ClickButton, GALabel.Quit);
     ShowCheckMessage(
       function(result)
         if result then
@@ -219,11 +211,10 @@ function UISetting.OnClick_Function(uiEvent)
 
   elseif uiEvent.parameter == 2 then
     --登出
-    --GoogleAnalytics.Call("LogEvent", this.name, GAEventAction.ClickButton, GALabel.LogOut);
     ShowCheckMessage(
       function(result)
         if result then
-          Game.Logout();
+          Game.DoLogout();
         end
       end,
       string.Get(20393),
@@ -231,57 +222,41 @@ function UISetting.OnClick_Function(uiEvent)
     );
 
   elseif uiEvent.parameter == 3 then
-    --客服中心
-    local data = {};
-    data["game_kind"] = 6;
-    data["uid"] = Role.playerId;
-    data["gamedata"] = {};
-    data["gamedata"].server = serverName;
-    data["gamedata"].id = tonumber(string.sub(Role.playerId, -10));
-    data["gamedata"].nickname = Role.player.name;
-    data["gamedata"].level = Role.player:GetAttribute(EAttribute.Lv);
-    if LuaHelper.IsAndroidPlatform then
-      data["gamedata"].version = string.Concat(string.Get(20773), LuaHelper.GetVersion());
-    elseif LuaHelper.IsApplePlatform then
-      data["gamedata"].version = string.Concat(string.Get(20774), LuaHelper.GetVersion());
-    else
-      data["gamedata"].version = string.Concat(string.Get(20775), LuaHelper.GetVersion());
-    end
-    data["systemdata"] = {};
-    data["systemdata"].imei = SystemInfo.deviceUniqueIdentifier;
-    data["systemdata"].os = SystemInfo.operatingSystem;
-    data["systemdata"].phone = SystemInfo.deviceName;
-
-    if Application.internetReachability == NetworkReachability.ReachableViaLocalAreaNetwork then
-      data["systemdata"].network = "WIFI";
-    elseif Application.internetReachability == NetworkReachability.ReachableViaCarrierDataNetwork then
-      data["systemdata"].network = "手機連線網路";
-    else
-      data["systemdata"].network = "";
-    end
-
-    --GoogleAnalytics.Call("LogEvent", this.name, GAEventAction.ClickButton, GALabel.CustomerService);
-    local url = string.Get(20776);
-    Application.OpenURL(string.Concat(url, UnityWebRequest.EscapeURL(json.encode(data), DataManager.encoding_UTF8)));
-
+    Application.OpenURL(string.Get(25126));
   elseif uiEvent.parameter == 4 then
     --連結官網
-    --GoogleAnalytics.Call("LogEvent", this.name, GAEventAction.ClickButton, GALabel.OfficialSite);
     Application.OpenURL(string.Get(50018));
   elseif uiEvent.parameter == 5 then
-    --帳號綁定
-    UI.Open(UIAccount);
+    --CGSDK.showImageActivityWhenCall();
+    Application.OpenURL(string.Get(20776));
   elseif uiEvent.parameter == 6 then
     --刪除帳號
-    ShowConfirmDeleteAccount(string.Get(23709),string.GetColorText(string.Get(23710), Color.Red),
-      function(text)
-        if text == "1234" then
-          this.OnClick_ConfirmDeleteAccount();
-        else
-          ShowCenterMessage(string.Get(23711));
+    ShowCheckMessage(
+      function(result)
+        if result then
+          if not LuaHelper.IsEditor then
+            if LuaHelper.IsApplePlatform then
+              CGTimer.DoFunctionDelay(6, this.DoShowLoginform);
+            end
+            Game.Logout();
+            UI.Close(UILogin);
+            UI.Open(UILoading);
+            UILoading.SetSDKBG(true);
+          else
+            Game.Logout();
+          end
+
+          CGSDK.deleteUser();
         end
-    end);
+      end,
+      "delete",
+      Role.player
+    );
   end
+end
+
+function UISetting.DoShowLoginform()
+  Game.Quit();
 end
 
 function UISetting.OnClick_PK()

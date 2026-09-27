@@ -1,6 +1,6 @@
 
 EHuman = {
-  None = 0,        --沒
+  None = 0,
   Player = 1,      --玩家自己
   Players = 2,     --其他玩家
   MapNpc = 3,      --大地圖Npc
@@ -2280,6 +2280,7 @@ function RoleController:CheckInteractive(kind)
       active = false;
     end
 
+    active = false; --手持版不可交易
 
   elseif kind == EInteractive.TradeNpc then
     if SceneManager.CheckLimit(SceneManager.sceneId, ESceneLimit.NoTradePet) then
@@ -2291,6 +2292,7 @@ function RoleController:CheckInteractive(kind)
       active = false;
     end
 
+    active = false; --手持版不可交易
 
   elseif kind == EInteractive.Whisper then
     if not Function.CheckShow(242) then
@@ -4205,6 +4207,39 @@ function RoleController:SetAttribute(kind, value, arg)
       NotifyManager.Notify("CheckCondition", ECondition.NowLevel);
 
       PluginManager.SetLevel(self.attributes[EAttribute.Lv]);
+
+      local level = self.attributes[EAttribute.Lv];
+      local lv = Role.player:GetAttribute(EAttribute.Turn) * Role.playerMaxLv + level;
+
+      CGSDK.trackLevelAchieved(lv);
+
+      if lv == 2 then
+        CGSDK.trackFirstCompleteLevel(Role.playerId, true);
+      end
+
+      if lv == 3 then
+        CGSDK.sentEventToServerCustom("get_lv_3");
+      elseif lv == 4 then
+        CGSDK.trackCompleteTutorial(tostring(Role.player.name), true);
+      elseif lv == 6 then
+        CGSDK.sentEventToServerCustom("get_lv_6");
+      elseif lv == 10 then
+        CGSDK.trackCompleteOverTutorial(tostring(Role.player.name), true);
+      elseif lv == 12 then
+        CGSDK.sentEventToServerCustom("get_lv_12");
+      elseif lv == 13 then
+        CGSDK.sentEventToServerCustom("get_lv_13");
+      elseif lv == 15 then
+        CGSDK.sentEventToServerCustom("get_lv_15");
+      elseif lv == 20 then
+        CGSDK.sentEventToServerCustom("get_lv_20");
+      elseif lv == 25 then
+        CGSDK.sentEventToServerCustom("get_lv_25");
+      elseif lv == 30 then
+        CGSDK.sentEventToServerCustom("get_lv_30");
+      elseif lv == 35 then
+        CGSDK.sentEventToServerCustom("get_lv_35");
+      end
     end
   
   elseif kind == EAttribute.Exp then

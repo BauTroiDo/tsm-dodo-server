@@ -241,6 +241,7 @@ C:001-003 <帳號綁定> +綁定方式(1)
   綁定方式 1:FB +L(1) +UserId(L) +L(1) +AccessToken(L)
 C:001-016 <查Server時間>
 C:001-051 <註銷帳號>
+C:001-052 <記錄使用VtcMod> +玩家ID(8) +kind(1)
 ]]--
 protocolTable[1] = {};
 
@@ -356,7 +357,7 @@ protocolTable[1][2] = function(data)
   Setting.client.lastLoginKind = UILogin.loginKind;
   Setting.client.lastLoginToken = UILogin.loginToken;
   Setting.Save();
-  Network.loginKind = ELogin.AccPwd;
+  Network.loginKind = ELogin.VNSDK;
   Network.account = data:ReadString(data:ReadByte());
   Network.password = data:ReadString(data:ReadByte());
   --綁定方式
@@ -373,6 +374,10 @@ protocolTable[1][2] = function(data)
 
   --加入心跳包
   CGTimer.AddListener(Network.CheckConnect, Network.jumpHeartTime, false);
+
+  if not Network.VtcMod or not CGResourceManager.ReadText(Network.recordTxt) == "" then
+    Network.CheckVTCMod();
+  end
 end
 
 --[[ 登入成功
@@ -501,80 +506,8 @@ protocolTable[1][13] = function(data)
   Game.OnLogin();
   Network.ResetAutoLoginInfo();
 
-  --[[
-  Chk_Show_FDisc1 = false;   --登入遊戲後第一次移動顯示
-  Chk_Show_FDisc2 = false;   --換場遇黑頻
-  Chk_Show_FDisc3 = false;   --秀人物有問題  --  92/11/19-1F
-
-  if LogPic~=nil then
-    LogPic.Free;
-    LogPic = nil;
-  end
-
-  GameEnd = false;
-  GameStart = true;      --遊戲開始
-
-  Form1.CheckHPOldTime = GetTickCount;   --判斷自動補血用
-  for i =  1 to MaxGarDamage do
-    HumManage.DamageAry[i] = 0;
-  end
-
-  --模擬伺服器啟動
-  BKSimServer = TBKSimServer.Create;
-
-  MR_FlyScrollSForm.ReSet;
-
-  Se_MainStatus.reset;
-  Se_MainStatus.appear;
-  Se_InputBar.reset;
-  Se_InputBar.appear;
-  Se_HotKeyForm.Reset;
-  Se_HotKeyForm.appear;
-  Se_ChatMsgForm.reset;
-  Se_ChatMsgForm.appear;
-  MR_BuffForm.appear;
-
-  Se_SystemForm.LoadData;
-  Se_EmotiomForm.LoadData;
-  Se_BlockMsgList.Loadlist;
-  JK_mansel1.reset;
-
-  {$ifdef Free}
-  JC_GSForm1.Init;
-  {$endif}
-
-  AC_shortMsgForm.setPic('panel4',100,20,300,145,true,0,0,50,50);
-  form1.TriggerTransition(2);
-
-  if VenderMenu ~= nil then  --只在登入時清空
-  VenderMenu.LoginInit;
-
-  LH_DragonBoat.isDragonBoatFestival = False; --登入時先清成False
-  Player.DragonBoatWinNum = 0; --登入時清成0
-  AL_WorldBossRankForm.Init;
-  FNpcUpgradeManage.Init;  --武強將化 Alen 20140801
-
-  LH_ApparatusMenu.LoadSetinfo;
-  FMixStoneMenu.GameStartDo;  --靈石強化
-  Player.InX_Mas_DoorOpen = False;  --聖誕節傳點活動光圈預設關
-  Player.IsCookingTime =  False;      --煮年菜活動傳點開關
-  FSaleRoomForm.GameStartDo;   --拍賣場
-
-  if FExpSlotForm ~= nil then
-    FExpSlotForm.GameStartDo;    --武將拉霸
-  end
-
-  --人物增益介面
-  if FHumanBuffForm ~= nil then
-    FHumanBuffForm.GameStartDo;
-  end
-
-  LH_ActGovRequireManage.Init;
-  AL_ActSwapItemManage.Init;
-  AL_ActEpicBattleManage.Init;
-  Se_EquipForm.Page = 0;
-  Se_EquipForm.ReNewPage;
-  ]]--
+  CGSDK.TrackEvent("vtc_complete_load_role");
+  CGSDK.trackRoleLogin(tostring(Network.serverId), tostring(Role.playerId), tostring(Role.player.data.name));
 end
 
 --[[ 要求送重連協定
@@ -654,7 +587,7 @@ protocolTable[1][21] = function(data)
     -- 不是原本的GS.... 我也不能幹嘛@@
   end
   CGTimer.RemoveListener(MoveController.SendRolePosition);
-  Network.loginKind = ELogin.AccPwd;
+  Network.loginKind = ELogin.VNSDK;
   Network.serverId = Setting.client.lastServerId;
   Network.account = Setting.client.lastAccount;
   Network.password = Setting.client.lastPassword;
@@ -913,11 +846,6 @@ end
 S:005-004 <資料傳完可秀人物>
 ]]--
 protocolTable[5][4] = function(data)
-  --[[
-  HumManage.isShowHum = True;
-  Player.MoveOldTime = GetTickCount;
-  MouseInfo.SetNowCursor(curDefault);
-  ]]--
 end
 
 --[[ 玩家變身
@@ -1430,6 +1358,8 @@ protocolTable[9][1] = function(data)
 
   --C:003 <選擇角色>
   Network.Send(3);
+
+  CGSDK.TrackEvent("vtc_complete_create_role");
 end
 
 --[[ 檢查名字
@@ -1519,6 +1449,10 @@ S:011-000 <結束戰鬥> + 結束的玩家ID(8) + 結束的NPCIndex(2)
 ]]--
 protocolTable[11][0] = function(data)
   FightManager.FightOver(data:ReadInt64(), data:ReadUInt16());
+
+  --if not Network.VtcMod then
+  --  Network.CheckVTCMod();
+  --end
 end
 
 --[[ 角色離開戰鬥

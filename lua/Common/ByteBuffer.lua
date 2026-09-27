@@ -40,7 +40,7 @@ function ByteBuffer:ReadString(size, encoding)
     if encoding ~= nil then
       result = LuaHelper.BytesToString(encoding, result);
     else
-      result = LuaHelper.BytesToString(DataManager.encoding_Big5, result);
+      result = LuaHelper.BytesToString(DataManager.encoding_Unicode, result);
     end
   end
 
@@ -56,7 +56,7 @@ function ByteBuffer:WriteString(value, encoding)
   if encoding ~= nil then
     convertedString = LuaHelper.StringToBytes(encoding, value);
   else
-    convertedString = LuaHelper.StringToBytes(DataManager.encoding_Big5, value);
+    convertedString = LuaHelper.StringToBytes(DataManager.encoding_Unicode, value);
   end
 
   self.data = string.Concat(self.data, convertedString);
@@ -70,7 +70,7 @@ function ByteBuffer:WriteStringWithByteL(value, encoding)
   if encoding ~= nil then
     convertedString = LuaHelper.StringToBytes(encoding, value);
   else
-    convertedString = LuaHelper.StringToBytes(DataManager.encoding_Big5, value);
+    convertedString = LuaHelper.StringToBytes(DataManager.encoding_Unicode, value);
   end
 
   self:WriteByte(string.len(convertedString));
@@ -86,7 +86,7 @@ function ByteBuffer:WriteStringWithWordL(value, encoding)
   if encoding ~= nil then
     convertedString = LuaHelper.StringToBytes(encoding, value);
   else
-    convertedString = LuaHelper.StringToBytes(DataManager.encoding_Big5, value);
+    convertedString = LuaHelper.StringToBytes(DataManager.encoding_Unicode, value);
   end
 
   self:WriteUInt16(string.len(convertedString));

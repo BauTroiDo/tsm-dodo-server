@@ -552,45 +552,35 @@ function UIDungeon.GetNeedParStr(requireData)
   if requireData == nil then
     return "";
   end
-  local aStr = "";
+
+  local param = "";
   if requireData.kind == ENeedKindTag.Area then
-    aStr = string.Get(22416);
-    for i = 0, 4 do
-      if requireData.parameter == i+1 then
-        aStr = string.format(aStr, string.Get(10086+i));
-        break;
-      end
-    end
+    param = string.format( string.Get(22416), string.GetMoral(requireData.parameter, false))
   elseif requireData.kind == ENeedKindTag.Elements then
-    aStr = string.Get(22415);
-    for i = 0, 3 do
-      if requireData.parameter == i+1 then
-        aStr = string.format(aStr, string.Get(20002+i));
-        break;
-      end
-    end
+    param = string.format(string.Get(22415), string.GetElement(requireData.parameter));
   elseif requireData.kind == ENeedKindTag.Gender then
-    aStr = string.Get(22417);
+    param = string.Get(22417);
     for i = 0, 1 do
-      if requireData.parameter == i+1 then
-        aStr = string.format(aStr, string.Get(20838+i));
+      if requireData.parameter == i + 1 then
+        param = string.format(param, string.Get(20838 + i));
         break;
       end
     end
   elseif requireData.kind == ENeedKindTag.Rebirth then
-    aStr = string.format(string.Get(22418), requireData.parameter);
+    param = string.format(string.Get(22418), requireData.parameter);
   elseif requireData.kind == ENeedKindTag.UseSkill then
     local skillData = skillDatas[requireData.parameter];
-    aStr = string.format(string.Get(22421), skillData.name);
+    param = string.format(string.Get(22421), skillData.name);
   elseif requireData.kind == ENeedKindTag.NoSill then
     local skillData = skillDatas[requireData.parameter];
-    aStr = string.format(string.Get(22422), skillData.name);
+    param = string.format(string.Get(22422), skillData.name);
   elseif requireData.kind == ENeedKindTag.MaxRound then
-    aStr = string.format(string.Get(22419), requireData.parameter);
+    param = string.format(string.Get(22419), requireData.parameter);
   elseif requireData.kind == ENeedKindTag.LimitRound then
-    aStr = string.format(string.Get(22420), requireData.parameter);
+    param = string.format(string.Get(22420), requireData.parameter);
   end
-  return aStr;
+
+  return param;
 end
 
 --WeekDungeon
@@ -798,7 +788,7 @@ end
 
 function UIDungeon.OnClick_ToNext(uiEvent)
   --周副本轉換至其它區
-  if nowPag >= 1 then
+  if nowPag >= math.floor(table.Count(weekDungeonDatas) / Dungeon.maxWeekDungeonNode) then
     return;
   end
   nowPag = nowPag+1;

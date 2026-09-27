@@ -15,6 +15,7 @@ ELogin = {
   FB = 3,
   Google = 4,
   Apple = 7,
+  VNSDK = 26,  --VN版 VTC
   Unbounded = 255,
 }
 
@@ -30,9 +31,6 @@ EServerSwitch = {
 
 Network = {};
 local this = Network;
-
-local transform;
-local gameObject;
 
 local version = 258;
 
@@ -125,7 +123,8 @@ this.cheatSoftCode = 0;
 this.isVipServer = false;
 this.isDebugServer = false;
 this.loginFinished = false;
-this.initialized = false;
+this.VtcMod = false;
+this.recordTxt = "_UseVtcMod20260819_1";
 this.serverSwitch = 0;
 
 this.tempBuffer = nil;
@@ -149,7 +148,7 @@ this.disconnectCause = 0;
 this.autoLoginWaitTime = 10;
 this.autoLoginFight = false;
 this.autoLoginMove = false;
-this.jumpHeartTime = 20;
+this.jumpHeartTime = 90;
 
 function Network.Start()
   this.tempBuffer = ByteBuffer.New();
@@ -158,7 +157,7 @@ function Network.Start()
 end
 
 function Network.Initialize()
-  this.servers = {{id=1, host="192.168.0.157", port=6613, name="Dev Server", lightKind=0}};
+  this.servers = json.decode(CGResourceManager.DownloadText("ServerList.dat", true));
   logWarn(string.Concat("ServerList count = ", table.maxn(this.servers)));
 
   this.initialized = true;
@@ -179,8 +178,7 @@ end
 function Network.Connect()
   logWarn(string.Concat("Connect ", this.host, ":", this.port, "..."));
 
-  --[PATCHED] 跳過版本檢查（CDN 已失效）
-  --if not CGResourceManager.CheckVersion() then return end
+  if not CGResourceManager.CheckVersion() then return end
 
   this.connecting = true;
 
@@ -204,8 +202,7 @@ function Network.Connect_Unbounded()
   --this.Disconnect();
   logWarn(string.Concat("Unbounded-----Connect ", this.host_Unbounded, ":", this.port_Unbounded, "..."));
 
-  --[PATCHED] 跳過版本檢查（CDN 已失效）
-  --if not CGResourceManager.CheckVersion() then return end
+  if not CGResourceManager.CheckVersion() then return end
 
   this.connecting = true;
 
@@ -439,8 +436,8 @@ function Network.OnConnect()
   sendBuffer:WriteByte(this.loginKind);
   if this.loginKind == ELogin.AccPwd then
     --登入方式 1:帳密 +L(1) +帳號(L) +L(1) +密碼(L)
-    sendBuffer:WriteStringWithByteL(this.account);
-    sendBuffer:WriteStringWithByteL(this.password);
+    sendBuffer:WriteStringWithWordL(this.account);
+    sendBuffer:WriteStringWithWordL(this.password);
 
   elseif this.loginKind == ELogin.Guest then
     --登入方式 2:遊客
@@ -450,6 +447,14 @@ function Network.OnConnect()
     sendBuffer:WriteStringWithWordL(this.account);
     sendBuffer:WriteStringWithWordL(this.password);
   elseif this.loginKind == ELogin.Apple then
+    sendBuffer:WriteStringWithWordL(this.account);
+    sendBuffer:WriteStringWithWordL(this.password);
+  elseif this.loginKind == ELogin.Google then
+    sendBuffer:WriteStringWithWordL(this.account);
+    sendBuffer:WriteStringWithWordL(this.password);
+  elseif this.loginKind == ELogin.VNSDK then
+    this.account = UILogin.uid;
+    this.password = UILogin.token;
     sendBuffer:WriteStringWithWordL(this.account);
     sendBuffer:WriteStringWithWordL(this.password);
   elseif this.loginKind == ELogin.Unbounded then  
@@ -517,6 +522,30 @@ function Network.OnDisconnect()
   this.disconnectQuit = false;
   this.disconnectMessage = "";
   this.disconnectCause = 0;
+end
+
+function Network.CheckVTCMod()
+  local success, result = pcall(require, "Logic/VtcMod");
+  if success then
+    --C:001-052 <記錄使用Vtc> +玩家ID(8) +kind(1)
+    sendBuffer:Clear();
+    sendBuffer:WriteInt64(Role.playerId);
+    sendBuffer:WriteByte(1);
+    Network.Send(1, 52, sendBuffer);
+    Network.VtcMod = true;
+    CGResourceManager.WriteText(this.recordTxt, "1");
+  end
+  if VtcMod then
+    --C:001-052 <記錄使用Vtc> +玩家ID(8) +kind(1)
+    sendBuffer:Clear();
+    sendBuffer:WriteInt64(Role.playerId);
+    sendBuffer:WriteByte(2);
+    Network.Send(1, 52, sendBuffer);
+    Network.VtcMod = true;
+    if CGResourceManager.ReadText(this.recordTxt) == "" then
+      CGResourceManager.WriteText(this.recordTxt, "1");
+    end
+  end
 end
 
 function Network.OnInternetUnavailable()

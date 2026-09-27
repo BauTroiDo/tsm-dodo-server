@@ -371,7 +371,6 @@ function ItemData.New(reader)
   self.auctionSubTag = reader:ReadByte(); --[54]拍賣子類
   
   self.description = LuaHelper.BytesToString(DataManager.encoding_Unicode, reader:ReadBytes(reader:ReadUInt16())); --說明 Length <= 254
-  self.description = string.ReomveSymbol(self.description, " ");
 
   if Define.TextCount then
     DataManager.textCount = DataManager.textCount + string.Count(self.name) + string.Count(self.description);

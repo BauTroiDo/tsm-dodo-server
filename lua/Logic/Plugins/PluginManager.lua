@@ -32,7 +32,7 @@ local init = false;
 function PluginManager.Init()
   if init then return end
 
-  if LuaHelper.CheckDefine("TW") or LuaHelper.CheckDefine("HK") then
+  if LuaHelper.CheckDefine("VN") then
     PluginManager.RegisterTW();
   end
 
@@ -146,7 +146,6 @@ local registerTW = {};
 
 registerTW[EPluginNotify.GameStart] = function ()
   local notifyReference = notify[EPluginNotify.GameStart];
-  table.insert(notifyReference, IAP.Init);                              --IAP
 end
 
 registerTW[EPluginNotify.Login] = function ()

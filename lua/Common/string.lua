@@ -1,15 +1,15 @@
 
 --未載入字串表前用到的字串
-Str_DownloadSize = "本次下載 : %.2f MB\n解壓縮後 : %.2f MB\n請注意自身網路流量及儲存空間"
-Str_DiskFull = "儲存空間不足，請檢查儲存空間並重新啟動遊戲"
-Str_DownloadResources = "下載遊戲資源 : %.2f MB / %.2f MB";
-Str_DecompressResources = "解壓縮遊戲資源 : %d / %d";
-Str_DownloadDatas = "下載遊戲演出、檔案 : %d / %d";
-Str_DownloadImages = "下載遊戲圖片、檔案 : %.2f MB / %.2f MB";
-Str_DecompressImages = "解壓縮遊戲圖片、檔案 : %d / %d";
-Str_LoadData = "載入資料";
-Str_LoadResource = "載入資源";
-Str_NeedDownLoadResource = "後續遊戲內容需更新遊戲資源"
+Str_DownloadSize = "Tải : %.2fMB\n Giải nén : %.2f MB\n. Nhớ lưu ý dung lượng của máy bạn.Xin cám ơn"
+Str_DiskFull = "Máy không đủ dung lượng, vui lòng kiểm tra lại."
+Str_DownloadResources = "Tải : %.2f MB / %.2f MB";
+Str_DecompressResources = "Giải nén :  %d / %d";
+Str_DownloadDatas = "Tải dữ liệu : %d / %d";
+Str_DownloadImages = "Tải hình ảnh : %.2f MB / %.2f MB";
+Str_DecompressImages = "Giải nén : %d / %d";
+Str_LoadData = "Đang tải dữ liệu";
+Str_LoadResource = "Đang tải hình ảnh";
+Str_NeedDownLoadResource = "Cần cập nhật"
 
 --GoogleAnalytics用到的字串
 GALabel = {
@@ -93,101 +93,74 @@ function string.Count(str)
 end
 
 function string.Sub(str, start, len)
-  local firstResult = "";
+  local initIndex = 1;
   local strResult = "";
-  local maxLen = string.len(str);
-  start = start - 1;
-
-  --找到起始位置
-  local preSite = 1;
-
-  if start > 0 then
-    for i = 1, maxLen do
-      local s_dropping = string.byte(str, i);
-      if not s_dropping then
-        local s_str = string.sub(str, preSite, i - 1);
-
-        preSite = i + 1;
-        break;
-      end
-      
-      if s_dropping < 128 or (i + 1 - preSite) == 3 then
-        local s_str = string.sub(str, preSite, i);
-
-        preSite = i + 1;
-        firstResult = string.Concat(firstResult, s_str);
-
-        local curLen = string.Count(firstResult);
-        if curLen == start then
-          break;
-        end
-      end
-    end
-  end
-  
-  --截取字符串
-  preSite = string.len(firstResult) + 1;
-  local startC = preSite;
-  for i = startC, maxLen do
-    local s_dropping = string.byte(str, i);
-    if not s_dropping then
-      local s_str = string.sub(str, preSite, i - 1);
-
-      preSite = i;
-      strResult = string.Concat(strResult, s_str);
-
-      return strResult
-    end
-    
-    if s_dropping < 128 or (i + 1 - preSite) == 3 then
-      local s_str = string.sub(str, preSite, i)
-
-      preSite = i + 1;
-      strResult = string.Concat(strResult, s_str);
-
-      local curLen = string.Count(strResult);
-      if curLen == len then
-        return strResult;
-      end
-    end
+  local endIndex;
+  if len == nil then
+    endIndex = string.Count(str);
+  else
+    endIndex = start + len - initIndex;
   end
 
+  local index = initIndex;
+  if endIndex < start then return strResult end;
+
+  --[[
+    https://www.cnblogs.com/SkyflyBird/p/9804282.html
+    UTF8的编码规则：
+    1. 字符的第一个字节范围： 0x00—0x7F(0-127),或者 0xC2—0xF4(194-244);
+        UTF8 是兼容 ascii 的，所以 0~127 就和 ascii 完全一致
+    2. 0xC0, 0xC1,0xF5—0xFF(192, 193 和 245-255)不会出现在UTF8编码中
+    3. 0x80—0xBF(128-191)只会出现在第二个及随后的编码中(针对多字节编码，如汉字)
+    ]]
+  --Use gmatch from http://lua-users.org/wiki/LuaUnicode for now.
+  for singleChar in string.gmatch(str, "([%z\1-\127\194-\244][\128-\191]*)") do
+    if index >= start and index <= endIndex then
+      strResult = string.Concat(strResult, singleChar);
+    end
+    index = index + 1;
+  end
   return strResult;
 end
 
+
 function string.GetLength(s)
-  --计算字符串宽度
-  --可以计算出字符宽度，用于显示使用
-  local lenInByte = #s;
-  local width = 0;
-  local i = 1;
+  if string.gmatch(s, "([%z\1-\127\194-\244][\128-\191]*)") then
+    return TextChecker.GetLength(s);
+  else
+    --计算字符串宽度
+    --可以计算出字符宽度，用于显示使用
+    local lenInByte = #s;
+    local width = 0;
+    local i = 1;
 
-  while i <= lenInByte do
-    local curByte = string.byte(s, i);
+    while i <= lenInByte do
+      local curByte = string.byte(s, i);
 
-    local byteCount = 1;
-    if curByte > 0 and curByte <= 127 then
-      --1字节字符
-      byteCount = 1;
-    elseif curByte >= 192 and curByte < 223 then
-      --双字节字符
-      byteCount = 2;
-    elseif curByte >= 224 and curByte < 239 then
-      --汉字
-      byteCount = 2;  --原本是3  因為delphi一個中文字長度是2所以改2
-    elseif curByte >= 240 and curByte <= 247 then
-      --4字节字符
-      byteCount = 4;
+      local byteCount = 1;
+      if curByte > 0 and curByte <= 127 then
+        --1字节字符
+        byteCount = 1;
+      elseif curByte >= 192 and curByte < 223 then
+        --双字节字符
+        byteCount = 2;
+      elseif curByte >= 224 and curByte < 239 then
+        --汉字
+        byteCount = 2;  --原本是3  因為delphi一個中文字長度是2所以改2
+      elseif curByte >= 240 and curByte <= 247 then
+        --4字节字符
+        byteCount = 4;
+      end
+
+      --重置下一字节的索引
+      i = i + byteCount;
+
+      --字符的个数（长度
+      width = width + 1;
     end
 
-    --重置下一字节的索引
-    i = i + byteCount;
-
-    --字符的个数（长度
-    width = width + 1;
+    return width;
   end
-
-  return width;
 end
 
 function string.ChangeSymbol(s)
@@ -363,14 +336,16 @@ function string.GetSecondText(seconds, shortText)
   return result;
 end
 
-function string.GetSecondSymbol(seconds)
+function string.GetSecondSymbol(seconds, noHour)
   local result = "";
 
   local hour = math.floor(seconds / 3600);
-  if hour > 0 then 
+  if hour > 0 then
     result = string.Concat(result, string.TenDigits(hour), ":");
   else
-    result = string.Concat(result, "00:");
+    if not noHour then
+      result = string.Concat(result, "00:");
+    end
   end
 
   local min = math.floor(seconds / 60) % 60;
@@ -406,7 +381,8 @@ function string.Trim(s)
   return (s:gsub("^%s*(.-)%s*$", "%1"));
 end
 
-function string.CheckName(s)
+function string.CheckName(s, skipIllegal)
+  
   if s == nil or s == "" then
     ShowCenterMessage(string.Get(50021));
     return false;
@@ -417,16 +393,18 @@ function string.CheckName(s)
     return false;
   end
 
+  if string.GetLength(s) > 14 then
+    ShowCenterMessage(string.Get(49005));
+    return false;
+  end
+
+  if skipIllegal then return true end
+
   for k, v in pairs(illegalDatas) do
     if string.match(s, string.GetNocase(v)) ~= nil then
       ShowCenterMessage(string.Get(50022));
       return false;
     end
-  end
-
-  if string.GetLength(s) > 14 then
-    ShowCenterMessage(string.Get(49005));
-    return false;
   end
 
   return true;
@@ -516,7 +494,7 @@ function string.Parse(text)
       if Network.servers[i].id == value then
         return Network.servers[i].name
       end
-    end  
+    end
   end
   
   return string.Concat("%", text, "%");
@@ -530,11 +508,11 @@ function string.GetAttribute(kind)
   elseif kind == 3 then
     return string.Get(20039);
   elseif kind == 4 then
-    return string.Get(20040);
-  elseif kind == 5 then
-    return string.Get(20041);
-  elseif kind == 6 then
     return string.Get(20042);
+  elseif kind == 5 then
+    return string.Get(20040);
+  elseif kind == 6 then
+    return string.Get(20041);
   end
   
   return "";
@@ -657,6 +635,20 @@ function string.GetCurrency(currency)
     return TextParse.GetSpriteText("common0", "common0_icon155", 20, 20, 0, 2);
   elseif currency == ECurrency.Treasure then
     return TextParse.GetSpriteText("common0", "common0_icon202", 20, 20, 0, 2);
+  elseif currency == ECurrency.TS then
+    return TextParse.GetSpriteText("common0", "common0_icon154", 20, 20, 0, 2);
+  elseif currency == ECurrency.Soul then
+    return TextParse.GetSpriteText("common0", "common0_icon158", 20, 20, 0, 2);
+  elseif currency == ECurrency.ColorSoul then
+    return TextParse.GetSpriteText("common0", "common0_icon161", 20, 20, 0, 2);
+  elseif currency == ECurrency.WarriorTicket then
+    return TextParse.GetSpriteText("common0", "common0_icon165", 20, 20, 0, 2);
+  elseif currency == ECurrency.CardTicket then
+    return TextParse.GetSpriteText("common0", "common0_icon164", 20, 20, 0, 2);
+  elseif currency == ECurrency.ExclusiveWeaponTicket then
+    return TextParse.GetSpriteText("common0", "common0_icon163", 20, 20, 0, 2);
+  elseif currency == ECurrency.OutfitTicket then
+    return TextParse.GetSpriteText("common0", "common0_icon162", 20, 20, 0, 2);
   else
     return "";
   end
@@ -679,6 +671,20 @@ function string.GetCurrencyName(currency)
     return string.Get(23573);
   elseif currency == ECurrency.Elf then
     return string.Get(23736);
+  elseif currency == ECurrency.TS then
+    return string.Get(23737);
+  elseif currency == ECurrency.Soul then
+    return string.Get(23932);
+  elseif currency == ECurrency.ColorSoul then
+    return string.Get(23933);
+  elseif currency == ECurrency.WarriorTicket then
+    return string.Get(23939);
+  elseif currency == ECurrency.CardTicket then
+    return string.Get(23940);
+  elseif currency == ECurrency.ExclusiveWeaponTicket then
+    return string.Get(23941);
+  elseif currency == ECurrency.OutfitTicket then
+    return string.Get(23942);
   elseif currency == ECurrency.Treasure then
     return string.Get(24607);
   else
@@ -696,7 +702,7 @@ function string.GetUiSellFail(sellId, kind, value)
   elseif kind == 4 then
     return string.Get(10140); --價格錯誤
   elseif kind == 5 then
-    return string.Get(40077); --金錢不足
+    return string.Get(24959); --貨幣不足
   elseif kind == 6 then
     return string.Get(10141); --扣金錢失敗
   elseif kind == 7 then
@@ -843,7 +849,9 @@ function string.GetServerText(data)
   local textKind = data:ReadByte();
   
   if textKind == 0 then
-    result = data:ReadString(data:ReadByte());
+    local len = data:ReadInt16()
+    result = data:ReadString(len);
+    result = string.gsub(result, "<%%(.-)%%>", string.Parse);
   elseif textKind == 1 then
     result = string.Get(data:ReadInt32());
   elseif textKind == 2 then
@@ -857,15 +865,30 @@ function string.GetServerText(data)
   local argTexts = {};
   for i = 1, count do
     textKind = data:ReadByte();
-    
     if textKind == 0 then
-      argTexts[i] = data:ReadString(data:ReadByte());
+      argTexts[i] = data:ReadString(data:ReadInt16());
+      argTexts[i] = string.gsub(argTexts[i], "<%%(.-)%%>", string.Parse);
     elseif textKind == 1 then
       argTexts[i] = string.Get(data:ReadInt32());
     elseif textKind == 2 then
       argTexts[i] = tostring(data:ReadInt32());
     elseif textKind == 3 then
       argTexts[i] = string.AddBrackets(string.Get(data:ReadInt32()));
+    elseif textKind == 4 then
+      local itemId = data:ReadUInt16();
+      local itemData = itemDatas[itemId];
+      if itemData ~= nil then
+        argTexts[i] = itemData:GetName(true);
+      else
+        logError(" GetServerText itemId is nil : " .. itemId);
+      end
+    elseif textKind == 5 then
+      local npcId = data:ReadUInt16();
+      if npcId ~= nil then
+        argTexts[i] = npcDatas[npcId].name;
+      else
+        logError(" GetServerText npcId is nil : " .. npcId);
+      end
     end
   end
   
@@ -917,6 +940,23 @@ end
 
 function string.GetRoleKey()
   return string.format("_%d_%s", Network.serverId, Role.playerId);
+end
+
+function string.ReplaceSpecialSymbol(s)
+  --( ) . % + - * ? [ ] ^ $
+  --  s = string.gsub(s,  "%(", "%%(");
+  --  s = string.gsub(s,  "%)", "%%)");
+  s = string.gsub(s,  "%.", "%%.");
+  --  s = string.gsub(s,  "%%", "%%%");
+  s = string.gsub(s,  "%+", "%%+");
+  s = string.gsub(s,  "%-", "%%-");
+  s = string.gsub(s,  "%*", "%%*");
+  --  s = string.gsub(s,  "%?", "%%?");
+  --  s = string.gsub(s,  "%[", "%%[");
+  --  s = string.gsub(s,  "%]", "%%]");
+  --  s = string.gsub(s,  "%^", "%%^");
+  --  s = string.gsub(s,  "%$", "%%$");
+  return s;
 end
 
 function string.GetCommaValue(amount)
@@ -980,6 +1020,16 @@ function string.GetRandomName()
   end
 
   return fullName;
+end
+
+function string.DecodeURI(s)
+  s = string.gsub(s, '%%(%x%x)', function(h) return string.char(tonumber(h, 16)) end)
+  return s
+end
+
+function string.EncodeURI(s)
+  s = string.gsub(s, "([^%w%.%- ])", function(c) return string.format("%%%02X", string.byte(c)) end)
+  return string.gsub(s, " ", "+")
 end
 
 function string.CheckNpcName(npcId, npcName)

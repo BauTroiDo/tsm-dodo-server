@@ -731,10 +731,8 @@ function UIHouseSetting.SendHouseInfo(editType, text)
 
   --C:106-005 <設定小屋資料> +名稱字串長度(1) +名稱(?) +簽名字串長度(1) +簽名(?)
   sendBuffer:Clear();
-  sendBuffer:WriteByte(string.GetLength(name));
-  sendBuffer:WriteString(name);
-  sendBuffer:WriteByte(string.GetLength(sign));
-  sendBuffer:WriteString(sign);
+  sendBuffer:WriteStringWithByteL(name, DataManager.encoding_Unicode);
+  sendBuffer:WriteStringWithByteL(sign, DataManager.encoding_Unicode);
   Network.Send(106, 5, sendBuffer);
 
   inputTemp.name = name;

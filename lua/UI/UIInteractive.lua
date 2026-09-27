@@ -36,34 +36,6 @@ function UIInteractive.Initialize(go)
     end
   end
 
-  --手遊版 prefab 移除了 Image_Interactive (10)(11)，動態克隆
-  for _, dst in ipairs({10, 11}) do
-    if image_Interactive[dst] == nil then
-      --找到第一個存在的按鈕作為模板
-      local template = nil
-      for i = 1, table.Count(EInteractive) do
-        if image_Interactive[i] ~= nil then
-          template = image_Interactive[i]
-          break
-        end
-      end
-      if template ~= nil then
-        local clone = newObject(template.gameObject)
-        clone.transform:SetParent(template.gameObject.transform.parent)
-        clone:GetComponent("RectTransform").localScale = Vector3.one
-        clone.name = string.Concat("Image_Interactive (", dst, ")")
-
-        image_Interactive[dst] = clone:GetComponent("Image")
-
-        local cloneEvent = clone:GetComponent("UIEvent")
-        if cloneEvent ~= nil then
-          cloneEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_Interactive)
-          cloneEvent.parameter = dst
-        end
-      end
-    end
-  end
-
   tempEvent = uiController:FindEvent("Image_SearchTarget");
   tempEvent:SetListener(EventTriggerType.PointerClick, this.OnClick_SearchTarget);
 end
@@ -117,6 +89,7 @@ end
 
 function UIInteractive.OnClick_Interactive(uiEvent)
   if Role.target == nil then return end
+
   Role.target:OnInteractive(uiEvent.parameter);
 end
 

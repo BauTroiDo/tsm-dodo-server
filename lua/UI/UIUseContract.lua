@@ -4,8 +4,8 @@ local this = UIUseContract;
 this.name = "UIUseContract";
 this.uiController = nil;
 
-this.ContractName = "Contract20251209";
-this.PrivacyName = "Privacy20251209";
+this.ContractName = "Contract";
+this.PrivacyName = "Privacy";
 
 local scroll_ContentRect;
 

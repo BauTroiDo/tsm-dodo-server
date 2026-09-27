@@ -1411,7 +1411,9 @@ function DataManager.OnLoadIllegalData(file)
 
   local count = reader:ReadInt32();
   for i = 1, count do
-    table.insert(illegalDatas, LuaHelper.BytesToString(DataManager.encoding_Unicode, reader:ReadBytes(reader:ReadUInt16())));
+    local word = LuaHelper.BytesToString(DataManager.encoding_Unicode, reader:ReadBytes(reader:ReadUInt16()));
+    local replace = string.gsub(word, "%W", "%%%1");
+    table.insert(illegalDatas, replace);
   end
 end
 
@@ -1683,7 +1685,7 @@ function DataManager.OnLoadTabooData(file)
 
   local count = reader:ReadInt32();
   for i = 1, count do
-    table.insert(tabooDatas, LuaHelper.BytesToString(DataManager.encoding_Unicode, reader:ReadBytes(reader:ReadUInt16())));
+    table.insert(tabooDatas, string.ReplaceSpecialSymbol(LuaHelper.BytesToString(DataManager.encoding_Unicode, reader:ReadBytes(reader:ReadUInt16()))));
   end
 end
 

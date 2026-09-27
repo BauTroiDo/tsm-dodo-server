@@ -384,11 +384,12 @@ function UINewChat.OnClick_Send()
     local findMessage = false;
 
     local itemName = itemDatas[itemSave.Id]:GetName(false, true);
+    itemName = string.gsub(itemName, "%%", function(w) return "%%" end);
     itemName = string.gsub(itemName, "%(", function(w) return "%(" end);
     itemName = string.gsub(itemName, "%)", function(w) return "%)" end);
-    itemName = string.gsub(itemName, "%%", function(w) return "%%" end);
     itemName = string.gsub(itemName, "% 「", function(w) return "% 「" end);
     itemName = string.gsub(itemName, "%」", function(w) return "%」" end);
+    itemName = string.gsub(itemName, "%+", function(w) return "%+" end);
 
     message = string.gsub(message, itemName,
       function(w)
@@ -436,7 +437,7 @@ function UINewChat.OnClick_Send()
     v:WriteBuffer(sendBuffer);
   end
 
-  if sendBuffer.length > 300 then
+  if sendBuffer.length > 500 then
     ShowCenterMessage(string.Get(20507));
     return;
   end

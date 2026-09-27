@@ -2041,52 +2041,70 @@ function Role.GetPlayerJmpHD(sex, style)
   if sex == 1 then
     --男
     if Contains(style, 0, 5) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 1943);
+      local bodyJmp = RolePicManager.GetJMP(ERolePart.Body, 1943);
+      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 2408);
+
+      jmp = Jmp.Combine(bodyJmp, clothJmp);
       scale = 1;
     elseif Contains(style, 1, 6) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 1944);
+      local bodyJmp = RolePicManager.GetJMP(ERolePart.Body, 1944);
+      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 2408);
+
+      jmp = Jmp.Combine(bodyJmp, clothJmp);
       scale = 1;
     elseif Contains(style, 2, 7) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 1945);
+      local bodyJmp  = RolePicManager.GetJMP(ERolePart.Body, 1945);
+      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 2408);
+
+      jmp = Jmp.Combine(bodyJmp, clothJmp);
       scale = 1;
     elseif Contains(style, 3, 8) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 1946);
+      local bodyJmp  = RolePicManager.GetJMP(ERolePart.Body, 1946);
+      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 2408);
+
+      jmp = Jmp.Combine(bodyJmp, clothJmp);
       scale = 1;
     elseif Contains(style, 4, 9) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 1947);
+      local bodyJmp  = RolePicManager.GetJMP(ERolePart.Body, 1947);
+      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 2408);
+
+      jmp = Jmp.Combine(bodyJmp, clothJmp);
       scale = 1;
     elseif Contains(style, 10) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 2008);
+      local bodyJmp  = RolePicManager.GetJMP(ERolePart.Body, 2008);
+      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 2408);
+
+      jmp = Jmp.Combine(bodyJmp, clothJmp);
       scale = 1;
     elseif Contains(style, 11) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 2009);
+      local bodyJmp  = RolePicManager.GetJMP(ERolePart.Body, 2009);
+      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 2408);
+
+      jmp = Jmp.Combine(bodyJmp, clothJmp);
       scale = 1;
     elseif Contains(style, 12) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 2010);
+      local bodyJmp  = RolePicManager.GetJMP(ERolePart.Body, 2010);
+      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 2408);
+
+      jmp = Jmp.Combine(bodyJmp, clothJmp);
       scale = 1;
     elseif Contains(style, 13) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 2011);
+      local bodyJmp  = RolePicManager.GetJMP(ERolePart.Body, 2011);
+      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 2408);
+
+      jmp = Jmp.Combine(bodyJmp, clothJmp);
       scale = 1;
     elseif Contains(style, 14) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 2012);
+      local bodyJmp  = RolePicManager.GetJMP(ERolePart.Body, 2012);
+      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 2408);
+
+      jmp = Jmp.Combine(bodyJmp, clothJmp);
       scale = 1;
     elseif Contains(style, 15) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 2013);
-      scale = 1;
-    elseif Contains(style, 16) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 2019);
-      scale = 1;
-    elseif Contains(style, 17) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 2020);
-      scale = 1;
-    elseif Contains(style, 18) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 2021);
-      scale = 1;
-    elseif Contains(style, 19) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 2022);
-      scale = 1;
-    elseif Contains(style, 20) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 2023);
+      local bodyJmp  = RolePicManager.GetJMP(ERolePart.Body, 2013);
+      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 2408);
+
+      jmp = Jmp.Combine(bodyJmp, clothJmp);
       scale = 1;
     end
 
@@ -2100,61 +2118,88 @@ function Role.GetPlayerJmpHD(sex, style)
   else
     --女
     if Contains(style, 0, 7) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 1949);
+      local bodyJmp = RolePicManager.GetJMP(ERolePart.Body, 1949);
+      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 3414);
+
+      jmp = Jmp.Combine(bodyJmp, clothJmp);
       scale = 1;
     elseif Contains(style, 1, 8) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 1950);
+      local bodyJmp = RolePicManager.GetJMP(ERolePart.Body, 1950);
+      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 3414);
+
+      jmp = Jmp.Combine(bodyJmp, clothJmp);
       scale = 1;
     elseif Contains(style, 2, 9) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 1951);
+      local bodyJmp = RolePicManager.GetJMP(ERolePart.Body, 1951);
+      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 3414);
+
+      jmp = Jmp.Combine(bodyJmp, clothJmp);
       scale = 1;
     elseif Contains(style, 3, 10) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 1952);
+      local bodyJmp = RolePicManager.GetJMP(ERolePart.Body, 1952);
+      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 3414);
+
+      jmp = Jmp.Combine(bodyJmp, clothJmp);
       scale = 1;
     elseif Contains(style, 4, 11) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 1953);
+      local bodyJmp = RolePicManager.GetJMP(ERolePart.Body, 1953);
+      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 3414);
+
+      jmp = Jmp.Combine(bodyJmp, clothJmp);
       scale = 1;
     elseif Contains(style, 5, 12) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 1954);
+      local bodyJmp = RolePicManager.GetJMP(ERolePart.Body, 1954);
+      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 3414);
+
+      jmp = Jmp.Combine(bodyJmp, clothJmp);
       scale = 1;
     elseif Contains(style, 6, 13) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 1948);
+      local bodyJmp = RolePicManager.GetJMP(ERolePart.Body, 1948);
+      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 3414);
+
+      jmp = Jmp.Combine(bodyJmp, clothJmp);
       scale = 1;
     elseif Contains(style, 14) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 2001);
+      local bodyJmp = RolePicManager.GetJMP(ERolePart.Body, 2001);
+      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 3414);
+
+      jmp = Jmp.Combine(bodyJmp, clothJmp);
       scale = 1;
     elseif Contains(style, 15) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 2002);
+      local bodyJmp = RolePicManager.GetJMP(ERolePart.Body, 2002);
+      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 3414);
+
+      jmp = Jmp.Combine(bodyJmp, clothJmp);
       scale = 1;
     elseif Contains(style, 16) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 2003);
+      local bodyJmp = RolePicManager.GetJMP(ERolePart.Body, 2003);
+      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 3414);
+
+      jmp = Jmp.Combine(bodyJmp, clothJmp);
       scale = 1;
     elseif Contains(style, 17) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 2004);
+      local bodyJmp = RolePicManager.GetJMP(ERolePart.Body, 2004);
+      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 3414);
+
+      jmp = Jmp.Combine(bodyJmp, clothJmp);
       scale = 1;
     elseif Contains(style, 18) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 2005);
+      local bodyJmp = RolePicManager.GetJMP(ERolePart.Body, 2005);
+      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 3414);
+
+      jmp = Jmp.Combine(bodyJmp, clothJmp);
       scale = 1;
     elseif Contains(style, 19) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 2006);
+      local bodyJmp = RolePicManager.GetJMP(ERolePart.Body, 2006);
+      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 3414);
+
+      jmp = Jmp.Combine(bodyJmp, clothJmp);
       scale = 1;
     elseif Contains(style, 20) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 2007);
-      scale = 1;
-    elseif Contains(style, 21) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 2014);
-      scale = 1;
-    elseif Contains(style, 22) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 2015);
-      scale = 1;
-    elseif Contains(style, 23) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 2016);
-      scale = 1;
-    elseif Contains(style, 24) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 2017);
-      scale = 1;
-    elseif Contains(style, 25) then
-      jmp = RolePicManager.GetJMP(ERolePart.Body, 2018);
+      local bodyJmp = RolePicManager.GetJMP(ERolePart.Body, 2007);
+      local clothJmp = RolePicManager.GetJMP(ERolePart.Clothes, 3414);
+
+      jmp = Jmp.Combine(bodyJmp, clothJmp);
       scale = 1;
     end
 

@@ -9,7 +9,8 @@ EUIAlertType = {
   Password = 7,
   Pin = 8,
   CheckBox = 9,
-  ChatChanel = 10
+  ChatChanel = 10,
+  ChangeNPCName = 11
 }
           
 UIAlert = {};
@@ -147,7 +148,7 @@ end
 
 function ShowNameInput(hint, eventHandler, maxChinese)
   if maxChinese == nil then
-    maxChinese = 7;
+    maxChinese = 14;
   end
 
   UI.Open(UIAlert, EUIAlertType.Standard, 
@@ -169,7 +170,7 @@ function ShowPlayerInfoInput(hint, eventHandler ,maxChinese)
           hint,
           "",
           1,
-          maxChinese * 2
+          maxChinese
   );
 end
 
@@ -238,7 +239,7 @@ function UIAlert.OnClickToogle(uiEvent)
   this.UpdateCheckBox();
 end
 
-function UIAlert.OnOpen(kind, positiveFunc, mainTitle, toggleTitile, minLimit, maxLimit, itemId, currency, price, channels, itemCount, subTitle,needCancel, cancelFunc)
+function UIAlert.OnOpen(kind, positiveFunc, mainTitle, toggleTitile, minLimit, maxLimit, itemId, currency, price, channels, itemCount, subTitle, needCancel, cancelFunc)
   currentKind = kind;
   currentClickEvent = positiveFunc;
   currentMin = minLimit;
@@ -394,9 +395,19 @@ function UIAlert.OnChange_Content(text)
   elseif currentKind == EUIAlertType.Alphanumeric then
   elseif currentKind == EUIAlertType.Name then
     if currentMax ~= nil and currentMax > 0 then
-      local convertedString = LuaHelper.StringToBytes(DataManager.encoding_Big5, inputField_Small.text);
+      local convertedString = LuaHelper.StringToBytes(DataManager.encoding_Unicode, inputField_Small.text);
 
       if string.len(convertedString) > currentMax then
+        convertedString = string.sub(convertedString, 1, currentMax);
+        inputField_Small.text = LuaHelper.BytesToString(DataManager.encoding_Unicode, convertedString);
+      end
+    end
+
+  elseif currentKind == EUIAlertType.ChangeNPCName then
+    if currentMax ~= nil and currentMax > 0 then
+      local convertedString = LuaHelper.StringToBytes(DataManager.encoding_Big5, inputField_Small.text);
+
+      if string.Count(inputField_Small.text) > currentMax then
         convertedString = string.sub(convertedString, 1, currentMax);
         inputField_Small.text = LuaHelper.BytesToString(DataManager.encoding_Big5, convertedString);
       end
@@ -407,11 +418,11 @@ function UIAlert.OnChange_Content(text)
   elseif currentKind == EUIAlertType.Pin then
   else
     if currentMax ~= nil and currentMax > 0 then
-      local convertedString = LuaHelper.StringToBytes(DataManager.encoding_Big5, inputField_Small.text);
+      local convertedString = LuaHelper.StringToBytes(DataManager.encoding_Unicode, inputField_Small.text);
 
       if string.len(convertedString) > currentMax then
         convertedString = string.sub(convertedString, 1, currentMax);
-        inputField_Small.text = LuaHelper.BytesToString(DataManager.encoding_Big5, convertedString);
+        inputField_Small.text = LuaHelper.BytesToString(DataManager.encoding_Unicode, convertedString);
       end
     end
   end

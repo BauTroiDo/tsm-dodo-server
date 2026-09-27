@@ -376,7 +376,7 @@ function Social.AddMail(mailId, data, updateOther)
   --附件種類 2:武將 +武將資料(?)
   this.mails[mailId].time = System.DateTime.FromOADate(data:ReadDouble());
   this.mails[mailId].state = data:ReadByte();
-  this.mails[mailId].message = string.gsub(data:ReadString(data:ReadUInt16()), "<%%(.-)%%>", string.Parse);
+  this.mails[mailId].message = string.gsub(data:ReadString(data:ReadUInt16(), DataManager.encoding_Unicode), "<%%(.-)%%>", string.Parse);
   this.mails[mailId].contents = {};
 
   local count = data:ReadByte();

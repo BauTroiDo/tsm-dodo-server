@@ -511,10 +511,10 @@ function UIHouseBoard.OnClick_More()
   UIHouseBoardFunction.OpenGiftWall(currentPlayerId);
 end
 
-function UIHouseBoard.OnClick_EditSignature()
+function UIHouseBoard.SendUserData(messageString, kind)
   if currentPlayerId ~= Role.playerId then return end;
 
-  ShowPlayerInfoInput(string.Get(23357),
+  ShowPlayerInfoInput(string.Get(messageString),
     function(text)
       if string.IsNullOrEmpty(text) then return end;
 
@@ -525,66 +525,26 @@ function UIHouseBoard.OnClick_EditSignature()
         end
       end
 
-      --C:105-002 <設定玩家資料> +設定類型(1) 1.個性簽名 +字串長度(1) +字串(?)
+      --C:105-002 <設定玩家資料> +設定類型(1) +字串長度(1) +字串(?)
       sendBuffer:Clear();
-      sendBuffer:WriteByte(1);
-      sendBuffer:WriteByte(string.GetLength(text));
-      sendBuffer:WriteString(text);
+      sendBuffer:WriteByte(kind);
+      sendBuffer:WriteStringWithByteL(text, DataManager.encoding_Unicode);
       Network.Send(105, 2, sendBuffer);
-
     end,
-    7
+    20
   );
+end
+
+function UIHouseBoard.OnClick_EditSignature()
+  this.SendUserData(23357, 1);
 end
 
 function UIHouseBoard.OnClick_EditImpression()
-  if currentPlayerId ~= Role.playerId then return end;
-
-  ShowPlayerInfoInput(string.Get(23361),
-    function(text)
-      if string.IsNullOrEmpty(text) then return end;
-
-      for k, v in pairs(tabooDatas) do
-        if string.match(text, string.GetNocase(v)) ~= nil then
-          ShowCenterMessage(string.Get(40327));
-          return;
-        end
-      end
-
-      --C:105-002 <設定玩家資料> +設定類型(1) 2.自訂印象 +字串長度(1) +字串(?)
-      sendBuffer:Clear();
-      sendBuffer:WriteByte(2);
-      sendBuffer:WriteByte(string.GetLength(text));
-      sendBuffer:WriteString(text);
-      Network.Send(105, 2, sendBuffer);
-
-    end
-  );
+  this.SendUserData(23361, 2);
 end
 
 function UIHouseBoard.OnClick_EditFavorite()
-  if currentPlayerId ~= Role.playerId then return end;
-
-  ShowPlayerInfoInput(string.Get(23364),
-    function(text)
-      if string.IsNullOrEmpty(text) then return end;
-
-      for k, v in pairs(tabooDatas) do
-        if string.match(text, string.GetNocase(v)) ~= nil then
-          ShowCenterMessage(string.Get(40327));
-          return;
-        end
-      end
-
-      --C:105-002 <設定玩家資料> +設定類型(1) 3.喜好 +字串長度(1) +字串(?)
-      sendBuffer:Clear();
-      sendBuffer:WriteByte(3);
-      sendBuffer:WriteByte(string.GetLength(text));
-      sendBuffer:WriteString(text);
-      Network.Send(105, 2, sendBuffer);
-
-    end
-  );
+  this.SendUserData(23364, 3);
 end
 
 function UIHouseBoard.OnClick_Sign()
@@ -627,53 +587,11 @@ function UIHouseBoard.OnClick_Birth()
 end
 
 function UIHouseBoard.OnClick_EditArea()
-  if currentPlayerId ~= Role.playerId then return end;
-
-  ShowPlayerInfoInput(string.Get(23365),
-    function(text)
-      if string.IsNullOrEmpty(text) then return end;
-
-      for k, v in pairs(tabooDatas) do
-        if string.match(text, string.GetNocase(v)) ~= nil then
-          ShowCenterMessage(string.Get(40327));
-          return;
-        end
-      end
-
-      --C:105-002 <設定玩家資料> +設定類型(1) 6.居住地 +字串長度(1) +字串(?)
-      sendBuffer:Clear();
-      sendBuffer:WriteByte(6);
-      sendBuffer:WriteByte(string.GetLength(text));
-      sendBuffer:WriteString(text);
-      Network.Send(105, 2, sendBuffer);
-
-    end
-  );
+  this.SendUserData(23365, 6);
 end
 
 function UIHouseBoard.OnClick_EditHobby()
-  if currentPlayerId ~= Role.playerId then return end;
-
-  ShowPlayerInfoInput(string.Get(23363),
-    function(text)
-      if string.IsNullOrEmpty(text) then return end;
-
-      for k, v in pairs(tabooDatas) do
-        if string.match(text, string.GetNocase(v)) ~= nil then
-          ShowCenterMessage(string.Get(40327));
-          return;
-        end
-      end
-
-      --C:105-002 <設定玩家資料> +設定類型(1) 7.興趣 +字串長度(1) +字串(?)
-      sendBuffer:Clear();
-      sendBuffer:WriteByte(7);
-      sendBuffer:WriteByte(string.GetLength(text));
-      sendBuffer:WriteString(text);
-      Network.Send(105, 2, sendBuffer);
-
-    end
-  );
+  this.SendUserData(23363, 7);
 end
 
 function UIHouseBoard.OnClick_FriendlyRank()

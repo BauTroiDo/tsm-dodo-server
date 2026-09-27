@@ -21,7 +21,7 @@ local transform_HideRoot;
 
 local image_HideAll;
 
---minimap
+-- minimap
 local rectTransform_BG;
 
 local text_Position;
@@ -249,6 +249,9 @@ end
 
 function UIMiniMap.OnClick_UISwitch()
   this.UpdateVisible(not UI.showMainUI);
+  if not UI.showMainUI then
+    UICenterMessage.Clear();
+  end
 end
 
 --minimap

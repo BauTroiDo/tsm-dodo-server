@@ -19,6 +19,12 @@ function Resource.CheckResourceSize()
   this.dataSize = 0;
   this.imageSize = 0;
 
+  if LuaHelper.IsApplePlatform then
+    if CGResourceManager.ReadText("_firstPatchIOS") == "" then
+      CGSDK.TrackEvent("vtc_complete_first_update");
+    end
+  end
+
   CGResourceManager.CheckPackageSzie();
 
   while not CGResourceManager.checkPackageDone do
@@ -66,6 +72,7 @@ end
 
 function Resource.CheckResourceSizeDone()
   this.checkSizeDone = true;
+
 --  if not LuaHelper.IsSimpleDiskUtilsWork() then
 --    this.checkSizeDone = true;
 --    return;
