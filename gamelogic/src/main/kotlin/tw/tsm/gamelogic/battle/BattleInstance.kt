@@ -199,10 +199,10 @@ class BattleInstance(
                 }
             }
             if (action.actionKind == BattleAction.KIND_SKILL &&
-                action.id in TURN3_SUMMON_SKILLS &&
-                !canUseTurn3Summon(fighter, action.id)
+                action.id in SUMMON_SKILLS &&
+                !canUseSummon(fighter, action.id)
             ) {
-                logger.warn { "戰鬥 $battleId: ${fighter.name} 嘗試使用不符合光暗/特殊裝備條件的三轉召喚 id=${action.id}" }
+                logger.warn { "戰鬥 $battleId: ${fighter.name} 嘗試使用不符合 Lua 元素/紋章條件的召喚 id=${action.id}" }
                 return false
             }
             if (action.actionKind == BattleAction.KIND_SKILL &&
@@ -593,11 +593,20 @@ class BattleInstance(
     fun calculateRewards(playerLevel: Int, npcDropTable: Map<Int, List<NpcDropDef>> = emptyMap()): BattleReward {
         return BattleRewardCalc.calculate(involvedNpcDefs, playerLevel, npcDropTable)
     }
-    private fun canUseTurn3Summon(fighter: BattleFighter, skillId: Int): Boolean {
-        if (!fighter.isHumanPlayer || skillId !in fighter.skills) return false
+    private fun canUseSummon(fighter: BattleFighter, skillId: Int): Boolean {
+        if (skillId !in fighter.skills) return false
+        val element = if (skillId == 22011 || skillId == 23011) {
+            if (fighter.isHumanPlayer) fighter.turn3Element else fighter.element
+        } else {
+            fighter.element
+        }
         return when (skillId) {
-            22011 -> fighter.turn3Element == 7 && fighter.specialEquipItemId in intArrayOf(23361, 23367)
-            23011 -> fighter.turn3Element == 8 && fighter.specialEquipItemId in intArrayOf(23362, 23368)
+            10016 -> element == 1 && fighter.specialEquipItemId in intArrayOf(23086, 23135)
+            11016 -> element == 2 && fighter.specialEquipItemId in intArrayOf(23087, 23136)
+            12016 -> element == 3 && fighter.specialEquipItemId in intArrayOf(23088, 23137)
+            13015 -> element == 4 && fighter.specialEquipItemId in intArrayOf(23089, 23138)
+            22011 -> element == 7 && fighter.specialEquipItemId in intArrayOf(23361, 23367)
+            23011 -> element == 8 && fighter.specialEquipItemId in intArrayOf(23362, 23368)
             else -> false
         }
     }
@@ -606,7 +615,7 @@ class BattleInstance(
     private val FRIENDLY_ONLY_FIGHT_WAYS = setOf(6, 7, 8, 14)
 
     companion object {
-        private val TURN3_SUMMON_SKILLS = setOf(22011, 23011)
+        private val SUMMON_SKILLS = setOf(10016, 11016, 12016, 13015, 22011, 23011)
         // Exact DVT FightField.SetConSkill list: these are non-battle skills.
         private val NON_BATTLE_SKILLS = setOf(
             14003, 14004, 14005,
