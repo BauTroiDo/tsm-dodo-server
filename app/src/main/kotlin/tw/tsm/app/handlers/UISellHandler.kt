@@ -14,6 +14,7 @@ import tw.tsm.gamelogic.systems.InventorySystem
 import tw.tsm.gamelogic.systems.PartySystem
 import tw.tsm.gamelogic.systems.PointSystem
 import tw.tsm.gamelogic.systems.RoleCountSystem
+import tw.tsm.gamelogic.systems.SkillSystem
 import tw.tsm.gamelogic.systems.UISellSystem
 import tw.tsm.gamelogic.systems.UiSellQuote
 import tw.tsm.gamelogic.systems.WorldManager
@@ -49,7 +50,8 @@ class UISellHandler(
     private val partySystem: PartySystem,
     private val roleCountSystem: RoleCountSystem,
     private val skillRepository: SkillRepository,
-    private val playerStateManager: PlayerStateManager
+    private val playerStateManager: PlayerStateManager,
+    private val skillSystem: SkillSystem
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.UI_SELL
@@ -283,7 +285,10 @@ class UISellHandler(
     ) {
         // S8:13 clears the client's whole skill table before reloading it, so Turn3
         // skills must be merged with ordinary persisted skills rather than sent alone.
-        val normalSkills = skillRepository.findByCharacterId(charId)
+        // SkillSystem cache is authoritative while the player is online; upgrades can be
+        // dirty and not persisted yet when UISell 57/58 triggers a full S8:13 reload.
+        val normalSkills = skillSystem.getCache(charId)?.skills?.toMap()
+            ?: skillRepository.findByCharacterId(charId)
         val state = playerStateManager.getState(charId) ?: return
         responseSender.sendPlayerSkillData(
             session,
