@@ -100,12 +100,9 @@ object BattleDamageCalc {
         if (skill != null && skill.hitStatus > 0 && skill.round > 0) {
             val statusChance = 50 + (attacker.intelligence - target.intelligence) / 2
             if (Random.nextInt(100) < statusChance.coerceIn(10, 90)) {
-                inflictedStatus = when (skill.hitStatus) {
-                    1 -> BattleStatus.ICE_BOUND
-                    2 -> BattleStatus.WHIRL_WIND
-                    3 -> BattleStatus.CLUMP
-                    else -> BattleStatus.NONE
-                }
+                // Client FightRoleController resolves the concrete status from skillId
+                // inside a status group; hitStatus is not a concrete BattleStatus enum.
+                inflictedStatus = statusFromSkillId(skill.id)
                 statusRounds = if (inflictedStatus != BattleStatus.NONE) skill.round else 0
             }
         }
@@ -118,6 +115,23 @@ object BattleDamageCalc {
             inflictedStatus = inflictedStatus,
             statusRounds = statusRounds
         )
+    }
+
+    /**
+     * Concrete status mapping proven by FightRoleController.lua.
+     * Keep this deliberately limited to server-modeled statuses.
+     */
+    private fun statusFromSkillId(skillId: Int): BattleStatus = when {
+        skillId in ICE_BOUND_SKILLS -> BattleStatus.ICE_BOUND
+        skillId in WHIRL_WIND_SKILLS -> BattleStatus.WHIRL_WIND
+        skillId in CLUMP_SKILLS -> BattleStatus.CLUMP
+        skillId in TRANCE_SKILLS -> BattleStatus.TRANCE
+        skillId in DIZZY_SKILLS -> BattleStatus.DIZZY_ATK
+        skillId in POISON_SKILLS -> BattleStatus.POISON
+        skillId in CHAOS_SKILLS -> BattleStatus.CHAOS
+        skillId in TARDY_SKILLS -> BattleStatus.TARDY
+        skillId in LANDSLIP_SKILLS -> BattleStatus.LANDSLIP
+        else -> BattleStatus.NONE
     }
 
     /**
@@ -196,6 +210,16 @@ object BattleDamageCalc {
     fun isHealSkill(skill: SkillDef): Boolean {
         return skill.element == 2 && skill.attribute == EAttribute.HP
     }
+    private val ICE_BOUND_SKILLS = setOf(11014, 20026, 11027, 11039, 11028, 22016, 22017, 22044)
+    private val WHIRL_WIND_SKILLS = setOf(13002, 13015, 13016, 13017, 13018, 13046, 13050, 13052, 20027, 20048, 21042, 23036, 46002)
+    private val CLUMP_SKILLS = setOf(10004, 20025, 20049, 10033)
+    private val TRANCE_SKILLS = setOf(14008, 23028, 23039)
+    private val DIZZY_SKILLS = setOf(13007, 20016, 20020, 13029, 23015, 23027, 13041, 21033, 13044, 22041, 22043, 22052, 10044)
+    private val POISON_SKILLS = setOf(14015, 20023, 21008, 20047, 23006, 23011, 23012, 23013, 23014, 21032, 21039, 22042)
+    private val CHAOS_SKILLS = setOf(11046, 14021, 20014, 20020, 20055, 23009, 23007, 23022, 20051, 14065, 21041, 20058, 41002)
+    private val TARDY_SKILLS = setOf(10016, 10017, 10018, 10019, 11045, 14097, 21001, 21028, 23027)
+    private val LANDSLIP_SKILLS = setOf(10025)
+
 }
 
 /**
