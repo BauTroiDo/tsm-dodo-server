@@ -194,8 +194,9 @@ class SkillSystem(
                     id in ALL_TURN2_BASE_SKILLS && id !in base || id in HERO_SKILL_IDS && id !in allowedTurn2
                 }) return false
 
+            val needsSkillChange = upgrades.any { (id, target) -> target > (sc.skills[id] ?: 0) }
             val changed = if (upgrades.isEmpty()) emptyList() else upgradeSkills(characterId, upgrades, playerTurn)
-            if (upgrades.any { (id, target) -> target > (sc.skills[id] ?: 0) } && changed.isEmpty()) return false
+            if (needsSkillChange && changed.isEmpty()) return false
 
             sc.availableTurn2Balls -= addBalls.size
             sc.activeTurn2Balls.addAll(addBalls)
