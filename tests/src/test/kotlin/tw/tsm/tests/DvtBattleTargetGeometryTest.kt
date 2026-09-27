@@ -72,4 +72,20 @@ class DvtBattleTargetGeometryTest {
     }
 
 
+    @Test
+    fun `all-field revive keeps only dead occupants`() {
+        val grid = BattleGrid()
+        val deadLeft = fighter(1, 0, 0).also { it.hp = 0; it.isDead = true }
+        val liveLeft = fighter(2, 1, 0)
+        val deadRight = fighter(3, 2, 0).also { it.hp = 0; it.isDead = true }
+        val liveRight = fighter(4, 3, 0)
+        listOf(deadLeft, liveLeft, deadRight, liveRight).forEach(grid::place)
+
+        assertEquals(
+            listOf(deadLeft, deadRight),
+            grid.resolveTargets(255, 2, 0, false, deadTargetsOnly = true)
+        )
+    }
+
+
 }
