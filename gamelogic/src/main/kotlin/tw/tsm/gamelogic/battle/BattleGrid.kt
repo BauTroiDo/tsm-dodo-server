@@ -110,85 +110,75 @@ class BattleGrid {
         attackerIsPlayerSide: Boolean,
         isCombo: Boolean = false
     ): List<BattleFighter> {
-        val enemyCols = if (attackerIsPlayerSide) intArrayOf(0, 1) else intArrayOf(2, 3)
+        fun occupiedAt(col: Int, row: Int): BattleFighter? =
+            if (col in 0 until BattleConstants.MAX_COL && row in 0 until BattleConstants.MAX_ROW) getAt(col, row) else null
 
-        return when (fightArea) {
+        // Lua FightField.GetEnemyIdx expands every normal fightArea from the selected
+        // target's coordinates/side. It does not derive the area from the attacker's side.
+        val targetSideCols = when (targetCol) {
+            0, 1 -> intArrayOf(1, 0)
+            2, 3 -> intArrayOf(2, 3)
+            else -> intArrayOf()
+        }
+
+        val targets = mutableListOf<BattleFighter>()
+        fun add(col: Int, row: Int) {
+            occupiedAt(col, row)?.let { if (it.isAlive || isCombo) targets.add(it) }
+        }
+
+        when (fightArea) {
             EFightArea.SINGLE -> {
-                // 單體：指定目標（比照 PC 版 BattleAbstract.cs changeTarget）
-                val target = getAt(targetCol, targetRow)
-                if (target != null && target.isAlive) {
-                    listOf(target)
-                } else if (target != null && isCombo) {
-                    // Combo 情況下允許對目標繼續連擊（對應 PC 版 combo || !death）
-                    listOf(target)
-                } else {
-                    // 目標已死且非 Combo：自動轉移到同側下一個存活目標（對應 PC 版 changeTarget）
-                    val fallback = if (attackerIsPlayerSide) getAliveEnemySide().firstOrNull() else getAlivePlayerSide().firstOrNull()
-                    if (fallback != null) listOf(fallback) else emptyList()
-                }
+                val target = occupiedAt(targetCol, targetRow)
+                if (target != null && (target.isAlive || isCombo)) return listOf(target)
+
+                // Preserve existing server retarget behavior only for a stale single target.
+                val fallback = if (attackerIsPlayerSide) getAliveEnemySide().firstOrNull() else getAlivePlayerSide().firstOrNull()
+                return listOfNotNull(fallback)
             }
             EFightArea.COL_TWO -> {
-                // 同列二人：目標 + 同列相鄰
-                val targets = mutableListOf<BattleFighter>()
-                getAliveAt(targetCol, targetRow)?.let { targets.add(it) }
-                getAliveAt(targetCol, targetRow - 1)?.let { targets.add(it) }
-                if (targets.size < 2) getAliveAt(targetCol, targetRow + 1)?.let { targets.add(it) }
-                targets
+                // Lua kind=2: front/back pair on the selected target row.
+                for (col in targetSideCols) add(col, targetRow)
             }
             EFightArea.ROW_THREE -> {
-                // 同行三人：目標行的敵方所有人（最多 3）
-                val targets = mutableListOf<BattleFighter>()
-                for (c in enemyCols) {
-                    getAliveAt(c, targetRow)?.let { targets.add(it) }
-                }
-                targets.take(3)
+                // Lua kind=3: selected column, target row -1 .. +1.
+                for (row in targetRow - 1..targetRow + 1) add(targetCol, row)
             }
             EFightArea.JUMP_THREE -> {
-                // 跳三人：目標 + 跳一格
-                val targets = mutableListOf<BattleFighter>()
-                getAliveAt(targetCol, targetRow)?.let { targets.add(it) }
-                getAliveAt(targetCol, targetRow - 2)?.let { targets.add(it) }
-                getAliveAt(targetCol, targetRow + 2)?.let { targets.add(it) }
-                targets
+                // kind=4 is not implemented by GetEnemyIdx in this DVT Lua snapshot.
+                // Keep the historical server shape rather than inventing a new Lua contract.
+                add(targetCol, targetRow)
+                add(targetCol, targetRow - 2)
+                add(targetCol, targetRow + 2)
             }
             EFightArea.CROSS_FIVE -> {
-                // 十字五人：目標 + 上下左右
-                val targets = mutableListOf<BattleFighter>()
-                getAliveAt(targetCol, targetRow)?.let { targets.add(it) }
-                getAliveAt(targetCol, targetRow - 1)?.let { targets.add(it) }
-                getAliveAt(targetCol, targetRow + 1)?.let { targets.add(it) }
-                getAliveAt(targetCol - 1, targetRow)?.let { targets.add(it) }
-                getAliveAt(targetCol + 1, targetRow)?.let { targets.add(it) }
-                targets
+                // Lua kind=5: front/back pair first, then vertical neighbors.
+                for (col in targetSideCols) add(col, targetRow)
+                add(targetCol, targetRow - 1)
+                add(targetCol, targetRow + 1)
             }
             EFightArea.SIX -> {
-                // 六人：同列全部（前排或後排）
-                val targets = mutableListOf<BattleFighter>()
-                for (r in 0 until BattleConstants.MAX_ROW) {
-                    getAliveAt(targetCol, r)?.let { targets.add(it) }
+                // Lua kind=6: both columns of selected side x rows target-1..target+1.
+                for (col in targetSideCols) {
+                    for (row in targetRow - 1..targetRow + 1) add(col, row)
                 }
-                targets
             }
             EFightArea.ROW_FIVE -> {
-                // 同行五人：該行所有列
-                val targets = mutableListOf<BattleFighter>()
-                for (c in 0 until BattleConstants.MAX_COL) {
-                    getAliveAt(c, targetRow)?.let { targets.add(it) }
-                }
-                targets
+                // Lua kind=7: all five rows in the selected column.
+                for (row in 0 until BattleConstants.MAX_ROW) add(targetCol, row)
             }
             EFightArea.ALL -> {
-                // 全體：敵方所有存活
-                if (attackerIsPlayerSide) getAliveEnemySide() else getAlivePlayerSide()
+                // Lua kind=8: both columns x five rows on the selected target side.
+                for (col in targetSideCols) {
+                    for (row in 0 until BattleConstants.MAX_ROW) add(col, row)
+                }
             }
             255 -> {
-                // Lua FightField.GetEnemyIdx(255): 敵我雙方全體.
-                // Preserve every occupied fighter; the client enumerates fightHum,
-                // not only living targets. This matters for all-field revive/utility semantics.
-                getAll()
+                // Lua GetEnemyIdx(255): both parties/all occupied fighters.
+                return getAll()
             }
-            else -> listOfNotNull(getAliveAt(targetCol, targetRow))
+            else -> add(targetCol, targetRow)
         }
+        return targets
     }
 
     /**
