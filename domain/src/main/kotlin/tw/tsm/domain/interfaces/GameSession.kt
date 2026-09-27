@@ -78,6 +78,12 @@ interface SessionAppearance {
     var element: Int
     /** 等級 */
     var level: Int
+    /** 轉生次數 */
+    var turn: Int
+    /** 二/三轉職業 */
+    var career: Int
+    /** 三轉光暗元素 */
+    var turn3Element: Int
     /** 頭型 */
     var hair: Int
     /** 臉圖 */
@@ -150,6 +156,8 @@ fun GameSession.loadFromRecord(record: CharacterRecord) {
     sex = record.sex
     element = record.element
     level = record.level
+    turn = record.turn
+    career = record.career
     hair = record.hair
     color1 = record.color1
     color2 = record.color2
