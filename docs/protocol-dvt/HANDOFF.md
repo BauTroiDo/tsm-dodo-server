@@ -117,7 +117,16 @@ Câu hỏi cần trả lời cho từng skill: Lua/data chứng minh fightWay/ta
 
 ## 9. Cách làm việc thủ công hiện tại
 
-Hiện tại chủ dự án hết hạn mức agent/Astra, vì vậy làm thủ công trong chat.
+**QUY TRÌNH LÀM VIỆC CỐ ĐỊNH — KHÔNG TỰ Ý ĐỔI SANG WORK/ASTRA:**
+
+- Làm việc trực tiếp trong ChatGPT chat.
+- ChatGPT đọc/audit Lua, data, opcode tham khảo và Kotlin trực tiếp từ GitHub.
+- Khi có đủ bằng chứng, ChatGPT **vá trực tiếp file trên GitHub** và commit/push thay đổi lên `main`.
+- ChatGPT không giả định rằng mình đã build/test local nếu chưa có kết quả thực tế.
+- Sau một patch/batch ổn định, **chủ dự án sẽ pull/full source từ GitHub về máy và tự chạy build/test**.
+- Chủ dự án gửi log/kết quả build/test lại trong chat; ChatGPT phân tích lỗi, phân biệt regression mới với baseline, rồi tiếp tục vá trên GitHub.
+- Chỉ ghi BUILD/TEST SUCCESS khi có kết quả build/test thực tế do chủ dự án cung cấp hoặc CI thực sự chạy.
+- Không chuyển công việc sang Work mode hoặc Astra chỉ vì cần sửa repository; quy trình chủ động của dự án này là **chat → GitHub patch → user pull/build/test → phản hồi → patch tiếp**.
 
 Mỗi bước nhỏ:
 1. kiểm tra HEAD/STAGE hiện tại trên GitHub;
