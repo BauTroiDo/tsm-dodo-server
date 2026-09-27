@@ -128,11 +128,23 @@ class BattleInstance(
         if (fighter.isAlive && !fighter.isCommandBlocked) {
             if (action.actionKind == BattleAction.KIND_SKILL) {
                 val target = grid.getAt(action.targetCol, action.targetRow)
-                if (target == null || !target.isAlive) {
-                    logger.warn { "戰鬥 $battleId: ${fighter.name} 指定無效/死亡技能目標 (${action.targetCol},${action.targetRow})" }
+                if (target == null) {
+                    logger.warn { "戰鬥 $battleId: ${fighter.name} 指定不存在的技能目標 (${action.targetCol},${action.targetRow})" }
                     return false
                 }
                 val skill = if (action.id == BattleConstants.HAND_FIGHT_SKILL_ID) null else skillResolver.getSkillDef(action.id)
+                val isRevive = skill?.fightWay == 8
+                // DVT FightField.UpdateSelectFrame exposes dead friendlies specifically
+                // for fightWay 8. Every other skill keeps the normal alive-target gate.
+                if (isRevive) {
+                    if (target.isAlive) {
+                        logger.warn { "戰鬥 $battleId: ${fighter.name} 復活技能 id=${action.id} 指定存活目標" }
+                        return false
+                    }
+                } else if (!target.isAlive) {
+                    logger.warn { "戰鬥 $battleId: ${fighter.name} 非復活技能指定死亡目標 (${action.targetCol},${action.targetRow})" }
+                    return false
+                }
                 val sameSide = fighter.isPlayerSide == target.isPlayerSide
                 if (skill == null) {
                     if (sameSide) {
