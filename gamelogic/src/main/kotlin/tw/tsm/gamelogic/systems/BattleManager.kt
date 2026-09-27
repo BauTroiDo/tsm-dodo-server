@@ -327,7 +327,7 @@ class BattleManager(
      * @param targetPlayerId 被點擊的目標玩家 ID（用於判斷陣營）
      * @return true=成功加入, false=加入失敗（隊伍滿）
      */
-    fun joinBattle(joiner: GameSession, battle: BattleInstance, targetPlayerId: Long): Boolean {
+    suspend fun joinBattle(joiner: GameSession, battle: BattleInstance, targetPlayerId: Long): Boolean {
         // 1. 判斷目標在哪一方
         val targetOnRight = battle.isPlayerOnRightSide(targetPlayerId)
         if (targetOnRight == null) {
@@ -1122,7 +1122,7 @@ class BattleManager(
      * 屬性來源：PlayerStateManager（登入時由 PlayerDataDto + StatSystem 計算）
      * 裝備來源：InventorySystem（用於戰鬥外觀序列化）
      */
-    private fun createPlayerFighter(
+    private suspend fun createPlayerFighter(
         session: GameSession,
         col: Int = BattleConstants.PLAYER_FRONT_COL,
         kind: Int = EHuman.PLAYER
@@ -1137,9 +1137,12 @@ class BattleManager(
         val equipIds = equips.values.map { it.itemId }.toIntArray()
         val specialEquipId = equips[6]?.itemId ?: 0
         val normalSkills = skillSystem?.getCache(charId)?.skills?.filterValues { it > 0 }?.keys.orEmpty()
-        val turn3Skills = runBlocking {
-            skillRepository?.findTurn3State(charId)?.skills?.filterValues { it > 0 }?.keys.orEmpty()
-        }
+        val turn3Skills = skillRepository
+            ?.findTurn3State(charId)
+            ?.skills
+            ?.filterValues { it > 0 }
+            ?.keys
+            .orEmpty()
         val learnedSkills = (normalSkills + turn3Skills).toIntArray()
 
         return BattleFighter(
