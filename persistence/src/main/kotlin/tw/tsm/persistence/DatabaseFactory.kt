@@ -24,6 +24,8 @@ import tw.tsm.persistence.tables.CharacterRoleCounts
 import tw.tsm.persistence.tables.CharacterUiSellCounts
 import tw.tsm.persistence.tables.CharacterSkills
 import tw.tsm.persistence.tables.CharacterTurn2Skills
+import tw.tsm.persistence.tables.CharacterTurn3States
+import tw.tsm.persistence.tables.CharacterTurn3Skills
 import tw.tsm.persistence.tables.FriendInvites
 import tw.tsm.persistence.tables.Friends
 import tw.tsm.persistence.tables.Inventories
@@ -62,7 +64,7 @@ object DatabaseFactory {
             SchemaUtils.createMissingTablesAndColumns(
                 Accounts, Characters, Inventories, CharacterMoney,
                 CharacterMissions, CharacterMissionFlags, CharacterCompletedEvents, CharacterBitFlags,
-                CharacterSkills, CharacterTurn2Skills,
+                CharacterSkills, CharacterTurn2Skills, CharacterTurn3States, CharacterTurn3Skills,
                 CharacterPets,
                 CharacterPetEquips,
                 CharacterMounts,
