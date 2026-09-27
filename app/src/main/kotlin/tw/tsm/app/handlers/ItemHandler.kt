@@ -109,9 +109,10 @@ class ItemHandler(
         session.color1 = color1
         session.color2 = color2
 
-        // Re-send authoritative player appearance so Role attributes Turn/Career update immediately.
-        val record = characterRepository.findById(characterId) ?: return
-        responseSender.sendPlayerAppear(session, session.playerId, record, session.serverId)
+        // Lua protocolTable[23][69] is the dedicated authoritative turn/career update.
+        responseSender.sendPlayerCareerChange(
+            session, session.playerId, hair, color1, color2, targetTurn, career
+        )
         logger.info { "${session.characterName} rebirth success: turn=$targetTurn career=$career hair=$hair" }
     }
 
