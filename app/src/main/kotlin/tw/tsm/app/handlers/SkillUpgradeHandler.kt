@@ -78,7 +78,8 @@ class SkillUpgradeHandler(
 
         logger.info { "${session.characterName} 請求升級技能：$upgrades" }
 
-        skillSystem.upgradeSkills(characterId, upgrades)
+        val playerTurn = playerStateManager.getState(characterId)?.turn ?: return
+        skillSystem.upgradeSkills(characterId, upgrades, playerTurn)
         // Luon luon gui lai toan bo du lieu ky nang de dong bo chinh xac cho client
         val sc = skillSystem.getCache(characterId)
         if (sc != null) {
