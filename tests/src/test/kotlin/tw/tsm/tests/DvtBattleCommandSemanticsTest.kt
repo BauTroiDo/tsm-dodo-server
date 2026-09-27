@@ -20,10 +20,10 @@ import tw.tsm.gamelogic.battle.BattleItemResolver
 import tw.tsm.gamelogic.battle.BattleSkillResolver
 
 class DvtBattleCommandSemanticsTest {
-    private fun fighter(id: Long, col: Int, row: Int, learnedSkills: IntArray = intArrayOf(), elementValue: Int = 1, specialEquipId: Int = 0) = BattleFighter(
+    private fun fighter(id: Long, col: Int, row: Int, learnedSkills: IntArray = intArrayOf(), elementValue: Int = 1, specialEquipId: Int = 0, specialDamage: Int = 0, weaponId: Int = 0, weaponKind: Int = 0) = BattleFighter(
         roleId=id, kind=EHuman.PLAYER, name="f$id", col=col, row=row,
         maxHp=1000, maxSp=500, hp=1000, sp=500, level=1, element=elementValue,
-        atk=100, def=10, agi=100, intelligence=100, skills=learnedSkills, specialEquipItemId=specialEquipId
+        atk=100, def=10, agi=100, intelligence=100, skills=learnedSkills, specialEquipItemId=specialEquipId, specialEquipDamage=specialDamage, weaponItemId=weaponId, weaponItemKind=weaponKind
     )
 
     private fun skill(fightWayValue: Int) = mockk<SkillDef> {
@@ -168,6 +168,42 @@ class DvtBattleCommandSemanticsTest {
         val invalidTarget = fighter(4, 0, 0)
         val invalidBattle = fixture(invalid, invalidTarget, mapOf(summonId to skill(1)))
         assertFalse(invalidBattle.setPlayerAction(invalid.roleId, invalid.col, invalid.row, action))
+    }
+
+
+    @Test
+    fun `bow skill requires Lua bow weapon for player kinds`() {
+        val bowSkill = 14033
+        val target = fighter(2, 0, 0)
+        val archer = fighter(1, 2, 0, intArrayOf(bowSkill), weaponId=50000, weaponKind=7)
+        val battle = fixture(archer, target, mapOf(bowSkill to skill(1)))
+        val action = BattleAction(BattleAction.KIND_SKILL, bowSkill, target.col, target.row)
+        assertTrue(battle.setPlayerAction(archer.roleId, archer.col, archer.row, action))
+
+        val noBow = fighter(3, 2, 0, intArrayOf(bowSkill), weaponId=50001, weaponKind=1)
+        val target2 = fighter(4, 0, 0)
+        val noBowBattle = fixture(noBow, target2, mapOf(bowSkill to skill(1)))
+        assertFalse(noBowBattle.setPlayerAction(noBow.roleId, noBow.col, noBow.row, action))
+    }
+
+    @Test
+    fun `spiritual bow ids pass SetConSkill bow exception`() {
+        val bowSkill = 14033
+        val actor = fighter(1, 2, 0, intArrayOf(bowSkill), weaponId=57601, weaponKind=0)
+        val target = fighter(2, 0, 0)
+        val battle = fixture(actor, target, mapOf(bowSkill to skill(1)))
+        assertTrue(battle.setPlayerAction(actor.roleId, actor.col, actor.row,
+            BattleAction(BattleAction.KIND_SKILL, bowSkill, target.col, target.row)))
+    }
+
+    @Test
+    fun `damaged summon emblem is rejected at Lua threshold`() {
+        val summonId = 10016
+        val actor = fighter(1, 2, 0, intArrayOf(summonId), elementValue=1, specialEquipId=23086, specialDamage=250)
+        val target = fighter(2, 0, 0)
+        val battle = fixture(actor, target, mapOf(summonId to skill(1)))
+        assertFalse(battle.setPlayerAction(actor.roleId, actor.col, actor.row,
+            BattleAction(BattleAction.KIND_SKILL, summonId, target.col, target.row)))
     }
 
 
