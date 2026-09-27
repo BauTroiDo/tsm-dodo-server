@@ -132,6 +132,9 @@ class LoginService(
 
         // S:005-003 Gói dữ liệu lớn của người chơi (Bao gồm chỉ số cộng thêm từ trang bị)
         val turn3State = skillRepository.findTurn3State(record.id)
+        session.turn = record.turn
+        session.career = record.career
+        session.turn3Element = turn3State.element
         val playerData = PlayerDataDto.fromCharacterRecord(record, statSystem, equipBonus, turn3State)
         responseSender.sendPlayerData(session, playerData)
 
