@@ -652,6 +652,10 @@ class BattleInstance(
     private val FRIENDLY_ONLY_FIGHT_WAYS = setOf(6, 7, 8, 14)
 
     companion object {
+        private const val SEAL_STATUS_GROUP = 1
+        private val MANUAL_CATCH_NPC_BLACKLIST = setOf(
+            35029, 35030, 35031, 35032, 35033, 35034, 35054, 35055, 35056
+        )
         private val SUMMON_SKILLS = setOf(10016, 11016, 12016, 13015, 22011, 23011)
         private val BOW_SKILLS = setOf(14033, 14036, 14037, 14064)
         private val SPIRITUAL_BOW_ITEM_IDS = setOf(57601, 57602, 57603, 57604)
