@@ -291,16 +291,16 @@ class BattleManager(
      * @param srcRow 發招者所在行
      * @param action 選擇的行動
      */
-    fun handlePlayerAction(playerId: Long, srcCol: Int, srcRow: Int, action: BattleAction) {
-        val battleId = playerBattleMap[playerId] ?: return
-        val battle = battles[battleId] ?: return
+    fun handlePlayerAction(playerId: Long, srcCol: Int, srcRow: Int, action: BattleAction): Boolean {
+        val battleId = playerBattleMap[playerId] ?: return false
+        val battle = battles[battleId] ?: return false
 
         if (battle.state != BattleInstance.State.WAITING_COMMANDS) {
             logger.debug { "戰鬥 $battleId: 目前不接受指令（state=${battle.state}）" }
-            return
+            return false
         }
 
-        battle.setPlayerAction(playerId, srcCol, srcRow, action)
+        return battle.setPlayerAction(playerId, srcCol, srcRow, action)
     }
 
     /**
