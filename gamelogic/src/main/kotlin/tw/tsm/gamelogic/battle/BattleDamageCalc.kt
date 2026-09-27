@@ -132,6 +132,41 @@ object BattleDamageCalc {
         skillId in CHAOS_SKILLS -> BattleStatus.CHAOS
         skillId in TARDY_SKILLS -> BattleStatus.TARDY
         skillId in LANDSLIP_SKILLS -> BattleStatus.LANDSLIP
+        skillId in TAUNT_SKILLS -> BattleStatus.TAUNT
+        skillId in TRAITOR_SKILLS -> BattleStatus.TRAITOR
+        skillId in STOOL_SKILLS -> BattleStatus.STOOL
+        skillId in THUNDER_FIRE_SKILLS -> BattleStatus.THUNDER_FIRE
+        skillId in HEALTH_DRAWER_SKILLS -> BattleStatus.HEALTH_DRAWER
+        skillId in EW_COMMON_FAINT_SKILLS -> BattleStatus.EW_COMMON_FAINT
+        skillId in WEAK_PERCENT_SKILLS -> BattleStatus.WEAK_PERCENT
+        skillId in VARY_BOUNDARY_SKILLS -> BattleStatus.BOUNDARY
+        skillId in VARY_ICE_WALL_SKILLS -> BattleStatus.ICE_WALL
+        skillId in VARY_LIMPID_SKILLS -> BattleStatus.LIMPID
+        skillId in VARY_ENLARGE_SKILLS -> BattleStatus.ENLARGE
+        skillId in VARY_AVOID_SKILLS -> BattleStatus.AVOID
+        skillId in VARY_MIRROR_SKILLS -> BattleStatus.MIRROR
+        skillId in VARY_SOUL_MIRROR_SKILLS -> BattleStatus.SOUL_MIRROR
+        skillId in VARY_GOD_SKILLS -> BattleStatus.GOD
+        skillId in VARY_SAME_HEART_SKILLS -> BattleStatus.SAME_HEART
+        skillId in VARY_INSPIRE_SKILLS -> BattleStatus.INSPIRE
+        skillId in VARY_FIRE_AMULET_SKILLS -> BattleStatus.FIRE_AMULET
+        skillId in VARY_TRANSFER_ATTACK_SKILLS -> BattleStatus.TRANSFER_ATTACK
+        skillId in VARY_INVISIBLE_SKILLS -> BattleStatus.INVISIBLE
+        skillId in VARY_GOLD_SHIELD_SKILLS -> BattleStatus.GOLD_SHIELD
+        skillId in VARY_DOLPHIN_GUARD_SKILLS -> BattleStatus.DOLPHIN_GUARD
+        skillId in VARY_IMMUNITY_SHIELD_SKILLS -> BattleStatus.IMMUNITY_SHIELD
+        skillId in VARY_ICE_CRYSTALS_SKILLS -> BattleStatus.ICE_CRYSTALS
+        skillId in VARY_DRAGON_TRANSFER_SKILLS -> BattleStatus.DRAGON_TRANSFER
+        skillId in SPEC_PROTECT_SKILLS -> BattleStatus.PROTECT
+        skillId in SPEC_SPELL_SKILLS -> BattleStatus.SPELL
+        skillId in SPEC_MAGIC_PROTECT_SKILLS -> BattleStatus.MAGIC_PROTECT
+        skillId in STRONG_BRIGHT_MIRROR_SKILLS -> BattleStatus.BRIGHT_MIRROR
+        skillId in STRONG_WAR_STEP_SKILLS -> BattleStatus.WAR_STEP
+        skillId in STRONG_WILD_FIGHT_SOUL_SKILLS -> BattleStatus.WILD_FIGHT_SOUL
+        skillId in STRONG_ANGRY_MIND_SKILLS -> BattleStatus.ANGRY_MIND
+        skillId in STRONG_MAGICAL_SHIELD_SKILLS -> BattleStatus.MAGICAL_SHIELD
+        skillId in STRONG_CRAZY_SOUL_SKILLS -> BattleStatus.CRAZY_SOUL
+        skillId in STRONG_PITY_SOLDIER_SKILLS -> BattleStatus.PITY_SOLDIER
         else -> BattleStatus.NONE
     }
 
@@ -228,6 +263,34 @@ private val HEALTH_DRAWER_SKILLS = setOf(13030,12052,45002)
 private val EW_COMMON_FAINT_SKILLS = setOf(11039,13040,14063,14064,14065)
 // 11039/13040/14063/14064 are captured by the earlier EWCommonFaint elseif in client Lua.
 private val WEAK_PERCENT_SKILLS = setOf(12046,13041,12059)
+private val VARY_BOUNDARY_SKILLS = setOf(10010,10041)
+private val VARY_ICE_WALL_SKILLS = setOf(11002,11042)
+private val VARY_LIMPID_SKILLS = setOf(13005,13032,13042,13049)
+private val VARY_ENLARGE_SKILLS = setOf(13012)
+private val VARY_AVOID_SKILLS = setOf(13003)
+private val VARY_MIRROR_SKILLS = setOf(10015,10039,10038)
+private val VARY_SOUL_MIRROR_SKILLS = setOf(10026,10040,11049,22024)
+private val VARY_GOD_SKILLS = setOf(20005)
+private val VARY_SAME_HEART_SKILLS = setOf(14012)
+private val VARY_INSPIRE_SKILLS = setOf(14013)
+private val VARY_FIRE_AMULET_SKILLS = setOf(12024)
+private val VARY_TRANSFER_ATTACK_SKILLS = setOf(13021)
+private val VARY_INVISIBLE_SKILLS = setOf(13025)
+private val VARY_GOLD_SHIELD_SKILLS = setOf(10031)
+private val VARY_DOLPHIN_GUARD_SKILLS = setOf(21037)
+private val VARY_IMMUNITY_SHIELD_SKILLS = setOf(22031,22046)
+private val VARY_ICE_CRYSTALS_SKILLS = setOf(22044)
+private val VARY_DRAGON_TRANSFER_SKILLS = setOf(13051)
+private val SPEC_PROTECT_SKILLS = setOf(20006)
+private val SPEC_SPELL_SKILLS = setOf(20008)
+private val SPEC_MAGIC_PROTECT_SKILLS = setOf(14056)
+private val STRONG_BRIGHT_MIRROR_SKILLS = setOf(11024,11042,23035)
+private val STRONG_WAR_STEP_SKILLS = setOf(11032,22006,14046)
+private val STRONG_WILD_FIGHT_SOUL_SKILLS = setOf(11049,12025,12045,13020)
+private val STRONG_ANGRY_MIND_SKILLS = setOf(14040,23008)
+private val STRONG_MAGICAL_SHIELD_SKILLS = setOf(14044)
+private val STRONG_CRAZY_SOUL_SKILLS = setOf(14053)
+private val STRONG_PITY_SOLDIER_SKILLS = setOf(21026)
 
 }
 
