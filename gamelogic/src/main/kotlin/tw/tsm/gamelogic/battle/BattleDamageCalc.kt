@@ -119,6 +119,50 @@ object BattleDamageCalc {
     }
 
     /**
+     * Enemy status-only execution.
+     *
+     * SkillData.attribute identifies these as a status attribute, so they must not
+     * manufacture HP damage. Keep the server's existing hit/status chance policy
+     * here until Lua/data provides a more authoritative formula.
+     */
+    fun calculateStatusOnly(
+        attacker: BattleFighter,
+        target: BattleFighter,
+        skill: SkillDef,
+        skillId: Int
+    ): AttackCalcResult {
+        val hitRate = calculateHitRate(attacker.agi, target.agi)
+        if (Random.nextInt(100) >= hitRate) {
+            return AttackCalcResult(
+                attackResult = EAttackResult.MISS,
+                beHitAction = EBeHitAction.DODGE,
+                damage = 0,
+                attrChanges = emptyList()
+            )
+        }
+
+        var inflictedStatus = BattleStatus.NONE
+        var statusRounds = 0
+        val concreteStatus = statusFromSkillId(skillId)
+        if (skill.round > 0 && concreteStatus != BattleStatus.NONE) {
+            val statusChance = 50 + (attacker.intelligence - target.intelligence) / 2
+            if (Random.nextInt(100) < statusChance.coerceIn(10, 90)) {
+                inflictedStatus = concreteStatus
+                statusRounds = skill.round
+            }
+        }
+
+        return AttackCalcResult(
+            attackResult = EAttackResult.HIT,
+            beHitAction = EBeHitAction.NONE,
+            damage = 0,
+            attrChanges = emptyList(),
+            inflictedStatus = inflictedStatus,
+            statusRounds = statusRounds
+        )
+    }
+
+    /**
      * Concrete status mapping proven by FightRoleController.lua.
      * Keep this deliberately limited to server-modeled statuses.
      */
