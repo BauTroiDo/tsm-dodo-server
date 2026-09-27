@@ -94,18 +94,23 @@ data class PlayerDataDto(
             val hpx = record.spr
             val spx = record.men
 
-            // 計算 MaxHP/MaxSP（含裝備加成）
-            val totalHpx = hpx + equipBonus.equipHpx
+            // Calculator.lua: Turn3 uses base Lv=200, turn3Lv=Lv-200 and adds
+            // automatic Turn3 HP/SP growth plus persisted Turn3Hpx/Turn3Spx.
+            val turn3Lv = if (record.turn >= 3) (record.level - 200).coerceAtLeast(0) else 0
+            val calcLevel = if (record.turn >= 3) 200 else record.level
+            val totalHpx = hpx + equipBonus.equipHpx +
+                (if (record.turn >= 3) turn3Lv.coerceAtMost(70) + turn3.hpx else 0)
             val maxHp = statCalc.calculateMaxHp(
-                level = record.level, hpx = totalHpx,
+                level = calcLevel, hpx = totalHpx,
                 equipMaxHp = equipBonus.equipMaxHp, extraHp = 0,
-                turn = record.turn, career = record.career, turn3Lv = 0
+                turn = record.turn, career = record.career, turn3Lv = turn3Lv
             )
-            val totalSpx = spx + equipBonus.equipSpx
+            val totalSpx = spx + equipBonus.equipSpx +
+                (if (record.turn >= 3) turn3Lv + turn3.spx else 0)
             val maxSp = statCalc.calculateMaxSp(
-                level = record.level, spx = totalSpx,
+                level = calcLevel, spx = totalSpx,
                 equipMaxSp = equipBonus.equipMaxSp, extraSp = 0,
-                turn = record.turn, career = record.career, turn3Lv = 0
+                turn = record.turn, career = record.career, turn3Lv = turn3Lv
             )
 
             return PlayerDataDto(
