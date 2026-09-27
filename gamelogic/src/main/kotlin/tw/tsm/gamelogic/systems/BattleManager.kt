@@ -718,13 +718,9 @@ class BattleManager(
     }
 
     /**
-     * 廣播回合結果 — 整回合所有行動塞進「同一個」S:050-001
-     *
-     * 客戶端 RevAttackSkill 以封包為回合單位：
-     * - 收包即 ClearAllAttack()（清除「前一回合」殘留演出）並設 isRound = true
-     * - 包內以 while 迴圈解析多段行動，各演出由 hitCount 機制處理同目標並擊
-     * 若拆成多包發送，後到的封包會把還在播放中的技能演出整批清除（特效被腰斬），
-     * 且每包都被客戶端誤認為新回合開始。協定外層 <<…>> 重複結構即為此設計。
+     * Broadcast one resolved action at a time. RevAttackSkill calls ClearAllAttack() on
+     * each S:050-001, so the next packet is deliberately delayed until the previous
+     * action's playback window has elapsed.
      */
     /**
      * DVT SkillData exposes spendSecond as its timing field. The client has no
