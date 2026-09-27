@@ -120,6 +120,13 @@ class BattleInstance(
         }
         if (fighter.isAlive && !fighter.isStunned) {
             if (action.actionKind == BattleAction.KIND_SKILL &&
+                action.id in TURN3_SUMMON_SKILLS &&
+                !canUseTurn3Summon(fighter, action.id)
+            ) {
+                logger.warn { "戰鬥 $battleId: ${fighter.name} 嘗試使用不符合光暗/特殊裝備條件的三轉召喚 id=${action.id}" }
+                return
+            }
+            if (action.actionKind == BattleAction.KIND_SKILL &&
                 action.id != BattleConstants.HAND_FIGHT_SKILL_ID &&
                 action.id !in BattleConstants.DEFEND_SKILL_IDS &&
                 action.id !in BattleConstants.ESCAPE_SKILL_IDS &&
@@ -480,6 +487,19 @@ class BattleInstance(
     fun calculateRewards(playerLevel: Int, npcDropTable: Map<Int, List<NpcDropDef>> = emptyMap()): BattleReward {
         return BattleRewardCalc.calculate(involvedNpcDefs, playerLevel, npcDropTable)
     }
+    private fun canUseTurn3Summon(fighter: BattleFighter, skillId: Int): Boolean {
+        if (!fighter.isHumanPlayer || skillId !in fighter.skills) return false
+        return when (skillId) {
+            22011 -> fighter.turn3Element == 7 && fighter.equipItemIds.any { it == 23361 || it == 23367 }
+            23011 -> fighter.turn3Element == 8 && fighter.equipItemIds.any { it == 23362 || it == 23368 }
+            else -> false
+        }
+    }
+
+    companion object {
+        private val TURN3_SUMMON_SKILLS = setOf(22011, 23011)
+    }
+
 }
 
 /**
