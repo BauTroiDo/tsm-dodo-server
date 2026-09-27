@@ -1008,6 +1008,15 @@ class BattleManager(
             }
             return
         }
+        // Compatibility migration for characters persisted by the old remainder-EXP server.
+        // A valid DVT cumulative EXP at level L can never be below NeedTExp(L).
+        val cumulativeFloor = statSystem.calculateNeedTotalExp(state.level, state.turn)
+        if (state.exp < cumulativeFloor) {
+            val legacyRemainder = state.exp.coerceAtLeast(0)
+            state.exp = cumulativeFloor + legacyRemainder
+            logger.info { "EXP migration: charId=$charId lv=${state.level} legacy=$legacyRemainder → cumulative=${state.exp}" }
+        }
+
         synchronized(state) {
             // DVT EAttribute.Exp is cumulative lifetime EXP. UIStatus computes:
             // currentBar = Exp - Calc.GetNeedTExp(level, turn)
