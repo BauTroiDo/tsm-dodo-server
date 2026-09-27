@@ -415,6 +415,12 @@ class ResponseSenderImpl(worldManager: WorldManager) : ResponseSender {
     override fun sendPlayerSkillData(session: SessionSender, element: Int, skillPoint: Int, skills: Map<Int, Int>) =
         battle.sendPlayerSkillData(session, element, skillPoint, skills)
 
+    override fun sendTurn2Balls(session: SessionSender, available: Int, active: Set<Int>) =
+        battle.sendTurn2Balls(session, available, active)
+
+    override fun sendTurn2HeroSkills(session: SessionSender, heroSkills: Map<Int, Int>) =
+        battle.sendTurn2HeroSkills(session, heroSkills)
+
     override fun sendBattleInit(session: SessionSender, terrain: Int, eventNo: Int, roleData: ByteArray) =
         battle.sendBattleInit(session, terrain, eventNo, roleData)
 
