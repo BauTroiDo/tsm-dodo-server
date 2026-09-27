@@ -38,6 +38,19 @@ class BattleItemResolver(
 ) {
 
     /**
+     * Lightweight command-time validation. Keeps S53:5 ACK authoritative without
+     * consuming the item; resolveItemUse repeats validation before mutation.
+     */
+    fun canQueueItemUse(user: BattleFighter, target: BattleFighter, itemId: Int, ownerCharId: Long): Boolean {
+        val def = itemDefs[itemId] ?: return false
+        val sameSide = user.isPlayerSide == target.isPlayerSide
+        if (!sameSide && def.kind in FRIENDLY_ONLY_KINDS) return false
+        if (sameSide && def.kind == KIND_POISON) return false
+        if (resolveRecoveryEffect(def, target) == null) return false
+        return inventorySystem.getBag(ownerCharId).values.any { it.itemId == itemId && it.quantity > 0 }
+    }
+
+    /**
      * Phân giải và thực thi việc sử dụng vật phẩm trong chiến đấu
      *
      * Xác thực → Tính toán hiệu ứng → Áp dụng lên mục tiêu → Trừ vật phẩm trong túi đồ.
