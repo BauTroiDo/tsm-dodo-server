@@ -20,10 +20,10 @@ import tw.tsm.gamelogic.battle.BattleItemResolver
 import tw.tsm.gamelogic.battle.BattleSkillResolver
 
 class DvtBattleCommandSemanticsTest {
-    private fun fighter(id: Long, col: Int, row: Int) = BattleFighter(
+    private fun fighter(id: Long, col: Int, row: Int, learnedSkills: IntArray = intArrayOf()) = BattleFighter(
         roleId=id, kind=EHuman.PLAYER, name="f$id", col=col, row=row,
         maxHp=1000, maxSp=500, hp=1000, sp=500, level=1, element=1,
-        atk=100, def=10, agi=100, intelligence=100
+        atk=100, def=10, agi=100, intelligence=100, skills=learnedSkills
     )
 
     private fun skill(fightWayValue: Int) = mockk<SkillDef> {
@@ -138,6 +138,20 @@ class DvtBattleCommandSemanticsTest {
 
         actor.clearAllGroupedStatuses()
         assertTrue(battle.setPlayerAction(actor.roleId, actor.col, actor.row, action))
+    }
+
+
+    @Test
+    fun `Lua forbidden non battle skill is rejected even when learned`() {
+        val forbiddenId = 14003
+        val actor = fighter(1, 2, 0, intArrayOf(forbiddenId))
+        val target = fighter(2, 0, 0)
+        val battle = fixture(actor, target, mapOf(forbiddenId to skill(1)))
+        val action = BattleAction(BattleAction.KIND_SKILL, forbiddenId, target.col, target.row)
+
+        assertFalse(battle.setPlayerAction(actor.roleId, actor.col, actor.row, action))
+        assertFalse(actor.hasActed)
+        assertEquals(null, actor.pendingAction)
     }
 
 
