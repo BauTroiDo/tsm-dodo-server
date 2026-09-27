@@ -46,6 +46,8 @@ class BattleFighter(
 
     // ── 技能（最多 3 個） ──
     val skills: IntArray = intArrayOf(),
+    /** Skill level snapshot; needed by SkillData:GetFightArea(skillLv). */
+    val skillLevels: Map<Int, Int> = emptyMap(),
 
     // ── 玩家專屬外觀資料（kind=Player 時使用） ──
     var sex: Int = 0,
