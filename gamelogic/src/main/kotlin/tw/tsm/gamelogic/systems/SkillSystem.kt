@@ -104,6 +104,10 @@ class SkillSystem(
             for ((id, target) in upgrades) {
                 val def = skillDefs[id] ?: return emptyList()
                 if (!allowTurn2 && (id in ALL_TURN2_BASE_SKILLS || id in HERO_SKILL_IDS)) return emptyList()
+                // UISkillTree.AddSkillLv explicitly returns for the LightDark tab. These skills are
+                // unlocked through UISell 57, never through C28:1. Reject forged upgrade packets
+                // so Turn3 skills cannot leak into the ordinary character skill store.
+                if (id in TURN3_LIGHT_DARK_SKILLS) return emptyList()
                 val from = sc.skills[id] ?: 0
                 if (id in forbidden || def.element == opposite || target !in 1..minOf(255, def.maxLv) ||
                     target < from || from < 0 || def.learnPoint < 0 || def.levelUpPoint < 0) return emptyList()
@@ -258,5 +262,9 @@ class SkillSystem(
         private val ALL_TURN2_BASE_SKILLS = TURN2_BASE_SKILLS.values.flatten().toSet()
         private val HERO_SKILL_IDS =
             (10027..10034).toSet() + (11027..11034) + (12027..12034) + (13026..13033)
+        private val TURN3_LIGHT_DARK_SKILLS = setOf(
+            22001, 22002, 22003, 22004, 22007, 22010, 22015, 22016, 22011,
+            23001, 23002, 23003, 23004, 23009, 23010, 23015, 23016, 23011
+        )
     }
 }
