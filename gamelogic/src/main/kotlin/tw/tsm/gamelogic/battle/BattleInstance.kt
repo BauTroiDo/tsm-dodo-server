@@ -473,18 +473,18 @@ class BattleInstance(
         // Statuses that were already present at action-phase start consume one round now.
         // A status inflicted during this round starts counting from the next round.
         for (fighter in allFighters) {
-            if (fighter.isAlive && fighter.statusEffect != BattleStatus.NONE &&
-                fighter.statusAppliedRound < currentRound
-            ) {
-                fighter.statusRounds--
-                if (fighter.statusRounds <= 0) {
-                    statusRestores.add(StatusRestore(fighter.col, fighter.row, statusGroup(fighter.statusEffect), fighter.statusSkillId))
-                    fighter.statusEffect = BattleStatus.NONE
-                    fighter.statusRounds = 0
-                    fighter.statusSkillId = 0
-                    fighter.statusAppliedRound = -1
+            if (!fighter.isAlive) continue
+            val expiredGroups = mutableListOf<Int>()
+            for ((group, status) in fighter.groupedStatuses) {
+                if (status.appliedRound >= currentRound) continue
+                status.rounds--
+                if (status.rounds <= 0) {
+                    statusRestores.add(StatusRestore(fighter.col, fighter.row, group, status.skillId))
+                    expiredGroups.add(group)
                 }
             }
+            for (group in expiredGroups) fighter.groupedStatuses.remove(group)
+            fighter.syncLegacyStatusView()
         }
 
         // 清除所有剩餘行動（未行動的角色）並重置 Combo 倍率
