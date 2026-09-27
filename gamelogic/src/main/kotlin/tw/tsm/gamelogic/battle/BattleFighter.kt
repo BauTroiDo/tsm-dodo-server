@@ -55,6 +55,7 @@ class BattleFighter(
     var color2: Int = 0,
     var turn: Int = 0,
     var career: Int = 0,
+    var turn3Element: Int = 0,
     var equipItemIds: IntArray = intArrayOf(),
     var outfitItemIds: IntArray = intArrayOf(),
 
