@@ -167,6 +167,7 @@ class BattleSkillResolver(
                 if (calcResult.inflictedStatus != tw.tsm.domain.enums.BattleStatus.NONE) {
                     target.statusEffect = calcResult.inflictedStatus
                     target.statusRounds = calcResult.statusRounds
+                    target.statusSkillId = skillId
                 }
 
                 // 死亡判定
