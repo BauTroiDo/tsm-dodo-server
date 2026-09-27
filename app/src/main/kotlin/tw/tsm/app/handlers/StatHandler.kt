@@ -62,6 +62,8 @@ class StatHandler(
             return
         }
         skillRepository.saveTurn3State(charId, current.copy(element = element))
+        session.turn3Element = element
+        responseSender.sendSetAttribute(session, EAttribute.TURN3_ELEMENT, element, true)
         responseSender.sendTurn3ElementResult(session, 0)
         logger.info { "${session.characterName} selected Turn3 element=$element" }
     }
