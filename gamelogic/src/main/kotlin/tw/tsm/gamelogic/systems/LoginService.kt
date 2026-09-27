@@ -8,6 +8,7 @@ import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.SessionSender
 import tw.tsm.domain.interfaces.repositories.CharacterRecord
 import tw.tsm.domain.interfaces.repositories.HotkeyRepository
+import tw.tsm.domain.interfaces.repositories.SkillRepository
 import tw.tsm.domain.valueobjects.PlayerDataDto
 import tw.tsm.domain.valueobjects.ThingData
 
@@ -37,6 +38,7 @@ class LoginService(
     private val petSystem: PetSystem,
     private val mountSystem: MountSystem,
     private val hotkeyRepository: HotkeyRepository,
+    private val skillRepository: SkillRepository,
     private val roleCountSystem: RoleCountSystem,
     private val flyPointSystem: FlyPointSystem,
     private val mailSystem: MailSystem,
@@ -129,7 +131,8 @@ class LoginService(
         val equipBonus = EquipBonusCalculator.calculateTotalBonus(equips, itemDefs)
 
         // S:005-003 Gói dữ liệu lớn của người chơi (Bao gồm chỉ số cộng thêm từ trang bị)
-        val playerData = PlayerDataDto.fromCharacterRecord(record, statSystem, equipBonus)
+        val turn3State = skillRepository.findTurn3State(record.id)
+        val playerData = PlayerDataDto.fromCharacterRecord(record, statSystem, equipBonus, turn3State)
         responseSender.sendPlayerData(session, playerData)
 
         // S:085-001 Đếm số lượng của nhân vật — Bắt buộc gửi trước vật phẩm trong túi đồ
