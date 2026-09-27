@@ -911,6 +911,7 @@ class BattleManager(
             if (gained > 0) {
                 synchronized(state) { state.level = level }
                 session.level = level
+                characterRepository.updateLevel(charId, level)
                 responseSender.sendSetAttribute(session, EAttribute.LV, level, true)
                 logger.info { "三轉升級：charId=$charId +$gained → Lv.$level, exp=$exp" }
             } else {
