@@ -73,6 +73,20 @@ class EveResultClassPolicyTest : DescribeSpec({
             EveResultClassPolicy.playerOperation(7, 5)?.kind shouldBe EvePlayerResultKind.INN_REST_CONFIRM
         }
 
+        it("resultClass=7 pStyle=1/3 帶值變體不得誤走服務 NPC UI") {
+            EveResultClassPolicy.isRepeatableServicePlayerOperation(1, 0) shouldBe true
+            EveResultClassPolicy.isRepeatableServicePlayerOperation(3, 0) shouldBe true
+            EveResultClassPolicy.isRepeatableServicePlayerOperation(2, 100) shouldBe true
+            EveResultClassPolicy.isRepeatableServicePlayerOperation(4, 100) shouldBe true
+            EveResultClassPolicy.isRepeatableServicePlayerOperation(5, 100) shouldBe true
+
+            // Eve.emg: pStyle=1 + value is 無界鬥陣 teleport;
+            // pStyle=3 + value is premium-currency direct purchase.
+            EveResultClassPolicy.isRepeatableServicePlayerOperation(1, 99) shouldBe false
+            EveResultClassPolicy.isRepeatableServicePlayerOperation(1, 199) shouldBe false
+            EveResultClassPolicy.isRepeatableServicePlayerOperation(3, 131171) shouldBe false
+        }
+
         it("resultClass=7 type=0 pStyle=1..5 不應誤觸發特殊 UI") {
             EveResultClassPolicy.playerOperation(0, 1) shouldBe null
             EveResultClassPolicy.playerOperation(0, 2) shouldBe null
