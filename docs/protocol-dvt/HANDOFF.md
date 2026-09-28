@@ -243,6 +243,42 @@ Runtime cần test:
 3. đánh 1 trận nhận EXP/vàng/drop, restart server ngay;
 4. login lại xác nhận EXP/vàng/drop/pet vẫn còn.
 
+#### I. Hidden carried pets / S15-8 wire — chờ runtime
+Commit:
+- `764204e Fix DVT carried pet full-sync wire`
+
+Triệu chứng:
+- UI đội ngũ chỉ hiện 1 pet, nhưng MySQL của `CaoYếnDao` (character_id=31) đang có **4 pet storage_type=1** ở slot 1..4.
+- Vì server cache thấy carried roster đủ 4 slot, manual catch bị validator từ chối; client lại chỉ thấy 1 pet nên người chơi bấm lưới nhưng nhân vật đứng yên, tưởng pet bị ẩn.
+- Client log thực tế sau login đã chứng minh lỗi parse:
+  `Received Message 015 008`
+  → `FollowNpc[13][1] Appear !!`
+  → `FollowNpc[13][0] Appear !!`
+  thay vì slot 1,2,3,4.
+
+Nguồn sự thật mạnh nhất:
+- Đã giải AES trực tiếp **client gốc TSNPCVN** `C:\Users\QT\Downloads\TSNPCVN\AssetBundles\Lua\Logic\Role.lua`.
+- Client gốc khác bản Lua trong repo ở đúng wire S15-8:
+  - tên pet: `ReadString(len, DataManager.encoding_Unicode)` → UTF-16LE;
+  - `sublimeCount`: UInt16;
+  - `hpPillCount`: UInt16;
+  - `spPillCount`: UInt16.
+- Kotlin cũ gửi name Big5 và ba field trên bằng Byte, làm record đầu tiên lệch offset; các pet sau bị đọc sai/ẩn.
+- `LuaHelper.CheckDefine("NFT")` trong Assembly-CSharp client gốc đã decompile và xác nhận **NFT=true**, nên ThingData 56-byte hiện tại là đúng; lỗi không nằm ở NFT extension.
+
+Đã sửa `sendFollowNpcFullData()`:
+- name UTF-16LE byte-len;
+- sublime/hpPill/spPill UInt16;
+- thêm test `DvtFollowNpcFullWireTest` parse 4 pet liên tiếp theo chính layout client gốc.
+- Full `./gradlew test build`: PASS.
+
+Runtime cần xác nhận sau `764204e`:
+1. restart/login lại;
+2. UITeam phải hiện đủ roster DB thật (hiện tại 4 pet ở carried);
+3. không còn pet slot 0/ẩn;
+4. sau khi thả/cất bớt để carried <4, bắt pet phải hoạt động bình thường.
+
+
 ## 6. EXP semantics hiện tại
 
 DVT dùng **cumulative lifetime EXP**, không phải remainder EXP.
