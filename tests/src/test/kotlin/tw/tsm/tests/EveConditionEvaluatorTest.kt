@@ -37,12 +37,12 @@ class EveConditionEvaluatorTest : DescribeSpec({
             EveConditionEvaluator.compareStep(5, 0, 5) shouldBe true
             EveConditionEvaluator.compareStep(5, 0, 3) shouldBe false
         }
-        it("ops=1 小於") {
-            EveConditionEvaluator.compareStep(3, 1, 5) shouldBe true
-            EveConditionEvaluator.compareStep(5, 1, 5) shouldBe false
+        it("ops=1 等於") {
+            EveConditionEvaluator.compareStep(5, 1, 5) shouldBe true
+            EveConditionEvaluator.compareStep(5, 1, 3) shouldBe false
         }
-        it("ops=2 大於") {
-            EveConditionEvaluator.compareStep(6, 2, 5) shouldBe true
+        it("ops=2 小於") {
+            EveConditionEvaluator.compareStep(3, 2, 5) shouldBe true
             EveConditionEvaluator.compareStep(5, 2, 5) shouldBe false
         }
         it("ops=3 小等") {
