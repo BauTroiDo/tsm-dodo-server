@@ -301,6 +301,53 @@ Không ép tất cả pet cũ về LV1 vì sẽ làm mất EXP người chơi đ
 Full `./gradlew test build`: PASS.
 Runtime `4bbb782`: **PASS**. Người dùng xác nhận sau khi thả/cất pet cũ và bắt pet mới, pet bắt mới hoạt động đúng theo seed LV1.
 
+#### K. Hằng ngày/Jiugongge mission progress — chờ runtime
+Commit:
+- `5c686ed Fix DVT daily mission progress tracking`
+
+Triệu chứng:
+- 9 ô Hằng ngày đã hiện đúng, thời gian hoạt động đã mở;
+- người dùng làm đủ điều kiện nhưng ô vẫn giữ 0/x và không hoàn thành.
+
+Nguyên nhân đã xác nhận:
+- Jiugongge client **không tự suy ra gameplay từ server**; nó đọc `RoleCount`/BitFlag local.
+- Khi nhận S:085-002, `RoleCount.Set()` phát `CheckCondition(ECondition.RoleCount)`.
+- Khi nhận S:081-001 với flag 1490..1499, `BitFlag.Set()` phát `CheckCondition(ECondition.Flag)`.
+- Khi điều kiện đạt, `Jiugongge.CheckCompeleteKind()` mới gửi C:091-002 về server.
+- Kotlin trước `5c686ed` chỉ load RoleCount lúc login nhưng **không tăng các counter tương ứng khi gameplay diễn ra**. Production DB character 31 không có row 151/160/163/190/191/192 và không có flag 1497..1499, nên UI luôn 0.
+
+Board 1 authoritative từ `IOS_JiugonggeMission_C.dat` + `IOS_TextData_C.dat` client gốc:
+- mission 2: RoleCount 160 >=1 — `Lần đầu nhận được thú cưỡi`
+- mission 3: RoleCount 151 >=2 — `Bắt được võ tướng`
+- mission 4: flag 1499 — `Xuất chiến võ tướng`
+- mission 5: RoleCount 190 >=10 — `Phân phối điểm kỹ năng của nhân vật`
+- mission 6: RoleCount 191 >=20 — `Phân phối điểm thuộc tính của nhân vật`
+- mission 7: RoleCount 163 >=50 — `Tiến hành chiến đấu`
+- mission 8: FriendCount >=5 — `Kết giao hảo hữu`
+- mission 9: flag 1498 — `Lần đầu tổ đội`
+- mission 10: flag 1497 — `Gia nhập quân đoàn`
+
+`5c686ed` thêm `DailyProgressSystem` và nối các gameplay event:
+- bắt pet thành công → RoleCount 151 +1 + S85;
+- nhận thú cưỡi lần đầu (item hoặc quest tutorial) → RoleCount 160 +1 + S85;
+- pet xuất chiến → flag1499 + S81;
+- tiêu skill point nhân vật → RoleCount190 + số điểm thật đã tiêu + S85;
+- phân phối stat → RoleCount191 + số điểm + S85;
+- kết thúc battle → RoleCount163 +1 + S85;
+- friend count dùng historical maximum RoleCount192 và S14-17, đúng `Social.maxRecordFriendCount`;
+- tổ đội lần đầu → flag1498 + S81;
+- login reconcile mount đã sở hữu và pet đang xuất chiến để người chơi cũ không phải làm lại hai điều kiện đó.
+
+Mission 10 / flag1497 chưa có gameplay hook vì server hiện **chưa có subsystem quân đoàn/organization**; không invent semantics.
+
+Regression:
+- `DvtDailyProgressTest`: kiểm tra RoleCount S85 + flag S81 bridge.
+- `DvtJiugonggeTest`: khóa chính xác toàn bộ mapping mission 2..10 theo File.dat.
+- Full clean `gradlew clean test build`: **BUILD SUCCESSFUL**.
+
+Runtime `5c686ed`: **PENDING**.
+
+
 
 ## 6. EXP semantics hiện tại
 
@@ -390,7 +437,8 @@ Sau lỗi item wire đã PASS, còn nên audit:
 ## 10. Recent commits để chat mới định vị nhanh
 
 ```text
-1706f00 Fix DVT daily runtime window                 — runtime PENDING
+5c686ed Fix DVT daily mission progress tracking      — runtime PENDING
+1706f00 Fix DVT daily runtime window                 — runtime timing fixed; feature still needed progress bridge
 32b8b6f Fix pet SP sync and EXP chat                 — runtime PASS
 def5f55 Restore battle EXP for active pet            — runtime PASS via 32b8b6f batch
 5461ff6 Fix DVT daily activity lifetime              — runtime FAIL
@@ -404,9 +452,10 @@ fe7633c Fix DVT NFT item wire alignment              — runtime PASS
 
 Chat mới chỉ cần đọc file này, sau đó:
 1. kiểm tra HEAD GitHub hiện tại;
-2. ưu tiên xác nhận runtime `1706f00` cho Hằng ngày/Jiugongge;
-3. nếu vẫn FAIL, audit tiếp packet/state runtime dựa trên client gốc TSNPCVN, không đoán;
-4. sau khi Hằng ngày PASS mới quay lại **EVE conditionClass=7 / param=8**;
-5. không yêu cầu người dùng kể lại lịch sử và không mở lại các phần đã runtime PASS nếu không có regression mới.
+2. ưu tiên xác nhận runtime `5c686ed` cho Hằng ngày/Jiugongge;
+3. test trực tiếp các điều kiện đã có gameplay hook: bắt pet, xuất chiến pet, phân phối skill/stat, battle, thú cưỡi, friend, tổ đội;
+4. mission `Gia nhập quân đoàn` (flag1497) vẫn chờ subsystem Organization; không tự invent;
+5. sau khi Hằng ngày PASS mới quay lại **EVE conditionClass=7 / param=8**;
+6. không yêu cầu người dùng kể lại lịch sử và không mở lại các phần đã runtime PASS nếu không có regression mới.
 
-**Điểm tiếp tục hiện tại: Hằng ngày/Jiugongge vẫn là lỗi còn mở; toàn bộ batch pet lifecycle / S15-8 / legacy seed hiện đã runtime PASS.**
+**Điểm tiếp tục hiện tại: Hằng ngày/Jiugongge đang chờ runtime test `5c686ed`; pet lifecycle / S15-8 / legacy seed đã runtime PASS.**
