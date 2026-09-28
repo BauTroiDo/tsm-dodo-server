@@ -10,6 +10,7 @@ import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.StatCalculator
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
 import tw.tsm.domain.interfaces.repositories.SkillRepository
+import tw.tsm.gamelogic.systems.DailyProgressSystem
 import tw.tsm.gamelogic.systems.PlayerStateManager
 import tw.tsm.gamelogic.systems.SkillSystem
 import tw.tsm.protocol.PacketReader
@@ -31,7 +32,8 @@ class StatHandler(
     private val responseSender: ResponseSender,
     private val statCalc: StatCalculator,
     private val skillSystem: SkillSystem,
-    private val skillRepository: SkillRepository
+    private val skillRepository: SkillRepository,
+    private val dailyProgressSystem: DailyProgressSystem? = null,
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.BATTLE
@@ -127,6 +129,11 @@ class StatHandler(
             }
         }
         characterRepository.updateAttrPoint(charId, state.attrPoint)
+        dailyProgressSystem?.incrementRoleCount(
+            session,
+            DailyProgressSystem.ATTRIBUTE_POINT,
+            addPoints,
+        )
         responseSender.sendSetAttribute(session, turn3Kind, old + addPoints, true)
         responseSender.sendSetAttribute(session, EAttribute.ATTR_POINT, state.attrPoint, true)
 
@@ -193,6 +200,11 @@ class StatHandler(
 
         // 持久化到 DB
         characterRepository.addStatPoint(charId, result.dbColumn, addPoints, result.newAttrPoint)
+        dailyProgressSystem?.incrementRoleCount(
+            session,
+            DailyProgressSystem.ATTRIBUTE_POINT,
+            addPoints,
+        )
 
         // S:008-001 回應 — 屬性新值
         responseSender.sendSetAttribute(session, attrKind, result.newValue, isPositive = true)

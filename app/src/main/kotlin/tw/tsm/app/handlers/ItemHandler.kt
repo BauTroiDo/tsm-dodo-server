@@ -12,6 +12,7 @@ import tw.tsm.domain.interfaces.PacketHandler
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.StatCalculator
 import tw.tsm.domain.valueobjects.ThingData
+import tw.tsm.gamelogic.systems.DailyProgressSystem
 import tw.tsm.gamelogic.systems.EquipBonusCalculator
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
 import tw.tsm.gamelogic.systems.FlyPointSystem
@@ -50,7 +51,8 @@ class ItemHandler(
     private val characterRepository: CharacterRepository,
     private val petEquipSystem: PetEquipSystem,
     private val questSystem: QuestSystem,
-    private val skillSystem: SkillSystem
+    private val skillSystem: SkillSystem,
+    private val dailyProgressSystem: DailyProgressSystem? = null,
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.SHOP  // 23
@@ -602,6 +604,10 @@ class ItemHandler(
 
         // S:081-001 永標更新 → 觸發客戶端 Mounts.OnGetCollection
         responseSender.sendBitFlagChanges(session, listOf(flagId to true))
+        dailyProgressSystem?.incrementRoleCount(
+            session,
+            DailyProgressSystem.MOUNTS,
+        )
 
         // 若自動選擇了此坐騎，通知客戶端
         val mountData = mountSystem.getCache(characterId)

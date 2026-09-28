@@ -6,6 +6,7 @@ import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.PacketHandler
 import tw.tsm.domain.interfaces.ResponseSender
+import tw.tsm.gamelogic.systems.DailyProgressSystem
 import tw.tsm.gamelogic.systems.PlayerStateManager
 import tw.tsm.gamelogic.systems.SkillSystem
 import tw.tsm.gamelogic.systems.PetSkillSystem
@@ -23,7 +24,8 @@ class SkillUpgradeHandler(
     private val skillSystem: SkillSystem,
     private val responseSender: ResponseSender,
     private val playerStateManager: PlayerStateManager,
-    private val petSkillSystem: PetSkillSystem
+    private val petSkillSystem: PetSkillSystem,
+    private val dailyProgressSystem: DailyProgressSystem? = null,
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.SKILL_UPGRADE
@@ -60,6 +62,7 @@ class SkillUpgradeHandler(
         val heroSlots = MutableList(slotCount.toInt()) { reader.readUByte() to reader.readUShortLE() }
 
         val state = playerStateManager.getState(characterId) ?: return
+        val beforeSkillPoint = skillSystem.getCache(characterId)?.skillPoint ?: state.skillPoint
         val ok = skillSystem.upgradeTurn2(
             characterId = characterId,
             addBalls = balls,
@@ -70,6 +73,14 @@ class SkillUpgradeHandler(
         )
         val sc = skillSystem.getCache(characterId) ?: return
         synchronized(state) { state.skillPoint = sc.skillPoint }
+        val spentSkillPoint = (beforeSkillPoint - sc.skillPoint).coerceAtLeast(0)
+        if (spentSkillPoint > 0) {
+            dailyProgressSystem?.incrementRoleCount(
+                session,
+                DailyProgressSystem.SKILL_POINT,
+                spentSkillPoint,
+            )
+        }
 
         // 成功或拒絕都回 authoritative snapshot，避免 client 保留本地暫存狀態。
         responseSender.sendPlayerSkillData(session, sc.element, sc.skillPoint, sc.skills)
@@ -116,7 +127,9 @@ class SkillUpgradeHandler(
 
         logger.info { "${session.characterName} 請求升級技能：$upgrades" }
 
-        val playerTurn = playerStateManager.getState(characterId)?.turn ?: return
+        val state = playerStateManager.getState(characterId) ?: return
+        val playerTurn = state.turn
+        val beforeSkillPoint = skillSystem.getCache(characterId)?.skillPoint ?: state.skillPoint
         skillSystem.upgradeSkills(characterId, upgrades, playerTurn)
         // Luon luon gui lai toan bo du lieu ky nang de dong bo chinh xac cho client
         val sc = skillSystem.getCache(characterId)
@@ -127,6 +140,14 @@ class SkillUpgradeHandler(
                 }
             }
             responseSender.sendPlayerSkillData(session, sc.element, sc.skillPoint, sc.skills)
+            val spentSkillPoint = (beforeSkillPoint - sc.skillPoint).coerceAtLeast(0)
+            if (spentSkillPoint > 0) {
+                dailyProgressSystem?.incrementRoleCount(
+                    session,
+                    DailyProgressSystem.SKILL_POINT,
+                    spentSkillPoint,
+                )
+            }
         }
     }
 }

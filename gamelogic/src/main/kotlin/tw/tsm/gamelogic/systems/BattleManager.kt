@@ -51,7 +51,8 @@ class BattleManager(
     private val skillRepository: SkillRepository? = null,
     private val characterRepository: CharacterRepository? = null,
     private val npcUpgradeDefs: Map<Int, NpcUpgradeDef> = emptyMap(),
-    private val sceneSetDefs: Map<Int, SceneSetDef> = emptyMap()
+    private val sceneSetDefs: Map<Int, SceneSetDef> = emptyMap(),
+    private val dailyProgressSystem: DailyProgressSystem? = null,
 ) {
     /** 戰鬥道具解析器（無狀態，全戰鬥共用） */
     private val battleItemResolver = BattleItemResolver(inventorySystem, itemDefs)
@@ -942,6 +943,10 @@ class BattleManager(
                     if (added != null) {
                         val (slotIndex, pet) = added
                         responseSender.sendFollowNpcAdd(session, playerId, slotIndex, npcId, pet.canGrow, showMsg = true)
+                        dailyProgressSystem?.incrementRoleCount(
+                            session,
+                            DailyProgressSystem.CATCH_SUCCESS,
+                        )
                         logger.info { "戰鬥 ${battle.battleId}: 玩家 $playerId 捕獲武將 npcId=$npcId → slot=$slotIndex" }
                     } else {
                         logger.warn { "戰鬥 ${battle.battleId}: 武將 npcId=$npcId 加入失敗（重複或隊伍滿）" }
@@ -953,6 +958,9 @@ class BattleManager(
                     responseSender.sendFollowNpcFullData(session, allPets.values.sortedBy { it.slotIndex })
                 }
             }
+
+            // ERoleCount.Fight=163 — mỗi trận kết thúc tăng một lần.
+            dailyProgressSystem?.incrementRoleCount(session, DailyProgressSystem.FIGHT)
 
             // 同步玩家最終 HP/SP 到 PlayerState + 更新主角 HUD
             val playerFighter = battle.getAllFighters().firstOrNull { it.roleId == playerId }

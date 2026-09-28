@@ -42,10 +42,31 @@ class DvtJiugonggeTest {
         assertEquals(55, missions.size)
         assertEquals(12, infos.getValue(1).activityId)
         assertEquals(1, infos.getValue(1).kind)
-        assertEquals((2..10).toList(), missions.values
+        val daily = missions.values
             .filter { it.boardNumber == 1L }
             .sortedBy { it.id }
-            .map { it.id })
+        assertEquals((2..10).toList(), daily.map { it.id })
+        assertEquals(
+            listOf(
+                listOf(14L, 160L, 3L, 1L),    // first mount
+                listOf(14L, 151L, 3L, 2L),    // catch warrior x2
+                listOf(17L, 1499L, 3L, 1L),   // deploy warrior
+                listOf(14L, 190L, 3L, 10L),   // spend skill points
+                listOf(14L, 191L, 3L, 20L),   // spend attribute points
+                listOf(14L, 163L, 3L, 50L),   // fight
+                listOf(18L, 0L, 3L, 5L),      // max friend count
+                listOf(17L, 1498L, 3L, 1L),   // first party
+                listOf(17L, 1497L, 3L, 1L),   // join organization
+            ),
+            daily.map {
+                listOf(
+                    it.conditionKind.toLong(),
+                    it.conditionKindValue,
+                    it.conditionOperator.toLong(),
+                    it.conditionValue,
+                )
+            }
+        )
         assertEquals(127, times.getValue(12).openDayMask)
         assertEquals(0, times.getValue(12).openHour)
         assertEquals(23, times.getValue(12).closeHour)

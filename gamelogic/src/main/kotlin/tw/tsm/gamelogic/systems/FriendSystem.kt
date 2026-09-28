@@ -18,7 +18,8 @@ class FriendSystem(
     private val friendRepository: FriendRepository,
     private val characterRepository: CharacterRepository,
     private val worldManager: WorldManager,
-    private val responseSender: ResponseSender
+    private val responseSender: ResponseSender,
+    private val roleCountSystem: RoleCountSystem? = null,
 ) {
 
     /**
@@ -55,8 +56,9 @@ class FriendSystem(
             responseSender.sendFriendAdd(session, dtos)
         }
 
-        // S:014-017 Số lượng bạn bè lịch sử tối đa
-        responseSender.sendMaxRecordFriendCount(session, friends.size)
+        // S:014-017 is ECondition.FriendCount in the DVT client.
+        // It is a historical maximum (maxRecordFriendCount), not current friends.size.
+        syncHistoricalFriendCount(session, charId, friends.size)
 
         // Tải các lời mời đang chờ xử lý
         val invites = friendRepository.findPendingInvites(charId)
@@ -192,7 +194,33 @@ class FriendSystem(
             }
         }
 
+        // DVT S:014-017 updates Social.maxRecordFriendCount and emits
+        // CheckCondition(ECondition.FriendCount). Keep the historical maximum for both sides.
+        syncHistoricalFriendCount(session, charId, friendRepository.countFriends(charId))
+        if (inviterSession != null) {
+            syncHistoricalFriendCount(
+                inviterSession,
+                inviterId,
+                friendRepository.countFriends(inviterId),
+            )
+        }
+
         logger.info { "Thiết lập bạn bè: $charId ↔ $inviterId" }
+    }
+
+    private fun syncHistoricalFriendCount(
+        session: GameSession,
+        charId: Long,
+        currentCount: Int,
+    ): Int {
+        val stored = roleCountSystem?.getValue(charId, RoleCountSystem.FRIEND_COUNT) ?: 0
+        val historical = maxOf(stored, currentCount)
+        if (roleCountSystem != null && historical != stored) {
+            val max = roleCountSystem.getMaxValue(charId, RoleCountSystem.FRIEND_COUNT)
+            roleCountSystem.setValue(charId, RoleCountSystem.FRIEND_COUNT, historical, max)
+        }
+        responseSender.sendMaxRecordFriendCount(session, historical)
+        return historical
     }
 
     /**

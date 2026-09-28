@@ -268,6 +268,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     }
     single { MacroBoxSystem() }
     single { RoleCountSystem(get()) }
+    single { DailyProgressSystem(get<RoleCountSystem>(), get<BitFlagSystem>(), get<ResponseSender>()) }
     single { FlyPointSystem(get(), get()) }
     single { UISellSystem(get<GameDataManager>().uiSellDefs, get<GameDataManager>().uiSellFormulaDefs, get(), get(), get()) }
     single { PetUpgradeSystem(get(), get(), get(), get(), get<GameDataManager>().npcDefs, get<GameDataManager>().npcUpgradeDefs) }
@@ -282,7 +283,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { TradeSystem(get(), get(), get(), get(), get<GameDataManager>().itemDefs, get(), get(), get<StatSystem>()) }
     single { DispatchSystem(get(), get(), get<GameDataManager>().dispatchDefs, get<GameDataManager>().dispatchBonusDefs) }
     single { MailSystem(get(), get(), get()) }
-    single { FriendSystem(get(), get(), get(), get()) }
+    single { FriendSystem(get(), get(), get(), get(), get<RoleCountSystem>()) }
     single {
         LeaderboardSystem(get(), get<GameDataManager>().leaderboardDefs, get(), get()).also {
             it.startPeriodicRefresh()
@@ -301,14 +302,14 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
         )
     }
     single {
-        BattleManager(get(), get<GameDataManager>().skillDefs, get<GameDataManager>().npcDefs, get(), get(), get<PetSystem>(), get<MoneySystem>(), get<StatSystem>(), get(), get<GameDataManager>().npcDropTable, get<SkillSystem>(), get<MacroBoxSystem>(), get<GameDataManager>().itemDefs, get<SkillRepository>(), get<CharacterRepository>(), get<GameDataManager>().npcUpgradeDefs, get<GameDataManager>().sceneSetDefs).also { bm ->
+        BattleManager(get(), get<GameDataManager>().skillDefs, get<GameDataManager>().npcDefs, get(), get(), get<PetSystem>(), get<MoneySystem>(), get<StatSystem>(), get(), get<GameDataManager>().npcDropTable, get<SkillSystem>(), get<MacroBoxSystem>(), get<GameDataManager>().itemDefs, get<SkillRepository>(), get<CharacterRepository>(), get<GameDataManager>().npcUpgradeDefs, get<GameDataManager>().sceneSetDefs, get<DailyProgressSystem>()).also { bm ->
             // 戰鬥結束回呼 → EveFlowController 恢復事件流程
             bm.onBattleEndCallback = { session, playerId, playerWin ->
                 get<EveFlowController>().resumeAfterBattle(session, playerId, playerWin)
             }
         }
     }
-    single { LoginService(get(), get(), get(), get(), get(), get<PointSystem>(), get(), get(), get<EveEventStateMachine>(), get(), get(), get(), get(), get(), get(), get<SkillRepository>(), get<RoleCountSystem>(), get<FlyPointSystem>(), get<MailSystem>(), get<FriendSystem>(), get<GameDataManager>().eveData, get<GameDataManager>().itemDefs, get<JiugonggeSystem>()) }
+    single { LoginService(get(), get(), get(), get(), get(), get<PointSystem>(), get(), get(), get<EveEventStateMachine>(), get(), get(), get(), get(), get(), get(), get<SkillRepository>(), get<RoleCountSystem>(), get<FlyPointSystem>(), get<MailSystem>(), get<FriendSystem>(), get<GameDataManager>().eveData, get<GameDataManager>().itemDefs, get<JiugonggeSystem>(), get<DailyProgressSystem>()) }
 
     // Eve 事件系統（拆分後的 9 個子服務）
     single {
@@ -327,7 +328,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     }
     single { EveConditionResolver(get<GameDataManager>().eveData) }
     single { EveAutoChainEngine(get<EveEventStateMachine>(), get(), get(), get<GameDataManager>().eveData) }
-    single { EveResultExecutor(get(), get(), get(), get(), get(), get(), get<GameDataManager>().npcDefs, get<GameDataManager>().markDefs, get<GameDataManager>().markFlagToGuideId, get<GameDataManager>().eveData, get<MountSystem>(), get<AchievementSystem>(), get<BitFlagSystem>(), get<RoleCountSystem>()) }
+    single { EveResultExecutor(get(), get(), get(), get(), get(), get(), get<GameDataManager>().npcDefs, get<GameDataManager>().markDefs, get<GameDataManager>().markFlagToGuideId, get<GameDataManager>().eveData, get<MountSystem>(), get<AchievementSystem>(), get<BitFlagSystem>(), get<RoleCountSystem>(), get<DailyProgressSystem>()) }
     single { EveDoorWarpService(get(), get(), get(), get<EveEventStateMachine>(), get<GameDataManager>().eveData) }
     single { EveBattleService(get(), get<EveEventStateMachine>(), get(), get<GameDataManager>().mapTerrains, get<GameDataManager>().eveData) }
     single { NpcShopManager() }
@@ -359,7 +360,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { SceneHandler(get(), get()) }
     single { RelocateHandler(get(), get()) }
     single { NpcEventHandler(get<EveTriggerRouter>(), get<EveFlowController>()) }
-    single { ItemHandler(get(), get(), get(), get(), get(), get<GameDataManager>().itemDefs, get(), get<PlayerStateManager>(), get<StatSystem>(), get(), get<FlyPointSystem>(), get<CharacterRepository>(), get<PetEquipSystem>(), get<QuestSystem>(), get<SkillSystem>()) }
+    single { ItemHandler(get(), get(), get(), get(), get(), get<GameDataManager>().itemDefs, get(), get<PlayerStateManager>(), get<StatSystem>(), get(), get<FlyPointSystem>(), get<CharacterRepository>(), get<PetEquipSystem>(), get<QuestSystem>(), get<SkillSystem>(), get<DailyProgressSystem>()) }
     single { NpcTradeHandler(get(), get(), get(), get<GameDataManager>().itemDefs, get()) }
     single { BankHandler(get(), get(), get<GameDataManager>().itemDefs, get()) }
     single { StorageHandler(get(), get(), get<GameDataManager>().itemDefs, get()) }
@@ -367,12 +368,12 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { BattleManageHandler(get(), get(), get()) }
     single { BattleCommandHandler(get()) }
     single { PlayerStatusHandler(get(), get(), get(), get()) }
-    single { SkillUpgradeHandler(get(), get(), get(), get()) }
-    single { PartyHandler(get(), get(), get()) }
+    single { SkillUpgradeHandler(get(), get(), get(), get(), get<DailyProgressSystem>()) }
+    single { PartyHandler(get(), get(), get(), get<DailyProgressSystem>()) }
     single { FollowNpcHandler(get(), get(), get()) }
-    single { FollowNpcDeployHandler(get(), get()) }
+    single { FollowNpcDeployHandler(get(), get(), get<DailyProgressSystem>()) }
     single { PkSettingHandler(get()) }
-    single { StatHandler(get(), get(), get(), get<StatSystem>(), get(), get<SkillRepository>()) }
+    single { StatHandler(get(), get(), get(), get<StatSystem>(), get(), get<SkillRepository>(), get<DailyProgressSystem>()) }
     single { MountHandler(get(), get(), get()) }
     single { HotkeyHandler(get(), get()) }
     single { InnResponseSender() }

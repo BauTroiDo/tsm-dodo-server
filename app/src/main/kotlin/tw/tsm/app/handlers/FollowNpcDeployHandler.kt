@@ -6,6 +6,7 @@ import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.PacketHandler
 import tw.tsm.domain.interfaces.ResponseSender
+import tw.tsm.gamelogic.systems.DailyProgressSystem
 import tw.tsm.gamelogic.systems.PetSystem
 import tw.tsm.protocol.PacketReader
 
@@ -19,7 +20,8 @@ private val logger = KotlinLogging.logger {}
  */
 class FollowNpcDeployHandler(
     private val petSystem: PetSystem,
-    private val responseSender: ResponseSender
+    private val responseSender: ResponseSender,
+    private val dailyProgressSystem: DailyProgressSystem? = null,
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.FOLLOW_NPC_DEPLOY
@@ -43,7 +45,7 @@ class FollowNpcDeployHandler(
      *
      * 格式：+npcId(2LE)
      */
-    private fun handleDeploy(session: GameSession, characterId: Long, data: ByteArray) {
+    private suspend fun handleDeploy(session: GameSession, characterId: Long, data: ByteArray) {
         val reader = PacketReader(data)
         val npcId = reader.readUShortLE()
 
@@ -55,6 +57,10 @@ class FollowNpcDeployHandler(
 
         // S:019-004 通知出戰（使用 UInt16 版本）
         responseSender.sendFollowNpcDeploy(session, npcId)
+        dailyProgressSystem?.setConditionFlag(
+            session,
+            DailyProgressSystem.FLAG_DEPLOY_FOLLOW_NPC,
+        )
         logger.info { "${session.characterName} 武將出戰 npc=$npcId" }
     }
 

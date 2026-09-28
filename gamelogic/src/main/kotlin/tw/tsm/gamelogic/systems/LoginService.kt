@@ -46,7 +46,8 @@ class LoginService(
     private val friendSystem: FriendSystem,
     private val eveData: Map<Int, SceneEveData> = emptyMap(),
     private val itemDefs: Map<Int, ItemDef> = emptyMap(),
-    private val jiugonggeSystem: JiugonggeSystem? = null
+    private val jiugonggeSystem: JiugonggeSystem? = null,
+    private val dailyProgressSystem: DailyProgressSystem? = null,
 ) {
 
     /**
@@ -265,6 +266,22 @@ class LoginService(
         responseSender.sendMountData(session, mountData)
         session.mountLevel = mountData.level
         if (mountData.currentNpcId > 0) session.mountNpcId = mountData.currentNpcId
+
+        // Reconcile observable one-time Daily conditions for characters that already
+        // satisfied them before DailyProgress tracking was added.
+        if (mountData.currentNpcId > 0) {
+            dailyProgressSystem?.setRoleCountAtLeast(
+                session,
+                DailyProgressSystem.MOUNTS,
+                1,
+            )
+        }
+        if (petCache.fightNpcId > 0) {
+            dailyProgressSystem?.setConditionFlag(
+                session,
+                DailyProgressSystem.FLAG_DEPLOY_FOLLOW_NPC,
+            )
+        }
 
         // 7. S:001-013 Hoàn tất chuỗi đăng nhập
         responseSender.sendLoginFinished(session, connectCode)

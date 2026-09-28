@@ -42,7 +42,8 @@ class EveResultExecutor(
     private val mountSystem: MountSystem,
     private val achievementSystem: AchievementSystem,
     private val bitFlagSystem: BitFlagSystem,
-    private val roleCountSystem: RoleCountSystem
+    private val roleCountSystem: RoleCountSystem,
+    private val dailyProgressSystem: DailyProgressSystem? = null,
 ) {
     private companion object {
         val FUNCTION_UNLOCK_MARKER_MISSION_IDS = setOf(11804, 12283, 12285, 12396)
@@ -360,6 +361,10 @@ class EveResultExecutor(
                         val flagId = mountSystem.useCollectionItem(charId, MountConstants.DEFAULT_MOUNT_NPC_ID)
                         if (flagId != null) {
                             responseSender.sendBitFlagChanges(session, listOf(flagId to true))
+                            dailyProgressSystem?.incrementRoleCount(
+                                session,
+                                DailyProgressSystem.MOUNTS,
+                            )
                             val mountData = mountSystem.getCache(charId)
                             if (mountData != null && mountData.currentNpcId > 0) {
                                 responseSender.sendMountSwitch(session, mountData.currentNpcId)

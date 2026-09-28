@@ -5,6 +5,7 @@ import tw.tsm.domain.constants.Opcodes
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.PacketHandler
 import tw.tsm.domain.interfaces.ResponseSender
+import tw.tsm.gamelogic.systems.DailyProgressSystem
 import tw.tsm.gamelogic.systems.PartySystem
 import tw.tsm.gamelogic.systems.WorldManager
 import tw.tsm.protocol.PacketReader
@@ -20,7 +21,8 @@ private val logger = KotlinLogging.logger {}
 class PartyHandler(
     private val partySystem: PartySystem,
     private val worldManager: WorldManager,
-    private val responseSender: ResponseSender
+    private val responseSender: ResponseSender,
+    private val dailyProgressSystem: DailyProgressSystem? = null,
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.PARTY
@@ -86,7 +88,7 @@ class PartyHandler(
      *
      * 格式：+result(1) +playerId(8)
      */
-    private fun handleJoinResponse(session: GameSession, playerId: Long, data: ByteArray) {
+    private suspend fun handleJoinResponse(session: GameSession, playerId: Long, data: ByteArray) {
         val reader = PacketReader(data)
         val result = reader.readUByte()
         val targetId = reader.readULongLE()
@@ -121,6 +123,8 @@ class PartyHandler(
 
         // 廣播隊伍新增成員
         broadcastMemberJoin(playerId, targetId)
+        dailyProgressSystem?.setConditionFlag(session, DailyProgressSystem.FLAG_FIRST_PARTY)
+        dailyProgressSystem?.setConditionFlag(targetSession, DailyProgressSystem.FLAG_FIRST_PARTY)
     }
 
     /**
@@ -240,7 +244,7 @@ class PartyHandler(
      *
      * 格式：+result(1) +playerId(8)
      */
-    private fun handleInviteResponse(session: GameSession, playerId: Long, data: ByteArray) {
+    private suspend fun handleInviteResponse(session: GameSession, playerId: Long, data: ByteArray) {
         val reader = PacketReader(data)
         val result = reader.readUByte()
         val inviterId = reader.readULongLE()
@@ -274,6 +278,8 @@ class PartyHandler(
 
         // 廣播隊伍新增成員
         broadcastMemberJoin(inviterId, playerId)
+        dailyProgressSystem?.setConditionFlag(session, DailyProgressSystem.FLAG_FIRST_PARTY)
+        dailyProgressSystem?.setConditionFlag(inviterSession, DailyProgressSystem.FLAG_FIRST_PARTY)
     }
 
     /**
