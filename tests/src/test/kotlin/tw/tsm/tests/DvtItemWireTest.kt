@@ -30,7 +30,7 @@ class DvtItemWireTest {
         every { roleId } returns 42
     }
     private val handler = ItemHandler(inventory, mockk(), mockk(), response, mockk(),
-        emptyMap(), mockk(), mockk(), mockk(), mockk(), mockk(), mockk(), pet)
+        emptyMap(), mockk(), mockk(), mockk(), mockk(), mockk(), mockk(), pet, mockk(), mockk())
 
     @Test fun `bag drop and use read full index before looking up inventory`() = runTest {
         every { inventory.getBagItem(42, 0x1234) } returns null
