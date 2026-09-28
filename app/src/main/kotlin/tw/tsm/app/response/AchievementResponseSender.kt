@@ -2,6 +2,7 @@ package tw.tsm.app.response
 
 import tw.tsm.domain.constants.Opcodes
 import tw.tsm.domain.interfaces.SessionSender
+import tw.tsm.protocol.DvtRoleCountWire
 import tw.tsm.protocol.PacketWriter
 
 /**
@@ -52,7 +53,7 @@ class AchievementResponseSender {
             .writeShortLE(counts.size)
         for ((index, valuePair) in counts) {
             writer.writeShortLE(index)
-            writer.writeIntLE(valuePair.first)   // value（unsigned 但用 Int 傳）
+            writer.writeIntLE(DvtRoleCountWire.encodeValue(index, valuePair.first))
             writer.writeIntLE(valuePair.second)  // maxValue（signed）
         }
         session.send(writer.toByteArray())

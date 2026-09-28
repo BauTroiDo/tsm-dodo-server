@@ -165,8 +165,13 @@ class RoleCountSystem(
     }
 
     companion object {
-        /** Chỉ số lượng bạn bè (Dùng cho thành tựu ECondition.FriendCount) */
+        // DVT RoleCount.lua marks 190..195 as special counters (wire value >> 16).
+        const val SKILL_POINT = 190
+        const val ATTRIBUTE_POINT = 191
         const val FRIEND_COUNT = 192
+        const val SPECIAL_NONE_1 = 193
+        const val SPECIAL_NONE_2 = 194
+        const val SPECIAL_NONE_3 = 195
 
         // ── Chỉ số mở rộng ô chứa ERoleCount (RoleCount.lua) ──
 

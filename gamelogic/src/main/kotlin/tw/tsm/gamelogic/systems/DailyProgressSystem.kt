@@ -60,9 +60,9 @@ class DailyProgressSystem(
         const val CATCH_SUCCESS = 151
         const val MOUNTS = 160
         const val FIGHT = 163
-        const val SKILL_POINT = 190
-        const val ATTRIBUTE_POINT = 191
-        const val FRIEND_MAX = 192
+        const val SKILL_POINT = RoleCountSystem.SKILL_POINT
+        const val ATTRIBUTE_POINT = RoleCountSystem.ATTRIBUTE_POINT
+        const val FRIEND_MAX = RoleCountSystem.FRIEND_COUNT
 
         // JiugonggeMission_C.dat:
         // mission 4 = "Xuất chiến võ tướng", mission 9 = "Lần đầu tổ đội",

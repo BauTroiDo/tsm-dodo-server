@@ -158,6 +158,12 @@ class LoginService(
             RoleCountSystem.BAG_3 to 0,               // Mở rộng túi đồ 3
             RoleCountSystem.BANK_2 to 0,              // Mở rộng tiền trang 2
             RoleCountSystem.BANK_3 to 0,              // Mở rộng tiền trang 3
+            RoleCountSystem.SKILL_POINT to 0,         // DVT special counter: client RoleCount.Get(190) dereferences directly
+            RoleCountSystem.ATTRIBUTE_POINT to 0,     // DVT special counter: client RoleCount.Get(191) dereferences directly
+            RoleCountSystem.FRIEND_COUNT to 0,        // 190..195 must exist before any UI reads them
+            RoleCountSystem.SPECIAL_NONE_1 to 0,
+            RoleCountSystem.SPECIAL_NONE_2 to 0,
+            RoleCountSystem.SPECIAL_NONE_3 to 0,
             RoleCountSystem.STORAGE_1 to 14,          // Mở rộng bảo khố bằng Nguyên Bảo (Private server mặc định 14 → 70 ô, đầy kho)
             RoleCountSystem.STORAGE_2 to 0,           // Mở rộng bảo khố qua sự kiện
             RoleCountSystem.WARRIOR_REPOSITORY to 0   // Mở rộng thêm kho võ tướng

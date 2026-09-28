@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test
 import tw.tsm.data.loaders.JiugonggeDatLoader
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.ResponseSender
+import tw.tsm.domain.valueobjects.ThingData
 import tw.tsm.gamelogic.systems.BitFlagSystem
 import tw.tsm.gamelogic.systems.InventorySystem
 import tw.tsm.gamelogic.systems.JiugonggeSystem
@@ -152,6 +153,73 @@ class DvtJiugonggeTest {
                 int // current condition value
                 assertEquals(0, get().toInt() and 255)
             }
+            assertFalse(hasRemaining())
+        }
+    }
+
+    @Test fun `first completed row claims board 1 item reward and acknowledgement`() = runTest {
+        val infos = JiugonggeDatLoader.loadInfo(
+            Files.readAllBytes(existing("File.dat", "Data-ios", "IOS_JiugonggeInfo_C.dat"))
+        )
+        val missions = JiugonggeDatLoader.loadMissions(
+            Files.readAllBytes(existing("File.dat", "Data-ios", "IOS_JiugonggeMission_C.dat"))
+        )
+
+        val counts = mockk<RoleCountSystem>()
+        every { counts.getValue(42, any()) } answers {
+            when (secondArg<Int>()) {
+                160 -> 1
+                151 -> 2
+                else -> 0
+            }
+        }
+        every { counts.getBagCapacity(42) } returns 50
+
+        val flags = mockk<BitFlagSystem>()
+        coEvery { flags.getSetFlagIds(42) } returns setOf(1499)
+        coJustRun { flags.setFlag(42, 1541) }
+
+        val inventory = mockk<InventorySystem>()
+        every { inventory.getBag(42) } returns emptyMap()
+        val rewardItems = listOf(
+            1 to ThingData(itemId = 31207, quantity = 1),
+            2 to ThingData(itemId = 31207, quantity = 1),
+        )
+        coEvery { inventory.addItemsToBag(42, 31207, 2) } returns rewardItems
+
+        val sender = mockk<ResponseSender>(relaxed = true)
+        val packets = mutableListOf<ByteArray>()
+        val session = mockk<GameSession>(relaxed = true) {
+            every { roleId } returns 42
+            every { send(capture(packets)) } just Runs
+        }
+
+        val system = JiugonggeSystem(
+            infos = infos,
+            missions = missions,
+            activityTimes = emptyMap(),
+            roleCountSystem = counts,
+            bitFlagSystem = flags,
+            inventorySystem = inventory,
+            responseSender = sender,
+            itemDefs = emptyMap(),
+        )
+
+        assertTrue(system.claimReward(session, gridId = 1, index = 1, missionId = 2))
+        coVerify(exactly = 1) { inventory.addItemsToBag(42, 31207, 2) }
+        coVerify(exactly = 1) { flags.setFlag(42, 1541) }
+        verify(exactly = 1) {
+            sender.sendBitFlagChanges(session, listOf(1541 to true))
+        }
+
+        assertEquals(1, packets.size)
+        ByteBuffer.wrap(packets.single()).order(ByteOrder.LITTLE_ENDIAN).apply {
+            assertEquals(91, get().toInt() and 0xFF)
+            assertEquals(3, get().toInt() and 0xFF)
+            assertEquals(0, get().toInt() and 0xFF)
+            assertEquals(1, get().toInt() and 0xFF)
+            assertEquals(1, short.toInt() and 0xFFFF)
+            assertEquals(1, get().toInt() and 0xFF)
             assertFalse(hasRemaining())
         }
     }

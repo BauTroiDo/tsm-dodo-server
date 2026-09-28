@@ -5,6 +5,7 @@ import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.SessionSender
 import tw.tsm.domain.interfaces.repositories.CharacterRecord
 import tw.tsm.domain.valueobjects.PlayerDataDto
+import tw.tsm.protocol.DvtRoleCountWire
 import tw.tsm.protocol.PacketWriter
 
 /**
@@ -360,7 +361,7 @@ class LoginResponseSender {
             .writeIntLE(counts.size)
         for ((index, value) in counts) {
             writer.writeShortLE(index)
-                  .writeIntLE(value)
+                  .writeIntLE(DvtRoleCountWire.encodeValue(index, value))
                   .writeIntLE(0)               // max = 0
         }
         session.send(writer.toByteArray())

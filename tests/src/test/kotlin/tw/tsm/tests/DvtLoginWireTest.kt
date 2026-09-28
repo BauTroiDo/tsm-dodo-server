@@ -2,6 +2,7 @@ package tw.tsm.tests
 
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import tw.tsm.app.response.AchievementResponseSender
 import tw.tsm.app.response.LoginResponseSender
 import tw.tsm.app.response.SceneResponseSender
 import tw.tsm.domain.interfaces.SessionSender
@@ -122,6 +123,52 @@ class DvtLoginWireTest {
         repeat(6) { r.short } // int/atk/def/agi/hpx/spx
         assertEquals(21, r.get().toInt() and 0xFF)
         assertEquals(123456, r.int)
+    }
+
+    @Test fun `DVT special RoleCount 190 through 195 use high 16 bits on login wire`() {
+        val session = Capture()
+        val counts = linkedMapOf(
+            189 to 7,
+            190 to 10,
+            191 to 20,
+            192 to 5,
+            195 to 1,
+        )
+        LoginResponseSender().sendRoleCountData(session, counts)
+        val r = session.reader()
+        assertEquals(listOf(85, 1, 0), List(3) { r.get().toInt() and 0xFF })
+        assertEquals(counts.size, r.int)
+        val expected = linkedMapOf(
+            189 to 7,
+            190 to (10 shl 16),
+            191 to (20 shl 16),
+            192 to (5 shl 16),
+            195 to (1 shl 16),
+        )
+        for ((index, value) in expected) {
+            assertEquals(index, r.short.toInt() and 0xFFFF)
+            assertEquals(value, r.int)
+            assertEquals(0, r.int)
+        }
+        assertFalse(r.hasRemaining())
+    }
+
+    @Test fun `DVT special RoleCount runtime update uses high 16 bits`() {
+        val session = Capture()
+        AchievementResponseSender().sendRoleCountUpdate(
+            session,
+            linkedMapOf(163 to (4 to 0), 190 to (3 to 0)),
+        )
+        val r = session.reader()
+        assertEquals(listOf(85, 2, 0), List(3) { r.get().toInt() and 0xFF })
+        assertEquals(2, r.short.toInt() and 0xFFFF)
+        assertEquals(163, r.short.toInt() and 0xFFFF)
+        assertEquals(4, r.int)
+        assertEquals(0, r.int)
+        assertEquals(190, r.short.toInt() and 0xFFFF)
+        assertEquals(3 shl 16, r.int)
+        assertEquals(0, r.int)
+        assertFalse(r.hasRemaining())
     }
 
     @Test fun `scene change includes outfit count before title`() {
