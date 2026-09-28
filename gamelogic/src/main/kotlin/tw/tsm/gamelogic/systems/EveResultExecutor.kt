@@ -218,6 +218,10 @@ class EveResultExecutor(
                 // Mở bảo khố — UIBank có 2 tab (Tiền trang+Bảo khố), cần gọi openBank để mở UI trước, sau đó mới nạp dữ liệu cho cả 2 tab
                 responseSender.sendBankLevel(session, 0) // TODO: Lấy cấp độ thực tế từ dữ liệu nhân vật
                 responseSender.sendOpenBank(session)      // S:029-006 → UI.Open(UIBank)
+                // S:030-001/S:102-001 không có count; danh sách rỗng không tự xóa cache client.
+                // Luôn clear trước khi gửi snapshot DB để reconnect/restart không giữ vật phẩm ma.
+                responseSender.sendBankClear(session)
+                responseSender.sendStorageClear(session)
                 val bankItems = inventorySystem.getBank(charId)
                 responseSender.sendBankAllItems(session, bankItems)
                 val storageItems = inventorySystem.getStorage(charId)
@@ -228,6 +232,8 @@ class EveResultExecutor(
                 // Mở tiền trang — Cần nạp dữ liệu cho cả 2 tab của UIBank
                 responseSender.sendBankLevel(session, 0) // TODO: Lấy cấp độ thực tế từ dữ liệu nhân vật
                 responseSender.sendOpenBank(session)
+                responseSender.sendBankClear(session)
+                responseSender.sendStorageClear(session)
                 val bankItems = inventorySystem.getBank(charId)
                 responseSender.sendBankAllItems(session, bankItems)
                 val storageItems = inventorySystem.getStorage(charId)

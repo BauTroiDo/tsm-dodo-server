@@ -6,6 +6,7 @@ import tw.tsm.domain.interfaces.repositories.FlyPointRecord
 import tw.tsm.domain.valueobjects.FollowNpcData
 import tw.tsm.domain.valueobjects.ThingData
 import tw.tsm.protocol.PacketWriter
+import tw.tsm.protocol.ThingDataWire
 import tw.tsm.protocol.writeThingData
 
 /**
@@ -19,7 +20,7 @@ class InventoryResponseSender {
 
     /** S:023-005 背包所有物品 */
     fun sendAllBagItems(session: SessionSender, items: Map<Int, ThingData>, refresh: Boolean) {
-        val writer = PacketWriter(4 + items.size * 36)
+        val writer = PacketWriter(6 + items.size * (2 + ThingDataWire.SIZE))
             .writeByte(Opcodes.SHOP).writeByte(5).writeByte(0)
             .writeByte(if (refresh) 1 else 0)
             .writeShortLE(items.size)
@@ -69,7 +70,7 @@ class InventoryResponseSender {
 
     /** S:023-011 所有裝備 */
     fun sendAllEquipment(session: SessionSender, equips: Map<Int, ThingData>) {
-        val writer = PacketWriter(4 + equips.size * 35)
+        val writer = PacketWriter(4 + equips.size * ThingDataWire.SIZE)
             .writeByte(Opcodes.SHOP).writeByte(11).writeByte(0)
             .writeByte(equips.size)
         for ((_, thing) in equips) {
@@ -294,7 +295,7 @@ class InventoryResponseSender {
 
     /** S:030-001 錢莊所有物品 */
     fun sendBankAllItems(session: SessionSender, items: Map<Int, ThingData>) {
-        val writer = PacketWriter(3 + items.size * 36)
+        val writer = PacketWriter(3 + items.size * (2 + ThingDataWire.SIZE))
             .writeByte(Opcodes.BANK).writeByte(1).writeByte(0)
         for ((slot, thing) in items) {
             writer.writeShortLE(slot)
@@ -306,7 +307,7 @@ class InventoryResponseSender {
     /** S:030-004 錢莊設定物品 */
     fun sendBankSetItem(session: SessionSender, slot: Int, thing: ThingData) {
         session.send(
-            PacketWriter(39)
+            PacketWriter(5 + ThingDataWire.SIZE)
                 .writeByte(Opcodes.BANK).writeByte(4).writeByte(0)
                 .writeShortLE(slot)
                 .writeThingData(thing)
@@ -369,7 +370,7 @@ class InventoryResponseSender {
 
     /** S:102-001 寶庫所有物品 */
     fun sendStorageAllItems(session: SessionSender, items: Map<Int, ThingData>) {
-        val writer = PacketWriter(3 + items.size * 36)
+        val writer = PacketWriter(3 + items.size * (1 + ThingDataWire.SIZE))
             .writeByte(Opcodes.STORAGE).writeByte(1).writeByte(0)
         for ((slot, thing) in items) {
             writer.writeByte(slot)
@@ -381,7 +382,7 @@ class InventoryResponseSender {
     /** S:102-004 寶庫設定物品 */
     fun sendStorageSetItem(session: SessionSender, slot: Int, thing: ThingData) {
         session.send(
-            PacketWriter(39)
+            PacketWriter(4 + ThingDataWire.SIZE)
                 .writeByte(Opcodes.STORAGE).writeByte(4).writeByte(0)
                 .writeByte(slot)
                 .writeThingData(thing)

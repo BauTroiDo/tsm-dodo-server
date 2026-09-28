@@ -3,8 +3,9 @@ package tw.tsm.domain.valueobjects
 /**
  * 物品實例值物件 — 對應 `Item.lua ThingData.New(data)` 第 81-100 行
  *
- * 網路傳輸格式：35 bytes（小端序）
- * protocal.lua 註解寫「物品資料(18)」但實際是 35 bytes。
+ * DVT NFT build 網路傳輸格式：56 bytes（小端序）。
+ * Base ThingData 為 35 bytes；Lua Item.lua 在 NFT define bật 時再讀 21 bytes Myth/NFT.
+ * Model này hiện chỉ lưu phần base; codec sẽ gửi phần NFT bằng 0 cho đến khi server hỗ trợ Myth.
  */
 data class ThingData(
     /** 物品編號（UInt16） */

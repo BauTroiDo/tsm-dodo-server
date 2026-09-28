@@ -8,7 +8,7 @@ import org.jetbrains.exposed.v1.core.Table
  * 複合主鍵：(characterId, storageType, slot)
  * storageType 對應 EThings：BAG=1, BANK=4, EQUIP=8
  *
- * 每筆記錄對應一個 ThingData（35 bytes 網路格式的持久化版本）。
+ * 每筆記錄持久化 ThingData base 欄位；DVT NFT wire còn có 21 bytes Myth metadata hiện chưa lưu DB.
  */
 object Inventories : Table("inventories") {
     /** 所屬角色 ID */

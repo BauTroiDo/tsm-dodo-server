@@ -656,6 +656,8 @@ class GmCommandProcessor(
     private fun cmdOpenStorage(session: GameSession) {
         responseSender.sendBankLevel(session, 0) // TODO：從角色資料取得實際等級
         responseSender.sendOpenBank(session)
+        responseSender.sendBankClear(session)
+        responseSender.sendStorageClear(session)
         val bankItems = inventorySystem.getBank(session.roleId.toLong())
         responseSender.sendBankAllItems(session, bankItems)
         val storageItems = inventorySystem.getStorage(session.roleId.toLong())

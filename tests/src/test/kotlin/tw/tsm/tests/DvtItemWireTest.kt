@@ -13,6 +13,7 @@ import tw.tsm.domain.interfaces.SessionSender
 import tw.tsm.domain.valueobjects.ThingData
 import tw.tsm.gamelogic.systems.InventorySystem
 import tw.tsm.gamelogic.systems.PetEquipSystem
+import tw.tsm.protocol.ThingDataWire
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -89,7 +90,7 @@ class DvtItemWireTest {
         for ((send, expected) in cases) { send(); assertArrayEquals(expected, s.packet) }
     }
 
-    @Test fun `bag and bank item lists retain non NFT ThingData alignment`() {
+    @Test fun `bag and bank item lists retain DVT NFT ThingData alignment`() {
         val sender = InventoryResponseSender()
         val s = Capture()
         val thing = ThingData(itemId = 0x4567, quantity = 258, styleLevel = 7)
@@ -107,13 +108,42 @@ class DvtItemWireTest {
             val slots = if (index < 2) listOf(0x1234, 0x5678) else listOf(0x1234)
             for (slot in slots) {
                 assertEquals(slot, r.short.toInt())
+                val recordStart = r.position()
                 assertEquals(0x4567, r.short.toInt())
                 assertEquals(258, r.int)
-                r.position(r.position() + 28) // remaining fields before styleLv
+                r.position(r.position() + 28) // remaining base fields before styleLv
                 assertEquals(7, r.get().toInt())
+
+                // Lua DVT NFT build consumes another 21 bytes after the 35-byte base ThingData.
+                repeat(ThingDataWire.NFT_EXTENSION_SIZE) {
+                    assertEquals(0, r.get().toInt())
+                }
+                assertEquals(ThingDataWire.SIZE, r.position() - recordStart)
             }
             if (index == 2) assertEquals(1, r.get().toInt())
             assertFalse(r.hasRemaining())
         }
+    }
+
+    @Test fun `DVT NFT extension prevents phantom next item and quantity`() {
+        val sender = InventoryResponseSender()
+        val s = Capture()
+        val items = linkedMapOf(
+            0 to ThingData(itemId = 26460, quantity = 401),
+            1 to ThingData(itemId = 46240, quantity = 2),
+            2 to ThingData(itemId = 46238, quantity = 1)
+        )
+
+        sender.sendAllBagItems(s, items, false)
+        val r = ByteBuffer.wrap(s.packet).order(ByteOrder.LITTLE_ENDIAN)
+        r.position(6)
+
+        for ((slot, thing) in items) {
+            assertEquals(slot, r.short.toInt())
+            assertEquals(thing.itemId, r.short.toInt() and 0xFFFF)
+            assertEquals(thing.quantity, r.int)
+            r.position(r.position() + (ThingDataWire.SIZE - 6))
+        }
+        assertFalse(r.hasRemaining())
     }
 }
