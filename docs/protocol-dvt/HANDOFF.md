@@ -192,7 +192,7 @@ Bằng chứng mới:
 
 Bản `1706f00` giữ server clock theo local wall-clock OLE Date và gửi **cửa sổ ngày hiện tại 00:00–23:59** cho activity 12. Chưa ghi PASS cho tới khi người dùng xác nhận.
 
-#### G. Pet lifecycle / pet ảo / HP bất thường — đang chờ runtime
+#### G. Pet lifecycle / pet ảo / HP bất thường — runtime PASS
 Commit:
 - `9cc236b Align captured pets with DVT lifecycle`
 
@@ -218,7 +218,7 @@ Bằng chứng:
 - snapshot pet được sort theo slot.
 - Full `./gradlew test build`: PASS.
 
-Runtime **PENDING** cho `9cc236b`. Existing pets đã tạo dưới bug cũ có thể giữ level DB cũ; test tốt nhất là đăng nhập lại để clear stale state và bắt **một pet mới** sau patch.
+Runtime: **PASS**. Sau các bản wire + migration tiếp theo, người dùng xác nhận pet mới/cũ hoạt động đúng theo lifecycle DVT.
 
 #### H. Duplicate capture + persistence hardening — chờ runtime
 Commit:
@@ -243,7 +243,7 @@ Runtime cần test:
 3. đánh 1 trận nhận EXP/vàng/drop, restart server ngay;
 4. login lại xác nhận EXP/vàng/drop/pet vẫn còn.
 
-#### I. Hidden carried pets / S15-8 wire — chờ runtime
+#### I. Hidden carried pets / S15-8 wire — runtime PASS
 Commit:
 - `764204e Fix DVT carried pet full-sync wire`
 
@@ -272,13 +272,9 @@ Nguồn sự thật mạnh nhất:
 - thêm test `DvtFollowNpcFullWireTest` parse 4 pet liên tiếp theo chính layout client gốc.
 - Full `./gradlew test build`: PASS.
 
-Runtime cần xác nhận sau `764204e`:
-1. restart/login lại;
-2. UITeam phải hiện đủ roster DB thật (hiện tại 4 pet ở carried);
-3. không còn pet slot 0/ẩn;
-4. sau khi thả/cất bớt để carried <4, bắt pet phải hoạt động bình thường.
+Runtime: **PASS**. Người dùng xác nhận roster pet đã hiện đúng sau khi sửa S15-8; không còn tình trạng pet bị ẩn do packet lệch.
 
-#### J. Legacy pet level seed — chờ runtime
+#### J. Legacy pet level seed — runtime PASS
 Commit:
 - `4bbb782 Migrate legacy DVT pet seed levels`
 
@@ -303,7 +299,7 @@ Với snapshot DB hiện tại của `CaoYếnDao` trước migration:
 Không ép tất cả pet cũ về LV1 vì sẽ làm mất EXP người chơi đã thực kiếm. Pet mới bắt sau patch luôn bắt đầu LV1.
 
 Full `./gradlew test build`: PASS.
-Runtime `4bbb782`: **PENDING**.
+Runtime `4bbb782`: **PASS**. Người dùng xác nhận sau khi thả/cất pet cũ và bắt pet mới, pet bắt mới hoạt động đúng theo seed LV1.
 
 
 ## 6. EXP semantics hiện tại
@@ -413,4 +409,4 @@ Chat mới chỉ cần đọc file này, sau đó:
 4. sau khi Hằng ngày PASS mới quay lại **EVE conditionClass=7 / param=8**;
 5. không yêu cầu người dùng kể lại lịch sử và không mở lại các phần đã runtime PASS nếu không có regression mới.
 
-**Điểm tiếp tục hiện tại: Hằng ngày/Jiugongge đang chờ runtime test `1706f00`; pet EXP/SP/chat đã PASS.**
+**Điểm tiếp tục hiện tại: Hằng ngày/Jiugongge vẫn là lỗi còn mở; toàn bộ batch pet lifecycle / S15-8 / legacy seed hiện đã runtime PASS.**
