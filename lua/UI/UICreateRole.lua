@@ -826,7 +826,9 @@ function UICreateRole.OnClick_Next()
     if not string.CheckName(inputField_Name.text) then return end
 
     sendBuffer:Clear();
-    sendBuffer:WriteStringWithByteL(inputField_Name.text);
+    -- VTC contract: character name is ByteL + encoding_Unicode (UTF-16LE).
+    -- Keep this explicit so other ByteBuffer string fields are not changed globally.
+    sendBuffer:WriteStringWithByteL(inputField_Name.text, DataManager.encoding_Unicode);
   
     local color1 = 0;
     local color2 = 0;
