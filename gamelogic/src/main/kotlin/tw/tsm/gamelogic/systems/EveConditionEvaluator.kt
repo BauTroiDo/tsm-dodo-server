@@ -258,15 +258,19 @@ object EveConditionEvaluator {
             }
 
             12 -> {
-                // 場景已完成事件數（param=0 為場景總完成事件數，否則為特定 eveNo 完成數）
-                val value = if (cond.conditionParameter == 0) {
-                    state.completedEveCounts.values.count { it > 0 }
-                } else {
-                    state.completedEveCounts[cond.conditionParameter] ?: 0
+                // DVT Eve: param=0 表示目前 eveNo 已完成的次數。
+                // 其他 param/pStyle 形狀仍沒有足夠 Lua 證據，不可用 0 假值誤放行。
+                if (cond.conditionParameter != 0) {
+                    logger.warn {
+                        "conditionClass=12 非 param=0 語意未實作 param=${cond.conditionParameter} " +
+                            "pStyle=${cond.conditionParameterStyle} ops=${cond.conditionOps} " +
+                            "val=${cond.conditionValue} → false"
+                    }
+                    return false
                 }
-                // 正向比較（與 class=2 一致）：compareStep(actual, ops, expected)
+                val value = state.completedEveCounts[state.currentEveNo] ?: 0
                 val result = compareStep(value, cond.conditionOps, cond.conditionValue)
-                logger.debug { "class=12 param=${cond.conditionParameter} eveNo=${state.currentEveNo} count=$value ops=${cond.conditionOps} val=${cond.conditionValue} → $result" }
+                logger.debug { "class=12 param=0 eveNo=${state.currentEveNo} count=$value ops=${cond.conditionOps} val=${cond.conditionValue} → $result" }
                 result
             }
 
@@ -384,20 +388,21 @@ object EveConditionEvaluator {
     /**
      * 比較運算
      *
-     * Eve 二進制條件 ops 對照：
-     * 0→== / 1→< / 2→> / 3→<= / 4→>= / 5→>= / 6→!=
+     * DVT Lua DungeonCriteriaData.CompareResult：
+     * 1→== / 2→< / 3→<= / 4→> / 5→>= / 6→!=。
+     * Eve.emg 另有大量 ops=0 的等值形狀，因此保留 Eve 專用 0→==。
      */
     fun compareStep(actual: Int, ops: Int, expected: Int): Boolean = when (ops) {
         0 -> actual == expected
-        1 -> actual < expected
-        2 -> actual > expected
+        1 -> actual == expected
+        2 -> actual < expected
         3 -> actual <= expected
-        4 -> actual >= expected
+        4 -> actual > expected
         5 -> actual >= expected
         6 -> actual != expected
         else -> {
-            logger.warn { "未知 ops=$ops actual=$actual expected=$expected → true" }
-            true
+            logger.warn { "未知 ops=$ops actual=$actual expected=$expected → false" }
+            false
         }
     }
 }
