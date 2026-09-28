@@ -313,6 +313,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { NpcShopManager() }
     single { EveFlowController(get(), get<EveEventStateMachine>(), get(), get(), get(), get(), get(), get(), get(), get(), get<GameDataManager>().eveData, get()) }
     single { EveTriggerRouter(get<EveEventStateMachine>(), get(), get(), get(), get(), get<GameDataManager>().eveData) }
+    single { MineEncounterSystem(get<GameDataManager>().eveData, get<EveEventStateMachine>(), get<EveTriggerRouter>()) }
 
     // 定期自動存檔（每 3 分鐘保存所有在線玩家資料）
     single { AutoSaveService(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
@@ -333,7 +334,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { CreateCharHandler(get(), get()) }
     single { SelectCharHandler(get(), get()) }
     single { DisconnectHandler(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
-    single { MoveHandler(get(), get(), get()) }
+    single { MoveHandler(get(), get(), get(), get<MineEncounterSystem>()) }
     single { ChatHandler(get(), get(), get()) }
     single { SceneHandler(get(), get()) }
     single { RelocateHandler(get(), get()) }

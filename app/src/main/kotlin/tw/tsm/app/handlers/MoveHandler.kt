@@ -7,6 +7,7 @@ import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.PacketHandler
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
+import tw.tsm.gamelogic.systems.MineEncounterSystem
 import tw.tsm.gamelogic.systems.WorldManager
 import tw.tsm.protocol.PacketReader
 
@@ -23,7 +24,8 @@ private val logger = KotlinLogging.logger {}
 class MoveHandler(
     private val worldManager: WorldManager,
     private val responseSender: ResponseSender,
-    private val characterRepository: CharacterRepository
+    private val characterRepository: CharacterRepository,
+    private val mineEncounterSystem: MineEncounterSystem
 ) : PacketHandler {
 
     companion object {
@@ -54,6 +56,9 @@ class MoveHandler(
         val targetX = reader.readUShortLE()
         val targetY = reader.readUShortLE()
 
+        val oldX = session.x
+        val oldY = session.y
+
         // 更新 session 座標
         session.x = targetX
         session.y = targetY
@@ -69,6 +74,9 @@ class MoveHandler(
             session.lastPositionSave = now
             characterRepository.updatePosition(session.roleId.toLong(), session.mapId, targetX, targetY)
         }
+
+        // DVT MineData: EEventTrigger.Mine=7 hiện do server kích hoạt.
+        mineEncounterSystem.onPlayerMove(session, oldX, oldY, targetX, targetY)
     }
 
     /**

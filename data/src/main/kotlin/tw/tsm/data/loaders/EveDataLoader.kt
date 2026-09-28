@@ -109,8 +109,8 @@ object EveDataLoader {
         // [3] DoorData（UInt16 count，可變長）
         val doors = parseDoorSection(reader)
 
-        // [4] MineData（UInt16 count，可變長）
-        skipMineSection(reader)
+        // [4] MineData（UInt16 count，可變長）— server-triggered encounter zones
+        val mines = parseMineSection(reader)
 
         // [5] SurfaceData（UInt16 count，可變長）
         val surfaceDatas = parseSurfaceSection(reader)
@@ -127,7 +127,7 @@ object EveDataLoader {
         // [9] FightData（UInt16 count）← 解析（事件戰鬥敵方配置）
         val fightDatas = parseFightDataSection(reader)
 
-        return SceneEveData(npcs, doors, npcEvents, sceneInfos, fightDatas, surfaceDatas, groupDatas)
+        return SceneEveData(npcs, doors, npcEvents, sceneInfos, fightDatas, surfaceDatas, groupDatas, mines)
     }
 
     // ────────────────────────────────────────────
@@ -284,19 +284,40 @@ object EveDataLoader {
     }
 
     /**
-     * 跳過 MineData 區段 — Eve_MineData.lua
+     * 解析 MineData 區段 — Eve_MineData.lua
      *
+     * DVT client 定義 EEventTrigger.Mine=7 並註明由 server kích hoạt.
      * 可變長：id(2)+eventCount(2)+events[n](n×1)+grid(16)+sizeKind(1)
      */
-    private fun skipMineSection(reader: DatReader) {
+    private fun parseMineSection(reader: DatReader): Map<Int, EveMinePlacement> {
         val count = reader.readUInt16()
+        if (count == 0) return emptyMap()
+
+        val result = LinkedHashMap<Int, EveMinePlacement>(count)
         repeat(count) {
-            reader.readUInt16()              // id
-            val eventCount = reader.readUInt16()   // eventCount（UInt16！）
-            repeat(eventCount) { reader.readByte() }  // events[n]（Byte each）
-            reader.readBytes(16)             // grid: 4 × Int32
-            reader.readByte()               // sizeKind
+            val id = reader.readUInt16()
+            val eventCount = reader.readUInt16()
+            val events = ArrayList<Int>(eventCount)
+            repeat(eventCount) { events.add(reader.readByte()) }
+            val gridX = reader.readInt32()
+            val gridY = reader.readInt32()
+            val gridWidth = reader.readInt32()
+            val gridHeight = reader.readInt32()
+            val sizeKind = reader.readByte()
+
+            if (id > 0) {
+                result[id] = EveMinePlacement(
+                    id = id,
+                    events = events,
+                    gridX = gridX,
+                    gridY = gridY,
+                    gridWidth = gridWidth,
+                    gridHeight = gridHeight,
+                    sizeKind = sizeKind
+                )
+            }
         }
+        return result
     }
 
     /**

@@ -56,6 +56,11 @@ class EveTriggerRouter(
 
         when {
             subKind == 4 || subKind == 8 -> routeDoor(session, charId, mapId, triggerID, subKind, sceneData, state)
+            subKind == 7 -> {
+                if (!triggerMine(session, triggerID)) {
+                    responseSender.sendEventEnd(session)
+                }
+            }
             subKind == 2 || subKind == 3 -> routeWhenHappen(session, charId, mapId, triggerID, subKind, sceneData, state)
             else -> routeClickNpc(session, charId, mapId, triggerID, subKind, sceneData, state)
         }
@@ -63,6 +68,46 @@ class EveTriggerRouter(
 
     /** NPC 當前巡邏位置查詢器：mapId, npcId -> (x, y) */
     var npcPositionProvider: ((mapId: Int, npcId: Int) -> Pair<Int, Int>?)? = null
+
+    /**
+     * Server-side Mine trigger (EEventTrigger.Mine=7).
+     *
+     * DVT client EventManager.lua ghi rõ Mine hiện do server kích hoạt. MineData.events
+     * trỏ trực tiếp tới EveNo; vì vậy không đi qua NpcData/WhenHappen.
+     */
+    suspend fun triggerMine(session: GameSession, mineId: Int): Boolean {
+        val charId = session.roleId.toLong()
+        val mapId = session.mapId
+        val sceneData = eveData[mapId] ?: return false
+        val mine = sceneData.mines[mineId] ?: return false
+
+        // Không đè một hội thoại/battle/event đang chạy.
+        if (stateMachine.getSession(charId) != null || session.battleId != 0L) return false
+
+        val state = stateBuilder.buildPlayerState(charId, mapId, session)
+        for (eveNo in mine.events) {
+            val eventData = sceneData.npcEvents[eveNo] ?: continue
+            val result = resolveActivateAndAdvance(
+                charId = charId,
+                mapId = mapId,
+                npcClickId = mineId,
+                eventData = eventData,
+                state = state,
+                triggerKind = 7
+            )
+            if (result != null) {
+                logger.info {
+                    "${session.characterName} Mine kích hoạt: map=$mapId mineId=$mineId " +
+                        "eveNo=$eveNo pos=(${session.x},${session.y})"
+                }
+                flowController.startEvent(session, result)
+                return true
+            }
+        }
+
+        logger.debug { "Mine không có event khớp: map=$mapId mineId=$mineId events=${mine.events}" }
+        return false
+    }
 
     /**
      * 伺服器碰撞觸發（ServerBump）

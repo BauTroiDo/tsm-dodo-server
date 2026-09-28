@@ -259,7 +259,34 @@ data class EveGroupData(
 )
 
 /**
- * 場景事件資料（NPC 擺放 + 傳送點擺放 + 事件定義 + 場景資訊 + 戰鬥資料 + 互動資料 + 分組資料）
+ * MineData — đối ứng trực tiếp với client lua/Data/Eve/Eve_MineData.lua.
+ *
+ * Lua DVT ghi rõ EEventTrigger.Mine=7 là "địa lôi (hiện do Server kích hoạt)".
+ * sizeKind=0 dùng vùng grid cụ thể; dữ liệu Eve.emg thực tế cho thấy sizeKind=1
+ * hầu hết dùng grid 1,1,1,1 và đóng vai trò vùng gặp quái toàn map.
+ */
+data class EveMinePlacement(
+    val id: Int,
+    val events: List<Int>,
+    val gridX: Int,
+    val gridY: Int,
+    val gridWidth: Int,
+    val gridHeight: Int,
+    val sizeKind: Int
+) {
+    fun containsPixel(x: Int, y: Int, blockUnit: Int = 20): Boolean {
+        if (sizeKind == 1) return true
+        if (gridWidth <= 0 || gridHeight <= 0) return false
+        val left = gridX * blockUnit
+        val top = gridY * blockUnit
+        val right = (gridX + gridWidth) * blockUnit
+        val bottom = (gridY + gridHeight) * blockUnit
+        return x >= left && x < right && y >= top && y < bottom
+    }
+}
+
+/**
+ * 場景事件資料（NPC + Door + Mine + 事件 + chiến đấu + Surface + GroupData）
  *
  * @param npcs         clickId → EveNpcPlacement
  * @param doors        doorId  → EveDoorPlacement
@@ -268,6 +295,7 @@ data class EveGroupData(
  * @param fightDatas   eveNo   → EveFightData（事件戰鬥敵方配置）
  * @param surfaceDatas id      → EveSurfaceData（Surface 互動定義）
  * @param groupDatas   eveNo   → EveGroupData（結果分組選擇）
+ * @param mines        mineId  → EveMinePlacement（server-triggered random encounter zone）
  */
 data class SceneEveData(
     val npcs: Map<Int, EveNpcPlacement>,
@@ -276,5 +304,6 @@ data class SceneEveData(
     val sceneInfos: Map<Int, EveSceneInfo>,
     val fightDatas: Map<Int, EveFightData> = emptyMap(),
     val surfaceDatas: Map<Int, EveSurfaceData> = emptyMap(),
-    val groupDatas: Map<Int, EveGroupData> = emptyMap()
+    val groupDatas: Map<Int, EveGroupData> = emptyMap(),
+    val mines: Map<Int, EveMinePlacement> = emptyMap()
 )
