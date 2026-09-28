@@ -12,6 +12,7 @@ import tw.tsm.gamelogic.systems.SkillSystem
 class DvtSkillBatchTest {
     private val repo = mockk<SkillRepository> {
         coEvery { findByCharacterId(42) } returns emptyMap()
+        coEvery { findTurn2State(42) } returns Turn2SkillState(0, emptySet(), emptyMap())
     }
     private fun skill(pre: List<Int> = emptyList(), elementValue: Int = 2, price: Int = 3) = mockk<SkillDef> {
         every { preSkills } returns pre
