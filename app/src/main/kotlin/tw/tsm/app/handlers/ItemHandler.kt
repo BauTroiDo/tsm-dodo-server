@@ -514,10 +514,18 @@ class ItemHandler(
         responseSender.sendUseItemSuccess(session, bagItem.itemId, useQty, showMsg = true)
 
         // 發送屬性變化
+        // DVT S:008-001/S:008-002 都是「設定絕對值」而不是增量。
+        // 武將用 S:008-002；主角用 S:008-001。
         for (change in result.attrChanges) {
-            responseSender.sendSetAttribute(
-                session, change.attrKind, change.value, change.isPositive
-            )
+            if (followIndex > 0) {
+                responseSender.sendFollowNpcAttribute(
+                    session, followIndex, change.attrKind, change.value
+                )
+            } else {
+                responseSender.sendSetAttribute(
+                    session, change.attrKind, change.value, change.isPositive
+                )
+            }
         }
 
         // 福袋獎勵物品入袋（支援溢出分格）
