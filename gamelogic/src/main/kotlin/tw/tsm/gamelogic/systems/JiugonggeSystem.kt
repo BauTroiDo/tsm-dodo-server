@@ -8,8 +8,9 @@ import tw.tsm.domain.data.JiugonggeInfoDef
 import tw.tsm.domain.data.JiugonggeMissionDef
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.ResponseSender
+import tw.tsm.domain.util.OleDate
 import tw.tsm.protocol.PacketWriter
-import kotlin.math.floor
+import java.time.LocalDateTime
 
 private val jiugongLogger = KotlinLogging.logger {}
 
@@ -225,10 +226,26 @@ class JiugonggeSystem(
 
     private fun sendActivityWindow(session: GameSession, activityId: Int) {
         val def = activityTimes[activityId] ?: return
-        val now = System.currentTimeMillis() / 86_400_000.0 + 25569.0
-        val day = floor(now)
-        val start = day + (def.openHour * 60 + def.openMinute) / 1440.0
-        val close = day + (def.closeHour * 60 + def.closeMinute) / 1440.0
+
+        // ActivityTime_C carries two different concepts:
+        // - start/end: lifetime of the activity (serverStartTime/serverCloseTime)
+        // - open/close hour: daily schedule shown by UIActivity
+        //
+        // UIJiugongge.UpdateTime compares CGTimer.serverTime directly against
+        // serverStartTime/serverCloseTime, therefore S:077-001 must send the
+        // configured lifetime, not today's 00:00-23:59 window.
+        val start = OleDate.fromLocalDateTime(
+            LocalDateTime.of(
+                def.startYear, def.startMonth, def.startDay,
+                def.startHour, def.startMinute
+            )
+        )
+        val close = OleDate.fromLocalDateTime(
+            LocalDateTime.of(
+                def.endYear, def.endMonth, def.endDay,
+                def.endHour, def.endMinute
+            )
+        )
 
         session.send(
             PacketWriter()

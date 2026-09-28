@@ -11,6 +11,8 @@ import tw.tsm.gamelogic.systems.BitFlagSystem
 import tw.tsm.gamelogic.systems.InventorySystem
 import tw.tsm.gamelogic.systems.JiugonggeSystem
 import tw.tsm.gamelogic.systems.RoleCountSystem
+import tw.tsm.domain.util.OleDate
+import java.time.LocalDateTime
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.file.Files
@@ -93,8 +95,18 @@ class DvtJiugonggeTest {
             assertEquals(1, get().toInt() and 255)
             assertEquals(0, get().toInt() and 255)
             assertEquals(12, short.toInt() and 0xFFFF)
-            double
-            double
+            val start = double
+            val close = double
+            assertEquals(
+                OleDate.fromLocalDateTime(LocalDateTime.of(2022, 11, 21, 0, 0)),
+                start,
+                0.0000001
+            )
+            assertEquals(
+                OleDate.fromLocalDateTime(LocalDateTime.of(2028, 12, 31, 23, 59)),
+                close,
+                0.0000001
+            )
             assertFalse(hasRemaining())
         }
 

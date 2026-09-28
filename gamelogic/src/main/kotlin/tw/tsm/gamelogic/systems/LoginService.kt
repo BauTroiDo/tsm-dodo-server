@@ -11,6 +11,7 @@ import tw.tsm.domain.interfaces.repositories.HotkeyRepository
 import tw.tsm.domain.interfaces.repositories.SkillRepository
 import tw.tsm.domain.valueobjects.PlayerDataDto
 import tw.tsm.domain.valueobjects.ThingData
+import tw.tsm.domain.util.OleDate
 
 private val logger = KotlinLogging.logger {}
 
@@ -336,9 +337,6 @@ class LoginService(
          *
          * OLE Automation Date = Số ngày tính từ 30-12-1899 + Phần thập phân là thời gian trong một ngày
          */
-        fun currentServerTime(): Double {
-            val millisSinceEpoch = System.currentTimeMillis()
-            return millisSinceEpoch / 86400000.0 + 25569.0
-        }
+        fun currentServerTime(): Double = OleDate.nowLocal()
     }
 }
