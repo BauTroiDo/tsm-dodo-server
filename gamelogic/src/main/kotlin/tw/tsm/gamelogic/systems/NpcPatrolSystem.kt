@@ -349,8 +349,8 @@ class NpcPatrolSystem(
         /** 每 N 次 tick 移動一次（3 × 900ms = 2700ms） */
         private const val TICKS_PER_MOVE = 3
 
-        /** 遇怪冷卻（毫秒），調整為 6 秒，避免遇怪後怪物長時間僵死不動 */
-        private const val ENCOUNTER_COOLDOWN_MS = 6_000L
+        /** 遇怪冷卻（毫秒）：KERO delay=10，約 27 秒；避免同一追擊 NPC 過快重複遇怪 */
+        private const val ENCOUNTER_COOLDOWN_MS = 27_000L
 
         /** 像素/格 */
         private const val BLOCK_UNIT = 20
