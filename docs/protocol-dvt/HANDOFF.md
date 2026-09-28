@@ -5,7 +5,7 @@
 > Cập nhật: 2026-09-29
 > Repo: `BauTroiDo/tsm-dodo-server`
 > Branch: `main`
-> Code checkpoint gần nhất: `1706f00`
+> Code checkpoint gần nhất: `36d3bb0`
 
 ## 1. Nguyên tắc tối cao
 
@@ -345,9 +345,51 @@ Regression:
 - `DvtJiugonggeTest`: khóa chính xác toàn bộ mapping mission 2..10 theo File.dat.
 - Full clean `gradlew clean test build`: **BUILD SUCCESSFUL**.
 
-Runtime `5c686ed`: **PENDING**.
+Runtime `5c686ed`: phần gameplay bridge đã hoạt động một phần; người dùng xác nhận bảng bắt đầu check điều kiện, nhưng UI dừng ở ô skill-point và còn `New Text`.
 
+#### L. Hằng ngày/Jiugongge special RoleCount wire + reward claim — chờ runtime
+Commit:
+- `36d3bb0 Fix DVT daily special RoleCount wire`
 
+Triệu chứng runtime:
+- ba ô đầu render bình thường;
+- ô `Phân phối điểm kỹ năng của nhân vật` hiện description nhưng progress còn `New Text`;
+- các ô phía sau giữ prefab trắng/`New Text`;
+- người dùng báo chưa nhận được quà Daily.
+
+Nguyên nhân UI đã xác nhận trực tiếp từ Lua DVT:
+- `RoleCount.Get(index)` có nhánh đặc biệt cho **190..195** và đọc `this.countDatas[index].value >> 16`;
+- nhánh này không nil-check `countDatas[index]`;
+- server cũ không seed 190..195 khi login, nên board văng đúng ở mission dùng RoleCount190;
+- server cũng gửi 190/191 dưới dạng số logic thô, trong khi client DVT đọc high-16, nên sau khi tiêu điểm client vẫn thấy 0.
+
+Đã sửa:
+- seed RoleCount190..195 = 0 khi login;
+- giữ DB/runtime server ở số logic bình thường;
+- chỉ encode S:085-001 và S:085-002 của index190..195 thành `logicalValue << 16`, đúng client DVT;
+- skill/stat Daily tiếp tục cộng số điểm thực đã tiêu, không đổi semantics server;
+- thêm regression test cho cả login wire và runtime update wire.
+
+Reward authoritative:
+- board Daily có **7 reward**, không phải 9 reward theo từng mission:
+  - 3 hàng;
+  - 3 cột;
+  - 1 reward tổng;
+- reward 1 chỉ nhận khi mission 2/3/4 cùng hoàn thành;
+- reward 7 chỉ nhận sau khi 6 reward hàng/cột đã nhận.
+- snapshot production char31 lúc audit: mount=1/1, catch=1/2, deploy flag1499=true, nên **chưa có hàng hoàn chỉnh** và client đúng ra chưa gửi C:091-003.
+
+Đã thêm regression:
+- hoàn thành hàng đầu → claim reward index1;
+- item 31207 x2 được add bag;
+- getFlag1541 được set;
+- server trả S:091-003 success.
+- Full `gradlew clean test build`: **BUILD SUCCESSFUL**.
+
+Runtime `36d3bb0`: **PENDING**. Cần restart production/login lại để S85-1 seed đủ 190..195, rồi kiểm tra:
+1. không còn `New Text`/ô trắng;
+2. skill/stat progress tăng đúng;
+3. khi đủ 3 ô một hàng/cột, icon reward chuyển trạng thái và item vào bag sau claim.
 
 ## 6. EXP semantics hiện tại
 
@@ -384,7 +426,16 @@ Theo `DungeonCriteriaData.CompareResult`:
 
 ## 8. Điểm audit đang dở / NEXT
 
-### Ưu tiên chính: EVE `conditionClass=7, conditionParameter=8`
+### Ưu tiên hiện tại: runtime Daily `36d3bb0`, sau đó `mainKind=124 subKind=4`
+
+Người dùng yêu cầu thứ tự:
+1. restart/login và xác nhận Daily `36d3bb0` hết `New Text`, progress 190/191 đúng và claim reward thực sự vào bag;
+2. khi Daily PASS, audit warning production `mainKind=124 subKind=4 (0 bytes)` bằng Lua/client gốc trước khi implement;
+3. sau đó mới quay lại EVE param8.
+
+Không invent handler 124:4 chỉ từ warning; phải tìm protocolTable/client callsite/data semantics trước.
+
+### Sau đó: EVE `conditionClass=7, conditionParameter=8`
 
 Đã scan Eve.emg:
 - khoảng **468 occurrence**.
@@ -437,7 +488,8 @@ Sau lỗi item wire đã PASS, còn nên audit:
 ## 10. Recent commits để chat mới định vị nhanh
 
 ```text
-5c686ed Fix DVT daily mission progress tracking      — runtime PENDING
+36d3bb0 Fix DVT daily special RoleCount wire         — runtime PENDING
+5c686ed Fix DVT daily mission progress tracking      — gameplay bridge working; superseded by 36d3bb0 for UI wire
 1706f00 Fix DVT daily runtime window                 — runtime timing fixed; feature still needed progress bridge
 32b8b6f Fix pet SP sync and EXP chat                 — runtime PASS
 def5f55 Restore battle EXP for active pet            — runtime PASS via 32b8b6f batch
@@ -452,10 +504,11 @@ fe7633c Fix DVT NFT item wire alignment              — runtime PASS
 
 Chat mới chỉ cần đọc file này, sau đó:
 1. kiểm tra HEAD GitHub hiện tại;
-2. ưu tiên xác nhận runtime `5c686ed` cho Hằng ngày/Jiugongge;
-3. test trực tiếp các điều kiện đã có gameplay hook: bắt pet, xuất chiến pet, phân phối skill/stat, battle, thú cưỡi, friend, tổ đội;
+2. ưu tiên xác nhận runtime `36d3bb0`: login lại, mở Hằng ngày, kiểm tra đủ 9 ô không còn `New Text`;
+3. test RoleCount190/191 bằng tiêu skill/stat point và test reward sau khi hoàn thành trọn một hàng/cột;
 4. mission `Gia nhập quân đoàn` (flag1497) vẫn chờ subsystem Organization; không tự invent;
-5. sau khi Hằng ngày PASS mới quay lại **EVE conditionClass=7 / param=8**;
-6. không yêu cầu người dùng kể lại lịch sử và không mở lại các phần đã runtime PASS nếu không có regression mới.
+5. khi Daily PASS, audit **mainKind=124 subKind=4** theo Lua/client gốc như người dùng yêu cầu;
+6. sau 124:4 mới quay lại **EVE conditionClass=7 / param=8**;
+7. không yêu cầu người dùng kể lại lịch sử và không mở lại các phần đã runtime PASS nếu không có regression mới.
 
-**Điểm tiếp tục hiện tại: Hằng ngày/Jiugongge đang chờ runtime test `5c686ed`; pet lifecycle / S15-8 / legacy seed đã runtime PASS.**
+**Điểm tiếp tục hiện tại: code Daily `36d3bb0` đã build/test PASS, đang chờ deploy/restart + runtime; sau Daily là mainKind124:4.**
