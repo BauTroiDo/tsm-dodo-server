@@ -89,8 +89,10 @@ class BattleManager(
             if (npcDef.kind == NPC_KIND_ELEPHANT &&
                 (skillSystem?.getCache(session.roleId.toLong())?.skills?.get(RIDING_SKILL_ID) ?: 0) <= 0
             ) return@validator false
+            // DVT FightRoleController.DoClick only rejects the same NPC
+            // in carried followers or Inn.HaveNpc() (inn + warrior repository).
+            // Cart.followNpcs is not checked by the client.
             val duplicate = pc.follow.values.any { it.npcId == npcId } ||
-                pc.cart.values.any { it.npcId == npcId } ||
                 pc.inn.values.any { it.npcId == npcId } ||
                 pc.warehouse.any { it.npcId == npcId }
             !duplicate
@@ -932,7 +934,11 @@ class BattleManager(
                         logger.warn { "戰鬥 ${battle.battleId}: 捕獲 npcId=$npcId 但 npcDefs 無此定義" }
                         continue
                     }
-                    val added = petSystem.addFollowNpc(charId, npcId, npcDef, canGrow = 1)
+                    val added = petSystem.addFollowNpc(
+                        charId, npcId, npcDef,
+                        canGrow = 1,
+                        allowDuplicateInCart = true,
+                    )
                     if (added != null) {
                         val (slotIndex, pet) = added
                         responseSender.sendFollowNpcAdd(session, playerId, slotIndex, npcId, pet.canGrow, showMsg = true)
@@ -987,9 +993,33 @@ class BattleManager(
                 }
             }
 
-            // EXP/HP/SP của võ tướng vừa thay đổi trong battle: persist ngay sau kết toán
-            // để restart ngay sau trận cũng không làm mất tiến độ.
-            petSystem.save(session.roleId.toLong())
+            // Persist toàn bộ dữ liệu vừa thay đổi bởi battle ngay sau kết toán.
+            // Autosave vẫn chạy nền, nhưng battle checkpoint này loại bỏ cửa sổ mất
+            // EXP/vàng/vật phẩm/pet khi máy chủ bị reset ngay sau trận.
+            val checkpointCharId = session.roleId.toLong()
+            try {
+                val checkpointState = playerStateManager.getState(checkpointCharId)
+                if (checkpointState != null) {
+                    characterRepository?.updatePlayerState(
+                        checkpointCharId,
+                        checkpointState.exp,
+                        checkpointState.level,
+                        checkpointState.attrPoint,
+                        checkpointState.skillPoint,
+                        checkpointState.intelligence,
+                        checkpointState.atk,
+                        checkpointState.def,
+                        checkpointState.agi,
+                        checkpointState.hpx,
+                        checkpointState.spx,
+                    )
+                }
+                inventorySystem.save(checkpointCharId)
+                moneySystem.saveMoney(checkpointCharId)
+                petSystem.save(checkpointCharId)
+            } catch (e: Exception) {
+                logger.error(e) { "戰鬥 ${battle.battleId}: lưu checkpoint thất bại charId=$checkpointCharId" }
+            }
 
             // S:011-000 結束戰鬥
             responseSender.sendBattleEnd(session, playerId, 0)

@@ -4,6 +4,7 @@ import com.typesafe.config.ConfigFactory
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.runBlocking
 import org.koin.core.context.startKoin
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -91,6 +92,16 @@ class Application : KoinComponent {
     fun shutdown() {
         val sessions = sessionManager.allSessions().toList()  // Bản chụp (snapshot), tránh lỗi ConcurrentModification
         val count = sessions.size
+
+        // Ghi đồng bộ toàn bộ runtime state trước khi đóng socket. Không dựa vào
+        // channelInactive + delay 3 giây vì restart nhanh có thể hủy coroutine lưu dở.
+        try {
+            runBlocking { autoSaveService.saveAllNow() }
+            logger.info { "Đã flush dữ liệu online vào DB trước khi tắt máy chủ" }
+        } catch (e: Exception) {
+            logger.error(e) { "Flush dữ liệu trước khi tắt máy chủ thất bại" }
+        }
+
         logger.info { "Đang thông báo cho $count client rằng máy chủ sắp tắt..." }
 
         // ① Gửi thông báo ngắt kết nối

@@ -31,8 +31,8 @@ class AutoSaveService(
     private val roleCountSystem: RoleCountSystem
 ) {
     companion object {
-        /** Khoảng thời gian tự động lưu (3 phút) */
-        const val INTERVAL_MS = 3L * 60 * 1000
+        /** Khoảng thời gian tự động lưu. 30 giây để giới hạn mất dữ liệu khi tiến trình/máy chủ bị reset đột ngột. */
+        const val INTERVAL_MS = 30L * 1000
     }
 
     init {
@@ -41,7 +41,7 @@ class AutoSaveService(
             delay(INTERVAL_MS)
             while (isActive) {
                 try {
-                    saveAll()
+                    saveAllNow()
                 } catch (e: Exception) {
                     logger.error(e) { "Lỗi tự động lưu" }
                 }
@@ -54,7 +54,7 @@ class AutoSaveService(
     /**
      * Lưu dữ liệu của tất cả người chơi đang online
      */
-    private suspend fun saveAll() {
+    suspend fun saveAllNow() {
         val sessions = worldManager.getOnlineSessions()
         if (sessions.isEmpty()) return
 

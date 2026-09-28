@@ -238,14 +238,25 @@ class PetSystem(
      * @param canGrow     Loại trưởng thành (0=Không thể trưởng thành, 1=Có thể trưởng thành)
      * @return (slotIndex, FollowNpcData), null = Đã đầy hoặc trùng lặp
      */
-    fun addFollowNpc(characterId: Long, npcId: Int, npcDef: NpcDef, canGrow: Int = 1): Pair<Int, FollowNpcData>? {
+    fun addFollowNpc(
+        characterId: Long,
+        npcId: Int,
+        npcDef: NpcDef,
+        canGrow: Int = 1,
+        allowDuplicateInCart: Boolean = false,
+    ): Pair<Int, FollowNpcData>? {
         val pc = cache[characterId] ?: return null
 
         synchronized(pc) {
-            // Kiểm tra xem đã có trong đội hay chưa (Tìm trong cả mang theo + xe ngựa + khách sạn)
-            if (pc.follow.values.any { it.npcId == npcId } || pc.cart.values.any { it.npcId == npcId }
-                || pc.inn.values.any { it.npcId == npcId }) {
-                logger.debug { "Võ tướng đã có trong đội: charId=$characterId npcId=$npcId" }
+            // DVT manual catch checks Role.GetFollowNpc() + Inn.HaveNpc().
+            // Cart is deliberately NOT part of that check, so a player may store
+            // one copy in the cart and catch the same NPC type again.
+            val duplicate = pc.follow.values.any { it.npcId == npcId } ||
+                (!allowDuplicateInCart && pc.cart.values.any { it.npcId == npcId }) ||
+                pc.inn.values.any { it.npcId == npcId } ||
+                pc.warehouse.any { it.npcId == npcId }
+            if (duplicate) {
+                logger.debug { "Võ tướng đã có trong vùng không cho phép trùng: charId=$characterId npcId=$npcId" }
                 return null
             }
 

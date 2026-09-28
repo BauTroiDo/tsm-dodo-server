@@ -97,6 +97,32 @@ class DvtPetExpTest {
         assertEquals(0, created.skill2Lv)
     }
 
+    @Test fun `manual capture may duplicate npc type only when existing copy is in cart`() = runTest {
+        coEvery { repo.findByCharacterId(42) } returns listOf(
+            FollowNpcData(
+                slotIndex = 1,
+                npcId = 100,
+                storageType = PetSystem.STORAGE_CART,
+                level = 21,
+                exp = 2100,
+                hp = 100,
+                sp = 50,
+            )
+        )
+        pets.load(42)
+
+        assertNull(pets.addFollowNpc(42, 100, npc, canGrow = 1))
+        val captured = pets.addFollowNpc(
+            42, 100, npc,
+            canGrow = 1,
+            allowDuplicateInCart = true,
+        )
+        assertNotNull(captured)
+        assertEquals(1, captured!!.first)
+        assertEquals(100, captured.second.npcId)
+        assertEquals(1, captured.second.level)
+    }
+
     @Test fun `pet exp uses same pure battle reward curve without rerolling drops`() {
         val enemy = mockk<NpcDef> {
             every { level } returns 21
