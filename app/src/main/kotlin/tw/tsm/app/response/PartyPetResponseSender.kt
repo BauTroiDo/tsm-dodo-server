@@ -185,7 +185,9 @@ class PartyPetResponseSender {
             writer.writeByte(pet.loyalty)
             writer.writeByte(pet.canGrow)
             writer.writeShortLE(pet.skillPoint)
-            writer.writeBig5WithByteLen(pet.name)
+            // Client gốc TSNPCVN Role.FollowNpcAppear đọc tên bằng
+            // ReadString(len, DataManager.encoding_Unicode) => UTF-16LE.
+            writer.writeUnicodeWithByteLen(pet.name)
             // 技能等級 ×3
             writer.writeByte(pet.skill1Lv)
             writer.writeByte(pet.skill2Lv)
@@ -194,11 +196,12 @@ class PartyPetResponseSender {
             for (fitType in 1..6) {
                 writer.writeThingData(pet.equips[fitType] ?: ThingData())
             }
-            writer.writeByte(pet.ascendPillCount)
+            // Client gốc TSNPCVN dùng UInt16 cho sublime/hpPill/spPill.
+            writer.writeShortLE(pet.ascendPillCount)
             writer.writeBoolean(pet.canUseSpecialSkill)
             writer.writeIntLE(pet.soulId)
-            writer.writeByte(pet.hpPillCount)
-            writer.writeByte(pet.spPillCount)
+            writer.writeShortLE(pet.hpPillCount)
+            writer.writeShortLE(pet.spPillCount)
             writer.writeByte(pet.upgradeLv)
         }
 
