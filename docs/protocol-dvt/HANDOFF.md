@@ -5,7 +5,7 @@
 > Cập nhật: 2026-09-29
 > Repo: `BauTroiDo/tsm-dodo-server`
 > Branch: `main`
-> HEAD tại checkpoint: `271e554`
+> Code checkpoint gần nhất: `1706f00`
 
 ## 1. Nguyên tắc tối cao
 
@@ -161,6 +161,37 @@ Lua DVT:
 
 Runtime: **PASS**
 
+#### E. Pet battle EXP / SP / chat
+Các commit:
+- `def5f55 Restore battle EXP for active pet`
+- `32b8b6f Fix pet SP sync and EXP chat`
+
+Đã sửa:
+- pet đang xuất chiến nhận EXP và lên cấp;
+- EXP pet dùng cumulative semantics;
+- MaxSP pet dùng đúng `Calc.GetMaxSp` thay vì công thức gần đúng;
+- HP/SP pet được sync mỗi round;
+- chat hệ thống hiện EXP pet sau battle.
+
+Runtime: **PASS** (người dùng xác nhận sau `32b8b6f`).
+
+#### F. Hằng ngày / Jiugongge — đang xử lý
+Các commit liên quan:
+- `709efb0 Restore DVT daily nine-grid`
+- `a22b623 Refresh DVT daily activity clock`
+- `bfe87d0 Rearm DVT daily UI after clock sync`
+- `5461ff6 Fix DVT daily activity lifetime` — runtime vẫn FAIL
+- `1706f00 Fix DVT daily runtime window` — chờ runtime test
+
+Bằng chứng mới:
+- Client gốc `C:\Users\QT\Downloads\TSNPCVN` đã được giải AES bằng key/tool của repo; các file `UIJiugongge.lua`, `Jiugongge.lua`, `ActivityTime.lua`, `protocal.lua`, `CGTimer.lua` khớp logic với bộ Lua audit.
+- Ba file data Jiugongge/ActivityTime trong client gốc có SHA256 trùng File.dat của repo.
+- `UIActivity.UpdateTime()` chứng minh `S:077-001 serverStartTime/serverCloseTime` là **runtime opening window** vì client so `DayOfWeek`; không phải lifetime 2022–2028.
+- Activity 12 là daily: openDay=127, giờ 00:00–23:59.
+- Server/client máy test cùng `SE Asia Standard Time`.
+
+Bản `1706f00` giữ server clock theo local wall-clock OLE Date và gửi **cửa sổ ngày hiện tại 00:00–23:59** cho activity 12. Chưa ghi PASS cho tới khi người dùng xác nhận.
+
 ## 6. EXP semantics hiện tại
 
 DVT dùng **cumulative lifetime EXP**, không phải remainder EXP.
@@ -249,23 +280,23 @@ Sau lỗi item wire đã PASS, còn nên audit:
 ## 10. Recent commits để chat mới định vị nhanh
 
 ```text
-271e554 Restore persisted EXP on login              — runtime PASS
-c13c543 Fix pet auto supply after battle            — runtime PASS
-fe7633c Fix DVT NFT item wire alignment             — runtime PASS
-55e2139 Restore DVT MineData encounters             — runtime PASS
-3f3b9d0 Update DVT revive command fixture
-c89bf47 Update DVT skill batch Turn2 fixture
-66e1ccd Align Eve condition tests with DVT Lua operators
-b86d4f5 Restore DVT Eve condition comparison semantics
+1706f00 Fix DVT daily runtime window                 — runtime PENDING
+32b8b6f Fix pet SP sync and EXP chat                 — runtime PASS
+def5f55 Restore battle EXP for active pet            — runtime PASS via 32b8b6f batch
+5461ff6 Fix DVT daily activity lifetime              — runtime FAIL
+271e554 Restore persisted EXP on login               — runtime PASS
+c13c543 Fix pet auto supply after battle             — runtime PASS
+fe7633c Fix DVT NFT item wire alignment              — runtime PASS
+55e2139 Restore DVT MineData encounters              — runtime PASS
 ```
 
 ## 11. Cách bắt đầu chat mới
 
 Chat mới chỉ cần đọc file này, sau đó:
 1. kiểm tra HEAD GitHub hiện tại;
-2. xem commit sau `271e554` nếu có;
-3. tiếp tục **audit EVE conditionClass=7 / param=8** bằng Lua DVT + client gốc TSNPCVN;
-4. không yêu cầu người dùng kể lại lịch sử;
-5. không quay lại sửa các phần đã runtime PASS nếu không có regression mới.
+2. ưu tiên xác nhận runtime `1706f00` cho Hằng ngày/Jiugongge;
+3. nếu vẫn FAIL, audit tiếp packet/state runtime dựa trên client gốc TSNPCVN, không đoán;
+4. sau khi Hằng ngày PASS mới quay lại **EVE conditionClass=7 / param=8**;
+5. không yêu cầu người dùng kể lại lịch sử và không mở lại các phần đã runtime PASS nếu không có regression mới.
 
-**Điểm tiếp tục hiện tại: audit EVE conditionClass=7 / conditionParameter=8, dùng client gốc TSNPCVN để chốt semantics.**
+**Điểm tiếp tục hiện tại: Hằng ngày/Jiugongge đang chờ runtime test `1706f00`; pet EXP/SP/chat đã PASS.**
