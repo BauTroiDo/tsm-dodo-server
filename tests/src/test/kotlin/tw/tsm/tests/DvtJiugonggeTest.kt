@@ -87,7 +87,9 @@ class DvtJiugonggeTest {
             itemDefs = emptyMap(),
         )
 
+        val dayBefore = LocalDateTime.now().toLocalDate()
         system.sendDailyInit(session)
+        val dayAfter = LocalDateTime.now().toLocalDate()
         assertEquals(3, packets.size)
 
         ByteBuffer.wrap(packets[0]).order(ByteOrder.LITTLE_ENDIAN).apply {
@@ -97,16 +99,14 @@ class DvtJiugonggeTest {
             assertEquals(12, short.toInt() and 0xFFFF)
             val start = double
             val close = double
-            assertEquals(
-                OleDate.fromLocalDateTime(LocalDateTime.of(2022, 11, 21, 0, 0)),
-                start,
-                0.0000001
-            )
-            assertEquals(
-                OleDate.fromLocalDateTime(LocalDateTime.of(2028, 12, 31, 23, 59)),
-                close,
-                0.0000001
-            )
+            val validStarts = setOf(dayBefore, dayAfter).map {
+                OleDate.fromLocalDateTime(it.atTime(0, 0))
+            }
+            val validCloses = setOf(dayBefore, dayAfter).map {
+                OleDate.fromLocalDateTime(it.atTime(23, 59))
+            }
+            assertTrue(validStarts.any { kotlin.math.abs(it - start) < 0.0000001 })
+            assertTrue(validCloses.any { kotlin.math.abs(it - close) < 0.0000001 })
             assertFalse(hasRemaining())
         }
 

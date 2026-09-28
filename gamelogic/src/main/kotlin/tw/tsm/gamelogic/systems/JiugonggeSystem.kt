@@ -227,25 +227,23 @@ class JiugonggeSystem(
     private fun sendActivityWindow(session: GameSession, activityId: Int) {
         val def = activityTimes[activityId] ?: return
 
-        // ActivityTime_C carries two different concepts:
-        // - start/end: lifetime of the activity (serverStartTime/serverCloseTime)
-        // - open/close hour: daily schedule shown by UIActivity
+        // DVT S:077-001 carries the runtime opening window, not the static
+        // lifetime from ActivityTime_C.start*/end*. UIActivity compares
+        // serverStartTime.DayOfWeek with CGTimer.serverTime and UIJiugongge
+        // treats "before start" / "after close" as inactive.
         //
-        // UIJiugongge.UpdateTime compares CGTimer.serverTime directly against
-        // serverStartTime/serverCloseTime, therefore S:077-001 must send the
-        // configured lifetime, not today's 00:00-23:59 window.
-        val start = OleDate.fromLocalDateTime(
-            LocalDateTime.of(
-                def.startYear, def.startMonth, def.startDay,
-                def.startHour, def.startMinute
-            )
-        )
-        val close = OleDate.fromLocalDateTime(
-            LocalDateTime.of(
-                def.endYear, def.endMonth, def.endDay,
-                def.endHour, def.endMinute
-            )
-        )
+        // Activity 12 (daily nine-grid) is open every day 00:00-23:59, so
+        // construct today's wall-clock window. This must use the same local
+        // wall clock as S:001-016 / CGTimer.SetServerTime().
+        val now = LocalDateTime.now()
+        val startDateTime = now.toLocalDate().atTime(def.openHour, def.openMinute)
+        var closeDateTime = now.toLocalDate().atTime(def.closeHour, def.closeMinute)
+        if (!closeDateTime.isAfter(startDateTime)) {
+            closeDateTime = closeDateTime.plusDays(1)
+        }
+
+        val start = OleDate.fromLocalDateTime(startDateTime)
+        val close = OleDate.fromLocalDateTime(closeDateTime)
 
         session.send(
             PacketWriter()
