@@ -110,9 +110,11 @@ class ItemUseProcessor(
     private fun processFullHp(characterId: Long): ItemUseResult {
         val recovered = playerStateManager.fullHp(characterId)
         if (recovered <= 0) return ItemUseResult(success = true)
+        val hp = playerStateManager.getState(characterId)?.hp ?: return ItemUseResult(success = false, consumed = false)
         return ItemUseResult(
             success = true,
-            attrChanges = listOf(AttrChange(EAttribute.HP, recovered.toInt(), true))
+            // S:008-001 is an absolute SetAttribute packet, not a delta packet.
+            attrChanges = listOf(AttrChange(EAttribute.HP, hp.toInt(), true))
         )
     }
 
@@ -122,9 +124,11 @@ class ItemUseProcessor(
     private fun processFullSp(characterId: Long): ItemUseResult {
         val recovered = playerStateManager.fullSp(characterId)
         if (recovered <= 0) return ItemUseResult(success = true)
+        val sp = playerStateManager.getState(characterId)?.sp ?: return ItemUseResult(success = false, consumed = false)
         return ItemUseResult(
             success = true,
-            attrChanges = listOf(AttrChange(EAttribute.SP, recovered, true))
+            // S:008-001 is an absolute SetAttribute packet, not a delta packet.
+            attrChanges = listOf(AttrChange(EAttribute.SP, sp, true))
         )
     }
 
@@ -134,9 +138,10 @@ class ItemUseProcessor(
     private fun processFullHpSp(characterId: Long): ItemUseResult {
         val hpRecovered = playerStateManager.fullHp(characterId)
         val spRecovered = playerStateManager.fullSp(characterId)
+        val state = playerStateManager.getState(characterId) ?: return ItemUseResult(success = false, consumed = false)
         val changes = mutableListOf<AttrChange>()
-        if (hpRecovered > 0) changes.add(AttrChange(EAttribute.HP, hpRecovered.toInt(), true))
-        if (spRecovered > 0) changes.add(AttrChange(EAttribute.SP, spRecovered, true))
+        if (hpRecovered > 0) changes.add(AttrChange(EAttribute.HP, state.hp.toInt(), true))
+        if (spRecovered > 0) changes.add(AttrChange(EAttribute.SP, state.sp, true))
         return ItemUseResult(success = true, attrChanges = changes)
     }
 
@@ -219,12 +224,14 @@ class ItemUseProcessor(
             EAttribute.HP -> {
                 val actual = petSystem.modifyFollowNpcHp(characterId, followSlot, value.toLong())
                 if (actual == 0L) return null
-                return AttrChange(EAttribute.HP, actual.toInt(), actual > 0)
+                val hp = petSystem.getFollowNpc(characterId, followSlot)?.hp ?: return null
+                return AttrChange(EAttribute.HP, hp.toInt(), true)
             }
             EAttribute.SP -> {
                 val actual = petSystem.modifyFollowNpcSp(characterId, followSlot, value)
                 if (actual == 0) return null
-                return AttrChange(EAttribute.SP, actual, actual > 0)
+                val sp = petSystem.getFollowNpc(characterId, followSlot)?.sp ?: return null
+                return AttrChange(EAttribute.SP, sp, true)
             }
             EAttribute.FAITH -> {
                 // TODO: Hệ thống độ trung thành (cần thêm trường loyalty vào FollowNpcData)
@@ -320,12 +327,14 @@ class ItemUseProcessor(
             EAttribute.HP -> {
                 val actual = playerStateManager.modifyHp(characterId, value.toLong())
                 if (actual == 0L) return null
-                return AttrChange(EAttribute.HP, actual.toInt(), actual > 0)
+                val hp = playerStateManager.getState(characterId)?.hp ?: return null
+                return AttrChange(EAttribute.HP, hp.toInt(), true)
             }
             EAttribute.SP -> {
                 val actual = playerStateManager.modifySp(characterId, value)
                 if (actual == 0) return null
-                return AttrChange(EAttribute.SP, actual, actual > 0)
+                val sp = playerStateManager.getState(characterId)?.sp ?: return null
+                return AttrChange(EAttribute.SP, sp, true)
             }
             else -> {
                 // Các thuộc tính khác trả về sự thay đổi trực tiếp (Máy chủ không theo dõi các thuộc tính chi tiết, client tự áp dụng)
