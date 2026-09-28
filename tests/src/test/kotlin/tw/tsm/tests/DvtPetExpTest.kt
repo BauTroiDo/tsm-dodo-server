@@ -17,11 +17,22 @@ class DvtPetExpTest {
         every { calculateNeedTotalExp(any(), any()) } answers {
             firstArg<Int>().toLong() * 100L
         }
+        every { calculateUpExp(1, 0) } returns 6L
+        every { calculateMaxHp(any(), any(), any(), any(), any(), any(), any()) } answers {
+            if (firstArg<Int>() == 1) 113L else 9999L
+        }
+        every { calculateMaxSp(any(), any(), any(), any(), any(), any(), any()) } answers {
+            if (firstArg<Int>() == 1) 69 else 9999
+        }
     }
     private val npc = mockk<NpcDef>(relaxed = true) {
         every { turn } returns 0
         every { level } returns 21
         every { name } returns "Pet"
+        every { hpx } returns 8
+        every { spx } returns 4
+        every { hpBase } returns 98
+        every { spBase } returns 95
         every { skills } returns intArrayOf(10000, 0, 0)
     }
     private val pets = PetSystem(repo, stat, mapOf(100 to npc))
@@ -71,12 +82,19 @@ class DvtPetExpTest {
         assertEquals(2100L, pets.getFollowPets(42).getValue(1).exp)
     }
 
-    @Test fun `new follow pet starts at cumulative exp floor instead of zero`() = runTest {
+    @Test fun `new captured pet starts at DVT level one with calculated hp sp`() = runTest {
         coEvery { repo.findByCharacterId(42) } returns emptyList()
         pets.load(42)
 
         val created = pets.addFollowNpc(42, 100, npc, canGrow = 1)!!.second
-        assertEquals(2100L, created.exp)
+        assertEquals(1, created.level)
+        assertEquals(6L, created.exp)
+        assertEquals(113L, created.hp)
+        assertEquals(69, created.sp)
+        assertEquals(8, created.hpx)
+        assertEquals(4, created.spx)
+        assertEquals(1, created.skill1Lv)
+        assertEquals(0, created.skill2Lv)
     }
 
     @Test fun `pet exp uses same pure battle reward curve without rerolling drops`() {

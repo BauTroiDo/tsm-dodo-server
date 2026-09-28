@@ -1,6 +1,7 @@
 package tw.tsm.gamelogic.systems
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import tw.tsm.domain.data.ItemDef
 import tw.tsm.domain.data.NpcDef
 import tw.tsm.domain.interfaces.repositories.PetRepository
 import tw.tsm.domain.valueobjects.FollowNpcData
@@ -18,7 +19,8 @@ private val logger = KotlinLogging.logger {}
 class PetSystem(
     private val petRepository: PetRepository,
     private val statCalculator: StatSystem,
-    private val npcDefs: Map<Int, NpcDef> = emptyMap()
+    private val npcDefs: Map<Int, NpcDef> = emptyMap(),
+    private val itemDefs: Map<Int, ItemDef> = emptyMap()
 ) {
 
     companion object {
@@ -75,7 +77,7 @@ class PetSystem(
             // Legacy rows from the old server stored 0/remainder EXP, which pins the bar at 0%.
             val turn = petExpTurn(loaded)
             val floorExp = statCalculator.calculateNeedTotalExp(loaded.level.coerceAtLeast(1), turn)
-            val pet = if (loaded.exp < floorExp) {
+            var pet = if (loaded.exp < floorExp) {
                 pc.dirty = true
                 logger.info {
                     "Chuẩn hóa EXP võ tướng: charId=$characterId npcId=${loaded.npcId} " +
@@ -84,6 +86,21 @@ class PetSystem(
                 loaded.copy(exp = floorExp)
             } else {
                 loaded
+            }
+
+            // DVT client calculates the pet gauges from Calc.GetMaxHp/GetMaxSp.
+            // Clamp legacy/broken rows here so an old hpBase/max mismatch cannot
+            // produce impossible values such as current HP > displayed MaxHP.
+            val (maxHp, maxSp) = petMaxHpSp(pet)
+            val normalizedHp = if (maxHp > 0L) pet.hp.coerceIn(0L, maxHp) else pet.hp
+            val normalizedSp = if (maxSp > 0) pet.sp.coerceIn(0, maxSp) else pet.sp
+            if (normalizedHp != pet.hp || normalizedSp != pet.sp) {
+                pc.dirty = true
+                logger.info {
+                    "Chuẩn hóa HP/SP võ tướng: charId=$characterId npcId=${pet.npcId} " +
+                        "hp=${pet.hp}/$maxHp -> $normalizedHp, sp=${pet.sp}/$maxSp -> $normalizedSp"
+                }
+                pet = pet.copy(hp = normalizedHp, sp = normalizedSp)
             }
 
             when (pet.storageType) {
@@ -109,10 +126,37 @@ class PetSystem(
     fun getFollowPets(characterId: Long): Map<Int, FollowNpcData> =
         cache[characterId]?.follow ?: emptyMap()
 
-    /** DVT NpcData:GetTurn(): static NPC turn==2 uses EXP curve turn=1, everything else uses turn=0. */
+    /** DVT NpcData:GetTurn(): static NPC turn==2 uses pet turn=1, everything else uses turn=0. */
     private fun petExpTurn(pet: FollowNpcData): Int {
         val rawTurn = npcDefs[pet.npcId]?.turn ?: pet.turnKind
         return if (rawTurn == 2) 1 else 0
+    }
+
+    /**
+     * DVT Calc.GetMaxHp/GetMaxSp for FollowNpc.
+     *
+     * Role.FollowNpcAppear initializes the six base attributes from NpcData, then
+     * recalculates MaxHp/MaxSp from level + HPX/SPX (+ equipment + permanent pills).
+     * The static NpcData hpBase/spBase are spawn defaults, not a captured pet's max.
+     */
+    private fun petMaxHpSp(pet: FollowNpcData): Pair<Long, Int> {
+        val bonus = EquipBonusCalculator.calculateTotalBonus(pet.equips, itemDefs)
+        val turn = petExpTurn(pet)
+        val maxHp = statCalculator.calculateMaxHp(
+            level = pet.level.coerceAtLeast(1),
+            hpx = pet.hpx + bonus.equipHpx,
+            equipMaxHp = bonus.equipMaxHp,
+            extraHp = pet.hpPillCount * 20,
+            turn = turn
+        )
+        val maxSp = statCalculator.calculateMaxSp(
+            level = pet.level.coerceAtLeast(1),
+            spx = pet.spx + bonus.equipSpx,
+            equipMaxSp = bonus.equipMaxSp,
+            extraSp = pet.spPillCount * 5,
+            turn = turn
+        )
+        return maxHp to maxSp
     }
 
     data class PetExpGain(
@@ -151,11 +195,17 @@ class PetSystem(
                 gainedLevels++
             }
 
-            val after = before.copy(
+            var after = before.copy(
                 level = level,
                 exp = exp,
                 skillPoint = before.skillPoint + gainedLevels,
             )
+            // PC reference levelUp() and DVT status formulas both refresh the
+            // pet's HP/SP capacity at a level boundary. Restore to the new max.
+            if (gainedLevels > 0) {
+                val (maxHp, maxSp) = petMaxHpSp(after)
+                after = after.copy(hp = maxHp, sp = maxSp)
+            }
             pc.follow[followSlot] = after
             pc.dirty = true
             logger.info {
@@ -202,31 +252,35 @@ class PetSystem(
             // Tìm vị trí trống trong danh sách mang theo
             val slot = (1..MAX_FOLLOW).firstOrNull { !pc.follow.containsKey(it) } ?: return null
 
-            val pet = FollowNpcData(
+            // DVT Role.FollowNpcAppear and PC TSPet.initPet both create a newly
+            // captured/awarded pet at LV1. NpcDef.level is the encounter/spawn level,
+            // not the pet's starting level.
+            val turn = if (npcDef.turn == 2) 1 else 0
+            val seed = FollowNpcData(
                 slotIndex = slot,
                 npcId = npcId,
                 storageType = STORAGE_FOLLOW,
                 name = npcDef.name,
-                level = npcDef.level,
-                // Role.FollowNpcAppear/UIStatus use cumulative EXP, never a zero/remainder gauge.
-                exp = statCalculator.calculateNeedTotalExp(
-                    npcDef.level.coerceAtLeast(1),
-                    if (npcDef.turn == 2) 1 else 0
-                ),
-                hp = npcDef.hpBase.toLong(),
-                sp = npcDef.spBase,
+                level = 1,
+                exp = statCalculator.calculateUpExp(1, turn),
+                hp = 0,
+                sp = 0,
                 atk = npcDef.atk,
                 def = npcDef.def,
                 agi = npcDef.agi,
                 intelligence = npcDef.intelligence,
                 hpx = npcDef.hpx,
                 spx = npcDef.spx,
-                // Cấp độ ban đầu của kỹ năng: Có kỹ năng → 1, Không có kỹ năng → 0 (Tương ứng với Role.lua L814-819)
+                loyalty = 60,
+                skillPoint = 0,
+                // Role.FollowNpcAppear: existing skill -> level 1; absent skill -> 0.
                 skill1Lv = if (npcDef.skills.getOrElse(0) { 0 } != 0) 1 else 0,
                 skill2Lv = if (npcDef.skills.getOrElse(1) { 0 } != 0) 1 else 0,
                 skill3Lv = if (npcDef.skills.getOrElse(2) { 0 } != 0) 1 else 0,
                 canGrow = canGrow
             )
+            val (maxHp, maxSp) = petMaxHpSp(seed)
+            val pet = seed.copy(hp = maxHp, sp = maxSp)
             pc.follow[slot] = pet
             pc.dirty = true
             logger.info { "Thêm võ tướng từ sự kiện: charId=$characterId npcId=$npcId (${npcDef.name}) canGrow=$canGrow → slot=$slot" }
@@ -427,9 +481,8 @@ class PetSystem(
         synchronized(pc) {
             val pet = pc.follow[followSlot] ?: return 0
             val oldHp = pet.hp
-            // maxHp tạm dùng khái niệm hpBase (Đúng ra phải lấy từ NpcDef, nhưng trong cache không có)
-            // Dùng 999999 làm mức trần an toàn, tránh tràn số
-            val newHp = (oldHp + delta).coerceIn(0, 999999)
+            val (maxHp, _) = petMaxHpSp(pet)
+            val newHp = (oldHp + delta).coerceIn(0L, maxHp)
             pc.follow[followSlot] = pet.copy(hp = newHp)
             pc.dirty = true
             return newHp - oldHp
@@ -451,7 +504,8 @@ class PetSystem(
         synchronized(pc) {
             val pet = pc.follow[followSlot] ?: return 0
             val oldSp = pet.sp
-            val newSp = (oldSp + delta).coerceIn(0, 99999)
+            val (_, maxSp) = petMaxHpSp(pet)
+            val newSp = (oldSp + delta).coerceIn(0, maxSp)
             pc.follow[followSlot] = pet.copy(sp = newSp)
             pc.dirty = true
             return newSp - oldSp
@@ -759,15 +813,7 @@ class PetSystem(
         val pc = cache[characterId] ?: return
         synchronized(pc) {
             for ((slot, pet) in pc.follow) {
-                val turn = if (pet.turnKind >= 2) 1 else 0
-                val maxHp = statCalculator.calculateMaxHp(
-                    level = pet.level, hpx = pet.hpx,
-                    extraHp = pet.hpPillCount * 20, turn = turn
-                )
-                val maxSp = statCalculator.calculateMaxSp(
-                    level = pet.level, spx = pet.spx,
-                    extraSp = pet.spPillCount * 5, turn = turn
-                )
+                val (maxHp, maxSp) = petMaxHpSp(pet)
                 pc.follow[slot] = pet.copy(hp = maxHp, sp = maxSp)
             }
             pc.dirty = true

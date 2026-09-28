@@ -894,6 +894,14 @@ class BattleManager(
                                 responseSender.sendFollowNpcAttribute(
                                     session, gain.slotIndex, EAttribute.SKILL_POINT, gain.after.skillPoint
                                 )
+                                // PC TSPet.levelUp restores HP/SP; client recomputes
+                                // MaxHP/MaxSP from the new level and these absolute values.
+                                responseSender.sendFollowNpcAttribute(
+                                    session, gain.slotIndex, EAttribute.HP, gain.after.hp.toInt()
+                                )
+                                responseSender.sendFollowNpcAttribute(
+                                    session, gain.slotIndex, EAttribute.SP, gain.after.sp
+                                )
                             }
                             logger.info {
                                 "戰鬥 ${battle.battleId}: 武將 npcId=${gain.after.npcId} " +
@@ -936,7 +944,7 @@ class BattleManager(
                 // 同步完整武將資料給客戶端
                 val allPets = petSystem.getFollowPets(charId)
                 if (allPets.isNotEmpty()) {
-                    responseSender.sendFollowNpcFullData(session, allPets.values.toList())
+                    responseSender.sendFollowNpcFullData(session, allPets.values.sortedBy { it.slotIndex })
                 }
             }
 
