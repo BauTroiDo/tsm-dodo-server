@@ -58,8 +58,8 @@ class CreateCharHandler(
     private suspend fun handleCreateChar(session: GameSession, data: ByteArray) {
         val reader = PacketReader(data)
 
-        // 姓名（1 byte 長度 + Big5 字串）
-        val name = reader.readUtf8WithByteLen()
+        // 姓名（1 byte byte-length + UTF-16LE；對齊 VTC ByteBuffer.WriteStringWithByteL）
+        val name = reader.readUnicodeWithByteLen()
 
         // 驗證名稱
         if (!isValidName(name)) {
@@ -172,11 +172,11 @@ class CreateCharHandler(
     /**
      * 處理檢查名字 (C:009-002)
      *
-     * 封包格式：+名字(ByteL+Big5)
+     * 封包格式：+名字(ByteL+UTF-16LE；VTC encoding_Unicode)
      */
     private suspend fun handleCheckName(session: GameSession, data: ByteArray) {
         val reader = PacketReader(data)
-        val name = reader.readUtf8WithByteLen()
+        val name = reader.readUnicodeWithByteLen()
 
         val result = when {
             !isValidName(name) -> NAME_RESULT_ILLEGAL
