@@ -794,6 +794,24 @@ class BattleManager(
             playerStateManager.setSp(charId, playerFighter.sp.toInt())
             responseSender.sendSetAttribute(session, EAttribute.HP, playerFighter.hp.toInt(), true)
             responseSender.sendSetAttribute(session, EAttribute.SP, playerFighter.sp.toInt(), true)
+
+            // Keep the deployed pet's persistent/current SP authoritative after every round.
+            // FightField deducts SP locally during animation, while BattleSkillResolver deducts
+            // it server-side; S:008-002 prevents the out-of-battle pet object from retaining
+            // stale/full SP and being restored as if skills were free.
+            val petFighter = battle.getAllFighters().firstOrNull {
+                it.kind == EHuman.FOLLOW_NPC && it.masterId == playerId
+            }
+            if (petFighter != null) {
+                val slot = petSystem.getFollowPets(charId).entries
+                    .firstOrNull { it.value.npcId == petFighter.npcId }
+                    ?.key
+                petSystem.updateFightNpcHpSp(charId, petFighter.hp, petFighter.sp.toInt())
+                if (slot != null) {
+                    responseSender.sendFollowNpcAttribute(session, slot, EAttribute.HP, petFighter.hp.toInt())
+                    responseSender.sendFollowNpcAttribute(session, slot, EAttribute.SP, petFighter.sp.toInt())
+                }
+            }
         }
     }
 
@@ -864,6 +882,10 @@ class BattleManager(
                             responseSender.sendFollowNpcAttribute(
                                 session, gain.slotIndex, EAttribute.EXP,
                                 gain.after.exp.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+                            )
+                            val petName = gain.after.name.ifEmpty { npcDefs[gain.after.npcId]?.name ?: "Pet" }
+                            responseSender.sendSystemMessage(
+                                session, "$petName nhận được $petExp điểm kinh nghiệm."
                             )
                             if (gain.levelGained > 0) {
                                 responseSender.sendFollowNpcAttribute(
@@ -1381,12 +1403,26 @@ class BattleManager(
         // 武將裝備加成（Calc.GetMaxHp：hpx 與 EquipHpx 同階計入，EquipMaxHp 直接相加）
         val equipBonus = EquipBonusCalculator.calculateTotalBonus(petData.equips, itemDefs)
 
-        val hp = petData.hp.coerceAtLeast(1)
-        val maxHp = (npcDef.hpBase + petData.level * (npcDef.hpx + equipBonus.equipHpx) + equipBonus.equipMaxHp)
-            .toLong().coerceAtLeast(hp)
-        val sp = petData.sp.toLong()
-        val maxSp = (npcDef.spBase + petData.level * (npcDef.spx + equipBonus.equipSpx) + equipBonus.equipMaxSp)
-            .toLong().coerceAtLeast(sp)
+        // DVT Calculator.lua handles FollowNpc with the normal stat formula;
+        // do not approximate max HP/SP as base + level*stat. That old shortcut
+        // inflated SP heavily and made pets look effectively unlimited.
+        val petTurn = if (npcDef.turn == 2) 1 else 0
+        val maxHp = statSystem.calculateMaxHp(
+            level = petData.level,
+            hpx = petData.hpx + equipBonus.equipHpx,
+            equipMaxHp = equipBonus.equipMaxHp,
+            extraHp = petData.hpPillCount * 20,
+            turn = petTurn
+        )
+        val maxSp = statSystem.calculateMaxSp(
+            level = petData.level,
+            spx = petData.spx + equipBonus.equipSpx,
+            equipMaxSp = equipBonus.equipMaxSp,
+            extraSp = petData.spPillCount * 5,
+            turn = petTurn
+        ).toLong()
+        val hp = petData.hp.coerceIn(1L, maxHp)
+        val sp = petData.sp.toLong().coerceIn(0L, maxSp)
 
         val normalSkills = npcDef.skills.take(3)
             .zip(listOf(petData.skill1Lv, petData.skill2Lv, petData.skill3Lv))
