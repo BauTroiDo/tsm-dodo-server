@@ -74,7 +74,7 @@ class DvtBattleCommandSemanticsTest {
     @Test
     fun `fightWay eight accepts dead friendly target at queue time`() {
         val reviveId = 11011
-        val actor = fighter(1, 2, 0)
+        val actor = fighter(1, 2, 0, intArrayOf(reviveId))
         val deadAlly = fighter(2, 3, 0).also { it.hp=0; it.isDead=true }
         val battle = fixture(actor, deadAlly, mapOf(reviveId to skill(8)))
         val action = BattleAction(BattleAction.KIND_SKILL, reviveId, deadAlly.col, deadAlly.row)
