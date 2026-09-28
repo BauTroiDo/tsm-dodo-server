@@ -268,7 +268,8 @@ class EveFlowController(
         // ═══ 統一過濾：任務鏈中跳過服務 NPC UI 操作 ═══
         // cls=7 pStyle 1~5 是服務 NPC 的 UI（寶庫/錢莊/商店/客棧/住宿）
         // 判斷依據：結果鏈含 cls 1~3（物品/任務/NPC）= 任務鏈 → 跳過
-        if (result.resultClass == 7 && result.parameterStyle in 1..5) {
+        if (result.resultClass == 7 &&
+            EveResultClassPolicy.isRepeatableServicePlayerOperation(result.parameterStyle, result.resultValue)) {
             val es = stateMachine.getSession(session.roleId.toLong())
             val isQuestChain = es?.results?.any { it.resultClass in 1..3 } == true
             if (isQuestChain) {
@@ -281,7 +282,8 @@ class EveFlowController(
         when (result.resultType) {
             0 -> {
                 // type=0：伺服器端效果
-                if (result.resultClass == 7 && result.parameterStyle == 1) {
+                if (result.resultClass == 7 && result.parameterStyle == 1 &&
+                    EveResultClassPolicy.isRepeatableServicePlayerOperation(result.parameterStyle, result.resultValue)) {
                     // pStyle=1 上下文感知：客棧 NPC → 儲存紀錄點 / 錢莊 NPC → 開啟寶庫
                     val charId0 = session.roleId.toLong()
                     val eventSession = stateMachine.getSession(charId0)
@@ -297,7 +299,8 @@ class EveFlowController(
                     if (result.resultClass == 3) {
                         // NPC 視覺操作（隱形/顯現/變身/追擊）→ 送客戶端
                         responseSender.sendCommonEvent(session, result)
-                    } else if (result.resultClass == 7 && result.parameterStyle in 2..5) {
+                    } else if (result.resultClass == 7 &&
+                        EveResultClassPolicy.isRepeatableServicePlayerOperation(result.parameterStyle, result.resultValue)) {
                         // 服務 NPC（錢莊/商店/客棧/住宿）→ 不記錄完成，確保可重複
                         serviceAdvanceOrEnd(session)
                     } else {
@@ -363,7 +366,8 @@ class EveFlowController(
             7 -> {
                 // type=7：伺服器端玩家操作（客戶端無 EventHandler[7]）
                 val charId7 = session.roleId.toLong()
-                if (result.resultClass == 7 && result.parameterStyle == 1) {
+                if (result.resultClass == 7 && result.parameterStyle == 1 &&
+                    EveResultClassPolicy.isRepeatableServicePlayerOperation(result.parameterStyle, result.resultValue)) {
                     // pStyle=1：依上下文區分
                     val eventSession = stateMachine.getSession(charId7)
                     if (eventSession != null && eventSession.lastChoiceCode != -1) {
