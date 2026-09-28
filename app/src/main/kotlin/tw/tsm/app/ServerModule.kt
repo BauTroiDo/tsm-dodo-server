@@ -103,6 +103,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             register(get<UISellHandler>())
             register(get<PetUpgradeHandler>())
             register(get<PetRebornHandler>())
+            register(get<JiugonggeHandler>())
         }
     }
     single {
@@ -281,6 +282,18 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
         }
     }
     single {
+        JiugonggeSystem(
+            get<GameDataManager>().jiugonggeInfoDefs,
+            get<GameDataManager>().jiugonggeMissionDefs,
+            get<GameDataManager>().activityTimeDefs,
+            get<RoleCountSystem>(),
+            get<BitFlagSystem>(),
+            get<InventorySystem>(),
+            get<ResponseSender>(),
+            get<GameDataManager>().itemDefs,
+        )
+    }
+    single {
         BattleManager(get(), get<GameDataManager>().skillDefs, get<GameDataManager>().npcDefs, get(), get(), get<PetSystem>(), get<MoneySystem>(), get<StatSystem>(), get(), get<GameDataManager>().npcDropTable, get<SkillSystem>(), get<MacroBoxSystem>(), get<GameDataManager>().itemDefs, get<SkillRepository>(), get<CharacterRepository>(), get<GameDataManager>().npcUpgradeDefs, get<GameDataManager>().sceneSetDefs).also { bm ->
             // 戰鬥結束回呼 → EveFlowController 恢復事件流程
             bm.onBattleEndCallback = { session, playerId, playerWin ->
@@ -288,7 +301,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             }
         }
     }
-    single { LoginService(get(), get(), get(), get(), get(), get<PointSystem>(), get(), get(), get<EveEventStateMachine>(), get(), get(), get(), get(), get(), get(), get<SkillRepository>(), get<RoleCountSystem>(), get<FlyPointSystem>(), get<MailSystem>(), get<FriendSystem>(), get<GameDataManager>().eveData, get<GameDataManager>().itemDefs) }
+    single { LoginService(get(), get(), get(), get(), get(), get<PointSystem>(), get(), get(), get<EveEventStateMachine>(), get(), get(), get(), get(), get(), get(), get<SkillRepository>(), get<RoleCountSystem>(), get<FlyPointSystem>(), get<MailSystem>(), get<FriendSystem>(), get<GameDataManager>().eveData, get<GameDataManager>().itemDefs, get<JiugonggeSystem>()) }
 
     // Eve 事件系統（拆分後的 9 個子服務）
     single {
@@ -375,4 +388,5 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { UISellHandler(get(), get(), get(), get(), get(), get(), get(), get(), get(), get<SkillRepository>(), get<PlayerStateManager>(), get<SkillSystem>()) }
     single { PetUpgradeHandler(get(), get()) }
     single { PetRebornHandler(get(), get(), get()) }
+    single { JiugonggeHandler(get()) }
 }

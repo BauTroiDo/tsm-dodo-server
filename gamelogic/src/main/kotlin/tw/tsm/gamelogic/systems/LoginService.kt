@@ -44,7 +44,8 @@ class LoginService(
     private val mailSystem: MailSystem,
     private val friendSystem: FriendSystem,
     private val eveData: Map<Int, SceneEveData> = emptyMap(),
-    private val itemDefs: Map<Int, ItemDef> = emptyMap()
+    private val itemDefs: Map<Int, ItemDef> = emptyMap(),
+    private val jiugonggeSystem: JiugonggeSystem? = null
 ) {
 
     /**
@@ -240,6 +241,10 @@ class LoginService(
         val bitFlagIds = bitFlagSystem.getSetFlagIds(record.id)
         val packedFlags = bitFlagSystem.packFlags(bitFlagIds)
         responseSender.sendInitBitFlags(session, packedFlags)
+
+        // S:077 runtime activity time + S:091-001 九宮格 daily board.
+        // UIJiugongge opens later from the Hằng ngày button and expects this state to exist.
+        jiugonggeSystem?.sendDailyInit(session)
 
         // S:023-118 Dữ liệu bùa truyền tống ghi nhớ (Điểm nhớ)
         val flyPoints = flyPointSystem.loadAll(record.id)

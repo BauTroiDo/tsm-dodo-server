@@ -119,6 +119,18 @@ class GameDataManager(
     var uiSellFormulaDefs: Map<Int, UISellFormulaDef> = emptyMap()
         private set
 
+    /** 九宮格盤面定義（key = grid ID） */
+    var jiugonggeInfoDefs: Map<Int, JiugonggeInfoDef> = emptyMap()
+        private set
+
+    /** 九宮格任務定義（key = mission ID） */
+    var jiugonggeMissionDefs: Map<Int, JiugonggeMissionDef> = emptyMap()
+        private set
+
+    /** 活動時間定義（key = activity ID） */
+    var activityTimeDefs: Map<Int, ActivityTimeDef> = emptyMap()
+        private set
+
     /**
      * 初始化：依序載入各 .dat 檔案
      *
@@ -127,6 +139,10 @@ class GameDataManager(
      */
     fun initialize() {
         val dataDir = basePath.resolve("Data")
+        val dataIosDir = listOf(
+            basePath.resolve("Data-ios"),
+            Path.of("File.dat", "Data-ios"),
+        ).firstOrNull { Files.isDirectory(it) } ?: basePath.resolve("Data-ios")
         if (!Files.isDirectory(dataDir)) {
             logger.warn { "資料目錄不存在：$dataDir — 跳過 .dat 載入" }
             return
@@ -255,6 +271,22 @@ class GameDataManager(
         loadFile(dataDir, "AchievementData_C.dat") { bytes ->
             achievementDefs = AchievementDatLoader.load(bytes)
             logger.info { "Achievement 載入完成：${achievementDefs.size} 筆" }
+        }
+
+        // ActivityTime — client UIActivity/UIJiugongge relies on serverStartTime/serverCloseTime.
+        loadFile(dataDir, "ActivityTime_C.dat") { bytes ->
+            activityTimeDefs = JiugonggeDatLoader.loadActivityTimes(bytes)
+            logger.info { "ActivityTime 載入完成：${activityTimeDefs.size} 筆" }
+        }
+
+        // Jiugongge static data. DVT DataManager.lua explicitly reads the IOS_ files.
+        loadFile(dataIosDir, "IOS_JiugonggeInfo_C.dat") { bytes ->
+            jiugonggeInfoDefs = JiugonggeDatLoader.loadInfo(bytes)
+            logger.info { "JiugonggeInfo 載入完成：${jiugonggeInfoDefs.size} 筆" }
+        }
+        loadFile(dataIosDir, "IOS_JiugonggeMission_C.dat") { bytes ->
+            jiugonggeMissionDefs = JiugonggeDatLoader.loadMissions(bytes)
+            logger.info { "JiugonggeMission 載入完成：${jiugonggeMissionDefs.size} 筆" }
         }
 
         // Dispatch（派遣任務定義）
