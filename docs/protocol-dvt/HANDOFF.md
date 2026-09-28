@@ -220,6 +220,29 @@ Bằng chứng:
 
 Runtime **PENDING** cho `9cc236b`. Existing pets đã tạo dưới bug cũ có thể giữ level DB cũ; test tốt nhất là đăng nhập lại để clear stale state và bắt **một pet mới** sau patch.
 
+#### H. Duplicate capture + persistence hardening — chờ runtime
+Commit:
+- `c9c44f3 Harden DVT capture and persistence`
+
+Duplicate capture:
+- DVT `FightRoleController.DoClick` chặn cùng `npcId` nếu đang ở `Role.GetFollowNpc()` hoặc `Inn.HaveNpc()`.
+- `Inn.HaveNpc()` kiểm tra inn + warriorRepository; **không kiểm tra Cart.followNpcs**.
+- PC `TSCharacter.addPet()` cũng chỉ kiểm tra mảng pet mang theo, cart là vùng riêng.
+- Kotlin cũ chặn cả cart nên nghiêm hơn Lua DVT.
+- `c9c44f3`: manual capture cho phép bắt lại cùng loại khi bản cũ đã cất trong cart; vẫn chặn nếu cùng loại còn mang theo hoặc nằm trong inn/warehouse. Không cho phép 2 bản cùng npcId cùng tồn tại trong carried roster, đúng client DVT.
+
+Persistence:
+- Production log xác nhận AutoSaveService thực sự chạy nhưng chu kỳ cũ là **3 phút** (ví dụ 04:47:48 → 04:50:48).
+- Đây là write-back cache; MySQL không tự mất record. Nếu reset/kill server trước autosave/disconnect thì runtime state gần nhất chưa kịp ghi DB có thể mất.
+- `c9c44f3`: autosave giảm còn **30 giây**; graceful shutdown gọi flush đồng bộ trước khi đóng socket; battle end checkpoint ghi ngay character EXP/level/stats + bag + gold + pet sau mỗi trận.
+- Full `./gradlew test build`: PASS.
+
+Runtime cần test:
+1. cất pet loại A vào cart, để carried còn slot trống;
+2. bắt lại cùng loại A — phải bắt được;
+3. đánh 1 trận nhận EXP/vàng/drop, restart server ngay;
+4. login lại xác nhận EXP/vàng/drop/pet vẫn còn.
+
 ## 6. EXP semantics hiện tại
 
 DVT dùng **cumulative lifetime EXP**, không phải remainder EXP.
