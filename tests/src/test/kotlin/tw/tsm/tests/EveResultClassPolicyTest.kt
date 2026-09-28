@@ -47,6 +47,8 @@ class EveResultClassPolicyTest : DescribeSpec({
             EveResultClassPolicy.missionOperation(2, 2)?.kind shouldBe EveMissionResultKind.DEC_STEP
             EveResultClassPolicy.missionOperation(2, 2)?.value shouldBe 2
             EveResultClassPolicy.missionOperation(3, 0)?.kind shouldBe EveMissionResultKind.COMPLETE_MISSION
+            // DVT MarkManager.AddMissionStep only changes mission progress; it must never be treated as completion.
+            (EveResultClassPolicy.missionOperation(1, 1)?.kind == EveMissionResultKind.COMPLETE_MISSION) shouldBe false
         }
 
         it("resultClass=2 pStyle=4 使用 resultValue 作為直接旗標 bitId") {
