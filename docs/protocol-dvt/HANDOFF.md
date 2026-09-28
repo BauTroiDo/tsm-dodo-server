@@ -278,6 +278,33 @@ Runtime cần xác nhận sau `764204e`:
 3. không còn pet slot 0/ẩn;
 4. sau khi thả/cất bớt để carried <4, bắt pet phải hoạt động bình thường.
 
+#### J. Legacy pet level seed — chờ runtime
+Commit:
+- `4bbb782 Migrate legacy DVT pet seed levels`
+
+Sau khi S15-8 được sửa, roster hiện đúng nhưng các pet cũ vẫn mang level sai do đã được tạo trước `9cc236b`: code cũ lấy `NpcDef.level` (cấp quái ngoài map) làm level khởi đầu.
+
+Bản `4bbb782` thêm cột DB `character_pets.seed_fixed`:
+- record cũ được MySQL/Exposed thêm cột với mặc định false;
+- pet mới tạo bằng code hiện tại có `seedFixed=true`;
+- khi login, mỗi record cũ chỉ migrate **một lần**;
+- trừ phần cumulative EXP seed sai ở spawn level, cộng lại seed LV1 chuẩn DVT;
+- giữ nguyên EXP thực tế người chơi đã kiếm sau lúc bắt;
+- tính lại level từ EXP sau sửa;
+- tái dựng skill point còn lại theo số level đã thực tăng và skill level đã tiêu;
+- HP/SP chỉ clamp về max mới, không xóa trang bị/pill/progress khác.
+
+Với snapshot DB hiện tại của `CaoYếnDao` trước migration:
+- Thủy Đậu Yêu: spawn LV3, current LV18 / EXP24670 → corrected EXP24629, vẫn LV18 (đã train thật nhiều);
+- Sĩ Binh: spawn LV6, EXP405 đúng bằng seed sai → corrected EXP6, **LV1**;
+- Binh Đao Lẻ: spawn LV17, EXP22199 → giữ 4080 EXP kiếm thật → corrected EXP4086, **LV11**;
+- Binh Tinh Giáp: spawn LV18, EXP22672 → giữ 180 EXP kiếm thật → corrected EXP186, **LV4**.
+
+Không ép tất cả pet cũ về LV1 vì sẽ làm mất EXP người chơi đã thực kiếm. Pet mới bắt sau patch luôn bắt đầu LV1.
+
+Full `./gradlew test build`: PASS.
+Runtime `4bbb782`: **PENDING**.
+
 
 ## 6. EXP semantics hiện tại
 
