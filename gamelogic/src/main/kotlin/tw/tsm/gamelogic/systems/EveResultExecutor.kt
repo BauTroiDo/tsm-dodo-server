@@ -44,6 +44,9 @@ class EveResultExecutor(
     private val bitFlagSystem: BitFlagSystem,
     private val roleCountSystem: RoleCountSystem
 ) {
+    private companion object {
+        val FUNCTION_UNLOCK_MARKER_MISSION_IDS = setOf(11804, 12283, 12285, 12396)
+    }
 
     /**
      * Thực thi hiệu ứng phía máy chủ dựa theo resultClass
@@ -325,8 +328,26 @@ class EveResultExecutor(
                 val prevStep = questSystem.addMissionStep(charId, missionId, delta)
                 responseSender.sendAddMissionStep(session, missionId, delta)
                 if (prevStep == 0) {
-                    // DVT AddMissionStep only starts/advances a mission. Mark_C bitId is completion state.
-                    // Completion flags are set by DEC_STEP completion, COMPLETE_MISSION, or explicit SET_FLAG.
+                    // DVT AddMissionStep normally only starts/advances a mission. These four
+                    // UiOpen marker missions are special: Eve.emg only emits ADD_STEP +1 for
+                    // them and IOS_MarkStep_C.dat has no progression records. Their Mark_C
+                    // completion bit is therefore the function-unlock marker.
+                    if (missionId in FUNCTION_UNLOCK_MARKER_MISSION_IDS) {
+                        val bitId = markDefs[missionId]?.bitId ?: 0
+                        if (bitId > 0) {
+                            questSystem.setFlag(charId, bitId, 1)
+                            responseSender.sendSetMissionFlags(
+                                session, listOf(MissionFlagRecord(bitId, 1))
+                            )
+                            logger.info {
+                                "${session.characterName} Mở khóa chức năng: markerMission=$missionId bitId=$bitId"
+                            }
+                        } else {
+                            logger.warn {
+                                "${session.characterName} Marker mission=$missionId không có MarkDef/bitId hợp lệ"
+                            }
+                        }
+                    }
 
                     // Hoàn thành hướng dẫn thú cưỡi → Tự động mở khóa ngựa trắng
                     if (missionId == MountConstants.MOUNT_TUTORIAL_MISSION_ID) {
