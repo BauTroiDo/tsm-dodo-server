@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test
 import tw.tsm.app.response.LoginResponseSender
 import tw.tsm.app.response.SceneResponseSender
 import tw.tsm.domain.interfaces.SessionSender
+import tw.tsm.domain.interfaces.StatCalculator
+import tw.tsm.domain.interfaces.repositories.CharacterRecord
 import tw.tsm.domain.valueobjects.PlayerDataDto
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -85,6 +87,41 @@ class DvtLoginWireTest {
             }
             assertFalse(r.hasRemaining())
         }
+    }
+
+    @Test fun `player data DTO carries persisted cumulative EXP into login packet`() {
+        val record = CharacterRecord(
+            id = 31,
+            accountId = 1,
+            name = "CaoYenDao",
+            level = 21,
+            exp = 123456L
+        )
+        val stat = object : StatCalculator {
+            override fun calculateMaxHp(
+                level: Int, hpx: Int, equipMaxHp: Int, extraHp: Int,
+                turn: Int, career: Int, turn3Lv: Int
+            ): Long = 131L
+
+            override fun calculateMaxSp(
+                level: Int, spx: Int, equipMaxSp: Int, extraSp: Int,
+                turn: Int, career: Int, turn3Lv: Int
+            ): Int = 61
+        }
+
+        val dto = PlayerDataDto.fromCharacterRecord(record, stat)
+        assertEquals(123456, dto.exp)
+
+        val session = Capture()
+        LoginResponseSender().sendPlayerData(session, dto)
+        val r = session.reader()
+        r.position(3) // mainKind, subKind, compress
+        r.get()       // element
+        r.int         // hp
+        r.short       // sp
+        repeat(6) { r.short } // int/atk/def/agi/hpx/spx
+        assertEquals(21, r.get().toInt() and 0xFF)
+        assertEquals(123456, r.int)
     }
 
     @Test fun `scene change includes outfit count before title`() {

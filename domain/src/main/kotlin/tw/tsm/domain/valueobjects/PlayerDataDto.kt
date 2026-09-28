@@ -124,6 +124,10 @@ data class PlayerDataDto(
                 hpx = hpx,
                 spx = spx,
                 level = record.level,
+                // DVT Role.ReceivePlayerData đọc EXP trực tiếp từ S:005-003.
+                // Nếu bỏ trường này, PlayerDataDto mặc định exp=0 và thanh EXP luôn
+                // trở về 0% sau mỗi lần đăng nhập dù DB đã lưu đúng EXP.
+                exp = record.exp.coerceIn(0L, Int.MAX_VALUE.toLong()).toInt(),
                 skillPoint = record.skillPoint,
                 attrPoint = record.attrPoint,
                 maxHp = maxHp,
