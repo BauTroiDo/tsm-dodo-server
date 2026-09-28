@@ -21,29 +21,40 @@ object BattleRewardCalc {
      * @param expMultiplier Hệ số nhân kinh nghiệm (Bùa Phúc Thần, v.v.)
      * @return Kết quả phần thưởng
      */
+    /**
+     * Pure EXP path used by both player and active follow NPC.
+     * Keeping this separate prevents pet EXP calculation from rolling gold/drop RNG a second time.
+     */
+    fun calculateExp(
+        defeatedNpcs: List<Pair<Int, NpcDef>>,
+        actorLevel: Int,
+        expMultiplier: Double = 1.0
+    ): Long {
+        var totalExp = 0L
+        for ((_, npc) in defeatedNpcs) {
+            val levelDiff = npc.level - actorLevel
+            val levelModifier = when {
+                levelDiff >= 5 -> 1.2
+                levelDiff >= -5 -> 1.0
+                levelDiff >= -10 -> 0.7
+                else -> 0.3
+            }
+            totalExp += max(1L, (npc.level * 10L * levelModifier * expMultiplier).toLong())
+        }
+        return totalExp
+    }
+
     fun calculate(
         defeatedNpcs: List<Pair<Int, NpcDef>>,
         playerLevel: Int,
         npcDropTable: Map<Int, List<NpcDropDef>> = emptyMap(),
         expMultiplier: Double = 1.0
     ): BattleReward {
-        var totalExp = 0L
+        val totalExp = calculateExp(defeatedNpcs, playerLevel, expMultiplier)
         var totalGold = 0
         val drops = mutableListOf<DropItem>()
 
         for ((npcId, npc) in defeatedNpcs) {
-            // Điểm kinh nghiệm = Cấp độ quái vật × Hệ số cơ bản × Điều chỉnh chênh lệch cấp độ
-            val levelDiff = npc.level - playerLevel
-            val levelModifier = when {
-                levelDiff >= 5 -> 1.2    // Quái vật cao hơn 5 cấp trở lên, có thưởng thêm
-                levelDiff >= -5 -> 1.0   // Chênh lệch cấp độ trong khoảng ±5, bình thường
-                levelDiff >= -10 -> 0.7  // Người chơi cao hơn 5~10 cấp, bị giảm
-                else -> 0.3              // Người chơi cao hơn 10 cấp trở lên, bị giảm mạnh
-            }
-
-            val baseExp = max(1L, (npc.level * 10L * levelModifier * expMultiplier).toLong())
-            totalExp += baseExp
-
             // Tiền vàng = Cấp độ quái vật × 2~5
             totalGold += npc.level * Random.nextInt(2, 6)
 

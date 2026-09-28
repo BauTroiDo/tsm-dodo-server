@@ -846,6 +846,41 @@ class BattleManager(
                     responseSender.sendSystemMessage(session, "Nhận được ${reward.exp} điểm kinh nghiệm.")
                 }
 
+                // Võ tướng đang xuất chiến và còn sống nhận EXP riêng theo cấp của chính nó.
+                // DVT UIStatus/NpcData đọc EAttribute.Exp dạng cumulative lifetime EXP.
+                val activePetFighter = battle.getAllFighters().firstOrNull {
+                    it.kind == EHuman.FOLLOW_NPC && it.masterId == playerId
+                }
+                if (activePetFighter != null && activePetFighter.isAlive) {
+                    val petEntry = petSystem.getFollowPets(charId).entries
+                        .firstOrNull { it.value.npcId == activePetFighter.npcId }
+                    if (petEntry != null) {
+                        val petExp = BattleRewardCalc.calculateExp(
+                            battle.involvedNpcDefs,
+                            petEntry.value.level
+                        )
+                        val gain = petSystem.gainBattleExp(charId, petEntry.key, petExp)
+                        if (gain != null) {
+                            responseSender.sendFollowNpcAttribute(
+                                session, gain.slotIndex, EAttribute.EXP,
+                                gain.after.exp.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+                            )
+                            if (gain.levelGained > 0) {
+                                responseSender.sendFollowNpcAttribute(
+                                    session, gain.slotIndex, EAttribute.LV, gain.after.level
+                                )
+                                responseSender.sendFollowNpcAttribute(
+                                    session, gain.slotIndex, EAttribute.SKILL_POINT, gain.after.skillPoint
+                                )
+                            }
+                            logger.info {
+                                "戰鬥 ${battle.battleId}: 武將 npcId=${gain.after.npcId} " +
+                                    "獲得 exp=$petExp lv=${gain.before.level}->${gain.after.level}"
+                            }
+                        }
+                    }
+                }
+
                 // 金錢發放
                 if (reward.gold > 0) {
                     val goldCharId = session.roleId.toLong()
@@ -921,6 +956,10 @@ class BattleManager(
                     )
                 }
             }
+
+            // EXP/HP/SP của võ tướng vừa thay đổi trong battle: persist ngay sau kết toán
+            // để restart ngay sau trận cũng không làm mất tiến độ.
+            petSystem.save(session.roleId.toLong())
 
             // S:011-000 結束戰鬥
             responseSender.sendBattleEnd(session, playerId, 0)

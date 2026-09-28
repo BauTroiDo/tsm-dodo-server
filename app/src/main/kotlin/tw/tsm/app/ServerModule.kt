@@ -252,7 +252,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { SkillSystem(get(), get(), get<GameDataManager>().skillDefs) }
     single { PetSkillSystem(get(), get<GameDataManager>().npcDefs, get<GameDataManager>().skillDefs) }
     single { PartySystem() }
-    single { PetSystem(get(), get<StatSystem>()) }
+    single { PetSystem(get(), get<StatSystem>(), get<GameDataManager>().npcDefs) }
     single {
         MountSystem(
             get(), get<GameDataManager>().mountDefs, get<GameDataManager>().mountGrowDefs,

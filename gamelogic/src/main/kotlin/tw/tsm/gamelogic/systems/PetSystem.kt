@@ -2,7 +2,6 @@ package tw.tsm.gamelogic.systems
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import tw.tsm.domain.data.NpcDef
-import tw.tsm.domain.interfaces.StatCalculator
 import tw.tsm.domain.interfaces.repositories.PetRepository
 import tw.tsm.domain.valueobjects.FollowNpcData
 import tw.tsm.domain.valueobjects.ThingData
@@ -18,10 +17,13 @@ private val logger = KotlinLogging.logger {}
  */
 class PetSystem(
     private val petRepository: PetRepository,
-    private val statCalculator: StatCalculator
+    private val statCalculator: StatSystem,
+    private val npcDefs: Map<Int, NpcDef> = emptyMap()
 ) {
 
     companion object {
+        /** Cấp tối đa của võ tướng trong UIStatus/Role. */
+        const val PET_MAX_LEVEL = 200
         /** Số lượng võ tướng mang theo tối đa */
         const val MAX_FOLLOW = 4
         /** Sức chứa xe ngựa tối đa */
@@ -67,7 +69,23 @@ class PetSystem(
     suspend fun load(characterId: Long): PetCache {
         val pets = petRepository.findByCharacterId(characterId)
         val pc = PetCache()
-        for (pet in pets) {
+        for (loaded in pets) {
+            // DVT UIStatus computes pet EXP as cumulative total:
+            // exp - Calc.GetNeedTExp(level, NpcData:GetTurn()).
+            // Legacy rows from the old server stored 0/remainder EXP, which pins the bar at 0%.
+            val turn = petExpTurn(loaded)
+            val floorExp = statCalculator.calculateNeedTotalExp(loaded.level.coerceAtLeast(1), turn)
+            val pet = if (loaded.exp < floorExp) {
+                pc.dirty = true
+                logger.info {
+                    "Chuẩn hóa EXP võ tướng: charId=$characterId npcId=${loaded.npcId} " +
+                        "lv=${loaded.level} exp=${loaded.exp} -> $floorExp"
+                }
+                loaded.copy(exp = floorExp)
+            } else {
+                loaded
+            }
+
             when (pet.storageType) {
                 STORAGE_FOLLOW -> pc.follow[pet.slotIndex] = pet
                 STORAGE_CART -> pc.cart[pet.slotIndex] = pet
@@ -90,6 +108,63 @@ class PetSystem(
      */
     fun getFollowPets(characterId: Long): Map<Int, FollowNpcData> =
         cache[characterId]?.follow ?: emptyMap()
+
+    /** DVT NpcData:GetTurn(): static NPC turn==2 uses EXP curve turn=1, everything else uses turn=0. */
+    private fun petExpTurn(pet: FollowNpcData): Int {
+        val rawTurn = npcDefs[pet.npcId]?.turn ?: pet.turnKind
+        return if (rawTurn == 2) 1 else 0
+    }
+
+    data class PetExpGain(
+        val slotIndex: Int,
+        val before: FollowNpcData,
+        val after: FollowNpcData,
+    ) {
+        val levelGained: Int get() = after.level - before.level
+    }
+
+    /**
+     * Add battle EXP to the active growable follow NPC using DVT cumulative EXP semantics.
+     *
+     * UIStatus.lua:
+     *   slider = Exp - Calc.GetNeedTExp(level, turn)
+     *   max    = Calc.GetUpExp(level + 1, turn)
+     */
+    fun gainBattleExp(characterId: Long, followSlot: Int, amount: Long): PetExpGain? {
+        if (amount <= 0) return null
+        val pc = cache[characterId] ?: return null
+        synchronized(pc) {
+            val before = pc.follow[followSlot] ?: return null
+            if (before.canGrow != 1 || before.level >= PET_MAX_LEVEL) return null
+
+            val turn = petExpTurn(before)
+            var level = before.level.coerceAtLeast(1)
+            val floorExp = statCalculator.calculateNeedTotalExp(level, turn)
+            var exp = maxOf(before.exp, floorExp)
+            exp = (exp + amount).coerceAtMost(Int.MAX_VALUE.toLong())
+
+            var gainedLevels = 0
+            while (level < PET_MAX_LEVEL) {
+                val nextFloor = statCalculator.calculateNeedTotalExp(level + 1, turn)
+                if (exp < nextFloor) break
+                level++
+                gainedLevels++
+            }
+
+            val after = before.copy(
+                level = level,
+                exp = exp,
+                skillPoint = before.skillPoint + gainedLevels,
+            )
+            pc.follow[followSlot] = after
+            pc.dirty = true
+            logger.info {
+                "EXP võ tướng: charId=$characterId slot=$followSlot npcId=${before.npcId} " +
+                    "exp=${before.exp}+$amount->$exp lv=${before.level}->$level"
+            }
+            return PetExpGain(followSlot, before, after)
+        }
+    }
 
     /**
      * Lấy danh sách võ tướng xe ngựa
@@ -133,6 +208,11 @@ class PetSystem(
                 storageType = STORAGE_FOLLOW,
                 name = npcDef.name,
                 level = npcDef.level,
+                // Role.FollowNpcAppear/UIStatus use cumulative EXP, never a zero/remainder gauge.
+                exp = statCalculator.calculateNeedTotalExp(
+                    npcDef.level.coerceAtLeast(1),
+                    if (npcDef.turn == 2) 1 else 0
+                ),
                 hp = npcDef.hpBase.toLong(),
                 sp = npcDef.spBase,
                 atk = npcDef.atk,
