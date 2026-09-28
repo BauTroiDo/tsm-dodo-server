@@ -75,6 +75,8 @@ object CharacterPets : Table("character_pets") {
     val surplus = integer("surplus").default(0)
     /** 升級時間戳 */
     val lvUpTime = double("lv_up_time").default(0.0)
+    /** Đã migrate seed pet legacy sang LV1 chuẩn DVT. Record cũ mặc định false. */
+    val seedFixed = bool("seed_fixed").default(false)
 
     override val primaryKey = PrimaryKey(id)
 }

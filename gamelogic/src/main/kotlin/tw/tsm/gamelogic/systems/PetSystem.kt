@@ -72,20 +72,28 @@ class PetSystem(
         val pets = petRepository.findByCharacterId(characterId)
         val pc = PetCache()
         for (loaded in pets) {
-            // DVT UIStatus computes pet EXP as cumulative total:
-            // exp - Calc.GetNeedTExp(level, NpcData:GetTurn()).
-            // Legacy rows from the old server stored 0/remainder EXP, which pins the bar at 0%.
-            val turn = petExpTurn(loaded)
-            val floorExp = statCalculator.calculateNeedTotalExp(loaded.level.coerceAtLeast(1), turn)
-            var pet = if (loaded.exp < floorExp) {
+            // Các record tạo trước bản sửa lifecycle đã lấy NpcDef.level (cấp quái ngoài map)
+            // làm cấp khởi đầu. Migrate đúng một lần về seed LV1 nhưng giữ nguyên lượng EXP
+            // người chơi thực sự kiếm được sau lúc bắt.
+            var pet = if (!loaded.seedFixed) {
                 pc.dirty = true
-                logger.info {
-                    "Chuẩn hóa EXP võ tướng: charId=$characterId npcId=${loaded.npcId} " +
-                        "lv=${loaded.level} exp=${loaded.exp} -> $floorExp"
-                }
-                loaded.copy(exp = floorExp)
+                migrateLegacySeed(characterId, loaded)
             } else {
                 loaded
+            }
+
+            // DVT UIStatus computes pet EXP as cumulative total:
+            // exp - Calc.GetNeedTExp(level, NpcData:GetTurn()).
+            // Legacy remainder EXP khác vẫn được nâng lên floor của cấp hiện tại.
+            val turn = petExpTurn(pet)
+            val floorExp = statCalculator.calculateNeedTotalExp(pet.level.coerceAtLeast(1), turn)
+            if (pet.exp < floorExp) {
+                pc.dirty = true
+                logger.info {
+                    "Chuẩn hóa EXP võ tướng: charId=$characterId npcId=${pet.npcId} " +
+                        "lv=${pet.level} exp=${pet.exp} -> $floorExp"
+                }
+                pet = pet.copy(exp = floorExp)
             }
 
             // DVT client calculates the pet gauges from Calc.GetMaxHp/GetMaxSp.
@@ -130,6 +138,70 @@ class PetSystem(
     private fun petExpTurn(pet: FollowNpcData): Int {
         val rawTurn = npcDefs[pet.npcId]?.turn ?: pet.turnKind
         return if (rawTurn == 2) 1 else 0
+    }
+
+    /**
+     * One-shot migration cho pet được tạo bởi code cũ: code cũ seed pet ở NpcDef.level
+     * và cộng sẵn cumulative EXP tới cấp đó. Chuẩn DVT tạo FollowNpc ở LV1.
+     *
+     * Ta trừ phần EXP seed sai rồi cộng lại seed LV1, nhờ vậy không làm mất EXP
+     * người chơi thực sự kiếm được sau khi bắt. Marker seedFixed ngăn chạy lần hai.
+     */
+    private fun migrateLegacySeed(characterId: Long, loaded: FollowNpcData): FollowNpcData {
+        val def = npcDefs[loaded.npcId] ?: return loaded.copy(seedFixed = true)
+        val spawnLevel = def.level.coerceAtLeast(1)
+
+        // Pet đã ở dưới cấp spawn là dữ liệu kiểu mới / đã được sửa; chỉ đánh dấu.
+        if (loaded.level < spawnLevel || loaded.level <= 1) {
+            return loaded.copy(seedFixed = true)
+        }
+
+        val turn = petExpTurn(loaded)
+        val legacySeedExp = statCalculator.calculateNeedTotalExp(spawnLevel, turn)
+        val correctSeedExp = statCalculator.calculateNeedTotalExp(1, turn)
+        val earnedExp = if (loaded.exp >= legacySeedExp) {
+            loaded.exp - legacySeedExp
+        } else {
+            // Một số row rất cũ từng lưu EXP remainder; coi phần đang có là EXP thực kiếm.
+            loaded.exp.coerceAtLeast(0L)
+        }
+        val correctedExp = (correctSeedExp + earnedExp).coerceAtMost(Int.MAX_VALUE.toLong())
+
+        var correctedLevel = 1
+        while (correctedLevel < PET_MAX_LEVEL &&
+            correctedExp >= statCalculator.calculateNeedTotalExp(correctedLevel + 1, turn)
+        ) {
+            correctedLevel++
+        }
+
+        // PC reference: mỗi lần lên cấp +1 skill point. Giữ các điểm đã tiêu qua skill level.
+        val baseSkill1 = if (def.skills.getOrElse(0) { 0 } != 0) 1 else 0
+        val baseSkill2 = if (def.skills.getOrElse(1) { 0 } != 0) 1 else 0
+        val baseSkill3 = if (def.skills.getOrElse(2) { 0 } != 0) 1 else 0
+        val spentSkillPoints =
+            (loaded.skill1Lv - baseSkill1).coerceAtLeast(0) +
+                (loaded.skill2Lv - baseSkill2).coerceAtLeast(0) +
+                (loaded.skill3Lv - baseSkill3).coerceAtLeast(0)
+        val correctedSkillPoint = (correctedLevel - 1 - spentSkillPoints).coerceAtLeast(0)
+
+        var corrected = loaded.copy(
+            level = correctedLevel,
+            exp = correctedExp,
+            skillPoint = correctedSkillPoint,
+            seedFixed = true,
+        )
+        val (maxHp, maxSp) = petMaxHpSp(corrected)
+        corrected = corrected.copy(
+            hp = if (maxHp > 0) corrected.hp.coerceIn(0L, maxHp) else corrected.hp,
+            sp = if (maxSp > 0) corrected.sp.coerceIn(0, maxSp) else corrected.sp,
+        )
+
+        logger.info {
+            "Migrate seed pet legacy: charId=$characterId npcId=${loaded.npcId} " +
+                "spawnLv=$spawnLevel lv=${loaded.level}->$correctedLevel " +
+                "exp=${loaded.exp}->$correctedExp earned=$earnedExp"
+        }
+        return corrected
     }
 
     /**

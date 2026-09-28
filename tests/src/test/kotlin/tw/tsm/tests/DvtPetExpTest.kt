@@ -15,7 +15,8 @@ class DvtPetExpTest {
     private val repo = mockk<PetRepository>(relaxed = true)
     private val stat = mockk<StatSystem>(relaxed = true) {
         every { calculateNeedTotalExp(any(), any()) } answers {
-            firstArg<Int>().toLong() * 100L
+            val level = firstArg<Int>()
+            if (level == 1) 6L else level.toLong() * 100L
         }
         every { calculateUpExp(1, 0) } returns 6L
         every { calculateMaxHp(any(), any(), any(), any(), any(), any(), any()) } answers {
@@ -37,15 +38,34 @@ class DvtPetExpTest {
     }
     private val pets = PetSystem(repo, stat, mapOf(100 to npc))
 
-    @Test fun `legacy zero pet exp migrates to cumulative level floor on load`() = runTest {
+    @Test fun `legacy spawn-level seed migrates back to DVT level one once`() = runTest {
         coEvery { repo.findByCharacterId(42) } returns listOf(
-            FollowNpcData(slotIndex = 1, npcId = 100, level = 21, exp = 0)
+            FollowNpcData(slotIndex = 1, npcId = 100, level = 21, exp = 0, seedFixed = false)
         )
 
         val cache = pets.load(42)
+        val migrated = cache.follow.getValue(1)
 
-        assertEquals(2100L, cache.follow.getValue(1).exp)
+        assertEquals(1, migrated.level)
+        assertEquals(6L, migrated.exp)
+        assertEquals(0, migrated.skillPoint)
+        assertTrue(migrated.seedFixed)
         assertTrue(cache.dirty)
+    }
+
+    @Test fun `legacy pet migration preserves exp actually earned after capture`() = runTest {
+        coEvery { repo.findByCharacterId(42) } returns listOf(
+            FollowNpcData(slotIndex = 1, npcId = 100, level = 21, exp = 2500, seedFixed = false)
+        )
+
+        val migrated = pets.load(42).follow.getValue(1)
+
+        // Old seed was 2100 at spawn LV21; 400 earned EXP survives.
+        // Correct LV1 seed is 6 => corrected cumulative EXP 406 => LV4 in this fixture.
+        assertEquals(406L, migrated.exp)
+        assertEquals(4, migrated.level)
+        assertEquals(3, migrated.skillPoint)
+        assertTrue(migrated.seedFixed)
     }
 
     @Test fun `battle exp advances pet cumulative gauge and level threshold`() = runTest {

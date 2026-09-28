@@ -13,7 +13,7 @@ data class FollowNpcData(
     val npcId: Int,
     /** 儲存類型：1=隨身, 2=馬車, 3=客棧, 4=武將倉庫 */
     val storageType: Int = 1,
-    /** 名稱（Big5） */
+    /** Tên võ tướng; S:015-008 của client TSNPCVN đọc bằng UTF-16LE. */
     val name: String = "",
     /** 等級 */
     val level: Int = 1,
@@ -71,6 +71,13 @@ data class FollowNpcData(
     val surplus: Int = 0,
     /** 升級時間戳（OLE Date） */
     val lvUpTime: Double = 0.0,
+    /**
+     * Marker dữ liệu pet đã dùng seed LV1 đúng chuẩn DVT.
+     *
+     * Cột này chỉ dùng để migrate dữ liệu legacy được tạo trước bản sửa pet lifecycle.
+     * Pet mới mặc định true; record cũ sau khi thêm cột DB sẽ mặc định false.
+     */
+    val seedFixed: Boolean = true,
     /**
      * 武將裝備（fitType 1帽/2衣/3武器/4護脕/5鞋/6特殊 → ThingData）
      *
