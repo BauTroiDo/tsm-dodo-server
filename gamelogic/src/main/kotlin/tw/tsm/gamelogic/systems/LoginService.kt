@@ -325,6 +325,11 @@ class LoginService(
         jiugonggeSystem?.refreshDailyActivityTime(session)
     }
 
+    /** Re-push S:091-001 after the activity clock is valid so UIJiugongge can re-arm its timer. */
+    suspend fun refreshDailySnapshot(session: GameSession) {
+        jiugonggeSystem?.sendDailySnapshot(session)
+    }
+
     companion object {
         /**
          * Lấy thời gian máy chủ theo định dạng OLE Automation Date

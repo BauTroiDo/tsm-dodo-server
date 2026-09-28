@@ -225,7 +225,11 @@ class LoginHandler(
      * by first requesting the current server clock. protocal.lua[1][16] then
      * feeds this value into CGTimer.SetServerTime().
      */
-    private fun handleServerTimeQuery(session: GameSession) {
+    private suspend fun handleServerTimeQuery(session: GameSession) {
+        // UIJiugongge.OnOpen() sends C:001-016 and immediately starts its timer.
+        // Put S:077 on the wire first, then update CGTimer with S:001-016, and finally
+        // re-push S:091-001 so an UI that already InvaildSet() can register UpdateTime again.
+        loginService.refreshDailyActivityTime(session)
         session.send(
             PacketWriter()
                 .writeByte(Opcodes.LOGIN)
@@ -234,9 +238,7 @@ class LoginHandler(
                 .writeDoubleLE(LoginService.currentServerTime())
                 .toByteArray()
         )
-        // UIJiugongge reads its countdown from S:077 activityTimes.
-        // Refresh it at UI-open time so it cannot stay at the default "activity ended" state.
-        loginService.refreshDailyActivityTime(session)
+        loginService.refreshDailySnapshot(session)
     }
 
     /**

@@ -47,6 +47,16 @@ class JiugonggeSystem(
     }
 
     suspend fun sendDailyInit(session: GameSession) {
+        refreshDailyActivityTime(session)
+        sendDailySnapshot(session)
+    }
+
+    /**
+     * Push lại S:091-001. UIJiugongge.SetJiugongge() sẽ gọi ChangeGrid khi UI đang mở,
+     * nhờ đó đăng ký lại UpdateTime nếu lần render đầu đã tự InvaildSet trước khi
+     * phản hồi C:001-016 từ server quay về.
+     */
+    suspend fun sendDailySnapshot(session: GameSession) {
         val info = dailyInfo() ?: run {
             jiugongLogger.warn { "Không có Jiugongge kind=1 trong data" }
             return
@@ -56,8 +66,6 @@ class JiugonggeSystem(
             jiugongLogger.warn { "Jiugongge daily id=${info.id} cần 9 mission, hiện có ${boardMissions.size}" }
             return
         }
-
-        sendActivityWindow(session, info.activityId)
 
         val values = boardMissions.map { mission ->
             val current = currentValue(session, mission)
@@ -78,7 +86,7 @@ class JiugonggeSystem(
             writer.writeByte(if (completed) 1 else 0)
         }
         session.send(writer.toByteArray())
-        jiugongLogger.info { "Khởi tạo Hằng ngày: charId=${session.roleId} grid=${info.id}" }
+        jiugongLogger.info { "Đồng bộ Hằng ngày: charId=${session.roleId} grid=${info.id}" }
     }
 
     suspend fun checkMission(

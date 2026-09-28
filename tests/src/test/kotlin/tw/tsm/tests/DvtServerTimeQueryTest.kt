@@ -17,12 +17,25 @@ import java.nio.ByteOrder
 class DvtServerTimeQueryTest {
     @Test fun `C1-16 returns current server OLE time for time-sensitive UIs`() = runTest {
         val sent = slot<ByteArray>()
+        val order = mutableListOf<String>()
         val session = mockk<GameSession>(relaxed = true) {
-            every { send(capture(sent)) } just Runs
+            every { send(capture(sent)) } answers {
+                order += "S1-16"
+                Unit
+            }
+        }
+        val loginService = mockk<LoginService>(relaxed = true)
+        every { loginService.refreshDailyActivityTime(session) } answers {
+            order += "S77"
+            Unit
+        }
+        coEvery { loginService.refreshDailySnapshot(session) } coAnswers {
+            order += "S91"
+            Unit
         }
         val handler = LoginHandler(
             mockk<AuthSystem>(),
-            mockk<LoginService>(relaxed = true),
+            loginService,
             mockk<ResponseSender>(),
             mockk<CharacterRepository>(),
             mockk<WorldManager>(),
@@ -32,6 +45,7 @@ class DvtServerTimeQueryTest {
         handler.handle(session, 16, byteArrayOf())
         val after = LoginService.currentServerTime()
 
+        assertEquals(listOf("S77", "S1-16", "S91"), order)
         assertTrue(sent.isCaptured)
         ByteBuffer.wrap(sent.captured).order(ByteOrder.LITTLE_ENDIAN).apply {
             assertEquals(1, get().toInt() and 255)
