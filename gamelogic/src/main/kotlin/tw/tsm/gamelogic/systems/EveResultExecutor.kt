@@ -325,19 +325,8 @@ class EveResultExecutor(
                 val prevStep = questSystem.addMissionStep(charId, missionId, delta)
                 responseSender.sendAddMissionStep(session, missionId, delta)
                 if (prevStep == 0) {
-                    val bitId = markDefs[missionId]?.bitId ?: 0
-                    if (bitId != 0) {
-                        questSystem.setFlag(charId, bitId, 1)
-                        responseSender.sendSetMissionFlags(
-                            session, listOf(MissionFlagRecord(bitId, 1))
-                        )
-                        val isGuideFlag = markFlagToGuideId.containsKey(bitId)
-                        if (isGuideFlag) {
-                            logger.info { "${session.characterName} Kích hoạt hướng dẫn: mission=$missionId bitId=$bitId → guide=${markFlagToGuideId[bitId]}" }
-                        } else {
-                            logger.info { "${session.characterName} Thiết lập cờ nhiệm vụ: mission=$missionId bitId=$bitId" }
-                        }
-                    }
+                    // DVT AddMissionStep only starts/advances a mission. Mark_C bitId is completion state.
+                    // Completion flags are set by DEC_STEP completion, COMPLETE_MISSION, or explicit SET_FLAG.
 
                     // Hoàn thành hướng dẫn thú cưỡi → Tự động mở khóa ngựa trắng
                     if (missionId == MountConstants.MOUNT_TUTORIAL_MISSION_ID) {
