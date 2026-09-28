@@ -203,6 +203,18 @@ class JiugonggeSystem(
         return room >= quantity
     }
 
+    /**
+     * Refresh the active daily window on demand.
+     *
+     * Time-sensitive client UIs issue C:001-016 when opened. Re-sending S:077
+     * here keeps activityTimes[activityId][1].serverStartTime/serverCloseTime
+     * valid even if the player stayed online across a day boundary.
+     */
+    fun refreshDailyActivityTime(session: GameSession) {
+        val info = dailyInfo() ?: return
+        sendActivityWindow(session, info.activityId)
+    }
+
     private fun sendActivityWindow(session: GameSession, activityId: Int) {
         val def = activityTimes[activityId] ?: return
         val now = System.currentTimeMillis() / 86_400_000.0 + 25569.0

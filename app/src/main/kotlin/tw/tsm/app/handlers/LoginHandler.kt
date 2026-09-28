@@ -15,6 +15,7 @@ import tw.tsm.gamelogic.systems.AuthSystem
 import tw.tsm.gamelogic.systems.LoginService
 import tw.tsm.gamelogic.systems.WorldManager
 import tw.tsm.protocol.PacketReader
+import tw.tsm.protocol.PacketWriter
 
 private val logger = KotlinLogging.logger {}
 
@@ -38,6 +39,7 @@ class LoginHandler(
         when (subKind) {
             0 -> handleLogin(session, data)
             1 -> handleReconnect(session, data)
+            16 -> handleServerTimeQuery(session)
             else -> logger.warn { "未處理的登入子協定：subKind=$subKind" }
         }
     }
@@ -214,6 +216,27 @@ class LoginHandler(
             responseSender.sendLoginSuccess(session, needChangePassword = false)
             logger.info { "新帳號，開啟創角：$account (id=$accountId)" }
         }
+    }
+
+    /**
+     * C:001-016 <查Server時間>
+     *
+     * DVT client opens time-sensitive UIs (UIJiugongge/UIActivity/BattlePass/...)
+     * by first requesting the current server clock. protocal.lua[1][16] then
+     * feeds this value into CGTimer.SetServerTime().
+     */
+    private fun handleServerTimeQuery(session: GameSession) {
+        session.send(
+            PacketWriter()
+                .writeByte(Opcodes.LOGIN)
+                .writeByte(16)
+                .writeByte(0)
+                .writeDoubleLE(LoginService.currentServerTime())
+                .toByteArray()
+        )
+        // UIJiugongge reads its countdown from S:077 activityTimes.
+        // Refresh it at UI-open time so it cannot stay at the default "activity ended" state.
+        loginService.refreshDailyActivityTime(session)
     }
 
     /**

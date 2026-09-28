@@ -320,6 +320,11 @@ class LoginService(
         logger.info { "Hoàn tất chuỗi nhân vật tiến vào: '${record.name}' (id=${record.id}) Bản đồ=$safeMapId ($safeX, $safeY)" }
     }
 
+    /** Refresh S:077 daily activity time after the client asks C:001-016. */
+    fun refreshDailyActivityTime(session: GameSession) {
+        jiugonggeSystem?.refreshDailyActivityTime(session)
+    }
+
     companion object {
         /**
          * Lấy thời gian máy chủ theo định dạng OLE Automation Date
