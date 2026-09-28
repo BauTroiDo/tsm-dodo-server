@@ -895,20 +895,42 @@ class BattleManager(
                 responseSender.sendSetAttribute(session, EAttribute.SP, playerFighter.sp.toInt(), true)
             }
 
-            // 同步武將最終 HP/SP 到 PetSystem
+            // 同步武將最終 HP/SP 到 PetSystem + 客戶端 Role followNpc。
+            //
+            // DVT MachineBox.Supply() không đọc HP/SP từ FightField mà đọc trực tiếp
+            // Role.GetFollowNpcs(). Nếu chỉ cập nhật cache server, client vẫn giữ HP/SP
+            // trước trận và sẽ tính needHp/needSp = 0 → không tự dùng đồ hồi cho pet.
             val followNpcFighter = battle.getAllFighters().firstOrNull {
                 it.kind == EHuman.FOLLOW_NPC && it.masterId == playerId
             }
             if (followNpcFighter != null) {
                 val syncCharId = session.roleId.toLong()
+                val followSlot = petSystem.getFollowPets(syncCharId)
+                    .entries
+                    .firstOrNull { it.value.npcId == followNpcFighter.npcId }
+                    ?.key
+
                 petSystem.updateFightNpcHpSp(syncCharId, followNpcFighter.hp, followNpcFighter.sp.toInt())
+
+                if (followSlot != null) {
+                    responseSender.sendFollowNpcAttribute(
+                        session, followSlot, EAttribute.HP, followNpcFighter.hp.toInt()
+                    )
+                    responseSender.sendFollowNpcAttribute(
+                        session, followSlot, EAttribute.SP, followNpcFighter.sp.toInt()
+                    )
+                }
             }
 
             // S:011-000 結束戰鬥
             responseSender.sendBattleEnd(session, playerId, 0)
 
-            // 機關盒補給觸發：戰鬥結束後通知客戶端進行補品/HP/SP 補給（比照 PC/手遊原版戰後自動補血補魔）
-            responseSender.sendMacroBoxSupply(session, checkItem = true)
+            // Chỉ kích hoạt tiếp tế khi Hộp Cơ Quan thực sự đang bật.
+            // S:065-010 gọi MachineBox.Supply(true), phía client sẽ tự chọn đồ hồi
+            // cho cả người chơi và pet theo ngưỡng HP/SP đã lưu trong client.
+            if (macroBoxSystem?.isActive(session.roleId.toLong()) == true) {
+                responseSender.sendMacroBoxSupply(session, checkItem = true)
+            }
         }
 
         // 延遲後發送離場
