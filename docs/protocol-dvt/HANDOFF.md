@@ -192,6 +192,34 @@ Bằng chứng mới:
 
 Bản `1706f00` giữ server clock theo local wall-clock OLE Date và gửi **cửa sổ ngày hiện tại 00:00–23:59** cho activity 12. Chưa ghi PASS cho tới khi người dùng xác nhận.
 
+#### G. Pet lifecycle / pet ảo / HP bất thường — đang chờ runtime
+Commit:
+- `9cc236b Align captured pets with DVT lifecycle`
+
+Triệu chứng người dùng:
+- pet mới bắt hiện LV1 nhưng không lên cấp đúng;
+- có pet/đối tượng theo sau tên Trung, người dùng cho rằng không có trong đội;
+- HP pet hiển thị bất thường.
+
+Bằng chứng:
+- DVT `Role.FollowNpcAppear` khởi tạo pet mới ở **LV1**, EXP=`Calc.GetUpExp(1, turn)`, sau đó MaxHP/MaxSP=`Calc.GetMaxHp/Sp`.
+- PC `bboycs/tsonline-server-tl/TS_Server/Client/TSPet.cs:initPet()` cũng khởi tạo LV1.
+- Với NPC 10046 Binh Dao Lẻ: HPX=8, SPX=4; Formula.dat DVT cho LV1 **MaxHP=113, MaxSP=69, EXP floor=6**, khớp chính screenshot người dùng.
+- Kotlin cũ sai: `addFollowNpc()` dùng `npcDef.level` (spawn level) và `hpBase/spBase` làm pet state.
+- Production DB charId=31 hiện có 4 carried pets (slots 1..4), nên một số pet nhìn thấy trên map có thể là record carried thật; PC source cũng broadcast toàn bộ carried pets ra map. Tuy nhiên client stale slots vẫn có thể tồn tại vì S15-8 chỉ add/update, không xóa slot vắng.
+
+Đã sửa trong `9cc236b`:
+- pet mới bắt/nhận bắt đầu LV1, EXP floor đúng, loyalty 60;
+- HP/SP khởi tạo từ Calc.GetMaxHp/Sp, không dùng hpBase/spBase;
+- HP/SP legacy vượt max bị clamp khi load;
+- item heal SP/HP clamp theo max thật thay vì 999999/99999;
+- level-up restore HP/SP như PC;
+- login gửi recall + xóa 4 follow slots trước S15-8 để loại stale/ghost client object;
+- snapshot pet được sort theo slot.
+- Full `./gradlew test build`: PASS.
+
+Runtime **PENDING** cho `9cc236b`. Existing pets đã tạo dưới bug cũ có thể giữ level DB cũ; test tốt nhất là đăng nhập lại để clear stale state và bắt **một pet mới** sau patch.
+
 ## 6. EXP semantics hiện tại
 
 DVT dùng **cumulative lifetime EXP**, không phải remainder EXP.
