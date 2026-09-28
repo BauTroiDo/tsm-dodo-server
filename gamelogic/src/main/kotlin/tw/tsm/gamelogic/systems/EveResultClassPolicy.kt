@@ -67,6 +67,24 @@ object EveResultClassPolicy {
     fun isExplicitNoOp(resultClass: Int, parameterStyle: Int): Boolean =
         resultClass == 10 && parameterStyle in setOf(1, 2)
 
+    /**
+     * resultClass=7 pStyle 1..5 normally denotes the repeatable service-NPC flow.
+     *
+     * Eve.emg also overloads pStyle=1 and pStyle=3 when resultValue != 0:
+     * - pStyle=1 + value: 無界鬥陣 arena teleport selector
+     * - pStyle=3 + value: premium-currency direct purchase
+     *
+     * Those value-bearing variants must never be routed through bank/storage/store
+     * service handling, otherwise the wrong UI is opened before their own subsystem
+     * gets a chance to process them.
+     */
+    fun isRepeatableServicePlayerOperation(parameterStyle: Int, resultValue: Int): Boolean =
+        when (parameterStyle) {
+            1, 3 -> resultValue == 0
+            2, 4, 5 -> true
+            else -> false
+        }
+
     fun itemDelta(parameterStyle: Int, resultValue: Int): Int? =
         when (parameterStyle) {
             0 -> resultValue
