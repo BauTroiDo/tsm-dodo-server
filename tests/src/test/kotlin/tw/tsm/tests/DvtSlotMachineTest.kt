@@ -253,6 +253,74 @@ class DvtSlotMachineTest {
     }
 
     @Test
+    fun `double reward costs two coins and grants double quantity`() = runTest {
+        val rewardItemId = 15090
+        val board = (1..16).map {
+            SlotMachineAward(it, rewardItemId, 1, it)
+        }
+        var stored = SlotMachineStateData(coin = 10, awards = board)
+        val repo = object : SlotMachineRepository {
+            override suspend fun load(characterId: Long) = stored
+            override suspend fun save(characterId: Long, state: SlotMachineStateData) {
+                stored = state
+            }
+        }
+        val inventory = mockk<InventorySystem>()
+        val currencies = mockk<PlayerCurrencySystem>(relaxed = true)
+        val thing = ThingData(itemId = rewardItemId, quantity = 2)
+
+        every { inventory.canAddRewardsToBag(42L, listOf(rewardItemId to 2)) } returns true
+        coEvery {
+            inventory.addRewardsToBagExact(42L, listOf(rewardItemId to 2))
+        } returns listOf(7 to thing)
+
+        val system = SlotMachineSystem(repo, pools, inventory, currencies, itemDefs)
+        val result = system.spin(42L, SlotMachineSystem.SUB_DOUBLE)
+
+        assertTrue(result is SlotMachineSpinOutcome.Success)
+        result as SlotMachineSpinOutcome.Success
+        assertEquals(8, result.state.coin)
+        assertEquals(8, stored.coin)
+        assertEquals(1, result.resultSlotIndices.size)
+        coVerify(exactly = 1) {
+            inventory.addRewardsToBagExact(42L, listOf(rewardItemId to 2))
+        }
+    }
+
+    @Test
+    fun `triple spin costs six coins and grants three independent results`() = runTest {
+        val rewardItemId = 15090
+        val board = (1..16).map {
+            SlotMachineAward(it, rewardItemId, 1, it)
+        }
+        var stored = SlotMachineStateData(coin = 10, awards = board)
+        val repo = object : SlotMachineRepository {
+            override suspend fun load(characterId: Long) = stored
+            override suspend fun save(characterId: Long, state: SlotMachineStateData) {
+                stored = state
+            }
+        }
+        val inventory = mockk<InventorySystem>()
+        val currencies = mockk<PlayerCurrencySystem>(relaxed = true)
+        val rewards = listOf(rewardItemId to 1, rewardItemId to 1, rewardItemId to 1)
+        val thing = ThingData(itemId = rewardItemId, quantity = 3)
+
+        every { inventory.canAddRewardsToBag(42L, rewards) } returns true
+        coEvery { inventory.addRewardsToBagExact(42L, rewards) } returns listOf(7 to thing)
+
+        val system = SlotMachineSystem(repo, pools, inventory, currencies, itemDefs)
+        val result = system.spin(42L, SlotMachineSystem.SUB_TRIPLE)
+
+        assertTrue(result is SlotMachineSpinOutcome.Success)
+        result as SlotMachineSpinOutcome.Success
+        assertEquals(4, result.state.coin)
+        assertEquals(4, stored.coin)
+        assertEquals(3, result.resultSlotIndices.size)
+        assertTrue(result.resultSlotIndices.all { it in 1..16 })
+        coVerify(exactly = 1) { inventory.addRewardsToBagExact(42L, rewards) }
+    }
+
+    @Test
     fun `UISell11 query exposes exact item and 9 Point per coin routes`() = runTest {
         var stored = SlotMachineStateData()
         val repo = object : SlotMachineRepository {
