@@ -486,7 +486,18 @@ Kết luận authoritative:
 - regression tests khóa các shape thật: serverId 1 <100, serverId100 ==100, galaxy 97/197 với ops5 threshold;
 - `gradlew clean test build`: **BUILD SUCCESSFUL**.
 
-Runtime `7e42afd`: **PENDING**. Server production hiện login với serverId=1. Sau deploy/restart cần test các NPC/event ở 12003/12180/12244 nếu tiện; arena 54901..54904 có thể phụ thuộc môi trường multi-server nên không ép test nếu server offline không có subsystem tương ứng.
+Runtime `7e42afd`: **PARTIAL — deploy/restart/login PASS, semantic event PENDING**.
+- production HEAD `bd4cf0f` (chứa code `7e42afd`);
+- process mới chạy lúc 07:46:17;
+- client login thành công lúc 07:47:02 với `serverId=1`, đúng giá trị mà evaluator sẽ dùng;
+- không có crash/exception/regression do patch sau restart;
+- chưa ghi runtime PASS hoàn chỉnh vì sau restart player đang ở map 12811 và chưa trigger event class7/param8.
+
+Điểm test trực tiếp đã xác định từ Eve.emg:
+- map `12003`, placement `16`, npcId `15275`, tọa độ `(70,580)`, eveNo `28`;
+- event này chứa class7/param8 và phân nhánh theo Server ID;
+- GM command hiện có: `/tp 12003 70 580`.
+Arena 54901..54904 phụ thuộc multi-server có thể để UNTESTABLE trên server offline.
 
 ### Gap lớn khác đã phát hiện: mainKind 36 — UIMessageboard
 
