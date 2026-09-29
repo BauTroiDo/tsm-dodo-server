@@ -419,7 +419,12 @@ Current server chưa implement/publish `S:124-000` hay subsystem ActivityModel �
 - thêm regression `DvtActivityModelWireTest` khóa packet `124,4,0 + UInt32(0)`;
 - full `gradlew clean test build`: **BUILD SUCCESSFUL**.
 
-Runtime `97e5ffa`: **PENDING**. Sau deploy/restart cần xác nhận warning 124:4 không còn lặp và không phát sinh lỗi client.
+Runtime `97e5ffa`: **PASS**.
+- production restart lúc 07:26:09;
+- client login lại lúc 07:26:23;
+- kiểm tra đến 07:30:09 (đã qua chu kỳ 180 giây): không còn warning `mainKind=124 subKind=4`;
+- warning cuối cùng là 07:23:10, thuộc process cũ;
+- không có ERROR/Exception/ActivityModel regression mới.
 
 ## 6. EXP semantics hiện tại
 
@@ -456,20 +461,16 @@ Theo `DungeonCriteriaData.CompareResult`:
 
 ## 8. Điểm audit đang dở / NEXT
 
-### Ưu tiên hiện tại: runtime `mainKind=124 subKind=4`
+### Ưu tiên hiện tại: EVE `conditionClass=7, conditionParameter=8`
 
 Daily/Jiugongge đã runtime PASS.
 
-`97e5ffa` đã implement compatibility handler dựa trên Lua DVT authoritative:
-- C:124-004 là refresh request rỗng mỗi 180 giây;
-- current server chưa publish S:124-000 nên response hiện tại là S:124-004 count=0;
-- full build/test PASS.
+`97e5ffa` ActivityModel C124-4 đã runtime **PASS** trên production.
 
 Việc kế tiếp:
-1. deploy/restart production với `97e5ffa`;
-2. xác nhận warning `mainKind=124 subKind=4 (0 bytes)` biến mất;
-3. kiểm tra client không có regression;
-4. nếu PASS thì chuyển sang EVE param8.
+1. audit EVE `conditionClass=7 / conditionParameter=8` từ Lua DVT;
+2. đối chiếu client gốc/Assembly-CSharp + Eve.emg scene mẫu;
+3. chỉ patch Kotlin khi semantics được chứng minh đủ; không dùng phỏng đoán từ local branch cũ.
 
 ### Sau đó: EVE `conditionClass=7, conditionParameter=8`
 
@@ -524,7 +525,7 @@ Sau lỗi item wire đã PASS, còn nên audit:
 ## 10. Recent commits để chat mới định vị nhanh
 
 ```text
-97e5ffa Handle DVT ActivityModel refresh              — runtime PENDING
+97e5ffa Handle DVT ActivityModel refresh              — runtime PASS
 36d3bb0 Fix DVT daily special RoleCount wire         — runtime PASS
 5c686ed Fix DVT daily mission progress tracking      — gameplay bridge working; superseded by 36d3bb0 for UI wire
 1706f00 Fix DVT daily runtime window                 — runtime timing fixed; feature still needed progress bridge
