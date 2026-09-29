@@ -693,12 +693,15 @@ Fix mới:
 - regression với mount Lv2, Trí Lực item32103 quantity=9: phải trừ 1, tăng point 0→1, tuyệt đối không trừ 10;
 - targeted test + full `clean test build`: **PASS**.
 
-Điểm cần runtime:
-1. restart production với commit mới;
-2. tab Bồi dưỡng: với 9 viên Trí Lực phải bấm được, số lượng 9→8 và progress 0→1;
-3. nút Bồi dưỡng tự động phải tiếp tục gửi từng C79-4 và mỗi lần chỉ trừ 1;
-4. đủ 10 point thì thuộc tính từ Lv0→Lv1;
-5. relog xác nhận progress/cấp thuộc tính vẫn giữ.
+Runtime sau restart: **PASS phần core C79-4 / auto nourish**.
+- user bấm nút đỏ lớn khi có 9 viên Trí Lực;
+- production log nhận 9 request C79-4 riêng biệt trong ~1 giây, kind=2, tăng points=1→9;
+- mỗi request sau patch chỉ tiêu hao 1 item;
+- Lua UIMounts xác nhận nút đỏ là `OnClick_AttributeUpAll()`: bật `attributeUping=true`, cứ ~0.1s tự gửi tiếp cho tới khi hết nguyên liệu hoặc user bấm lại để Ngừng;
+- khi auto đang chạy text button dùng string20706 = “Ngừng”; khi dừng dùng string99660 = “Bồi dưỡng”;
+- bồi dưỡng 1 lần riêng lẻ là click icon nguyên liệu của từng dòng, gọi `OnClick_AttributeUp()`.
+=> Việc 9 viên bị dùng hết khi bấm nút đỏ là **hành vi gốc DVT**, không phải server trừ 9 trong một packet; không được sửa server thành chỉ xử lý 1 request auto.
+- persistence sau relog của attributePoints vẫn nên xác nhận riêng khi thuận tiện.
 
 ### Gap lớn khác đã phát hiện: mainKind 36 — UIMessageboard
 
