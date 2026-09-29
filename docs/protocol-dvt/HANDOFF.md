@@ -625,13 +625,12 @@ Runtime vòng 1 sau deploy `2c13c9f/a831464`: FAIL trước bước payment.
 - fix mới: Mall/Doro ưu tiên `Data-ios/IOS_GS_C.dat` + `IOS_BlissBag_C.dat`; giữ `BlissBag_C.dat` cũ riêng cho logic mở túi để tránh regression subsystem khác.
 - regression khóa 32 Doro packages / 7 tabs từ IOS_GS và targeted + full `clean test build` đều PASS.
 
-Runtime cần test lại sau deploy/restart bản fix nguồn IOS:
-1. startup log phải có `IOS_GS ... Doro=32`;
-2. quay Limited 1 lần (100): Point -100, UIDoro mở 1 egg, bag nhận reward;
-3. quay Limited 10 lần (900): Point -900, UIDoro có 10 egg/result, bag nhận đủ;
-4. thử thêm tab Võ tướng bằng vàng/Point để xác nhận generic currency1/3;
-5. relog xác nhận Point/reward vẫn giữ;
-6. special currency 4..16 cần số dư server thật để test payment bằng vé.
+Runtime sau deploy/restart `9a7961e`: **PASS**.
+- người dùng xác nhận lỗi “dùng loại tiền nào cũng báo không đủ” đã hết;
+- source Mobile `IOS_GS_C.dat + IOS_BlissBag_C.dat` đã khớp packet client;
+- Mall/Doro core được chốt runtime PASS cho luồng quay thực tế đã test;
+- không mở lại trừ khi có regression mới ở tab/currency cụ thể;
+- special currency 4..16 vẫn nên audit riêng nếu sau này có triệu chứng persistence/số dư riêng.
 
 ### Gap lớn khác đã phát hiện: mainKind 36 — UIMessageboard
 
@@ -670,7 +669,8 @@ Sau lỗi item wire đã PASS, còn nên audit:
 ## 10. Recent commits để chat mới định vị nhanh
 
 ```text
-2c13c9f Restore DVT Mall Doro gacha                   — build/test PASS; runtime PENDING
+9a7961e Fix DVT Doro mobile data source               — runtime PASS
+2c13c9f Restore DVT Mall Doro gacha                   — runtime PASS via 9a7961e
 dee8d4c Mark follow NPC persistence runtime pass      — runtime PASS
 179cf79 Persist active follow NPC across login        — runtime PASS
 d66bed7 Fix DVT Eve chain tie ordering                — runtime PASS
@@ -694,11 +694,10 @@ fe7633c Fix DVT NFT item wire alignment              — runtime PASS
 
 Chat mới chỉ cần đọc file này, sau đó:
 1. kiểm tra HEAD GitHub hiện tại;
-2. Daily/Jiugongge, ActivityModel C124-4, EVE param8, casino chain resolver và follow-NPC persistence đã runtime PASS; không mở lại nếu không có regression mới;
-3. ưu tiên deploy/restart và runtime test `2c13c9f` cho **Mall/Doro quay thưởng**;
-4. test tab Hồn: dùng `/addpoint 1000` nếu cần, quay Limited x1 giá100 rồi Limited x10 giá900; xác nhận UIDoro 1/10 egg, Point giảm đúng và bag nhận đủ reward;
-5. relog xác nhận Point/reward giữ nguyên; nếu có nguồn vé Soul/ColorSoul thì test thêm currency10/11;
-6. `resultType=10` casino legacy vẫn UNKNOWN, không invent; direct Point Surface23 hiện unreachable qua UI hiện tại;
-7. không yêu cầu người dùng kể lại lịch sử.
+2. Daily/Jiugongge, ActivityModel C124-4, EVE param8, casino chain resolver, follow-NPC persistence và Mall/Doro đã runtime PASS; không mở lại nếu không có regression mới;
+3. nếu user báo lỗi mới, audit theo Lua DVT -> client/data -> Kotlin rồi patch server; không sửa Lua để hợp server;
+4. `resultType=10` casino legacy vẫn UNKNOWN, không invent; direct Point Surface23 hiện unreachable qua UI hiện tại;
+5. mainKind36 UIMessageboard vẫn là gap lớn chưa làm đầy đủ;
+6. không yêu cầu người dùng kể lại lịch sử.
 
-**Điểm tiếp tục hiện tại: `2c13c9f` Mall/Doro đã build/test PASS, đang chờ deploy/restart + runtime tab Hồn.**
+**Điểm tiếp tục hiện tại: Mall/Doro `9a7961e` đã runtime PASS; chờ user đưa lỗi/gap tiếp theo.**
