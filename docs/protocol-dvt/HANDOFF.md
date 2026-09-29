@@ -243,6 +243,43 @@ Runtime cần test:
 3. đánh 1 trận nhận EXP/vàng/drop, restart server ngay;
 4. login lại xác nhận EXP/vàng/drop/pet vẫn còn.
 
+#### H2. Võ tướng xuất chiến không được giữ sau relog — build PASS, runtime PENDING
+Commit:
+- `179cf79 Persist active follow NPC across login`
+
+Triệu chứng người dùng:
+- chọn một võ tướng xuất chiến;
+- thoát game rồi đăng nhập lại;
+- phải chọn võ tướng xuất chiến lại.
+
+Nguyên nhân audit:
+- `PetCache.fightNpcId` chỉ nằm trong RAM;
+- DB có `characters.fight_npc_id` và LoginService đã đọc `record.fightNpcId`, nhưng trước patch chỉ `DisconnectHandler` ghi field này;
+- đóng app/mất kết nối không đảm bảo C:000 tới server;
+- AutoSaveService 30 giây trước patch gọi `petSystem.save()` nhưng `fightNpcId` không nằm trong PetRepository nên cũng không được checkpoint;
+- LoginService comment đúng là khôi phục bằng `S:019-001`, nhưng code lại dùng sender runtime `S:019-004`.
+
+Bằng chứng DVT Lua:
+- `protocolTable[19][1]` = `Role.SetFightNpc(data:ReadUInt16())` — packet init/login;
+- `protocolTable[19][2]` = `Role.SetFightNpc(0)` — thu hồi;
+- `protocolTable[19][4]` = `Role.SetFightNpc(data:ReadUInt16())` — runtime deploy;
+- `UITeam.lua` khi bấm xuất chiến gửi C:019-001 UInt16, khi thu hồi gửi C:019-002.
+
+Đã sửa:
+- C19-1 deploy ghi `characters.fight_npc_id` ngay;
+- C19-2 recall ghi `fight_npc_id=0` ngay;
+- autosave 30 giây cũng checkpoint `PetCache.fightNpcId` sang bảng characters;
+- login restore dùng đúng `S:019-001`; runtime bấm xuất chiến vẫn dùng `S:019-004`;
+- login chỉ restore nếu npcId đó vẫn nằm trong carried roster;
+- regression xác nhận DB update deploy/recall và wire S19-1 khác S19-4;
+- `gradlew clean test build`: **BUILD SUCCESSFUL**.
+
+Runtime cần test sau pull/restart `179cf79`:
+1. chọn một pet/tướng xuất chiến;
+2. thoát hẳn game rồi đăng nhập lại;
+3. tướng đó phải vẫn ở trạng thái xuất chiến, không cần chọn lại;
+4. thu hồi tướng, thoát/login lại — phải vẫn là không xuất chiến.
+
 #### I. Hidden carried pets / S15-8 wire — runtime PASS
 Commit:
 - `764204e Fix DVT carried pet full-sync wire`
