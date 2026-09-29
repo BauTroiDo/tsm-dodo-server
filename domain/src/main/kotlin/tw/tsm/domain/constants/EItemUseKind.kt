@@ -19,6 +19,7 @@ object EItemUseKind {
     const val EXP_PILL = 92                 // Đơn kinh nghiệm
     const val EXP_GOD = 93                  // Đạo cụ phúc thần
     const val SP_FULL = 165                 // Hồi đầy ma lực
+    const val NPC_PICTURE = 195              // Võ tướng họa sách/token (spare3 = NPC ID)
     const val BLISS_BAG_VIEW = 223          // Mở rộng xem trước túi phúc
     const val LOCK_BLISS_BAG = 228          // Túi phúc rương báu cần chìa khoá
     const val BLISS_BAG_KEY = 229           // Chìa khoá rương báu
