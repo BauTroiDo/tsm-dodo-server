@@ -261,7 +261,7 @@ class DvtSlotMachineTest {
                 match { it.size == 1 && it.single() in 1..16 }
             )
         }
-        verify(exactly = 1) { response.sendSlotMachineMessage(session, 11) }
+        verify(exactly = 0) { response.sendSlotMachineMessage(session, any()) }
         coVerify(exactly = 0) { inventory.addRewardsToBagExact(any(), any()) }
     }
 

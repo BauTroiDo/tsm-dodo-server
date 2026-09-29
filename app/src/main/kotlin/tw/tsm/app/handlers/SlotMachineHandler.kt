@@ -83,14 +83,17 @@ class SlotMachineHandler(
             is SlotMachineSpinOutcome.UnsupportedDirectReward -> {
                 slotLogger.error {
                     "SlotMachine reward direct-use chưa có semantics DVT: item=" +
-                        result.itemId + " player=" + session.characterName
+                        result.itemId + " player=" + session.characterName +
+                        " slots=" + result.resultSlotIndices
                 }
-                // DVT client only leaves ESlotMachineState.Run after S72-2 supplies
-                // the target slot. Keep the coin unchanged and finish the visual
-                // spin even when the reward effect itself is still unsupported.
+                // DVT UISlotMachine enters Wait immediately after C72-2/3/4.
+                // S72-3 kind=11 means "feature closed" and RevSlotMessage() does
+                // not restore state=None. Sending it after S72-2 can therefore
+                // leave the UI stuck in Wait/Run. For an unsupported direct-use
+                // reward, finish the visual spin only: keep coin unchanged, send
+                // a valid S72-2 target and log the missing reward semantics.
                 response.sendSlotMachineCoin(session, result.state.coin)
                 response.sendSlotMachineSpinResult(session, result.resultSlotIndices)
-                response.sendSlotMachineMessage(session, 11)
             }
         }
     }
