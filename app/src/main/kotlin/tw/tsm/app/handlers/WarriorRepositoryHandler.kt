@@ -77,6 +77,9 @@ class WarriorRepositoryHandler(
         innResponseSender.sendWarehouseStoreResult(session, 1)
         // gỡ khỏi tướng tuỳ thân
         responseSender.sendFollowNpcRemove(session, session.playerId, followSlot, false)
+        // Lua DVT S:122-002 chỉ gọi UpdateUI(), không tự thêm vào Inn.warriorRepository.
+        // Phải gửi lại S:122-001 để client rebuild cột "Tướng đã gửi" ngay trong UI đang mở.
+        innResponseSender.sendWarehouseData(session, petSystem.getWarehousePets(charId))
 
         logger.info { "${session.characterName} gửi vào kho tướng: follow=$followSlot npcId=$npcId" }
     }
@@ -107,6 +110,9 @@ class WarriorRepositoryHandler(
         if (pet != null) {
             responseSender.sendFollowNpcFullData(session, listOf(pet))
         }
+        // Cùng contract với chiều cất: S:122-003 chỉ UpdateUI(), không tự xoá
+        // Inn.warriorRepository. Refresh S:122-001 để cột kho không giữ dữ liệu cũ.
+        innResponseSender.sendWarehouseData(session, petSystem.getWarehousePets(charId))
 
         logger.info { "${session.characterName} lấy từ kho tướng: npcId=$npcId → follow=$followSlot" }
     }
