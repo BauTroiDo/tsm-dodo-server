@@ -25,7 +25,9 @@ private val mineLogger = KotlinLogging.logger {}
 class MineEncounterSystem(
     private val eveData: Map<Int, SceneEveData>,
     private val stateMachine: EveEventStateMachine,
-    private val triggerRouter: EveTriggerRouter
+    private val triggerRouter: EveTriggerRouter,
+    private val playerStateManager: PlayerStateManager,
+    private val nowMs: () -> Long = { System.currentTimeMillis() }
 ) {
     private val states = ConcurrentHashMap<Long, MineWalkState>()
 
@@ -40,6 +42,15 @@ class MineEncounterSystem(
         val charId = session.roleId.toLong()
         if (stateMachine.getSession(charId) != null) return
 
+        val now = nowMs()
+        val noEncounterUntil = playerStateManager.getState(charId)?.noEncounterUntil ?: 0L
+        if (now < noEncounterUntil) {
+            // ItemUse_4 của DVT là "không gặp địch 20 giây". Không tích lũy
+            // quãng đường trong thời gian này để tránh hết buff là gặp ngay.
+            states[charId]?.distancePx = 0
+            return
+        }
+
         val scene = eveData[session.mapId] ?: return
         if (scene.mines.isEmpty()) return
 
@@ -50,12 +61,24 @@ class MineEncounterSystem(
         }
 
         val state = states.compute(charId) { _, previous ->
-            if (previous == null || previous.mapId != session.mapId || previous.mineId != mine.id) {
-                MineWalkState(mapId = session.mapId, mineId = mine.id)
-            } else {
-                previous
+            when {
+                previous == null ->
+                    MineWalkState(mapId = session.mapId, mineId = mine.id)
+                previous.mapId != session.mapId || previous.mineId != mine.id ->
+                    // Cooldown là theo người chơi, không phải theo MineData. Giữ cooldown
+                    // khi đổi vùng để không thể gặp liên tiếp chỉ vì bước qua biên mine.
+                    previous.copy(
+                        mapId = session.mapId,
+                        mineId = mine.id,
+                        distancePx = 0
+                    )
+                else -> previous
             }
         } ?: return
+
+        // Cooldown là thời gian nghỉ thực sự: di chuyển trong khoảng này không được
+        // nạp sẵn distance budget rồi kích hoạt ngay khi timer vừa hết.
+        if (now < state.cooldownUntil) return
 
         val moved = min(
             abs(newX - oldX) + abs(newY - oldY),
@@ -64,10 +87,8 @@ class MineEncounterSystem(
         if (moved <= 0) return
         state.distancePx += moved
 
-        val now = System.currentTimeMillis()
-        if (state.distancePx < DISTANCE_PER_ATTEMPT_PX || now < state.cooldownUntil) return
+        if (state.distancePx < DISTANCE_PER_ATTEMPT_PX) return
 
-        // Consume only the distance budget. Cooldown is applied after a real trigger.
         state.distancePx = 0
         if (triggerRouter.triggerMine(session, mine.id)) {
             state.cooldownUntil = now + ENCOUNTER_COOLDOWN_MS
@@ -78,12 +99,36 @@ class MineEncounterSystem(
         }
     }
 
+    /**
+     * BattleManager gọi trước EveFlowController.resumeAfterBattle().
+     *
+     * Nếu trận vừa kết thúc xuất phát từ Mine trigger (triggerKind=7), bắt đầu lại
+     * grace period từ thời điểm trận thực sự kết thúc. Trước đây timer chạy từ lúc
+     * bắt đầu trận nên một trận kéo dài >= cooldown khiến người chơi vừa đi vài bước
+     * đã gặp tiếp.
+     */
+    fun onBattleEnd(characterId: Long) {
+        val eventSession = stateMachine.getSession(characterId) ?: return
+        if (eventSession.triggerKind != MINE_TRIGGER_KIND) return
+
+        states[characterId]?.let { state ->
+            state.distancePx = 0
+            state.cooldownUntil = nowMs() + ENCOUNTER_COOLDOWN_MS
+        }
+    }
+
     fun cleanup(characterId: Long) {
         states.remove(characterId)
     }
 
     companion object {
-        /** Same encounter cooldown already runtime-approved for roaming MapNpc encounters. */
+        const val MINE_TRIGGER_KIND = 7
+        /**
+         * Pacing fallback: exact original mobile-server RNG is not present in Lua/Eve.
+         * Keep the already-established 27s interval, but enforce it as a real
+         * post-encounter grace period instead of allowing battle time/mine switching
+         * to consume or bypass it.
+         */
         const val ENCOUNTER_COOLDOWN_MS = 27_000L
 
         /**

@@ -326,6 +326,9 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
         BattleManager(get(), get<GameDataManager>().skillDefs, get<GameDataManager>().npcDefs, get(), get(), get<PetSystem>(), get<MoneySystem>(), get<StatSystem>(), get(), get<GameDataManager>().npcDropTable, get<SkillSystem>(), get<MacroBoxSystem>(), get<GameDataManager>().itemDefs, get<SkillRepository>(), get<CharacterRepository>(), get<GameDataManager>().npcUpgradeDefs, get<GameDataManager>().sceneSetDefs, get<DailyProgressSystem>()).also { bm ->
             // Callback kết thúc chiến đấu → EveFlowController khôi phục luồng sự kiện
             bm.onBattleEndCallback = { session, playerId, playerWin ->
+                // Mine cooldown phải bắt đầu từ lúc trận gặp ngẫu nhiên kết thúc,
+                // trước khi EveFlowController có thể complete/remove EventSession.
+                get<MineEncounterSystem>().onBattleEnd(playerId)
                 get<EveFlowController>().resumeAfterBattle(session, playerId, playerWin)
             }
         }
@@ -356,7 +359,14 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { NpcShopManager() }
     single { EveFlowController(get(), get<EveEventStateMachine>(), get(), get(), get(), get(), get(), get(), get(), get(), get<GameDataManager>().eveData, get()) }
     single { EveTriggerRouter(get<EveEventStateMachine>(), get(), get(), get(), get(), get<GameDataManager>().eveData) }
-    single { MineEncounterSystem(get<GameDataManager>().eveData, get<EveEventStateMachine>(), get<EveTriggerRouter>()) }
+    single {
+        MineEncounterSystem(
+            get<GameDataManager>().eveData,
+            get<EveEventStateMachine>(),
+            get<EveTriggerRouter>(),
+            get<PlayerStateManager>()
+        )
+    }
 
     // Lưu tự động định kỳ (mỗi 3 phút lưu dữ liệu tất cả người chơi trực tuyến)
     single { AutoSaveService(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
