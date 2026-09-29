@@ -165,16 +165,19 @@ class MountSystem(
         val nextGrow = mountGrowDefs[attrLevel + 1] ?: return null
         val attrGrow = nextGrow.attributes.getOrNull(kind - 1) ?: return null
 
-        // Tiêu hao vật phẩm
+        // DVT Mounts.AttributeUp() chỉ kiểm tra slot đầu tiên có đúng item rồi gửi C79-4.
+        // upItemCount KHÔNG phải số lượng tiêu hao cho một lần bồi dưỡng; nó là ngưỡng
+        // điểm tích lũy mà Mounts.GetAttributeProgress() dùng để lên 1 cấp thuộc tính.
+        // Mỗi C79-4 tiêu hao đúng 1 item và cộng đúng 1 attributePoint.
         var itemConsumed = 0
-        if (attrGrow.upItemId > 0 && attrGrow.upItemCount > 0) {
+        if (attrGrow.upItemId > 0) {
             val thing = inventorySystem.getBagItem(characterId, bagIndex) ?: return null
-            if (thing.itemId != attrGrow.upItemId || thing.quantity < attrGrow.upItemCount) return null
-            itemConsumed = attrGrow.upItemCount
-            inventorySystem.removeFromBag(characterId, bagIndex, itemConsumed)
+            if (thing.itemId != attrGrow.upItemId || thing.quantity <= 0) return null
+            itemConsumed = 1
+            if (!inventorySystem.removeFromBag(characterId, bagIndex, itemConsumed)) return null
         }
 
-        // Cộng 1 điểm
+        // Mỗi lần bồi dưỡng cộng 1 điểm tiến độ.
         data.attributePoints[kind] = currentPoints + 1
         logger.info { "Thú cưỡi cộng điểm: charId=$characterId kind=$kind → points=${data.attributePoints[kind]}" }
         return AttributeUpResult(data.attributePoints[kind], itemConsumed)

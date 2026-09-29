@@ -12,7 +12,13 @@ import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.SessionSender
+import tw.tsm.domain.interfaces.repositories.MountRepository
+import tw.tsm.domain.valueobjects.MountData
+import tw.tsm.domain.valueobjects.ThingData
+import tw.tsm.gamelogic.systems.BitFlagSystem
+import tw.tsm.gamelogic.systems.InventorySystem
 import tw.tsm.gamelogic.systems.LevelUpResult
+import tw.tsm.gamelogic.systems.MoneySystem
 import tw.tsm.gamelogic.systems.MountSystem
 import tw.tsm.gamelogic.systems.WorldManager
 import java.nio.file.Files
@@ -99,6 +105,40 @@ class DvtMountContractTest {
 
         coVerify(exactly = 1) { mountSystem.levelUp(42L, 300) }
         verify(exactly = 1) { response.sendMountLevel(session, 2) }
+    }
+
+    @Test
+    fun `C79-4 nourish consumes one item per click and adds one progress point`() = runTest {
+        val grow = MountGrowDatLoader.load(
+            Files.readAllBytes(existing("File.dat", "Data-ios", "IOS_MountsGrow_C.dat"))
+        )
+        val repository = mockk<MountRepository>()
+        val inventory = mockk<InventorySystem>()
+        val money = mockk<MoneySystem>(relaxed = true)
+        val flags = mockk<BitFlagSystem>(relaxed = true)
+
+        coEvery { repository.findByCharacterId(42L) } returns MountData(level = 2)
+        every { inventory.getBagItem(42L, 300) } returns ThingData(itemId = 32103, quantity = 9)
+        coEvery { inventory.removeFromBag(42L, 300, 1) } returns true
+
+        val system = MountSystem(
+            repository,
+            emptyMap(),
+            grow,
+            inventory,
+            money,
+            flags,
+            emptyMap()
+        )
+        system.load(42L)
+
+        val result = system.addAttributePoint(42L, 2, 300)
+
+        assertNotNull(result)
+        assertEquals(1, result!!.newPoints)
+        assertEquals(1, result.itemConsumed)
+        coVerify(exactly = 1) { inventory.removeFromBag(42L, 300, 1) }
+        coVerify(exactly = 0) { inventory.removeFromBag(42L, 300, 10) }
     }
 
     @Test

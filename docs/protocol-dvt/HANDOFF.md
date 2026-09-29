@@ -676,11 +676,29 @@ Kotlin cũ chấp nhận fallback Byte ở C79-3/4/5/6 và gửi Byte ở S79-4/
   - C79-3 parse UInt16 300 và reject legacy one-byte.
 - `gradlew clean test build`: **BUILD SUCCESSFUL**.
 
+Bồi dưỡng thuộc tính (C79-4) — root cause đã chứng minh từ Lua + screenshot:
+- `Mounts.AttributeUp()` chỉ yêu cầu tồn tại ít nhất 1 item đúng loại rồi gửi C79-4 với slot đó;
+- `Mounts.GetAttributeProgress()` dùng `upItemCount` làm ngưỡng điểm tích lũy để lên cấp thuộc tính;
+- mỗi response S79-3 tăng progress từng điểm, UI hiển thị ví dụ `+0 > +1`.
+Kotlin cũ hiểu sai `upItemCount` thành số item phải trừ trong một lần bồi dưỡng:
+- Lv0→Lv1 yêu cầu threshold 10 nên server đòi đủ 10 item;
+- sau đó lại chỉ tăng 1 point.
+Ảnh runtime user có Trí Lực 9 item nhưng không bồi dưỡng được, khớp chính xác lỗi này.
+
+Fix mới:
+- mỗi C79-4 chỉ xác thực đúng item tại slot;
+- tiêu hao đúng 1 item;
+- tăng đúng 1 attributePoint;
+- `upItemCount` chỉ còn dùng trong `getAttributeLevel/GetAttributeProgress`;
+- regression với mount Lv2, Trí Lực item32103 quantity=9: phải trừ 1, tăng point 0→1, tuyệt đối không trừ 10;
+- targeted test + full `clean test build`: **PASS**.
+
 Điểm cần runtime:
-1. restart production và xác nhận startup log `IOS_Mounts ... 224`, `IOS_MountsGrow ... 10, maxLv=10`;
-2. thử nâng thú cưỡi đúng level hiện tại;
-3. nếu lỗi vẫn xảy ra ở Lv1..9, bắt log C79-3 và kiểm tra item32101 + gold;
-4. một mismatch còn đáng audit nếu symptom là “đủ vật phẩm nhưng không nâng”: Lua kiểm tra tổng `Item.GetItemCount()` trên toàn bag nhưng gửi slot đầu tiên `Item.GetItemIndex()`; Kotlin hiện đòi chính slot gửi lên chứa đủ toàn bộ count. Chưa patch vì chưa có runtime symptom chứng minh cần multi-stack consumption.
+1. restart production với commit mới;
+2. tab Bồi dưỡng: với 9 viên Trí Lực phải bấm được, số lượng 9→8 và progress 0→1;
+3. nút Bồi dưỡng tự động phải tiếp tục gửi từng C79-4 và mỗi lần chỉ trừ 1;
+4. đủ 10 point thì thuộc tính từ Lv0→Lv1;
+5. relog xác nhận progress/cấp thuộc tính vẫn giữ.
 
 ### Gap lớn khác đã phát hiện: mainKind 36 — UIMessageboard
 
