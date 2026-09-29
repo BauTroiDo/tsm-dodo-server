@@ -6,13 +6,18 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import tw.tsm.app.handlers.ItemHandler
 import tw.tsm.app.response.InventoryResponseSender
+import tw.tsm.domain.constants.EItemUseKind
+import tw.tsm.domain.data.ItemDef
+import tw.tsm.domain.data.NpcDef
 import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.SessionSender
+import tw.tsm.domain.valueobjects.FollowNpcData
 import tw.tsm.domain.valueobjects.ThingData
 import tw.tsm.gamelogic.systems.InventorySystem
 import tw.tsm.gamelogic.systems.PetEquipSystem
+import tw.tsm.gamelogic.systems.PetSystem
 import tw.tsm.protocol.ThingDataWire
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -56,6 +61,119 @@ class DvtItemWireTest {
         coEvery { pet.equip(42, 2, 0x1234) } returns PetEquipSystem.EquipResult.Fail
         handler.handle(session, 17, byteArrayOf(2,0x34,0x12))
         coVerify(exactly = 1) { pet.equip(42, 2, 0x1234) }
+    }
+
+    @Test fun `npc picture token recruits DVT follow npc and consumes exactly one`() = runTest {
+        val itemId = 31000
+        val npcId = 9001
+        val itemDef = mockk<ItemDef> {
+            every { specialAbility } returns EItemUseKind.NPC_PICTURE
+            every { spare3 } returns npcId
+        }
+        val npcDef = mockk<NpcDef>(relaxed = true)
+        val petSystem = mockk<PetSystem>()
+        val petData = FollowNpcData(slotIndex = 2, npcId = npcId, canGrow = 1)
+
+        every { inventory.getBagItem(42, 0x1234) } returns ThingData(itemId = itemId, quantity = 3)
+        every {
+            petSystem.addFollowNpc(
+                characterId = 42,
+                npcId = npcId,
+                npcDef = npcDef,
+                canGrow = 1,
+                allowDuplicateInCart = true,
+            )
+        } returns (2 to petData)
+        every { petSystem.getFollowPets(42) } returns mapOf(2 to petData)
+        coEvery { inventory.removeFromBag(42, 0x1234, 1) } returns true
+
+        val npcPictureHandler = ItemHandler(
+            inventorySystem = inventory,
+            moneySystem = mockk(),
+            groundItemManager = mockk(),
+            responseSender = response,
+            worldManager = mockk(),
+            itemDefs = mapOf(itemId to itemDef),
+            itemUseProcessor = mockk(),
+            playerStateManager = mockk(),
+            statCalc = mockk(),
+            mountSystem = mockk(),
+            flyPointSystem = mockk(),
+            characterRepository = mockk(),
+            petEquipSystem = pet,
+            questSystem = mockk(),
+            skillSystem = mockk(),
+            dailyProgressSystem = null,
+            petSystem = petSystem,
+            npcDefs = mapOf(npcId to npcDef),
+        )
+
+        npcPictureHandler.handle(
+            session,
+            15,
+            byteArrayOf(0x34, 0x12, 3, 0, 0, 0, 0, 1)
+        )
+
+        coVerify(exactly = 1) { inventory.removeFromBag(42, 0x1234, 1) }
+        verify(exactly = 1) { response.sendReduceBagItem(session, 0x1234, 1) }
+        verify(exactly = 1) { response.sendUseItemSuccess(session, itemId, 1, true) }
+        verify(exactly = 1) {
+            response.sendFollowNpcAdd(session, any(), 2, npcId, 1, true)
+        }
+        verify(exactly = 1) { response.sendFollowNpcFullData(session, listOf(petData)) }
+    }
+
+    @Test fun `npc picture duplicate or full roster does not consume token`() = runTest {
+        val itemId = 31000
+        val npcId = 9001
+        val itemDef = mockk<ItemDef> {
+            every { specialAbility } returns EItemUseKind.NPC_PICTURE
+            every { spare3 } returns npcId
+        }
+        val npcDef = mockk<NpcDef>(relaxed = true)
+        val petSystem = mockk<PetSystem>()
+
+        every { inventory.getBagItem(42, 0x1234) } returns ThingData(itemId = itemId, quantity = 1)
+        every {
+            petSystem.addFollowNpc(
+                characterId = 42,
+                npcId = npcId,
+                npcDef = npcDef,
+                canGrow = 1,
+                allowDuplicateInCart = true,
+            )
+        } returns null
+
+        val npcPictureHandler = ItemHandler(
+            inventorySystem = inventory,
+            moneySystem = mockk(),
+            groundItemManager = mockk(),
+            responseSender = response,
+            worldManager = mockk(),
+            itemDefs = mapOf(itemId to itemDef),
+            itemUseProcessor = mockk(),
+            playerStateManager = mockk(),
+            statCalc = mockk(),
+            mountSystem = mockk(),
+            flyPointSystem = mockk(),
+            characterRepository = mockk(),
+            petEquipSystem = pet,
+            questSystem = mockk(),
+            skillSystem = mockk(),
+            dailyProgressSystem = null,
+            petSystem = petSystem,
+            npcDefs = mapOf(npcId to npcDef),
+        )
+
+        npcPictureHandler.handle(
+            session,
+            15,
+            byteArrayOf(0x34, 0x12, 1, 0, 0, 0, 0, 1)
+        )
+
+        coVerify(exactly = 0) { inventory.removeFromBag(any(), any(), any()) }
+        verify(exactly = 0) { response.sendUseItemSuccess(any(), any(), any(), any()) }
+        verify(exactly = 0) { response.sendFollowNpcAdd(any(), any(), any(), any(), any(), any()) }
     }
 
     @Test fun `player equipment reads word bag index and complete unequip suggestion`() = runTest {
