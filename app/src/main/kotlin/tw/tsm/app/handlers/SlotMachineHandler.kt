@@ -19,6 +19,14 @@ class SlotMachineHandler(
     override val mainKind: Int = Opcodes.SLOT_MACHINE
 
     override suspend fun handle(session: GameSession, subKind: Int, data: ByteArray) {
+        slotLogger.info {
+            "C72 recv player=" + session.characterName +
+                " roleId=" + session.roleId +
+                " subKind=" + subKind +
+                " size=" + data.size +
+                " sessionState=" + session.state +
+                " battleId=" + session.battleId
+        }
         if (session.state != SessionState.IN_GAME) return
 
         when (subKind) {
