@@ -274,12 +274,19 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { PetSkillSystem(get(), get<GameDataManager>().npcDefs, get<GameDataManager>().skillDefs) }
     single { PartySystem() }
     single {
+        PetRosterPolicy(
+            ninePetEnabled = config.getBoolean("features.ninePet.enabled"),
+            extensionMaxCarried = config.getInt("features.ninePet.maxCarried"),
+        )
+    }
+    single {
         PetSystem(
             get(),
             get<StatSystem>(),
             get<GameDataManager>().npcDefs,
             get<GameDataManager>().itemDefs,
             get<RoleCountSystem>(),
+            get<PetRosterPolicy>(),
         )
     }
     single {
@@ -401,7 +408,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { BattleManageHandler(get(), get(), get()) }
     single { BattleCommandHandler(get()) }
     single { PlayerStatusHandler(get(), get(), get(), get()) }
-    single { SkillUpgradeHandler(get(), get(), get(), get(), get<DailyProgressSystem>()) }
+    single { SkillUpgradeHandler(get(), get(), get(), get(), get<DailyProgressSystem>(), get<PetSystem>()) }
     single { PartyHandler(get(), get(), get(), get<DailyProgressSystem>()) }
     single { FollowNpcHandler(get(), get(), get()) }
     single { FollowNpcDeployHandler(get(), get(), get<CharacterRepository>(), get<DailyProgressSystem>()) }

@@ -10,6 +10,7 @@ import tw.tsm.gamelogic.systems.DailyProgressSystem
 import tw.tsm.gamelogic.systems.PlayerStateManager
 import tw.tsm.gamelogic.systems.SkillSystem
 import tw.tsm.gamelogic.systems.PetSkillSystem
+import tw.tsm.gamelogic.systems.PetSystem
 import tw.tsm.protocol.PacketReader
 
 private val logger = KotlinLogging.logger {}
@@ -26,6 +27,7 @@ class SkillUpgradeHandler(
     private val playerStateManager: PlayerStateManager,
     private val petSkillSystem: PetSkillSystem,
     private val dailyProgressSystem: DailyProgressSystem? = null,
+    private val petSystem: PetSystem? = null,
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.SKILL_UPGRADE
@@ -93,7 +95,8 @@ class SkillUpgradeHandler(
         if (data.size !in 4..10 || (data.size - 1) % 3 != 0) return
         val reader = PacketReader(data)
         val slot = reader.readUByte()
-        if (slot !in 1..4) return
+        val followCapacity = petSystem?.getFollowCapacity(characterId) ?: PetSystem.MAX_FOLLOW
+        if (slot !in 1..followCapacity) return
         val upgrades = mutableListOf<Pair<Int, Int>>()
         while (reader.remaining > 0) upgrades += reader.readUShortLE() to reader.readUByte()
         val snapshot = petSkillSystem.upgrade(characterId, slot, upgrades) ?: return

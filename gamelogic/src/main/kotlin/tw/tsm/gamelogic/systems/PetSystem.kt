@@ -21,14 +21,17 @@ class PetSystem(
     private val statCalculator: StatSystem,
     private val npcDefs: Map<Int, NpcDef> = emptyMap(),
     private val itemDefs: Map<Int, ItemDef> = emptyMap(),
-    private val roleCountSystem: RoleCountSystem? = null
+    private val roleCountSystem: RoleCountSystem? = null,
+    private val rosterPolicy: PetRosterPolicy = PetRosterPolicy(),
 ) {
 
     companion object {
         /** Cấp tối đa của võ tướng trong UIStatus/Role. */
         const val PET_MAX_LEVEL = 200
-        /** Số lượng võ tướng mang theo tối đa */
-        const val MAX_FOLLOW = 4
+        /** DVT legacy carried follower cap. Keep for protocol/reference code that is not extension-aware. */
+        const val MAX_FOLLOW = PetRosterPolicy.LEGACY_CARRIED
+        /** Custom extension hard ceiling; never applies unless PetRosterPolicy enables it. */
+        const val MAX_CARRIED_FOLLOW = PetRosterPolicy.MAX_EXTENSION_CARRIED
         /** Sức chứa xe ngựa tối đa */
         const val MAX_CART = 4
         /** Sức chứa khách sạn tối đa (Inn.lua minSpace=6, maxSpace=30) */
@@ -65,6 +68,15 @@ class PetSystem(
     )
 
     private val cache = ConcurrentHashMap<Long, PetCache>()
+
+    /**
+     * Authoritative carried-roster capacity for the current server/client mode.
+     * Phase 1 is global feature-gating only; level/quest/rebirth unlock comes later.
+     */
+    fun getFollowCapacity(characterId: Long): Int = rosterPolicy.carriedCapacity()
+
+    fun isValidFollowSlot(characterId: Long, slot: Int): Boolean =
+        slot in 1..getFollowCapacity(characterId)
 
     /**
      * Tải võ tướng của nhân vật khi đăng nhập
@@ -334,7 +346,7 @@ class PetSystem(
             }
 
             // Tìm vị trí trống trong danh sách mang theo
-            val slot = (1..MAX_FOLLOW).firstOrNull { !pc.follow.containsKey(it) } ?: return null
+            val slot = (1..getFollowCapacity(characterId)).firstOrNull { !pc.follow.containsKey(it) } ?: return null
 
             // DVT Role.FollowNpcAppear and PC TSPet.initPet both create a newly
             // captured/awarded pet at LV1. NpcDef.level is the encounter/spawn level,
@@ -406,7 +418,7 @@ class PetSystem(
     fun addExistingFollowNpc(characterId: Long, pet: FollowNpcData): Pair<Int, FollowNpcData>? {
         val pc = cache[characterId] ?: return null
         synchronized(pc) {
-            val slot = (1..MAX_FOLLOW).firstOrNull { !pc.follow.containsKey(it) } ?: return null
+            val slot = (1..getFollowCapacity(characterId)).firstOrNull { !pc.follow.containsKey(it) } ?: return null
             val placed = pet.copy(slotIndex = slot, storageType = STORAGE_FOLLOW)
             pc.follow[slot] = placed
             pc.dirty = true
@@ -517,7 +529,7 @@ class PetSystem(
             val pet = pc.cart[cartSlot] ?: return -1
 
             // Tìm vị trí trống trong danh sách mang theo
-            val followSlot = (1..MAX_FOLLOW).firstOrNull { !pc.follow.containsKey(it) } ?: return -1
+            val followSlot = (1..getFollowCapacity(characterId)).firstOrNull { !pc.follow.containsKey(it) } ?: return -1
 
             // Di chuyển
             pc.cart.remove(cartSlot)
@@ -786,7 +798,7 @@ class PetSystem(
             val pet = pc.inn[innSlot] ?: return -1
 
             // Tìm vị trí trống mang theo
-            val followSlot = (1..MAX_FOLLOW).firstOrNull { !pc.follow.containsKey(it) } ?: return -1
+            val followSlot = (1..getFollowCapacity(characterId)).firstOrNull { !pc.follow.containsKey(it) } ?: return -1
 
             // Di chuyển
             pc.inn.remove(innSlot)
@@ -876,7 +888,7 @@ class PetSystem(
             val pet = pc.warehouse.find { it.npcId == npcId } ?: return -1
 
             // Tìm vị trí trống mang theo
-            val followSlot = (1..MAX_FOLLOW).firstOrNull { !pc.follow.containsKey(it) } ?: return -1
+            val followSlot = (1..getFollowCapacity(characterId)).firstOrNull { !pc.follow.containsKey(it) } ?: return -1
 
             // Di chuyển
             pc.warehouse.remove(pet)

@@ -242,13 +242,19 @@ class LoginService(
         val petCache = petSystem.load(record.id)
         // S15-8 only adds/updates slots on the DVT client; it does not delete an
         // old FollowNpc object that is absent from the new server snapshot. Clear
-        // the four carried slots and battle selection first so reconnect/login
+        // every carried slot visible to this server/client mode so reconnect/login
         // cannot leave a stale 'ghost' pet on the map or in Role.followNpcs.
+        val followCapacity = petSystem.getFollowCapacity(record.id)
         responseSender.sendFollowNpcRecall(session)
-        for (slot in 1..PetSystem.MAX_FOLLOW) {
+        for (slot in 1..followCapacity) {
             responseSender.sendFollowNpcRemove(session, session.playerId, slot, showMsg = false)
         }
-        responseSender.sendFollowNpcFullData(session, petCache.follow.values.sortedBy { it.slotIndex })
+        responseSender.sendFollowNpcFullData(
+            session,
+            petCache.follow.values
+                .filter { it.slotIndex in 1..followCapacity }
+                .sortedBy { it.slotIndex }
+        )
         // S:015-010 Dữ liệu võ tướng trong xe ngựa
         if (petCache.cart.isNotEmpty()) {
             responseSender.sendCartData(session, petCache.cart.values.toList())

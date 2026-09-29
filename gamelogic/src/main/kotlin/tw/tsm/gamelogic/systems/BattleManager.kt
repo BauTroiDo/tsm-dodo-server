@@ -84,7 +84,7 @@ class BattleManager(
             // SceneManager.CheckLimit(sceneId, ESceneLimit.NoCatch): NoCatch=7,
             // stored in SceneData.limits[1] as bit 64.
             if ((sceneSetDefs[session.mapId]?.limit1 ?: 0) and SCENE_LIMIT_NO_CATCH_BIT != 0) return@validator false
-            if (pc.follow.size >= PetSystem.MAX_FOLLOW) return@validator false
+            if (pc.follow.size >= petSystem.getFollowCapacity(session.roleId.toLong())) return@validator false
             val npcDef = npcDefs[npcId] ?: return@validator false
             // DVT ENpc.Elephant=22 requires learned riding skill 14034.
             if (npcDef.kind == NPC_KIND_ELEPHANT &&

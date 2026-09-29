@@ -113,7 +113,7 @@ class EveStateBuilder(
             completedEveCounts = stateMachine.getCompletedEveCounts(charId, mapId),
             followNpcIds = followNpcIds,
             followPetCount = followPets.size,
-            maxFollowPets = PetSystem.MAX_FOLLOW,
+            maxFollowPets = petSystem.getFollowCapacity(charId),
             innNpcIds = innNpcIds,
             cartNpcIds = cartNpcIds,
             roleCountValues = roleCountValues,
