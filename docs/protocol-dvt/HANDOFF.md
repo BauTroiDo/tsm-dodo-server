@@ -5,7 +5,7 @@
 > Cập nhật: 2026-09-29
 > Repo: `BauTroiDo/tsm-dodo-server`
 > Branch: `main`
-> Code checkpoint gần nhất: `faf0a81`
+> Code checkpoint gần nhất: `d66bed7`
 
 ## 1. Nguyên tắc tối cao
 
@@ -465,6 +465,7 @@ Theo `DungeonCriteriaData.CompareResult`:
 
 Commit code:
 - `faf0a81 Restore DVT Eve Point purchase semantics` — **build/test PASS, runtime PENDING**.
+- `d66bed7 Fix DVT Eve chain tie ordering` — **build/test PASS, runtime PENDING**.
 
 Param8 trước đó đã **runtime PASS**:
 - `conditionClass=7 / param=8` = Server ID;
@@ -496,8 +497,16 @@ Kết luận authoritative cho param19:
 - end-to-end test khóa giao dịch `10 Point -> item31171 x1`, thiếu Point thì không trừ/không trao item;
 - full `gradlew clean test build`: **BUILD SUCCESSFUL**.
 
-Runtime cần test sau deploy/restart:
-1. production serverId hiện là `1`, nên dùng nhánh eve17 với giá `10/50/100`;
+Runtime checkpoint trước `d66bed7`:
+- user click Chủ Sòng Bạc sau deploy `faf0a81` nhưng client nhảy thẳng tới Talk48728 “Giao cho bạn tiền Thôn thực hoan lạc...”, không hiện menu chọn;
+- Eve17 chứng minh Talk48728 là nhánh hậu giao dịch `cond10+11`, còn initial click phải vào `cond1` (serverId<100) rồi Talk22363 + Surface1;
+- root cause: `EveChainResolver` tự ưu tiên chain dài hơn / nhiều result hơn khi stepScore hòa, khiến cond10+11 thắng cond1;
+- `d66bed7` sửa tie-break: vẫn ưu tiên class2 mission step cao nhất, nhưng nếu stepScore hòa thì giữ chain xuất hiện trước trong Eve.emg;
+- regression mới khóa đúng eve17: serverId=1 + realPoint>=10 vẫn phải chọn cond1, không được nhảy Talk48728;
+- full `gradlew clean test build`: **BUILD SUCCESSFUL**.
+
+Runtime cần test sau deploy/restart `d66bed7`:
+1. production serverId hiện là `1`, nên dùng nhánh eve17;
 2. nhân vật cần ít nhất 10 real Point;
 3. map `12180`, NPC **Chủ Sòng Bạc** (`npcId=16030`, placement1);
 4. chọn đổi/mua **1 tiền Thôn thực vui vẻ**;
