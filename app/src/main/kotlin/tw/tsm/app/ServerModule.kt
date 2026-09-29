@@ -104,6 +104,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             register(get<PetUpgradeHandler>())
             register(get<PetRebornHandler>())
             register(get<JiugonggeHandler>())
+            register(get<ActivityModelHandler>())
         }
     }
     single {
@@ -397,4 +398,5 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { PetUpgradeHandler(get(), get()) }
     single { PetRebornHandler(get(), get(), get()) }
     single { JiugonggeHandler(get()) }
+    single { ActivityModelHandler() }
 }

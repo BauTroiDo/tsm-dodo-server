@@ -171,6 +171,9 @@ object Opcodes {
     /** 武將倉庫（protocolTable[122]） */
     const val WARRIOR_REPO = 122
 
+    /** 狂歡/活動模型系統（protocolTable[124]） */
+    const val ACTIVITY_MODEL = 124
+
     /** 精靈系統（DVT UIElf.lua / protocolTable[107]） */
     const val ELF = 107
 
