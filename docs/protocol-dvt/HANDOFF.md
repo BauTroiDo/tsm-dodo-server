@@ -5,7 +5,7 @@
 > Cập nhật: 2026-09-29
 > Repo: `BauTroiDo/tsm-dodo-server`
 > Branch: `main`
-> Code checkpoint gần nhất: `d66bed7`
+> Code checkpoint gần nhất: `2c13c9f`
 
 ## 1. Nguyên tắc tối cao
 
@@ -561,6 +561,71 @@ Ghi chú param8 hidden NPC:
 - NPC15275/map12003 placement16 có `close=1`; Lua client cũng không tạo NPC close=true khi vào scene, nên không dùng nó làm runtime test.
 - Runtime param8 đã được chốt bằng NPC Chủ Sòng Bạc close=0, không cần mở lại.
 
+### Mall/Doro quay thưởng — build/test PASS, runtime PENDING
+
+Commit:
+- `2c13c9f Restore DVT Mall Doro gacha`
+
+Nguồn authoritative:
+- Lua `Mall.SendBuyItem()` gửi C:066-001:
+  `storeKind(1)+mainPage(1)+showKind(1)+pageItemIndex(1)+itemId(2)+saleCredit(2)+count(2)+free(1)`;
+- Doro storeKind = 5;
+- giá/gói lấy trực tiếp từ `GS_C.dat` (hash giống hệt `IOS_GS_C.dat`);
+- pool/tỉ lệ lấy trực tiếp từ `BlissBag_C.dat` (hash giống hệt `IOS_BlissBag_C.dat`);
+- kết quả quay trả `S:023-150`: `count(UInt16) + <<itemId(UInt16)+itemCount(UInt32)>>`;
+- sau đó mới trả `S:066-003 itemId(UInt16)+result(Byte)`. Thứ tự này bắt buộc vì S66-3 success gọi `Mall.ClearDoro()`; nếu gửi trước thì UIDoro không mở animation.
+
+Gói Hồn trong ảnh người dùng:
+- `34623`: Limited x1, currency1 Point, giá100, draws=1;
+- `34624`: Limited x10, currency1 Point, giá900, draws=10;
+- `32992/32993`: Soul ticket currency10, giá1/10, draws=1/10;
+- `34167/34168`: ColorSoul currency11, giá1/10, draws=1/10.
+
+Pool Hồn DVT:
+- 34623/34624: 34625 1%, 34073 10%, 32995 29%, 32994 60%;
+- 32992/32993: 34074 1%, 34073 10%, 32995 29%, 32994 60%;
+- 34167/34168: 34074 30%, 34073 70%.
+Tổng weight = 10000. Không invent pity/rate.
+
+Reward tức thời là các hộp/túi item thường trong BAG (specialAbility=48), không phải Soul instance:
+- 32994 Bộ Linh Hồn Trắng;
+- 32995 Bộ Linh Hồn Lục;
+- 34073 Túi Linh Hồn - Lam;
+- 34074 Túi Linh Hồn - Tím;
+- 34625 Bộ Linh Hồn Limited.
+Mở các hộp sau đó đã dùng BlissBag logic hiện có.
+
+Đã implement:
+- đổi opcode 66 từ constant ARENA không dùng thành `MALL=66`;
+- loader `GS_C.dat` đúng layout `GoodsSaleData.New`;
+- `DoroSystem` xác thực exact store/main/show/index/item/price, open/time/bitFunction và weighted draw từ BlissBag;
+- C66-1 handler chỉ hỗ trợ Doro đã audit; reject count!=1/free!=0 và non-Doro;
+- 1 package tạo đúng `GS.value` result entries; 10-draw luôn gửi đúng 10 entry S23-150 kể cả trùng item;
+- transaction: roll -> kiểm tra toàn bộ sức chứa bag -> trừ currency -> add toàn bộ reward -> rollback/refund nếu lỗi -> sync client;
+- multi-reward bag exact/rollback để không mất tiền khi túi đầy hoặc partial add;
+- currency1 dùng PointSystem; currency3 dùng MoneySystem; currency4..16 có `PlayerCurrencySystem` + bảng `character_currencies`, persist ngay mỗi mutation;
+- login gửi S35-50 cho currency4..16 để vé quay không mất/stale sau relog;
+- S23-150 được gửi trước S66-3 success.
+
+Regression:
+- khóa 6 gói Hồn và giá/currency/draw count từ GS_C thật;
+- khóa boundary xác suất Limited 1/10/29/60;
+- khóa 10-draw tạo đúng 10 egg result;
+- reject client tamper price/page index;
+- khóa wire S23-150, S66-3, S35-50;
+- khóa persistence/underflow currency ticket;
+- end-to-end C66-1 Limited x1: -100 Point -> item34625 -> packet order bag/Point/S23-150/S66-3.
+- `gradlew clean test build`: **BUILD SUCCESSFUL**.
+
+Runtime cần test sau deploy/restart:
+1. server tạo bảng `character_currencies` tự động;
+2. login UI Hồn vẫn mở bình thường;
+3. dùng `/addpoint 1000` nếu thiếu Point;
+4. quay Limited 1 lần (100): Point -100, UIDoro mở 1 egg, bag nhận đúng 1 hộp reward;
+5. quay Limited 10 lần (900): Point -900, UIDoro có 10 egg/result, bag nhận đủ tổng 10 reward;
+6. đóng/login lại: Point và bag reward vẫn còn;
+7. vé Soul/ColorSoul sẽ hiển thị từ S35-50 và persist; cần nguồn/add currency riêng để test payment bằng vé nếu account hiện có 0.
+
 ### Gap lớn khác đã phát hiện: mainKind 36 — UIMessageboard
 
 Lua DVT có protocol đầy đủ:
@@ -598,7 +663,11 @@ Sau lỗi item wire đã PASS, còn nên audit:
 ## 10. Recent commits để chat mới định vị nhanh
 
 ```text
-faf0a81 Restore DVT Eve Point purchase semantics      — build/test PASS; runtime PENDING
+2c13c9f Restore DVT Mall Doro gacha                   — build/test PASS; runtime PENDING
+dee8d4c Mark follow NPC persistence runtime pass      — runtime PASS
+179cf79 Persist active follow NPC across login        — runtime PASS
+d66bed7 Fix DVT Eve chain tie ordering                — runtime PASS
+faf0a81 Restore DVT Eve Point purchase semantics      — build/test PASS; runtime UI path UNREACHABLE/legacy
 b196786 Mark DVT server-id Eve condition runtime pass — docs checkpoint
 7e42afd Restore DVT Eve server-id condition           — runtime PASS
 97e5ffa Handle DVT ActivityModel refresh              — runtime PASS
@@ -618,11 +687,11 @@ fe7633c Fix DVT NFT item wire alignment              — runtime PASS
 
 Chat mới chỉ cần đọc file này, sau đó:
 1. kiểm tra HEAD GitHub hiện tại;
-2. Daily/Jiugongge, ActivityModel C124-4 và EVE param8 đã runtime PASS; không mở lại nếu không có regression mới;
-3. ưu tiên deploy/restart và runtime test `faf0a81` cho **EVE conditionClass=7 / param19 = real Point + direct Point purchase**;
-4. test tại map12180/NPC Chủ Sòng Bạc trên serverId=1: đủ >=10 Point, chọn đổi 1 tiền Thôn thực vui vẻ; xác nhận Point -10 và item31171 x1;
-5. nếu PASS, ghi runtime PASS rồi tiếp tục gap kế tiếp (mainKind36 UIMessageboard hoặc EVE gap tiếp theo);
-6. mission Daily phụ thuộc environment/subsystem chưa test riêng vẫn là UNTESTABLE, không tự invent;
+2. Daily/Jiugongge, ActivityModel C124-4, EVE param8, casino chain resolver và follow-NPC persistence đã runtime PASS; không mở lại nếu không có regression mới;
+3. ưu tiên deploy/restart và runtime test `2c13c9f` cho **Mall/Doro quay thưởng**;
+4. test tab Hồn: dùng `/addpoint 1000` nếu cần, quay Limited x1 giá100 rồi Limited x10 giá900; xác nhận UIDoro 1/10 egg, Point giảm đúng và bag nhận đủ reward;
+5. relog xác nhận Point/reward giữ nguyên; nếu có nguồn vé Soul/ColorSoul thì test thêm currency10/11;
+6. `resultType=10` casino legacy vẫn UNKNOWN, không invent; direct Point Surface23 hiện unreachable qua UI hiện tại;
 7. không yêu cầu người dùng kể lại lịch sử.
 
-**Điểm tiếp tục hiện tại: `faf0a81` param19/direct Point purchase đã build/test PASS, đang chờ deploy/restart + runtime tại Chủ Sòng Bạc.**
+**Điểm tiếp tục hiện tại: `2c13c9f` Mall/Doro đã build/test PASS, đang chờ deploy/restart + runtime tab Hồn.**
