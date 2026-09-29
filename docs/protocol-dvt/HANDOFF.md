@@ -243,7 +243,7 @@ Runtime cần test:
 3. đánh 1 trận nhận EXP/vàng/drop, restart server ngay;
 4. login lại xác nhận EXP/vàng/drop/pet vẫn còn.
 
-#### H2. Võ tướng xuất chiến không được giữ sau relog — build PASS, runtime PENDING
+#### H2. Võ tướng xuất chiến không được giữ sau relog — runtime PASS
 Commit:
 - `179cf79 Persist active follow NPC across login`
 
@@ -274,11 +274,9 @@ Bằng chứng DVT Lua:
 - regression xác nhận DB update deploy/recall và wire S19-1 khác S19-4;
 - `gradlew clean test build`: **BUILD SUCCESSFUL**.
 
-Runtime cần test sau pull/restart `179cf79`:
-1. chọn một pet/tướng xuất chiến;
-2. thoát hẳn game rồi đăng nhập lại;
-3. tướng đó phải vẫn ở trạng thái xuất chiến, không cần chọn lại;
-4. thu hồi tướng, thoát/login lại — phải vẫn là không xuất chiến.
+Runtime: **PASS** — người dùng đã xác nhận sau pull/restart `179cf79`.
+- tướng đang xuất chiến vẫn được giữ sau thoát game/login lại;
+- không còn phải chọn lại pet/tướng sau mỗi lần đăng nhập.
 
 #### I. Hidden carried pets / S15-8 wire — runtime PASS
 Commit:
