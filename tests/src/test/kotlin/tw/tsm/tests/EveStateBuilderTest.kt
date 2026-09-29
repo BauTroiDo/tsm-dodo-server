@@ -141,7 +141,7 @@ class EveStateBuilderTest : DescribeSpec({
             )
             state.bagUsedSlots shouldBe 2
             state.storedItems shouldBe mapOf(29348 to 5)
-            state.bagCapacity shouldBe 65
+            state.bagCapacity shouldBe 265
             state.isMounted shouldBe true
             state.sex shouldBe 2
             state.level shouldBe 30

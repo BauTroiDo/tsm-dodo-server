@@ -144,8 +144,8 @@ class LoginService(
         responseSender.sendPlayerData(session, playerData)
 
         // S:085-001 Đếm số lượng của nhân vật — Bắt buộc gửi trước vật phẩm trong túi đồ
-        // Túi đồ: currentThingGrid = 50 + (Bag_1+Bag_2+Bag_3)×5 (Khởi tạo 0 → 50 ô)
-        // Tiền trang (Ngân hàng): currentBThingGrid = 25 + (Bank_1+Bank_2+Bank_3)×5 (Khởi tạo 0 → 25 ô)
+        // DVT Item.lua: currentThingGrid = 250 + (Bag_1+Bag_2+Bag_3)×5.
+        // DVT Item.lua: currentBThingGrid = 250 + (Bank_1+Bank_2+Bank_3)×5.
         // Bảo khố: currentStorageGrid = (Storage_1+Storage_2)×5 (Private server mặc định 14 → 70 ô, đầy kho)
         // Khách sạn: Inn.currentSpace = RoleCount[102] + 6 (Khởi tạo 0 → 6 ô)
         // Kho võ tướng: Inn.currentWarriorRepositorySpace = RoleCount[822] + 5 (Khởi tạo 0 → 5 ô)

@@ -110,7 +110,7 @@ class RoleCountSystem(
     /**
      * Số ô túi đồ người chơi đã mở
      *
-     * Đối chiếu Item.lua: currentThingGrid = InitBagGrid(50) + (Bag_1+Bag_2+Bag_3)×5
+     * Đối chiếu DVT Item.lua: currentThingGrid = InitBagGrid(250) + (Bag_1+Bag_2+Bag_3)×5
      */
     fun getBagCapacity(characterId: Long): Int {
         val expand = getValue(characterId, BAG_1) + getValue(characterId, BAG_2) + getValue(characterId, BAG_3)
@@ -121,7 +121,7 @@ class RoleCountSystem(
     /**
      * Số ô tiền trang (ngân hàng) người chơi đã mở
      *
-     * Đối chiếu Item.lua: currentBThingGrid = BaseBThingGrid(25) + (Bank_1+Bank_2+Bank_3)×5
+     * Đối chiếu DVT Item.lua: currentBThingGrid = BaseBThingGrid(250) + (Bank_1+Bank_2+Bank_3)×5
      */
     fun getBankCapacity(characterId: Long): Int {
         val expand = getValue(characterId, BANK_1) + getValue(characterId, BANK_2) + getValue(characterId, BANK_3)

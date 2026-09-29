@@ -216,9 +216,7 @@ class SlotMachineSystem(
             // Persist coin deduction first. Every following mutation has an explicit
             // rollback path, so a failed reward grant cannot consume the spin coin.
             val deducted = state.copy(coin = state.coin - cost)
-            slotSystemLogger.info { "SLOTTRACE COIN_SAVE_BEGIN" }
             repository.save(characterId, deducted)
-            slotSystemLogger.info { "SLOTTRACE COIN_SAVE_DONE" }
 
             val credited = mutableListOf<Pair<Int, Int>>()
             try {
@@ -242,7 +240,6 @@ class SlotMachineSystem(
             val changed = if (bagRewards.isEmpty()) {
                 emptyList()
             } else {
-                slotSystemLogger.info { "SLOTTRACE BAG_GRANT_BEGIN" }
                 inventorySystem.addRewardsToBagExact(characterId, bagRewards)
                     ?: run {
                         rollbackCurrencies(characterId, credited)
@@ -289,9 +286,7 @@ class SlotMachineSystem(
     }
 
     private suspend fun loadOrCreate(characterId: Long): SlotMachineStateData {
-        slotSystemLogger.info { "SLOTTRACE LOAD_BEGIN" }
         val loaded = repository.load(characterId)
-        slotSystemLogger.info { "SLOTTRACE LOAD_DONE" }
         if (isValidBoard(loaded.awards)) return loaded
 
         val created = loaded.copy(

@@ -1,13 +1,13 @@
 package tw.tsm.domain.constants
 
 /**
- * Hằng số hệ thống vật phẩm — tương ứng `Item.lua:187-220`
+ * Hằng số hệ thống vật phẩm — theo Lua Đa Vũ Trụ `Logic/Item.lua`.
  */
 object ItemConstants {
     /** Số ô tối đa của túi đồ*/
-    const val MAX_BAG_SLOTS = 250
+    const val MAX_BAG_SLOTS = 500
     /** Số ô ban đầu của túi đồ*/
-    const val INIT_BAG_SLOTS = 50
+    const val INIT_BAG_SLOTS = 250
     /** Số ô mỗi trang của túi đồ*/
     const val MAX_PAGE_ITEM = 25
     /** Đơn vị mở rộng túi đồ*/
@@ -19,14 +19,14 @@ object ItemConstants {
     const val MAX_STYLE = 5
 
     /** Số ô tối đa của Tiền Trang*/
-    const val MAX_BANK_SLOTS = 250
+    const val MAX_BANK_SLOTS = 500
     /** Số ô ban đầu của Tiền Trang*/
-    const val INIT_BANK_SLOTS = 25
+    const val INIT_BANK_SLOTS = 250
     /** Đơn vị mở rộng của Tiền Trang*/
     const val ADD_BANK_SLOTS = 5
 
     /** Số ô tối đa của kho báu — Item.lua:188 MaxStorageGrid*/
-    const val MAX_STORAGE_SLOTS = 70
+    const val MAX_STORAGE_SLOTS = 250
     /** Số ô ban đầu của kho báu (mở rộng hoàn toàn bằng RoleCount)*/
     const val INIT_STORAGE_SLOTS = 0
     /** Đơn vị mở rộng của kho báu (giống Tiền Trang)*/
