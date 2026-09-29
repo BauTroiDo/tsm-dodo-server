@@ -486,17 +486,17 @@ Kết luận authoritative:
 - regression tests khóa các shape thật: serverId 1 <100, serverId100 ==100, galaxy 97/197 với ops5 threshold;
 - `gradlew clean test build`: **BUILD SUCCESSFUL**.
 
-Runtime `7e42afd`: **PARTIAL — deploy/restart/login PASS, semantic event PENDING**.
+Runtime `7e42afd`: **PASS**.
 - production HEAD `bd4cf0f` (chứa code `7e42afd`);
 - process mới chạy lúc 07:46:17;
 - client login thành công lúc 07:47:02 với `serverId=1`, đúng giá trị mà evaluator sẽ dùng;
 - không có crash/exception/regression do patch sau restart;
-- chưa ghi runtime PASS hoàn chỉnh vì sau restart player đang ở map 12811 và chưa trigger event class7/param8.
+- runtime test thật tại map `12180`, NPC `Chủ Sòng Bạc` (`npcId=16030`, placement 1, close=0, events `[2,17]`);
+- với `serverId=1`: `eveNo=2` kiểm tra `actual=1 ops=1 val=100 -> false`; `eveNo=17` kiểm tra `actual=1 ops=2 val=100 -> true`;
+- `EveFlowController` sau đó dispatch result của nhánh event17;
+- không có exception/regression.
 
-Điểm test trực tiếp đã xác định từ Eve.emg:
-- map `12003`, placement `16`, npcId `15275`, tọa độ `(70,580)`, eveNo `28`;
-- event này chứa class7/param8 và phân nhánh theo Server ID;
-- GM command hiện có: `/tp 12003 70 580`.
+Ghi chú: NPC 15275/map12003 trước đó không phù hợp để test vì placement16 có `close=1`; Lua `MapNpcManager.OnEnterScene()` cũng không tạo Role.mapNpcs cho NPC close=true, nên không phải regression server.
 Arena 54901..54904 phụ thuộc multi-server có thể để UNTESTABLE trên server offline.
 
 ### Gap lớn khác đã phát hiện: mainKind 36 — UIMessageboard
@@ -536,7 +536,7 @@ Sau lỗi item wire đã PASS, còn nên audit:
 ## 10. Recent commits để chat mới định vị nhanh
 
 ```text
-7e42afd Restore DVT Eve server-id condition           — build/test PASS; runtime PENDING
+7e42afd Restore DVT Eve server-id condition           — runtime PASS
 97e5ffa Handle DVT ActivityModel refresh              — runtime PASS
 36d3bb0 Fix DVT daily special RoleCount wire         — runtime PASS
 5c686ed Fix DVT daily mission progress tracking      — gameplay bridge working; superseded by 36d3bb0 for UI wire
