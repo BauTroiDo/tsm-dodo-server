@@ -110,6 +110,7 @@ class EveStateBuilderTest : DescribeSpec({
             val session = mockk<GameSession>()
             every { session.sex } returns 2
             every { session.level } returns 30
+            every { session.serverId } returns 97
             every { session.mountNpcId } returns 7001
 
             val builder = EveStateBuilder(
@@ -139,6 +140,7 @@ class EveStateBuilderTest : DescribeSpec({
             state.isMounted shouldBe true
             state.sex shouldBe 2
             state.level shouldBe 30
+            state.serverId shouldBe 97
             state.skillLevels shouldBe mapOf(14001 to 2)
             state.gold shouldBe 250
             state.npcSecondReincarnationStatus shouldBe -1

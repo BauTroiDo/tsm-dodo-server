@@ -20,6 +20,7 @@ private val logger = KotlinLogging.logger {}
  * @param equipItems     已裝備的物品 ID 集合
  * @param sex            角色性別（conditionClass=7 param=5 用，對應 pStyle=1/2）
  * @param level          角色等級
+ * @param serverId       登入所選 Server ID（conditionClass=7 param=8）
  * @param rebornCount    轉生次數
  * @param isMounted      是否正在騎乘坐騎（conditionClass=7 param=16 用）
  * @param lastSurfaceId  最後顯示的 Surface ID（conditionClass=10 比對用）
@@ -45,6 +46,7 @@ data class PlayerEventState(
     val equipItems: Set<Int> = emptySet(),
     val sex: Int = 0,
     val level: Int = 0,
+    val serverId: Int = -1,
     val rebornCount: Int = 0,
     val isMounted: Boolean = false,
     val lastSurfaceId: Int = -1,
@@ -181,6 +183,20 @@ object EveConditionEvaluator {
                             else -> emptySet()
                         }
                         if (npcId in npcSet) npcId else 0
+                    }
+                    8 -> {
+                        // DVT Server ID condition.
+                        // Evidence:
+                        // - Login packet stores Network.serverId / session.serverId.
+                        // - Migrant.lua defines galaxy servers 90..99 (serverId > 100 => %100).
+                        // - All 468 Eve.emg cls=7,param=8 samples use pStyle=1/subItem=0 and
+                        //   values 1,2,96..104,196..199; arena scenes 54901..54904 are
+                        //   exactly Migrant.IsArenaScene().
+                        if (
+                            cond.conditionParameterStyle == 1 &&
+                            cond.conditionSubItem == 0 &&
+                            state.serverId > 0
+                        ) state.serverId else null
                     }
                     16 -> {
                         // 坐騎狀態：Eve 樣本固定 subItem=1 時接「請你下馬」對話。

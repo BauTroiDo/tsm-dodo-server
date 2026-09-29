@@ -229,6 +229,46 @@ class EveConditionEvaluatorTest : DescribeSpec({
                 PlayerEventState(followPetCount = 2, maxFollowPets = 4)
             ) shouldBe true
         }
+        it("param=8 使用登入 Server ID；覆蓋 Eve.emg 真實 shape") {
+            val normal = PlayerEventState(serverId = 1)
+            val galaxy97 = PlayerEventState(serverId = 97)
+            val galaxy197 = PlayerEventState(serverId = 197)
+            val server100 = PlayerEventState(serverId = 100)
+
+            // 12003/12180: ops=2,value=100 → serverId < 100
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 8, pStyle = 1, ops = 2, value = 100), normal
+            ) shouldBe true
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 8, pStyle = 1, ops = 2, value = 100), server100
+            ) shouldBe false
+
+            // 12003/12180: ops=1,value=100 → serverId == 100
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 8, pStyle = 1, ops = 1, value = 100), server100
+            ) shouldBe true
+
+            // 54901..54904: ops=5 with exact galaxy-server thresholds.
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 8, pStyle = 1, ops = 5, value = 97), galaxy97
+            ) shouldBe true
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 8, pStyle = 1, ops = 5, value = 98), galaxy97
+            ) shouldBe false
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 8, pStyle = 1, ops = 5, value = 197), galaxy197
+            ) shouldBe true
+        }
+
+        it("param=8 thiếu serverId hoặc shape lạ phải bảo thủ false") {
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 8, pStyle = 1, ops = 2, value = 100), PlayerEventState()
+            ) shouldBe false
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 8, pStyle = 2, ops = 2, value = 100), PlayerEventState(serverId = 1)
+            ) shouldBe false
+        }
+
         it("param=16 subItem=1 代表騎乘中需要下馬") {
             val mounted = PlayerEventState(isMounted = true)
             val notMounted = PlayerEventState(isMounted = false)

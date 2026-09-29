@@ -101,6 +101,7 @@ class EveStateBuilder(
             equipItems = equipItems,
             sex = session?.sex ?: 0,
             level = session?.level ?: 0,
+            serverId = session?.serverId?.takeIf { it > 0 } ?: -1,
             rebornCount = playerStateManager.getState(charId)?.turn ?: 0,
             isMounted = (session?.mountNpcId ?: 0) != 0,
             lastSurfaceId = eventSession?.lastSurfaceId ?: -1,
