@@ -264,6 +264,16 @@ class PartyPetResponseSender {
 
     // ── 武將出戰 (mainKind=19) ──
 
+    /** S:019-001 登入/初始化武將出戰（Client Role.SetFightNpc UInt16） */
+    fun sendFollowNpcDeployInit(session: SessionSender, npcId: Int) {
+        session.send(
+            PacketWriter(5)
+                .writeByte(Opcodes.FOLLOW_NPC_DEPLOY).writeByte(1).writeByte(0)
+                .writeShortLE(npcId)
+                .toByteArray()
+        )
+    }
+
     /** S:019-004 武將出戰（UInt16 版本） */
     fun sendFollowNpcDeploy(session: SessionSender, npcId: Int) {
         session.send(

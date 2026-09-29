@@ -80,4 +80,20 @@ class DvtFollowNpcFullWireTest {
         }
         assertFalse(b.hasRemaining())
     }
+
+    @Test fun `fight pet init and runtime deploy use distinct DVT subkinds`() {
+        val sent = mutableListOf<ByteArray>()
+        val session = mockk<SessionSender>(relaxed = true) {
+            every { send(any()) } answers {
+                sent += firstArg<ByteArray>()
+            }
+        }
+        val sender = PartyPetResponseSender()
+
+        sender.sendFollowNpcDeployInit(session, 30001)
+        sender.sendFollowNpcDeploy(session, 30001)
+
+        assertArrayEquals(byteArrayOf(19, 1, 0, 0x31, 0x75), sent[0])
+        assertArrayEquals(byteArrayOf(19, 4, 0, 0x31, 0x75), sent[1])
+    }
 }

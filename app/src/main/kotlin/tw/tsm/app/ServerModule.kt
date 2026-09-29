@@ -373,7 +373,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { SkillUpgradeHandler(get(), get(), get(), get(), get<DailyProgressSystem>()) }
     single { PartyHandler(get(), get(), get(), get<DailyProgressSystem>()) }
     single { FollowNpcHandler(get(), get(), get()) }
-    single { FollowNpcDeployHandler(get(), get(), get<DailyProgressSystem>()) }
+    single { FollowNpcDeployHandler(get(), get(), get<CharacterRepository>(), get<DailyProgressSystem>()) }
     single { PkSettingHandler(get()) }
     single { StatHandler(get(), get(), get(), get<StatSystem>(), get(), get<SkillRepository>(), get<DailyProgressSystem>()) }
     single { MountHandler(get(), get(), get()) }

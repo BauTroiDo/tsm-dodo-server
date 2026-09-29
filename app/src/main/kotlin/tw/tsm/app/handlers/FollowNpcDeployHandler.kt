@@ -6,6 +6,7 @@ import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.PacketHandler
 import tw.tsm.domain.interfaces.ResponseSender
+import tw.tsm.domain.interfaces.repositories.CharacterRepository
 import tw.tsm.gamelogic.systems.DailyProgressSystem
 import tw.tsm.gamelogic.systems.PetSystem
 import tw.tsm.protocol.PacketReader
@@ -21,6 +22,7 @@ private val logger = KotlinLogging.logger {}
 class FollowNpcDeployHandler(
     private val petSystem: PetSystem,
     private val responseSender: ResponseSender,
+    private val characterRepository: CharacterRepository? = null,
     private val dailyProgressSystem: DailyProgressSystem? = null,
 ) : PacketHandler {
 
@@ -55,7 +57,15 @@ class FollowNpcDeployHandler(
             return
         }
 
-        // S:019-004 通知出戰（使用 UInt16 版本）
+        // Trạng thái xuất chiến là dữ liệu nhân vật, phải ghi ngay xuống DB.
+        // Không chờ C:000 disconnect vì đóng app/mất kết nối có thể không gửi packet đó.
+        try {
+            characterRepository?.updateFightNpcId(characterId, npcId)
+        } catch (e: Exception) {
+            logger.error(e) { "Lưu võ tướng xuất chiến thất bại: charId=$characterId npc=$npcId" }
+        }
+
+        // S:019-004 thông báo xuất chiến (UInt16)
         responseSender.sendFollowNpcDeploy(session, npcId)
         dailyProgressSystem?.setConditionFlag(
             session,
@@ -67,13 +77,20 @@ class FollowNpcDeployHandler(
     /**
      * C:019-002 收回出戰武將（空包）
      */
-    private fun handleRecall(session: GameSession, characterId: Long) {
+    private suspend fun handleRecall(session: GameSession, characterId: Long) {
         if (!petSystem.recallFightNpc(characterId)) {
             logger.debug { "收回失敗：charId=$characterId" }
             return
         }
 
-        // S:019-002 通知收回（空包）
+        // Thu hồi cũng phải ghi ngay, nếu không DB có thể khôi phục nhầm pet cũ ở lần login sau.
+        try {
+            characterRepository?.updateFightNpcId(characterId, 0)
+        } catch (e: Exception) {
+            logger.error(e) { "Lưu trạng thái thu hồi võ tướng thất bại: charId=$characterId" }
+        }
+
+        // S:019-002 thông báo thu hồi (không payload)
         responseSender.sendFollowNpcRecall(session)
         logger.info { "${session.characterName} 收回武將" }
     }

@@ -9,6 +9,7 @@ import tw.tsm.app.handlers.FollowNpcDeployHandler
 import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.ResponseSender
+import tw.tsm.domain.interfaces.repositories.CharacterRepository
 import tw.tsm.domain.interfaces.repositories.PetRepository
 import tw.tsm.domain.valueobjects.FollowNpcData
 import tw.tsm.domain.valueobjects.ThingData
@@ -77,7 +78,8 @@ class DvtCartTransitionTest {
     }
     @Test fun `deploy rejects truncated or trailing bytes and accepts word npc id`() = runTest {
         load(FollowNpcData(1, 30001))
-        val deploy = FollowNpcDeployHandler(pets, response)
+        val characters = mockk<CharacterRepository>(relaxed = true)
+        val deploy = FollowNpcDeployHandler(pets, response, characters)
         for (bytes in listOf(byteArrayOf(), byteArrayOf(0x31), byteArrayOf(0x31, 0x75, 1)))
             deploy.handle(session, 1, bytes)
         assertEquals(0, pets.getCache(42)!!.fightNpcId)
@@ -87,6 +89,10 @@ class DvtCartTransitionTest {
         assertEquals(30001, pets.getCache(42)!!.fightNpcId)
         deploy.handle(session, 2, byteArrayOf())
         assertEquals(0, pets.getCache(42)!!.fightNpcId)
+        coVerifySequence {
+            characters.updateFightNpcId(42, 30001)
+            characters.updateFightNpcId(42, 0)
+        }
     }
     @Test fun `cart capacity follows rebirth tier`() = runTest {
         val follow = FollowNpcData(1, 30002)

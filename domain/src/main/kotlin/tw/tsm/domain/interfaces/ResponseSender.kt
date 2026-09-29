@@ -1097,9 +1097,14 @@ interface ResponseSender {
     fun sendCartRemove(session: SessionSender, slotIndex: Int)
 
     /**
-     * 發送武將出戰（S:019-004）
-     *
-     * 格式：+npcId(2)
+     * Đăng nhập/khởi tạo võ tướng xuất chiến (S:019-001).
+     * DVT client protocolTable[19][1] gọi Role.SetFightNpc(UInt16).
+     */
+    fun sendFollowNpcDeployInit(session: SessionSender, npcId: Int)
+
+    /**
+     * Võ tướng xuất chiến runtime (S:019-004).
+     * DVT client protocolTable[19][4] cũng gọi Role.SetFightNpc(UInt16).
      */
     fun sendFollowNpcDeploy(session: SessionSender, npcId: Int)
 

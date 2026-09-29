@@ -249,7 +249,7 @@ class LoginService(
         // S:019-001 Khôi phục võ tướng xuất chiến (Xác nhận võ tướng đó vẫn đang được mang theo)
         if (record.fightNpcId > 0 && petCache.follow.values.any { it.npcId == record.fightNpcId }) {
             petCache.fightNpcId = record.fightNpcId
-            responseSender.sendFollowNpcDeploy(session, record.fightNpcId)
+            responseSender.sendFollowNpcDeployInit(session, record.fightNpcId)
         }
 
         // S:081-002 Khởi tạo cờ vĩnh viễn (Cờ hoàn thành hướng dẫn, v.v.) — Bắt buộc phải trước dữ liệu thú cưỡi,

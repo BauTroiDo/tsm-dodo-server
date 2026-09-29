@@ -86,6 +86,10 @@ class AutoSaveService(
                 moneySystem.saveMoney(charId)
                 pointSystem.savePoints(charId)
                 skillSystem.save(charId)
+                // fightNpcId nằm ở bảng characters, không nằm trong petRepository.
+                // Checkpoint riêng để crash/mất kết nối vẫn giữ đúng tướng đang xuất chiến.
+                val fightNpcId = petSystem.getCache(charId)?.fightNpcId ?: 0
+                characterRepository.updateFightNpcId(charId, fightNpcId)
                 petSystem.save(charId)
                 mountSystem.save(charId)
                 roleCountSystem.saveCounts(charId)

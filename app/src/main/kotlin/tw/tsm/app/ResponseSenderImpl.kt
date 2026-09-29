@@ -528,6 +528,9 @@ class ResponseSenderImpl(worldManager: WorldManager) : ResponseSender {
     override fun sendCartRemove(session: SessionSender, slotIndex: Int) =
         partyPet.sendCartRemove(session, slotIndex)
 
+    override fun sendFollowNpcDeployInit(session: SessionSender, npcId: Int) =
+        partyPet.sendFollowNpcDeployInit(session, npcId)
+
     override fun sendFollowNpcDeploy(session: SessionSender, npcId: Int) =
         partyPet.sendFollowNpcDeploy(session, npcId)
 
