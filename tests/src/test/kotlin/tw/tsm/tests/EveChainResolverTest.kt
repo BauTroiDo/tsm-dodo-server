@@ -7,11 +7,13 @@ import io.kotest.matchers.shouldBe
 import tw.tsm.domain.data.EveCondition
 import tw.tsm.domain.data.EveResult
 import tw.tsm.gamelogic.systems.EveChainResolver
+import tw.tsm.gamelogic.systems.EveConditionEvaluator
+import tw.tsm.gamelogic.systems.PlayerEventState
 
 /**
  * EveChainResolver 單元測試
  *
- * 涵蓋：buildChains 分組 + resolve 四層排序 + chainFilter 過濾
+ * 涵蓋：buildChains 分組 + resolve step/data-order 優先級 + chainFilter 過濾
  */
 class EveChainResolverTest : DescribeSpec({
 
@@ -131,9 +133,7 @@ class EveChainResolverTest : DescribeSpec({
             resolved.matchedConditionNo shouldBe 2
         }
 
-        it("四層排序 — stepScore 相同時鏈長度優先") {
-            // 鏈 A：1 個條件
-            // 鏈 B：2 個條件（AND）→ 應被選（更精確）
+        it("stepScore bằng nhau thì giữ chain xuất hiện trước, không ưu tiên chain dài") {
             val conditions = listOf(
                 cond(no = 1, cls = 0, andNum = 1, results = listOf(result(meanNo = 10))),
                 cond(no = 2, cls = 0, andNum = 2, results = listOf(result(meanNo = 20))),
@@ -141,19 +141,52 @@ class EveChainResolverTest : DescribeSpec({
             )
             val resolved = EveChainResolver.resolve(conditions, evaluator = { true })
             resolved.shouldNotBeNull()
-            resolved.results shouldBe listOf(result(meanNo = 20))
-            resolved.matchedConditionNo shouldBe 2
+            resolved.results shouldBe listOf(result(meanNo = 10))
+            resolved.matchedConditionNo shouldBe 1
         }
 
-        it("四層排序 — 鏈長度相同時 results 數量優先") {
+        it("stepScore bằng nhau thì giữ chain xuất hiện trước, không ưu tiên nhiều result") {
             val conditions = listOf(
                 cond(no = 1, cls = 0, results = listOf(result(meanNo = 10))),
                 cond(no = 2, cls = 0, results = listOf(result(meanNo = 20), result(meanNo = 21))),
             )
             val resolved = EveChainResolver.resolve(conditions, evaluator = { true })
             resolved.shouldNotBeNull()
-            resolved.results shouldBe listOf(result(meanNo = 20), result(meanNo = 21))
-            resolved.matchedConditionNo shouldBe 2
+            resolved.results shouldBe listOf(result(meanNo = 10))
+            resolved.matchedConditionNo shouldBe 1
+        }
+
+        it("12180 eve17: initial click phải giữ cond1, không nhảy thẳng tới Talk48728") {
+            val initialResults = listOf(
+                result(type = 1, meanNo = 22363),
+                result(type = 6, meanNo = 1)
+            )
+            val successResults = listOf(result(type = 1, meanNo = 48728))
+            val conditions = listOf(
+                // cond1: serverId < 100 — nhánh mở event/menu ban đầu
+                cond(
+                    no = 1, cls = 7, param = 8, pStyle = 1,
+                    ops = 2, value = 100, andNum = 1, results = initialResults
+                ),
+                // cond10+11: hậu giao dịch — Point >=10 AND serverId <100
+                cond(
+                    no = 10, cls = 7, param = 19, pStyle = 2,
+                    ops = 5, value = 10, andNum = 2, results = successResults
+                ),
+                cond(
+                    no = 11, cls = 7, param = 8, pStyle = 1,
+                    ops = 2, value = 100, andNum = 0
+                )
+            )
+            val state = PlayerEventState(serverId = 1, realPoint = 100)
+            val resolved = EveChainResolver.resolve(
+                conditions,
+                evaluator = { EveConditionEvaluator.evaluate(it, state) }
+            )
+
+            resolved.shouldNotBeNull()
+            resolved.matchedConditionNo shouldBe 1
+            resolved.results shouldBe initialResults
         }
 
         it("四層排序 — 全相同時先出現者優先") {
