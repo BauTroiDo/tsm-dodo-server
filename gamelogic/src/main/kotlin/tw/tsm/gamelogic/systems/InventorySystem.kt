@@ -163,6 +163,61 @@ class InventorySystem(
     }
 
     /**
+     * Trừ nhiều stack túi đồ theo một giao dịch all-or-nothing.
+     *
+     * Dùng cho DVT UISell sellId=11: client có thể chọn nhiều stack item31171
+     * và gửi bagIndex(UInt16)+qty(UInt16) cho từng stack. Server validate toàn bộ
+     * trước khi mutation; nếu bất kỳ save/remove nào thất bại thì khôi phục snapshot.
+     */
+    suspend fun removeBagItemsExact(
+        characterId: Long,
+        consumptions: List<Pair<Int, Int>>
+    ): Boolean {
+        if (consumptions.isEmpty()) return false
+        val bag = bags[characterId] ?: return false
+        if (consumptions.any { (slot, qty) -> slot < 0 || qty <= 0 } ||
+            consumptions.map { it.first }.toSet().size != consumptions.size
+        ) {
+            return false
+        }
+
+        val before = linkedMapOf<Int, ThingData>()
+        for ((slot, qty) in consumptions) {
+            val thing = bag[slot] ?: return false
+            if (thing.quantity < qty) return false
+            before[slot] = thing
+        }
+
+        try {
+            for ((slot, qty) in consumptions) {
+                val current = bag[slot] ?: error("Bag slot disappeared during exact removal")
+                val next = if (current.quantity == qty) null
+                    else current.copy(quantity = current.quantity - qty)
+
+                if (next == null) bag.remove(slot) else bag[slot] = next
+                inventoryRepo.saveItem(characterId, EThings.BAG, slot, next)
+            }
+            return true
+        } catch (e: Exception) {
+            logger.error(e) {
+                "removeBagItemsExact lỗi, rollback: characterId=" + characterId +
+                    " slots=" + before.keys
+            }
+            for ((slot, original) in before) {
+                bag[slot] = original
+                try {
+                    inventoryRepo.saveItem(characterId, EThings.BAG, slot, original)
+                } catch (rollbackError: Exception) {
+                    logger.error(rollbackError) {
+                        "Rollback bag thất bại: characterId=" + characterId + " slot=" + slot
+                    }
+                }
+            }
+            return false
+        }
+    }
+
+    /**
      * Kiểm tra một batch reward có thể vào túi trọn vẹn hay không.
      * Các item cùng ID được gộp lượng để tính stack, các ID khác nhau cùng tranh số ô trống.
      */

@@ -59,6 +59,7 @@ class ResponseSenderImpl(worldManager: WorldManager) : ResponseSender {
     private val achievement = AchievementResponseSender()
     private val uiSell = UISellResponseSender()
     private val mall = MallResponseSender()
+    private val slotMachine = SlotMachineResponseSender()
 
     // ── Đăng nhập/Nhân vật (LoginResponseSender) ──
 
@@ -333,6 +334,18 @@ class ResponseSenderImpl(worldManager: WorldManager) : ResponseSender {
 
     override fun sendPlayerCurrency(session: SessionSender, currencyKind: Int, value: Int) =
         mall.sendPlayerCurrency(session, currencyKind, value)
+
+    override fun sendSlotMachineAwards(session: SessionSender, awards: List<tw.tsm.domain.data.SlotMachineAward>) =
+        slotMachine.sendAwards(session, awards)
+
+    override fun sendSlotMachineSpinResult(session: SessionSender, slotIndices: List<Int>) =
+        slotMachine.sendSpinResult(session, slotIndices)
+
+    override fun sendSlotMachineMessage(session: SessionSender, kind: Int) =
+        slotMachine.sendMessage(session, kind)
+
+    override fun sendSlotMachineCoin(session: SessionSender, coin: Int) =
+        slotMachine.sendCoin(session, coin)
 
     override fun sendDoroResult(session: SessionSender, rewards: List<tw.tsm.domain.data.DoroReward>) =
         mall.sendDoroResult(session, rewards)

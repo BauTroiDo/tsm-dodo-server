@@ -793,6 +793,18 @@ interface ResponseSender {
     /** S:035-050 DVT generic player currency. */
     fun sendPlayerCurrency(session: SessionSender, currencyKind: Int, value: Int)
 
+    /** S:072-001 Vòng quay: 16 ô giải thưởng hiện tại. */
+    fun sendSlotMachineAwards(session: SessionSender, awards: List<tw.tsm.domain.data.SlotMachineAward>)
+
+    /** S:072-002 Vòng quay: các slot trúng thưởng của lượt quay. */
+    fun sendSlotMachineSpinResult(session: SessionSender, slotIndices: List<Int>)
+
+    /** S:072-003 Vòng quay: mã thông báo/lỗi. */
+    fun sendSlotMachineMessage(session: SessionSender, kind: Int)
+
+    /** S:072-006 Vòng quay: số xu hiện có (UInt16). */
+    fun sendSlotMachineCoin(session: SessionSender, coin: Int)
+
     /** S:023-150 Doro draw results; one entry per egg/draw. */
     fun sendDoroResult(session: SessionSender, rewards: List<tw.tsm.domain.data.DoroReward>)
 

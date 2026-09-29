@@ -71,6 +71,10 @@ class GameDataManager(
     var doroBlissBagDefs: Map<Int, BlissBagDef> = emptyMap()
         private set
 
+    /** Bốn pool giải thưởng của Vòng quay từ Mobile DVT IOS_Slot.dat. */
+    var slotMachinePools: SlotMachinePools? = null
+        private set
+
     /** Dữ liệu địa chất bản đồ (key = mapId, value = geolBaseAtt) — dùng cho nền chiến đấu*/
     var mapTerrains: Map<Int, Int> = emptyMap()
         private set
@@ -270,6 +274,30 @@ class GameDataManager(
         if (doroBlissBagDefs.isEmpty()) {
             doroBlissBagDefs = blissBagDefs
             logger.warn { "Doro fallback dùng BlissBag_C.dat vì IOS_BlissBag_C.dat không khả dụng" }
+        }
+
+        // Vòng quay Tiểu Mary: IOS_Slot.dat là bảng server-side của Mobile DVT.
+        val iosSlot = dataIosDir.resolve("IOS_Slot.dat")
+        if (Files.exists(iosSlot)) {
+            try {
+                slotMachinePools = SlotMachineDatLoader.load(Files.readAllBytes(iosSlot))
+                val p = slotMachinePools!!
+                logger.info {
+                    "Nạp IOS_Slot xong: A=${p.poolA.size}, B=${p.poolB.size}, C=${p.poolC.size}, D=${p.poolD.size} source=$iosSlot"
+                }
+            } catch (e: Exception) {
+                logger.error(e) { "Nạp IOS_Slot.dat thất bại: $iosSlot" }
+            }
+        } else {
+            val slot = dataDir.resolve("Slot.dat")
+            if (Files.exists(slot)) {
+                try {
+                    slotMachinePools = SlotMachineDatLoader.load(Files.readAllBytes(slot))
+                    logger.warn { "IOS_Slot.dat không tồn tại, fallback Slot.dat: $slot" }
+                } catch (e: Exception) {
+                    logger.error(e) { "Nạp Slot.dat fallback thất bại: $slot" }
+                }
+            }
         }
 
         // Ground.mmg (dữ liệu địa chất bản đồ, đọc từ thư mục CompreseData/)

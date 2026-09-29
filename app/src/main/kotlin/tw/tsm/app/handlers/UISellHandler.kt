@@ -15,6 +15,7 @@ import tw.tsm.gamelogic.systems.PartySystem
 import tw.tsm.gamelogic.systems.PointSystem
 import tw.tsm.gamelogic.systems.RoleCountSystem
 import tw.tsm.gamelogic.systems.SkillSystem
+import tw.tsm.gamelogic.systems.SlotMachineSystem
 import tw.tsm.gamelogic.systems.UISellSystem
 import tw.tsm.gamelogic.systems.UiSellQuote
 import tw.tsm.gamelogic.systems.WorldManager
@@ -51,7 +52,8 @@ class UISellHandler(
     private val roleCountSystem: RoleCountSystem,
     private val skillRepository: SkillRepository,
     private val playerStateManager: PlayerStateManager,
-    private val skillSystem: SkillSystem
+    private val skillSystem: SkillSystem,
+    private val slotMachineSystem: SlotMachineSystem
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.UI_SELL
@@ -78,7 +80,12 @@ class UISellHandler(
         val args = readArgs(reader)
 
         val charId = session.roleId.toLong()
-        when (val quote = uiSellSystem.query(charId, sellId)) {
+        val quote = if (sellId == UISellSystem.SELL_SLOT_COIN) {
+            querySlotCoin(charId, args)
+        } else {
+            uiSellSystem.query(charId, sellId)
+        }
+        when (quote) {
             is UiSellQuote.Fail -> {
                 responseSender.sendUiSellFail(session, 1, sellId, quote.reason, quote.value)
                 logger.debug { "${session.characterName} tra cứu ký gửi thất bại: sellId=$sellId reason=${quote.reason}" }
@@ -93,22 +100,29 @@ class UISellHandler(
     }
 
     /**
-     * C:084-002 sử dụng 介消
+     * C:084-002 sử dụng UISell.
      *
-     * Định dạng: +loại(1) +số hiệu 介消(2)
-     * Loại 1 (vật phẩm): +chỉ số túi đồ(1) +args(2×N)
-     * Loại 2 (điểm/miễn phí): +args(2×N)
-     *
-     * TODO: sellId=11 dạng nhiều ô của trò chơi vòng quay (+L(1) <<+chỉ số túi đồ(1) +số lượng(2)>>) chưa được hỗ trợ
+     * DVT Lua:
+     * - generic item path: useKind(1)+sellId(2)+bagIndex(UInt16)+args(UInt16...)
+     * - sellId=11 item path đặc biệt:
+     *   useKind(1)+sellId(2)+stackCount(1)+
+     *   stackCount×[bagIndex(UInt16)+qty(UInt16)]+args(UInt16...)
+     * - money/free path: useKind(1)+sellId(2)+args(UInt16...)
      */
     private suspend fun handleUse(session: GameSession, data: ByteArray) {
         if (data.size < 3) return
         val reader = PacketReader(data)
         val useKind = reader.readUByte()
         val sellId = reader.readUShortLE()
+
+        if (sellId == UISellSystem.SELL_SLOT_COIN) {
+            handleSlotCoinUse(session, useKind, reader)
+            return
+        }
+
         val bagIndex = if (useKind == USE_KIND_ITEM) {
-            if (reader.remaining < 1) return
-            reader.readUByte()
+            if (reader.remaining < 2) return
+            reader.readUShortLE()
         } else {
             -1
         }
@@ -164,6 +178,188 @@ class UISellHandler(
                 }
             }
         }
+    }
+
+    /**
+     * Báo giá sellId=11 của UISlotMachine.
+     *
+     * Lua client:
+     * - args=[amount]      => tiêu hao item31171 x amount;
+     * - args=[0, amount]   => tiêu hao real Point, 9 Point / 1 xu.
+     */
+    private suspend fun querySlotCoin(charId: Long, args: List<Int>): UiSellQuote {
+        val amount: Int
+        val itemRoute: Boolean
+        when {
+            args.size == 1 -> {
+                amount = args[0]
+                itemRoute = true
+            }
+            args.size == 2 && args[0] == 0 -> {
+                amount = args[1]
+                itemRoute = false
+            }
+            else -> return UiSellQuote.Fail(UISellSystem.REASON_NOT_USABLE)
+        }
+
+        if (amount <= 0) return UiSellQuote.Fail(UISellSystem.REASON_NOT_USABLE)
+        val coin = slotMachineSystem.getCoin(charId)
+        if (coin + amount > SlotMachineSystem.MAX_COIN) {
+            return UiSellQuote.Fail(UISellSystem.REASON_LIMIT_REACHED)
+        }
+
+        return if (itemRoute) {
+            UiSellQuote.Item(UISellSystem.SLOT_COIN_ITEM_ID, amount)
+        } else {
+            UiSellQuote.Money(
+                UISellSystem.CURRENCY_GOLD,
+                amount.toLong() * UISellSystem.SLOT_COIN_POINT_PRICE
+            )
+        }
+    }
+
+    /**
+     * C84-2 special của sellId=11.
+     *
+     * Item route dùng nhiều stack UInt16 đúng UISell.ReceiveQuery().
+     * Point route dùng args=[0, amount].
+     */
+    private suspend fun handleSlotCoinUse(
+        session: GameSession,
+        useKind: Int,
+        reader: PacketReader
+    ) {
+        val charId = session.roleId.toLong()
+        val sellId = UISellSystem.SELL_SLOT_COIN
+
+        if (useKind == USE_KIND_ITEM) {
+            if (reader.remaining < 1) {
+                responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_ITEM_DEDUCT_FAIL)
+                return
+            }
+
+            val stackCount = reader.readUByte()
+            if (stackCount <= 0 || reader.remaining < stackCount * 4) {
+                responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_ITEM_DEDUCT_FAIL)
+                return
+            }
+
+            val consumptions = ArrayList<Pair<Int, Int>>(stackCount)
+            repeat(stackCount) {
+                val bagIndex = reader.readUShortLE()
+                val qty = reader.readUShortLE()
+                consumptions += bagIndex to qty
+            }
+            val args = readArgs(reader)
+            val quote = querySlotCoin(charId, args)
+            if (quote !is UiSellQuote.Item ||
+                consumptions.map { it.first }.toSet().size != consumptions.size ||
+                consumptions.sumOf { it.second } != quote.count
+            ) {
+                responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_PRICE_ERROR)
+                return
+            }
+
+            for ((slot, qty) in consumptions) {
+                val thing = inventorySystem.getBagItem(charId, slot)
+                if (qty <= 0 || thing == null ||
+                    thing.itemId != UISellSystem.SLOT_COIN_ITEM_ID ||
+                    thing.quantity < qty
+                ) {
+                    responseSender.sendUiSellFail(
+                        session, 2, sellId, UISellSystem.REASON_ITEM_DEDUCT_FAIL
+                    )
+                    return
+                }
+            }
+
+            val amount = quote.count
+            val updated = try {
+                slotMachineSystem.depositCoinWithPayment(charId, amount) {
+                    inventorySystem.removeBagItemsExact(charId, consumptions)
+                }
+            } catch (e: Exception) {
+                logger.error(e) { "Nạp xu SlotMachine bằng item thất bại: charId=" + charId }
+                null
+            }
+
+            if (updated == null) {
+                responseSender.sendUiSellFail(
+                    session, 2, sellId, UISellSystem.REASON_ITEM_DEDUCT_FAIL
+                )
+                return
+            }
+
+            consumptions.forEach { (slot, qty) ->
+                responseSender.sendReduceBagItem(session, slot, qty)
+            }
+            responseSender.sendSlotMachineCoin(session, updated.coin)
+            responseSender.sendUiSellSuccess(session, sellId)
+            logger.info {
+                session.characterName + " nạp " + amount +
+                    " xu Vòng quay bằng item31171, coin=" + updated.coin
+            }
+            return
+        }
+
+        if (useKind == USE_KIND_POINT) {
+            val args = readArgs(reader)
+            val quote = querySlotCoin(charId, args)
+            if (quote !is UiSellQuote.Money || args.size != 2 || args[0] != 0) {
+                responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_PRICE_ERROR)
+                return
+            }
+
+            val amount = args[1]
+            val cost = quote.cost.toInt()
+            val updated = try {
+                slotMachineSystem.depositCoinWithPayment(charId, amount) {
+                    if (!pointSystem.subtractRealPoint(charId, cost)) {
+                        false
+                    } else {
+                        try {
+                            pointSystem.savePoints(charId)
+                            true
+                        } catch (e: Exception) {
+                            pointSystem.addRealPoint(charId, cost)
+                            try {
+                                pointSystem.savePoints(charId)
+                            } catch (rollbackError: Exception) {
+                                logger.error(rollbackError) {
+                                    "Rollback Point nạp SlotMachine thất bại: charId=" + charId
+                                }
+                            }
+                            logger.error(e) {
+                                "Persist Point nạp SlotMachine thất bại: charId=" + charId
+                            }
+                            false
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                logger.error(e) { "Nạp xu SlotMachine bằng Point thất bại: charId=" + charId }
+                null
+            }
+
+            if (updated == null) {
+                responseSender.sendUiSellFail(
+                    session, 2, sellId, UISellSystem.REASON_GOLD_NOT_ENOUGH
+                )
+                return
+            }
+
+            val (real, virtual) = pointSystem.getPoints(charId)
+            responseSender.sendPointBalance(session, real, virtual)
+            responseSender.sendSlotMachineCoin(session, updated.coin)
+            responseSender.sendUiSellSuccess(session, sellId)
+            logger.info {
+                session.characterName + " nạp " + amount + " xu Vòng quay bằng " +
+                    cost + " Point, coin=" + updated.coin
+            }
+            return
+        }
+
+        responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_PRICE_ERROR)
     }
 
     /**

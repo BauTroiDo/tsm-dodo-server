@@ -210,6 +210,18 @@ class UISellSystem(
         /** Tiêu phí UI 8: Mở rộng điểm dịch chuyển ghi nhớ (UITeleport giải khóa ô → Launch(8)) */
         const val SELL_FLY_EXTEND = 8
 
+        /** UISlotMachine: nạp xu Thôn Thực (UISlotMachine.OnClick_InsertCoin → Launch(11,...)). */
+        const val SELL_SLOT_COIN = 11
+
+        /** UISlotMachine: đổi bàn thưởng (Launch(41)); payment formula kind19 còn UNKNOWN. */
+        const val SELL_SLOT_CHANGE = 41
+
+        /** Item tiền Thôn Thực hoan lạc. */
+        const val SLOT_COIN_ITEM_ID = 31171
+
+        /** UISlotMachine.lua hardcode floor(Role.GetPoint()/9): 9 real Point / 1 xu. */
+        const val SLOT_COIN_POINT_PRICE = 9
+
         /** Tam chuyển: mở khóa skill Quang/Ám (UISkillTree.UnLockSkill). */
         const val SELL_TURN3_UNLOCK_SKILL = 57
 

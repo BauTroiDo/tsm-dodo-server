@@ -150,6 +150,9 @@ object Opcodes {
     /** Cửa hàng / quay thưởng (DVT Mall, protocolTable[66])*/
     const val MALL = 66
 
+    /** Vòng quay Thôn Thực / UISlotMachine (protocolTable[72])*/
+    const val SLOT_MACHINE = 72
+
     /** Hệ thống cờ vĩnh viễn (BitFlag)*/
     const val FOREVER_FLAG = 81
 

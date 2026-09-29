@@ -37,8 +37,10 @@ import tw.tsm.domain.interfaces.repositories.MailRepository
 import tw.tsm.domain.interfaces.repositories.SkillRepository
 import tw.tsm.domain.interfaces.repositories.UiSellCountRepository
 import tw.tsm.domain.interfaces.repositories.CharacterCurrencyRepository
+import tw.tsm.domain.interfaces.repositories.SlotMachineRepository
 import tw.tsm.persistence.repositories.UiSellCountRepositoryImpl
 import tw.tsm.persistence.repositories.CharacterCurrencyRepositoryImpl
+import tw.tsm.persistence.repositories.SlotMachineRepositoryImpl
 import tw.tsm.persistence.repositories.DispatchRepositoryImpl
 import tw.tsm.persistence.repositories.FriendRepositoryImpl
 import tw.tsm.persistence.repositories.MailRepositoryImpl
@@ -108,6 +110,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             register(get<JiugonggeHandler>())
             register(get<ActivityModelHandler>())
             register(get<MallHandler>())
+            register(get<SlotMachineHandler>())
         }
     }
     single {
@@ -221,6 +224,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single<FlyPointRepository> { FlyPointRepositoryImpl() }
     single<UiSellCountRepository> { UiSellCountRepositoryImpl() }
     single<CharacterCurrencyRepository> { CharacterCurrencyRepositoryImpl() }
+    single<SlotMachineRepository> { SlotMachineRepositoryImpl() }
     single<DispatchRepository> { DispatchRepositoryImpl() }
     single<MailRepository> { MailRepositoryImpl() }
     single<FriendRepository> { FriendRepositoryImpl() }
@@ -250,6 +254,16 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { PointSystem(get()) }
     single { PlayerCurrencySystem(get<CharacterCurrencyRepository>()) }
     single { DoroSystem(get<GameDataManager>().goodsSaleDefs, get<GameDataManager>().doroBlissBagDefs) }
+    single {
+        SlotMachineSystem(
+            get<SlotMachineRepository>(),
+            get<GameDataManager>().slotMachinePools
+                ?: error("IOS_Slot.dat chưa được nạp"),
+            get<InventorySystem>(),
+            get<PlayerCurrencySystem>(),
+            get<GameDataManager>().itemDefs
+        )
+    }
     single { GroundItemManager() }
     single { PlayerStateManager() }
     single { ItemUseProcessor(get(), get<PetSystem>(), get<GameDataManager>().itemDefs, get<GameDataManager>().blissBagDefs) }
@@ -401,10 +415,11 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { MailHandler(get()) }
     single { LeaderboardHandler(get()) }
     single { FriendHandler(get()) }
-    single { UISellHandler(get(), get(), get(), get(), get(), get(), get(), get(), get(), get<SkillRepository>(), get<PlayerStateManager>(), get<SkillSystem>()) }
+    single { UISellHandler(get(), get(), get(), get(), get(), get(), get(), get(), get(), get<SkillRepository>(), get<PlayerStateManager>(), get<SkillSystem>(), get<SlotMachineSystem>()) }
     single { PetUpgradeHandler(get(), get()) }
     single { PetRebornHandler(get(), get(), get()) }
     single { JiugonggeHandler(get()) }
     single { ActivityModelHandler() }
     single { MallHandler(get(), get(), get<PointSystem>(), get<MoneySystem>(), get<PlayerCurrencySystem>(), get<ResponseSender>()) }
+    single { SlotMachineHandler(get<SlotMachineSystem>(), get<ResponseSender>()) }
 }

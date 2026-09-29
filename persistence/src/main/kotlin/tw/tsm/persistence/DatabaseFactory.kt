@@ -23,6 +23,8 @@ import tw.tsm.persistence.tables.CharacterHotkeys
 import tw.tsm.persistence.tables.CharacterFlyPoints
 import tw.tsm.persistence.tables.CharacterRoleCounts
 import tw.tsm.persistence.tables.CharacterUiSellCounts
+import tw.tsm.persistence.tables.CharacterSlotMachines
+import tw.tsm.persistence.tables.CharacterSlotMachineAwards
 import tw.tsm.persistence.tables.CharacterSkills
 import tw.tsm.persistence.tables.CharacterTurn2Skills
 import tw.tsm.persistence.tables.CharacterTurn3States
@@ -74,6 +76,7 @@ object DatabaseFactory {
                 CharacterRoleCounts,
                 CharacterFlyPoints,
                 CharacterUiSellCounts,
+                CharacterSlotMachines, CharacterSlotMachineAwards,
                 CharacterDispatches,
                 Friends, FriendInvites,
                 Mails, MailAttachments
