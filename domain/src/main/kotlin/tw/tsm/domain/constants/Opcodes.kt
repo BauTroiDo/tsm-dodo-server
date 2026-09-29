@@ -147,8 +147,8 @@ object Opcodes {
     /** 天行異能傳送（protocolTable[68]） */
     const val TELEPORT = 68
 
-    /** 天梯賽季 */
-    const val ARENA = 66
+    /** 商城 / 轉蛋（DVT Mall，protocolTable[66]） */
+    const val MALL = 66
 
     /** 永標系統（BitFlag） */
     const val FOREVER_FLAG = 81

@@ -163,6 +163,86 @@ class InventorySystem(
     }
 
     /**
+     * Kiểm tra một batch reward có thể vào túi trọn vẹn hay không.
+     * Các item cùng ID được gộp lượng để tính stack, các ID khác nhau cùng tranh số ô trống.
+     */
+    fun canAddRewardsToBag(characterId: Long, rewards: List<Pair<Int, Int>>): Boolean {
+        if (rewards.isEmpty()) return false
+        val bag = bags[characterId] ?: return false
+        val grouped = rewards
+            .filter { it.first > 0 && it.second > 0 }
+            .groupingBy { it.first }
+            .fold(0) { acc, pair -> acc + pair.second }
+        if (grouped.isEmpty()) return false
+
+        val capacity = roleCountSystem.getBagCapacity(characterId)
+        var emptySlots = (0 until capacity).count { !bag.containsKey(it) }
+
+        for ((itemId, totalQty) in grouped) {
+            val def = itemDefs[itemId] ?: return false
+            val stackLimit = if (def.fitType == 0) ItemConstants.MAX_STACK else 1
+            var remaining = totalQty
+            if (stackLimit > 1) {
+                val freeInExisting = bag.values
+                    .filter { it.itemId == itemId && it.quantity < stackLimit }
+                    .sumOf { stackLimit - it.quantity }
+                remaining = (remaining - freeInExisting).coerceAtLeast(0)
+            }
+            val needed = if (remaining == 0) 0 else (remaining + stackLimit - 1) / stackLimit
+            if (needed > emptySlots) return false
+            emptySlots -= needed
+        }
+        return true
+    }
+
+    /**
+     * Thêm toàn bộ batch reward hoặc rollback toàn bộ bag về snapshot trước giao dịch.
+     * Trả về các slot cuối cùng đã thay đổi để caller sync client.
+     */
+    suspend fun addRewardsToBagExact(
+        characterId: Long,
+        rewards: List<Pair<Int, Int>>
+    ): List<Pair<Int, ThingData>>? {
+        if (!canAddRewardsToBag(characterId, rewards)) return null
+        val bag = bags[characterId] ?: return null
+        val before = bag.toMap()
+        val expected = rewards
+            .filter { it.first > 0 && it.second > 0 }
+            .groupingBy { it.first }
+            .fold(0) { acc, pair -> acc + pair.second }
+        val beforeCounts = expected.keys.associateWith { id ->
+            before.values.filter { it.itemId == id }.sumOf { it.quantity }
+        }
+
+        try {
+            for ((itemId, qty) in expected) {
+                addItemsToBag(characterId, itemId, qty)
+            }
+            val ok = expected.all { (itemId, qty) ->
+                val afterQty = bag.values.filter { it.itemId == itemId }.sumOf { it.quantity }
+                afterQty - (beforeCounts[itemId] ?: 0) == qty
+            }
+            if (ok) {
+                return bag.entries
+                    .filter { (slot, thing) -> before[slot] != thing }
+                    .sortedBy { it.key }
+                    .map { it.key to it.value }
+            }
+        } catch (e: Exception) {
+            logger.error(e) { "addRewardsToBagExact lỗi: characterId=$characterId" }
+        }
+
+        val allSlots = bag.keys.toSet() union before.keys
+        for (slot in allSlots) {
+            val original = before[slot]
+            if (original == null) bag.remove(slot) else bag[slot] = original
+            inventoryRepo.saveItem(characterId, EThings.BAG, slot, original)
+        }
+        logger.warn { "Rollback batch reward bag: characterId=$characterId rewards=$expected" }
+        return null
+    }
+
+    /**
      * Có đang sở hữu đạo cụ nhị chuyển (chuyển sinh lần 2) của võ tướng chỉ định hay không
      *
      * Tương ứng với Lua `UINpcTurn.CheckTurn(currentTurn=2)`:

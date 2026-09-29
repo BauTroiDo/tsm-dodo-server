@@ -20,6 +20,7 @@ class DisconnectHandler(
     private val inventorySystem: InventorySystem,
     private val moneySystem: MoneySystem,
     private val pointSystem: PointSystem,
+    private val playerCurrencySystem: PlayerCurrencySystem,
     private val characterRepository: CharacterRepository,
     private val skillSystem: SkillSystem,
     private val petSystem: PetSystem,
@@ -83,6 +84,9 @@ class DisconnectHandler(
 
             try { pointSystem.saveAndUnload(characterId) }
             catch (e: Exception) { logger.error(e) { "斷線存檔失敗（元寶）：charId=$characterId" } }
+
+            // DVT currencies 4..16 are persisted on every mutation; disconnect only drops cache.
+            playerCurrencySystem.unload(characterId)
 
             try { skillSystem.saveAndUnload(characterId) }
             catch (e: Exception) { logger.error(e) { "斷線存檔失敗（技能）：charId=$characterId" } }

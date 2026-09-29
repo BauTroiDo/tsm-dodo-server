@@ -12,6 +12,7 @@ import tw.tsm.persistence.tables.CharacterMissionFlags
 import tw.tsm.persistence.tables.CharacterMissions
 import tw.tsm.persistence.tables.CharacterCompletedEvents
 import tw.tsm.persistence.tables.CharacterMoney
+import tw.tsm.persistence.tables.CharacterCurrencies
 import tw.tsm.persistence.tables.Characters
 import tw.tsm.persistence.tables.CharacterMountEquips
 import tw.tsm.persistence.tables.CharacterMounts
@@ -62,7 +63,7 @@ object DatabaseFactory {
         // 自動建表（含補齊新增欄位）
         transaction {
             SchemaUtils.createMissingTablesAndColumns(
-                Accounts, Characters, Inventories, CharacterMoney,
+                Accounts, Characters, Inventories, CharacterMoney, CharacterCurrencies,
                 CharacterMissions, CharacterMissionFlags, CharacterCompletedEvents, CharacterBitFlags,
                 CharacterSkills, CharacterTurn2Skills, CharacterTurn3States, CharacterTurn3Skills,
                 CharacterPets,

@@ -30,6 +30,7 @@ class LoginService(
     private val inventorySystem: InventorySystem,
     private val moneySystem: MoneySystem,
     private val pointSystem: PointSystem,
+    private val playerCurrencySystem: PlayerCurrencySystem,
     private val groundItemManager: GroundItemManager,
     private val questSystem: QuestSystem,
     private val stateMachine: EveEventStateMachine,
@@ -128,6 +129,7 @@ class LoginService(
         inventorySystem.loadCharacterData(record.id)
         moneySystem.loadMoney(record.id)
         pointSystem.loadPoints(record.id)
+        val specialCurrencies = playerCurrencySystem.load(record.id)
 
         // 2.5 Tính toán chỉ số cộng thêm từ trang bị (Tham khảo tskero loadEquipmentJson → addEquipBonus)
         val equips = inventorySystem.getEquipment(record.id)
@@ -198,6 +200,11 @@ class LoginService(
         // S:035-005 Hiển thị số điểm nguyên bảo còn lại
         val (pointReal, pointVirtual) = pointSystem.getPoints(record.id)
         responseSender.sendPointBalance(session, pointReal, pointVirtual)
+
+        // S:035-050 DVT generic currencies. Gửi cả 4..16 để character switch/relog không giữ số dư cũ trên client.
+        for (currencyKind in PlayerCurrencySystem.MIN_KIND..PlayerCurrencySystem.MAX_KIND) {
+            responseSender.sendPlayerCurrency(session, currencyKind, specialCurrencies[currencyKind] ?: 0)
+        }
 
         // 3. S:005-011 Số lần dùng đan dược
         responseSender.sendPillCounts(session, attrPill = 0, hpPill = 0, spPill = 0, skillPill = 0)

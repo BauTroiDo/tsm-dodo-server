@@ -790,6 +790,15 @@ interface ResponseSender {
      */
     fun sendPointBalance(session: SessionSender, pointReal: Int, pointVirtual: Int)
 
+    /** S:035-050 DVT generic player currency. */
+    fun sendPlayerCurrency(session: SessionSender, currencyKind: Int, value: Int)
+
+    /** S:023-150 Doro draw results; one entry per egg/draw. */
+    fun sendDoroResult(session: SessionSender, rewards: List<tw.tsm.domain.data.DoroReward>)
+
+    /** S:066-003 Mall purchase result. */
+    fun sendMallPurchaseResult(session: SessionSender, itemId: Int, result: Int)
+
     // ── 錢莊 (mainKind=30) ──
 
     /**

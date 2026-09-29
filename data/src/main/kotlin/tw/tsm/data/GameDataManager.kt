@@ -63,6 +63,10 @@ class GameDataManager(
     var blissBagDefs: Map<Int, BlissBagDef> = emptyMap()
         private set
 
+    /** Mall/Doro goods from GS_C.dat in file order. */
+    var goodsSaleDefs: List<GoodsSaleDef> = emptyList()
+        private set
+
     /** 地圖地質資料（key = mapId, value = geolBaseAtt）— 用於戰鬥背景 */
     var mapTerrains: Map<Int, Int> = emptyMap()
         private set
@@ -222,6 +226,14 @@ class GameDataManager(
         loadFile(dataDir, "BlissBag_C.dat") { bytes ->
             blissBagDefs = BlissBagDatLoader.load(bytes)
             logger.info { "BlissBag 載入完成：${blissBagDefs.size} 筆福袋定義" }
+        }
+
+        // GS_C（商城 / 轉蛋商品定義）
+        loadFile(dataDir, "GS_C.dat") { bytes ->
+            goodsSaleDefs = GoodsSaleDatLoader.load(bytes)
+            logger.info {
+                "GS 載入完成：${goodsSaleDefs.size} 筆，其中 Doro=${goodsSaleDefs.count { it.storeKind == 5 }}"
+            }
         }
 
         // Ground.mmg（地圖地質資料，從 CompreseData/ 目錄讀取）

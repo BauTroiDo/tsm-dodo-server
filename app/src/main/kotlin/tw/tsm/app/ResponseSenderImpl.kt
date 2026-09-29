@@ -58,6 +58,7 @@ class ResponseSenderImpl(worldManager: WorldManager) : ResponseSender {
     private val macroBox = MacroBoxResponseSender()
     private val achievement = AchievementResponseSender()
     private val uiSell = UISellResponseSender()
+    private val mall = MallResponseSender()
 
     // ── Đăng nhập/Nhân vật (LoginResponseSender) ──
 
@@ -329,6 +330,15 @@ class ResponseSenderImpl(worldManager: WorldManager) : ResponseSender {
 
     override fun sendPointBalance(session: SessionSender, pointReal: Int, pointVirtual: Int) =
         uiSell.sendPointBalance(session, pointReal, pointVirtual)
+
+    override fun sendPlayerCurrency(session: SessionSender, currencyKind: Int, value: Int) =
+        mall.sendPlayerCurrency(session, currencyKind, value)
+
+    override fun sendDoroResult(session: SessionSender, rewards: List<tw.tsm.domain.data.DoroReward>) =
+        mall.sendDoroResult(session, rewards)
+
+    override fun sendMallPurchaseResult(session: SessionSender, itemId: Int, result: Int) =
+        mall.sendMallPurchaseResult(session, itemId, result)
 
     override fun sendBankAllItems(session: SessionSender, items: Map<Int, ThingData>) =
         inventory.sendBankAllItems(session, items)

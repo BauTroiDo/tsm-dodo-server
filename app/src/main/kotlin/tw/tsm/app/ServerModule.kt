@@ -36,7 +36,9 @@ import tw.tsm.domain.interfaces.repositories.FriendRepository
 import tw.tsm.domain.interfaces.repositories.MailRepository
 import tw.tsm.domain.interfaces.repositories.SkillRepository
 import tw.tsm.domain.interfaces.repositories.UiSellCountRepository
+import tw.tsm.domain.interfaces.repositories.CharacterCurrencyRepository
 import tw.tsm.persistence.repositories.UiSellCountRepositoryImpl
+import tw.tsm.persistence.repositories.CharacterCurrencyRepositoryImpl
 import tw.tsm.persistence.repositories.DispatchRepositoryImpl
 import tw.tsm.persistence.repositories.FriendRepositoryImpl
 import tw.tsm.persistence.repositories.MailRepositoryImpl
@@ -105,6 +107,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             register(get<PetRebornHandler>())
             register(get<JiugonggeHandler>())
             register(get<ActivityModelHandler>())
+            register(get<MallHandler>())
         }
     }
     single {
@@ -217,6 +220,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single<RoleCountRepository> { RoleCountRepositoryImpl() }
     single<FlyPointRepository> { FlyPointRepositoryImpl() }
     single<UiSellCountRepository> { UiSellCountRepositoryImpl() }
+    single<CharacterCurrencyRepository> { CharacterCurrencyRepositoryImpl() }
     single<DispatchRepository> { DispatchRepositoryImpl() }
     single<MailRepository> { MailRepositoryImpl() }
     single<FriendRepository> { FriendRepositoryImpl() }
@@ -244,6 +248,8 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { InventorySystem(get(), get<GameDataManager>().itemDefs, get()) }
     single { MoneySystem(get()) }
     single { PointSystem(get()) }
+    single { PlayerCurrencySystem(get<CharacterCurrencyRepository>()) }
+    single { DoroSystem(get<GameDataManager>().goodsSaleDefs, get<GameDataManager>().blissBagDefs) }
     single { GroundItemManager() }
     single { PlayerStateManager() }
     single { ItemUseProcessor(get(), get<PetSystem>(), get<GameDataManager>().itemDefs, get<GameDataManager>().blissBagDefs) }
@@ -310,7 +316,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             }
         }
     }
-    single { LoginService(get(), get(), get(), get(), get(), get<PointSystem>(), get(), get(), get<EveEventStateMachine>(), get(), get(), get(), get(), get(), get(), get<SkillRepository>(), get<RoleCountSystem>(), get<FlyPointSystem>(), get<MailSystem>(), get<FriendSystem>(), get<GameDataManager>().eveData, get<GameDataManager>().itemDefs, get<JiugonggeSystem>(), get<DailyProgressSystem>()) }
+    single { LoginService(get(), get(), get(), get(), get(), get<PointSystem>(), get<PlayerCurrencySystem>(), get(), get(), get<EveEventStateMachine>(), get(), get(), get(), get(), get(), get(), get<SkillRepository>(), get<RoleCountSystem>(), get<FlyPointSystem>(), get<MailSystem>(), get<FriendSystem>(), get<GameDataManager>().eveData, get<GameDataManager>().itemDefs, get<JiugonggeSystem>(), get<DailyProgressSystem>()) }
 
     // Eve 事件系統（拆分後的 9 個子服務）
     single {
@@ -356,7 +362,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { LoginHandler(get(), get(), get(), get(), get()) }
     single { CreateCharHandler(get(), get()) }
     single { SelectCharHandler(get(), get()) }
-    single { DisconnectHandler(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    single { DisconnectHandler(get(), get(), get(), get(), get<PlayerCurrencySystem>(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     single { MoveHandler(get(), get(), get(), get<MineEncounterSystem>()) }
     single { ChatHandler(get(), get(), get()) }
     single { SceneHandler(get(), get()) }
@@ -400,4 +406,5 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { PetRebornHandler(get(), get(), get()) }
     single { JiugonggeHandler(get()) }
     single { ActivityModelHandler() }
+    single { MallHandler(get(), get(), get<PointSystem>(), get<MoneySystem>(), get<PlayerCurrencySystem>(), get<ResponseSender>()) }
 }
