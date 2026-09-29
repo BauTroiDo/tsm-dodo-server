@@ -5,7 +5,7 @@
 > Cập nhật: 2026-09-29
 > Repo: `BauTroiDo/tsm-dodo-server`
 > Branch: `main`
-> Code checkpoint gần nhất: `3eae620`
+> Code checkpoint gần nhất: `661defa`
 
 ## 1. Nguyên tắc tối cao
 
@@ -703,6 +703,91 @@ Runtime sau restart: **PASS phần core C79-4 / auto nourish**.
 => Việc 9 viên bị dùng hết khi bấm nút đỏ là **hành vi gốc DVT**, không phải server trừ 9 trong một packet; không được sửa server thành chỉ xử lý 1 request auto.
 - persistence sau relog của attributePoints vẫn nên xác nhận riêng khi thuận tiện.
 
+### mainKind 72 — UISlotMachine / Vòng quay Thôn Thực — build/test PASS phần core, runtime PENDING
+
+Nguồn authoritative:
+- Lua `UISlotMachine.lua` + `protocolTable[72]`;
+- `File.dat/Data-ios/IOS_Slot.dat`;
+- `IOS_UISell_C.dat`, `IOS_UISell_Formula_C.dat`, `IOS_TextData_C.dat`.
+
+Client contract:
+- C72-5 mở giao diện, payload rỗng;
+- C72-2 quay thường, tốn 1 xu;
+- C72-3 x2 quà, tốn 2 xu và nhân đôi quantity;
+- C72-4 tam liên đạn, tốn 6 xu và trả 3 slot result;
+- S72-1 = 16 record `itemId U16 + count U8 + slotIndex U8 + probability U16`;
+- client ép probability theo awardIndex thành `1 / 2 / 5 / 8`, cardinality `1 + 2 + 3 + 10 = 16`, tổng 100;
+- S72-2 = resultCount U8 + các slotIndex U8;
+- S72-3 = message kind;
+- S72-6 = coin UInt16;
+- max coin = 999.
+
+IOS_Slot.dat:
+- size 2149 = 7 block × 307 byte;
+- decoder đã khóa:
+  - A = block1 XOR block6;
+  - B = block2 XOR block5;
+  - C = block3 XOR block6;
+  - D = block4 XOR block5;
+- mỗi pool record = `sourceIndex U8 + itemId U16 + qty U8 + weight U16`;
+- pool size thật: A=25, B=19, C=35, D=39;
+- board generator dùng 1 A + 2 B + 3 C + 10 D, weighted sample không lặp trong pool, rồi shuffle slot1..16. Cấu trúc này khớp chính xác tier cardinality mà client hardcode.
+
+Đã implement trong working patch:
+- opcode `SLOT_MACHINE=72`;
+- loader `SlotMachineDatLoader`, domain model, GameDataManager load `IOS_Slot.dat`;
+- DB:
+  - `character_slot_machines` lưu coin;
+  - `character_slot_machine_awards` lưu 16 ô board;
+- repository + `SlotMachineSystem`;
+- handler C72-2/3/4/5;
+- response S72-1/2/3/6;
+- transaction reward bag/currency + rollback coin khi grant thất bại;
+- persistence board + coin qua relog;
+- direct-use specialAbility216 được đổi thành DVT generic currency theo attr1Kind-8;
+- InventorySystem có multi-stack exact removal để nạp xu qua nhiều stack.
+
+Nạp xu `sellId=11` đã chứng minh:
+- item xu = 31171;
+- Lua hardcode 9 Point / 1 xu;
+- item route: args=[amount], C84-2 special chứa nhiều stack `[bagIndex U16 + qty U16]`;
+- Point route: args=[0, amount];
+- đã nối query/use C84-1/C84-2 vào SlotMachineSystem;
+- coin cap 999.
+
+Regression:
+- decode IOS_Slot thật: A25/B19/C35/D39 + known entries;
+- board = 16 unique awardIndex/slotIndex, tier cardinality 1/2/3/10, wire probability sum=100;
+- normal/double/triple: coin cost 1/2/6, quantity multiplier và result count đúng;
+- insufficient coin không mutate;
+- wire S72-1/2/3/6 byte-exact;
+- coin deposit cap999;
+- sell11 Point query = 9 Point/xu;
+- sell11 item query = item31171;
+- sell11 C84-2 multi-stack UInt16 parse/consume;
+- sell11 Point use persist Point trước khi credit coin;
+- targeted tests + full `gradlew clean test build`: **BUILD SUCCESSFUL**.
+
+Gaps cố ý chưa invent:
+1. `sellId=41` “Đổi giải thưởng”:
+   - formula stable qua nhiều version: `kind=19 value=8 params=[1,15,8,10,...]`;
+   - text: “Đồng ý tiêu hao %s %s đổi phần thưởng?”;
+   - chưa có bằng chứng đủ để giải cost/semantics kind19 chính xác;
+   - `regenerateBoard()` đã có nhưng chưa nối payment 41.
+2. reward item31922:
+   - “Dị Giới Rương Thần”, directUse=1, specialAbility=239;
+   - Lua enum comment `--Elf = 239`, chưa tìm thấy authoritative server effect;
+   - hiện spin trúng reward này fail an toàn + rollback coin, không fake thành bag/currency.
+
+Runtime cần test sau deploy:
+1. mở Vòng quay: không còn unknown mainKind72 subKind5, phải nhận đủ 16 ô + coin;
+2. “Thêm xu” thử item31171 và Point;
+3. quay thường: -1 coin, animation 1 result, nhận reward;
+4. x2: -2 coin, reward quantity ×2;
+5. tam liên đạn: -6 coin, 3 result;
+6. relog: coin + board giữ nguyên;
+7. nút “Đổi giải thưởng” hiện vẫn PARTIAL/UNKNOWN, không đánh PASS cho nhánh này.
+
 ### Gap lớn khác đã phát hiện: mainKind 36 — UIMessageboard
 
 Lua DVT có protocol đầy đủ:
@@ -740,7 +825,11 @@ Sau lỗi item wire đã PASS, còn nên audit:
 ## 10. Recent commits để chat mới định vị nhanh
 
 ```text
-3eae620 Fix DVT mount upgrade contract                — build/test PASS; runtime PENDING
+661defa Restore DVT SlotMachine core                 — build/test PASS; runtime PENDING (sell41/Elf239 PARTIAL)
+303c10c Vietnamize server source and logs             — build/test PASS
+b83478d Mark mount nourish auto behavior pass         — runtime PASS core
+73e9605 Fix DVT mount attribute training              — runtime PASS core
+3eae620 Fix DVT mount upgrade contract                — build/test PASS
 50b8f72 Mark DVT Doro runtime pass                    — docs checkpoint
 9a7961e Fix DVT Doro mobile data source               — runtime PASS
 2c13c9f Restore DVT Mall Doro gacha                   — runtime PASS via 9a7961e
@@ -767,11 +856,11 @@ fe7633c Fix DVT NFT item wire alignment              — runtime PASS
 
 Chat mới chỉ cần đọc file này, sau đó:
 1. kiểm tra HEAD GitHub hiện tại;
-2. Daily/Jiugongge, ActivityModel C124-4, EVE param8, casino chain resolver, follow-NPC persistence và Mall/Doro đã runtime PASS; không mở lại nếu không có regression mới;
-3. ưu tiên deploy/restart và runtime test `3eae620` cho **nâng cấp thú cưỡi**;
-4. startup phải load IOS_Mounts=224 và IOS_MountsGrow=10/maxLv10; thử C79-3 nâng level hiện tại;
-5. nếu Lv1..9 vẫn không nâng dù đủ đồ/tiền, audit tiếp multi-stack consumption của item32101;
-6. `resultType=10` casino legacy vẫn UNKNOWN, không invent; mainKind36 UIMessageboard vẫn là gap chưa làm;
+2. Daily/Jiugongge, ActivityModel C124-4, EVE param8, casino chain resolver, follow-NPC persistence, Mall/Doro và mount nourish core đã runtime PASS; không mở lại nếu không có regression mới;
+3. ưu tiên deploy/restart và runtime test `661defa` cho **UISlotMachine / mainKind72**;
+4. test mở vòng (C72-5), nạp xu sell11 bằng item31171/Point, quay thường/x2/tam liên đạn và relog persistence;
+5. sellId41 “Đổi giải thưởng” vẫn UNKNOWN/PARTIAL; item31922 Elf239 vẫn UNKNOWN — không invent;
+6. `resultType=10` casino legacy vẫn UNKNOWN; mainKind36 UIMessageboard vẫn là gap chưa làm;
 7. không yêu cầu người dùng kể lại lịch sử.
 
-**Điểm tiếp tục hiện tại: `3eae620` mount contract đã build/test PASS, chờ deploy/restart + runtime.**
+**Điểm tiếp tục hiện tại: `661defa` SlotMachine core đã build/test PASS; chờ deploy/restart + runtime.**
