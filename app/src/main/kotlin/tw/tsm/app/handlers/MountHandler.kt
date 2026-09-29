@@ -97,12 +97,16 @@ class MountHandler(
     /**
      * C:079-003 座騎升級
      *
-     * 格式：+背包索引(1 or 2)
+     * 格式：+背包索引(2LE)
      */
     private suspend fun handleLevelUp(session: GameSession, characterId: Long, data: ByteArray) {
-        if (data.size < 1) return
+        // DVT C:079-003 = bagIndex(UInt16LE)
+        if (data.size != 2) {
+            logger.warn { "C79-3 sai size=" + data.size + ", expected=2" }
+            return
+        }
         val reader = PacketReader(data)
-        val bagIndex = if (reader.remaining >= 2) reader.readUShortLE() else reader.readUByte()
+        val bagIndex = reader.readUShortLE()
 
         val result = mountSystem.levelUp(characterId, bagIndex) ?: return
 
@@ -130,13 +134,17 @@ class MountHandler(
     /**
      * C:079-004 座騎投點
      *
-     * 格式：+種類(1) +背包索引(1 or 2)
+     * 格式：+種類(1) +背包索引(2LE)
      */
     private suspend fun handleAttributeUp(session: GameSession, characterId: Long, data: ByteArray) {
-        if (data.size < 2) return
+        // DVT C:079-004 = kind(Byte) + bagIndex(UInt16LE)
+        if (data.size != 3) {
+            logger.warn { "C79-4 sai size=" + data.size + ", expected=3" }
+            return
+        }
         val reader = PacketReader(data)
         val kind = reader.readUByte()
-        val bagIndex = if (reader.remaining >= 2) reader.readUShortLE() else reader.readUByte()
+        val bagIndex = reader.readUShortLE()
 
         val result = mountSystem.addAttributePoint(characterId, kind, bagIndex) ?: return
 
@@ -151,12 +159,16 @@ class MountHandler(
     /**
      * C:079-005 座騎穿裝
      *
-     * 格式：+背包索引(1 or 2)
+     * 格式：+背包索引(2LE)
      */
     private suspend fun handleEquip(session: GameSession, characterId: Long, data: ByteArray) {
-        if (data.size < 1) return
+        // DVT C:079-005 = bagIndex(UInt16LE)
+        if (data.size != 2) {
+            logger.warn { "C79-5 sai size=" + data.size + ", expected=2" }
+            return
+        }
         val reader = PacketReader(data)
-        val bagIndex = if (reader.remaining >= 2) reader.readUShortLE() else reader.readUByte()
+        val bagIndex = reader.readUShortLE()
 
         val fitType = mountSystem.equipItem(characterId, bagIndex)
         if (fitType < 0) return
@@ -168,13 +180,17 @@ class MountHandler(
     /**
      * C:079-006 座騎脫裝
      *
-     * 格式：+裝備部位(1) +背包索引(1 or 2)
+     * 格式：+裝備部位(1) +背包索引(2LE)
      */
     private suspend fun handleUnequip(session: GameSession, characterId: Long, data: ByteArray) {
-        if (data.size < 2) return
+        // DVT C:079-006 = fitType(Byte) + bagIndex(UInt16LE)
+        if (data.size != 3) {
+            logger.warn { "C79-6 sai size=" + data.size + ", expected=3" }
+            return
+        }
         val reader = PacketReader(data)
         val fitType = reader.readUByte()
-        val bagIndex = if (reader.remaining >= 2) reader.readUShortLE() else reader.readUByte()
+        val bagIndex = reader.readUShortLE()
 
         val result = mountSystem.unequipItem(characterId, fitType, bagIndex) ?: return
 

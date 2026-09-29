@@ -303,16 +303,35 @@ class GameDataManager(
             logger.warn { "Eve.emg 不存在：$eveFile — 跳過" }
         }
 
-        // Mounts（坐騎定義）
-        loadFile(dataDir, "Mounts_C.dat") { bytes ->
-            mountDefs = MountDatLoader.load(bytes)
-            logger.info { "Mounts 載入完成：${mountDefs.size} 筆" }
+        // Mounts / MountsGrow 必須 bám đúng Mobile DVT Lua DataManager:
+        // Data/IOS_Mounts_C.dat + IOS_MountsGrow_C.dat.
+        // CDN Data/MountsGrow_C.dat hiện là một bộ khác, mở rộng tới Lv15 trong khi
+        // Mobile DVT IOS table dừng ở Lv10.
+        val iosMounts = dataIosDir.resolve("IOS_Mounts_C.dat")
+        val iosMountsGrow = dataIosDir.resolve("IOS_MountsGrow_C.dat")
+
+        if (Files.exists(iosMounts)) {
+            mountDefs = MountDatLoader.load(Files.readAllBytes(iosMounts))
+            logger.info { "IOS_Mounts 載入完成：${mountDefs.size} 筆 source=$iosMounts" }
+        } else {
+            loadFile(dataDir, "Mounts_C.dat") { bytes ->
+                mountDefs = MountDatLoader.load(bytes)
+                logger.warn { "IOS_Mounts_C.dat 不存在，fallback Mounts_C.dat：${mountDefs.size} 筆" }
+            }
         }
 
-        // MountsGrow（坐騎成長定義）
-        loadFile(dataDir, "MountsGrow_C.dat") { bytes ->
-            mountGrowDefs = MountGrowDatLoader.load(bytes)
-            logger.info { "MountsGrow 載入完成：${mountGrowDefs.size} 筆" }
+        if (Files.exists(iosMountsGrow)) {
+            mountGrowDefs = MountGrowDatLoader.load(Files.readAllBytes(iosMountsGrow))
+            logger.info {
+                "IOS_MountsGrow 載入完成：${mountGrowDefs.size} 筆，maxLv=${mountGrowDefs.keys.maxOrNull() ?: 0} source=$iosMountsGrow"
+            }
+        } else {
+            loadFile(dataDir, "MountsGrow_C.dat") { bytes ->
+                mountGrowDefs = MountGrowDatLoader.load(bytes)
+                logger.warn {
+                    "IOS_MountsGrow_C.dat 不存在，fallback MountsGrow_C.dat：${mountGrowDefs.size} 筆"
+                }
+            }
         }
 
         // Achievement（成就定義）

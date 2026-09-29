@@ -70,25 +70,27 @@ class MountResponseSender {
     /**
      * S:079-004 穿上座騎裝備
      *
-     * 格式：+背包索引(1)
+     * DVT Lua protocolTable[79][4] 讀 ReadUInt16().
+     * 格式：+背包索引(2LE)
      */
     fun sendMountEquip(session: SessionSender, bagIndex: Int) {
-        val writer = PacketWriter(4)
+        val writer = PacketWriter(5)
             .writeByte(Opcodes.MOUNT).writeByte(4).writeByte(0)
-            .writeByte(bagIndex)
+            .writeShortLE(bagIndex)
         session.send(writer.toByteArray())
     }
 
     /**
      * S:079-005 卸下座騎裝備
      *
-     * 格式：+裝備部位(1) +背包索引(1)
+     * DVT Lua protocolTable[79][5] 讀 Byte + UInt16.
+     * 格式：+裝備部位(1) +背包索引(2LE)
      */
     fun sendMountUnequip(session: SessionSender, fitType: Int, bagIndex: Int) {
-        val writer = PacketWriter(5)
+        val writer = PacketWriter(6)
             .writeByte(Opcodes.MOUNT).writeByte(5).writeByte(0)
             .writeByte(fitType)
-            .writeByte(bagIndex)
+            .writeShortLE(bagIndex)
         session.send(writer.toByteArray())
     }
 
