@@ -5,7 +5,7 @@
 > Cập nhật: 2026-09-29
 > Repo: `BauTroiDo/tsm-dodo-server`
 > Branch: `main`
-> Code checkpoint gần nhất: `97e5ffa`
+> Code checkpoint gần nhất: `7e42afd`
 
 ## 1. Nguyên tắc tối cao
 
@@ -461,32 +461,32 @@ Theo `DungeonCriteriaData.CompareResult`:
 
 ## 8. Điểm audit đang dở / NEXT
 
-### Ưu tiên hiện tại: EVE `conditionClass=7, conditionParameter=8`
+### Ưu tiên hiện tại: runtime EVE `conditionClass=7, conditionParameter=8`
 
-Daily/Jiugongge đã runtime PASS.
+Commit:
+- `7e42afd Restore DVT Eve server-id condition` — build/test PASS, runtime PENDING.
 
-`97e5ffa` ActivityModel C124-4 đã runtime **PASS** trên production.
+Kết luận authoritative:
+- `conditionClass=7 / conditionParameter=8` = **Server ID**, không phải arena participant/arena index.
+- Lua login đọc `aSID` và gán vào `Network.serverId`.
+- Kotlin LoginHandler cũng đã giữ đúng giá trị này trong `session.serverId`.
+- Lua `Migrant.lua` định nghĩa galaxy server `90..99`; nếu `serverId > 100` thì lấy `serverId % 100`.
+- `Migrant.IsArenaScene()` định nghĩa chính xác map `54901..54904`.
+- Scan toàn bộ Eve.emg có đúng **468** condition class7/param8:
+  - val 96/97/98/99 và 196/197/198/199 tập trung ở 54901..54904;
+  - ngoài ra có val 1/2/100/101/102/104 ở 12003/12180/12244;
+  - tất cả sample đều pStyle=1, subItem=0; ops chỉ 1/2/5.
+- Pattern này khớp Server ID và các mốc phân luồng server; giả thuyết cũ ở local commit `387373f` đã bị thay thế.
 
-Việc kế tiếp:
-1. audit EVE `conditionClass=7 / conditionParameter=8` từ Lua DVT;
-2. đối chiếu client gốc/Assembly-CSharp + Eve.emg scene mẫu;
-3. chỉ patch Kotlin khi semantics được chứng minh đủ; không dùng phỏng đoán từ local branch cũ.
+Đã sửa:
+- thêm `serverId` vào `PlayerEventState`;
+- `EveStateBuilder` lấy trực tiếp `session.serverId`;
+- class7/param8 chỉ nhận shape đã quan sát `pStyle=1/subItem=0`, nếu thiếu serverId/shape lạ thì conservative false;
+- comparison dùng operator semantics DVT đã audit: 1==, 2<, 3<=, 4>, 5>=, 6!=, Eve extension 0==;
+- regression tests khóa các shape thật: serverId 1 <100, serverId100 ==100, galaxy 97/197 với ops5 threshold;
+- `gradlew clean test build`: **BUILD SUCCESSFUL**.
 
-### Sau đó: EVE `conditionClass=7, conditionParameter=8`
-
-Đã scan Eve.emg:
-- khoảng **468 occurrence**.
-- local user commit `387373f` từng đoán param8 liên quan arena participant, nhưng **chưa đủ authoritative DVT proof**.
-- Không copy/push logic đó chỉ vì tồn tại ở local branch.
-
-Cần tiếp tục đối chiếu:
-- Lua DVT;
-- client gốc `TSNPCVN\tsnpc_Data\Managed\Assembly-CSharp.dll`;
-- Eve.emg scene mẫu;
-- TalkData/UI arena/PK/event liên quan;
-- File.dat nếu cần.
-
-Chỉ khi xác định rõ param8 là gì mới vá Kotlin.
+Runtime `7e42afd`: **PENDING**. Server production hiện login với serverId=1. Sau deploy/restart cần test các NPC/event ở 12003/12180/12244 nếu tiện; arena 54901..54904 có thể phụ thuộc môi trường multi-server nên không ép test nếu server offline không có subsystem tương ứng.
 
 ### Gap lớn khác đã phát hiện: mainKind 36 — UIMessageboard
 
@@ -525,6 +525,7 @@ Sau lỗi item wire đã PASS, còn nên audit:
 ## 10. Recent commits để chat mới định vị nhanh
 
 ```text
+7e42afd Restore DVT Eve server-id condition           — build/test PASS; runtime PENDING
 97e5ffa Handle DVT ActivityModel refresh              — runtime PASS
 36d3bb0 Fix DVT daily special RoleCount wire         — runtime PASS
 5c686ed Fix DVT daily mission progress tracking      — gameplay bridge working; superseded by 36d3bb0 for UI wire
@@ -542,11 +543,11 @@ fe7633c Fix DVT NFT item wire alignment              — runtime PASS
 
 Chat mới chỉ cần đọc file này, sau đó:
 1. kiểm tra HEAD GitHub hiện tại;
-2. Daily/Jiugongge `36d3bb0` đã runtime PASS; không mở lại nếu không có regression mới;
-3. ưu tiên deploy/restart và runtime test `97e5ffa` cho **mainKind=124 subKind=4**;
-4. xác nhận production không còn warning 124:4 lặp mỗi 180 giây và client không phát sinh lỗi;
-5. nếu PASS, chuyển sang **EVE conditionClass=7 / param=8**;
+2. Daily/Jiugongge và ActivityModel C124-4 đã runtime PASS; không mở lại nếu không có regression mới;
+3. ưu tiên deploy/restart và runtime test `7e42afd` cho **EVE conditionClass=7 / param=8 = Server ID**;
+4. nếu event 12003/12180/12244 hoạt động đúng thì ghi runtime PASS; arena 54901..54904 phụ thuộc multi-server có thể để UNTESTABLE trên server offline;
+5. sau param8, tiếp tục gap kế tiếp theo user/roadmap (hiện nổi bật: mainKind36 UIMessageboard hoặc EVE gap khác);
 6. mission Daily phụ thuộc environment/subsystem chưa test riêng vẫn là UNTESTABLE, không tự invent;
 7. không yêu cầu người dùng kể lại lịch sử.
 
-**Điểm tiếp tục hiện tại: `97e5ffa` ActivityModel C124-4 đã build/test PASS, đang chờ production runtime; sau đó là EVE conditionClass=7 / param=8.**
+**Điểm tiếp tục hiện tại: `7e42afd` EVE class7/param8 đã xác định là Server ID và build/test PASS, đang chờ deploy/restart + runtime.**
