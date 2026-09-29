@@ -5,7 +5,7 @@
 > Cập nhật: 2026-09-29
 > Repo: `BauTroiDo/tsm-dodo-server`
 > Branch: `main`
-> Code checkpoint gần nhất: `2c13c9f`
+> Code checkpoint gần nhất: `3eae620`
 
 ## 1. Nguyên tắc tối cao
 
@@ -632,6 +632,56 @@ Runtime sau deploy/restart `9a7961e`: **PASS**.
 - không mở lại trừ khi có regression mới ở tab/currency cụ thể;
 - special currency 4..16 vẫn nên audit riêng nếu sau này có triệu chứng persistence/số dư riêng.
 
+### Nâng cấp thú cưỡi — build/test PASS, runtime PENDING
+
+Commit:
+- `3eae620 Fix DVT mount upgrade contract`
+
+Triệu chứng user:
+- báo hệ thống nâng cấp thú cưỡi đang có vấn đề; chưa mô tả chi tiết lỗi UI/runtime.
+
+Audit authoritative:
+- Lua Mobile DVT `DataManager.lua` load:
+  - `Data/IOS_Mounts_C.dat`;
+  - `Data/IOS_MountsGrow_C.dat`.
+- Kotlin trước patch lại load `Data/Mounts_C.dat` + `MountsGrow_C.dat` từ `GAMEDATA_PATH` CDN.
+- Hai bộ khác nhau thật:
+  - IOS_Mounts_C.dat = 224 mount definitions;
+  - CDN Mounts_C.dat production hiện chỉ 93;
+  - IOS_MountsGrow_C.dat = 10 level, max Lv10;
+  - CDN MountsGrow_C.dat = 15 level, max Lv15.
+- Lv1..9 requirement hiện giống nhau giữa hai bảng; từ Lv10 trở đi khác hoàn toàn:
+  - Mobile Lv10 là max, upItemId/upMoney = 0;
+  - CDN tiếp tục Lv10→15 bằng item32107.
+=> Server phải bám IOS table để không cho tiến triển ngoài contract Mobile DVT.
+
+Wire DVT:
+- C79-3 level-up = bagIndex UInt16;
+- C79-4 attribute-up = kind Byte + bagIndex UInt16;
+- C79-5 equip = bagIndex UInt16;
+- C79-6 unequip = fitType Byte + bagIndex UInt16;
+- S79-4 client đọc UInt16 bagIndex;
+- S79-5 client đọc Byte + UInt16 bagIndex.
+Kotlin cũ chấp nhận fallback Byte ở C79-3/4/5/6 và gửi Byte ở S79-4/5.
+
+Đã sửa:
+- GameDataManager ưu tiên `IOS_Mounts_C.dat` + `IOS_MountsGrow_C.dat`, fallback non-IOS chỉ khi IOS file không có;
+- C79-3/4/5/6 khóa exact packet size và UInt16 bagIndex;
+- S79-4/S79-5 đổi bagIndex thành UInt16;
+- regression:
+  - IOS mount catalogue = 224;
+  - IOS grow levels = 1..10, Lv10 max;
+  - khóa requirement Lv1/Lv9;
+  - wire S79-4/S79-5 với bagIndex 300;
+  - C79-3 parse UInt16 300 và reject legacy one-byte.
+- `gradlew clean test build`: **BUILD SUCCESSFUL**.
+
+Điểm cần runtime:
+1. restart production và xác nhận startup log `IOS_Mounts ... 224`, `IOS_MountsGrow ... 10, maxLv=10`;
+2. thử nâng thú cưỡi đúng level hiện tại;
+3. nếu lỗi vẫn xảy ra ở Lv1..9, bắt log C79-3 và kiểm tra item32101 + gold;
+4. một mismatch còn đáng audit nếu symptom là “đủ vật phẩm nhưng không nâng”: Lua kiểm tra tổng `Item.GetItemCount()` trên toàn bag nhưng gửi slot đầu tiên `Item.GetItemIndex()`; Kotlin hiện đòi chính slot gửi lên chứa đủ toàn bộ count. Chưa patch vì chưa có runtime symptom chứng minh cần multi-stack consumption.
+
 ### Gap lớn khác đã phát hiện: mainKind 36 — UIMessageboard
 
 Lua DVT có protocol đầy đủ:
@@ -669,6 +719,8 @@ Sau lỗi item wire đã PASS, còn nên audit:
 ## 10. Recent commits để chat mới định vị nhanh
 
 ```text
+3eae620 Fix DVT mount upgrade contract                — build/test PASS; runtime PENDING
+50b8f72 Mark DVT Doro runtime pass                    — docs checkpoint
 9a7961e Fix DVT Doro mobile data source               — runtime PASS
 2c13c9f Restore DVT Mall Doro gacha                   — runtime PASS via 9a7961e
 dee8d4c Mark follow NPC persistence runtime pass      — runtime PASS
@@ -695,9 +747,10 @@ fe7633c Fix DVT NFT item wire alignment              — runtime PASS
 Chat mới chỉ cần đọc file này, sau đó:
 1. kiểm tra HEAD GitHub hiện tại;
 2. Daily/Jiugongge, ActivityModel C124-4, EVE param8, casino chain resolver, follow-NPC persistence và Mall/Doro đã runtime PASS; không mở lại nếu không có regression mới;
-3. nếu user báo lỗi mới, audit theo Lua DVT -> client/data -> Kotlin rồi patch server; không sửa Lua để hợp server;
-4. `resultType=10` casino legacy vẫn UNKNOWN, không invent; direct Point Surface23 hiện unreachable qua UI hiện tại;
-5. mainKind36 UIMessageboard vẫn là gap lớn chưa làm đầy đủ;
-6. không yêu cầu người dùng kể lại lịch sử.
+3. ưu tiên deploy/restart và runtime test `3eae620` cho **nâng cấp thú cưỡi**;
+4. startup phải load IOS_Mounts=224 và IOS_MountsGrow=10/maxLv10; thử C79-3 nâng level hiện tại;
+5. nếu Lv1..9 vẫn không nâng dù đủ đồ/tiền, audit tiếp multi-stack consumption của item32101;
+6. `resultType=10` casino legacy vẫn UNKNOWN, không invent; mainKind36 UIMessageboard vẫn là gap chưa làm;
+7. không yêu cầu người dùng kể lại lịch sử.
 
-**Điểm tiếp tục hiện tại: Mall/Doro `9a7961e` đã runtime PASS; chờ user đưa lỗi/gap tiếp theo.**
+**Điểm tiếp tục hiện tại: `3eae620` mount contract đã build/test PASS, chờ deploy/restart + runtime.**
