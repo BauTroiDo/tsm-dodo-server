@@ -1,17 +1,17 @@
 package tw.tsm.domain.enums
 
 /**
- * 隊伍成員狀態
+ * Trạng thái thành viên tổ đội
  *
- * 來源：Team.lua ETeamState
+ * Nguồn: ETeamState trong Team.lua
  */
 enum class TeamState(val code: Int) {
-    /** 未組隊 */
+    /** Chưa lập tổ đội*/
     NONE(0),
-    /** 隊長 */
+    /** Đội trưởng*/
     LEADER(1),
-    /** 軍師（副隊長） */
+    /** Quân sư (phó đội trưởng)*/
     ADVISER(2),
-    /** 隊員 */
+    /** Đội viên*/
     MEMBER(3)
 }

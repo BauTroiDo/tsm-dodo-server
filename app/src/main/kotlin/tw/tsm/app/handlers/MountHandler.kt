@@ -14,10 +14,10 @@ import tw.tsm.protocol.PacketReader
 private val logger = KotlinLogging.logger {}
 
 /**
- * 坐騎處理器（mainKind = 79）
+ * Bộ xử lý vật cưỡi (mainKind = 79)
  *
- * 來源：protocal.lua protocolTable[79]
- * 處理上下馬、升級、投點、穿脫裝備、切換坐騎。
+ * Nguồn: protocal.lua protocolTable[79]
+ * Xử lý lên/xuống ngựa, nâng cấp, cộng điểm, mặc/tháo trang bị, đổi vật cưỡi.
  */
 class MountHandler(
     private val mountSystem: MountSystem,
@@ -39,14 +39,14 @@ class MountHandler(
             5 -> handleEquip(session, characterId, data)
             6 -> handleUnequip(session, characterId, data)
             7 -> handleSwitch(session, characterId, data)
-            else -> logger.warn { "未處理的坐騎 subKind=$subKind" }
+            else -> logger.warn { "Vật cưỡi chưa xử lý subKind=$subKind" }
         }
     }
 
     /**
-     * C:079-001 上座騎
+     * C:079-001 lên vật cưỡi
      *
-     * 成功後廣播 S:079-007 給同地圖所有玩家
+     * sau khi thành công phát rộng S:079-007 cho mọi người chơi cùng bản đồ
      */
     private fun handleMount(session: GameSession, characterId: Long) {
         if (session.battleId != 0L) return
@@ -60,44 +60,44 @@ class MountHandler(
             session.mountLevel = mountData.level
         }
 
-        // 廣播 S:079-007 給同地圖所有玩家（含自己）
+        // phát rộng S:079-007 cho mọi người chơi cùng bản đồ (gồm cả bản thân)
         val players = worldManager.getPlayersInMap(session.mapId)
         for (player in players) {
             responseSender.sendPlayerMount(player, session.playerId, npcId)
         }
 
-        // 發送 S:008-001 更新 MountsLv 屬性（觸發客戶端 UpdateSpeed）
+        // gửi S:008-001 cập nhật thuộc tính MountsLv (kích hoạt client UpdateSpeed)
         responseSender.sendSetAttribute(
             session, MountConstants.ATTR_MOUNTS_LV,
             session.mountLevel, true, 0
         )
 
-        logger.info { "${session.characterName} 上馬：npcId=$npcId" }
+        logger.info { "${session.characterName} lên ngựa: npcId=$npcId" }
     }
 
     /**
-     * C:079-002 下座騎
+     * C:079-002 xuống vật cưỡi
      *
-     * 成功後廣播 S:079-007（npcId=0）給同地圖所有玩家
+     * sau khi thành công phát rộng S:079-007 (npcId=0) cho mọi người chơi cùng bản đồ
      */
     private fun handleDismount(session: GameSession, characterId: Long) {
         if (!mountSystem.dismount(characterId)) return
 
         session.mountNpcId = 0
 
-        // 廣播 S:079-007（npcId=0 代表下馬）
+        // phát rộng S:079-007 (npcId=0 biểu thị xuống ngựa)
         val players = worldManager.getPlayersInMap(session.mapId)
         for (player in players) {
             responseSender.sendPlayerMount(player, session.playerId, 0)
         }
 
-        logger.info { "${session.characterName} 下馬" }
+        logger.info { "${session.characterName} xuống ngựa" }
     }
 
     /**
-     * C:079-003 座騎升級
+     * C:079-003 nâng cấp vật cưỡi
      *
-     * 格式：+背包索引(2LE)
+     * Định dạng: +chỉ số túi đồ(2LE)
      */
     private suspend fun handleLevelUp(session: GameSession, characterId: Long, data: ByteArray) {
         // DVT C:079-003 = bagIndex(UInt16LE)
@@ -112,29 +112,29 @@ class MountHandler(
 
         session.mountLevel = result.newLevel
 
-        // S:023-009 扣物品
+        // S:023-009 khấu trừ vật phẩm
         if (result.itemConsumed > 0) {
             responseSender.sendReduceBagItem(session, bagIndex, result.itemConsumed)
         }
-        // S:026-002 扣金錢
+        // S:026-002 khấu trừ tiền
         if (result.moneySpent > 0) {
             responseSender.sendSubtractMoney(session, result.moneySpent)
         }
-        // S:079-002 新等級
+        // S:079-002 cấp độ mới
         responseSender.sendMountLevel(session, result.newLevel)
-        // S:008-001 更新 MountsLv（觸發速度重算）
+        // S:008-001 cập nhật MountsLv (kích hoạt tính lại tốc độ)
         responseSender.sendSetAttribute(
             session, MountConstants.ATTR_MOUNTS_LV,
             result.newLevel, true, 0
         )
 
-        logger.info { "${session.characterName} 坐騎升級 → level=${result.newLevel}" }
+        logger.info { "${session.characterName} vật cưỡi lên cấp → level=${result.newLevel}" }
     }
 
     /**
-     * C:079-004 座騎投點
+     * C:079-004 cộng điểm vật cưỡi
      *
-     * 格式：+種類(1) +背包索引(2LE)
+     * Định dạng: +loại(1) +chỉ số túi đồ(2LE)
      */
     private suspend fun handleAttributeUp(session: GameSession, characterId: Long, data: ByteArray) {
         // DVT C:079-004 = kind(Byte) + bagIndex(UInt16LE)
@@ -148,18 +148,18 @@ class MountHandler(
 
         val result = mountSystem.addAttributePoint(characterId, kind, bagIndex) ?: return
 
-        // S:023-009 扣物品
+        // S:023-009 khấu trừ vật phẩm
         if (result.itemConsumed > 0) {
             responseSender.sendReduceBagItem(session, bagIndex, result.itemConsumed)
         }
-        // S:079-003 設定點數
+        // S:079-003 đặt điểm
         responseSender.sendMountAttributePoint(session, kind, result.newPoints)
     }
 
     /**
-     * C:079-005 座騎穿裝
+     * C:079-005 mặc trang bị cho vật cưỡi
      *
-     * 格式：+背包索引(2LE)
+     * Định dạng: +chỉ số túi đồ(2LE)
      */
     private suspend fun handleEquip(session: GameSession, characterId: Long, data: ByteArray) {
         // DVT C:079-005 = bagIndex(UInt16LE)
@@ -173,14 +173,14 @@ class MountHandler(
         val fitType = mountSystem.equipItem(characterId, bagIndex)
         if (fitType < 0) return
 
-        // S:079-004 穿裝回應
+        // S:079-004 phản hồi mặc trang bị
         responseSender.sendMountEquip(session, bagIndex)
     }
 
     /**
-     * C:079-006 座騎脫裝
+     * C:079-006 tháo trang bị vật cưỡi
      *
-     * 格式：+裝備部位(1) +背包索引(2LE)
+     * Định dạng: +vị trí trang bị(1) +chỉ số túi đồ(2LE)
      */
     private suspend fun handleUnequip(session: GameSession, characterId: Long, data: ByteArray) {
         // DVT C:079-006 = fitType(Byte) + bagIndex(UInt16LE)
@@ -194,14 +194,14 @@ class MountHandler(
 
         val result = mountSystem.unequipItem(characterId, fitType, bagIndex) ?: return
 
-        // S:079-005 脫裝回應
+        // S:079-005 phản hồi tháo trang bị
         responseSender.sendMountUnequip(session, result.first, result.second)
     }
 
     /**
-     * C:079-007 座騎切換
+     * C:079-007 đổi vật cưỡi
      *
-     * 格式：+NPCID(2LE)
+     * Định dạng: +NPCID(2LE)
      */
     private suspend fun handleSwitch(session: GameSession, characterId: Long, data: ByteArray) {
         if (data.size < 2) return
@@ -210,7 +210,7 @@ class MountHandler(
 
         if (!mountSystem.switchMount(characterId, npcId)) return
 
-        // S:079-006 切換回應
+        // S:079-006 phản hồi đổi vật cưỡi
         responseSender.sendMountSwitch(session, npcId)
     }
 }

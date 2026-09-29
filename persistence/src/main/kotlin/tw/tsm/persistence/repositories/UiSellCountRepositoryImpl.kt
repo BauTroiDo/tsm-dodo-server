@@ -9,9 +9,9 @@ import tw.tsm.domain.interfaces.repositories.UiSellCountRepository
 import tw.tsm.persistence.tables.CharacterUiSellCounts
 
 /**
- * UiSellCountRepository 的 Exposed ORM 實作
+ * Triển khai UiSellCountRepository bằng Exposed ORM
  *
- * 使用 character_ui_sell_counts 表存儲介消購買計數。
+ * Dùng bảng character_ui_sell_counts lưu số lần mua 介消 (mua bán qua bảng).
  */
 class UiSellCountRepositoryImpl : UiSellCountRepository {
 

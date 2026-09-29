@@ -2,7 +2,7 @@ package tw.tsm.persistence.tables
 
 import org.jetbrains.exposed.v1.core.Table
 
-/** 三轉技能列表，wire 為 skillId(UInt16)+level(Byte)。 */
+/** Danh sách kỹ năng tam chuyển, dạng wire là skillId(UInt16)+level(Byte).*/
 object CharacterTurn3Skills : Table("character_turn3_skills") {
     val characterId = long("character_id")
     val skillId = integer("skill_id")

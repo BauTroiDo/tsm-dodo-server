@@ -8,16 +8,16 @@ import tw.tsm.protocol.PacketWriter
 import tw.tsm.protocol.writeThingData
 
 /**
- * 坐騎封包序列化 — mainKind=79 的 8 個 S→C 封包
+ * Tuần tự hoá gói tin vật cưỡi — 8 gói S→C của mainKind=79
  *
- * 來源：protocal.lua protocolTable[79]
+ * Nguồn: protocal.lua protocolTable[79]
  */
 class MountResponseSender {
 
     /**
-     * S:079-001 座騎資料（登入下發）
+     * S:079-001 Dữ liệu vật cưỡi (gửi xuống khi đăng nhập)
      *
-     * 格式：+等級(1) +點數(2LE)*6 +裝備數量(1) <<+ThingData(35)>> +當前NPC ID(2LE)
+     * Định dạng: +cấp độ(1) +điểm(2LE)*6 +số lượng trang bị(1) <<+ThingData(35)>> +NPC ID hiện tại(2LE)
      */
     fun sendMountData(session: SessionSender, data: MountData) {
         val equips = data.equips.values.filter { !it.isEmpty }
@@ -25,27 +25,27 @@ class MountResponseSender {
             .writeByte(Opcodes.MOUNT).writeByte(1).writeByte(0)
             .writeByte(data.level)
 
-        // 6 個屬性點數（index 1-6）
+        // 6 điểm thuộc tính（index 1-6）
         for (i in 1..6) {
             writer.writeShortLE(data.attributePoints[i])
         }
 
-        // 裝備
+        // trang bị
         writer.writeByte(equips.size)
         for (equip in equips) {
             writer.writeThingData(equip)
         }
 
-        // 當前坐騎 NPC ID
+        // ID NPC vật cưỡi hiện tại
         writer.writeShortLE(data.currentNpcId)
 
         session.send(writer.toByteArray())
     }
 
     /**
-     * S:079-002 設定座騎等級
+     * S:079-002 Thiết lập cấp độ vật cưỡi
      *
-     * 格式：+等級(1)
+     * Định dạng: +cấp độ(1)
      */
     fun sendMountLevel(session: SessionSender, level: Int) {
         val writer = PacketWriter(4)
@@ -55,9 +55,9 @@ class MountResponseSender {
     }
 
     /**
-     * S:079-003 設定座騎點數
+     * S:079-003 Thiết lập điểm vật cưỡi
      *
-     * 格式：+種類(1) +點數(2LE)
+     * Định dạng: +loại(1) +điểm(2LE)
      */
     fun sendMountAttributePoint(session: SessionSender, kind: Int, points: Int) {
         val writer = PacketWriter(6)
@@ -68,10 +68,10 @@ class MountResponseSender {
     }
 
     /**
-     * S:079-004 穿上座騎裝備
+     * S:079-004 Mặc trang bị cho vật cưỡi
      *
-     * DVT Lua protocolTable[79][4] 讀 ReadUInt16().
-     * 格式：+背包索引(2LE)
+     * DVT Lua protocolTable[79][4] đọc ReadUInt16().
+     * Định dạng: +chỉ số túi đồ(2LE)
      */
     fun sendMountEquip(session: SessionSender, bagIndex: Int) {
         val writer = PacketWriter(5)
@@ -81,10 +81,10 @@ class MountResponseSender {
     }
 
     /**
-     * S:079-005 卸下座騎裝備
+     * S:079-005 Tháo trang bị vật cưỡi
      *
-     * DVT Lua protocolTable[79][5] 讀 Byte + UInt16.
-     * 格式：+裝備部位(1) +背包索引(2LE)
+     * DVT Lua protocolTable[79][5] đọc Byte + UInt16.
+     * Định dạng: +vị trí trang bị(1) +chỉ số túi đồ(2LE)
      */
     fun sendMountUnequip(session: SessionSender, fitType: Int, bagIndex: Int) {
         val writer = PacketWriter(6)
@@ -95,9 +95,9 @@ class MountResponseSender {
     }
 
     /**
-     * S:079-006 切換座騎
+     * S:079-006 Chuyển đổi vật cưỡi
      *
-     * 格式：+NPC ID(2LE)
+     * Định dạng: +NPC ID(2LE)
      */
     fun sendMountSwitch(session: SessionSender, npcId: Int) {
         val writer = PacketWriter(5)
@@ -107,9 +107,9 @@ class MountResponseSender {
     }
 
     /**
-     * S:079-007 設定玩家座騎（廣播用）
+     * S:079-007 Thiết lập vật cưỡi của người chơi (dùng để phát rộng)
      *
-     * 格式：+玩家ID(8LE) +NPC ID(2LE)
+     * Định dạng: +ID người chơi(8LE) +NPC ID(2LE)
      */
     fun sendPlayerMount(session: SessionSender, playerId: Long, npcId: Int) {
         val writer = PacketWriter(13)
@@ -120,9 +120,9 @@ class MountResponseSender {
     }
 
     /**
-     * S:079-008 坐騎數值
+     * S:079-008 Chỉ số vật cưỡi
      *
-     * 格式：+數量(1) <<+種類(1) +正負號(1) +數值(4LE) +參數(4LE)>>
+     * Định dạng: +số lượng(1) <<+loại(1) +dấu âm dương(1) +chỉ số(4LE) +tham số(4LE)>>
      */
     fun sendMountAttributes(session: SessionSender, attrs: List<MountAttribute>) {
         val writer = PacketWriter(4 + attrs.size * 10)

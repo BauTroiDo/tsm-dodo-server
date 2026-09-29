@@ -265,7 +265,7 @@ class LoginService(
         val packedFlags = bitFlagSystem.packFlags(bitFlagIds)
         responseSender.sendInitBitFlags(session, packedFlags)
 
-        // S:077 runtime activity time + S:091-001 九宮格 daily board.
+        // S:077 thời gian hoạt động runtime + S:091-001 bảng cửu cung daily.
         // UIJiugongge opens later from the Hằng ngày button and expects this state to exist.
         jiugonggeSystem?.sendDailyInit(session)
 

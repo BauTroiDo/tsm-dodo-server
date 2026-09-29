@@ -5,12 +5,12 @@ import tw.tsm.domain.data.MountAttributeGrow
 import tw.tsm.domain.data.MountGrowDef
 
 /**
- * 坐騎成長定義載入器 — 對應 `DataManager.OnLoadMountsGrowData`
+ * Loader định nghĩa trưởng thành vật cưỡi — tương ứng `DataManager.OnLoadMountsGrowData`
  *
- * 來源：`MountsGrow_C.dat`
- * 格式：count(Int32) + count 筆 MountsGrowData.New(reader)
+ * Nguồn: `MountsGrow_C.dat`
+ * Định dạng: count(Int32) + count bản ghi MountsGrowData.New(reader)
  *
- * MountsGrowData.New 欄位順序（MountsData.lua L21-42）：
+ * Thứ tự trường của MountsGrowData.New (MountsData.lua L21-42):
  *   level(Byte) + speed(Byte)
  *   + upItemId(UInt16) + upItemCount(Byte) + upMoney(UInt32)
  *   + 5 × { addValue(UInt16) + upItemId(UInt16) + upItemCount(UInt16) }
@@ -18,7 +18,7 @@ import tw.tsm.domain.data.MountGrowDef
 object MountGrowDatLoader {
 
     /**
-     * 載入坐騎成長資料
+     * Đọc dữ liệu trưởng thành vật cưỡi
      */
     fun load(data: ByteArray): Map<Int, MountGrowDef> {
         val reader = DatReader(data)

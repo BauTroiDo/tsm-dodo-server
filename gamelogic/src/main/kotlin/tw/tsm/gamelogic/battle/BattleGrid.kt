@@ -4,26 +4,26 @@ import tw.tsm.domain.constants.BattleConstants
 import tw.tsm.domain.constants.EFightArea
 
 /**
- * 戰場棋盤 — 對應 `FightField.lua`
+ * Bàn cờ chiến trường — tương ứng `FightField.lua`
  *
- * 4 列 × 5 行 = 20 格位置
- * - 列 0-1：敵方（左側，0=前排, 1=後排）
- * - 列 2-3：玩家方（右側，2=前排, 3=後排）
+ * 4 cột × 5 hàng = 20 vị trí ô
+ * - Cột 0-1: phe địch (bên trái, 0=hàng trước, 1=hàng sau)
+ * - Cột 2-3: phe người chơi (bên phải, 2=hàng trước, 3=hàng sau)
  */
 class BattleGrid {
 
-    /** 棋盤格：grid[col][row] → BattleFighter? */
+    /** Ô bàn cờ: grid[col][row] → BattleFighter?*/
     private val grid = Array(BattleConstants.MAX_COL) { arrayOfNulls<BattleFighter>(BattleConstants.MAX_ROW) }
 
     /**
-     * 放置角色到棋盤
+     * Đặt nhân vật lên bàn cờ
      */
     fun place(fighter: BattleFighter) {
         grid[fighter.col][fighter.row] = fighter
     }
 
     /**
-     * 取得指定位置的角色
+     * Lấy nhân vật ở vị trí chỉ định
      */
     fun getAt(col: Int, row: Int): BattleFighter? {
         if (col < 0 || col >= BattleConstants.MAX_COL) return null
@@ -32,7 +32,7 @@ class BattleGrid {
     }
 
     /**
-     * 移除角色（死亡/逃跑）
+     * Xoá nhân vật (chết/bỏ chạy)
      */
     fun remove(col: Int, row: Int) {
         if (col in 0 until BattleConstants.MAX_COL && row in 0 until BattleConstants.MAX_ROW) {
@@ -41,7 +41,7 @@ class BattleGrid {
     }
 
     /**
-     * 取得所有存活的玩家方角色（列 2-3，右側）
+     * Lấy tất cả nhân vật phe người chơi còn sống (cột 2-3, bên phải)
      */
     fun getAlivePlayerSide(): List<BattleFighter> {
         val result = mutableListOf<BattleFighter>()
@@ -55,7 +55,7 @@ class BattleGrid {
     }
 
     /**
-     * 取得所有存活的敵方角色（列 0-1，左側）
+     * Lấy tất cả nhân vật địch còn sống (cột 0-1, bên trái)
      */
     fun getAliveEnemySide(): List<BattleFighter> {
         val result = mutableListOf<BattleFighter>()
@@ -68,7 +68,7 @@ class BattleGrid {
         return result
     }
 
-    /** 取得棋盤上所有角色（包含死亡但尚未 FlyOut 的角色）。 */
+    /** Lấy tất cả nhân vật trên bàn cờ (bao gồm nhân vật đã chết nhưng chưa FlyOut).*/
     fun getAll(): List<BattleFighter> {
         val result = mutableListOf<BattleFighter>()
         for (col in 0 until BattleConstants.MAX_COL) {
@@ -81,7 +81,7 @@ class BattleGrid {
     }
 
     /**
-     * 取得所有存活角色
+     * Lấy tất cả nhân vật còn sống
      */
     fun getAllAlive(): List<BattleFighter> {
         val result = mutableListOf<BattleFighter>()
@@ -95,13 +95,13 @@ class BattleGrid {
     }
 
     /**
-     * 根據技能範圍計算目標列表
+     * Tính danh sách mục tiêu theo phạm vi kỹ năng
      *
-     * @param fightArea 技能範圍（EFightArea）
-     * @param targetCol 指定目標列
-     * @param targetRow 指定目標行
-     * @param attackerIsPlayerSide 攻擊者是否為玩家方
-     * @return 所有被影響的存活角色
+     * @param fightArea phạm vi kỹ năng (EFightArea)
+     * @param targetCol chỉ định cột mục tiêu
+     * @param targetRow chỉ định hàng mục tiêu
+     * @param attackerIsPlayerSide người tấn công có thuộc phe người chơi không
+     * @return tất cả nhân vật còn sống bị ảnh hưởng
      */
     fun resolveTargets(
         fightArea: Int,
@@ -191,16 +191,16 @@ class BattleGrid {
     }
 
     /**
-     * 在指定兩列中找空格位（前排優先，居中排列）
+     * Tìm ô trống trong hai cột chỉ định (ưu tiên hàng trước, xếp giữa)
      *
-     * @param frontCol 前排列號
-     * @param backCol 後排列號
-     * @return (col, row) 或 null（滿了）
+     * @param frontCol số cột hàng trước
+     * @param backCol số cột hàng sau
+     * @return (col, row) hoặc null (đã đầy)
      */
     fun findEmptySlot(frontCol: Int, backCol: Int): Pair<Int, Int>? {
-        // 前排優先
+        // Ưu tiên hàng trước
         for (col in intArrayOf(frontCol, backCol)) {
-            // 優先居中（row 2 → 1,3 → 0,4）
+            // Ưu tiên giữa (row 2 → 1,3 → 0,4)
             val order = intArrayOf(2, 1, 3, 0, 4)
             for (row in order) {
                 if (row < BattleConstants.MAX_ROW && grid[col][row] == null) {
@@ -212,7 +212,7 @@ class BattleGrid {
     }
 
     /**
-     * 計算指定兩列中已佔用的格位數
+     * Tính số ô đã chiếm trong hai cột chỉ định
      */
     fun countOccupied(col1: Int, col2: Int): Int {
         var count = 0
@@ -224,7 +224,7 @@ class BattleGrid {
         return count
     }
 
-    /** 取得指定位置的存活角色 */
+    /** Lấy nhân vật còn sống ở vị trí chỉ định*/
     private fun getAliveAt(col: Int, row: Int): BattleFighter? {
         val f = getAt(col, row) ?: return null
         return if (f.isAlive) f else null

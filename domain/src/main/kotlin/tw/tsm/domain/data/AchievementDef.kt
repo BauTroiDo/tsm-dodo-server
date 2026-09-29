@@ -1,29 +1,29 @@
 package tw.tsm.domain.data
 
 /**
- * 成就定義 — 對應 `AchievementData.lua`
+ * Định nghĩa thành tựu — tương ứng `AchievementData.lua`
  *
- * 來源：`AchievementData_C.dat`
- * 每筆 37 bytes 固定長度。
+ * Nguồn: `AchievementData_C.dat`
+ * Mỗi bản ghi dài cố định 37 bytes.
  *
- * name / content / channelContent 為字串表 ID，純 UI 用途，伺服器不需要存。
+ * name / content / channelContent là ID bảng chuỗi, chỉ dành cho UI, server không cần lưu.
  *
- * @param id             成就 ID
- * @param mainTag        主分類
- * @param subTag         次分類
- * @param sortId         排序
- * @param showKind       顯示類別
- * @param score          成就積分
- * @param conditionKind  條件類別（對應 ECondition 枚舉）
- * @param conditionKindValue 條件次參數（如 RoleCount 索引、轉生次數等）
- * @param conditionOpr   運算子（1=等於, 2=大於, 3=大於等於, 4=小於, 5=小於等於, 6=不等於）
- * @param conditionValue 達成數值
- * @param itemId         獎勵物品 ID（0 = 無獎勵）
- * @param itemCount      獎勵物品數量
- * @param completeFlag   完成永標 ID（BitFlag）
- * @param getFlag        領獎永標 ID（BitFlag）
- * @param channel        廣播頻道（對應 EChannel）
- * @param channelContent 廣播內容（字串表 ID）
+ * @param id             ID thành tựu
+ * @param mainTag        phân loại chính
+ * @param subTag         phân loại phụ
+ * @param sortId         sắp xếp
+ * @param showKind       loại hiển thị
+ * @param score          điểm tích luỹ thành tựu
+ * @param conditionKind  loại điều kiện (tương ứng liệt kê ECondition)
+ * @param conditionKindValue tham số phụ của điều kiện (như chỉ mục RoleCount, số lần chuyển sinh)
+ * @param conditionOpr   toán tử (1=bằng, 2=lớn hơn, 3=lớn hơn hoặc bằng, 4=nhỏ hơn, 5=nhỏ hơn hoặc bằng, 6=khác)
+ * @param conditionValue giá trị cần đạt
+ * @param itemId         ID vật phẩm thưởng (0 = không thưởng)
+ * @param itemCount      số lượng vật phẩm thưởng
+ * @param completeFlag   ID cờ vĩnh viễn khi hoàn thành (BitFlag)
+ * @param getFlag        ID cờ vĩnh viễn khi nhận thưởng (BitFlag)
+ * @param channel        kênh phát rộng (tương ứng EChannel)
+ * @param channelContent nội dung phát rộng (ID bảng chuỗi)
  */
 data class AchievementDef(
     val id: Int,

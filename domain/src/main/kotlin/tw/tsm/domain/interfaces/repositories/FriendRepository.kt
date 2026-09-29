@@ -1,70 +1,70 @@
 package tw.tsm.domain.interfaces.repositories
 
 /**
- * 好友系統資料庫操作介面
+ * giao diện thao tác cơ sở dữ liệu của hệ thống bạn bè
  *
- * 來源：protocal.lua protocolTable[14], Social.lua
+ * nguồn: protocal.lua protocolTable[14], Social.lua
  */
 interface FriendRepository {
 
-    /** 查詢角色的所有好友 */
+    /** truy vấn toàn bộ bạn bè của nhân vật*/
     suspend fun findFriends(charId: Long): List<FriendRecord>
 
-    /** 新增好友關係（雙向寫入） */
+    /** thêm quan hệ bạn bè (ghi hai chiều)*/
     suspend fun addFriend(charId1: Long, charId2: Long, addTime: Double)
 
-    /** 刪除好友關係（雙向刪除） */
+    /** xoá quan hệ bạn bè (xoá hai chiều)*/
     suspend fun removeFriend(charId1: Long, charId2: Long)
 
-    /** 查詢好友數量 */
+    /** truy vấn số lượng bạn bè*/
     suspend fun countFriends(charId: Long): Int
 
-    /** 更新信任度 */
+    /** cập nhật độ tin cậy*/
     suspend fun updateFriendly(charId: Long, friendId: Long, friendly: Int)
 
-    /** 更新功能標記 */
+    /** cập nhật cờ chức năng*/
     suspend fun updateFunctionFlag(charId: Long, friendId: Long, flag: Int)
 
-    /** 批量更新功能標記（一鍵送禮用） */
+    /** cập nhật hàng loạt cờ chức năng (dùng cho tặng quà một chạm)*/
     suspend fun batchUpdateFunctionFlag(charId: Long, friendIds: List<Long>, flag: Int)
 
-    /** 每日重置所有功能標記（送禮/收禮狀態） */
+    /** đặt lại toàn bộ cờ chức năng mỗi ngày (trạng thái tặng / nhận quà)*/
     suspend fun resetAllFunctionFlags()
 
-    /** 是否已是好友 */
+    /** đã là bạn bè hay chưa*/
     suspend fun isFriend(charId1: Long, charId2: Long): Boolean
 
-    // ── 邀請相關 ──
+    // ── liên quan đến lời mời ──
 
-    /** 查詢待處理的好友邀請 */
+    /** truy vấn lời mời kết bạn đang chờ xử lý*/
     suspend fun findPendingInvites(targetCharId: Long): List<FriendInviteRecord>
 
-    /** 新增好友邀請 */
+    /** thêm lời mời kết bạn*/
     suspend fun addInvite(inviterCharId: Long, targetCharId: Long)
 
-    /** 刪除好友邀請 */
+    /** xoá lời mời kết bạn*/
     suspend fun removeInvite(inviterCharId: Long, targetCharId: Long)
 
-    /** 是否已有邀請（任一方向） */
+    /** Đã có lời mời chưa (theo bất kỳ hướng nào)*/
     suspend fun hasInvite(inviterCharId: Long, targetCharId: Long): Boolean
 }
 
 /**
- * 好友記錄
+ * Bản ghi bạn bè
  */
 data class FriendRecord(
     val charId: Long,
     val friendId: Long,
-    /** 信任度（0-9999） */
+    /** Độ tin cậy (0-9999)*/
     val friendly: Int,
-    /** 功能標記（bit1=已送禮, bit2=已被送禮, bit3=已領禮） */
+    /** Cờ chức năng (bit1=đã tặng quà, bit2=được tặng quà, bit3=đã nhận quà)*/
     val functionFlag: Int,
-    /** 結交時間（OADate） */
+    /** Thời điểm kết bạn (OADate)*/
     val addTime: Double
 )
 
 /**
- * 好友邀請記錄
+ * Bản ghi lời mời kết bạn
  */
 data class FriendInviteRecord(
     val id: Long,

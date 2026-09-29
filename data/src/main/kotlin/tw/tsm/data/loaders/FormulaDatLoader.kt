@@ -4,15 +4,15 @@ import tw.tsm.data.DatReader
 import tw.tsm.domain.data.FormulaParams
 
 /**
- * 公式參數載入器 — 對應 `DataManager.OnLoadFormulaData` → `Calc.Initialize(reader)`
+ * Loader tham số công thức — tương ứng `DataManager.OnLoadFormulaData` → `Calc.Initialize(reader)`
  *
- * 來源：`Formula.dat`（無 count 前綴，直接連續讀取）
- * 讀取順序嚴格對照 Calculator.lua 第 42-75 行。
+ * Nguồn: `Formula.dat` (không có prefix count, đọc liên tiếp trực tiếp)
+ * Thứ tự đọc đối chiếu chính xác dòng 42-75 của Calculator.lua.
  */
 object FormulaDatLoader {
 
     /**
-     * 載入公式參數
+     * Đọc tham số công thức
      */
     fun load(data: ByteArray): FormulaParams {
         val reader = DatReader(data)

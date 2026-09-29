@@ -11,13 +11,13 @@ import tw.tsm.gamelogic.systems.EveConditionEvaluator
 import tw.tsm.gamelogic.systems.PlayerEventState
 
 /**
- * EveChainResolver 單元測試
+ * Kiểm thử đơn vị EveChainResolver
  *
- * 涵蓋：buildChains 分組 + resolve step/data-order 優先級 + chainFilter 過濾
+ * Bao gồm: gom nhóm buildChains + độ ưu tiên step/data-order của resolve + lọc chainFilter
  */
 class EveChainResolverTest : DescribeSpec({
 
-    // ── 輔助函數 ──
+    // ── Hàm phụ trợ ──
 
     fun result(type: Int = 1, meanNo: Int = 1) = EveResult(
         resultGroupNo = 0, resultNo = 1, resultType = type,
@@ -38,11 +38,11 @@ class EveChainResolverTest : DescribeSpec({
     )
 
     // ══════════════════════════════════════════════
-    //  buildChains — 分組測試
+    //  buildChains — kiểm thử gom nhóm
     // ══════════════════════════════════════════════
 
     describe("buildChains") {
-        it("單條件 andNum=1 → 各自獨立") {
+        it("điều kiện đơn andNum=1 → mỗi cái độc lập") {
             val conditions = listOf(
                 cond(no = 1, andNum = 1),
                 cond(no = 2, andNum = 1),
@@ -53,11 +53,11 @@ class EveChainResolverTest : DescribeSpec({
             chains.map { it.size } shouldBe listOf(1, 1, 1)
         }
 
-        it("andNum=2 → 兩個一組") {
+        it("andNum=2 → hai cái một nhóm") {
             val conditions = listOf(
-                cond(no = 1, andNum = 2),  // 鏈頭，帶下一個
+                cond(no = 1, andNum = 2),  // Đầu chuỗi, chỉ tới phần tử kế tiếp
                 cond(no = 2, andNum = 0),  // AND
-                cond(no = 3, andNum = 1),  // 獨立
+                cond(no = 3, andNum = 1),  // Độc lập
             )
             val chains = EveChainResolver.buildChains(conditions)
             chains.size shouldBe 2
@@ -66,7 +66,7 @@ class EveChainResolverTest : DescribeSpec({
             chains[1].size shouldBe 1
         }
 
-        it("andNum=3 → 三個一組") {
+        it("andNum=3 → ba cái một nhóm") {
             val conditions = listOf(
                 cond(no = 1, andNum = 3),
                 cond(no = 2, andNum = 0),
@@ -79,28 +79,28 @@ class EveChainResolverTest : DescribeSpec({
             chains[1].size shouldBe 1
         }
 
-        it("空列表 → 空結果") {
+        it("danh sách trống → kết quả trống") {
             EveChainResolver.buildChains(emptyList()).size shouldBe 0
         }
     }
 
     // ══════════════════════════════════════════════
-    //  resolve — 匹配邏輯
+    //  resolve — logic so khớp
     // ══════════════════════════════════════════════
 
     describe("resolve") {
-        it("無匹配 → null") {
+        it("không khớp → null") {
             val conditions = listOf(
                 cond(cls = 2, ops = 1, value = 5, results = listOf(result()))
             )
-            // 評估器永遠回傳 false
+            // Bộ đánh giá luôn trả về false
             EveChainResolver.resolve(conditions, evaluator = { false }).shouldBeNull()
         }
 
-        it("鏈頭無 results → 跳過") {
+        it("đầu chuỗi không có results → bỏ qua") {
             val conditions = listOf(
-                cond(cls = 0, results = emptyList()),  // 無 results
-                cond(no = 2, cls = 0, results = listOf(result(meanNo = 99)))  // 有 results
+                cond(cls = 0, results = emptyList()),  // Không có results
+                cond(no = 2, cls = 0, results = listOf(result(meanNo = 99)))  // Có results
             )
             val resolved = EveChainResolver.resolve(conditions, evaluator = { true })
             resolved.shouldNotBeNull()
@@ -108,10 +108,10 @@ class EveChainResolverTest : DescribeSpec({
             resolved.matchedConditionNo shouldBe 2
         }
 
-        it("AND 鏈中一個 false → 整條失敗") {
+        it("một phần tử false trong chuỗi AND → cả chuỗi thất bại") {
             val conditions = listOf(
                 cond(no = 1, cls = 0, andNum = 2, results = listOf(result())),
-                cond(no = 2, cls = 99, andNum = 0),  // 未知 class → false
+                cond(no = 2, cls = 99, andNum = 0),  // class không xác định → false
             )
             val result = EveChainResolver.resolve(
                 conditions,
@@ -120,9 +120,9 @@ class EveChainResolverTest : DescribeSpec({
             result.shouldBeNull()
         }
 
-        it("四層排序 — stepScore 優先") {
-            // 鏈 A：cls=2 val=1（低 stepScore）
-            // 鏈 B：cls=2 val=3（高 stepScore）→ 應被選
+        it("sắp xếp bốn tầng — stepScore ưu tiên") {
+            // Chuỗi A: cls=2 val=1 (stepScore thấp)
+            // Chuỗi B: cls=2 val=3 (stepScore cao) → sẽ được chọn
             val conditions = listOf(
                 cond(no = 1, cls = 2, value = 1, results = listOf(result(meanNo = 10))),
                 cond(no = 2, cls = 2, value = 3, results = listOf(result(meanNo = 20))),
@@ -189,25 +189,25 @@ class EveChainResolverTest : DescribeSpec({
             resolved.results shouldBe initialResults
         }
 
-        it("四層排序 — 全相同時先出現者優先") {
+        it("sắp xếp bốn tầng — khi giống hết, cái xuất hiện trước ưu tiên") {
             val conditions = listOf(
                 cond(no = 1, cls = 0, results = listOf(result(meanNo = 10))),
                 cond(no = 2, cls = 0, results = listOf(result(meanNo = 20))),
             )
             val resolved = EveChainResolver.resolve(conditions, evaluator = { true })
             resolved.shouldNotBeNull()
-            // 都是 stepScore=0, len=1, resultCount=1 → 先出現的 meanNo=10
+            // Đều là stepScore=0, len=1, resultCount=1 → cái xuất hiện trước có meanNo=10
             resolved.results shouldBe listOf(result(meanNo = 10))
             resolved.matchedConditionNo shouldBe 1
         }
     }
 
     // ══════════════════════════════════════════════
-    //  chainFilter — 重評過濾
+    //  chainFilter — lọc đánh giá lại
     // ══════════════════════════════════════════════
 
     describe("chainFilter") {
-        it("過濾出含 class=10 的鏈") {
+        it("lọc ra chuỗi chứa class=10") {
             val conditions = listOf(
                 cond(no = 1, cls = 0, results = listOf(result(meanNo = 10))),
                 cond(no = 2, cls = 10, param = 100, pStyle = 30, andNum = 1, results = listOf(result(meanNo = 20))),
@@ -222,7 +222,7 @@ class EveChainResolverTest : DescribeSpec({
             resolved.matchedConditionNo shouldBe 2
         }
 
-        it("過濾後無匹配 → null") {
+        it("lọc xong không khớp → null") {
             val conditions = listOf(
                 cond(no = 1, cls = 0, results = listOf(result(meanNo = 10))),
             )

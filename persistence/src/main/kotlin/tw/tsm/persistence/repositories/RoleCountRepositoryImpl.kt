@@ -10,9 +10,9 @@ import tw.tsm.domain.interfaces.repositories.RoleCountRepository
 import tw.tsm.persistence.tables.CharacterRoleCounts
 
 /**
- * RoleCountRepository 的 Exposed ORM 實作
+ * Triển khai RoleCountRepository bằng Exposed ORM
  *
- * 使用 character_role_counts 表存儲角色計數器。
+ * Dùng bảng character_role_counts lưu bộ đếm của nhân vật.
  */
 class RoleCountRepositoryImpl : RoleCountRepository {
 

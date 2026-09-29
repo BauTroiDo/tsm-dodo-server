@@ -10,7 +10,7 @@ import tw.tsm.protocol.PacketWriter
 
 private val logger = KotlinLogging.logger {}
 
-/** DVT C:091 九宮格 / Hằng ngày. */
+/** DVT C:091 lưới 3x3 / Hằng ngày.*/
 class JiugonggeHandler(
     private val system: JiugonggeSystem,
 ) : PacketHandler {

@@ -14,12 +14,12 @@ import tw.tsm.protocol.PacketReader
 private val logger = KotlinLogging.logger {}
 
 /**
- * 移動處理器（mainKind = 6）
+ * Bộ xử lý di chuyển (mainKind = 6)
  *
- * 來源：protocal.lua protocolTable[6]
- * C→S 0x06-0x01：玩家移動 — direction(1B) + targetX(2B) + targetY(2B)
- * S→C 0x06-0x01：廣播移動 — roleId(8B) + direction(1B) + destX(2B) + destY(2B)
- * S→C 0x06-0x02：停止移動 — 空封包
+ * Nguồn: protocal.lua protocolTable[6]
+ * C→S 0x06-0x01: người chơi di chuyển — direction(1B) + targetX(2B) + targetY(2B)
+ * S→C 0x06-0x01: phát rộng di chuyển — roleId(8B) + direction(1B) + destX(2B) + destY(2B)
+ * S→C 0x06-0x02: dừng di chuyển — gói tin rỗng
  */
 class MoveHandler(
     private val worldManager: WorldManager,
@@ -29,7 +29,7 @@ class MoveHandler(
 ) : PacketHandler {
 
     companion object {
-        /** 防抖間隔：每 30 秒最多寫一次 DB */
+        /** Khoảng chống dội: mỗi 30 giây ghi DB tối đa một lần*/
         private const val POSITION_SAVE_INTERVAL_MS = 30_000L
     }
 
@@ -41,14 +41,14 @@ class MoveHandler(
         when (subKind) {
             1 -> handleMove(session, data)
             2 -> handleStopMove(session, data)
-            else -> logger.warn { "未處理的移動子協定：subKind=$subKind" }
+            else -> logger.warn { "Sub-protocol di chuyển chưa xử lý: subKind=$subKind" }
         }
     }
 
     /**
-     * C:006-001 玩家移動
+     * C:006-001 người chơi di chuyển
      *
-     * 格式：+direction(1) +targetX(2 LE) +targetY(2 LE)
+     * Định dạng: +direction(1) +targetX(2 LE) +targetY(2 LE)
      */
     private suspend fun handleMove(session: GameSession, data: ByteArray) {
         val reader = PacketReader(data)
@@ -59,15 +59,15 @@ class MoveHandler(
         val oldX = session.x
         val oldY = session.y
 
-        // 更新 session 座標
+        // Cập nhật toạ độ session
         session.x = targetX
         session.y = targetY
         session.direction = direction
 
-        // 廣播給同地圖其他玩家
+        // phát rộng cho người chơi khác cùng bản đồ
         responseSender.sendPlayerMove(session, session.playerId, direction, targetX, targetY)
 
-        // 防抖位置儲存：每 30 秒最多寫一次 DB
+        // lưu vị trí chống dội: mỗi 30 giây ghi DB tối đa một lần
         val now = System.currentTimeMillis()
         if (session.roleId > 0 && session.mapId > 0 &&
             now - session.lastPositionSave >= POSITION_SAVE_INTERVAL_MS) {
@@ -80,10 +80,10 @@ class MoveHandler(
     }
 
     /**
-     * C:006-002 停止移動
+     * C:006-002 dừng di chuyển
      *
-     * 格式：+direction(1) +currentX(2 LE) +currentY(2 LE)
-     * 註：客戶端 Lua 註解「C端不送這一條」，但保留處理
+     * Định dạng: +direction(1) +currentX(2 LE) +currentY(2 LE)
+     * Lưu ý: chú thích trong Lua client ghi 'phía client không gửi gói này', nhưng vẫn giữ xử lý
      */
     private fun handleStopMove(session: GameSession, data: ByteArray) {
         if (data.isEmpty()) return

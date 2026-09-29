@@ -3,20 +3,20 @@ package tw.tsm.persistence.tables
 import org.jetbrains.exposed.v1.core.Table
 
 /**
- * 信件附件資料表
+ * Bảng dữ liệu tệp đính kèm thư
  *
- * 附件種類：1=物品（ThingData 欄位）, 2=武將 NPC（npcData blob）
- * 欄位與 Inventories 表 ThingData 部分一致。
+ * Loại đính kèm: 1=vật phẩm (các trường ThingData), 2=tướng NPC (blob npcData)
+ * Các trường nhất quán với phần ThingData của bảng Inventories.
  */
 object MailAttachments : Table("mail_attachments") {
-    /** 所屬信件 ID */
+    /** ID thư sở hữu*/
     val mailId = integer("mail_id").index()
-    /** 附件序號（1-based，最多 5） */
+    /** Số thứ tự tệp đính kèm (1-based, tối đa 5)*/
     val slot = integer("slot")
-    /** 附件種類（1=物品, 2=武將 NPC） */
+    /** loại tệp đính kèm (1=vật phẩm, 2=NPC tướng)*/
     val kind = integer("kind")
 
-    // ── kind=1 時：ThingData 欄位（與 Inventories 結構一致）──
+    // ── Khi kind=1: các trường ThingData (nhất quán với cấu trúc Inventories) ──
     val itemId = integer("item_id").default(0)
     val quantity = integer("quantity").default(0)
     val damage = integer("damage").default(0)
@@ -38,7 +38,7 @@ object MailAttachments : Table("mail_attachments") {
     val affix3 = integer("affix3").default(0)
     val styleLevel = integer("style_level").default(0)
 
-    // ── kind=2 時：NPC 序列化資料 ──
+    // ── Khi kind=2: dữ liệu NPC đã tuần tự hoá ──
     val npcData = blob("npc_data").nullable()
 
     override val primaryKey = PrimaryKey(mailId, slot)

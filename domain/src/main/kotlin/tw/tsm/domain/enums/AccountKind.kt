@@ -1,14 +1,14 @@
 package tw.tsm.domain.enums
 
 /**
- * 帳號綁定類型
+ * Loại liên kết tài khoản
  *
- * 來源：Network.lua 的 EAccount 定義
+ * Nguồn: định nghĩa EAccount trong Network.lua
  */
 enum class AccountKind(val code: Int) {
-    /** 遊客帳號 */
+    /** Tài khoản khách*/
     GUEST(0),
-    /** Facebook 綁定 */
+    /** Liên kết Facebook*/
     FACEBOOK(1);
 
     companion object {

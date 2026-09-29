@@ -53,16 +53,16 @@ import tw.tsm.persistence.repositories.SkillRepositoryImpl
 private val serverLogger = KotlinLogging.logger {}
 
 /**
- * Koin DI 模組定義
+ * Định nghĩa module Koin DI
  *
- * @param config 應用程式設定
- * @param gameDataManager 已初始化的遊戲資料管理器
+ * @param config cấu hình ứng dụng
+ * @param gameDataManager bộ quản lý dữ liệu game đã khởi tạo
  */
 fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
-    // 共用 CoroutineScope
+    // CoroutineScope dùng chung
     single { CoroutineScope(SupervisorJob() + Dispatchers.Default) }
 
-    // 網路層
+    // Tầng mạng
     single { SessionManager() }
     single {
         PacketDispatcher().apply {
@@ -129,24 +129,24 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
         val friendSystem = get<FriendSystem>()
         val scope = get<CoroutineScope>()
         NettyGameServer(get(), get(), get()) { session ->
-            // 斷線時取消進行中的交易
+            // Khi mất kết nối huỷ giao dịch đang tiến hành
             tradeSystem.cancelTradeOnDisconnect(session.playerId)
-            // 斷線時清理戰鬥
+            // Khi mất kết nối dọn dẹp chiến đấu
             battleManager.handleDisconnect(session.playerId)
-            // 斷線時清理隊伍
+            // Khi mất kết nối dọn dẹp tổ đội
             partySystem.handleDisconnect(session.playerId)
-            // 斷線時清理事件狀態
+            // Khi mất kết nối dọn dẹp trạng thái sự kiện
             eveStateMachine.clear(session.roleId.toLong())
-            // 斷線時清理機關盒狀態
+            // Khi mất kết nối dọn dẹp trạng thái hộp cơ quan
             macroBoxSystem.cleanup(session.roleId.toLong())
-            // 斷線時通知好友下線
+            // Khi mất kết nối thông báo bạn bè offline
             if (session.roleId > 0) {
                 scope.launch {
                     try { friendSystem.handleDisconnect(session.roleId.toLong()) }
-                    catch (e: Exception) { serverLogger.error(e) { "斷線通知好友失敗" } }
+                    catch (e: Exception) { serverLogger.error(e) { "Thông báo ngắt kết nối tới bạn bè thất bại" } }
                 }
             }
-            // 斷線時保存並清除運行時狀態
+            // Khi mất kết nối lưu và xoá trạng thái runtime
             if (session.roleId > 0) {
                 val roleId = session.roleId.toLong()
                 val state = playerStateManager.getState(roleId)
@@ -159,55 +159,55 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
                                 state.intelligence, state.atk, state.def, state.agi, state.hpx, state.spx
                             )
                         } catch (e: Exception) {
-                            serverLogger.error(e) { "異常斷線存檔失敗（角色狀態）：roleId=$roleId" }
+                            serverLogger.error(e) { "Lưu khi ngắt kết nối bất thường thất bại (trạng thái nhân vật): roleId=$roleId" }
                         }
                     }
                 }
                 playerStateManager.removePlayer(roleId)
             }
 
-            // 先快照位置，再移除（leaveMap 會把 session.mapId 清為 0）
+            // Chụp snapshot vị trí trước, rồi loại bỏ (leaveMap sẽ đặt session.mapId về 0)
             val mapId = session.mapId
             val x = session.x
             val y = session.y
 
             worldManager.removePlayer(session)
-            // 異常斷線時儲存角色位置/物品/金錢（非 suspend，用 scope.launch）
-            // mapId > 0 檢查：避免 DisconnectHandler 已保存後，channelInactive 用 mapId=0 覆蓋
+            // Khi mất kết nối bất thường lưu vị trí/vật phẩm/tiền của nhân vật (không suspend, dùng scope.launch)
+            // Kiểm tra mapId > 0: tránh sau khi DisconnectHandler đã lưu, channelInactive dùng mapId=0 ghi đè
             if (session.roleId > 0) {
                 val roleId = session.roleId.toLong()
                 scope.launch {
-                    // 每項獨立 try-catch，確保一項失敗不影響其他項保存
+                    // Mỗi mục dùng try-catch độc lập, đảm bảo một mục thất bại không ảnh hưởng việc lưu các mục khác
                     if (mapId > 0) {
                         try { characterRepository.updatePosition(roleId, mapId, x, y) }
-                        catch (e: Exception) { serverLogger.error(e) { "斷線存檔失敗（位置）：roleId=$roleId" } }
+                        catch (e: Exception) { serverLogger.error(e) { "Lưu ngắt kết nối thất bại (vị trí): roleId=$roleId" } }
                     }
                     try { inventorySystem.saveAndUnload(roleId) }
-                    catch (e: Exception) { serverLogger.error(e) { "斷線存檔失敗（物品）：roleId=$roleId" } }
+                    catch (e: Exception) { serverLogger.error(e) { "Lưu ngắt kết nối thất bại (vật phẩm): roleId=$roleId" } }
 
                     try { moneySystem.saveAndUnload(roleId) }
-                    catch (e: Exception) { serverLogger.error(e) { "斷線存檔失敗（金錢）：roleId=$roleId" } }
+                    catch (e: Exception) { serverLogger.error(e) { "Lưu ngắt kết nối thất bại (tiền vàng): roleId=$roleId" } }
 
                     try { pointSystem.saveAndUnload(roleId) }
-                    catch (e: Exception) { serverLogger.error(e) { "斷線存檔失敗（元寶）：roleId=$roleId" } }
+                    catch (e: Exception) { serverLogger.error(e) { "Lưu ngắt kết nối thất bại (nguyên bảo): roleId=$roleId" } }
 
                     try { skillSystem.saveAndUnload(roleId) }
-                    catch (e: Exception) { serverLogger.error(e) { "斷線存檔失敗（技能）：roleId=$roleId" } }
+                    catch (e: Exception) { serverLogger.error(e) { "Lưu ngắt kết nối thất bại (kỹ năng): roleId=$roleId" } }
 
                     try { petSystem.saveAndUnload(roleId) }
-                    catch (e: Exception) { serverLogger.error(e) { "斷線存檔失敗（武將）：roleId=$roleId" } }
+                    catch (e: Exception) { serverLogger.error(e) { "Lưu ngắt kết nối thất bại (tướng): roleId=$roleId" } }
 
                     try { mountSystem.saveAndUnload(roleId) }
-                    catch (e: Exception) { serverLogger.error(e) { "斷線存檔失敗（坐騎）：roleId=$roleId" } }
+                    catch (e: Exception) { serverLogger.error(e) { "Lưu ngắt kết nối thất bại (vật cưỡi): roleId=$roleId" } }
 
                     try { roleCountSystem.saveAndUnload(roleId) }
-                    catch (e: Exception) { serverLogger.error(e) { "斷線存檔失敗（計數器）：roleId=$roleId" } }
+                    catch (e: Exception) { serverLogger.error(e) { "Lưu ngắt kết nối thất bại (bộ đếm): roleId=$roleId" } }
                 }
             }
         }
     }
 
-    // Repository（domain 介面 → persistence 實作）
+    // Repository (interface domain → triển khai persistence)
     single<AccountRepository> { AccountRepositoryImpl() }
     single<CharacterRepository> { CharacterRepositoryImpl() }
     single<InventoryRepository> { InventoryRepositoryImpl() }
@@ -225,18 +225,18 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single<MailRepository> { MailRepositoryImpl() }
     single<FriendRepository> { FriendRepositoryImpl() }
 
-    // 遊戲資料
+    // Dữ liệu game
     single { gameDataManager }
     single { StatSystem(get<GameDataManager>().formulaParams) }
     single<StatCalculator> { get<StatSystem>() }
 
-    // 遊戲邏輯
+    // Logic game
     single { WorldManager() }
     single { AuthSystem(get()) }
     single<ResponseSender> {
         val wm = get<WorldManager>()
         val rs = ResponseSenderImpl(wm)
-        wm.responseSender = rs  // 打破循環依賴
+        wm.responseSender = rs  // Phá vỡ phụ thuộc vòng
         rs
     }
     single {
@@ -310,7 +310,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     }
     single {
         BattleManager(get(), get<GameDataManager>().skillDefs, get<GameDataManager>().npcDefs, get(), get(), get<PetSystem>(), get<MoneySystem>(), get<StatSystem>(), get(), get<GameDataManager>().npcDropTable, get<SkillSystem>(), get<MacroBoxSystem>(), get<GameDataManager>().itemDefs, get<SkillRepository>(), get<CharacterRepository>(), get<GameDataManager>().npcUpgradeDefs, get<GameDataManager>().sceneSetDefs, get<DailyProgressSystem>()).also { bm ->
-            // 戰鬥結束回呼 → EveFlowController 恢復事件流程
+            // Callback kết thúc chiến đấu → EveFlowController khôi phục luồng sự kiện
             bm.onBattleEndCallback = { session, playerId, playerWin ->
                 get<EveFlowController>().resumeAfterBattle(session, playerId, playerWin)
             }
@@ -318,7 +318,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     }
     single { LoginService(get(), get(), get(), get(), get(), get<PointSystem>(), get<PlayerCurrencySystem>(), get(), get(), get<EveEventStateMachine>(), get(), get(), get(), get(), get(), get(), get<SkillRepository>(), get<RoleCountSystem>(), get<FlyPointSystem>(), get<MailSystem>(), get<FriendSystem>(), get<GameDataManager>().eveData, get<GameDataManager>().itemDefs, get<JiugonggeSystem>(), get<DailyProgressSystem>()) }
 
-    // Eve 事件系統（拆分後的 9 個子服務）
+    // Hệ thống sự kiện Eve (9 dịch vụ con sau khi tách)
     single {
         EveStateBuilder(
             questSystem = get(),
@@ -344,10 +344,10 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { EveTriggerRouter(get<EveEventStateMachine>(), get(), get(), get(), get(), get<GameDataManager>().eveData) }
     single { MineEncounterSystem(get<GameDataManager>().eveData, get<EveEventStateMachine>(), get<EveTriggerRouter>()) }
 
-    // 定期自動存檔（每 3 分鐘保存所有在線玩家資料）
+    // Lưu tự động định kỳ (mỗi 3 phút lưu dữ liệu tất cả người chơi trực tuyến)
     single { AutoSaveService(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
 
-    // GM 指令處理器
+    // Bộ xử lý lệnh GM
     single {
         GmCommandProcessor(
             get(), get(), get(), get(), get<PointSystem>(), get(), get(), get(), get(),

@@ -14,10 +14,10 @@ import tw.tsm.protocol.PacketWriter
 private val logger = KotlinLogging.logger {}
 
 /**
- * GM 指令處理器
+ * Bộ xử lý lệnh GM
  *
- * 解析聊天中以 "/" 開頭的指令，分發到對應的處理方法。
- * 所有結果透過 S:002-000 系統訊息回傳給 GM 玩家。
+ * Phân tích các lệnh trong trò chuyện bắt đầu bằng "/", phân phối tới hàm xử lý tương ứng.
+ * Tất cả kết quả trả về cho người chơi GM qua thông báo hệ thống S:002-000.
  */
 class GmCommandProcessor(
     private val responseSender: ResponseSender,
@@ -43,10 +43,10 @@ class GmCommandProcessor(
 ) {
 
     /**
-     * 執行 GM 指令
+     * Thực thi lệnh GM
      *
-     * @param session 發送指令的 GM session
-     * @param input 完整指令字串（含 "/" 前綴）
+     * @param session GM session gửi lệnh
+     * @param input chuỗi lệnh đầy đủ (bao gồm tiền tố "/")
      */
     suspend fun execute(session: GameSession, input: String) {
         val parts = input.trim().split("\\s+".toRegex())
@@ -90,26 +90,26 @@ class GmCommandProcessor(
                 "/武將轉生", "/npcturn"                -> cmdOpenNpcTurn(session, args)
                 "/測試",     "/test"                   -> cmdTest(session, args)
                 "/指令",     "/help", "/commands"      -> cmdHelp(session)
-                else -> reply(session, "未知指令：$command（輸入 /help 查看指令列表）")
+                else -> reply(session, "Lệnh không rõ ràng: $command (gõ /help để xem danh sách lệnh)")
             }
         } catch (e: NumberFormatException) {
-            reply(session, "參數格式錯誤：請輸入正確的數字")
+            reply(session, "Tham số sai định dạng: vui lòng nhập số hợp lệ")
         } catch (e: IndexOutOfBoundsException) {
-            reply(session, "參數不足：輸入 /help 查看用法")
+            reply(session, "Tham số thiếu: gõ /help để xem cách dùng")
         } catch (e: Exception) {
-            logger.error(e) { "GM 指令執行失敗：$input" }
-            reply(session, "指令執行錯誤：${e.message}")
+            logger.error(e) { "Lệnh GM thực thi thất bại: $input" }
+            reply(session, "Lệnh thực thi lỗi: ${e.message}")
         }
     }
 
-    // ── 物品/金錢指令 ──
+    // ── Lệnh vật phẩm/tiền ──
 
     /**
-     * /additem <id> [qty=1] — 新增物品到背包
+     * /additem <id> [qty=1] — thêm vật phẩm vào túi đồ
      */
     private suspend fun cmdAddItem(session: GameSession, args: List<String>) {
         if (args.isEmpty()) {
-            reply(session, "用法：/加物品 <物品ID> [數量=1]")
+            reply(session, "Cách dùng: /加物品 <ID vật phẩm> [số lượng=1]")
             return
         }
         val itemId = args[0].toInt()
@@ -117,33 +117,33 @@ class GmCommandProcessor(
 
         val def = itemDefs[itemId]
         if (def == null) {
-            reply(session, "物品 ID $itemId 不存在")
+            reply(session, "ID vật phẩm $itemId không tồn tại")
             return
         }
 
         val result = inventorySystem.addItemToBag(session.roleId.toLong(), itemId, qty)
         if (result == null) {
-            reply(session, "背包已滿，無法新增物品")
+            reply(session, "Túi đồ đã đầy, không thể thêm vật phẩm")
             return
         }
 
         val (slot, thing) = result
         responseSender.sendSetBagItem(session, slot, thing, showMsg = true)
-        reply(session, "已新增 ${def.name} x$qty 到格位 $slot")
+        reply(session, "Đã thêm ${def.name} x$qty vào ô $slot")
     }
 
     /**
-     * /removeitem <slot> [qty=全部] — 移除背包物品
+     * /removeitem <slot> [qty=tất cả] — loại bỏ vật phẩm trong túi đồ
      */
     private suspend fun cmdRemoveItem(session: GameSession, args: List<String>) {
         if (args.isEmpty()) {
-            reply(session, "用法：/移除物品 <格位> [數量=全部]")
+            reply(session, "Cách dùng: /移除物品 <ô> [số lượng=tất cả]")
             return
         }
         val slot = args[0].toInt()
         val thing = inventorySystem.getBagItem(session.roleId.toLong(), slot)
         if (thing == null) {
-            reply(session, "格位 $slot 沒有物品")
+            reply(session, "Ô $slot không có vật phẩm")
             return
         }
 
@@ -151,76 +151,76 @@ class GmCommandProcessor(
         inventorySystem.removeFromBag(session.roleId.toLong(), slot, qty)
         responseSender.sendReduceBagItem(session, slot, qty)
 
-        val name = itemDefs[thing.itemId]?.name ?: "未知物品"
-        reply(session, "已移除格位 $slot 的 $name x$qty")
+        val name = itemDefs[thing.itemId]?.name ?: "Vật phẩm không xác định"
+        reply(session, "Đã xóa $name x$qty ở ô $slot")
     }
 
     /**
-     * /addgold <amount> — 增加金幣
+     * /addgold <amount> — tăng tiền vàng
      */
     private fun cmdAddGold(session: GameSession, args: List<String>) {
         if (args.isEmpty()) {
-            reply(session, "用法：/加金幣 <數量>")
+            reply(session, "Cách dùng: /加金幣 <số lượng>")
             return
         }
         val amount = args[0].toInt()
         if (amount <= 0) {
-            reply(session, "數量必須大於 0")
+            reply(session, "Số lượng phải lớn hơn 0")
             return
         }
 
         if (moneySystem.addGold(session.roleId.toLong(), amount)) {
             responseSender.sendAddMoney(session, amount)
-            reply(session, "已增加 $amount 金幣（目前：${moneySystem.getGold(session.roleId.toLong())}）")
+            reply(session, "Đã thêm $amount tiền vàng (hiện tại: ${moneySystem.getGold(session.roleId.toLong())})")
         } else {
-            reply(session, "金幣已達上限")
+            reply(session, "Tiền vàng đã đạt giới hạn")
         }
     }
 
     /**
-     * /addpoint <實點> [虛點] — 增加元寶點數
+     * /addpoint <điểm thực> [điểm ảo] — tăng điểm nguyên bảo
      *
-     * 對應 GM 封包 C:100-015 <加元寶> +實點(4) +虛點(4) 的語意，
-     * 透過 S:035-005 刷新客戶端元寶顯示。
+     * Tương ứng ngữ nghĩa của gói GM C:100-015 <thêm nguyên bảo> +điểm thực(4) +điểm ảo(4),
+     * Làm mới hiển thị nguyên bảo trên client qua S:035-005.
      */
     private fun cmdAddPoint(session: GameSession, args: List<String>) {
         if (args.isEmpty()) {
-            reply(session, "用法：/加元寶 <實點> [虛點]")
+            reply(session, "Cách dùng: /加元寶 <điểm thực> [điểm ảo]")
             return
         }
         val real = args[0].toInt()
         val virtual = args.getOrNull(1)?.toInt() ?: 0
         if (real < 0 || virtual < 0 || (real == 0 && virtual == 0)) {
-            reply(session, "數量必須大於 0")
+            reply(session, "Số lượng phải lớn hơn 0")
             return
         }
 
         val charId = session.roleId.toLong()
         if (real > 0 && !pointSystem.addRealPoint(charId, real)) {
-            reply(session, "元寶實點已達上限")
+            reply(session, "Nguyên bảo điểm thực đã đạt giới hạn")
             return
         }
         if (virtual > 0 && !pointSystem.addVirtualPoint(charId, virtual)) {
-            reply(session, "元寶虛點已達上限")
+            reply(session, "Nguyên bảo điểm ảo đã đạt giới hạn")
             return
         }
 
         val (newReal, newVirtual) = pointSystem.getPoints(charId)
         responseSender.sendPointBalance(session, newReal, newVirtual)
-        reply(session, "已增加元寶：實點+$real 虛點+$virtual（目前：$newReal / $newVirtual）")
+        reply(session, "Đã thêm nguyên bảo: điểm thực+$real điểm ảo+$virtual (hiện tại: $newReal / $newVirtual)")
     }
 
     /**
-     * /setgold <amount> — 設定金幣數量
+     * /setgold <amount> — đặt số lượng tiền vàng
      */
     private fun cmdSetGold(session: GameSession, args: List<String>) {
         if (args.isEmpty()) {
-            reply(session, "用法：/設金幣 <數量>")
+            reply(session, "Cách dùng: /設金幣 <số lượng>")
             return
         }
         val target = args[0].toInt()
         if (target < 0) {
-            reply(session, "數量不能為負數")
+            reply(session, "Số lượng không được là số âm")
             return
         }
 
@@ -235,11 +235,11 @@ class GmCommandProcessor(
             responseSender.sendSubtractMoney(session, -diff)
         }
 
-        reply(session, "金幣已設定為 $target")
+        reply(session, "Tiền vàng đã đặt thành $target")
     }
 
     /**
-     * /clearbag — 清空背包
+     * /clearbag — xoá sạch túi đồ
      */
     private suspend fun cmdClearBag(session: GameSession) {
         val bag = inventorySystem.getBag(session.roleId.toLong())
@@ -247,17 +247,17 @@ class GmCommandProcessor(
             inventorySystem.removeFromBag(session.roleId.toLong(), slot, Int.MAX_VALUE)
         }
         responseSender.sendAllBagItems(session, emptyMap(), refresh = false)
-        reply(session, "背包已清空（移除 ${bag.size} 個物品）")
+        reply(session, "Túi đồ đã được làm trống (đã xóa ${bag.size} vật phẩm)")
     }
 
-    // ── 移動/場景指令 ──
+    // ── Lệnh di chuyển/cảnh ──
 
     /**
-     * /tp <mapId> <x> <y> — 傳送到指定座標
+     * /tp <mapId> <x> <y> — dịch chuyển đến toạ độ chỉ định
      */
     private fun cmdTeleport(session: GameSession, args: List<String>) {
         if (args.size < 3) {
-            reply(session, "用法：/傳送 <地圖ID> <X> <Y>")
+            reply(session, "Cách dùng: /傳送 <ID bản đồ> <X> <Y>")
             return
         }
         val mapId = args[0].toInt()
@@ -268,22 +268,22 @@ class GmCommandProcessor(
         worldManager.enterMap(session, mapId, x, y)
         responseSender.sendPlayerTeleport(session, session.playerId, mapId, x, y)
         responseSender.sendSceneChange(session, session.playerId, mapId, x, y, session.equipItemIds, session.titleId)
-        // S:022-004 由 RelocateHandler 在 C:012-001 後發送
-        reply(session, "已傳送到 mapId=$mapId ($x, $y)")
+        // S:022-004 được RelocateHandler gửi sau C:012-001
+        reply(session, "Đã dịch chuyển đến mapId=$mapId ($x, $y)")
     }
 
     /**
-     * /goto <playerName> — 傳送到指定玩家位置
+     * /goto <playerName> — dịch chuyển đến vị trí người chơi chỉ định
      */
     private fun cmdGoto(session: GameSession, args: List<String>) {
         if (args.isEmpty()) {
-            reply(session, "用法：/前往 <玩家名稱>")
+            reply(session, "Cách dùng: /前往 <tên nhân vật>")
             return
         }
         val targetName = args.joinToString(" ")
         val target = worldManager.getPlayerByName(targetName)
         if (target == null) {
-            reply(session, "找不到玩家：$targetName")
+            reply(session, "Không tìm thấy người chơi: $targetName")
             return
         }
 
@@ -291,22 +291,22 @@ class GmCommandProcessor(
         worldManager.enterMap(session, target.mapId, target.x, target.y)
         responseSender.sendPlayerTeleport(session, session.playerId, target.mapId, target.x, target.y)
         responseSender.sendSceneChange(session, session.playerId, target.mapId, target.x, target.y, session.equipItemIds, session.titleId)
-        // S:022-004 由 RelocateHandler 在 C:012-001 後發送
-        reply(session, "已傳送到 ${target.characterName} 所在位置 (mapId=${target.mapId} ${target.x},${target.y})")
+        // S:022-004 được RelocateHandler gửi sau C:012-001
+        reply(session, "Đã dịch chuyển đến vị trí của ${target.characterName} (mapId=${target.mapId} ${target.x},${target.y})")
     }
 
     /**
-     * /summon <playerName> — 召喚玩家到自己位置
+     * /summon <playerName> — triệu hồi người chơi đến vị trí của mình
      */
     private fun cmdSummon(session: GameSession, args: List<String>) {
         if (args.isEmpty()) {
-            reply(session, "用法：/召喚 <玩家名稱>")
+            reply(session, "Cách dùng: /召喚 <tên nhân vật>")
             return
         }
         val targetName = args.joinToString(" ")
         val target = worldManager.getPlayerByName(targetName)
         if (target == null) {
-            reply(session, "找不到玩家：$targetName")
+            reply(session, "Không tìm thấy người chơi: $targetName")
             return
         }
 
@@ -314,25 +314,25 @@ class GmCommandProcessor(
         worldManager.enterMap(target, session.mapId, session.x, session.y)
         responseSender.sendPlayerTeleport(target, target.playerId, session.mapId, session.x, session.y)
         responseSender.sendSceneChange(target, target.playerId, session.mapId, session.x, session.y, target.equipItemIds, target.titleId)
-        // S:022-004 由 RelocateHandler 在 C:012-001 後發送
-        reply(session, "已將 ${target.characterName} 召喚到你的位置")
+        // S:022-004 được RelocateHandler gửi sau C:012-001
+        reply(session, "Đã triệu hồi ${target.characterName} đến vị trí của bạn")
     }
 
-    // ── 角色指令 ──
+    // ── Lệnh nhân vật ──
 
     /**
-     * /setlevel <level> — 設定角色等級（含配點計算）
+     * /setlevel <level> — đặt cấp độ nhân vật (bao gồm tính điểm phân bổ)
      */
     private suspend fun cmdSetLevel(session: GameSession, args: List<String>) {
         if (args.isEmpty()) {
-            reply(session, "用法：/設等級 <等級>")
+            reply(session, "Cách dùng: /設等級 <cấp độ>")
             return
         }
         val newLevel = args[0].toInt().coerceIn(1, 200)
         val charId = session.roleId.toLong()
         val state = playerStateManager.getState(charId)
         if (state == null) {
-            reply(session, "找不到玩家狀態")
+            reply(session, "Không tìm thấy trạng thái người chơi")
             return
         }
 
@@ -343,14 +343,14 @@ class GmCommandProcessor(
             state.level = newLevel
             state.exp = 0
 
-            // 升級給點數（降級不扣）
+            // Tăng cấp thì cộng điểm (giảm cấp không trừ)
             if (levelDiff > 0) {
                 state.skillPoint += levelDiff * 2
                 state.attrPoint += levelDiff * 3
                 skillSystem.adjustSkillPoint(charId, levelDiff * 2)
             }
 
-            // 重算 maxHP/maxSP + 回滿
+            // Tính lại maxHP/maxSP + hồi đầy
             val newMaxHp = statSystem.calculateMaxHp(
                 level = state.level, hpx = state.hpx + state.equipHpx,
                 equipMaxHp = state.equipMaxHp, extraHp = 0,
@@ -366,7 +366,7 @@ class GmCommandProcessor(
             playerStateManager.fullHp(charId)
             playerStateManager.fullSp(charId)
 
-            // 通知客戶端所有屬性
+            // Thông báo cho client tất cả thuộc tính
             responseSender.sendSetAttribute(session, EAttribute.LV, state.level, true)
             responseSender.sendSetAttribute(session, EAttribute.EXP, state.exp.toInt(), true)
             responseSender.sendSetAttribute(session, EAttribute.HP, newMaxHp.toInt(), true)
@@ -381,11 +381,11 @@ class GmCommandProcessor(
             state.attrPoint, state.skillPoint,
             state.intelligence, state.atk, state.def, state.agi, state.hpx, state.spx
         )
-        reply(session, "等級已設定為 $newLevel")
+        reply(session, "Cấp độ đã đặt thành $newLevel")
     }
 
     /**
-     * /info — 顯示角色資訊
+     * /info — hiển thị thông tin nhân vật
      */
     private fun cmdInfo(session: GameSession) {
         val charId = session.roleId.toLong()
@@ -395,163 +395,163 @@ class GmCommandProcessor(
         val bankCount = inventorySystem.getBank(charId).size
 
         val info = buildString {
-            append("=== 角色資訊 ===\n")
-            append("名稱：${session.characterName}\n")
-            append("等級：${session.level}\n")
-            append("位置：mapId=${session.mapId} (${session.x}, ${session.y})\n")
-            append("金幣：$gold\n")
-            append("背包：$bagCount 個物品\n")
-            append("裝備：$equipCount 件\n")
-            append("錢莊：$bankCount 個物品\n")
-            append("GM等級：${session.gmLevel}")
+            append("=== THÔNG TIN NHÂN VẬT ===\n")
+            append("Tên: ${session.characterName}\n")
+            append("Cấp: ${session.level}\n")
+            append("Vị trí: mapId=${session.mapId} (${session.x}, ${session.y})\n")
+            append("Tiền vàng: $gold\n")
+            append("Túi đồ: $bagCount vật phẩm\n")
+            append("Trang bị: $equipCount món\n")
+            append("Tiền trang: $bankCount vật phẩm\n")
+            append("Cấp GM: ${session.gmLevel}")
         }
         reply(session, info)
     }
 
     /**
-     * /online — 顯示在線玩家
+     * /online — hiển thị người chơi trực tuyến
      */
     private fun cmdOnline(session: GameSession) {
         val count = worldManager.onlineCount
-        reply(session, "在線玩家：$count 人")
+        reply(session, "Người chơi trực tuyến: $count người")
     }
 
-    // ── 管理指令 ──
+    // ── Lệnh quản trị ──
 
     /**
-     * /broadcast <msg> — 全服系統廣播
+     * /broadcast <msg> — phát rộng hệ thống toàn server
      */
     private fun cmdBroadcast(session: GameSession, args: List<String>) {
         if (args.isEmpty()) {
-            reply(session, "用法：/廣播 <訊息內容>")
+            reply(session, "Cách dùng: /廣播 <nội dung thông báo>")
             return
         }
         val message = args.joinToString(" ")
         val data = buildSystemBroadcastPacket(message)
         worldManager.broadcastToAll(data)
-        reply(session, "已廣播：$message")
+        reply(session, "Đã broadcast: $message")
     }
 
     /**
-     * /kick <name> — 踢出玩家
+     * /kick <name> — đá người chơi
      */
     private fun cmdKick(session: GameSession, args: List<String>) {
         if (args.isEmpty()) {
-            reply(session, "用法：/踢人 <玩家名稱>")
+            reply(session, "Cách dùng: /踢人 <tên nhân vật>")
             return
         }
         val targetName = args.joinToString(" ")
         val target = worldManager.getPlayerByName(targetName)
         if (target == null) {
-            reply(session, "找不到玩家：$targetName")
+            reply(session, "Không tìm thấy người chơi: $targetName")
             return
         }
 
-        responseSender.sendDisconnect(target, 4)  // 4 = 被Server踢下線
+        responseSender.sendDisconnect(target, 4)  // 4 = bị Server đá offline
         target.close()
-        reply(session, "已踢出玩家：$targetName")
+        reply(session, "Đá người chơi: $targetName")
     }
 
     /**
-     * /設權限 <玩家名> <等級> — 設定玩家的 GM 等級
+     * /設權限 <tên người chơi> <cấp độ> — đặt cấp GM của người chơi
      */
     private suspend fun cmdSetGm(session: GameSession, args: List<String>) {
         if (args.size < 2) {
-            reply(session, "用法：/設權限 <玩家名> <等級>")
+            reply(session, "Cách dùng: /設權限 <tên nhân vật> <cấp>")
             return
         }
         val targetName = args.dropLast(1).joinToString(" ")
         val level = args.last().toInt().coerceIn(0, 99)
         val target = worldManager.getPlayerByName(targetName)
         if (target == null) {
-            reply(session, "找不到在線玩家：$targetName")
+            reply(session, "Không tìm thấy người chơi trực tuyến: $targetName")
             return
         }
 
-        // 非 GM 只能設定自己，且最高等級 1（Bootstrap 用）
+        // Không phải GM chỉ đặt được chính mình, và cấp tối đa 1 (dùng cho Bootstrap)
         if (session.gmLevel == 0) {
             if (target.accountId != session.accountId) {
-                reply(session, "權限不足：無法設定其他玩家的等級")
+                reply(session, "Không đủ phân quyền: không thể đặt cấp cho người chơi khác")
                 return
             }
             if (level > 1) {
-                reply(session, "權限不足：初次設定最高等級為 1")
+                reply(session, "Không đủ phân quyền: lần đầu chỉ đặt tối đa cấp 1")
                 return
             }
         }
 
         accountRepository.updateGmLevel(target.accountId, level)
         target.gmLevel = level
-        reply(target, "你的管理員等級已變更為 $level")
+        reply(target, "Cấp quản trị của bạn đã đổi thành $level")
         if (target.accountId != session.accountId) {
-            reply(session, "已將 ${target.characterName} 的 GM 等級設為 $level")
+            reply(session, "Đã đặt cấp GM của ${target.characterName} thành $level")
         }
     }
 
     /**
-     * /clearmap — 清空目前地圖的地面物品
+     * /clearmap — xoá sạch vật phẩm trên mặt đất của bản đồ hiện tại
      */
     private fun cmdClearMap(session: GameSession) {
         groundItemManager.clearMap(session.mapId)
-        reply(session, "已清空地圖 ${session.mapId} 的地面物品")
+        reply(session, "Đã dọn sạch vật phẩm trên mặt đất của bản đồ ${session.mapId}")
     }
 
-    // ── tskero 對齊指令 ──
+    // ── Lệnh căn chỉnh tskero ──
 
-    /** /where — 查詢當前位置 */
+    /** /where — truy vấn vị trí hiện tại*/
     private fun cmdWhere(session: GameSession) {
-        reply(session, "位置：mapId=${session.mapId} (${session.x}, ${session.y})")
+        reply(session, "Vị trí: mapId=${session.mapId} (${session.x}, ${session.y})")
     }
 
-    /** /home — 傳送回家（mapId=12003, 500,500） */
+    /** /home — dịch chuyển về nhà (mapId=12003, 500,500)*/
     private fun cmdHome(session: GameSession) {
         cmdTeleport(session, listOf("12003", "500", "500"))
     }
 
-    /** /addpet <npcId> — 新增武將到隨身 */
+    /** /addpet <npcId> — thêm tướng vào túi mang theo*/
     private fun cmdAddPet(session: GameSession, args: List<String>) {
         if (args.isEmpty()) {
-            reply(session, "用法：/加武將 <NPC ID>")
+            reply(session, "Cách dùng: /加武將 <NPC ID>")
             return
         }
         val npcId = args[0].toInt()
         val def = npcDefs[npcId]
         if (def == null) {
-            reply(session, "NPC ID $npcId 不存在")
+            reply(session, "NPC ID $npcId không tồn tại")
             return
         }
         val result = petSystem.addFollowNpc(session.roleId.toLong(), npcId, def, canGrow = 1)
         if (result == null) {
-            reply(session, "武將已在隊伍中或隊伍已滿")
+            reply(session, "Tướng đã ở trong tổ đội hoặc tổ đội đã đầy")
             return
         }
         val (slot, _) = result
         responseSender.sendFollowNpcAdd(session, session.playerId, slot, npcId, 1, showMsg = true)
-        reply(session, "已新增武將 ${def.name} (ID=$npcId) → 欄位 $slot")
+        reply(session, "Đã thêm tướng ${def.name} (ID=$npcId) → ô $slot")
     }
 
-    /** /addexp <amount> — 增加經驗值（含自動升級） */
+    /** /addexp <amount> — tăng EXP (bao gồm tự lên cấp)*/
     private fun cmdAddExp(session: GameSession, args: List<String>) {
         if (args.isEmpty()) {
-            reply(session, "用法：/加經驗 <數量>")
+            reply(session, "Cách dùng: /加經驗 <số lượng>")
             return
         }
         val amount = args[0].toLong()
         if (amount <= 0) {
-            reply(session, "數量必須大於 0")
+            reply(session, "Số lượng phải lớn hơn 0")
             return
         }
         val charId = session.roleId.toLong()
         val state = playerStateManager.getState(charId)
         if (state == null) {
-            reply(session, "找不到玩家狀態")
+            reply(session, "Không tìm thấy trạng thái người chơi")
             return
         }
         synchronized(state) {
             state.exp += amount
             responseSender.sendSetAttribute(session, EAttribute.EXP, state.exp.toInt(), true)
 
-            // 升級迴圈（參考 BattleManager.distributeExp）
+            // Vòng lặp tăng cấp (tham khảo BattleManager.distributeExp)
             var levelsGained = 0
             while (state.level < 200) {
                 val upExp = statSystem.calculateUpExp(state.level, state.turn)
@@ -565,7 +565,7 @@ class GmCommandProcessor(
                 state.skillPoint += levelsGained * 2
                 state.attrPoint += levelsGained * 3
                 skillSystem.adjustSkillPoint(charId, levelsGained * 2)
-                // 重算 maxHP/maxSP + 回滿
+                // Tính lại maxHP/maxSP + hồi đầy
                 val newMaxHp = statSystem.calculateMaxHp(
                     level = state.level, hpx = state.hpx + state.equipHpx,
                     equipMaxHp = state.equipMaxHp, extraHp = 0,
@@ -588,23 +588,23 @@ class GmCommandProcessor(
                 responseSender.sendSetAttribute(session, EAttribute.SKILL_POINT, state.skillPoint, true)
                 responseSender.sendSetAttribute(session, EAttribute.ATTR_POINT, state.attrPoint, true)
                 session.level = state.level
-                reply(session, "已增加 $amount 經驗值，升了 $levelsGained 級 → Lv.${state.level}")
+                reply(session, "Đã thêm $amount EXP, lên $levelsGained cấp → Lv.${state.level}")
             } else {
-                reply(session, "已增加 $amount 經驗值（Lv.${state.level}）")
+                reply(session, "Đã thêm $amount EXP (Lv.${state.level})")
             }
         }
     }
 
-    /** /gm <msg> — GM 頻道廣播（S:002-004） */
+    /** /gm <msg> — phát rộng kênh GM (S:002-004)*/
     private fun cmdGmBroadcast(session: GameSession, args: List<String>) {
         if (args.isEmpty()) {
-            reply(session, "用法：/gm <訊息內容>")
+            reply(session, "Cách dùng: /gm <nội dung thông báo>")
             return
         }
         val message = args.joinToString(" ")
         val packet = PacketWriter()
             .writeByte(tw.tsm.domain.constants.Opcodes.CHAT)
-            .writeByte(4)   // subKind = 4（GM 頻道）
+            .writeByte(4)   // subKind = 4 (kênh GM)
             .writeByte(0)
             .writeLongLE(session.playerId)
             .writeShortLE(session.titleId) // titleId
@@ -614,13 +614,13 @@ class GmCommandProcessor(
             .writeByte(0)   // npcCount
             .toByteArray()
         worldManager.broadcastToAll(packet)
-        reply(session, "已發送 GM 訊息：$message")
+        reply(session, "Đã gửi tin nhắn GM: $message")
     }
 
-    /** /setcharelement <elem> — 設定角色元素 (1=地, 2=水, 3=火, 4=風) */
+    /** /setcharelement <elem> — đặt nguyên tố nhân vật (1=đất, 2=nước, 3=lửa, 4=gió)*/
     private fun cmdSetElement(session: GameSession, args: List<String>) {
         if (args.isEmpty()) {
-            reply(session, "用法：/設元素 <元素ID> (1=地, 2=水, 3=火, 4=風)")
+            reply(session, "Cách dùng: /設元素 <ID nguyên tố> (1=Đất, 2=Nước, 3=Lửa, 4=Gió)")
             return
         }
         val elem = args[0].toInt().coerceIn(0, 7)
@@ -629,13 +629,13 @@ class GmCommandProcessor(
         if (cache != null) {
             responseSender.sendPlayerSkillData(session, elem, cache.skillPoint, cache.skills)
         }
-        reply(session, "元素已設定為 $elem")
+        reply(session, "Nguyên tố đã đặt thành $elem")
     }
 
-    /** /setoutfit <npcId> — 變身 NPC 外觀（S:005-005），0=隨機 */
+    /** /setoutfit <npcId> — biến hình ngoại hình NPC (S:005-005), 0=ngẫu nhiên*/
     private fun cmdSetOutfit(session: GameSession, args: List<String>) {
         if (args.isEmpty()) {
-            reply(session, "用法：/變身 <NPC ID>（0=隨機）")
+            reply(session, "Cách dùng: /變身 <NPC ID> (0=ngẫu nhiên)")
             return
         }
         var npcId = args[0].toInt()
@@ -648,13 +648,13 @@ class GmCommandProcessor(
             .writeShortLE(npcId)
             .toByteArray()
         worldManager.broadcastToMap(session.mapId, packet)
-        val name = npcDefs[npcId]?.name ?: "未知 NPC"
-        reply(session, "已變身為 $name (ID=$npcId)")
+        val name = npcDefs[npcId]?.name ?: "NPC không xác định"
+        reply(session, "Đã biến thân thành $name (ID=$npcId)")
     }
 
-    /** /opensto 或 /bank — 開啟錢莊 UI（S:029-009 + S:029-006 + S:030-001）+ 送寶庫物品 */
+    /** /opensto hoặc /bank — mở UI Tiền Trang (S:029-009 + S:029-006 + S:030-001) + gửi vật phẩm kho báu*/
     private fun cmdOpenStorage(session: GameSession) {
-        responseSender.sendBankLevel(session, 0) // TODO：從角色資料取得實際等級
+        responseSender.sendBankLevel(session, 0) // TODO: lấy cấp độ thực tế từ dữ liệu nhân vật
         responseSender.sendOpenBank(session)
         responseSender.sendBankClear(session)
         responseSender.sendStorageClear(session)
@@ -662,31 +662,31 @@ class GmCommandProcessor(
         responseSender.sendBankAllItems(session, bankItems)
         val storageItems = inventorySystem.getStorage(session.roleId.toLong())
         responseSender.sendStorageAllItems(session, storageItems)
-        reply(session, "已開啟錢莊（含寶庫）")
+        reply(session, "Đã mở Tiền trang (bao gồm kho báu)")
     }
 
-    /** /hotel — 開啟旅館 UI（S:031-010 kind=1 客棧） */
+    /** /hotel — mở UI quán trọ (S:031-010 kind=1 lữ quán)*/
     private fun cmdOpenHotel(session: GameSession) {
         session.send(PacketWriter()
             .writeByte(31).writeByte(10).writeByte(0)
-            .writeByte(1) // kind=1 客棧
+            .writeByte(1) // kind=1 lữ quán
             .toByteArray())
-        reply(session, "已開啟旅館")
+        reply(session, "Đã mở lữ quán")
     }
 
-    /** /battle <npcId> — 與指定 NPC 發起測試戰鬥 */
+    /** /battle <npcId> — bắt đầu chiến đấu thử nghiệm với NPC chỉ định*/
     private suspend fun cmdBattle(session: GameSession, args: List<String>) {
         if (args.isEmpty()) {
-            reply(session, "用法：/戰鬥 <NPC ID>")
+            reply(session, "Cách dùng: /戰鬥 <NPC ID>")
             return
         }
         val npcId = args[0].toInt()
         if (npcDefs[npcId] == null) {
-            reply(session, "NPC ID $npcId 不存在")
+            reply(session, "NPC ID $npcId không tồn tại")
             return
         }
         if (battleManager.isInBattle(session.playerId)) {
-            reply(session, "你已在戰鬥中")
+            reply(session, "Bạn đang trong trận chiến")
             return
         }
         val fightData = EveFightData(
@@ -695,17 +695,17 @@ class GmCommandProcessor(
             rightEnemies = emptyList(), fightLimit = 0
         )
         battleManager.createPveBattle(session, fightData, terrain = 101)
-        reply(session, "已發起與 ${npcDefs[npcId]?.name} 的戰鬥")
+        reply(session, "Đã mở trận chiến với ${npcDefs[npcId]?.name}")
     }
 
     /**
-     * /quest list — 列出角色所有進行中任務與已完成標記
-     * /quest set <missionId> <step> — 設定任務步驟（0=刪除）
-     * /quest flag <bitIndex> <value> — 設定任務完成標記
+     * /quest list — liệt kê tất cả nhiệm vụ đang tiến hành và cờ đã hoàn thành của nhân vật
+     * /quest set <missionId> <step> — đặt bước nhiệm vụ (0=xoá)
+     * /quest flag <bitIndex> <value> — đặt cờ hoàn thành nhiệm vụ
      */
     private suspend fun cmdQuest(session: GameSession, args: List<String>) {
         if (args.isEmpty()) {
-            reply(session, "用法：/quest list | set <任務ID> <步驟> | flag <bitIndex> <值>")
+            reply(session, "Cách dùng: /quest list | set <ID nhiệm vụ> <bước> | flag <bitIndex> <giá trị>")
             return
         }
         val charId = session.roleId.toLong()
@@ -714,18 +714,18 @@ class GmCommandProcessor(
                 val missions = questSystem.getMissions(charId)
                 val flags = questSystem.getFlags(charId)
                 if (missions.isEmpty() && flags.isEmpty()) {
-                    reply(session, "無進行中任務，無已完成標記")
+                    reply(session, "Không có nhiệm vụ đang làm, không có mốc hoàn thành")
                     return
                 }
                 val sb = buildString {
                     if (missions.isNotEmpty()) {
-                        append("進行中任務（${missions.size}）：\n")
+                        append("Nhiệm vụ đang làm (${missions.size}):\n")
                         for (m in missions) {
-                            append("  任務${m.missionId} step=${m.step}\n")
+                            append("  Nhiệm vụ ${m.missionId} step=${m.step}\n")
                         }
                     }
                     if (flags.isNotEmpty()) {
-                        append("已完成標記（${flags.size}）：\n")
+                        append("Mốc hoàn thành (${flags.size}):\n")
                         for (f in flags) {
                             append("  bit${f.bitIndex}=${f.bitValue}\n")
                         }
@@ -735,36 +735,36 @@ class GmCommandProcessor(
             }
             "set" -> {
                 if (args.size < 3) {
-                    reply(session, "用法：/quest set <任務ID> <步驟>（步驟=0 刪除任務）")
+                    reply(session, "Cách dùng: /quest set <ID nhiệm vụ> <bước> (bước=0 để xóa nhiệm vụ)")
                     return
                 }
                 val missionId = args[1].toInt()
                 val step = args[2].toInt()
                 questSystem.setMissionStep(charId, missionId, step)
                 if (step <= 0) {
-                    reply(session, "已刪除任務 $missionId")
+                    reply(session, "Đã xóa nhiệm vụ $missionId")
                 } else {
-                    reply(session, "已設定任務 $missionId step=$step")
+                    reply(session, "Đã đặt nhiệm vụ $missionId step=$step")
                 }
             }
             "flag" -> {
                 if (args.size < 3) {
-                    reply(session, "用法：/quest flag <bitIndex> <值>")
+                    reply(session, "Cách dùng: /quest flag <bitIndex> <giá trị>")
                     return
                 }
                 val bitIndex = args[1].toInt()
                 val bitValue = args[2].toInt()
                 questSystem.setFlag(charId, bitIndex, bitValue)
-                reply(session, "已設定任務標記 bit$bitIndex=$bitValue")
+                reply(session, "Đã đặt mốc nhiệm vụ bit$bitIndex=$bitValue")
             }
-            else -> reply(session, "未知子指令：${args[0]}（可用：list / set / flag）")
+            else -> reply(session, "Lệnh con không rõ: ${args[0]} (dùng được: list / set / flag)")
         }
     }
 
-    /** /設稱號 <titleId> — 直接穿戴指定稱號（0=卸下） */
+    /** /設稱號 <titleId> — mặc trực tiếp danh hiệu chỉ định (0=tháo)*/
     private suspend fun cmdSetTitle(session: GameSession, args: List<String>) {
         if (args.isEmpty()) {
-            reply(session, "用法：/設稱號 <稱號ID>（0=卸下）")
+            reply(session, "Cách dùng: /設稱號 <ID danh hiệu> (0=tháo)")
             return
         }
         val titleId = args[0].toInt()
@@ -774,26 +774,26 @@ class GmCommandProcessor(
         for (player in players) {
             responseSender.sendTitleChange(player, session.playerId, titleId)
         }
-        reply(session, if (titleId == 0) "已卸下稱號" else "已穿戴稱號 ID=$titleId")
+        reply(session, if (titleId == 0) "Đã tháo danh hiệu" else "Đã mang danh hiệu ID=$titleId")
     }
 
-    /** /加永標 <flagId> — 設定永久旗標（解鎖稱號等用途） */
+    /** /加永標 <flagId> — đặt cờ vĩnh viễn (dùng để mở khoá danh hiệu v.v.)*/
     private suspend fun cmdSetBitFlag(session: GameSession, args: List<String>) {
         if (args.isEmpty()) {
-            reply(session, "用法：/加永標 <flagId>（設定永久旗標，可用於解鎖稱號）")
+            reply(session, "Cách dùng: /加永標 <flagId> (đặt cờ vĩnh viễn, dùng để mở khóa danh hiệu)")
             return
         }
         val flagId = args[0].toInt()
         if (flagId <= 0) {
-            reply(session, "flagId 必須大於 0")
+            reply(session, "flagId phải lớn hơn 0")
             return
         }
         bitFlagSystem.setFlag(session.roleId.toLong(), flagId)
         responseSender.sendBitFlagChanges(session, listOf(flagId to true))
-        reply(session, "已設定永標 flagId=$flagId")
+        reply(session, "Đã đặt cờ vĩnh viễn flagId=$flagId")
     }
 
-    /** /warpall — 解鎖所有天行異能傳送點 */
+    /** /warpall — mở khoá tất cả điểm dịch chuyển Thiên Hành Dị Năng*/
     private suspend fun cmdWarpAll(session: GameSession) {
         val charId = session.roleId.toLong()
         val flagIds = mutableSetOf<Int>()
@@ -806,7 +806,7 @@ class GmCommandProcessor(
         }
 
         if (flagIds.isEmpty()) {
-            reply(session, "找不到需要解鎖的傳送點標記")
+            reply(session, "Không tìm thấy mốc điểm dịch chuyển cần mở khóa")
             return
         }
 
@@ -814,110 +814,110 @@ class GmCommandProcessor(
             bitFlagSystem.setFlag(charId, flagId)
         }
 
-        // 通知客戶端永標變更
+        // Thông báo cho client thay đổi cờ vĩnh viễn
         val changes = flagIds.map { it to true }
         responseSender.sendBitFlagChanges(session, changes)
 
-        reply(session, "已解鎖 ${flagIds.size} 個傳送點永標")
+        reply(session, "Đã mở khóa ${flagIds.size} cờ vĩnh viễn điểm dịch chuyển")
     }
 
-    /** /npcturn [1|2] — 開啟武將轉生介面（1=一轉, 2=二轉，預設 1） */
+    /** /npcturn [1|2] — mở giao diện chuyển sinh tướng (1=nhất chuyển, 2=nhị chuyển, mặc định 1)*/
     private fun cmdOpenNpcTurn(session: GameSession, args: List<String>) {
         when (args.getOrNull(0)?.toIntOrNull() ?: 1) {
             1 -> {
                 responseSender.sendOpenNpcReincarnation(session)
-                reply(session, "已開啟武將轉生（一轉）介面")
+                reply(session, "Đã mở giao diện chuyển sinh tướng (chuyển 1)")
             }
             2 -> {
                 responseSender.sendOpenNpcSecondReincarnation(session)
-                reply(session, "已開啟武將二轉介面")
+                reply(session, "Đã mở giao diện chuyển sinh tướng lần 2")
             }
-            else -> reply(session, "用法：/武將轉生 [1|2]")
+            else -> reply(session, "Cách dùng: /武將轉生 [1|2]")
         }
     }
 
-    /** /test <mainKind> [subKind] — 封包測試工具 */
+    /** /test <mainKind> [subKind] — công cụ kiểm thử gói tin*/
     private fun cmdTest(session: GameSession, args: List<String>) {
         if (args.isEmpty()) {
-            reply(session, "用法：/測試 <mainKind> [subKind]（省略 subKind 則發送 0-255）")
+            reply(session, "Cách dùng: /測試 <mainKind> [subKind] (bỏ subKind sẽ gửi 0-255)")
             return
         }
         val mainKind = args[0].toInt()
         if (args.size >= 2) {
             val subKind = args[1].toInt()
             session.send(PacketWriter().writeByte(mainKind).writeByte(subKind).writeByte(0).toByteArray())
-            reply(session, "已發送測試封包：$mainKind-$subKind")
+            reply(session, "Đã gửi gói tin thử: $mainKind-$subKind")
         } else {
             for (i in 0..255) {
                 session.send(PacketWriter().writeByte(mainKind).writeByte(i).writeByte(0).toByteArray())
             }
-            reply(session, "已發送 $mainKind 的 256 個子協定")
+            reply(session, "Đã gửi 256 sub-protocol của $mainKind")
         }
     }
 
     /**
-     * /指令 — 顯示所有可用指令
+     * /指令 — hiển thị tất cả lệnh khả dụng
      */
     private fun cmdHelp(session: GameSession) {
         val help = buildString {
-            append("=== GM 指令列表 ===\n")
-            append("/加物品 | /additem <ID> [數量] - 新增物品\n")
-            append("/移除物品 | /removeitem <格位> [數量] - 移除物品\n")
-            append("/加金幣 | /addgold <數量> - 增加金幣\n")
-            append("/設金幣 | /setgold <數量> - 設定金幣\n")
-            append("/加元寶 | /addpoint <實點> [虛點] - 增加元寶\n")
-            append("/清背包 | /clearbag - 清空背包\n")
-            append("/加武將 | /addpet <NPC ID> - 新增武將\n")
-            append("/加經驗 | /addexp <數量> - 增加經驗值\n")
-            append("/傳送 | /tp | /warp <地圖> <X> <Y> - 傳送\n")
-            append("/前往 | /goto <玩家名> - 前往玩家\n")
-            append("/召喚 | /summon <玩家名> - 召喚玩家\n")
-            append("/位置 | /where - 查詢當前位置\n")
-            append("/回家 | /home - 回到出生點\n")
-            append("/設等級 | /level <等級> - 設定等級\n")
-            append("/設元素 | /setcharelement <ID> - 設定元素\n")
-            append("/變身 | /setoutfit <NPC ID> - 變身 NPC\n")
-            append("/開倉庫 | /opensto - 開啟錢莊\n")
-            append("/開旅館 | /hotel - 開啟旅館\n")
-            append("/戰鬥 | /battle <NPC ID> - 測試戰鬥\n")
-            append("/任務 | /quest list|set|flag - 任務管理\n")
-            append("/設稱號 | /settitle <ID> - 穿戴稱號（0=卸下）\n")
-            append("/加永標 | /setflag <flagId> - 設定永標（解鎖稱號）\n")
-            append("/解鎖傳送 | /warpall - 解鎖所有天行傳送點\n")
-            append("/武將轉生 | /npcturn [1|2] - 開啟武將轉生介面\n")
-            append("/資訊 | /info - 角色資訊\n")
-            append("/在線 | /online - 在線人數\n")
-            append("/廣播 | /broadcast | /motd <訊息> - 全服廣播\n")
-            append("/gm訊息 | /gm <訊息> - GM 頻道廣播\n")
-            append("/踢人 | /kick <玩家名> - 踢出玩家\n")
-            append("/清地圖 | /clearmap - 清空地面物品\n")
-            append("/設權限 | /op <玩家名> <等級> - 設定權限\n")
-            append("/測試 | /test <mainKind> [subKind] - 封包測試\n")
-            append("/指令 | /help - 顯示此列表")
+            append("=== DANH SÁCH LỆNH GM ===\n")
+            append("/加物品 | /additem <ID> [số lượng] - thêm vật phẩm\n")
+            append("/移除物品 | /removeitem <ô> [số lượng] - xóa vật phẩm\n")
+            append("/加金幣 | /addgold <số lượng> - thêm tiền vàng\n")
+            append("/設金幣 | /setgold <số lượng> - đặt tiền vàng\n")
+            append("/加元寶 | /addpoint <điểm thực> [điểm ảo] - thêm nguyên bảo\n")
+            append("/清背包 | /clearbag - làm trống túi đồ\n")
+            append("/加武將 | /addpet <NPC ID> - thêm tướng\n")
+            append("/加經驗 | /addexp <số lượng> - thêm EXP\n")
+            append("/傳送 | /tp | /warp <bản đồ> <X> <Y> - dịch chuyển\n")
+            append("/前往 | /goto <tên người chơi> - đến chỗ người chơi\n")
+            append("/召喚 | /summon <tên người chơi> - triệu hồi người chơi\n")
+            append("/位置 | /where - xem vị trí hiện tại\n")
+            append("/回家 | /home - về điểm xuất sinh\n")
+            append("/設等級 | /level <cấp> - đặt cấp độ\n")
+            append("/設元素 | /setcharelement <ID> - đặt nguyên tố\n")
+            append("/變身 | /setoutfit <NPC ID> - biến thân NPC\n")
+            append("/開倉庫 | /opensto - mở Tiền trang\n")
+            append("/開旅館 | /hotel - mở lữ quán\n")
+            append("/戰鬥 | /battle <NPC ID> - thử chiến đấu\n")
+            append("/任務 | /quest list|set|flag - quản lý nhiệm vụ\n")
+            append("/設稱號 | /settitle <ID> - mang danh hiệu (0=tháo)\n")
+            append("/加永標 | /setflag <flagId> - đặt cờ vĩnh viễn (mở khóa danh hiệu)\n")
+            append("/解鎖傳送 | /warpall - mở khóa toàn bộ điểm dịch chuyển Thiên Hành\n")
+            append("/武將轉生 | /npcturn [1|2] - mở giao diện chuyển sinh tướng\n")
+            append("/資訊 | /info - thông tin nhân vật\n")
+            append("/在線 | /online - số người trực tuyến\n")
+            append("/廣播 | /broadcast | /motd <thông báo> - broadcast toàn server\n")
+            append("/gm訊息 | /gm <thông báo> - broadcast kênh GM\n")
+            append("/踢人 | /kick <tên người chơi> - đá người chơi\n")
+            append("/清地圖 | /clearmap - dọn vật phẩm trên mặt đất\n")
+            append("/設權限 | /op <tên người chơi> <cấp> - đặt phân quyền\n")
+            append("/測試 | /test <mainKind> [subKind] - thử gói tin\n")
+            append("/指令 | /help - hiển thị danh sách này")
         }
         reply(session, help)
     }
 
-    // ── 輔助方法 ──
+    // ── Phương thức phụ trợ ──
 
     /**
-     * 回傳系統訊息給 GM 玩家
+     * Trả thông báo hệ thống cho người chơi GM
      */
     private fun reply(session: GameSession, message: String) {
         responseSender.sendSystemMessage(session, message)
     }
 
     /**
-     * 組裝系統頻道廣播封包（S:002-000）
+     * Lắp ráp gói tin phát rộng kênh hệ thống (S:002-000)
      */
     private fun buildSystemBroadcastPacket(content: String): ByteArray {
         val writer = tw.tsm.protocol.PacketWriter()
             .writeByte(tw.tsm.domain.constants.Opcodes.CHAT)
-            .writeByte(0)   // subKind = 0（系統頻道）
+            .writeByte(0)   // subKind = 0 (kênh hệ thống)
             .writeByte(0)   // compress
             .writeLongLE(0) // senderId = 0
             .writeShortLE(0) // titleId = 0
-            .writeBig5WithByteLen("系統")
+            .writeBig5WithByteLen("Hệ thống")
             .writeUnicodeWithByteLen(content)
             .writeByte(0)   // itemCount = 0
             .writeByte(0)   // npcCount = 0

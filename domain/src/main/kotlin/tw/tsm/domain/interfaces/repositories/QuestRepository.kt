@@ -1,102 +1,102 @@
 package tw.tsm.domain.interfaces.repositories
 
 /**
- * 任務進度記錄 — 對應 character_missions 單筆
+ * Bản ghi tiến độ nhiệm vụ — tương ứng một bản ghi character_missions
  *
- * @param missionId 任務 ID
- * @param step      當前步驟值
+ * @param missionId ID nhiệm vụ
+ * @param step      giá trị bước hiện tại
  */
 data class MissionRecord(val missionId: Int, val step: Int)
 
 /**
- * 任務完成標記記錄 — 對應 character_mission_flags 單筆
+ * Bản ghi cờ hoàn thành nhiệm vụ — tương ứng một bản ghi character_mission_flags
  *
- * @param bitIndex 標記位元索引（Mark_C.dat bitId）
- * @param bitValue 標記值
+ * @param bitIndex chỉ số bit của cờ (Mark_C.dat bitId)
+ * @param bitValue giá trị cờ
  */
 data class MissionFlagRecord(val bitIndex: Int, val bitValue: Int)
 
 /**
- * 任務資料庫存取介面
+ * Interface truy cập cơ sở dữ liệu nhiệm vụ
  *
- * 對應 MarkManager 的持久化層：
- * - [getMissions]：查詢進行中的任務（S:024-006 init 用）
- * - [getMissionFlags]：查詢已完成的任務標記（S:024-007 init 用）
- * - [upsertMission]：新增或更新任務步驟（S:024-001/002 觸發）
- * - [removeMission]：刪除任務（S:024-004 觸發）
- * - [upsertFlag]：設定任務完成標記（S:024-005 觸發）
+ * Tương ứng tầng lưu bền của MarkManager:
+ * - [getMissions]: truy vấn nhiệm vụ đang tiến hành (dùng cho init S:024-006)
+ * - [getMissionFlags]: truy vấn cờ nhiệm vụ đã hoàn thành (dùng cho init S:024-007)
+ * - [upsertMission]: thêm mới hoặc cập nhật bước nhiệm vụ (kích hoạt S:024-001/002)
+ * - [removeMission]: xoá nhiệm vụ (kích hoạt S:024-004)
+ * - [upsertFlag]: đặt cờ hoàn thành nhiệm vụ (kích hoạt S:024-005)
  */
 interface QuestRepository {
 
     /**
-     * 取得角色所有進行中的任務
+     * Lấy tất cả nhiệm vụ đang tiến hành của nhân vật
      *
-     * @param charId 角色 ID
-     * @return 任務列表（missionId + step）
+     * @param charId ID nhân vật
+     * @return danh sách nhiệm vụ (missionId + step)
      */
     suspend fun getMissions(charId: Long): List<MissionRecord>
 
     /**
-     * 取得角色所有已完成任務標記
+     * Lấy tất cả cờ nhiệm vụ đã hoàn thành của nhân vật
      *
-     * @param charId 角色 ID
-     * @return 標記列表（bitIndex + bitValue）
+     * @param charId ID nhân vật
+     * @return danh sách cờ (bitIndex + bitValue)
      */
     suspend fun getMissionFlags(charId: Long): List<MissionFlagRecord>
 
     /**
-     * 新增或更新任務步驟
+     * Thêm mới hoặc cập nhật bước nhiệm vụ
      *
-     * @param charId    角色 ID
-     * @param missionId 任務 ID
-     * @param step      新步驟值
+     * @param charId    ID nhân vật
+     * @param missionId ID nhiệm vụ
+     * @param step      giá trị bước mới
      */
     suspend fun upsertMission(charId: Long, missionId: Int, step: Int)
 
     /**
-     * 刪除進行中任務（任務完成後呼叫）
+     * Xoá nhiệm vụ đang tiến hành (gọi sau khi hoàn thành nhiệm vụ)
      *
-     * @param charId    角色 ID
-     * @param missionId 任務 ID
+     * @param charId    ID nhân vật
+     * @param missionId ID nhiệm vụ
      */
     suspend fun removeMission(charId: Long, missionId: Int)
 
     /**
-     * 設定任務完成標記
+     * Đặt cờ hoàn thành nhiệm vụ
      *
-     * @param charId    角色 ID
-     * @param bitIndex  標記位元索引
-     * @param bitValue  標記值
+     * @param charId    ID nhân vật
+     * @param bitIndex  chỉ số bit của cờ
+     * @param bitValue  giá trị cờ
      */
     suspend fun upsertFlag(charId: Long, bitIndex: Int, bitValue: Int)
 
-    // ── 事件完成追蹤（completedEvents DB 持久化）──
+    // ── Theo dõi hoàn thành sự kiện (lưu bền completedEvents DB)──
 
     /**
-     * 查詢角色在指定地圖的已完成事件及其完成次數
+     * Truy vấn các sự kiện đã hoàn thành và số lần hoàn thành của nhân vật trên bản đồ chỉ định
      *
-     * @param charId 角色 ID
-     * @param mapId  地圖 ID
-     * @return eveNo → 完成次數 映射
+     * @param charId ID nhân vật
+     * @param mapId  ID bản đồ
+     * @return ánh xạ eveNo → số lần hoàn thành
      */
     suspend fun getCompletedEventCounts(charId: Long, mapId: Int): Map<Int, Int>
 
     /**
-     * 記錄角色完成指定地圖的事件
+     * Ghi lại việc nhân vật hoàn thành sự kiện trên bản đồ chỉ định
      *
-     * 使用 UPSERT 語意（已存在則不報錯）。
+     * Dùng ngữ nghĩa UPSERT (đã tồn tại thì không báo lỗi).
      *
-     * @param charId 角色 ID
-     * @param mapId  地圖 ID
-     * @param eveNo  事件編號
+     * @param charId ID nhân vật
+     * @param mapId  ID bản đồ
+     * @param eveNo  số hiệu sự kiện
      */
     suspend fun insertCompletedEvent(charId: Long, mapId: Int, eveNo: Int)
 
     /**
-     * 清除角色在指定地圖的所有完成記錄（進入場景時呼叫）
+     * Xoá mọi bản ghi hoàn thành của nhân vật trên bản đồ chỉ định (gọi khi vào cảnh)
      *
-     * @param charId 角色 ID
-     * @param mapId  地圖 ID
+     * @param charId ID nhân vật
+     * @param mapId  ID bản đồ
      */
     suspend fun clearCompletedEvents(charId: Long, mapId: Int)
 }

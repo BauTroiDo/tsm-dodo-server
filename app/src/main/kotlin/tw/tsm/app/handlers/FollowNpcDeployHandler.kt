@@ -14,10 +14,10 @@ import tw.tsm.protocol.PacketReader
 private val logger = KotlinLogging.logger {}
 
 /**
- * 武將出戰/收回處理器（mainKind = 19）
+ * Bộ xử lý tướng ra chiến đấu/thu hồi (mainKind = 19)
  *
- * 來源：protocal.lua protocolTable[19]
- * C:019-001 出戰、C:019-002 收回
+ * Nguồn: protocal.lua protocolTable[19]
+ * C:019-001 ra chiến đấu, C:019-002 thu hồi
  */
 class FollowNpcDeployHandler(
     private val petSystem: PetSystem,
@@ -38,14 +38,14 @@ class FollowNpcDeployHandler(
         when (subKind) {
             1 -> handleDeploy(session, characterId, data)
             2 -> handleRecall(session, characterId)
-            else -> logger.trace { "未處理的出戰 subKind=$subKind" }
+            else -> logger.trace { "Xuất chiến chưa xử lý subKind=$subKind" }
         }
     }
 
     /**
-     * C:019-001 武將出戰
+     * C:019-001 Tướng ra chiến đấu
      *
-     * 格式：+npcId(2LE)
+     * Định dạng: +npcId(2LE)
      */
     private suspend fun handleDeploy(session: GameSession, characterId: Long, data: ByteArray) {
         val reader = PacketReader(data)
@@ -53,7 +53,7 @@ class FollowNpcDeployHandler(
 
         val result = petSystem.deployFollowNpc(characterId, npcId)
         if (result == 0) {
-            logger.debug { "出戰失敗：charId=$characterId npc=$npcId" }
+            logger.debug { "Xuất chiến thất bại: charId=$characterId npc=$npcId" }
             return
         }
 
@@ -71,15 +71,15 @@ class FollowNpcDeployHandler(
             session,
             DailyProgressSystem.FLAG_DEPLOY_FOLLOW_NPC,
         )
-        logger.info { "${session.characterName} 武將出戰 npc=$npcId" }
+        logger.info { "${session.characterName} cho tướng xuất chiến npc=$npcId" }
     }
 
     /**
-     * C:019-002 收回出戰武將（空包）
+     * C:019-002 Thu hồi tướng đang chiến đấu (gói trống)
      */
     private suspend fun handleRecall(session: GameSession, characterId: Long) {
         if (!petSystem.recallFightNpc(characterId)) {
-            logger.debug { "收回失敗：charId=$characterId" }
+            logger.debug { "Thu hồi thất bại: charId=$characterId" }
             return
         }
 
@@ -92,6 +92,6 @@ class FollowNpcDeployHandler(
 
         // S:019-002 thông báo thu hồi (không payload)
         responseSender.sendFollowNpcRecall(session)
-        logger.info { "${session.characterName} 收回武將" }
+        logger.info { "${session.characterName} thu hồi tướng" }
     }
 }

@@ -4,18 +4,18 @@ import tw.tsm.data.DatReader
 import tw.tsm.domain.data.MountDef
 
 /**
- * 坐騎定義載入器 — 對應 `DataManager.OnLoadMountsData`
+ * Loader định nghĩa vật cưỡi — tương ứng `DataManager.OnLoadMountsData`
  *
- * 來源：`Mounts_C.dat`
- * 格式：count(Int32) + count 筆 MountsData.New(reader)
+ * Nguồn: `Mounts_C.dat`
+ * Định dạng: count(Int32) + count bản ghi MountsData.New(reader)
  *
- * MountsData.New 欄位順序（MountsData.lua L4-15）：
+ * Thứ tự trường của MountsData.New (MountsData.lua L4-15):
  *   npcId(UInt16) + flagId(UInt16) + source(UInt32) + scale(Byte) * 0.01
  */
 object MountDatLoader {
 
     /**
-     * 載入坐騎資料
+     * Đọc dữ liệu vật cưỡi
      */
     fun load(data: ByteArray): Map<Int, MountDef> {
         val reader = DatReader(data)

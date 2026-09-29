@@ -9,10 +9,10 @@ import java.nio.file.Path
 private val logger = KotlinLogging.logger {}
 
 /**
- * NPC 掉落表載入器
+ * Loader bảng rơi đồ của NPC
  *
- * 從 `gamedata/npc_drops.json` 載入 NPC 掉落定義。
- * JSON 格式：
+ * Đọc định nghĩa rơi đồ của NPC từ `gamedata/npc_drops.json`.
+ * Định dạng JSON:
  * ```json
  * {
  *   "1001": [
@@ -24,14 +24,14 @@ private val logger = KotlinLogging.logger {}
 object NpcDropLoader {
 
     /**
-     * 載入 NPC 掉落表
+     * Đọc bảng rơi đồ của NPC
      *
-     * @param path npc_drops.json 的路徑
-     * @return npcId → 掉落列表 映射
+     * @param path đường dẫn tới npc_drops.json
+     * @return ánh xạ npcId → danh sách vật rơi
      */
     fun load(path: Path): Map<Int, List<NpcDropDef>> {
         if (!Files.exists(path)) {
-            logger.warn { "NPC 掉落表不存在：$path，使用空掉落表" }
+            logger.warn { "Bảng rơi đồ của NPC không tồn tại: $path, dùng bảng rơi trống" }
             return emptyMap()
         }
 
@@ -42,7 +42,7 @@ object NpcDropLoader {
         for ((npcIdStr, dropsElement) in json) {
             val npcId = npcIdStr.toIntOrNull()
             if (npcId == null) {
-                logger.warn { "NPC 掉落表 key 非數字：$npcIdStr，跳過" }
+                logger.warn { "key bảng rơi đồ của NPC không phải số: $npcIdStr, bỏ qua" }
                 continue
             }
 
@@ -58,7 +58,7 @@ object NpcDropLoader {
             result[npcId] = drops
         }
 
-        logger.info { "NPC 掉落表載入完成：${result.size} 種 NPC，共 ${result.values.sumOf { it.size }} 筆掉落" }
+        logger.info { "Nạp bảng rơi đồ NPC xong: ${result.size} loại NPC, tổng ${result.values.sumOf { it.size }} dòng rơi đồ" }
         return result
     }
 }

@@ -10,90 +10,90 @@ import java.util.concurrent.CopyOnWriteArraySet
 private val logger = KotlinLogging.logger {}
 
 /**
- * 世界管理器 — 追蹤所有地圖上的玩家
+ * Bộ quản lý thế giới — theo dõi người chơi trên tất cả bản đồ
  *
- * 負責：
- * - 玩家進入/離開地圖的追蹤
- * - 同地圖玩家廣播
- * - 取得指定地圖的所有玩家
+ * Phụ trách:
+ * - Theo dõi người chơi vào/rời bản đồ
+ * - Phát rộng cho người chơi cùng bản đồ
+ * - Lấy tất cả người chơi của bản đồ chỉ định
  */
 class WorldManager {
-    /** 延遲注入（打破與 ResponseSender 的循環依賴） */
+    /** Inject chậm (phá vỡ phụ thuộc vòng với ResponseSender)*/
     lateinit var responseSender: ResponseSender
 
-    /** 延遲注入 NPC 巡邏系統 */
+    /** Inject chậm hệ thống tuần tra NPC*/
     lateinit var npcPatrolSystem: NpcPatrolSystem
 
-    /** mapId → 該地圖上的所有 session */
+    /** mapId → tất cả session trên bản đồ đó*/
     private val mapPlayers = ConcurrentHashMap<Int, CopyOnWriteArraySet<GameSession>>()
 
-    /** 所有在線玩家（playerId → session） */
+    /** Tất cả người chơi trực tuyến (playerId → session)*/
     private val onlinePlayers = ConcurrentHashMap<Long, GameSession>()
 
-    /** 角色名稱反向索引（name → session），避免 O(n) 查詢 */
+    /** Chỉ mục ngược theo tên nhân vật (name → session), tránh truy vấn O(n)*/
     private val nameIndex = ConcurrentHashMap<String, GameSession>()
 
-    /** 等待場景載入完畢的信號（playerId → deferred） */
+    /** Tín hiệu chờ tải cảnh xong (playerId → deferred)*/
     private val pendingSceneLoads = ConcurrentHashMap<Long, CompletableDeferred<Unit>>()
 
     /**
-     * 玩家進入地圖
+     * Người chơi vào bản đồ
      *
-     * 會自動從舊地圖移除。
+     * Sẽ tự động bị loại khỏi bản đồ cũ.
      */
     fun enterMap(session: GameSession, mapId: Int, x: Int, y: Int) {
-        // 先從舊地圖移除
+        // Trước tiên loại khỏi bản đồ cũ
         if (session.mapId > 0 && session.mapId != mapId) {
             val oldMapId = session.mapId
             mapPlayers[oldMapId]?.remove(session)
-            // 舊地圖最後一人離開時停用 NPC 巡邏
+            // Tắt tuần tra NPC khi người cuối cùng rời bản đồ cũ
             if (mapPlayers[oldMapId]?.isEmpty() == true && ::npcPatrolSystem.isInitialized) {
                 npcPatrolSystem.deactivateMap(oldMapId)
             }
         }
 
-        // 更新 session 座標
+        // Cập nhật toạ độ session
         session.mapId = mapId
         session.x = x
         session.y = y
 
-        // 取得地圖上已存在的玩家（加入前先快照）
+        // Lấy người chơi đã có trên bản đồ (chụp snapshot trước khi thêm)
         val existingPlayers = mapPlayers[mapId]?.toList() ?: emptyList()
 
-        // 加入新地圖（第一個玩家時啟動 NPC 巡邏）
+        // Thêm vào bản đồ mới (bật tuần tra NPC khi có người chơi đầu tiên)
         val wasEmpty = existingPlayers.isEmpty()
         mapPlayers.computeIfAbsent(mapId) { CopyOnWriteArraySet() }.add(session)
         if (wasEmpty && ::npcPatrolSystem.isInitialized) {
             npcPatrolSystem.activateMap(mapId)
         }
 
-        // 向新玩家發送已在場的每個玩家
+        // Gửi từng người chơi đang có mặt cho người chơi mới
         existingPlayers.forEach { other ->
             if (other !== session && other.loginFinished) {
                 responseSender.sendOtherPlayerAppear(session, other)
             }
         }
 
-        // 向已在場玩家廣播新玩家出現
+        // Phát rộng sự xuất hiện của người chơi mới cho người chơi đang có mặt
         existingPlayers.forEach { other ->
             if (other !== session && other.loginFinished) {
                 responseSender.sendOtherPlayerAppear(other, session)
             }
         }
 
-        logger.debug { "${session.characterName} 進入地圖 $mapId ($x, $y)，場上 ${existingPlayers.size} 人" }
+        logger.debug { "${session.characterName} vào bản đồ $mapId ($x, $y), trên sàn ${existingPlayers.size} người" }
     }
 
     /**
-     * 玩家離開地圖（斷線/登出）
+     * Người chơi rời bản đồ (mất kết nối/đăng xuất)
      */
     fun leaveMap(session: GameSession) {
         if (session.mapId > 0) {
             val mapId = session.mapId
             mapPlayers[mapId]?.remove(session)
-            logger.debug { "${session.characterName} 離開地圖 $mapId" }
+            logger.debug { "${session.characterName} rời bản đồ $mapId" }
             session.mapId = 0
-            // 最後一個玩家離開時停用 NPC 巡邏
+            // Tắt tuần tra NPC khi người chơi cuối cùng rời đi
             if (mapPlayers[mapId]?.isEmpty() == true && ::npcPatrolSystem.isInitialized) {
                 npcPatrolSystem.deactivateMap(mapId)
             }
@@ -101,21 +101,21 @@ class WorldManager {
     }
 
     /**
-     * 註冊在線玩家
+     * Đăng ký người chơi trực tuyến
      */
     fun registerPlayer(session: GameSession) {
         onlinePlayers[session.playerId] = session
         if (session.characterName.isNotEmpty()) {
             nameIndex[session.characterName] = session
         }
-        logger.info { "玩家上線：${session.characterName} (id=${session.playerId})" }
+        logger.info { "Người chơi trực tuyến: ${session.characterName} (id=${session.playerId})" }
     }
 
     /**
-     * 移除在線玩家
+     * Loại bỏ người chơi trực tuyến
      *
-     * 使用 remove(key, value) 確保只移除自己的 session，
-     * 避免舊 session 清理時誤刪已被新登入覆蓋的 entry。
+     * Dùng remove(key, value) để đảm bảo chỉ loại bỏ session của chính mình,
+     * Tránh khi dọn dẹp session cũ xoá nhầm entry đã bị đăng nhập mới ghi đè.
      */
     fun removePlayer(session: GameSession) {
         leaveMap(session)
@@ -124,44 +124,44 @@ class WorldManager {
             if (session.characterName.isNotEmpty()) {
                 nameIndex.remove(session.characterName, session)
             }
-            logger.info { "玩家下線：${session.characterName} (id=${session.playerId})" }
+            logger.info { "Người chơi off: ${session.characterName} (id=${session.playerId})" }
         } else if (session.playerId != 0L) {
-            logger.warn { "玩家 ${session.characterName} (id=${session.playerId}) 已被新 session 取代，跳過移除" }
+            logger.warn { "Người chơi ${session.characterName} (id=${session.playerId}) đã bị session mới thay thế, bỏ qua xóa" }
         } else {
             logger.debug { "Bỏ qua session kiểm tra cổng chưa đăng nhập" }
         }
     }
 
     /**
-     * 取得指定地圖上的所有玩家
+     * Lấy tất cả người chơi trên bản đồ chỉ định
      */
     fun getPlayersInMap(mapId: Int): Set<GameSession> =
         mapPlayers[mapId] ?: emptySet()
 
     /**
-     * 根據 playerId 取得在線玩家
+     * Lấy người chơi trực tuyến theo playerId
      */
     fun getPlayerById(playerId: Long): GameSession? =
         onlinePlayers[playerId]
 
     /**
-     * 根據角色名稱取得在線玩家
+     * Lấy người chơi trực tuyến theo tên nhân vật
      */
     fun getPlayerByName(name: String): GameSession? =
         nameIndex[name]
 
     /**
-     * 取得所有在線玩家 session（用於定期自動存檔）
+     * Lấy tất cả session người chơi trực tuyến (dùng cho lưu tự động định kỳ)
      */
     fun getOnlineSessions(): Collection<GameSession> =
         onlinePlayers.values
 
     /**
-     * 廣播封包給同地圖所有玩家
+     * Phát rộng gói tin cho tất cả người chơi cùng bản đồ
      *
-     * @param mapId 目標地圖 ID
-     * @param data 封包資料
-     * @param exclude 排除的 session（通常是發送者自己）
+     * @param mapId ID bản đồ đích
+     * @param data dữ liệu gói tin
+     * @param exclude session bị loại trừ (thường là chính người gửi)
      */
     fun broadcastToMap(mapId: Int, data: ByteArray, exclude: GameSession? = null) {
         mapPlayers[mapId]?.forEach { session ->
@@ -172,7 +172,7 @@ class WorldManager {
     }
 
     /**
-     * 廣播封包給所有在線玩家
+     * Phát rộng gói tin cho tất cả người chơi trực tuyến
      */
     fun broadcastToAll(data: ByteArray, exclude: GameSession? = null) {
         onlinePlayers.values.forEach { session ->
@@ -182,16 +182,16 @@ class WorldManager {
         }
     }
 
-    /** 在線玩家數量 */
+    /** Số người chơi trực tuyến*/
     val onlineCount: Int get() = onlinePlayers.size
 
-    // ── 場景載入等待 ──
+    // ── Chờ tải cảnh ──
 
     /**
-     * 建立場景載入等待信號
+     * Tạo tín hiệu chờ tải cảnh
      *
-     * EveDoorWarpService 呼叫，在發送場景切換封包後掛起等待
-     * 客戶端 C:012-001（場景載入完畢）到達時由 [notifySceneLoadComplete] 觸發。
+     * EveDoorWarpService gọi, treo chờ sau khi gửi gói tin chuyển cảnh
+     * Được [notifySceneLoadComplete] kích hoạt khi gói client C:012-001 (tải cảnh xong) tới nơi.
      */
     fun createSceneLoadDeferred(playerId: Long): CompletableDeferred<Unit> {
         val deferred = CompletableDeferred<Unit>()
@@ -200,9 +200,9 @@ class WorldManager {
     }
 
     /**
-     * 通知場景載入完畢
+     * Thông báo tải cảnh xong
      *
-     * RelocateHandler 收到 C:012-001 時呼叫。
+     * RelocateHandler gọi khi nhận C:012-001.
      */
     fun notifySceneLoadComplete(playerId: Long) {
         pendingSceneLoads.remove(playerId)?.complete(Unit)

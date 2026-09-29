@@ -77,7 +77,7 @@ object EveResultClassPolicy {
      * resultClass=7 pStyle 1..5 normally denotes the repeatable service-NPC flow.
      *
      * Eve.emg also overloads pStyle=1 and pStyle=3 when resultValue != 0:
-     * - pStyle=1 + value: 無界鬥陣 arena teleport selector
+     * - pStyle=1 + value: bộ chọn teleport arena đấu trận không giới hạn
      * - pStyle=3 + value: premium-currency direct purchase
      *
      * Those value-bearing variants must never be routed through bank/storage/store
@@ -94,7 +94,7 @@ object EveResultClassPolicy {
     /**
      * DVT direct Point purchase encoded in resultClass=7 / pStyle=3.
      *
-     * Proven Eve.emg samples are the six 主賭場 branches on scene 12180:
+     * Các mẫu Eve.emg đã xác minh là sáu nhánh sòng bạc chính trên cảnh 12180:
      * value = quantity * 100000 + itemId, parameter=0, meanNo=Point price.
      * Other pStyle=3 samples use different semantics and must not be decoded here.
      */

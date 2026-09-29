@@ -1,32 +1,32 @@
 package tw.tsm.domain.data
 
 /**
- * 坐騎成長定義 — 對應 `MountsGrowData.lua`
+ * Định nghĩa tăng trưởng vật cưỡi — tương ứng `MountsGrowData.lua`
  *
- * 來源：`MountsGrow_C.dat`
- * key = 等級（1-based）
+ * Nguồn: `MountsGrow_C.dat`
+ * key = cấp độ (1-based)
  */
 data class MountGrowDef(
-    /** 速度加成值 */
+    /** Giá trị cộng thêm tốc độ*/
     val speed: Int,
-    /** 升級所需物品 ID */
+    /** ID vật phẩm cần để thăng cấp*/
     val upItemId: Int,
-    /** 升級所需物品數量 */
+    /** Số lượng vật phẩm cần để thăng cấp*/
     val upItemCount: Int,
-    /** 升級所需金錢 */
+    /** Tiền cần để thăng cấp*/
     val upMoney: Long,
-    /** 5 種屬性成長定義（index 0-4 = atk/int/def/hp/sp） */
+    /** 5 định nghĩa tăng trưởng thuộc tính (index 0-4 = atk/int/def/hp/sp)*/
     val attributes: List<MountAttributeGrow>
 )
 
 /**
- * 坐騎單屬性成長定義
+ * Định nghĩa tăng trưởng đơn thuộc tính của vật cưỡi
  */
 data class MountAttributeGrow(
-    /** 此等級的屬性加成值 */
+    /** Giá trị cộng thêm thuộc tính của cấp này*/
     val addValue: Int,
-    /** 投點所需物品 ID */
+    /** ID vật phẩm cần để thêm điểm*/
     val upItemId: Int,
-    /** 投點所需物品數量 */
+    /** Số lượng vật phẩm cần để thêm điểm*/
     val upItemCount: Int
 )

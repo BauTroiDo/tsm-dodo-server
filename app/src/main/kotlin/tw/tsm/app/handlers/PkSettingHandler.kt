@@ -11,13 +11,13 @@ import tw.tsm.protocol.PacketReader
 private val logger = KotlinLogging.logger {}
 
 /**
- * PK 設定處理器（mainKind = 33）
+ * Bộ xử lý cài đặt PK (mainKind = 33)
  *
- * 來源：protocal.lua protocolTable[33]
+ * Nguồn: protocal.lua protocolTable[33]
  *
- * C→S 格式：
- * - C:033-001 — PK 開關：+PK開關(1)
- * - C:033-002 — 參戰開關：+參戰開關(1)
+ * Định dạng C→S:
+ * - C:033-001 — công tắc PK: +công tắc PK(1)
+ * - C:033-002 — công tắc tham chiến: +công tắc tham chiến(1)
  */
 class PkSettingHandler(
     private val responseSender: ResponseSender
@@ -31,29 +31,29 @@ class PkSettingHandler(
         when (subKind) {
             1 -> handlePkSwitch(session, data)
             2 -> handleJoinSwitch(session, data)
-            else -> logger.warn { "未處理的 PK 設定子協定：subKind=$subKind" }
+            else -> logger.warn { "Sub-protocol cài đặt PK chưa xử lý: subKind=$subKind" }
         }
     }
 
     /**
-     * C:033-001 — 切換 PK 開關
+     * C:033-001 — bật/tắt công tắc PK
      */
     private fun handlePkSwitch(session: GameSession, data: ByteArray) {
         val reader = PacketReader(data)
         val enabled = reader.readUByte() != 0
         session.pkEnabled = enabled
-        logger.info { "${session.characterName} ${if (enabled) "開啟" else "關閉"} PK 開關" }
+        logger.info { "${session.characterName} ${if (enabled) "開啟" else "關閉"} công tắc PK" }
         responseSender.sendPkSwitch(session, session.pkEnabled, session.joinEnabled)
     }
 
     /**
-     * C:033-002 — 切換參戰開關
+     * C:033-002 — bật/tắt công tắc tham chiến
      */
     private fun handleJoinSwitch(session: GameSession, data: ByteArray) {
         val reader = PacketReader(data)
         val enabled = reader.readUByte() != 0
         session.joinEnabled = enabled
-        logger.info { "${session.characterName} ${if (enabled) "開啟" else "關閉"} 參戰開關" }
+        logger.info { "${session.characterName} ${if (enabled) "開啟" else "關閉"} công tắc tham chiến" }
         responseSender.sendPkSwitch(session, session.pkEnabled, session.joinEnabled)
     }
 }

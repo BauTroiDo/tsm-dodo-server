@@ -13,16 +13,16 @@ import tw.tsm.persistence.tables.CharacterPetEquips
 import tw.tsm.persistence.tables.CharacterPets
 
 /**
- * 武將資料存取實作（Exposed ORM）
+ * Triển khai truy xuất dữ liệu tướng (Exposed ORM)
  *
- * 武將本體存 CharacterPets；身上裝備存 CharacterPetEquips，
- * 以 (storageType, slotIndex) 對應本體，載入時合併進 FollowNpcData.equips。
+ * Bản thể tướng lưu ở CharacterPets; trang bị trên người lưu ở CharacterPetEquips,
+ * Map với bản thể qua (storageType, slotIndex), khi nạp sẽ gộp vào FollowNpcData.equips.
  */
 class PetRepositoryImpl : PetRepository {
 
     override suspend fun findByCharacterId(characterId: Long): List<FollowNpcData> =
         suspendTransaction {
-            // 先載入全部武將裝備，依 (storageType, slotIndex) 分組
+            // Nạp toàn bộ trang bị tướng trước, nhóm theo (storageType, slotIndex)
             val equipsByPet = mutableMapOf<Pair<Int, Int>, MutableMap<Int, ThingData>>()
             CharacterPetEquips.selectAll()
                 .where { CharacterPetEquips.characterId eq characterId }
@@ -136,7 +136,7 @@ class PetRepositoryImpl : PetRepository {
                 }
             }
 
-            // 武將裝備：整批重寫（與本體同交易，確保一致）
+            // Trang bị tướng: ghi lại nguyên lô (cùng transaction với bản thể để đảm bảo nhất quán)
             CharacterPetEquips.deleteWhere { CharacterPetEquips.characterId eq characterId }
             val equipEntries = pets.flatMap { pet ->
                 pet.equips.entries

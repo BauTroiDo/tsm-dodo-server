@@ -16,11 +16,11 @@ serialization-json = "1.8.1"
 typesafe-config = "1.4.3"
 
 [libraries]
-# Kotlin 協程
+# Kotlin coroutine
 coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 
-# Netty 網路層
+# Tầng mạng Netty
 netty-all = { module = "io.netty:netty-all", version.ref = "netty" }
 
 # Exposed ORM
@@ -29,7 +29,7 @@ exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exp
 exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
 exposed-java-time = { module = "org.jetbrains.exposed:exposed-java-time", version.ref = "exposed" }
 
-# 資料庫
+# Cơ sở dữ liệu
 hikari = { module = "com.zaxxer:HikariCP", version.ref = "hikari" }
 mysql-connector = { module = "com.mysql:mysql-connector-j", version.ref = "mysql" }
 
@@ -37,20 +37,20 @@ mysql-connector = { module = "com.mysql:mysql-connector-j", version.ref = "mysql
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 koin-test = { module = "io.insert-koin:koin-test", version.ref = "koin" }
 
-# 日誌
+# Ghi log
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 kotlin-logging = { module = "io.github.oshai:kotlin-logging-jvm", version.ref = "kotlin-logging" }
 
-# JSON 序列化
+# Tuần tự hoá JSON
 serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization-json" }
 
-# 設定
+# Cấu hình
 typesafe-config = { module = "com.typesafe:config", version.ref = "typesafe-config" }
 
-# 密碼雜湊
+# Hash mật khẩu
 bcrypt = { module = "at.favre.lib:bcrypt", version.ref = "bcrypt" }
 
-# 測試
+# Kiểm thử
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit5" }
 junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit5" }
 kotest-runner = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }

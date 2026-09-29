@@ -3,26 +3,26 @@ package tw.tsm.persistence.tables
 import org.jetbrains.exposed.v1.core.Table
 
 /**
- * 角色派遣進度資料表
+ * Bảng tiến độ phái đi của nhân vật
  *
- * 儲存進行中的派遣任務（完成領獎後刪除）
+ * Lưu nhiệm vụ phái đi đang thực hiện (xoá sau khi hoàn thành nhận thưởng)
  */
 object CharacterDispatches : Table("character_dispatches") {
     val id = long("id").autoIncrement()
     val characterId = long("character_id").index()
-    /** 進度條索引（1-4） */
+    /** Chỉ số thanh tiến độ (1-4)*/
     val slotIndex = integer("slot_index")
-    /** 派遣種類 */
+    /** Loại phái đi*/
     val dispatchKind = integer("dispatch_kind")
-    /** 客棧武將索引 */
+    /** Chỉ số tướng ở lữ quán*/
     val innPetIndex = integer("inn_pet_index")
-    /** 開始時間（OLE Automation Date） */
+    /** Thời điểm bắt đầu (OLE Automation Date)*/
     val startTime = double("start_time")
-    /** 結束時間（OLE Automation Date） */
+    /** Thời điểm kết thúc (OLE Automation Date)*/
     val endTime = double("end_time")
-    /** 效果索引 1 */
+    /** Chỉ số hiệu ứng 1*/
     val effectIndex1 = integer("effect_index1").default(0)
-    /** 效果索引 2 */
+    /** Chỉ số hiệu ứng 2*/
     val effectIndex2 = integer("effect_index2").default(0)
 
     override val primaryKey = PrimaryKey(id)

@@ -85,14 +85,14 @@ Không tắt test, không thêm dummy/no-op production để compile. Chưa ch�
 
 Tám lỗi còn lại (đã có trước sửa):
 
-- `tw.tsm.tests.EveConditionEvaluatorTest` — ops=4 大於: io.kotest.assertions.AssertionFailedError: expected:<false> but was:<true>
-- `tw.tsm.tests.EveConditionEvaluatorTest` — 只檢查錢莊/寶庫彙總數量，不重用背包數量: io.kotest.assertions.AssertionFailedError: expected:<true> but was:<false>
-- `tw.tsm.tests.EveConditionEvaluatorTest` — pStyle=3 未開始任務 → actual=0: io.kotest.assertions.AssertionFailedError: expected:<true> but was:<false>
-- `tw.tsm.tests.EveConditionEvaluatorTest` — val=1 ops=2(<) → 當前 eveNo 完成次數 < 1 才通過: io.kotest.assertions.AssertionFailedError: expected:<true> but was:<false>
-- `tw.tsm.tests.EveConditionEvaluatorTest` — val=2 ops=1(==) → 當前 eveNo 完成 2 次才通過: io.kotest.assertions.AssertionFailedError: expected:<false> but was:<true>
-- `tw.tsm.tests.EveConditionEvaluatorTest` — 未知 param 不可因 value=0/ops=0 誤通過: io.kotest.assertions.AssertionFailedError: expected:<false> but was:<true>
-- `tw.tsm.tests.EveConditionEvaluatorTest` — 會用技能等級比對 conditionValue: io.kotest.assertions.AssertionFailedError: expected:<false> but was:<true>
-- `tw.tsm.tests.EveConditionEvaluatorTest` — 未學技能等級視為 0: io.kotest.assertions.AssertionFailedError: expected:<true> but was:<false>
+- `tw.tsm.tests.EveConditionEvaluatorTest` — ops=4 lớn hơn: io.kotest.assertions.AssertionFailedError: expected:<false> but was:<true>
+- `tw.tsm.tests.EveConditionEvaluatorTest` — chỉ kiểm tra số lượng tổng hợp Tiền Trang/kho báu, không dùng lại số lượng túi đồ: io.kotest.assertions.AssertionFailedError: expected:<true> but was:<false>
+- `tw.tsm.tests.EveConditionEvaluatorTest` — pStyle=3 chưa bắt đầu nhiệm vụ → actual=0: io.kotest.assertions.AssertionFailedError: expected:<true> but was:<false>
+- `tw.tsm.tests.EveConditionEvaluatorTest` — val=1 ops=2(<) → chỉ đạt khi số lần hoàn thành eveNo hiện tại < 1: io.kotest.assertions.AssertionFailedError: expected:<true> but was:<false>
+- `tw.tsm.tests.EveConditionEvaluatorTest` — val=2 ops=1(==) → chỉ đạt khi eveNo hiện tại hoàn thành 2 lần: io.kotest.assertions.AssertionFailedError: expected:<false> but was:<true>
+- `tw.tsm.tests.EveConditionEvaluatorTest` — param không xác định không được qua nhầm vì value=0/ops=0: io.kotest.assertions.AssertionFailedError: expected:<false> but was:<true>
+- `tw.tsm.tests.EveConditionEvaluatorTest` — sẽ so cấp kỹ năng với conditionValue: io.kotest.assertions.AssertionFailedError: expected:<false> but was:<true>
+- `tw.tsm.tests.EveConditionEvaluatorTest` — kỹ năng chưa học coi là cấp 0: io.kotest.assertions.AssertionFailedError: expected:<true> but was:<false>
 
 ## Tái chạy và áp dụng
 

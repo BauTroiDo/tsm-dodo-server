@@ -5,16 +5,16 @@ import java.nio.ByteOrder
 import java.nio.charset.Charset
 
 /**
- * .dat 二進位讀取器
+ * Trình đọc nhị phân .dat
  *
- * 1:1 對照手遊客戶端 `DatReader.lua`。
- * 支援 XOR 解密（PC 版 .dat）和無加密直讀（手遊版 `_C.dat`）。
+ * Đối chiếu 1:1 với `DatReader.lua` của client game mobile.
+ * Hỗ trợ giải mã XOR (.dat bản PC) và đọc trực tiếp không mã hoá (`_C.dat` bản game mobile).
  *
- * @param data 檔案完整內容
- * @param numberOffset 數值偏移量（解密用）
- * @param xor1 1-byte XOR 金鑰
- * @param xor2 2-byte XOR 金鑰
- * @param xor4 4-byte XOR 金鑰
+ * @param data toàn bộ nội dung tệp
+ * @param numberOffset lượng offset giá trị（dùng để giải mã）
+ * @param xor1 khoá XOR 1-byte
+ * @param xor2 khoá XOR 2-byte
+ * @param xor4 khoá XOR 4-byte
  */
 class DatReader(
     private val data: ByteArray,
@@ -25,77 +25,77 @@ class DatReader(
 ) {
     private var position: Int = 0
 
-    /** 是否還有資料可讀 */
+    /** Còn dữ liệu để đọc hay không*/
     fun canRead(): Boolean = position < data.size
 
-    /** 跳到指定位置 */
+    /** Chuyển đến vị trí chỉ định*/
     fun seek(pos: Int) {
         position = pos.coerceIn(0, data.size)
     }
 
-    /** 目前讀取位置 */
+    /** Vị trí đọc hiện tại*/
     fun position(): Int = position
 
-    // ── 數值讀取（對照 DatReader:ReadNumber） ──
+    // ── Đọc giá trị số (đối chiếu DatReader:ReadNumber) ──
 
     /**
-     * 讀取無號 1 位元組
+     * Đọc 1 byte không dấu
      *
-     * 對照 Lua `ReadByte(computeXOR, computeOffset)`
+     * Đối chiếu Lua `ReadByte(computeXOR, computeOffset)`
      */
     fun readByte(): Int {
         return readNumber(1, signed = false)
     }
 
     /**
-     * 讀取有號 1 位元組
+     * Đọc 1 byte có dấu
      *
-     * 對照 Lua `ReadSByte(computeXOR, computeOffset)`
+     * Đối chiếu Lua `ReadSByte(computeXOR, computeOffset)`
      */
     fun readSByte(): Int {
         return readNumber(1, signed = true)
     }
 
     /**
-     * 讀取無號 2 位元組（小端序）
+     * Đọc 2 byte không dấu (little-endian)
      *
-     * 對照 Lua `ReadUInt16(computeXOR, computeOffset)`
+     * Đối chiếu Lua `ReadUInt16(computeXOR, computeOffset)`
      */
     fun readUInt16(): Int {
         return readNumber(2, signed = false)
     }
 
     /**
-     * 讀取有號 2 位元組（小端序）
+     * Đọc 2 byte có dấu (little-endian)
      *
-     * 對照 Lua `ReadInt16(computeXOR, computeOffset)`
+     * Đối chiếu Lua `ReadInt16(computeXOR, computeOffset)`
      */
     fun readInt16(): Int {
         return readNumber(2, signed = true)
     }
 
     /**
-     * 讀取無號 4 位元組（小端序）
+     * Đọc 4 byte không dấu (little-endian)
      *
-     * 對照 Lua `ReadUInt32(computeXOR, computeOffset)`
+     * Đối chiếu Lua `ReadUInt32(computeXOR, computeOffset)`
      */
     fun readUInt32(): Long {
         return readNumber(4, signed = false).toLong() and 0xFFFFFFFFL
     }
 
     /**
-     * 讀取有號 4 位元組（小端序）
+     * Đọc 4 byte có dấu (little-endian)
      *
-     * 對照 Lua `ReadInt32(computeXOR, computeOffset)`
+     * Đối chiếu Lua `ReadInt32(computeXOR, computeOffset)`
      */
     fun readInt32(): Int {
         return readNumber(4, signed = true)
     }
 
     /**
-     * 讀取 IEEE 754 雙精度浮點數（8 位元組，小端序）
+     * Đọc số thực dấu phẩy động độ chính xác kép IEEE 754 (8 byte, little-endian)
      *
-     * 對照 Lua `ReadDouble()`
+     * Đối chiếu Lua `ReadDouble()`
      */
     fun readDouble(): Double {
         if (position + 8 > data.size) return 0.0
@@ -106,20 +106,20 @@ class DatReader(
     }
 
     /**
-     * 讀取布林值（1 位元組 == 1）
+     * Đọc giá trị boolean (1 byte == 1)
      *
-     * 對照 Lua `ReadBoolean(computeXOR, computeOffset)`
+     * Đối chiếu Lua `ReadBoolean(computeXOR, computeOffset)`
      */
     fun readBoolean(): Boolean {
         return readByte() == 1
     }
 
-    // ── 位元組/字串讀取 ──
+    // ── Đọc byte/chuỗi ──
 
     /**
-     * 讀取原始位元組
+     * Đọc byte thô
      *
-     * 對照 Lua `ReadBytes(size)`
+     * Đối chiếu Lua `ReadBytes(size)`
      */
     fun readBytes(size: Int): ByteArray {
         if (position + size > data.size) return ByteArray(0)
@@ -129,11 +129,11 @@ class DatReader(
     }
 
     /**
-     * 讀取 PC 版字串（1B 長度 + 反轉 bytes + Big5）
+     * Đọc chuỗi bản PC (1B độ dài + bytes đảo ngược + Big5)
      *
-     * 對照 Lua `ReadString(size, computeRevert, xor, offset)`
-     * 格式：[count: 1B] [padding...] [反轉的 Big5 字串]
-     * 總共消耗 1 + size 個 bytes
+     * Đối chiếu Lua `ReadString(size, computeRevert, xor, offset)`
+     * Định dạng: [count: 1B] [padding...] [chuỗi Big5 đã đảo ngược]
+     * Tổng cộng tiêu tốn 1 + size bytes
      */
     fun readString(size: Int): String {
         if (position + 1 + size > data.size) return ""
@@ -142,7 +142,7 @@ class DatReader(
         position += 1
 
         val result = if (count > 0) {
-            // 反轉讀取：從 position + size - count 開始讀 count 個 bytes，再反轉
+            // Đọc đảo ngược: đọc count bytes từ position + size - count, sau đó đảo ngược
             val start = position + size - count
             val raw = data.copyOfRange(start, start + count)
             raw.reverse()
@@ -156,10 +156,10 @@ class DatReader(
     }
 
     /**
-     * 讀取固定長度 ASCII 字串（無加密、無反轉）
+     * Đọc chuỗi ASCII độ dài cố định (không mã hoá, không đảo ngược)
      *
-     * 格式：[count: 1B] [data: size bytes]
-     * 總共消耗 1 + size 個 bytes。用於 Ground.mmg 索引等無加密檔案。
+     * Định dạng: [count: 1B] [data: size bytes]
+     * Tổng cộng tiêu tốn 1 + size bytes. Dùng cho các file không mã hoá như chỉ mục Ground.mmg.
      */
     fun readFixedAscii(size: Int): String {
         if (position + 1 + size > data.size) return ""
@@ -173,9 +173,9 @@ class DatReader(
     }
 
     /**
-     * 讀取手遊版 Unicode 字串（2B LE 長度前綴 + UTF-16LE bytes）
+     * Đọc chuỗi Unicode bản game mobile (tiền tố độ dài 2B LE + UTF-16LE bytes)
      *
-     * 對照 Lua `LuaHelper.BytesToString(encoding_Unicode, reader:ReadBytes(reader:ReadUInt16()))`
+     * Đối chiếu Lua `LuaHelper.BytesToString(encoding_Unicode, reader:ReadBytes(reader:ReadUInt16()))`
      */
     fun readUnicodeString(): String {
         val byteLen = readUInt16()
@@ -184,36 +184,36 @@ class DatReader(
         return String(raw, UTF16LE)
     }
 
-    // ── 內部實作 ──
+    // ── Cài đặt nội bộ ──
 
     /**
-     * 通用數值讀取（對照 Lua `ReadNumber`）
+     * Đọc giá trị số chung (đối chiếu Lua `ReadNumber`)
      *
-     * 小端序組裝 → XOR 解密 → 減偏移 → 有號轉換
+     * Ghép little-endian → giải mã XOR → trừ offset → chuyển đổi có dấu
      */
     private fun readNumber(size: Int, signed: Boolean): Int {
         if (position + size > data.size) return 0
 
-        // 小端序組裝
+        // Ghép little-endian
         var result = 0L
         for (i in 0 until size) {
             result = result or ((data[position + i].toLong() and 0xFF) shl (i * 8))
         }
         position += size
 
-        // XOR 解密
+        // Giải mã XOR
         when (size) {
             1 -> if (xor1 != 0) result = result xor xor1.toLong()
             2 -> if (xor2 != 0) result = result xor xor2.toLong()
             4 -> if (xor4 != 0) result = result xor xor4.toLong()
         }
 
-        // 偏移
+        // offset
         if (numberOffset != 0) {
             result -= numberOffset
         }
 
-        // 有號轉換
+        // Chuyển đổi có dấu
         if (signed) {
             when (size) {
                 1 -> result = result.toByte().toLong()
@@ -221,7 +221,7 @@ class DatReader(
                 4 -> result = result.toInt().toLong()
             }
         } else {
-            // 無號：確保正值
+            // Không dấu: đảm bảo giá trị dương
             when (size) {
                 1 -> result = result and 0xFF
                 2 -> result = result and 0xFFFF

@@ -15,14 +15,14 @@ import tw.tsm.protocol.PacketWriter
 private val logger = KotlinLogging.logger {}
 
 /**
- * 派遣系統 Handler（mainKind = 86）
+ * Handler hệ thống phái cử (mainKind = 86)
  *
- * 來源：protocal.lua protocolTable[86]（第 13352-13453 行）
+ * Nguồn: protocal.lua protocolTable[86] (dòng 13352-13453)
  *
- * C→S 格式：
- * - subKind 1（查詢派遣資料）：無資料
- * - subKind 2（派遣武將出發）：+客棧武將索引(1)
- * - subKind 5（完成派遣）：+進度條索引(1)
+ * Định dạng C→S:
+ * - subKind 1 (tra cứu dữ liệu phái cử): không có dữ liệu
+ * - subKind 2 (phái tướng xuất phát): +chỉ số tướng lữ quán(1)
+ * - subKind 5 (hoàn thành phái cử): +chỉ số thanh tiến độ(1)
  */
 class DispatchHandler(
     private val dispatchSystem: DispatchSystem
@@ -37,42 +37,42 @@ class DispatchHandler(
             1 -> handleQuery(session)
             2 -> handleStart(session, data)
             5 -> handleComplete(session, data)
-            else -> logger.warn { "未處理的派遣子協定：subKind=$subKind" }
+            else -> logger.warn { "Sub-protocol phái đi chưa xử lý: subKind=$subKind" }
         }
     }
 
     /**
-     * C:086-001 查詢派遣資料
+     * C:086-001 Tra cứu dữ liệu phái cử
      *
-     * 回傳：S:086-003（現有派遣資料）+ S:086-004（效果）+ S:086-006（最大數量）+ S:086-001（UI 打開）
+     * Trả về: S:086-003 (dữ liệu phái cử hiện có) + S:086-004 (hiệu quả) + S:086-006 (số lượng tối đa) + S:086-001 (mở UI)
      */
     private suspend fun handleQuery(session: GameSession) {
         val charId = session.roleId.toLong()
-        logger.trace { "${session.characterName} 查詢派遣資料" }
+        logger.trace { "${session.characterName} tra cứu dữ liệu phái đi" }
 
-        // 載入進行中的派遣
+        // Tải các phái cử đang tiến hành
         val dispatches = dispatchSystem.queryDispatches(charId)
 
-        // S:086-003 更新派遣資料
+        // S:086-003 cập nhật dữ liệu phái cử
         if (dispatches.isNotEmpty()) {
             sendDispatchData(session, dispatches)
         }
 
-        // S:086-004 更新派遣效果（隨機產生）
+        // S:086-004 cập nhật hiệu quả phái cử (sinh ngẫu nhiên)
         val (effect1, effect2) = dispatchSystem.randomEffectIndices()
         sendDispatchEffect(session, 0, effect1, effect2)
 
-        // S:086-006 更新派遣最大數量
+        // S:086-006 cập nhật số lượng phái cử tối đa
         sendBarCount(session, DispatchSystem.MAX_SLIDER_COUNT)
 
-        // S:086-001 UI 打開信號（最後發送）
+        // S:086-001 tín hiệu mở UI (gửi cuối cùng)
         sendOpenUI(session)
     }
 
     /**
-     * C:086-002 派遣武將出發
+     * C:086-002 Phái tướng xuất phát
      *
-     * 格式：+客棧武將索引(1)
+     * Định dạng: +chỉ số tướng lữ quán(1)
      */
     private suspend fun handleStart(session: GameSession, data: ByteArray) {
         if (data.isEmpty()) return
@@ -80,12 +80,12 @@ class DispatchHandler(
         val innPetIndex = reader.readUByte()
         val charId = session.roleId.toLong()
 
-        logger.trace { "${session.characterName} 派遣武將出發：innIndex=$innPetIndex" }
+        logger.trace { "${session.characterName} phái tướng xuất phát: innIndex=$innPetIndex" }
 
-        // 取得目前伺服器時間（OLE Automation Date）
+        // Lấy thời gian server hiện tại (OLE Automation Date)
         val currentTime = getCurrentOaDate()
 
-        // 隨機效果
+        // Hiệu quả ngẫu nhiên
         val (effect1, effect2) = dispatchSystem.randomEffectIndices()
 
         val (resultCode, saveData) = dispatchSystem.startDispatch(
@@ -96,19 +96,19 @@ class DispatchHandler(
             effectIndex2 = effect2
         )
 
-        // S:086-002 派遣結果
+        // S:086-002 kết quả phái cử
         sendDispatchResult(session, resultCode)
 
-        // 成功時更新派遣資料
+        // Khi thành công cập nhật dữ liệu phái cử
         if (resultCode == DispatchStartResult.SUCCESS && saveData != null) {
             sendDispatchData(session, listOf(saveData))
         }
     }
 
     /**
-     * C:086-005 完成派遣（領取獎勵）
+     * C:086-005 Hoàn thành phái cử (nhận thưởng)
      *
-     * 格式：+進度條索引(1)
+     * Định dạng: +chỉ số thanh tiến độ(1)
      */
     private suspend fun handleComplete(session: GameSession, data: ByteArray) {
         if (data.isEmpty()) return
@@ -116,7 +116,7 @@ class DispatchHandler(
         val slotIndex = reader.readUByte()
         val charId = session.roleId.toLong()
 
-        logger.trace { "${session.characterName} 完成派遣：slot=$slotIndex" }
+        logger.trace { "${session.characterName} hoàn thành phái đi: slot=$slotIndex" }
 
         val currentTime = getCurrentOaDate()
 
@@ -126,19 +126,19 @@ class DispatchHandler(
             currentTime = currentTime
         )
 
-        // S:086-005 領獎結果
+        // S:086-005 kết quả nhận thưởng
         sendCompleteResult(session, resultCode)
 
-        // 成功後重新發送資料（刪除已完成的 slot）
+        // Sau khi thành công gửi lại dữ liệu (xoá slot đã hoàn thành)
         if (resultCode == DispatchCompleteResult.SUCCESS) {
             val remaining = dispatchSystem.queryDispatches(charId)
             sendDispatchData(session, remaining)
         }
     }
 
-    // ── S→C 封包組裝 ──
+    // ── Ghép gói tin S→C ──
 
-    /** S:086-001 回傳武將資料完成（UI 打開信號） */
+    /** S:086-001 Trả về dữ liệu tướng hoàn tất (tín hiệu mở UI)*/
     private fun sendOpenUI(session: GameSession) {
         val packet = PacketWriter(3)
             .writeByte(Opcodes.DISPATCH).writeByte(1).writeByte(0)
@@ -146,7 +146,7 @@ class DispatchHandler(
         session.send(packet)
     }
 
-    /** S:086-002 派遣武將結果 */
+    /** S:086-002 Kết quả phái tướng*/
     private fun sendDispatchResult(session: GameSession, resultCode: Int) {
         val packet = PacketWriter(4)
             .writeByte(Opcodes.DISPATCH).writeByte(2).writeByte(0)
@@ -156,9 +156,9 @@ class DispatchHandler(
     }
 
     /**
-     * S:086-003 更新派遣資料
+     * S:086-003 Cập nhật dữ liệu phái cử
      *
-     * 格式：+數量(1) + N×[進度條索引(1) + 開始時間(8) + 結束時間(8) + 派遣種類(1) + 客棧武將索引(1) + 效果索引1(1) + 效果索引2(1)]
+     * Định dạng: +số lượng(1) + N×[chỉ số thanh tiến độ(1) + thời gian bắt đầu(8) + thời gian kết thúc(8) + loại phái cử(1) + chỉ số tướng lữ quán(1) + chỉ số hiệu quả 1(1) + chỉ số hiệu quả 2(1)]
      */
     private fun sendDispatchData(session: GameSession, dispatches: List<DispatchSaveData>) {
         val packetSize = 3 + 1 + dispatches.size * 21 // header(3) + count(1) + N * 21
@@ -179,7 +179,7 @@ class DispatchHandler(
         session.send(writer.toByteArray())
     }
 
-    /** S:086-004 更新派遣效果 */
+    /** S:086-004 Cập nhật hiệu quả phái cử*/
     private fun sendDispatchEffect(session: GameSession, dispatchKind: Int, effect1: Int, effect2: Int) {
         val packet = PacketWriter(6)
             .writeByte(Opcodes.DISPATCH).writeByte(4).writeByte(0)
@@ -190,7 +190,7 @@ class DispatchHandler(
         session.send(packet)
     }
 
-    /** S:086-005 領取派遣獎勵結果 */
+    /** S:086-005 Kết quả nhận thưởng phái cử*/
     private fun sendCompleteResult(session: GameSession, resultCode: Int) {
         val packet = PacketWriter(4)
             .writeByte(Opcodes.DISPATCH).writeByte(5).writeByte(0)
@@ -199,7 +199,7 @@ class DispatchHandler(
         session.send(packet)
     }
 
-    /** S:086-006 更新派遣最大數量 */
+    /** S:086-006 Cập nhật số lượng phái cử tối đa*/
     private fun sendBarCount(session: GameSession, count: Int) {
         val packet = PacketWriter(4)
             .writeByte(Opcodes.DISPATCH).writeByte(6).writeByte(0)
@@ -208,7 +208,7 @@ class DispatchHandler(
         session.send(packet)
     }
 
-    /** 取得目前伺服器時間（OLE Automation Date） */
+    /** Lấy thời gian server hiện tại (OLE Automation Date)*/
     private fun getCurrentOaDate(): Double {
         // OLE Automation Date：1899-12-30 00:00:00 = 0.0
         // Java epoch (1970-01-01) = 25569.0 in OA

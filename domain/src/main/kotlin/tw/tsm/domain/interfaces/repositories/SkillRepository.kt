@@ -1,7 +1,7 @@
 package tw.tsm.domain.interfaces.repositories
 
 /**
- * 技能持久化介面
+ * Giao diện persist kỹ năng
  */
 data class Turn2SkillState(
     val availableBalls: Int = 0,
@@ -23,28 +23,28 @@ data class Turn3State(
 
 interface SkillRepository {
     /**
-     * 載入角色所有已學技能
+     * Tải toàn bộ kỹ năng đã học của nhân vật
      *
-     * @return skillId → level 映射
+     * @return ánh xạ skillId → level
      */
     suspend fun findByCharacterId(characterId: Long): Map<Int, Int>
 
     /**
-     * 批量保存角色技能（全量覆蓋）
+     * Lưu hàng loạt kỹ năng nhân vật (ghi đè toàn bộ)
      *
-     * @param skills skillId → level 映射
+     * @param skills ánh xạ skillId → level
      */
     suspend fun saveAll(characterId: Long, skills: Map<Int, Int>)
 
-    /** 載入二轉天珠與英雄技能槽。 */
+    /** Tải thiên châu nhị chuyển và các ô kỹ năng anh hùng.*/
     suspend fun findTurn2State(characterId: Long): Turn2SkillState = Turn2SkillState()
 
-    /** 全量保存二轉天珠與英雄技能槽。 */
+    /** Lưu toàn bộ thiên châu nhị chuyển và các ô kỹ năng anh hùng.*/
     suspend fun saveTurn2State(characterId: Long, state: Turn2SkillState) {}
 
-    /** 載入三轉獨立成長資料。 */
+    /** Tải dữ liệu tăng trưởng độc lập của tam chuyển.*/
     suspend fun findTurn3State(characterId: Long): Turn3State = Turn3State()
 
-    /** 保存三轉獨立成長資料。 */
+    /** Lưu dữ liệu tăng trưởng độc lập của tam chuyển.*/
     suspend fun saveTurn3State(characterId: Long, state: Turn3State) {}
 }

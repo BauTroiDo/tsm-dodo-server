@@ -12,15 +12,15 @@ import tw.tsm.gamelogic.systems.LoginService
 private val logger = KotlinLogging.logger {}
 
 /**
- * 選角處理器（mainKind = 3）
+ * Bộ xử lý chọn nhân vật (mainKind = 3)
  *
- * 客戶端在兩種情境下發送 C:003：
- * 1. 創角成功（S:009-001）後自動發送
- * 2. 返回玩家在 UICreateRole 點擊進入遊戲
+ * Client gửi C:003 trong hai trường hợp:
+ * 1. Tự động gửi sau khi tạo nhân vật thành công (S:009-001)
+ * 2. Người chơi quay lại và bấm vào trò chơi trong UICreateRole
  *
- * 收到 C:003 後，載入角色資料並執行角色進入序列。
+ * Sau khi nhận C:003, nạp dữ liệu nhân vật rồi chạy trình tự nhân vật gia nhập.
  *
- * 📖 協定來源：protocal.lua protocolTable[9][1] → Network.Send(3)
+ * 📖 Nguồn giao thức: protocal.lua protocolTable[9][1] → Network.Send(3)
  */
 class SelectCharHandler(
     private val characterRepository: CharacterRepository,
@@ -30,34 +30,34 @@ class SelectCharHandler(
     override val mainKind: Int = Opcodes.CHARACTER
 
     /**
-     * 處理選角請求 (C:003)
+     * Xử lý yêu cầu chọn nhân vật (C:003)
      *
-     * C:003 是空封包，無 subKind 和資料。
-     * 手遊版每帳號一個角色，直接載入第一個。
+     * C:003 là gói tin trống, không có subKind và dữ liệu.
+     * Bản mobile mỗi tài khoản một nhân vật, nạp thẳng nhân vật đầu tiên.
      */
     override suspend fun handle(session: GameSession, subKind: Int, data: ByteArray) {
-        // 必須已登入
+        // Phải đã đăng nhập
         if (session.state != SessionState.LOGGED_IN) {
-            logger.warn { "非法選角：state=${session.state}" }
+            logger.warn { "Chọn nhân vật không hợp lệ: state=${session.state}" }
             return
         }
 
-        // 載入帳號下的角色
+        // Nạp các nhân vật thuộc tài khoản
         val characters = characterRepository.findByAccountId(session.accountId)
         if (characters.isEmpty()) {
-            logger.warn { "帳號 ${session.accountId} 沒有角色，無法選角" }
+            logger.warn { "Tài khoản ${session.accountId} không có nhân vật, không thể chọn" }
             return
         }
 
-        // 手遊版取第一個角色
+        // Bản mobile lấy nhân vật đầu tiên
         val record = characters.first()
 
-        // 設定 session 角色資訊 + 外觀（供 S:003-000 他人可見）
+        // Thiết lập thông tin nhân vật + ngoại hình trong session (để S:003-000 người khác nhìn thấy)
         session.loadFromRecord(record)
 
-        logger.info { "選角成功：'${record.name}' (id=${record.id}) 帳號=${session.accountId}" }
+        logger.info { "Chọn nhân vật thành công: '${record.name}' (id=${record.id}) tài khoản=${session.accountId}" }
 
-        // 階段二：角色進入遊戲世界
+        // Giai đoạn hai: nhân vật gia nhập thế giới trò chơi
         loginService.executeCharacterEnterSequence(
             session = session,
             playerId = session.playerId,

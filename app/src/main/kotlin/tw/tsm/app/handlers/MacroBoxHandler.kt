@@ -15,10 +15,10 @@ import tw.tsm.protocol.PacketReader
 private val logger = KotlinLogging.logger {}
 
 /**
- * 機關盒（內掛）Handler — mainKind=65
+ * Handler hộp cơ quan (treo máy nội bộ) — mainKind=65
  *
- * 來源：protocal.lua protocolTable[65]
- * 處理 7 個 C→S subKind：啟動/暫停/確認時數/移除晶石/飛回紀錄點/移除經驗瓶/設定經驗瓶順序
+ * Nguồn: protocal.lua protocolTable[65]
+ * xử lý 7 subKind C→S: khởi động/tạm dừng/xác nhận số giờ/xóa tinh thạch/bay về điểm ghi/xóa bình EXP/đặt thứ tự bình EXP
  */
 class MacroBoxHandler(
     private val macroBoxSystem: MacroBoxSystem,
@@ -40,14 +40,14 @@ class MacroBoxHandler(
             5 -> handleReturnTown(session)
             6 -> handleRemoveExpBottle(session, data)
             7 -> handleSetExpPriority(session, data)
-            else -> logger.warn { "未處理的機關盒子協定：subKind=$subKind" }
+            else -> logger.warn { "Sub-protocol Hộp Cơ Quan chưa xử lý: subKind=$subKind" }
         }
     }
 
     /**
-     * C:065-001 啟動機關盒
+     * C:065-001 khởi động hộp cơ quan
      *
-     * 格式：playerHp%(1B) playerSp%(1B) npcHp%(1B) npcSp%(1B)
+     * Định dạng: playerHp%(1B) playerSp%(1B) npcHp%(1B) npcSp%(1B)
      *       hpReturn(1B) spReturn(1B) playerDead(1B) npcDead(1B)
      *       autoWalk(1B) autoExp(1B) autoShotput(1B)
      */
@@ -56,13 +56,13 @@ class MacroBoxHandler(
         val reader = PacketReader(data)
         val playerHp = reader.readUByte()
         val playerSp = reader.readUByte()
-        reader.readUByte()  // npcHp（固定 1，略過）
-        reader.readUByte()  // npcSp（固定 1，略過）
+        reader.readUByte()  // npcHp (cố định 1, bỏ qua)
+        reader.readUByte()  // npcSp (cố định 1, bỏ qua)
         val hpReturn = reader.readBoolean()
         val spReturn = reader.readBoolean()
         val playerDead = reader.readBoolean()
         val npcDead = reader.readBoolean()
-        reader.readBoolean()  // autoWalk（固定 false，略過）
+        reader.readBoolean()  // autoWalk (cố định false, bỏ qua)
         val autoExp = reader.readBoolean()
         val autoShotput = reader.readBoolean()
 
@@ -80,24 +80,24 @@ class MacroBoxHandler(
 
         macroBoxSystem.activate(charId, settings)
         responseSender.sendMacroBoxStart(session)
-        logger.debug { "${session.characterName} 啟動機關盒 hp%=$playerHp sp%=$playerSp" }
+        logger.debug { "${session.characterName} khởi động Hộp Cơ Quan hp%=$playerHp sp%=$playerSp" }
     }
 
     /**
-     * C:065-002 暫停機關盒
+     * C:065-002 tạm dừng hộp cơ quan
      */
     private suspend fun handlePause(session: GameSession) {
         val charId = session.roleId.toLong()
         if (!macroBoxSystem.isActive(charId)) return
         macroBoxSystem.deactivate(charId)
         responseSender.sendMacroBoxPause(session)
-        logger.debug { "${session.characterName} 暫停機關盒" }
+        logger.debug { "${session.characterName} tạm dừng Hộp Cơ Quan" }
     }
 
     /**
-     * C:065-003 確認時數
+     * C:065-003 xác nhận số giờ
      *
-     * 私服不計費，直接回應啟動成功。
+     * server riêng không tính phí, trả lời khởi động thành công ngay.
      */
     private suspend fun handleConfirmHours(session: GameSession) {
         val charId = session.roleId.toLong()
@@ -107,9 +107,9 @@ class MacroBoxHandler(
     }
 
     /**
-     * C:065-004 移除晶石
+     * C:065-004 xóa tinh thạch
      *
-     * 格式：sparId(2B LE) + bagSlot(1B)
+     * Định dạng: sparId(2B LE) + bagSlot(1B)
      */
     private suspend fun handleRemoveSpar(session: GameSession, data: ByteArray) {
         if (data.size < 3) return
@@ -120,7 +120,7 @@ class MacroBoxHandler(
         val charId = session.roleId.toLong()
         if (macroBoxSystem.removeSpar(charId, sparId, bagSlot)) {
             responseSender.sendMacroBoxSparRemoveMsg(session)
-            // 重新下發晶石資料
+            // gửi xuống lại dữ liệu tinh thạch
             val state = macroBoxSystem.getState(charId)
             if (state != null) {
                 responseSender.sendMacroBoxSparData(session, state.sparSlots)
@@ -129,9 +129,9 @@ class MacroBoxHandler(
     }
 
     /**
-     * C:065-005 飛回紀錄點
+     * C:065-005 bay về điểm ghi
      *
-     * 暫停機關盒 → 查詢記錄點 → 傳送到記錄點位置
+     * tạm dừng hộp cơ quan → tra điểm ghi → dịch chuyển đến vị trí điểm ghi
      */
     private suspend fun handleReturnTown(session: GameSession) {
         val charId = session.roleId.toLong()
@@ -140,7 +140,7 @@ class MacroBoxHandler(
 
         val record = characterRepository.getRecordPoint(charId)
         if (record == null) {
-            logger.warn { "${session.characterName} 飛回紀錄點失敗：無記錄點資料" }
+            logger.warn { "${session.characterName} bay về điểm kiểm tra thất bại: không có dữ liệu điểm kiểm tra" }
             return
         }
 
@@ -151,13 +151,13 @@ class MacroBoxHandler(
         responseSender.sendPlayerTeleport(session, session.playerId, mapId, x, y)
         responseSender.sendSceneChange(session, session.playerId, mapId, x, y, session.equipItemIds, session.titleId)
 
-        logger.info { "${session.characterName} 飛回紀錄點：map=$mapId ($x,$y)" }
+        logger.info { "${session.characterName} bay về điểm kiểm tra: map=$mapId ($x,$y)" }
     }
 
     /**
-     * C:065-006 移除經驗瓶
+     * C:065-006 xóa bình EXP
      *
-     * 格式：index(1B)
+     * Định dạng: index(1B)
      */
     private suspend fun handleRemoveExpBottle(session: GameSession, data: ByteArray) {
         if (data.isEmpty()) return
@@ -166,7 +166,7 @@ class MacroBoxHandler(
 
         val charId = session.roleId.toLong()
         if (macroBoxSystem.removeExpBottle(charId, index)) {
-            // 重新下發經驗瓶資料
+            // gửi xuống lại dữ liệu bình EXP
             val state = macroBoxSystem.getState(charId)
             if (state != null) {
                 responseSender.sendMacroBoxExpBottleData(session, state.expPriority, state.expBottles)
@@ -175,9 +175,9 @@ class MacroBoxHandler(
     }
 
     /**
-     * C:065-007 設定經驗瓶順序
+     * C:065-007 đặt thứ tự bình EXP
      *
-     * 格式：index(1B)
+     * Định dạng: index(1B)
      */
     private suspend fun handleSetExpPriority(session: GameSession, data: ByteArray) {
         if (data.isEmpty()) return

@@ -1,58 +1,58 @@
 package tw.tsm.domain.data
 
 /**
- * 技能定義 — 對應 `SkillData.New(reader)`
+ * Định nghĩa kỹ năng — tương ứng `SkillData.New(reader)`
  *
- * 來源：`Skill_C.dat`
- * 欄位順序嚴格對照 SkillData.lua 第 4-63 行。
+ * Nguồn: `Skill_C.dat`
+ * Thứ tự trường đối chiếu nghiêm ngặt với dòng 4-63 của SkillData.lua.
  */
 data class SkillDef(
-    /** 技能名稱（UTF-16LE） */
+    /** Tên kỹ năng (UTF-16LE)*/
     val name: String,
-    /** 種類 */
+    /** chủng loại*/
     val kind: Int,
-    /** 消耗 SP */
+    /** tiêu hao SP*/
     val requireSp: Int,
-    /** 元素（1=地, 2=水, 3=火, 4=風） */
+    /** nguyên tố (1=đất, 2=nước, 3=lửa, 4=gió)*/
     val element: Int,
-    /** 數值（影響屬性） */
+    /** chỉ số (ảnh hưởng thuộc tính)*/
     val numerical: Long,
-    /** 屬性種類 */
+    /** loại thuộc tính*/
     val attribute: Int,
-    /** 等級 */
+    /** Cấp*/
     val level: Int,
-    /** 打法（0=單體無位移, 1=打多位, 2=有位移） */
+    /** cách đánh (0=đơn mục tiêu không dịch chuyển, 1=đánh nhiều mục tiêu, 2=có dịch chuyển)*/
     val fightWay: Int,
-    /** 範圍（1=一人, 2=同列二人, 3=行三人, 4=跳三人, 5=十字五人, 6=六人, 7=同行五人, 8=全體） */
+    /** phạm vi (1=một người, 2=hai người cùng cột, 3=ba người cùng hàng, 4=ba người kiểu nhảy, 5=năm người hình chữ thập, 6=sáu người, 7=năm người cùng hàng, 8=toàn thể)*/
     val fightArea: Int,
-    /** 回合（0=none, 1-3=定住回合, 4=持續三回合） */
+    /** hiệp (0=none, 1-3=số hiệp bị định thân, 4=duy trì ba hiệp)*/
     val round: Int,
-    /** 秒數 */
+    /** số giây*/
     val spendSecond: Int,
-    /** 狀態（0=正常, 1=冰封, 2=旋風, 3=樹精） */
+    /** trạng thái (0=bình thường, 1=đóng băng, 2=lốc xoáy, 3=yêu cây)*/
     val hitStatus: Int,
-    /** 攻擊分幾下 */
+    /** tấn công chia mấy đòn*/
     val howMuchTimes: Int,
-    /** 限制等級（含以上才可學會） */
+    /** giới hạn cấp độ (từ cấp này trở lên mới học được)*/
     val limitLv: Int,
-    /** 初學所需點數 */
+    /** số điểm cần để học lần đầu*/
     val learnPoint: Int,
-    /** 每級所需點數 */
+    /** số điểm cần cho mỗi cấp*/
     val levelUpPoint: Int,
-    /** 最高等級 */
+    /** cấp độ tối đa*/
     val maxLv: Int,
-    /** 前置技能 ID 列表 */
+    /** danh sách ID kỹ năng tiền đề*/
     val preSkills: List<Int>,
-    /** 攻擊種類 */
+    /** loại tấn công*/
     val atkKind: Int,
-    /** 轉生類型（0=未轉生, 1=已轉生） */
+    /** loại chuyển sinh (0=chưa chuyển sinh, 1=đã chuyển sinh)*/
     val turnKind: Int,
-    /** 學習限制 */
+    /** giới hạn học*/
     val learnLimit: Int,
-    /** 使用限制 */
+    /** giới hạn sử dụng*/
     val useLimit: Int,
-    /** 打法成長類型 */
+    /** loại tăng trưởng của cách đánh*/
     val fightWayGrowType: Int,
-    /** 技能說明（UTF-16LE） */
+    /** mô tả kỹ năng (UTF-16LE)*/
     val description: String
 )

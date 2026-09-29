@@ -1,40 +1,40 @@
 package tw.tsm.domain.constants
 
 /**
- * 角色種類常數 — 對應 `define.lua` EHuman
+ * hằng số loại nhân vật — tương ứng EHuman trong `define.lua`
  *
- * 用於 S:011-005 / S:011-250 戰鬥角色資料的 kind 欄位。
- * 數值必須與 Lua 客戶端 RoleController.lua 完全一致。
+ * dùng cho trường kind trong dữ liệu nhân vật chiến đấu của S:011-005 / S:011-250.
+ * giá trị phải khớp hoàn toàn với RoleController.lua của client Lua.
  */
 object EHuman {
-    const val NONE = 0                // 無
-    const val PLAYER = 1              // 主角玩家
-    const val PLAYERS = 2             // 其他玩家
-    const val MAP_NPC = 3             // 大地圖 NPC（不用於戰鬥）
-    const val FOLLOW_NPC = 4          // 跟隨 NPC / 武將（戰鬥中顯示名字）
-    const val SCENE_ELM = 5           // 場景元件
-    const val GUARD_NPC = 6           // 駐紮 NPC
-    const val MINE_NPC = 7            // 地雷 NPC
-    const val OWNER_NPC = 8           // 擁有的 NPC
-    const val DIVIDE = 9              // 分身
-    const val SOLDIER = 11            // 兵
-    const val MACHINE = 12            // 械
-    const val CTRL_MACH = 13          // 控制器械
-    const val AUTO_FOLLOW = 14        // 自動跟隨
-    const val CTRL_SOLD = 15          // 控制兵
-    const val FOREIGN_NPC = 16        // 外來 NPC
-    const val CART_NPC = 17           // 馬車 NPC
-    const val CHAOS_GOD = 18          // 亂鬥天神
-    const val PET_NPC = 19            // 小寵物
-    const val QUESTION = 20           // 戰鬥問答
-    const val WORLD_BOSS = 21         // 世界 Boss
-    const val AUTOMANUAL_PLAYER = 28  // 半自動對戰玩家
-    const val AUTOMANUAL_NPC = 29     // 半自動對戰 NPC
-    const val HOUSE_WARRIOR = 30      // 小屋武將
-    const val BATTLE_ROYALE_NPC = 31  // 大逃殺 NPC
-    const val DUPLICATE = 255         // 複製角色（戰鬥渲染用）
+    const val NONE = 0                // không
+    const val PLAYER = 1              // người chơi là nhân vật chính
+    const val PLAYERS = 2             // người chơi khác
+    const val MAP_NPC = 3             // NPC bản đồ lớn (không dùng trong chiến đấu)
+    const val FOLLOW_NPC = 4          // NPC / tướng đi theo (hiển thị tên trong chiến đấu)
+    const val SCENE_ELM = 5           // phần tử cảnh
+    const val GUARD_NPC = 6           // NPC đóng trại
+    const val MINE_NPC = 7            // NPC mìn
+    const val OWNER_NPC = 8           // NPC thuộc quyền sở hữu
+    const val DIVIDE = 9              // phân thân
+    const val SOLDIER = 11            // lính
+    const val MACHINE = 12            // máy móc
+    const val CTRL_MACH = 13          // điều khiển máy móc
+    const val AUTO_FOLLOW = 14        // tự động đi theo
+    const val CTRL_SOLD = 15          // điều khiển lính
+    const val FOREIGN_NPC = 16        // NPC ngoại lai
+    const val CART_NPC = 17           // NPC xe ngựa
+    const val CHAOS_GOD = 18          // thần loạn đả
+    const val PET_NPC = 19            // thú cưng nhỏ
+    const val QUESTION = 20           // Hỏi đáp chiến đấu
+    const val WORLD_BOSS = 21         // World Boss
+    const val AUTOMANUAL_PLAYER = 28  // người chơi đấu bán tự động
+    const val AUTOMANUAL_NPC = 29     // NPC đấu bán tự động
+    const val HOUSE_WARRIOR = 30      // tướng trong nhà nhỏ
+    const val BATTLE_ROYALE_NPC = 31  // NPC sinh tồn (battle royale)
+    const val DUPLICATE = 255         // nhân vật sao chép (dùng để render trong chiến đấu)
 
-    /** @deprecated 改用 MAP_NPC */
-    @Deprecated("改用 MAP_NPC", replaceWith = ReplaceWith("MAP_NPC"))
+    /** @deprecated chuyển sang dùng MAP_NPC*/
+    @Deprecated("Dùng MAP_NPC thay thế", replaceWith = ReplaceWith("MAP_NPC"))
     const val NPC = MAP_NPC
 }

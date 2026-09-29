@@ -7,14 +7,14 @@ import tw.tsm.domain.valueobjects.EquipBonusData
 import tw.tsm.protocol.PacketWriter
 
 /**
- * 戰鬥/屬性/技能/PK 相關封包序列化
+ * tuần tự hoá gói tin liên quan chiến đấu/thuộc tính/kỹ năng/PK
  *
- * mainKind = 8（屬性/技能）, 11（戰鬥管理）, 33（PK 設定）, 50（技能結果）,
- *            51（屬性變化）, 52（倒數）, 53（狀態回復/掉寶）
+ * mainKind = 8 (thuộc tính/kỹ năng), 11 (quản lý chiến đấu), 33 (cài đặt PK), 50 (kết quả kỹ năng),
+ *            51 (thay đổi thuộc tính), 52 (đếm ngược), 53 (hồi phục trạng thái/rơi đồ)
  */
 class BattleResponseSender {
 
-    // ── 屬性修改 (mainKind=8) ──
+    // ── Sửa thuộc tính (mainKind=8) ──
 
     /** S:008-002: absolute attribute value for the owner's follow pet. */
     fun sendFollowNpcAttribute(session: SessionSender, slot: Int, attrKind: Int, value: Int, arg: Int) {
@@ -25,8 +25,8 @@ class BattleResponseSender {
     }
 
     /**
-     * S:008-001 主角屬性修改
-     * 格式：+attrKind(1) +sign(1) +value(4LE) +arg(4LE)
+     * S:008-001 sửa thuộc tính nhân vật chính
+     * Định dạng: +attrKind(1) +sign(1) +value(4LE) +arg(4LE)
      */
     fun sendSetAttribute(session: SessionSender, attrKind: Int, value: Int, isPositive: Boolean, arg: Int) {
         val writer = PacketWriter(14)
@@ -39,10 +39,10 @@ class BattleResponseSender {
     }
 
     /**
-     * 發送裝備加成更新（8 筆 S:008-001 + MaxHP/HP/MaxSP/SP）
+     * Gửi cập nhật chỉ số cộng thêm của trang bị (8 gói S:008-001 + MaxHP/HP/MaxSP/SP)
      *
-     * 參考 tskero `TSCharacter.refreshBonus()` — 穿脫裝備後逐筆發送裝備屬性值，
-     * 客戶端收到 EquipMaxHp(207)/EquipHpx(218) 時會自動重算 MaxHP。
+     * tham khảo tskero `TSCharacter.refreshBonus()` — sau khi mặc/tháo trang bị gửi từng giá trị thuộc tính trang bị,
+     * client nhận được EquipMaxHp(207)/EquipHpx(218) sẽ tự tính lại MaxHP.
      */
     fun sendEquipBonusUpdate(
         session: SessionSender,
@@ -52,7 +52,7 @@ class BattleResponseSender {
         hp: Long,
         sp: Int
     ) {
-        // 8 筆裝備屬性（客戶端自動觸發 RefreshMaxHP/RefreshMaxSP）
+        // 8 thuộc tính trang bị (client tự kích hoạt RefreshMaxHP/RefreshMaxSP)
         sendSetAttribute(session, EAttribute.EQUIP_MAX_HP, bonus.equipMaxHp, true, 0)
         sendSetAttribute(session, EAttribute.EQUIP_MAX_SP, bonus.equipMaxSp, true, 0)
         sendSetAttribute(session, EAttribute.EQUIP_ATK, bonus.equipAtk, true, 0)
@@ -62,7 +62,7 @@ class BattleResponseSender {
         sendSetAttribute(session, EAttribute.EQUIP_HPX, bonus.equipHpx, true, 0)
         sendSetAttribute(session, EAttribute.EQUIP_SPX, bonus.equipSpx, true, 0)
 
-        // 補發 HP/SP 絕對值，確保與伺服器同步（參考 tskero refreshBonus 最後也發 HP/SP）
+        // gửi bổ sung giá trị tuyệt đối HP/SP, đảm bảo đồng bộ với server (tham khảo tskero refreshBonus cuối cùng cũng gửi HP/SP)
         sendSetAttribute(session, EAttribute.MAX_HP, maxHp.toInt(), true, 0)
         sendSetAttribute(session, EAttribute.HP, hp.toInt(), true, 0)
         sendSetAttribute(session, EAttribute.MAX_SP, maxSp, true, 0)
@@ -70,9 +70,9 @@ class BattleResponseSender {
     }
 
     /**
-     * S:008-013 主角技能資料
+     * S:008-013 dữ liệu kỹ năng nhân vật chính
      *
-     * 格式：+element(1) +skillPoint(2LE) +skillCount(2LE) <<+skillId(2LE) +level(1)>>
+     * Định dạng: +element(1) +skillPoint(2LE) +skillCount(2LE) <<+skillId(2LE) +level(1)>>
      */
     fun sendPlayerSkillData(session: SessionSender, element: Int, skillPoint: Int, skills: Map<Int, Int>) {
         val writer = PacketWriter(3 + 1 + 2 + 2 + skills.size * 3)
@@ -87,7 +87,7 @@ class BattleResponseSender {
         session.send(writer.toByteArray())
     }
 
-    /** S:008-012 設定三轉光暗元素結果。 */
+    /** S:008-012 kết quả thiết lập nguyên tố sáng/tối chuyển sinh 3.*/
     fun sendTurn3ElementResult(session: SessionSender, result: Int) {
         session.send(
             PacketWriter()
@@ -97,7 +97,7 @@ class BattleResponseSender {
         )
     }
 
-    /** S:023-077 天珠資訊。 */
+    /** S:023-077 thông tin Thiên Chu.*/
     fun sendTurn2Balls(session: SessionSender, available: Int, active: Set<Int>) {
         val writer = PacketWriter(4 + active.size)
             .writeByte(23).writeByte(77).writeByte(0)
@@ -106,7 +106,7 @@ class BattleResponseSender {
         session.send(writer.toByteArray())
     }
 
-    /** S:023-078 二轉技能槽；wire index 1..8，client 讀取後 +5。 */
+    /** S:023-078 ô kỹ năng nhị chuyển; wire index 1..8, client đọc xong +5.*/
     fun sendTurn2HeroSkills(session: SessionSender, heroSkills: Map<Int, Int>) {
         val valid = heroSkills.filterKeys { it in 6..13 }.toSortedMap()
         val writer = PacketWriter(3 + valid.size * 3)
@@ -118,12 +118,12 @@ class BattleResponseSender {
         session.send(writer.toByteArray())
     }
 
-    // ── 戰鬥管理 (mainKind=11) ──
+    // ── Quản lý chiến đấu (mainKind=11) ──
 
     /**
-     * S:011-250 戰鬥初始化
+     * S:011-250 khởi tạo chiến đấu
      *
-     * 格式：+terrain(1) +eventNo(2LE) +<<RoleAppear 資料>>
+     * Định dạng: +terrain(1) +eventNo(2LE) +<<dữ liệu RoleAppear>>
      */
     fun sendBattleInit(session: SessionSender, terrain: Int, eventNo: Int, roleData: ByteArray) {
         val writer = PacketWriter(6 + roleData.size)
@@ -133,7 +133,7 @@ class BattleResponseSender {
         session.send(writer.toByteArray() + roleData)
     }
 
-    /** S:011-000 結束戰鬥 */
+    /** S:011-000 kết thúc chiến đấu*/
     fun sendBattleEnd(session: SessionSender, playerId: Long, npcIndex: Int) {
         val writer = PacketWriter(13)
             .writeByte(Opcodes.BATTLE_MANAGE).writeByte(0).writeByte(0)
@@ -142,7 +142,7 @@ class BattleResponseSender {
         session.send(writer.toByteArray())
     }
 
-    /** S:011-001 角色離開戰鬥 */
+    /** S:011-001 nhân vật rời chiến đấu*/
     fun sendBattleExitFight(session: SessionSender, col: Int, row: Int) {
         val writer = PacketWriter(5)
             .writeByte(Opcodes.BATTLE_MANAGE).writeByte(1).writeByte(0)
@@ -151,7 +151,7 @@ class BattleResponseSender {
         session.send(writer.toByteArray())
     }
 
-    /** S:011-003 戰鬥錯誤訊息 */
+    /** S:011-003 thông báo lỗi chiến đấu*/
     fun sendBattleError(session: SessionSender, errorKind: Int) {
         val writer = PacketWriter(4)
             .writeByte(Opcodes.BATTLE_MANAGE).writeByte(3).writeByte(0)
@@ -160,9 +160,9 @@ class BattleResponseSender {
     }
 
     /**
-     * S:011-004 場景玩家戰鬥類型更新
+     * S:011-004 Cập nhật loại chiến đấu của người chơi trong cảnh
      *
-     * 格式：<<+角色種類(1) +玩家ID(8 LE) +NPCID(2 LE) +戰鬥類型(1)>>
+     * Định dạng: <<+loại nhân vật(1) +ID người chơi(8 LE) +NPCID(2 LE) +loại chiến đấu(1)>>
      */
     fun sendSceneWarTypeUpdate(session: SessionSender, entries: ByteArray) {
         val writer = PacketWriter(3)
@@ -171,9 +171,9 @@ class BattleResponseSender {
     }
 
     /**
-     * S:011-005 參戰角色資訊（戰場舊玩家收到新參戰角色）
+     * S:011-005 Thông tin nhân vật tham chiến (người chơi cũ trong chiến trường nhận nhân vật tham chiến mới)
      *
-     * 格式：<<+戰鬥角色資料(?)>> — 同 BattleRoleData 格式
+     * Định dạng: <<+dữ liệu nhân vật chiến đấu(?)>> — cùng định dạng BattleRoleData
      */
     fun sendBattleJoinRoleAppear(session: SessionSender, roleData: ByteArray) {
         val writer = PacketWriter(3)
@@ -181,7 +181,7 @@ class BattleResponseSender {
         session.send(writer.toByteArray() + roleData)
     }
 
-    /** S:011-010 戰場類型 */
+    /** S:011-010 loại chiến trường*/
     fun sendBattleFieldType(session: SessionSender, warStyle: Int, rounds: Int, limitType: Int, limitSwitch: Int) {
         val writer = PacketWriter(11)
             .writeByte(Opcodes.BATTLE_MANAGE).writeByte(10).writeByte(0)
@@ -192,16 +192,16 @@ class BattleResponseSender {
         session.send(writer.toByteArray())
     }
 
-    // ── 技能結果 (mainKind=50) ──
+    // ── Kết quả kỹ năng (mainKind=50) ──
 
-    /** S:050-001 技能攻擊結果 */
+    /** S:050-001 kết quả kỹ năng tấn công*/
     fun sendBattleSkillResult(session: SessionSender, data: ByteArray) {
         val writer = PacketWriter(3)
             .writeByte(50).writeByte(1).writeByte(0)
         session.send(writer.toByteArray() + data)
     }
 
-    /** S:050-002 戰鬥使用物品結果 */
+    /** S:050-002 kết quả dùng vật phẩm trong chiến đấu*/
     fun sendBattleUseItem(session: SessionSender, col: Int, row: Int, itemId: Int, count: Int, tgtCol: Int, tgtRow: Int) {
         val writer = PacketWriter(10)
             .writeByte(50).writeByte(2).writeByte(0)
@@ -214,34 +214,34 @@ class BattleResponseSender {
         session.send(writer.toByteArray())
     }
 
-    // ── 屬性變化 (mainKind=51) ──
+    // ── Thay đổi thuộc tính (mainKind=51) ──
 
-    /** S:051-001 戰鬥中即時屬性修改 */
+    /** S:051-001 sửa thuộc tính tức thời trong chiến đấu*/
     fun sendBattleAttrChange(session: SessionSender, data: ByteArray) {
         val writer = PacketWriter(3)
             .writeByte(51).writeByte(1).writeByte(0)
         session.send(writer.toByteArray() + data)
     }
 
-    // ── 倒數 (mainKind=52) ──
+    // ── Đếm ngược (mainKind=52) ──
 
-    /** S:052-001 戰鬥開始倒數 */
+    /** S:052-001 đếm ngược bắt đầu chiến đấu*/
     fun sendBattleCountdown(session: SessionSender) {
         val writer = PacketWriter(3)
             .writeByte(52).writeByte(1).writeByte(0)
         session.send(writer.toByteArray())
     }
 
-    // ── 狀態回復/掉寶 (mainKind=53) ──
+    // ── Hồi phục trạng thái/rơi đồ (mainKind=53) ──
 
-    /** S:053-001 戰鬥狀態回復 */
+    /** S:053-001 hồi phục trạng thái chiến đấu*/
     fun sendBattleRestoreStatus(session: SessionSender, data: ByteArray) {
         val writer = PacketWriter(3)
             .writeByte(53).writeByte(1).writeByte(0)
         session.send(writer.toByteArray() + data)
     }
 
-    /** S:053-003 戰鬥打飛 */
+    /** S:053-003 đánh bay trong chiến đấu*/
     fun sendBattleFlyOut(session: SessionSender, col: Int, row: Int) {
         val writer = PacketWriter(5)
             .writeByte(53).writeByte(3).writeByte(0)
@@ -251,9 +251,9 @@ class BattleResponseSender {
     }
 
     /**
-     * S:053-004 戰鬥掉寶
+     * S:053-004 rơi đồ trong chiến đấu
      *
-     * 格式：+物品ID(2) +掉寶列(1) +掉寶行(1) +得寶列(1) +得寶行(1)
+     * Định dạng: +ID vật phẩm(2) +cột rơi đồ(1) +hàng rơi đồ(1) +cột nhận đồ(1) +hàng nhận đồ(1)
      */
     fun sendBattleDrop(session: SessionSender, itemId: Int, fromCol: Int, fromRow: Int, toCol: Int, toRow: Int) {
         val writer = PacketWriter(9)
@@ -266,9 +266,9 @@ class BattleResponseSender {
         session.send(writer.toByteArray())
     }
 
-    // ── PK 設定 (mainKind=33) ──
+    // ── Thiết lập PK (mainKind=33) ──
 
-    /** S:033-001 要求 PK 回應 */
+    /** S:033-001 yêu cầu phản hồi PK*/
     fun sendPkResult(session: SessionSender, resultCode: Int) {
         val writer = PacketWriter(4)
             .writeByte(Opcodes.PK_SETTING).writeByte(1).writeByte(0)
@@ -276,7 +276,7 @@ class BattleResponseSender {
         session.send(writer.toByteArray())
     }
 
-    /** S:033-002 設定 PVP 開關 */
+    /** S:033-002 thiết lập công tắc PVP*/
     fun sendPkSwitch(session: SessionSender, pkEnabled: Boolean, joinEnabled: Boolean) {
         val writer = PacketWriter(5)
             .writeByte(Opcodes.PK_SETTING).writeByte(2).writeByte(0)
@@ -285,7 +285,7 @@ class BattleResponseSender {
         session.send(writer.toByteArray())
     }
 
-    /** S:023-069 玩家轉職/轉生外觀同步。 */
+    /** S:023-069 đồng bộ ngoại hình đổi nghề/chuyển sinh của người chơi.*/
     fun sendPlayerCareerChange(
         session: SessionSender,
         playerId: Long,

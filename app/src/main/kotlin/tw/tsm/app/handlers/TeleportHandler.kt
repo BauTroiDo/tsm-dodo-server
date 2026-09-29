@@ -17,16 +17,16 @@ import tw.tsm.protocol.PacketWriter
 
 private val logger = KotlinLogging.logger {}
 
-/** 禁止天行異能的地圖（對應客戶端 SceneManager.sceneId == 10701） */
+/** Bản đồ cấm Thiên Hành Dị Năng (tương ứng SceneManager.sceneId == 10701 của client)*/
 private const val FORBIDDEN_TELEPORT_MAP = 10701
 
 /**
- * 天行異能 Handler（mainKind=68）
+ * Handler Thiên Hành Dị Năng (mainKind=68)
  *
- * 來源：protocal.lua protocolTable[68]、UITeleport.lua
+ * Nguồn: protocal.lua protocolTable[68], UITeleport.lua
  *
- * C:068-001 晶石天行異能 — 使用晶石傳送到已解鎖的傳送點
- * C:068-002 卷軸天行異能 — 使用卷軸傳送（客戶端僅 stub）
+ * C:068-001 Thiên Hành Dị Năng bằng tinh thạch — dùng tinh thạch dịch chuyển tới điểm dịch chuyển đã mở khoá
+ * C:068-002 Thiên Hành Dị Năng bằng cuộn — dùng cuộn để dịch chuyển (client chỉ là stub)
  */
 class TeleportHandler(
     private val responseSender: ResponseSender,
@@ -46,15 +46,15 @@ class TeleportHandler(
         when (subKind) {
             1 -> handleCrystalWarp(session, data)
             2 -> handleScrollWarp(session, data)
-            else -> logger.warn { "未處理的天行異能子協定：subKind=$subKind" }
+            else -> logger.warn { "Sub-protocol Thiên Hành Dị Năng chưa xử lý: subKind=$subKind" }
         }
     }
 
     /**
-     * C:068-001 晶石天行異能
+     * C:068-001 Thiên Hành Dị Năng bằng tinh thạch
      *
-     * 格式：場景ID(2B LE) + NO(1B)
-     * NO = warpDefs 的 0-based 索引
+     * Định dạng: ID cảnh(2B LE) + NO(1B)
+     * NO = chỉ số 0-based trong warpDefs
      */
     private suspend fun handleCrystalWarp(session: GameSession, data: ByteArray) {
         if (data.size < 3) return
@@ -62,46 +62,46 @@ class TeleportHandler(
         val sceneId = reader.readUShortLE()
         val no = reader.readUByte()
 
-        // 基本狀態驗證
+        // Kiểm tra hợp lệ trạng thái cơ bản
         if (!validateTeleport(session)) {
             sendWarpResult(session, 1, 1)
             return
         }
 
-        // 查找傳送點
+        // Tìm điểm dịch chuyển
         val warpDef = warpDefs[no]
         if (warpDef == null) {
-            logger.warn { "${session.characterName} 天行異能失敗：傳送點不存在 no=$no" }
+            logger.warn { "${session.characterName} Thiên Hành Dị Năng thất bại: điểm dịch chuyển không tồn tại no=$no" }
             sendWarpResult(session, 1, 1)
             return
         }
 
-        // 校驗場景 ID 一致性
+        // Kiểm tra tính nhất quán của ID cảnh
         if (warpDef.scene != sceneId) {
-            logger.warn { "${session.characterName} 天行異能失敗：場景ID不一致 client=$sceneId server=${warpDef.scene}" }
+            logger.warn { "${session.characterName} Thiên Hành Dị Năng thất bại: sceneID không khớp client=$sceneId server=${warpDef.scene}" }
             sendWarpResult(session, 1, 1)
             return
         }
 
-        // 驗證標記解鎖
+        // Kiểm tra mốc đã mở khoá
         val charId = session.roleId.toLong()
         if (!validateWarpMark(charId, warpDef)) {
-            logger.warn { "${session.characterName} 天行異能失敗：標記未解鎖 mark=${warpDef.mark}" }
+            logger.warn { "${session.characterName} Thiên Hành Dị Năng thất bại: mốc chưa mở khóa mark=${warpDef.mark}" }
             sendWarpResult(session, 1, 1)
             return
         }
 
-        // 執行傳送
+        // Thực hiện dịch chuyển
         executeTeleport(session, warpDef)
         sendWarpResult(session, 1, 0)
-        logger.info { "${session.characterName} 天行異能傳送：no=$no → scene=${warpDef.scene} (${warpDef.x},${warpDef.y})" }
+        logger.info { "${session.characterName} Thiên Hành Dị Năng dịch chuyển: no=$no → scene=${warpDef.scene} (${warpDef.x},${warpDef.y})" }
     }
 
     /**
-     * C:068-002 卷軸天行異能
+     * C:068-002 Thiên Hành Dị Năng bằng cuộn
      *
-     * 格式：場景ID(2B LE) + NO(1B) + 背包索引(1B)
-     * 客戶端目前僅 logError（stub），先留骨架。
+     * Định dạng: ID cảnh(2B LE) + NO(1B) + chỉ số túi đồ(1B)
+     * Client hiện chỉ logError (stub), trước mắt giữ lại khung code.
      */
     private suspend fun handleScrollWarp(session: GameSession, data: ByteArray) {
         if (data.size < 4) return
@@ -110,18 +110,18 @@ class TeleportHandler(
         val no = reader.readUByte()
         val bagIndex = reader.readUByte()
 
-        logger.debug { "${session.characterName} 卷軸天行異能（未實作）：scene=$sceneId no=$no bag=$bagIndex" }
-        // TODO：客戶端未使用，待後續實作卷軸消耗邏輯
+        logger.debug { "${session.characterName} Thiên Hành Dị Năng bằng cuộn (chưa triển khai): scene=$sceneId no=$no bag=$bagIndex" }
+        // TODO: client chưa dùng, chờ cài đặt logic tiêu hao cuộn sau
         sendWarpResult(session, 2, 1)
     }
 
     /**
-     * 驗證是否允許傳送
+     * Kiểm tra xem có được phép dịch chuyển không
      *
-     * 對應客戶端 UITeleport.CheckTeleport()：
-     * - 不能在戰鬥中
-     * - 地圖 10701 禁止
-     * - 不能組隊
+     * Tương ứng với UITeleport.CheckTeleport() của client:
+     * - Không được đang trong chiến đấu
+     * - Cấm ở bản đồ 10701
+     * - Không được ở trong tổ đội
      */
     private fun validateTeleport(session: GameSession): Boolean {
         if (session.battleId != 0L) return false
@@ -131,9 +131,9 @@ class TeleportHandler(
     }
 
     /**
-     * 驗證傳送點標記是否已解鎖
+     * Kiểm tra mốc của điểm dịch chuyển đã mở khoá hay chưa
      *
-     * 對應客戶端 UITeleport.SetupSkyPointData()：
+     * Tương ứng với UITeleport.SetupSkyPointData() của client:
      * `if warpDatas[i].mark ~= 0 and CheckFlag(MarkManager.flags, markDatas[warpDatas[i].mark].bitId)`
      */
     private suspend fun validateWarpMark(charId: Long, warpDef: WarpDef): Boolean {
@@ -145,7 +145,7 @@ class TeleportHandler(
     }
 
     /**
-     * 執行傳送（沿用 MacroBoxHandler.handleReturnTown 模式）
+     * Thực hiện dịch chuyển (theo mô hình MacroBoxHandler.handleReturnTown)
      */
     private suspend fun executeTeleport(session: GameSession, warpDef: WarpDef) {
         val charId = session.roleId.toLong()
@@ -159,9 +159,9 @@ class TeleportHandler(
     }
 
     /**
-     * 發送天行異能結果
+     * Gửi kết quả Thiên Hành Dị Năng
      *
-     * S:068-001/002 格式：result(1B)，0=成功
+     * S:068-001/002 định dạng: result(1B), 0=thành công
      */
     private fun sendWarpResult(session: GameSession, subKind: Int, result: Int) {
         val writer = PacketWriter(4)

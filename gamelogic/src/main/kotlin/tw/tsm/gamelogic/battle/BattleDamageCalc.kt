@@ -14,28 +14,28 @@ import kotlin.random.Random
 private val logger = KotlinLogging.logger {}
 
 /**
- * 戰鬥傷害計算器 — 對照 tskeropc `BattleAbstract.cs` CalcDmg + execute()
+ * Máy tính sát thương chiến đấu — đối chiếu `BattleAbstract.cs` của tskeropc, CalcDmg + execute()
  *
- * 負責：命中判定、基礎傷害計算、防禦減傷、乘算修正、暴擊判定、狀態異常施加。
+ * Chịu trách nhiệm: phán đoán trúng, tính sát thương cơ bản, giảm sát thương phòng thủ, hiệu chỉnh nhân, phán đoán chí mạng, gây trạng thái bất thường.
  *
- * 傷害管道：
- * 1. CalcDmg（攻擊者端）→ 基礎傷害（含等級加成）
- * 2. execute（目標端）→ 減去目標等級+防禦
- * 3. 乘算修正 → 元素/轉生/亂數/暴擊/PvP/冰封/防禦
+ * Pipeline sát thương:
+ * 1. CalcDmg (phía người tấn công) → sát thương cơ bản (bao gồm cộng cấp độ)
+ * 2. execute (phía mục tiêu) → trừ đi cấp độ + phòng thủ của mục tiêu
+ * 3. Hiệu chỉnh nhân → nguyên tố/chuyển sinh/ngẫu nhiên/chí mạng/PvP/đóng băng/phòng thủ
  */
 object BattleDamageCalc {
 
-    /** 基礎傷害上限（KERO: if (dmgbase > 50000) dmgbase = 50000） */
+    /** Giới hạn trên sát thương cơ bản (KERO: if (dmgbase > 50000) dmgbase = 50000)*/
     private const val MAX_BASE_DAMAGE = 50000
 
     /**
-     * 計算單次攻擊結果
+     * Tính kết quả một lần tấn công
      *
-     * @param attacker 攻擊者
-     * @param target 目標
-     * @param skill 使用的技能（null=普攻）
-     * @param terrain 地質（目前未使用，預留）
-     * @return 攻擊結果
+     * @param attacker người tấn công
+     * @param target mục tiêu
+     * @param skill kỹ năng sử dụng (null=đánh thường)
+     * @param terrain địa chất (hiện chưa dùng, dự phòng)
+     * @return kết quả tấn công
      */
     fun calculateAttack(
         attacker: BattleFighter,
@@ -44,7 +44,7 @@ object BattleDamageCalc {
         terrain: Int = 0,
         skillId: Int = 0
     ): AttackCalcResult {
-        // 命中判定
+        // Phán đoán trúng
         val hitRate = calculateHitRate(attacker.agi, target.agi)
         if (Random.nextInt(100) >= hitRate) {
             return AttackCalcResult(
@@ -55,13 +55,13 @@ object BattleDamageCalc {
             )
         }
 
-        // Phase 1: 基礎傷害（CalcDmg 等價物）
+        // Phase 1: sát thương cơ bản (tương đương CalcDmg)
         val baseDamage = calculateBaseDamage(attacker, skill)
 
-        // Phase 2: 防禦減傷（KERO execute: dmg - dest.getLvl() - dest.getDef()）
+        // Phase 2: giảm sát thương phòng thủ (KERO execute: dmg - dest.getLvl() - dest.getDef())
         val reducedDmg = (baseDamage - target.level - target.def).toDouble()
 
-        // Phase 3: 乘算修正因子
+        // Phase 3: hệ số hiệu chỉnh nhân
         val skillElement = skill?.element ?: attacker.element
         val elementMultiplier = ElementTable.getMultiplier(skillElement, target.element)
 
@@ -90,12 +90,12 @@ object BattleDamageCalc {
         val attackResult = if (isThunder) EAttackResult.THUNDER else EAttackResult.HIT
         val beHitAction = EBeHitAction.HIT
 
-        // 屬性變化列表（HP 減少）
+        // Danh sách biến đổi thuộc tính (HP giảm)
         val attrChanges = mutableListOf(
             BattleAttrChange(EAttribute.HP, finalDamage, false)
         )
 
-        // 狀態異常施加
+        // Gây trạng thái bất thường
         var inflictedStatus = BattleStatus.NONE
         var statusRounds = 0
         if (skill != null && skill.round > 0 && statusFromSkillId(skillId) != BattleStatus.NONE) {
@@ -215,9 +215,9 @@ object BattleDamageCalc {
     }
 
     /**
-     * 計算回復技能效果
+     * Tính hiệu ứng kỹ năng hồi phục
      *
-     * 回復量 = (知力 × 0.5 + 等級) × 技能數值 / 100
+     * Lượng hồi phục = (trí lực × 0.5 + cấp độ) × giá trị kỹ năng / 100
      */
     fun calculateHeal(
         caster: BattleFighter,
@@ -238,31 +238,31 @@ object BattleDamageCalc {
         )
     }
 
-    // ── 私有計算函數 ──
+    // ── Hàm tính toán riêng tư ──
 
     /**
-     * 基礎傷害計算（CalcDmg 等價物）
+     * Tính sát thương cơ bản (tương đương CalcDmg)
      *
-     * 對照 tskeropc `BattleAbstract.cs` CalcDmg 第 136-170 行。
-     * 等級是傷害的主要來源（NPC .dat 的 ATK 值偏低，設計上依賴等級加成）。
+     * Đối chiếu `BattleAbstract.cs` của tskeropc, CalcDmg dòng 136-170.
+     * Cấp độ là nguồn sát thương chủ yếu (giá trị ATK trong .dat của NPC thấp, thiết kế phụ thuộc vào cộng cấp độ).
      *
-     * 普通攻擊：(atk × 1.6 + level) + level × 2
-     * 物理技能：(atk × 1.6 + int × 0.4 + level) × numerical/100 + level × 2
-     * 法術技能：(int × 2.0 + level) × numerical/100 + level × 2
+     * Đánh thường: (atk × 1.6 + level) + level × 2
+     * Kỹ năng vật lý: (atk × 1.6 + int × 0.4 + level) × numerical/100 + level × 2
+     * Kỹ năng phép thuật: (int × 2.0 + level) × numerical/100 + level × 2
      */
     private fun calculateBaseDamage(attacker: BattleFighter, skill: SkillDef?): Int {
         val levelDmg = attacker.level * 2
 
         val baseDmg = if (skill == null) {
-            // 普通攻擊（PC BattleAbstract.cs: skill == 10000 -> initAtk * 1.6）
+            // Đánh thường (PC BattleAbstract.cs: skill == 10000 -> initAtk * 1.6)
             val dmgBase = (attacker.atk * 1.6 + attacker.level).toInt()
             dmgBase + levelDmg
         } else if (skill.attribute == EAttribute.INT) {
-            // 法術技能（PC BattleAbstract.cs: else 分支 -> initMag * 2.0）
+            // Kỹ năng phép thuật (PC BattleAbstract.cs: nhánh else -> initMag * 2.0)
             val dmgBase = (attacker.intelligence * 2.0 + attacker.level).toInt()
             (dmgBase * skill.numerical / 100).toInt() + levelDmg
         } else {
-            // 物理技能（PC BattleAbstract.cs: unk17 == 1 -> initAtk * 1.6 + initMag * 0.4）
+            // Kỹ năng vật lý (PC BattleAbstract.cs: unk17 == 1 -> initAtk * 1.6 + initMag * 0.4)
             val dmgBase = (attacker.atk * 1.6 + attacker.intelligence * 0.4 + attacker.level).toInt()
             (dmgBase * skill.numerical / 100).toInt() + levelDmg
         }
@@ -271,21 +271,21 @@ object BattleDamageCalc {
     }
 
     /**
-     * 命中率：90% 基礎 + 敏捷差/2
+     * Tỷ lệ trúng: cơ bản 90% + chênh lệch nhanh nhẹn/2
      */
     private fun calculateHitRate(atkAgi: Int, defAgi: Int): Int {
         return (90 + (atkAgi - defAgi) / 2).coerceIn(5, 99)
     }
 
     /**
-     * 暴擊率：5% 基礎 + 敏捷/10
+     * Tỷ lệ chí mạng: cơ bản 5% + nhanh nhẹn/10
      */
     private fun calculateThunderRate(agi: Int): Int {
         return (5 + agi / 10).coerceIn(1, 50)
     }
 
     /**
-     * 判斷是否為回復技能（水系回復類）
+     * Xác định có phải kỹ năng hồi phục không (loại hồi phục hệ thuỷ)
      */
     fun isHealSkill(skill: SkillDef): Boolean {
         return skill.element == 2 && skill.attribute == EAttribute.HP
@@ -339,7 +339,7 @@ private val STRONG_PITY_SOLDIER_SKILLS = setOf(21026)
 }
 
 /**
- * 單次攻擊計算結果
+ * Kết quả tính một lần tấn công
  */
 data class AttackCalcResult(
     val attackResult: Int,
@@ -351,7 +351,7 @@ data class AttackCalcResult(
 )
 
 /**
- * 戰鬥屬性變化
+ * Biến đổi thuộc tính chiến đấu
  */
 data class BattleAttrChange(
     val attrKind: Int,

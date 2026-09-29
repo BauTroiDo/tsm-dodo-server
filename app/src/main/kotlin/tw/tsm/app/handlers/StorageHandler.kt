@@ -15,17 +15,17 @@ import tw.tsm.protocol.PacketReader
 private val logger = KotlinLogging.logger {}
 
 /**
- * 寶庫處理器（mainKind = 102）
+ * Bộ xử lý kho báu (mainKind = 102)
  *
- * 來源：protocal.lua protocolTable[102]
- * C:102-001 領物品, C:102-002 存物品
+ * Nguồn: protocal.lua protocolTable[102]
+ * C:102-001 nhận vật phẩm, C:102-002 gửi vật phẩm
  *
- * 寶庫與錢莊平行，額外限制：
- * - restrict bit 32 禁止存入
- * - 裝備（fitType > 0）禁止存入
- * - 有 deleteTime 的物品禁止存入
+ * Kho báu chạy song song với Tiền Trang, có thêm các hạn chế:
+ * - restrict bit 32 cấm gửi vào
+ * - trang bị (fitType > 0) cấm gửi vào
+ * - vật phẩm có deleteTime cấm gửi vào
  *
- * @param itemDefs 物品定義表，用於限制驗證
+ * @param itemDefs bảng định nghĩa vật phẩm, dùng để kiểm tra các hạn chế
  */
 class StorageHandler(
     private val inventorySystem: InventorySystem,
@@ -37,7 +37,7 @@ class StorageHandler(
     override val mainKind: Int = Opcodes.STORAGE  // 102
 
     companion object {
-        /** 單次封包最大操作筆數（防止惡意封包） */
+        /** Số thao tác tối đa mỗi gói tin (chống gói tin độc hại)*/
         private const val MAX_BATCH = 50
     }
 
@@ -47,15 +47,15 @@ class StorageHandler(
         when (subKind) {
             1 -> handleWithdraw(session, data)
             2 -> handleDeposit(session, data)
-            else -> logger.warn { "未處理的寶庫子協定：subKind=$subKind" }
+            else -> logger.warn { "Sub-protocol kho báu chưa xử lý: subKind=$subKind" }
         }
     }
 
     /**
-     * C:102-001 寶庫領物品
+     * C:102-001 Kho báu nhận vật phẩm
      *
-     * 格式：<<+index(1) +quantity(4)>>
-     * 來源：UIBank.lua:479
+     * Định dạng: <<+index(1) +quantity(4)>>
+     * Nguồn: UIBank.lua:479
      */
     private suspend fun handleWithdraw(session: GameSession, data: ByteArray) {
         if (data.size < 5) return
@@ -82,10 +82,10 @@ class StorageHandler(
     }
 
     /**
-     * C:102-002 寶庫存物品
+     * C:102-002 Kho báu gửi vật phẩm
      *
-     * 格式：<<+index(2) +quantity(4)>>
-     * 來源：UIBank.lua:480
+     * Định dạng: <<+index(2) +quantity(4)>>
+     * Nguồn: UIBank.lua:480
      */
     private suspend fun handleDeposit(session: GameSession, data: ByteArray) {
         if (data.isEmpty() || data.size % 6 != 0) return
@@ -100,7 +100,7 @@ class StorageHandler(
 
             val bagItem = inventorySystem.getBagItem(characterId, bagSlot) ?: continue
 
-            // 寶庫限制驗證：restrict bit 32、裝備、過期物品
+            // Kiểm tra hạn chế của kho báu: restrict bit 32, trang bị, vật phẩm hết hạn
             val checkResult = inventorySystem.canDepositToStorage(bagItem)
             if (checkResult != BankResult.SUCCESS) {
                 responseSender.sendStorageFail(session, checkResult)
@@ -108,7 +108,7 @@ class StorageHandler(
             }
 
             val depositQty = minOf(quantity, bagItem.quantity)
-            // 動態格數：(Storage_1+Storage_2)×5（私服預設 Storage_1=14 → 70 格）
+            // Số ô động: (Storage_1+Storage_2)×5 (private server mặc định Storage_1=14 → 70 ô)
             val maxSlots = roleCountSystem.getStorageCapacity(characterId)
 
             val (errorCode, storageSlot, storageThing) = inventorySystem.depositToStorage(

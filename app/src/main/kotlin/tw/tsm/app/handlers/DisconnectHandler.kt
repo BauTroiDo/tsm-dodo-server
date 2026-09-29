@@ -10,10 +10,10 @@ import tw.tsm.gamelogic.systems.*
 private val logger = KotlinLogging.logger {}
 
 /**
- * 斷線處理器（mainKind = 0）
+ * Bộ xử lý mất kết nối (mainKind = 0)
  *
- * 來源：protocal.lua protocolTable[0]
- * C→S 0x00-0x00：客戶端通知伺服器即將斷線
+ * Nguồn: protocal.lua protocolTable[0]
+ * C→S 0x00-0x00: client thông báo server sắp mất kết nối
  */
 class DisconnectHandler(
     private val worldManager: WorldManager,
@@ -38,29 +38,29 @@ class DisconnectHandler(
 
     override suspend fun handle(session: GameSession, subKind: Int, data: ByteArray) {
         val characterId = session.roleId.toLong()
-        logger.info { "收到斷線通知：${session.characterName} (roleId=$characterId)" }
+        logger.info { "Nhận thông báo ngắt kết nối: ${session.characterName} (roleId=$characterId)" }
 
-        // 清理遊戲狀態（交易/戰鬥/隊伍/事件/機關盒）
+        // Dọn dẹp trạng thái trò chơi (giao dịch/chiến đấu/tổ đội/sự kiện/hộp cơ quan)
         tradeSystem.cancelTradeOnDisconnect(session.playerId)
         battleManager.handleDisconnect(session.playerId)
         partySystem.handleDisconnect(session.playerId)
         eveStateMachine.clear(characterId)
         macroBoxSystem.cleanup(characterId)
 
-        // 先快照位置，再移除（leaveMap 會把 session.mapId 清為 0）
+        // Chụp snapshot vị trí trước, rồi loại bỏ (leaveMap sẽ đặt session.mapId về 0)
         val mapId = session.mapId
         val x = session.x
         val y = session.y
 
-        // 從世界移除玩家
+        // Gỡ người chơi khỏi thế giới
         worldManager.removePlayer(session)
 
-        // 儲存角色資料到 DB（每項獨立 try-catch，確保一項失敗不影響其他項保存）
+        // Lưu dữ liệu nhân vật vào DB (mỗi mục try-catch riêng, đảm bảo một mục lỗi không ảnh hưởng việc lưu các mục khác)
         if (characterId > 0) {
             try { characterRepository.updatePosition(characterId, mapId, x, y) }
-            catch (e: Exception) { logger.error(e) { "斷線存檔失敗（位置）：charId=$characterId" } }
+            catch (e: Exception) { logger.error(e) { "Lưu ngắt kết nối thất bại (vị trí): charId=$characterId" } }
 
-            // 完整運行時狀態（exp/level/attrPoint/skillPoint/六圍）
+            // Trạng thái runtime đầy đủ (exp/level/attrPoint/skillPoint/6 chỉ số)
             try {
                 val state = playerStateManager.getState(characterId)
                 if (state != null) {
@@ -71,43 +71,43 @@ class DisconnectHandler(
                     )
                 }
             }
-            catch (e: Exception) { logger.error(e) { "斷線存檔失敗（角色狀態）：charId=$characterId" } }
+            catch (e: Exception) { logger.error(e) { "Lưu ngắt kết nối thất bại (trạng thái nhân vật): charId=$characterId" } }
 
-            // 清除運行時狀態（在讀取 state 之後）
+            // Xoá trạng thái runtime (sau khi đọc state)
             playerStateManager.removePlayer(characterId)
 
             try { inventorySystem.saveAndUnload(characterId) }
-            catch (e: Exception) { logger.error(e) { "斷線存檔失敗（物品）：charId=$characterId" } }
+            catch (e: Exception) { logger.error(e) { "Lưu ngắt kết nối thất bại (vật phẩm): charId=$characterId" } }
 
             try { moneySystem.saveAndUnload(characterId) }
-            catch (e: Exception) { logger.error(e) { "斷線存檔失敗（金錢）：charId=$characterId" } }
+            catch (e: Exception) { logger.error(e) { "Lưu ngắt kết nối thất bại (tiền vàng): charId=$characterId" } }
 
             try { pointSystem.saveAndUnload(characterId) }
-            catch (e: Exception) { logger.error(e) { "斷線存檔失敗（元寶）：charId=$characterId" } }
+            catch (e: Exception) { logger.error(e) { "Lưu ngắt kết nối thất bại (nguyên bảo): charId=$characterId" } }
 
             // DVT currencies 4..16 are persisted on every mutation; disconnect only drops cache.
             playerCurrencySystem.unload(characterId)
 
             try { skillSystem.saveAndUnload(characterId) }
-            catch (e: Exception) { logger.error(e) { "斷線存檔失敗（技能）：charId=$characterId" } }
+            catch (e: Exception) { logger.error(e) { "Lưu ngắt kết nối thất bại (kỹ năng): charId=$characterId" } }
 
             try {
                 val fightNpcId = petSystem.getCache(characterId)?.fightNpcId ?: 0
                 characterRepository.updateFightNpcId(characterId, fightNpcId)
             }
-            catch (e: Exception) { logger.error(e) { "斷線存檔失敗（出戰武將）：charId=$characterId" } }
+            catch (e: Exception) { logger.error(e) { "Lưu ngắt kết nối thất bại (tướng xuất chiến): charId=$characterId" } }
 
             try { petSystem.saveAndUnload(characterId) }
-            catch (e: Exception) { logger.error(e) { "斷線存檔失敗（武將）：charId=$characterId" } }
+            catch (e: Exception) { logger.error(e) { "Lưu ngắt kết nối thất bại (tướng): charId=$characterId" } }
 
             try { mountSystem.saveAndUnload(characterId) }
-            catch (e: Exception) { logger.error(e) { "斷線存檔失敗（坐騎）：charId=$characterId" } }
+            catch (e: Exception) { logger.error(e) { "Lưu ngắt kết nối thất bại (vật cưỡi): charId=$characterId" } }
 
             try { roleCountSystem.saveAndUnload(characterId) }
-            catch (e: Exception) { logger.error(e) { "斷線存檔失敗（計數器）：charId=$characterId" } }
+            catch (e: Exception) { logger.error(e) { "Lưu ngắt kết nối thất bại (bộ đếm): charId=$characterId" } }
         }
 
-        // 關閉連線
+        // Đóng kết nối
         session.close()
     }
 }

@@ -3,46 +3,46 @@ package tw.tsm.protocol
 import tw.tsm.domain.constants.EHuman
 
 /**
- * 戰鬥角色封包序列化 — 對應 FightField.RoleAppear 的讀取格式
+ * Tuần tự hoá gói tin nhân vật chiến đấu — tương ứng định dạng đọc của FightField.RoleAppear
  *
- * 負責將戰鬥角色資料序列化為 S:011-250 / S:011-005 的二進位格式。
- * 格式來源：FightField.lua RoleAppear() + FightManager.lua ReciveFightAppearenceData()
+ * Chịu trách nhiệm tuần tự hoá dữ liệu nhân vật chiến đấu sang định dạng nhị phân S:011-250 / S:011-005.
+ * Nguồn định dạng: FightField.lua RoleAppear() + FightManager.lua ReciveFightAppearenceData()
  */
 object BattleRoleSerializer {
 
     /**
-     * 序列化單個戰鬥角色
+     * Tuần tự hoá một nhân vật chiến đấu
      *
-     * @param data 戰鬥角色資料
-     * @return 序列化後的 bytes
+     * @param data dữ liệu nhân vật chiến đấu
+     * @return bytes đã được tuần tự hoá
      */
     fun serialize(data: BattleRoleData): ByteArray {
         val writer = PacketWriter(128)
 
-        // 基礎資料（所有角色種類共用）
+        // Dữ liệu cơ sở (mọi loại nhân vật dùng chung)
         writer
-            .writeByte(data.warType)           // 戰鬥形式 (1B)
-            .writeByte(data.humanKind)         // 角色種類 EHuman (1B)
-            .writeLongLE(data.roleId)          // 角色 ID (8B)
+            .writeByte(data.warType)           // Hình thức chiến đấu (1B)
+            .writeByte(data.humanKind)         // Loại nhân vật EHuman (1B)
+            .writeLongLE(data.roleId)          // ID nhân vật (8B)
             .writeShortLE(data.npcId)          // NPC ID (2B)
-            .writeLongLE(data.masterId)        // 主人 ID (8B)
-            .writeByte(data.col)               // 列 (1B)
-            .writeByte(data.row)               // 行 (1B)
-            .writeUIntLE(data.maxHp)           // 最大 HP (4B)
-            .writeUIntLE(data.maxSp)           // 最大 SP (4B)
-            .writeUIntLE(data.hp)              // 當前 HP (4B)
-            .writeUIntLE(data.sp)              // 當前 SP (4B)
-            .writeShortLE(data.level)          // 等級 (2B)
-            .writeByte(data.upgradeLv)         // 升級等級 (1B)
-            .writeByte(data.element)           // 元素 (1B)
+            .writeLongLE(data.masterId)        // ID chủ nhân (8B)
+            .writeByte(data.col)               // Cột (1B)
+            .writeByte(data.row)               // Hàng (1B)
+            .writeUIntLE(data.maxHp)           // HP tối đa (4B)
+            .writeUIntLE(data.maxSp)           // SP tối đa (4B)
+            .writeUIntLE(data.hp)              // HP hiện tại (4B)
+            .writeUIntLE(data.sp)              // SP hiện tại (4B)
+            .writeShortLE(data.level)          // Cấp độ (2B)
+            .writeByte(data.upgradeLv)         // Cấp tăng cấp (1B)
+            .writeByte(data.element)           // Nguyên tố (1B)
 
-        // 條件式外觀資料
+        // Dữ liệu ngoại hình có điều kiện
         if (data.humanKind == EHuman.PLAYER || data.humanKind == EHuman.PLAYERS ||
             data.humanKind == EHuman.DIVIDE || data.humanKind == EHuman.AUTOMANUAL_PLAYER) {
-            // 玩家外觀：ReciveFightAppearenceData
+            // Ngoại hình người chơi: ReciveFightAppearenceData
             writePlayerAppearance(writer, data)
         } else if (data.humanKind == EHuman.FOLLOW_NPC || data.humanKind == EHuman.AUTOMANUAL_NPC) {
-            // 武將名字 (UTF-8)
+            // Tên tướng (UTF-8)
             writer.writeUtf8WithByteLen(data.name)
         }
         // RoleAppear always consumes one trailing UInt16 after every fighter,
@@ -53,7 +53,7 @@ object BattleRoleSerializer {
     }
 
     /**
-     * 序列化所有戰鬥角色
+     * Tuần tự hoá tất cả nhân vật chiến đấu
      */
     fun serializeAll(roles: List<BattleRoleData>): ByteArray {
         val parts = roles.map { serialize(it) }
@@ -68,52 +68,52 @@ object BattleRoleSerializer {
     }
 
     /**
-     * 寫入玩家外觀資料（ReciveFightAppearenceData 格式）
+     * Ghi dữ liệu ngoại hình người chơi (định dạng ReciveFightAppearenceData)
      */
     private fun writePlayerAppearance(writer: PacketWriter, data: BattleRoleData) {
         writer
-            .writeUtf8WithByteLen(data.name)     // 名字 (ByteL+UTF-8)
-            .writeByte(data.sex)                  // 性別 (1B)
-            .writeByte(data.element)              // 屬性 (1B)
-            .writeByte(data.level)                // 等級 (1B)
-            .writeByte(0)                         // 衰神標記 (1B)
-            .writeUIntLE(0)                       // 福神標記 (4B)
-            .writeShortLE(0)                      // 精靈 No (2B)
-            .writeByte(data.face)                 // 臉圖 (1B)
-            .writeByte(data.hair)                 // 頭型 (1B)
-            .writeByte(0)                         // 身型 (1B)
-            .writeIntLE(data.color1)              // 色盤一 (4B)
-            .writeIntLE(data.color2)              // 色盤二 (4B)
-            .writeShortLE(0)                      // PVP 勝場 (2B)
-            .writeByte(0)                         // PVP 名次 (1B)
-            .writeByte(0)                         // NPC 挑戰賽 (1B)
-            .writeByte(data.turn)                 // 轉生種類 (1B)
-            .writeByte(data.career)               // 職業種類 (1B)
+            .writeUtf8WithByteLen(data.name)     // Tên (ByteL+UTF-8)
+            .writeByte(data.sex)                  // Giới tính (1B)
+            .writeByte(data.element)              // Thuộc tính (1B)
+            .writeByte(data.level)                // Cấp độ (1B)
+            .writeByte(0)                         // Cờ suy thần (1B)
+            .writeUIntLE(0)                       // Cờ phúc thần (4B)
+            .writeShortLE(0)                      // Số tinh linh (2B)
+            .writeByte(data.face)                 // Ảnh mặt (1B)
+            .writeByte(data.hair)                 // Kiểu đầu (1B)
+            .writeByte(0)                         // Dáng người (1B)
+            .writeIntLE(data.color1)              // Bảng màu một (4B)
+            .writeIntLE(data.color2)              // Bảng màu hai (4B)
+            .writeShortLE(0)                      // Số trận PVP thắng (2B)
+            .writeByte(0)                         // Thứ hạng PVP (1B)
+            .writeByte(0)                         // Giải thách đấu NPC (1B)
+            .writeByte(data.turn)                 // Loại chuyển sinh (1B)
+            .writeByte(data.career)               // Loại chức nghiệp (1B)
 
-        // 裝備
+        // trang bị
         val equips = data.equipItemIds
-        writer.writeByte(equips.size)             // 裝備數量 (1B)
+        writer.writeByte(equips.size)             // Số lượng trang bị (1B)
         for (itemId in equips) {
-            writer.writeShortLE(itemId)           // 裝備 ID (2B)
+            writer.writeShortLE(itemId)           // ID trang bị (2B)
         }
 
-        // 外顯裝備
+        // Trang bị hiển thị
         val outfits = data.outfitItemIds
-        writer.writeByte(outfits.size)            // 外顯裝備數量 (1B)
+        writer.writeByte(outfits.size)            // Số lượng trang bị hiển thị (1B)
         for (itemId in outfits) {
-            writer.writeShortLE(itemId)           // 外顯 ID (2B)
+            writer.writeShortLE(itemId)           // ID hiển thị (2B)
         }
 
         writer
-            .writeByte(0)                         // 組隊狀態 (1B)
-            .writeIntLE(0)                        // 軍團 ID (4B)
+            .writeByte(0)                         // Trạng thái tổ đội (1B)
+            .writeIntLE(0)                        // ID quân đoàn (4B)
     }
 }
 
 /**
- * 戰鬥角色序列化資料
+ * Dữ liệu tuần tự hoá nhân vật chiến đấu
  *
- * 從 BattleFighter 或 GameSession 轉換而來。
+ * Được chuyển đổi từ BattleFighter hoặc GameSession.
  */
 data class BattleRoleData(
     val warType: Int,

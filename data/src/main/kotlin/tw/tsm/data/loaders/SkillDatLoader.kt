@@ -4,18 +4,18 @@ import tw.tsm.data.DatReader
 import tw.tsm.domain.data.SkillDef
 
 /**
- * 技能載入器 — 對應 `DataManager.OnLoadSkillData`
+ * Loader kỹ năng — tương ứng `DataManager.OnLoadSkillData`
  *
- * 來源：`Skill_C.dat`
- * 格式：count(Int32) + count 筆 SkillData.New(reader)
- * Key = 技能 ID（id != 0 才存入）
+ * Nguồn: `Skill_C.dat`
+ * Định dạng: count(Int32) + count bản ghi SkillData.New(reader)
+ * Key = ID kỹ năng (chỉ lưu khi id != 0)
  *
- * 欄位順序嚴格對照 SkillData.lua 第 4-63 行。
+ * Thứ tự trường đối chiếu nghiêm ngặt với dòng 4-63 của SkillData.lua.
  */
 object SkillDatLoader {
 
     /**
-     * 載入技能資料
+     * Đọc dữ liệu kỹ năng
      */
     fun load(data: ByteArray): Map<Int, SkillDef> {
         val reader = DatReader(data)
@@ -57,7 +57,7 @@ object SkillDatLoader {
             val fightWayGrowType = reader.readUInt16()
             val description = reader.readUnicodeString()
 
-            // 特殊硬編碼前置技能（對照 Lua 54-61 行）
+            // Kỹ năng tiền đề hardcode đặc biệt (đối chiếu dòng 54-61 của Lua)
             if (id == 13014) preSkills.add(13012)
             if (id == 14038) {
                 preSkills.addAll(listOf(10020, 11020, 12020, 13019))

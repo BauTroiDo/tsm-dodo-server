@@ -11,12 +11,12 @@ import tw.tsm.protocol.PacketReader
 private val logger = KotlinLogging.logger {}
 
 /**
- * 信件系統 Handler (mainKind=83)
+ * Handler hệ thống thư (mainKind=83)
  *
- * 來源：protocal.lua protocolTable[83]
- * - C:083-001 領取附件
- * - C:083-002 刪除信件
- * - C:083-003 已讀信件
+ * Nguồn: protocal.lua protocolTable[83]
+ * - C:083-001 nhận tệp đính kèm
+ * - C:083-002 xóa thư
+ * - C:083-003 đánh dấu thư đã đọc
  */
 class MailHandler(
     private val mailSystem: MailSystem
@@ -30,14 +30,14 @@ class MailHandler(
             1 -> handleTakeAttachments(session, data)
             2 -> handleDeleteMails(session, data)
             3 -> handleReadMails(session, data)
-            else -> logger.warn { "未處理的信件子協定：subKind=$subKind" }
+            else -> logger.warn { "Sub-protocol thư tín chưa xử lý: subKind=$subKind" }
         }
     }
 
     /**
-     * C:083-001 領取附件
+     * C:083-001 nhận tệp đính kèm
      *
-     * 格式：+count(4B LE) <<+mailId(4B LE)>>
+     * Định dạng: +count(4B LE) <<+mailId(4B LE)>>
      */
     private suspend fun handleTakeAttachments(session: GameSession, data: ByteArray) {
         if (data.size < 4) return
@@ -49,9 +49,9 @@ class MailHandler(
     }
 
     /**
-     * C:083-002 刪除信件
+     * C:083-002 xóa thư
      *
-     * 格式：+count(4B LE) <<+mailId(4B LE)>>
+     * Định dạng: +count(4B LE) <<+mailId(4B LE)>>
      */
     private suspend fun handleDeleteMails(session: GameSession, data: ByteArray) {
         if (data.size < 4) return
@@ -63,9 +63,9 @@ class MailHandler(
     }
 
     /**
-     * C:083-003 已讀信件
+     * C:083-003 đánh dấu thư đã đọc
      *
-     * 格式：+count(4B LE) <<+mailId(4B LE)>>
+     * Định dạng: +count(4B LE) <<+mailId(4B LE)>>
      */
     private suspend fun handleReadMails(session: GameSession, data: ByteArray) {
         if (data.size < 4) return

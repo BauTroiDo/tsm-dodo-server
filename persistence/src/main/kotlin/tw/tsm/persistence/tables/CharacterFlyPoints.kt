@@ -3,25 +3,25 @@ package tw.tsm.persistence.tables
 import org.jetbrains.exposed.v1.core.Table
 
 /**
- * 角色記憶傳送符表 — 對應客戶端 UITeleport.flyPoints
+ * Bảng bùa dịch chuyển ký ức của nhân vật — tương ứng UITeleport.flyPoints của client
  *
- * 儲存玩家記憶傳送符的已記錄位置。
- * 每個角色最多 10 筆（MaxFlyScroll=5 + MaxFlyScrollExtend=5）。
+ * Lưu các vị trí đã ghi của bùa dịch chuyển ký ức người chơi.
+ * Mỗi nhân vật tối đa 10 bản ghi (MaxFlyScroll=5 + MaxFlyScrollExtend=5).
  */
 object CharacterFlyPoints : Table("character_fly_points") {
-    /** 角色 ID */
+    /** ID nhân vật*/
     val charId = long("char_id").index()
 
-    /** 傳送點索引（1-based，1 到 10） */
+    /** Chỉ số điểm dịch chuyển (1-based, 1 đến 10)*/
     val pointIndex = integer("point_index")
 
-    /** 場景 ID */
+    /** ID cảnh*/
     val sceneId = integer("scene_id")
 
-    /** X 座標 */
+    /** Toạ độ X*/
     val x = integer("x")
 
-    /** Y 座標 */
+    /** Toạ độ Y*/
     val y = integer("y")
 
     override val primaryKey = PrimaryKey(charId, pointIndex)

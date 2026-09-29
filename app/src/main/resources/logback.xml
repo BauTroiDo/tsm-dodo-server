@@ -16,18 +16,18 @@
         </encoder>
     </appender>
 
-    <!-- Netty 日誌降級 -->
+    <!-- Giảm mức ghi log Netty -->
     <logger name="io.netty" level="WARN"/>
 
-    <!-- Exposed SQL 日誌（INFO 會記錄每條 SQL，生產環境用 WARN） -->
+    <!-- Ghi log Exposed SQL(INFO sẽ ghi lại từng câu SQL,môi trường sản xuất dùng WARN) -->
     <logger name="Exposed" level="WARN"/>
 
-    <!-- 高頻雜訊降級 -->
+    <!-- Hạ mức nhiễu tần suất cao -->
     <logger name="tw.tsm.gamelogic.systems.WorldManager" level="INFO"/>
     <logger name="tw.tsm.network.PacketDispatchHandler" level="INFO"/>
     <logger name="tw.tsm.app.handlers.BattleCommandHandler" level="INFO"/>
 
-    <!-- 事件條件評估診斷（顯示條件 class/param/ops 判定結果） -->
+    <!-- Chẩn đoán đánh giá điều kiện sự kiện(hiển thị kết quả xét class/param/ops điều kiện) -->
     <logger name="tw.tsm.gamelogic.systems.EveConditionEvaluator" level="DEBUG"/>
 
     <root level="INFO">

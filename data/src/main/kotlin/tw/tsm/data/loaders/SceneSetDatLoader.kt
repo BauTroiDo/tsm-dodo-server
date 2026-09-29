@@ -4,16 +4,16 @@ import tw.tsm.data.DatReader
 import tw.tsm.domain.data.SceneSetDef
 
 /**
- * 場景設定載入器 — 對應 `DataManager.OnLoadSceneSetData`
+ * Loader cài đặt cảnh — tương ứng `DataManager.OnLoadSceneSetData`
  *
- * 來源：`SceneSet_C.dat`
- * 格式：count(Int32) + count 筆 SceneData.ReadSceneSetData(reader)
- * Key = 場景 ID（id != 0 才存入）
+ * nguồn: `SceneSet_C.dat`
+ * Định dạng: count(Int32) + count bản ghi SceneData.ReadSceneSetData(reader)
+ * Key = ID cảnh (chỉ lưu khi id != 0)
  */
 object SceneSetDatLoader {
 
     /**
-     * 載入場景設定資料
+     * Đọc dữ liệu cài đặt cảnh
      */
     fun load(data: ByteArray): Map<Int, SceneSetDef> {
         val reader = DatReader(data)

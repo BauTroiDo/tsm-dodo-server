@@ -10,15 +10,15 @@ import tw.tsm.domain.interfaces.ResponseSender
 private val logger = KotlinLogging.logger {}
 
 /**
- * Eve 事件觸發路由器
+ * Bộ định tuyến kích hoạt sự kiện Eve
  *
- * 職責：
- * - 6 種觸發路由（ClickNpc / BumpNpc / ScanNpc / ClickDoor / MeetDoor / ServerBump）
- * - 距離驗證
- * - Fallback Talk 處理
- * - 觸發後委派 [EveFlowController.startEvent] 進入分發流程
+ * Nhiệm vụ:
+ * - 6 loại định tuyến kích hoạt (ClickNpc / BumpNpc / ScanNpc / ClickDoor / MeetDoor / ServerBump)
+ * - Kiểm tra khoảng cách
+ * - Xử lý Talk fallback
+ * - Sau khi kích hoạt, ủy quyền cho [EveFlowController.startEvent] đi vào luồng phân phát
  *
- * 從 EveFlowEngine.triggerEvent() / triggerServerBump() 抽取。
+ * Tách khỏi EveFlowEngine.triggerEvent() / triggerServerBump().
  */
 class EveTriggerRouter(
     private val stateMachine: EveEventStateMachine,
@@ -30,9 +30,9 @@ class EveTriggerRouter(
 ) {
 
     /**
-     * C:020-{1~5,7,8} 事件觸發
+     * C:020-{1~5,7,8} kích hoạt sự kiện
      *
-     * 觸發路徑：
+     * Đường dẫn kích hoạt:
      * - subKind=4/8（Door）：doors[triggerID].events
      * - subKind=2（BumpNpc）：WhenHappen[1]=true
      * - subKind=3（ScanNpc）：WhenHappen[2]=true
@@ -43,11 +43,11 @@ class EveTriggerRouter(
         val mapId = session.mapId
 
         val triggerName = TRIGGER_NAMES[subKind] ?: "Unknown"
-        logger.info { "${session.characterName} 觸發事件：$triggerName (sub=$subKind) triggerID=$triggerID mapId=$mapId" }
+        logger.info { "${session.characterName} kích hoạt sự kiện: $triggerName (sub=$subKind) triggerID=$triggerID mapId=$mapId" }
 
         val sceneData = eveData[mapId]
         if (sceneData == null) {
-            logger.debug { "場景 $mapId 無事件資料" }
+            logger.debug { "Cảnh $mapId không có dữ liệu sự kiện" }
             responseSender.sendEventEnd(session)
             return
         }
@@ -66,7 +66,7 @@ class EveTriggerRouter(
         }
     }
 
-    /** NPC 當前巡邏位置查詢器：mapId, npcId -> (x, y) */
+    /** Bộ truy vấn vị trí tuần tra hiện tại của NPC: mapId, npcId -> (x, y)*/
     var npcPositionProvider: ((mapId: Int, npcId: Int) -> Pair<Int, Int>?)? = null
 
     /**
@@ -110,12 +110,12 @@ class EveTriggerRouter(
     }
 
     /**
-     * 伺服器碰撞觸發（ServerBump）
+     * Kích hoạt va chạm phía server (ServerBump)
      *
-     * 由 NpcPatrolSystem 在偵測到玩家進入 NPC traceRadius 範圍時呼叫。
-     * 掃描 whenHappen[3]=OnSerStrokeObject 的事件。
+     * Được NpcPatrolSystem gọi khi phát hiện người chơi đi vào phạm vi traceRadius của NPC.
+     * Quét các sự kiện whenHappen[3]=OnSerStrokeObject.
      *
-     * @return true 如果成功觸發事件
+     * @return true nếu kích hoạt sự kiện thành công
      */
     suspend fun triggerServerBump(session: GameSession, npcClickId: Int): Boolean {
         val charId = session.roleId.toLong()
@@ -137,28 +137,28 @@ class EveTriggerRouter(
             }
         }
         if (candidates.isEmpty()) {
-            logger.debug { "場景 $mapId 無 ServerBump 事件 (npcClickId=$npcClickId)" }
+            logger.debug { "Cảnh $mapId không có sự kiện ServerBump (npcClickId=$npcClickId)" }
             return false
         }
 
         for (eventData in candidates) {
             val result = resolveActivateAndAdvance(charId, mapId, npcClickId, eventData, state, triggerKind = 3)
             if (result != null) {
-                logger.info { "${session.characterName} ServerBump 觸發：eveNo=${eventData.eveNo} clickId=$npcClickId mapId=$mapId" }
+                logger.info { "${session.characterName} ServerBump kích hoạt: eveNo=${eventData.eveNo} clickId=$npcClickId mapId=$mapId" }
                 flowController.startEvent(session, result)
                 return true
             }
         }
 
-        logger.debug { "場景 $mapId ServerBump 無匹配事件（${candidates.size} 個候選, clickId=$npcClickId）" }
+        logger.debug { "Cảnh $mapId ServerBump không có sự kiện khớp (${candidates.size} ứng viên, clickId=$npcClickId)" }
         return false
     }
 
     // ══════════════════════════════════════════════
-    //  私有路由
+    //  Định tuyến private
     // ══════════════════════════════════════════════
 
-    /** Door 事件（ClickDoor=4, MeetDoor=8） */
+    /** Sự kiện Door (ClickDoor=4, MeetDoor=8)*/
     private suspend fun routeDoor(
         session: GameSession, charId: Long, mapId: Int,
         triggerID: Int, subKind: Int,
@@ -167,13 +167,13 @@ class EveTriggerRouter(
         if (subKind == 8 &&
             session.lastDoorWarpMapId == mapId &&
             System.currentTimeMillis() - session.lastDoorWarpTime < 2000L) {
-            logger.info { "MeetDoor 冷卻中（距上次傳送 ${System.currentTimeMillis() - session.lastDoorWarpTime}ms）→ 忽略" }
+            logger.info { "MeetDoor đang cooldown (cách lần dịch chuyển trước ${System.currentTimeMillis() - session.lastDoorWarpTime}ms) → bỏ qua" }
             responseSender.sendEventEnd(session)
             return
         }
         val door = sceneData.doors[triggerID]
         if (door == null) {
-            logger.warn { "場景 $mapId doorId=$triggerID 找不到 Door 擺放資料（doors.keys=${sceneData.doors.keys}）" }
+            logger.warn { "Cảnh $mapId doorId=$triggerID không tìm thấy dữ liệu bố trí Door (doors.keys=${sceneData.doors.keys})" }
             responseSender.sendEventEnd(session)
             return
         }
@@ -181,14 +181,14 @@ class EveTriggerRouter(
             val eventData = sceneData.npcEvents[eveNo] ?: continue
             val result = resolveActivateAndAdvance(charId, mapId, triggerID, eventData, state, triggerKind = subKind)
             if (result != null) { flowController.startEvent(session, result); return }
-            logger.info { "Door eveNo=$eveNo 不匹配（${eventData.conditions.size} 個條件）" }
+            logger.info { "Door eveNo=$eveNo không khớp (${eventData.conditions.size} điều kiện)" }
         }
-        logger.warn { "場景 $mapId doorId=$triggerID Door 無可觸發條件（${door.events.size} 個事件全部失敗）" +
-            " events=${door.events} 玩家=(${session.x},${session.y})" }
+        logger.warn { "Cảnh $mapId doorId=$triggerID Door không có điều kiện kích hoạt được (${door.events.size} sự kiện đều thất bại)" +
+            " events=${door.events} người chơi=(${session.x},${session.y})" }
         responseSender.sendEventEnd(session)
     }
 
-    /** BumpNpc / ScanNpc — WhenHappen 掃描 */
+    /** BumpNpc / ScanNpc — quét WhenHappen*/
     private suspend fun routeWhenHappen(
         session: GameSession, charId: Long, mapId: Int,
         triggerID: Int, subKind: Int,
@@ -214,11 +214,11 @@ class EveTriggerRouter(
             val result = resolveActivateAndAdvance(charId, mapId, triggerID, eventData, state, triggerKind = subKind)
             if (result != null) { flowController.startEvent(session, result); return }
         }
-        logger.debug { "場景 $mapId sub=$subKind 無可觸發的 WhenHappen 事件 (triggerID=$triggerID)" }
+        logger.debug { "Cảnh $mapId sub=$subKind không có sự kiện WhenHappen nào kích hoạt được (triggerID=$triggerID)" }
         responseSender.sendEventEnd(session)
     }
 
-    /** ClickNpc — NpcData.events 路徑 */
+    /** ClickNpc — đường dẫn NpcData.events*/
     private suspend fun routeClickNpc(
         session: GameSession, charId: Long, mapId: Int,
         triggerID: Int, subKind: Int,
@@ -226,7 +226,7 @@ class EveTriggerRouter(
     ) {
         val npc = sceneData.npcs[triggerID]
         if (npc == null) {
-            logger.debug { "場景 $mapId clickId=$triggerID 找不到 NPC 擺放資料" }
+            logger.debug { "Cảnh $mapId clickId=$triggerID không tìm thấy dữ liệu bố trí NPC" }
             responseSender.sendEventEnd(session)
             return
         }
@@ -234,15 +234,15 @@ class EveTriggerRouter(
         val targetX = currentPos?.first ?: npc.x
         val targetY = currentPos?.second ?: npc.y
         if (subKind == 1 && !stateBuilder.isWithinRange(session.x, session.y, targetX, targetY) && !stateBuilder.isWithinRange(session.x, session.y, npc.x, npc.y)) {
-            logger.debug { "NPC 距離過遠：clickId=$triggerID player=(${session.x},${session.y}) npc=($targetX,$targetY)" }
+            logger.debug { "NPC quá xa: clickId=$triggerID player=(${session.x},${session.y}) npc=($targetX,$targetY)" }
             responseSender.sendEventEnd(session)
             return
         }
 
-        // 1. NPC 自身事件列表 — 評估全部 eveNo，選 stepScore 最高者
-        //    stepScore > 0 表示有 cc=2 任務條件，優先於 stepScore=0 的服務事件
+        // 1. Danh sách sự kiện của bản thân NPC — đánh giá toàn bộ eveNo, chọn cái có stepScore cao nhất
+        //    stepScore > 0 nghĩa là có điều kiện nhiệm vụ cc=2, ưu tiên hơn sự kiện phục vụ stepScore=0
         logger.info { "${session.characterName} ClickNpc clickId=$triggerID events=${npc.events} " +
-            "玩家狀態：level=${state.level} reborn=${state.rebornCount} " +
+            "Trạng thái người chơi: level=${state.level} reborn=${state.rebornCount} " +
             "missions=${state.missionSteps.entries.joinToString { "${it.key}=${it.value}" }} " +
             "flags=${state.missionFlags.entries.joinToString { "${it.key}=${it.value}" }}" }
         var bestEventData: NpcEventData? = null
@@ -256,20 +256,20 @@ class EveTriggerRouter(
                 eventData, state.copy(currentEveNo = eveNo), mapId
             )
             if (resolved == null) {
-                logger.info { "${session.characterName} eveNo=$eveNo 不匹配（${eventData.conditions.size} 條件）" }
+                logger.info { "${session.characterName} eveNo=$eveNo không khớp (${eventData.conditions.size} điều kiện)" }
                 continue
             }
 
-            // condNo 級別防重複：只擋已完成的特定條件鏈，允許同 eveNo 的不同條件進展
+            // Chống trùng lặp cấp condNo: chỉ chặn chuỗi điều kiện cụ thể đã hoàn thành, cho phép tiến triển điều kiện khác của cùng eveNo
             if (stateMachine.isConditionCompleted(charId, mapId, eveNo, resolved.matchedConditionNo)) {
-                logger.info { "${session.characterName} eveNo=$eveNo condNo=${resolved.matchedConditionNo} 已完成，跳過" }
+                logger.info { "${session.characterName} eveNo=$eveNo condNo=${resolved.matchedConditionNo} đã hoàn thành, bỏ qua" }
                 continue
             }
 
-            logger.debug { "${session.characterName} eveNo=$eveNo 匹配成功 condNo=${resolved.matchedConditionNo} stepScore=${resolved.stepScore} → ${resolved.results.size} 個結果" }
+            logger.debug { "${session.characterName} eveNo=$eveNo khớp thành công condNo=${resolved.matchedConditionNo} stepScore=${resolved.stepScore} → ${resolved.results.size} kết quả" }
 
-            // 三層排序：stepScore → 結果數量 → 先出現者
-            // 結果數量區分任務對話鏈（10+ results）與服務選單（1 result）
+            // Sắp xếp 3 lớp: stepScore → số lượng kết quả → xuất hiện trước
+            // Số lượng kết quả phân biệt chuỗi hội thoại nhiệm vụ (10+ results) với menu dịch vụ (1 result)
             val bestResultCount = bestResolved?.results?.size ?: 0
             val isBetter = resolved.stepScore > bestStepScore ||
                 (resolved.stepScore == bestStepScore && resolved.results.size > bestResultCount)
@@ -284,7 +284,7 @@ class EveTriggerRouter(
         val chosenEvent = bestEventData
         val chosenResolved = bestResolved
         if (chosenEvent != null && chosenResolved != null) {
-            logger.debug { "${session.characterName} 最佳匹配：eveNo=${chosenEvent.eveNo} stepScore=$bestStepScore" }
+            logger.debug { "${session.characterName} khớp tốt nhất: eveNo=${chosenEvent.eveNo} stepScore=$bestStepScore" }
             stateMachine.activate(charId, EventSession(
                 mapId = mapId, eveNo = chosenEvent.eveNo, npcClickId = triggerID,
                 triggerKind = subKind, results = chosenResolved.results,
@@ -310,16 +310,16 @@ class EveTriggerRouter(
             }
         }
 
-        logger.debug { "場景 $mapId clickId=$triggerID 無可觸發事件" }
+        logger.debug { "Cảnh $mapId clickId=$triggerID không có sự kiện để kích hoạt" }
         responseSender.sendEventEnd(session)
     }
 
     // ══════════════════════════════════════════════
-    //  私有工具
+    //  Tiện ích private
     // ══════════════════════════════════════════════
 
     /**
-     * 條件解析 + 啟動 Session + 取得第一個 result
+     * Phân tích điều kiện + khởi tạo Session + lấy result đầu tiên
      */
     private fun resolveActivateAndAdvance(
         charId: Long, mapId: Int, npcClickId: Int,
@@ -336,12 +336,12 @@ class EveTriggerRouter(
             matchedConditionNo = resolved.matchedConditionNo
         ))
 
-        logger.debug { "觸發事件：charId=$charId mapId=$mapId clickId=$npcClickId eveNo=${eventData.eveNo} → ${resolved.results.size} 個 result" }
+        logger.debug { "Kích hoạt sự kiện: charId=$charId mapId=$mapId clickId=$npcClickId eveNo=${eventData.eveNo} → ${resolved.results.size} result" }
         return stateMachine.advance(charId)
     }
 
     companion object {
-        /** 事件觸發類型名稱對照（EEventTrigger） */
+        /** Bảng đối chiếu tên loại kích hoạt sự kiện (EEventTrigger)*/
         private val TRIGGER_NAMES = mapOf(
             1 to "ClickNpc",
             2 to "BumpNpc",

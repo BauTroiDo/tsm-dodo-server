@@ -7,57 +7,57 @@ import tw.tsm.domain.data.*
 private val logger = KotlinLogging.logger {}
 
 /**
- * Eve.emg 事件資料載入器 — 對應客戶端 `DataManager.lua` 的 Eve.emg 讀取邏輯
+ * Trình nạp dữ liệu sự kiện Eve.emg — tương ứng logic đọc Eve.emg của client trong `DataManager.lua`
  *
- * 容器格式（DataManager.lua 逆向）：
+ * Định dạng container (đảo ngược từ DataManager.lua):
  * ```
- * [UInt16 LE] 場景數量（如 3823）
- * 每個場景目錄項 32 bytes：
- *   [1B] 名稱長度（如 9）
- *   [23B] 名稱（"10701.eve\0..."，固定 23 bytes）
- *   [Int32 LE] 場景資料的絕對偏移（從檔案起始）
- *   [Int32 LE] 場景資料大小（bytes）
+ * [UInt16 LE] số lượng cảnh (ví dụ 3823)
+ * Mỗi mục thư mục cảnh 32 bytes:
+ *   [1B] độ dài tên (ví dụ 9)
+ *   [23B] tên ("10701.eve\0...", cố định 23 bytes)
+ *   [Int32 LE] offset tuyệt đối của dữ liệu cảnh (từ đầu file)
+ *   [Int32 LE] kích thước dữ liệu cảnh (bytes)
  * ```
  *
- * 場景 ID = 名稱去掉 ".eve" 後綴後轉整數（"10701.eve" → 10701）
+ * ID cảnh = tên bỏ hậu tố ".eve" rồi chuyển thành số nguyên ("10701.eve" → 10701)
  *
- * 每個場景資料格式（EventData.lua）：
+ * Định dạng dữ liệu mỗi cảnh (EventData.lua):
  * ```
- * [Int32]  NpcData 數量  + NpcData[]
- * [UInt16] GoodsData 數量 + GoodsData[]   ← 跳過
- * [UInt16] DoorData 數量  + DoorData[]    ← 跳過
- * [UInt16] MineData 數量  + MineData[]    ← 跳過
- * [UInt16] SurfaceData 數量 + SurfaceData[] ← 跳過
- * [UInt16] SceneInfoData 數量 + SceneInfoData[] ← 跳過
- * [UInt16] GroupData 數量  + GroupData[]  ← 解析（結果分組選擇）
- * [UInt16] NpcEventData 數量 + NpcEventData[]  ← 解析
- * [UInt16] FightData 數量 + FightData[]   ← 解析（事件戰鬥敵方配置）
+ * [Int32]  số lượng NpcData  + NpcData[]
+ * [UInt16] số lượng GoodsData + GoodsData[]   ← bỏ qua
+ * [UInt16] số lượng DoorData  + DoorData[]    ← bỏ qua
+ * [UInt16] số lượng MineData  + MineData[]    ← bỏ qua
+ * [UInt16] số lượng SurfaceData + SurfaceData[] ← bỏ qua
+ * [UInt16] số lượng SceneInfoData + SceneInfoData[] ← bỏ qua
+ * [UInt16] số lượng GroupData  + GroupData[]  ← phân tích (lựa chọn phân nhóm kết quả)
+ * [UInt16] số lượng NpcEventData + NpcEventData[]  ← phân tích
+ * [UInt16] số lượng FightData + FightData[]   ← phân tích (cấu hình phe địch của chiến đấu sự kiện)
  * ```
  */
 object EveDataLoader {
 
     /**
-     * 載入 Eve.emg 並回傳場景 ID → [SceneEveData] 映射
+     * Nạp Eve.emg và trả về ánh xạ ID cảnh → [SceneEveData]
      *
-     * @param data Eve.emg 完整二進位內容
+     * @param data nội dung nhị phân đầy đủ của Eve.emg
      */
     fun load(data: ByteArray): Map<Int, SceneEveData> {
         val reader = DatReader(data)
 
-        // ── 讀取場景目錄 ──
+        // ── Đọc thư mục cảnh ──
         val sceneCount = reader.readUInt16()
-        logger.debug { "Eve.emg：場景數量 = $sceneCount" }
+        logger.debug { "Eve.emg: số cảnh = $sceneCount" }
 
         data class SceneEntry(val sceneId: Int, val position: Int, val size: Int)
 
         val entries = ArrayList<SceneEntry>(sceneCount)
         repeat(sceneCount) {
-            val nameLen = reader.readByte()          // [1B] 名稱長度
-            val nameBytes = reader.readBytes(23)     // [23B] 固定名稱欄位
-            val position = reader.readInt32()        // [4B] 絕對偏移
-            val size = reader.readInt32()            // [4B] 大小
+            val nameLen = reader.readByte()          // [1B] Độ dài tên
+            val nameBytes = reader.readBytes(23)     // [23B] Trường tên cố định
+            val position = reader.readInt32()        // [4B] Offset tuyệt đối
+            val size = reader.readInt32()            // [4B] Kích thước
 
-            // 取有效名稱部分（nameLen 個 bytes），去掉 ".eve"
+            // Lấy phần tên hợp lệ (nameLen bytes), bỏ ".eve"
             val name = String(nameBytes, 0, nameLen.coerceAtMost(23), Charsets.US_ASCII)
             val sceneId = name.removeSuffix(".eve").toIntOrNull() ?: return@repeat
 
@@ -66,14 +66,14 @@ object EveDataLoader {
             }
         }
 
-        // ── 解析每個場景 ──
+        // ── Parse từng cảnh ──
         val result = HashMap<Int, SceneEveData>(entries.size)
         var parseErrors = 0
 
         for (entry in entries) {
             try {
-                // DataManager.lua 第 773 行：position = ReadInt32() + 103
-                // 場景 block 前 103 bytes 是標頭，EventData.New 從 +103 開始讀
+                // DataManager.lua dòng 773: position = ReadInt32() + 103
+                // 103 bytes đầu của block cảnh là phần header, EventData.New đọc từ +103
                 reader.seek(entry.position + 103)
                 val sceneData = parseSceneData(reader)
                 if (sceneData.npcs.isNotEmpty() || sceneData.doors.isNotEmpty() || sceneData.npcEvents.isNotEmpty()) {
@@ -82,67 +82,67 @@ object EveDataLoader {
             } catch (e: Exception) {
                 parseErrors++
                 if (parseErrors <= 5) {
-                    logger.warn { "場景 ${entry.sceneId} 解析失敗（offset=${entry.position}）：${e.message}" }
+                    logger.warn { "Parse cảnh ${entry.sceneId} thất bại (offset=${entry.position}): ${e.message}" }
                 }
             }
         }
 
         if (parseErrors > 5) {
-            logger.warn { "... 共 $parseErrors 個場景解析失敗（只顯示前 5 個）" }
+            logger.warn { "... tổng cộng $parseErrors cảnh parse thất bại (chỉ hiển thị 5 cái đầu)" }
         }
 
         return result
     }
 
-    // ── 場景資料解析 ──
+    // ── Parse dữ liệu cảnh ──
 
     /**
-     * 解析單一場景的事件資料
+     * Phân tích dữ liệu sự kiện của một cảnh duy nhất
      */
     private fun parseSceneData(reader: DatReader): SceneEveData {
         // [1] NpcData（Int32 count）
         val npcs = parseNpcDataSection(reader)
 
-        // [2] GoodsData（UInt16 count，固定 13B/record）
+        // [2] GoodsData (UInt16 count, cố định 13B/record)
         skipGoodsSection(reader)
 
-        // [3] DoorData（UInt16 count，可變長）
+        // [3] DoorData (UInt16 count, độ dài biến thiên)
         val doors = parseDoorSection(reader)
 
-        // [4] MineData（UInt16 count，可變長）— server-triggered encounter zones
+        // [4] MineData (UInt16 count, độ dài biến thiên) — server-triggered encounter zones
         val mines = parseMineSection(reader)
 
-        // [5] SurfaceData（UInt16 count，可變長）
+        // [5] SurfaceData (UInt16 count, độ dài biến thiên)
         val surfaceDatas = parseSurfaceSection(reader)
 
-        // [6] SceneInfoData（UInt16 count，固定 39B/record）— Door 傳送目的地
+        // [6] SceneInfoData (UInt16 count, cố định 39B/record) — đích dịch chuyển của Door
         val sceneInfos = parseSceneInfoSection(reader)
 
-        // [7] GroupData（UInt16 count，可變長）— 結果分組選擇
+        // [7] GroupData (UInt16 count, độ dài biến thiên) — chọn nhóm kết quả
         val groupDatas = parseGroupSection(reader)
 
-        // [8] NpcEventData（UInt16 count）← 解析
+        // [8] NpcEventData (UInt16 count) ← parse
         val npcEvents = parseNpcEventSection(reader)
 
-        // [9] FightData（UInt16 count）← 解析（事件戰鬥敵方配置）
+        // [9] FightData (UInt16 count) ← parse (cấu hình phe địch trong chiến đấu sự kiện)
         val fightDatas = parseFightDataSection(reader)
 
         return SceneEveData(npcs, doors, npcEvents, sceneInfos, fightDatas, surfaceDatas, groupDatas, mines)
     }
 
     // ────────────────────────────────────────────
-    // NpcData 解析（Eve_NpcData.lua）
+    // Parse NpcData (Eve_NpcData.lua)
     // ────────────────────────────────────────────
 
     /**
-     * 解析 NpcData 區段
+     * Phân tích section NpcData
      *
-     * 欄位順序嚴格對照 Eve_NpcData.lua（逐行 1:1 對應）：
+     * Thứ tự trường đối chiếu nghiêm ngặt Eve_NpcData.lua (đối chiếu 1:1 từng dòng):
      * ```
      * id(UInt16) npcId(UInt16)
      * eventCount(UInt16) events[n](Byte each)
      * saleKindCount(Byte) saleKinds[n](Byte each)
-     * motionNodeCount(Byte) motionNodes[0..n]{Int32 Int32}（共 n+1 個）
+     * motionNodeCount(Byte) motionNodes[0..n]{Int32 Int32} (tổng cộng n+1)
      * motionType(Byte) motionBack(Byte) motionCycleNum(Byte) direction(Byte)
      * motionSuspendMS(UInt16) motionSpeedLv(Byte)
      * roleGrid{Int32×4} moveOffsetGrid{Int32×2} position{Int32×2}
@@ -152,7 +152,7 @@ object EveDataLoader {
      * ```
      */
     private fun parseNpcDataSection(reader: DatReader): Map<Int, EveNpcPlacement> {
-        val count = reader.readInt32()   // NpcData 用 Int32
+        val count = reader.readInt32()   // NpcData dùng Int32
         if (count <= 0) return emptyMap()
 
         val result = LinkedHashMap<Int, EveNpcPlacement>(count)
@@ -161,16 +161,16 @@ object EveDataLoader {
             val id = reader.readUInt16()
             val npcId = reader.readUInt16()
 
-            // eventCount：Lua ReadUInt16（不是 Byte）
+            // eventCount: Lua ReadUInt16 (không phải Byte)
             val eventCount = reader.readUInt16()
             val events = ArrayList<Int>(eventCount)
-            // events[n]：Lua ReadByte（不是 UInt16）
+            // events[n]: Lua ReadByte (không phải UInt16)
             repeat(eventCount) { events.add(reader.readByte()) }
 
             val saleKindCount = reader.readByte()
             repeat(saleKindCount) { reader.readByte() }
 
-            // 巡邏路點：Lua for i=0, motionNodeCount → 共 motionNodeCount+1 個節點
+            // Điểm tuần tra: Lua for i=0, motionNodeCount → tổng cộng motionNodeCount+1 nút
             val motionNodeCount = reader.readByte()
             val motionNodes = ArrayList<Pair<Int, Int>>(motionNodeCount + 1)
             repeat(motionNodeCount + 1) {
@@ -186,13 +186,13 @@ object EveDataLoader {
             val motionSuspendMS = reader.readUInt16()
             val motionSpeedLv = reader.readByte()
 
-            // roleGrid：4 × Int32 = 16B（不使用）
+            // roleGrid: 4 × Int32 = 16B (không dùng)
             repeat(4) { reader.readInt32() }
 
-            // moveOffsetGrid：2 × Int32 = 8B（不使用）
+            // moveOffsetGrid: 2 × Int32 = 8B (không dùng)
             repeat(2) { reader.readInt32() }
 
-            // position：2 × Int32 = 8B（NPC 座標）
+            // position: 2 × Int32 = 8B (toạ độ NPC)
             val posX = reader.readInt32()
             val posY = reader.readInt32()
 
@@ -203,13 +203,13 @@ object EveDataLoader {
             val canGrow = reader.readByte()  // canGrow
             reader.readByte()       // isLie
 
-            // innerNode：4 × Int32 = 16B（不使用）
+            // innerNode: 4 × Int32 = 16B (không dùng)
             repeat(4) { reader.readInt32() }
 
-            // outerNode：4 × Int32 = 16B（不使用）
+            // outerNode: 4 × Int32 = 16B (không dùng)
             repeat(4) { reader.readInt32() }
 
-            reader.readByte()       // traceSpeedLv（不使用）
+            reader.readByte()       // traceSpeedLv (không dùng)
             val traceRadius = reader.readUInt16()
             val close = reader.readByte() != 0
 
@@ -230,13 +230,13 @@ object EveDataLoader {
     }
 
     // ────────────────────────────────────────────
-    // Skip 區段
+    // Phần Skip
     // ────────────────────────────────────────────
 
     /**
-     * 跳過 GoodsData 區段 — Eve_GoodsData.lua
+     * Bỏ qua section GoodsData — Eve_GoodsData.lua
      *
-     * 固定 13B/record：NO(1)+DBID(2)+PosX(4)+PosY(4)+HideTime(2)
+     * Cố định 13B/record: NO(1)+DBID(2)+PosX(4)+PosY(4)+HideTime(2)
      */
     private fun skipGoodsSection(reader: DatReader) {
         val count = reader.readUInt16()
@@ -244,14 +244,14 @@ object EveDataLoader {
     }
 
     /**
-     * 解析 DoorData 區段 — Eve_DoorData.lua
+     * Phân tích section DoorData — Eve_DoorData.lua
      *
-     * 可變長：id(2)+eventCount(2)+events[n](n×1)+grid(16)+imageKind(1)+pos(4)+close(1)
+     * Độ dài thay đổi: id(2)+eventCount(2)+events[n](n×1)+grid(16)+imageKind(1)+pos(4)+close(1)
      *
-     * Door 和 NPC 共享同一個 NpcEventData 表（eveNo 引用），
-     * 但各自有獨立的 ID 空間（Door.id ≠ NPC.clickId）。
+     * Door và NPC chia sẻ cùng một bảng NpcEventData (tham chiếu eveNo),
+     * Nhưng mỗi loại có không gian ID độc lập (Door.id ≠ NPC.clickId).
      *
-     * @return doorId → [EveDoorPlacement] 映射
+     * @return ánh xạ doorId → [EveDoorPlacement]
      */
     private fun parseDoorSection(reader: DatReader): Map<Int, EveDoorPlacement> {
         val count = reader.readUInt16()
@@ -263,15 +263,15 @@ object EveDataLoader {
             val eventCount = reader.readUInt16()
             val events = ArrayList<Int>(eventCount)
             repeat(eventCount) { events.add(reader.readByte()) }
-            // grid：4 × Int32（gridX, gridY, gridWidth, gridHeight）— 門碰撞區域（格子單位）
+            // grid: 4 × Int32 (gridX, gridY, gridWidth, gridHeight) — vùng va chạm của cửa (đơn vị ô lưới)
             val gridX = reader.readInt32()
             val gridY = reader.readInt32()
             val gridW = reader.readInt32()
             val gridH = reader.readInt32()
             reader.readByte()               // imageKind
-            reader.readUInt16()             // imgInfo.position.x（圖片顯示座標，非碰撞座標）
+            reader.readUInt16()             // imgInfo.position.x (toạ độ hiển thị ảnh, không phải toạ độ va chạm)
             reader.readUInt16()             // imgInfo.position.y
-            // 門中心像素座標 = grid 中心 × BLOCK_UNIT(20)，與客戶端 DoorManager.lua 一致
+            // Toạ độ pixel tâm cửa = tâm grid × BLOCK_UNIT(20), khớp với client DoorManager.lua
             val doorX = (gridX + gridW / 2) * 20
             val doorY = (gridY + gridH / 2) * 20
             reader.readByte()               // close（Boolean）
@@ -284,10 +284,10 @@ object EveDataLoader {
     }
 
     /**
-     * 解析 MineData 區段 — Eve_MineData.lua
+     * Phân tích section MineData — Eve_MineData.lua
      *
-     * DVT client 定義 EEventTrigger.Mine=7 並註明由 server kích hoạt.
-     * 可變長：id(2)+eventCount(2)+events[n](n×1)+grid(16)+sizeKind(1)
+     * DVT client định nghĩa EEventTrigger.Mine=7 và ghi rõ do server kích hoạt.
+     * Độ dài thay đổi: id(2)+eventCount(2)+events[n](n×1)+grid(16)+sizeKind(1)
      */
     private fun parseMineSection(reader: DatReader): Map<Int, EveMinePlacement> {
         val count = reader.readUInt16()
@@ -321,14 +321,14 @@ object EveDataLoader {
     }
 
     /**
-     * 解析 SurfaceData 區段 — Eve_SurfaceData.lua
+     * Phân tích section SurfaceData — Eve_SurfaceData.lua
      *
-     * 可變長：id(2)+unused(2)+sentenceCount(1)+optionIndex(1)+optionCount(1)+optionMode(1)+sentences[n](n×5)
-     * 每個 sentence：dataId(2)+dataKind(1)+style(1)+canCut(1)
+     * Độ dài thay đổi: id(2)+unused(2)+sentenceCount(1)+optionIndex(1)+optionCount(1)+optionMode(1)+sentences[n](n×5)
+     * Mỗi sentence: dataId(2)+dataKind(1)+style(1)+canCut(1)
      *
-     * 對齊 Lua：跳過 style=3 && dataKind=1 && dataId=20393 的句子（Eve_SurfaceData.lua 第 27-31 行）
+     * Căn chỉnh Lua: bỏ qua các câu có style=3 && dataKind=1 && dataId=20393 (Eve_SurfaceData.lua dòng 27-31)
      *
-     * @return id → [EveSurfaceData] 映射
+     * @return ánh xạ id → [EveSurfaceData]
      */
     private fun parseSurfaceSection(reader: DatReader): Map<Int, EveSurfaceData> {
         val count = reader.readUInt16()
@@ -337,7 +337,7 @@ object EveDataLoader {
         val result = LinkedHashMap<Int, EveSurfaceData>(count)
         repeat(count) {
             val id = reader.readUInt16()
-            reader.readUInt16()              // 廢棄欄位（關聯次數，沒有在用）
+            reader.readUInt16()              // Trường bãi bỏ (số lần liên kết, không còn dùng)
             val sentenceCount = reader.readByte()
             val optionIndex = reader.readByte()
             val optionCount = reader.readByte()
@@ -351,7 +351,7 @@ object EveDataLoader {
                 val style = reader.readByte()
                 val canCut = reader.readBoolean()
 
-                // 對齊 Lua：跳過 style=3 && dataKind=1 && dataId=20393
+                // Căn theo Lua: bỏ qua style=3 && dataKind=1 && dataId=20393
                 if (style == 3 && dataKind == 1 && dataId == 20393) {
                     ignoreCount++
                 } else {
@@ -365,20 +365,20 @@ object EveDataLoader {
             }
         }
 
-        logger.debug { "SurfaceData：${result.size} 筆互動資料載入完成" }
+        logger.debug { "SurfaceData: nạp xong ${result.size} dữ liệu tương tác" }
         return result
     }
 
     /**
-     * 解析 SceneInfoData 區段 — Eve_SceneInfoData.lua
+     * Phân tích section SceneInfoData — Eve_SceneInfoData.lua
      *
-     * 固定 39B/record：
+     * Cố định 39B/record:
      * EveNo(2)+BackGroundNo(2)+EveFileName(2)+PlayerAppearX(4)+PlayerAppearY(4)+
      * Direction(1)+AreaName[21](21)+LinkCount(2)+SceneEffect(1)
      *
-     * resultType=2（Door 傳送）時，result.parameter = SceneInfo 的 EveNo 鍵值。
+     * Khi resultType=2 (Door dịch chuyển), result.parameter = giá khoá EveNo của SceneInfo.
      *
-     * @return eveNo → [EveSceneInfo] 映射
+     * @return ánh xạ eveNo → [EveSceneInfo]
      */
     private fun parseSceneInfoSection(reader: DatReader): Map<Int, EveSceneInfo> {
         val count = reader.readUInt16()
@@ -388,11 +388,11 @@ object EveDataLoader {
         repeat(count) {
             val eveNo = reader.readUInt16()
             val backgroundNo = reader.readUInt16()
-            reader.readUInt16()         // eveFileName（伺服器不需要）
+            reader.readUInt16()         // eveFileName (server không cần)
             val playerAppearX = reader.readInt32()
             val playerAppearY = reader.readInt32()
             val direction = reader.readByte()
-            reader.readBytes(21)        // areaName（伺服器不需要）
+            reader.readBytes(21)        // areaName (server không cần)
             reader.readUInt16()         // linkCount
             reader.readByte()           // sceneEffect
 
@@ -404,15 +404,15 @@ object EveDataLoader {
     }
 
     /**
-     * 解析 GroupData 區段 — Eve_GroupData.lua
+     * Phân tích section GroupData — Eve_GroupData.lua
      *
-     * 結果分組機制：EveResult.resultGroupNo > 0 時引用此表。
-     * 伺服器依 ProbabilityRateAy 從 MemberNoAy 中選一個 resultNo。
+     * Cơ chế phân nhóm kết quả: khi EveResult.resultGroupNo > 0 thì tham chiếu bảng này.
+     * Server dựa vào ProbabilityRateAy chọn một resultNo từ MemberNoAy.
      *
-     * 可變長：EveNo(2)+EventNo(2)+ConditionNo(1)+UseMode(1)+MemberNum(1)+
+     * Độ dài thay đổi: EveNo(2)+EventNo(2)+ConditionNo(1)+UseMode(1)+MemberNum(1)+
      * MemberNoAy[n](n×1)+ProbabilityRateAy[n](n×1)+PickMember(1)
      *
-     * @return eveNo → [EveGroupData] 映射
+     * @return ánh xạ eveNo → [EveGroupData]
      */
     private fun parseGroupSection(reader: DatReader): Map<Int, EveGroupData> {
         val count = reader.readUInt16()
@@ -442,18 +442,18 @@ object EveDataLoader {
             }
         }
 
-        logger.debug { "GroupData：${result.size} 筆分組資料載入完成" }
+        logger.debug { "GroupData: nạp xong ${result.size} dữ liệu nhóm" }
         return result
     }
 
     // ────────────────────────────────────────────
-    // NpcEventData 解析（Eve_NpcEventData.lua）
+    // Parse NpcEventData (Eve_NpcEventData.lua)
     // ────────────────────────────────────────────
 
     /**
-     * 解析 NpcEventData 區段
+     * Phân tích section NpcEventData
      *
-     * 欄位順序嚴格對照 Eve_NpcEventData.lua：
+     * Thứ tự trường đối chiếu nghiêm ngặt Eve_NpcEventData.lua:
      * ```
      * EveNo(2) + EventName[9](9) + WhenHappen(4×Boolean)
      * ConditionArrayNum(1) + ConditionArray[]:
@@ -473,11 +473,11 @@ object EveDataLoader {
         repeat(count) {
             val eveNo = reader.readUInt16()
             reader.readBytes(9)              // EventName[9]
-            // WhenHappen（4 × 1B Boolean）：觸發時機旗標
+            // WhenHappen (4 × 1B Boolean): cờ thời điểm kích hoạt
             val onClickObj  = reader.readByte() != 0   // [0] OnClickObject（ClickNpc）
             val onStrokeObj = reader.readByte() != 0   // [1] OnStrokeObject（BumpNpc）
             val onIntoArea  = reader.readByte() != 0   // [2] OnIntoObjectArea（ScanNpc）
-            val onSerStroke = reader.readByte() != 0   // [3] OnSerStrokeObject（伺服器碰撞）
+            val onSerStroke = reader.readByte() != 0   // [3] OnSerStrokeObject (va chạm phía server)
             val whenHappen  = listOf(onClickObj, onStrokeObj, onIntoArea, onSerStroke)
 
             val conditionCount = reader.readByte()
@@ -486,13 +486,13 @@ object EveDataLoader {
             repeat(conditionCount) {
                 val conditionNo = reader.readByte()
                 val conditionClass = reader.readByte()
-                val conditionParameter = reader.readUInt16()  // Parameter（conditionClass=2 時為任務 ID）
+                val conditionParameter = reader.readUInt16()  // Parameter (khi conditionClass=2 thì là ID nhiệm vụ)
                 val conditionParameterStyle = reader.readByte()  // ParameterStyle
                 val conditionOps = reader.readByte()
                 val conditionValue = reader.readInt32()
                 reader.readDouble()              // CTimeValue（8B Double）
-                val toResult = reader.readByte()  // ToResult（若此條件符合，跳到哪個結果）
-                val andNum = reader.readByte()    // AndNum（>0 表示與後 N 個條件 AND）
+                val toResult = reader.readByte()  // ToResult (nếu điều kiện này thỏa thì nhảy đến kết quả nào)
+                val andNum = reader.readByte()    // AndNum (>0 có nghĩa là AND với N điều kiện phía sau)
                 val conditionSubItem = reader.readUInt16()  // ConditionSubItem
 
                 val resultCount = reader.readByte()
@@ -543,22 +543,22 @@ object EveDataLoader {
     }
 
     // ────────────────────────────────────────────
-    // FightData 解析（Eve_FightData.lua）
+    // Parse FightData (Eve_FightData.lua)
     // ────────────────────────────────────────────
 
     /**
-     * 解析 FightData 區段
+     * Phân tích section FightData
      *
-     * 欄位順序嚴格對照 Eve_FightData.lua FightData.New()：
+     * Thứ tự trường đối chiếu nghiêm ngặt Eve_FightData.lua FightData.New():
      * ```
      * EveNo(2) + FightType(1) + BKMusic(1) + LinkToResult(1)
      * + LeftEnemyArrayNum(2) + LeftEnemy[]{NO(2)+NPCID(2)+LocationPos(1)+AI(1)}
-     * + RightEnemyArrayNum(2) + RightEnemy[]{同上}
+     * + RightEnemyArrayNum(2) + RightEnemy[]{như trên}
      * + FightEventArrayNum(2) + FightEvent[]{EventNo(2)+EventName[9]+WinConditions[]}
      * + FightLimit(4)
      * ```
      *
-     * @return eveNo → [EveFightData] 映射
+     * @return ánh xạ eveNo → [EveFightData]
      */
     private fun parseFightDataSection(reader: DatReader): Map<Int, EveFightData> {
         val count = reader.readUInt16()
@@ -569,10 +569,10 @@ object EveDataLoader {
         repeat(count) {
             val eveNo = reader.readUInt16()
             val fightType = reader.readByte()
-            reader.readByte()                   // BKMusic（客戶端用，伺服器不需要）
+            reader.readByte()                   // BKMusic (dùng cho client, server không cần)
             val linkToResult = reader.readByte()
 
-            // LeftEnemyAy（主要敵方群組）
+            // LeftEnemyAy (nhóm kẻ địch chính)
             val leftCount = reader.readUInt16()
             val leftEnemies = ArrayList<EveFightEnemy>(leftCount)
             repeat(leftCount) {
@@ -583,7 +583,7 @@ object EveDataLoader {
                 leftEnemies.add(EveFightEnemy(no, npcId, locationPos, ai))
             }
 
-            // RightEnemyAy（次要群組）
+            // RightEnemyAy (nhóm phụ)
             val rightCount = reader.readUInt16()
             val rightEnemies = ArrayList<EveFightEnemy>(rightCount)
             repeat(rightCount) {
@@ -594,7 +594,7 @@ object EveDataLoader {
                 rightEnemies.add(EveFightEnemy(no, npcId, locationPos, ai))
             }
 
-            // FightEventAy（戰鬥事件條件 — 跳過，伺服器目前不需要）
+            // FightEventAy (điều kiện sự kiện chiến đấu — bỏ qua, server hiện không cần)
             val fightEventCount = reader.readUInt16()
             repeat(fightEventCount) {
                 reader.readUInt16()             // EventNo
@@ -626,13 +626,13 @@ object EveDataLoader {
             }
         }
 
-        logger.debug { "FightData：${result.size} 場戰鬥配置載入完成" }
+        logger.debug { "FightData: nạp xong cấu hình ${result.size} trận chiến" }
         return result
     }
 
     // ────────────────────────────────────────────
-    // conditionClass 統計分析（啟動時一次性）
+    // Phân tích thống kê conditionClass (chạy một lần lúc khởi động)
     // ────────────────────────────────────────────
 
-    // TODO：conditionClass 統計分析（未實作）
+    // TODO: phân tích thống kê conditionClass (chưa cài đặt)
 }

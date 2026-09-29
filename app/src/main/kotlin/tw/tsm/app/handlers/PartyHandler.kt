@@ -13,10 +13,10 @@ import tw.tsm.protocol.PacketReader
 private val logger = KotlinLogging.logger {}
 
 /**
- * 隊伍處理器（mainKind = 13）
+ * Bộ xử lý tổ đội (mainKind = 13)
  *
- * 來源：protocal.lua protocolTable[13]
- * 處理所有隊伍相關的 C→S 封包。
+ * Nguồn: protocal.lua protocolTable[13]
+ * Xử lý tất cả gói tin C→S liên quan đến tổ đội.
  */
 class PartyHandler(
     private val partySystem: PartySystem,
@@ -42,51 +42,51 @@ class PartyHandler(
             9 -> handleChangeLeader(session, playerId, data)
             10 -> handleKick(session, playerId, data)
             15 -> handleMoveStatus(session, playerId, data)
-            else -> logger.trace { "未處理的隊伍 subKind=$subKind" }
+            else -> logger.trace { "Tổ đội chưa xử lý subKind=$subKind" }
         }
     }
 
     /**
-     * C:013-001 要求組隊（隊員 → 隊長）
+     * C:013-001 yêu cầu lập tổ đội (thành viên → đội trưởng)
      *
-     * 格式：+playerId(8)
+     * Định dạng: +playerId(8)
      */
     private fun handleJoinRequest(session: GameSession, playerId: Long, data: ByteArray) {
         val reader = PacketReader(data)
         val targetId = reader.readULongLE()
 
-        // 自己已在隊伍中
+        // Mình đã ở trong tổ đội
         if (partySystem.isInParty(playerId)) {
-            responseSender.sendPartyMessage(session, 2)  // 本隊人數已滿
+            responseSender.sendPartyMessage(session, 2)  // Số người của đội mình đã đầy
             return
         }
 
         val targetSession = worldManager.getPlayerById(targetId)
         if (targetSession == null) {
-            logger.debug { "組隊要求失敗：對方 $targetId 不在線" }
+            logger.debug { "Yêu cầu tổ đội thất bại: người kia $targetId không trực tuyến" }
             return
         }
 
-        // 對方不是隊長且不是獨立玩家（已是別人隊員）
+        // Đối phương không phải đội trưởng cũng không phải người chơi độc lập (đã là đội viên của người khác)
         if (partySystem.isInParty(targetId) && partySystem.getTeamState(targetId) != tw.tsm.domain.enums.TeamState.LEADER) {
             return
         }
 
-        // 對方隊伍已滿
+        // Tổ đội của đối phương đã đầy
         if (partySystem.isInParty(targetId) && partySystem.getTeamSize(targetId) >= PartySystem.MAX_MEMBERS) {
-            responseSender.sendPartyMessage(session, 1)  // 該隊人數已滿
+            responseSender.sendPartyMessage(session, 1)  // Số người của đội đó đã đầy
             return
         }
 
-        // 轉發要求給隊長
+        // Chuyển tiếp yêu cầu cho đội trưởng
         responseSender.sendPartyJoinRequest(targetSession, playerId)
-        logger.info { "${session.characterName} 要求加入 ${targetSession.characterName} 的隊伍" }
+        logger.info { "${session.characterName} xin gia nhập tổ đội của ${targetSession.characterName}" }
     }
 
     /**
-     * C:013-003 回覆組隊要求（隊長 → 隊員）
+     * C:013-003 trả lời yêu cầu tổ đội (đội trưởng → thành viên)
      *
-     * 格式：+result(1) +playerId(8)
+     * Định dạng: +result(1) +playerId(8)
      */
     private suspend fun handleJoinResponse(session: GameSession, playerId: Long, data: ByteArray) {
         val reader = PacketReader(data)
@@ -95,90 +95,90 @@ class PartyHandler(
 
         val targetSession = worldManager.getPlayerById(targetId)
         if (targetSession == null) {
-            logger.debug { "回覆組隊：對方 $targetId 不在線" }
+            logger.debug { "Phản hồi tổ đội: người kia $targetId không trực tuyến" }
             return
         }
 
         if (result != 1) {
-            // 拒絕或無回應 — 通知要求方
+            // Từ chối hoặc không phản hồi — thông báo cho bên yêu cầu
             responseSender.sendPartyJoinResult(targetSession, result, session.characterName)
             return
         }
 
-        // 同意加入
+        // Đồng ý tham gia
         if (partySystem.isInParty(playerId)) {
-            // 隊長已有隊伍 → 加入
+            // Đội trưởng đã có tổ đội → tham gia
             val addResult = partySystem.addMember(playerId, targetId)
             if (addResult != 0) {
                 responseSender.sendPartyMessage(session, addResult)
                 return
             }
         } else {
-            // 隊長尚未組隊 → 建立新隊伍
+            // Đội trưởng chưa lập tổ đội → tạo tổ đội mới
             if (!partySystem.createParty(playerId, targetId)) return
         }
 
-        // 通知要求方：同意
+        // Thông báo cho bên yêu cầu: đồng ý
         responseSender.sendPartyJoinResult(targetSession, 1, session.characterName)
 
-        // 廣播隊伍新增成員
+        // Phát rộng thành viên mới của tổ đội
         broadcastMemberJoin(playerId, targetId)
         dailyProgressSystem?.setConditionFlag(session, DailyProgressSystem.FLAG_FIRST_PARTY)
         dailyProgressSystem?.setConditionFlag(targetSession, DailyProgressSystem.FLAG_FIRST_PARTY)
     }
 
     /**
-     * C:013-004 離開隊伍
+     * C:013-004 rời tổ đội
      *
-     * 格式：+leaderId(8)
+     * Định dạng: +leaderId(8)
      */
     private fun handleLeave(session: GameSession, playerId: Long, data: ByteArray) {
         val result = partySystem.leaveParty(playerId)
         if (result == null) {
-            logger.debug { "$playerId 不在隊伍中" }
+            logger.debug { "$playerId không ở trong tổ đội" }
             return
         }
 
         if (result.disbanded) {
-            // 隊伍解散 → 通知所有成員
+            // Tổ đội giải tán → thông báo cho tất cả thành viên
             for (pid in result.affectedMembers) {
                 val s = worldManager.getPlayerById(pid) ?: continue
                 responseSender.sendPartyLeave(s, playerId, s.x, s.y)
             }
-            // 額外通知解散訊息
+            // Thông báo thêm tin giải tán
             for (pid in result.affectedMembers) {
                 if (pid == playerId) continue
                 val s = worldManager.getPlayerById(pid) ?: continue
-                responseSender.sendPartyMessage(s, 6)  // 隊伍已解散
+                responseSender.sendPartyMessage(s, 6)  // Tổ đội đã giải tán
             }
         } else {
-            // 通知所有剩餘成員
+            // Thông báo cho tất cả thành viên còn lại
             for (pid in result.affectedMembers) {
                 val s = worldManager.getPlayerById(pid) ?: continue
                 responseSender.sendPartyLeave(s, playerId, session.x, session.y)
             }
-            // 通知離隊者自己
+            // Thông báo cho chính người rời đội
             responseSender.sendPartyLeave(session, playerId, session.x, session.y)
         }
 
-        logger.info { "${session.characterName} 離開隊伍 解散=${result.disbanded}" }
+        logger.info { "${session.characterName} rời tổ đội giải_tán=${result.disbanded}" }
     }
 
     /**
-     * C:013-005 設定軍師
+     * C:013-005 đặt quân sư
      *
-     * 格式：+playerId(8)
+     * Định dạng: +playerId(8)
      */
     private fun handleSetAdviser(session: GameSession, playerId: Long, data: ByteArray) {
         val reader = PacketReader(data)
         val targetId = reader.readULongLE()
 
         if (!partySystem.setAdviser(playerId, targetId)) {
-            logger.debug { "設定軍師失敗：隊長=$playerId 目標=$targetId" }
+            logger.debug { "Đặt quân sư thất bại: đội trưởng=$playerId mục tiêu=$targetId" }
             return
         }
 
-        // 通知所有隊員
+        // Thông báo cho tất cả đội viên
         val members = partySystem.getTeamMembers(playerId)
         for (pid in members) {
             val s = worldManager.getPlayerById(pid) ?: continue
@@ -187,20 +187,20 @@ class PartyHandler(
     }
 
     /**
-     * C:013-006 取消軍師
+     * C:013-006 hủy quân sư
      *
-     * 格式：+playerId(8)
+     * Định dạng: +playerId(8)
      */
     private fun handleRemoveAdviser(session: GameSession, playerId: Long, data: ByteArray) {
         val reader = PacketReader(data)
         val targetId = reader.readULongLE()
 
         if (!partySystem.removeAdviser(playerId, targetId)) {
-            logger.debug { "取消軍師失敗：隊長=$playerId 目標=$targetId" }
+            logger.debug { "Hủy quân sư thất bại: đội trưởng=$playerId mục tiêu=$targetId" }
             return
         }
 
-        // 通知目標
+        // Thông báo cho mục tiêu
         val targetSession = worldManager.getPlayerById(targetId)
         if (targetSession != null) {
             responseSender.sendPartyRemoveAdviser(targetSession)
@@ -208,9 +208,9 @@ class PartyHandler(
     }
 
     /**
-     * C:013-007 邀請組隊（隊長 → 單獨玩家）
+     * C:013-007 mời tổ đội (đội trưởng → người chơi đơn lẻ)
      *
-     * 格式：+playerId(8)
+     * Định dạng: +playerId(8)
      */
     private fun handleInvite(session: GameSession, playerId: Long, data: ByteArray) {
         val reader = PacketReader(data)
@@ -218,31 +218,31 @@ class PartyHandler(
 
         val targetSession = worldManager.getPlayerById(targetId)
         if (targetSession == null) {
-            logger.debug { "邀請組隊：對方 $targetId 不在線" }
+            logger.debug { "Mời tổ đội: người kia $targetId không trực tuyến" }
             return
         }
 
-        // 對方已在隊伍
+        // Đối phương đã ở trong tổ đội
         if (partySystem.isInParty(targetId)) {
-            responseSender.sendPartyInviteResult(session, 2, targetSession.characterName)  // 拒絕
+            responseSender.sendPartyInviteResult(session, 2, targetSession.characterName)  // Từ chối
             return
         }
 
-        // 自己隊伍已滿
+        // Tổ đội của mình đã đầy
         if (partySystem.isInParty(playerId) && partySystem.getTeamSize(playerId) >= PartySystem.MAX_MEMBERS) {
-            responseSender.sendPartyMessage(session, 2)  // 本隊人數已滿
+            responseSender.sendPartyMessage(session, 2)  // Số người của đội mình đã đầy
             return
         }
 
-        // 轉發邀請
+        // Chuyển tiếp lời mời
         responseSender.sendPartyInvite(targetSession, playerId)
-        logger.info { "${session.characterName} 邀請 ${targetSession.characterName} 加入隊伍" }
+        logger.info { "${session.characterName} mời ${targetSession.characterName} vào tổ đội" }
     }
 
     /**
-     * C:013-008 回覆邀請組隊
+     * C:013-008 Trả lời lời mời lập tổ đội
      *
-     * 格式：+result(1) +playerId(8)
+     * Định dạng: +result(1) +playerId(8)
      */
     private suspend fun handleInviteResponse(session: GameSession, playerId: Long, data: ByteArray) {
         val reader = PacketReader(data)
@@ -251,17 +251,17 @@ class PartyHandler(
 
         val inviterSession = worldManager.getPlayerById(inviterId)
         if (inviterSession == null) {
-            logger.debug { "回覆邀請：邀請者 $inviterId 不在線" }
+            logger.debug { "Phản hồi lời mời: người mời $inviterId không trực tuyến" }
             return
         }
 
         if (result != 1) {
-            // 拒絕或無回應
+            // Từ chối hoặc không phản hồi
             responseSender.sendPartyInviteResult(inviterSession, result, session.characterName)
             return
         }
 
-        // 同意加入
+        // Đồng ý tham gia
         if (partySystem.isInParty(inviterId)) {
             val addResult = partySystem.addMember(inviterId, playerId)
             if (addResult != 0) {
@@ -269,23 +269,23 @@ class PartyHandler(
                 return
             }
         } else {
-            // 邀請者尚未組隊 → 建立新隊伍
+            // Người mời chưa lập tổ đội → tạo tổ đội mới
             if (!partySystem.createParty(inviterId, playerId)) return
         }
 
-        // 通知邀請者：同意
+        // Thông báo cho người mời: đồng ý
         responseSender.sendPartyInviteResult(inviterSession, 1, session.characterName)
 
-        // 廣播隊伍新增成員
+        // Phát rộng thành viên mới của tổ đội
         broadcastMemberJoin(inviterId, playerId)
         dailyProgressSystem?.setConditionFlag(session, DailyProgressSystem.FLAG_FIRST_PARTY)
         dailyProgressSystem?.setConditionFlag(inviterSession, DailyProgressSystem.FLAG_FIRST_PARTY)
     }
 
     /**
-     * C:013-009 換隊長
+     * C:013-009 Đổi đội trưởng
      *
-     * 格式：+playerId(8)
+     * Định dạng: +playerId(8)
      */
     private fun handleChangeLeader(session: GameSession, playerId: Long, data: ByteArray) {
         val reader = PacketReader(data)
@@ -293,11 +293,11 @@ class PartyHandler(
 
         val memberList = partySystem.changeLeader(playerId, newLeaderId)
         if (memberList == null) {
-            logger.debug { "換隊長失敗：$playerId → $newLeaderId" }
+            logger.debug { "Đổi đội trưởng thất bại: $playerId → $newLeaderId" }
             return
         }
 
-        // 通知所有成員（含新隊長）
+        // Thông báo cho tất cả thành viên (gồm cả đội trưởng mới)
         val allNotify = memberList + listOf(newLeaderId)
         for (pid in allNotify) {
             val s = worldManager.getPlayerById(pid) ?: continue
@@ -306,9 +306,9 @@ class PartyHandler(
     }
 
     /**
-     * C:013-010 踢人
+     * C:013-010 Đá người
      *
-     * 格式：+playerId(8)
+     * Định dạng: +playerId(8)
      */
     private fun handleKick(session: GameSession, playerId: Long, data: ByteArray) {
         val reader = PacketReader(data)
@@ -317,29 +317,29 @@ class PartyHandler(
         val targetSession = worldManager.getPlayerById(targetId)
 
         if (!partySystem.kickMember(playerId, targetId)) {
-            logger.debug { "踢人失敗：隊長=$playerId 目標=$targetId" }
+            logger.debug { "Đá người thất bại: đội trưởng=$playerId mục tiêu=$targetId" }
             return
         }
 
-        // 通知被踢者
+        // Thông báo cho người bị đá
         if (targetSession != null) {
             responseSender.sendPartyLeave(targetSession, targetId, targetSession.x, targetSession.y)
         }
 
-        // 通知剩餘隊員
+        // Thông báo cho các đội viên còn lại
         val remaining = partySystem.getTeamMembers(playerId)
         for (pid in remaining) {
             val s = worldManager.getPlayerById(pid) ?: continue
             responseSender.sendPartyLeave(s, targetId, targetSession?.x ?: 0, targetSession?.y ?: 0)
         }
 
-        logger.info { "${session.characterName} 踢出 ${targetSession?.characterName ?: targetId}" }
+        logger.info { "${session.characterName} đá ${targetSession?.characterName ?: targetId}" }
     }
 
     /**
-     * C:013-015 組隊中換移動狀態
+     * C:013-015 Đổi trạng thái di chuyển khi đang trong tổ đội
      *
-     * 格式：+playerId(8) +status(1)
+     * Định dạng: +playerId(8) +status(1)
      */
     private fun handleMoveStatus(session: GameSession, playerId: Long, data: ByteArray) {
         val reader = PacketReader(data)
@@ -349,12 +349,12 @@ class PartyHandler(
         val targetSession = worldManager.getPlayerById(targetId)
         if (targetSession == null) return
 
-        // 轉發給目標
+        // Chuyển tiếp cho mục tiêu
         responseSender.sendPartyMoveStatus(targetSession, targetId, status)
     }
 
     /**
-     * 廣播隊伍新增成員給所有隊員
+     * Phát rộng thành viên mới của tổ đội cho tất cả đội viên
      */
     private fun broadcastMemberJoin(leaderId: Long, newMemberId: Long) {
         val members = partySystem.getTeamMembers(leaderId)
@@ -363,11 +363,11 @@ class PartyHandler(
             responseSender.sendPartyMemberJoin(s, leaderId, newMemberId)
         }
 
-        // 發送完整隊伍資料給新成員
+        // Gửi toàn bộ dữ liệu tổ đội cho thành viên mới
         val newSession = worldManager.getPlayerById(newMemberId)
         if (newSession != null) {
             responseSender.sendPartyData(newSession, mapOf(leaderId to members))
-            // 發送軍師資料
+            // Gửi dữ liệu quân sư
             val adviserId = partySystem.getAdviserId(leaderId)
             if (adviserId > 0) {
                 responseSender.sendPartyAdviserData(newSession, listOf(adviserId))

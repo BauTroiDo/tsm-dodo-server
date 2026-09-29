@@ -1,16 +1,16 @@
 package tw.tsm.domain.valueobjects
 
 /**
- * 玩家資料 DTO — 對應 S:005-003 封包
+ * DTO dữ liệu người chơi — tương ứng gói tin S:005-003
  *
- * 來源：protocal.lua protocolTable[5][3] → Role.ReceivePlayerData(data)
+ * Nguồn: protocal.lua protocolTable[5][3] → Role.ReceivePlayerData(data)
  */
 import tw.tsm.domain.interfaces.repositories.CharacterRecord
 import tw.tsm.domain.interfaces.repositories.Turn3State
 import tw.tsm.domain.interfaces.StatCalculator
 
 data class PlayerDataDto(
-    // ── 基礎屬性 ──
+    // ── Thuộc tính cơ bản ──
     val element: Int = 1,
     val hp: Long = 100,
     val sp: Int = 50,
@@ -31,7 +31,7 @@ data class PlayerDataDto(
     val maxHp: Long = 100,
     val maxSp: Int = 50,
 
-    // ── 裝備加值 ──
+    // ── Bonus trang bị ──
     val equipAtk: Int = 0,
     val equipDef: Int = 0,
     val equipInt: Int = 0,
@@ -41,18 +41,18 @@ data class PlayerDataDto(
     val equipHpx: Int = 0,
     val equipSpx: Int = 0,
 
-    // ── 陣營好感度（魏、蜀、吳、黃巾、遊俠） ──
+    // ── Độ thân thiện phe đảng (Ngụy, Thục, Ngô, Khăn Vàng, Du Hiệp) ──
     val moral: IntArray = intArrayOf(0, 0, 0, 0, 0),
 
-    // ── 其他 ──
+    // ── Khác ──
     val pracCount: Long = 0,
     val organization: Long = 0,
     val autoEatCount: Int = 0,
 
-    // ── 初轉技能 (skillId, skillLv) ──
+    // ── Kỹ năng chuyển sinh lần đầu (skillId, skillLv) ──
     val skills: List<Pair<Int, Int>> = emptyList(),
 
-    // ── 三轉資料 ──
+    // ── Dữ liệu chuyển sinh lần 3 ──
     val turn3Element: Int = 0,
     val turn3Exp: Long = 0,
     val turn3Int: Int = 0,
@@ -63,22 +63,22 @@ data class PlayerDataDto(
     val turn3Spx: Int = 0,
     val turn3Skills: List<Pair<Int, Int>> = emptyList(),
 
-    // ── 新增動態屬性 (attrType, attrValue) ──
+    // ── Thuộc tính động mới thêm (attrType, attrValue) ──
     val newAttrs: List<Pair<Int, Int>> = emptyList()
 ) {
     companion object {
-        /** 新角色預設值 */
+        /** Giá trị mặc định của nhân vật mới*/
         fun defaultNewPlayer() = PlayerDataDto()
 
         /**
-         * 從角色記錄建立 DTO
+         * Tạo DTO từ bản ghi nhân vật
          *
-         * 使用角色的六圍配點 + StatSystem 計算真實屬性。
-         * 六圍映射：int_→intelligence, str→atk, vit→def, dex→agi, spr→hpx, men→spx
+         * Dùng điểm phân bổ sáu chỉ số của nhân vật + StatSystem để tính thuộc tính thực tế.
+         * Ánh xạ sáu chỉ số: int_→intelligence, str→atk, vit→def, dex→agi, spr→hpx, men→spx
          *
-         * @param record 資料庫角色記錄
-         * @param statCalc 屬性計算器（StatSystem 實作）
-         * @param equipBonus 裝備加成（穿戴裝備的 8 項屬性加成總值）
+         * @param record bản ghi nhân vật trong cơ sở dữ liệu
+         * @param statCalc bộ tính thuộc tính (do StatSystem triển khai)
+         * @param equipBonus bonus trang bị (tổng chỉ số cộng thêm 8 thuộc tính của trang bị đang mặc)
          */
         fun fromCharacterRecord(
             record: CharacterRecord,
@@ -86,7 +86,7 @@ data class PlayerDataDto(
             equipBonus: EquipBonusData = EquipBonusData.EMPTY,
             turn3: Turn3State = Turn3State()
         ): PlayerDataDto {
-            // 六圍 → 戰鬥屬性映射
+            // Ánh xạ sáu chỉ số → thuộc tính chiến đấu
             val intelligence = record.int_
             val atk = record.str
             val def = record.vit

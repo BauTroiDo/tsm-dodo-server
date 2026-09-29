@@ -31,10 +31,10 @@ import tw.tsm.protocol.PacketReader
 private val logger = KotlinLogging.logger {}
 
 /**
- * 物品操作處理器（mainKind = 23）
+ * Bộ xử lý thao tác vật phẩm (mainKind = 23)
  *
- * 來源：protocal.lua protocolTable[23]
- * 處理背包物品操作、裝備穿脫、地面物品拾取/丟棄。
+ * Nguồn: protocal.lua protocolTable[23]
+ * Xử lý thao tác vật phẩm trong túi đồ, mặc/tháo trang bị, nhặt/vứt vật phẩm trên mặt đất.
  */
 class ItemHandler(
     private val inventorySystem: InventorySystem,
@@ -77,11 +77,11 @@ class ItemHandler(
             81 -> handleRebirth(session, data, targetTurn = 3)
             73 -> handleFlyPoint(session, data)
             76 -> handleCareerChange(session, data)
-            else -> logger.warn { "未處理的物品子協定：subKind=$subKind" }
+            else -> logger.warn { "Sub-protocol vật phẩm chưa xử lý: subKind=$subKind" }
         }
     }
 
-    /** C:023-076 職業轉換符: bagIndex(UInt16 LE) + career(Byte). */
+    /** C:023-076 Phù đổi nghề: bagIndex(UInt16 LE) + career(Byte).*/
     private suspend fun handleCareerChange(session: GameSession, data: ByteArray) {
         if (data.size != 3) return
         val reader = PacketReader(data)
@@ -129,7 +129,7 @@ class ItemHandler(
     }
 
     /**
-     * C:023-046/054/081 玩家一/二/三轉。
+     * C:023-046/054/081 Người chơi chuyển sinh 1/2/3.
      * Lua UITurn wire: hair(1)+color1(Int32LE)+color2(Int32LE)+[career(1) for turn 2/3].
      *
      * Quest/item eligibility is intentionally not invented here. The server still enforces
@@ -174,10 +174,10 @@ class ItemHandler(
     }
 
     /**
-     * C:023-002 拾取場景物品
+     * C:023-002 Nhặt vật phẩm trong cảnh
      *
-     * 格式：+index(UInt16) +kind(UInt16) +value(UInt16) +x(UInt16) +y(UInt16)
-     * 來源：GdThing.lua:82-89
+     * Định dạng: +index(UInt16) +kind(UInt16) +value(UInt16) +x(UInt16) +y(UInt16)
+     * Nguồn: GdThing.lua:82-89
      */
     private suspend fun handlePickup(session: GameSession, data: ByteArray) {
         val reader = PacketReader(data)
@@ -189,27 +189,27 @@ class ItemHandler(
 
         val characterId = session.roleId.toLong()
 
-        // 移除地面物品
+        // xóa vật phẩm trên mặt đất
         val groundItem = groundItemManager.removeItem(session.mapId, index)
         if (groundItem == null) {
-            responseSender.sendPickupResult(session, 1)  // 1=無法拾取
+            responseSender.sendPickupResult(session, 1)  // 1=không thể nhặt
             return
         }
 
         if (kind == EGdThing.MONEY) {
-            // 撿金錢
+            // nhặt tiền
             if (!moneySystem.addGold(characterId, value)) {
-                // 金錢已滿，放回地面
+                // tiền đã đầy, đặt trả về mặt đất
                 groundItemManager.addItem(session.mapId, kind, value, x, y, characterId)
                 responseSender.sendMoneyFull(session, 1)
                 return
             }
             responseSender.sendAddMoney(session, value)
         } else {
-            // 撿物品
+            // nhặt vật phẩm
             val result = inventorySystem.addItemToBag(characterId, value, 1)
             if (result == null) {
-                // 背包滿，放回地面
+                // túi đồ đầy, đặt trả về mặt đất
                 groundItemManager.addItem(session.mapId, kind, value, x, y, characterId)
                 responseSender.sendPickupResult(session, 1)
                 return
@@ -218,21 +218,21 @@ class ItemHandler(
             responseSender.sendSetBagItem(session, slot, thing, showMsg = true)
         }
 
-        // 拾取成功
+        // nhặt thành công
         responseSender.sendPickupResult(session, 0, kind, value, x, y)
 
-        // 發給撿取者本人（isMe=true）
+        // gửi cho chính người nhặt (isMe=true)
         session.send(buildRemoveGroundItemPacket(index, true))
-        // 廣播給同地圖其他玩家（isMe=false）
+        // phát rộng cho người chơi khác cùng bản đồ (isMe=false)
         val removeData = buildRemoveGroundItemPacket(index, false)
         worldManager.broadcastToMap(session.mapId, removeData, exclude = session)
     }
 
     /**
-     * C:023-003 丟棄背包物品
+     * C:023-003 Vứt vật phẩm túi đồ
      *
-     * 格式：+bagIndex(2) +quantity(4)
-     * 來源：Item.lua:2626-2650
+     * Định dạng: +bagIndex(2) +quantity(4)
+     * Nguồn: Item.lua:2626-2650
      */
     private suspend fun handleDropBagItem(session: GameSession, data: ByteArray) {
         if (data.size != 6) return
@@ -246,14 +246,14 @@ class ItemHandler(
 
         val dropQty = if (quantity == 0) bagItem.quantity else minOf(quantity, bagItem.quantity)
 
-        // 從背包移除
+        // xóa khỏi túi đồ
         inventorySystem.removeFromBag(characterId, bagIndex, dropQty)
         responseSender.sendReduceBagItem(session, bagIndex, dropQty)
 
-        // 在地面生成
+        // sinh ra trên mặt đất
         val gdIndex = groundItemManager.addItem(session.mapId, EGdThing.ITEM, bagItem.itemId, session.x, session.y, characterId)
         if (gdIndex >= 0) {
-            // 廣播場景物品
+            // phát rộng vật phẩm trong cảnh
             responseSender.sendAddGroundItem(session, bagItem.itemId, session.x, session.y, 1)
             val addData = buildAddGroundItemPacket(bagItem.itemId, session.x, session.y, 0)
             worldManager.broadcastToMap(session.mapId, addData, exclude = session)
@@ -261,17 +261,17 @@ class ItemHandler(
     }
 
     /**
-     * C:023-010 移動背包物品
+     * C:023-010 Di chuyển vật phẩm túi đồ
      *
-     * 格式：+count(1) +<<from(2) +quantity(4) +to(2)>>
-     * 來源：UIBag.lua:402-410
+     * Định dạng: +count(1) +<<from(2) +quantity(4) +to(2)>>
+     * Nguồn: UIBag.lua:402-410
      */
     private suspend fun handleMoveBagItem(session: GameSession, data: ByteArray) {
         if (data.isEmpty()) return
         val reader = PacketReader(data)
         val count = reader.readUByte()
         if (data.size != 1 + count * 8) return
-        if (count > 50) return  // 背包格數上限
+        if (count > 50) return  // giới hạn số ô túi đồ
         val characterId = session.roleId.toLong()
 
         for (i in 0 until count) {
@@ -286,10 +286,10 @@ class ItemHandler(
     }
 
     /**
-     * C:023-011 穿上裝備
+     * C:023-011 Mặc trang bị
      *
-     * 格式：+bagIndex(2)
-     * 來源：Item.lua:928-931
+     * Định dạng: +bagIndex(2)
+     * Nguồn: Item.lua:928-931
      */
     private suspend fun handleEquip(session: GameSession, data: ByteArray) {
         if (data.size != 2) return
@@ -301,61 +301,61 @@ class ItemHandler(
 
         val (fitType, oldEquip) = result
 
-        // 通知客戶端穿上裝備
+        // thông báo client mặc trang bị
         responseSender.sendEquip(session, bagIndex)
 
-        // 如果有舊裝備被替換到背包，通知客戶端更新
+        // nếu có trang bị cũ bị đẩy về túi đồ, thông báo client cập nhật
         if (oldEquip != null) {
             responseSender.sendSetBagItem(session, bagIndex, oldEquip, showMsg = false)
         }
 
-        // 更新 session 裝備外觀（供 sendOtherPlayerAppear 使用）
+        // cập nhật diện mạo trang bị của session (để sendOtherPlayerAppear sử dụng)
         session.equipItemIds = inventorySystem.getEquipment(characterId)
             .values.map { it.itemId }.toIntArray()
 
-        // 重算裝備加成並同步屬性（參考 tskero equipOnChar → refreshBonus）
+        // tính lại cộng hưởng trang bị và đồng bộ thuộc tính (tham khảo tskero equipOnChar → refreshBonus)
         recalcAndSendEquipBonus(session, characterId)
 
-        logger.trace { "穿上裝備：characterId=$characterId bagSlot=$bagIndex fitType=$fitType" }
+        logger.trace { "Mặc trang bị: characterId=$characterId bagSlot=$bagIndex fitType=$fitType" }
     }
 
     /**
-     * C:023-012 卸下裝備
+     * C:023-012 Tháo trang bị
      *
-     * 格式：+fitType(1) +bagIndex(2)
-     * 來源：Item.lua:2699-2703
+     * Định dạng: +fitType(1) +bagIndex(2)
+     * Nguồn: Item.lua:2699-2703
      */
     private suspend fun handleUnequip(session: GameSession, data: ByteArray) {
         if (data.size != 3) return
         val reader = PacketReader(data)
         val fitType = reader.readUByte()
         @Suppress("UNUSED_VARIABLE")
-        val requestedBagIndex = reader.readUShortLE()  // 客戶端建議的背包位，伺服器自行決定
+        val requestedBagIndex = reader.readUShortLE()  // vị trí túi đồ do client đề nghị, server tự quyết định
 
         val characterId = session.roleId.toLong()
         val bagSlot = inventorySystem.unequipItem(characterId, fitType)
         if (bagSlot < 0) {
-            logger.warn { "卸下裝備失敗（背包滿？）：characterId=$characterId fitType=$fitType" }
+            logger.warn { "Tháo trang bị thất bại (túi đồ đầy?): characterId=$characterId fitType=$fitType" }
             return
         }
 
         responseSender.sendUnequip(session, fitType, bagSlot)
 
-        // 更新 session 裝備外觀（供 sendOtherPlayerAppear 使用）
+        // cập nhật diện mạo trang bị của session (để sendOtherPlayerAppear sử dụng)
         session.equipItemIds = inventorySystem.getEquipment(characterId)
             .values.map { it.itemId }.toIntArray()
 
-        // 重算裝備加成並同步屬性（參考 tskero unEquipChar → refreshBonus）
+        // tính lại cộng hưởng trang bị và đồng bộ thuộc tính (tham khảo tskero unEquipChar → refreshBonus)
         recalcAndSendEquipBonus(session, characterId)
 
-        logger.trace { "卸下裝備：characterId=$characterId fitType=$fitType → bagSlot=$bagSlot" }
+        logger.trace { "Tháo trang bị: characterId=$characterId fitType=$fitType → bagSlot=$bagSlot" }
     }
 
     /**
-     * C:023-013 丟棄裝備
+     * C:023-013 Vứt trang bị
      *
-     * 格式：+bagIndex(1)（此處的 bagIndex 對應裝備部位）
-     * 來源：Item.lua:2804-2807
+     * Định dạng: +bagIndex(1) (bagIndex ở đây ứng với vị trí trang bị)
+     * Nguồn: Item.lua:2804-2807
      */
     private suspend fun handleDropEquip(session: GameSession, data: ByteArray) {
         val reader = PacketReader(data)
@@ -364,21 +364,21 @@ class ItemHandler(
         val characterId = session.roleId.toLong()
         val equipItem = inventorySystem.getEquipItem(characterId, fitType) ?: return
 
-        // 使用 unequipItem 卸下後再丟棄
+        // dùng unequipItem tháo ra rồi mới vứt
         val bagSlot = inventorySystem.unequipItem(characterId, fitType)
         if (bagSlot >= 0) {
             inventorySystem.removeFromBag(characterId, bagSlot, equipItem.quantity)
             responseSender.sendUnequip(session, fitType, bagSlot)
             responseSender.sendReduceBagItem(session, bagSlot, equipItem.quantity)
 
-            // 更新 session 裝備外觀
+            // cập nhật diện mạo trang bị của session
             session.equipItemIds = inventorySystem.getEquipment(characterId)
                 .values.map { it.itemId }.toIntArray()
 
-            // 重算裝備加成並同步屬性
+            // tính lại cộng hưởng trang bị và đồng bộ thuộc tính
             recalcAndSendEquipBonus(session, characterId)
 
-            // 在地面生成
+            // sinh ra trên mặt đất
             val gdIndex = groundItemManager.addItem(session.mapId, EGdThing.ITEM, equipItem.itemId, session.x, session.y, characterId)
             if (gdIndex >= 0) {
                 responseSender.sendAddGroundItem(session, equipItem.itemId, session.x, session.y, 1)
@@ -387,13 +387,13 @@ class ItemHandler(
     }
 
     /**
-     * C:023-017 武將穿上裝備
+     * C:023-017 Tướng mặc trang bị
      *
-     * 格式：+followIndex(1) +bagIndex(2)
-     * 來源：Item.lua:947-950
+     * Định dạng: +followIndex(1) +bagIndex(2)
+     * Nguồn: Item.lua:947-950
      *
-     * 成功回 S:023-023，客戶端自行做背包格 ↔ 裝備格互換
-     * （舊裝備回到同一背包格），武將屬性由客戶端本地重算（Item.GetEQIncrease）。
+     * Thành công trả về S:023-023, client tự đổi chỗ ô túi đồ ↔ ô trang bị
+     * (trang bị cũ quay về đúng ô túi đồ đó), thuộc tính tướng do client tự tính lại nội bộ (Item.GetEQIncrease).
      */
     private suspend fun handlePetEquip(session: GameSession, data: ByteArray) {
         if (data.size != 3) return
@@ -406,20 +406,20 @@ class ItemHandler(
             is PetEquipSystem.EquipResult.Ok ->
                 responseSender.sendPetEquip(session, followSlot, bagSlot)
             PetEquipSystem.EquipResult.Fail -> {
-                // 驗證失敗：客戶端已先擋過一輪，伺服器靜默拒絕（僅留 log）
+                // kiểm tra hợp lệ thất bại: client đã chặn một vòng trước đó, server từ chối im lặng (chỉ lưu log)
             }
         }
     }
 
     /**
-     * C:023-018 武將卸下裝備
+     * C:023-018 Tướng tháo trang bị
      *
-     * 格式：+followIndex(1) +fitType(1) +bagIndex(2)
+     * Định dạng: +followIndex(1) +fitType(1) +bagIndex(2)
      * DVT Item.UnEquip and UnEquipAll both send a UInt16 destination suggestion;
      * the server selects the authoritative destination slot.
-     * 來源：Item.lua:2692-2697
+     * Nguồn: Item.lua:2692-2697
      *
-     * 成功回 S:023-022（武將卸下裝備到背包）。
+     * Thành công trả về S:023-022 (tướng tháo trang bị vào túi đồ).
      */
     private suspend fun handlePetUnequip(session: GameSession, data: ByteArray) {
         if (data.size != 4) return
@@ -433,20 +433,20 @@ class ItemHandler(
             is PetEquipSystem.UnequipResult.Ok ->
                 responseSender.sendPetUnequipToBag(session, followSlot, fitType, result.bagSlot)
             PetEquipSystem.UnequipResult.BagFull ->
-                logger.warn { "武將卸裝失敗（背包滿）：charId=$characterId slot=$followSlot fitType=$fitType" }
+                logger.warn { "Tướng tháo trang bị thất bại (túi đồ đầy): charId=$characterId slot=$followSlot fitType=$fitType" }
             PetEquipSystem.UnequipResult.Fail -> {
-                // 資料不存在：靜默拒絕（僅留 log）
+                // dữ liệu không tồn tại: từ chối im lặng (chỉ lưu log)
             }
         }
     }
 
     /**
-     * C:023-019 丟棄武將裝備
+     * C:023-019 Vứt trang bị của tướng
      *
-     * 格式：+followIndex(1) +fitType(1)
-     * 來源：Item.lua:2798-2802、MachineBox.lua:912-916（機關盒丟壞裝）
+     * Định dạng: +followIndex(1) +fitType(1)
+     * Nguồn: Item.lua:2798-2802, MachineBox.lua:912-916 (hộp cơ quan vứt trang bị hỏng)
      *
-     * 成功回 S:023-021（直接從武將身上刪除），並在地面生成掉落物（與玩家丟裝一致）。
+     * Thành công trả về S:023-021 (xoá trực tiếp khỏi tướng), và sinh vật rơi trên mặt đất (giống người chơi vứt trang bị).
      */
     private suspend fun handlePetDropEquip(session: GameSession, data: ByteArray) {
         val reader = PacketReader(data)
@@ -458,7 +458,7 @@ class ItemHandler(
 
         responseSender.sendPetEquipDelete(session, followSlot, fitType)
 
-        // 在地面生成掉落物（與玩家 C:023-013 丟裝行為一致）
+        // sinh vật rơi trên mặt đất (giống hành vi vứt trang bị C:023-013 của người chơi)
         val gdIndex = groundItemManager.addItem(session.mapId, EGdThing.ITEM, dropped.itemId, session.x, session.y, characterId)
         if (gdIndex >= 0) {
             responseSender.sendAddGroundItem(session, dropped.itemId, session.x, session.y, 1)
@@ -466,17 +466,17 @@ class ItemHandler(
     }
 
     /**
-     * C:023-015 使用物品
+     * C:023-015 Dùng vật phẩm
      *
-     * 格式：+bagIndex(2) +quantity(4) +followIndex(1) +useType(1)
-     * 來源：Item.lua:954-961
+     * Định dạng: +bagIndex(2) +quantity(4) +followIndex(1) +useType(1)
+     * Nguồn: Item.lua:954-961
      *
-     * 處理流程：
-     * 1. 讀取封包參數
-     * 2. 呼叫 ItemUseProcessor 計算效果
-     * 3. 扣除物品
-     * 4. S:023-015 通知使用成功
-     * 5. S:008-001 逐筆發送屬性變化
+     * Quy trình xử lý:
+     * 1. Đọc tham số gói tin
+     * 2. Gọi ItemUseProcessor tính hiệu quả
+     * 3. Khấu trừ vật phẩm
+     * 4. S:023-015 Thông báo sử dụng thành công
+     * 5. S:008-001 Gửi từng bản thay đổi thuộc tính
      */
     private suspend fun handleUseItem(session: GameSession, data: ByteArray) {
         if (data.size != 8) return
@@ -489,7 +489,7 @@ class ItemHandler(
         val characterId = session.roleId.toLong()
         val bagItem = inventorySystem.getBagItem(characterId, bagIndex) ?: return
 
-        // 坐騎畫冊特殊處理（specialAbility=217）
+        // xử lý đặc biệt bộ sưu tập vật cưỡi (specialAbility=217)
         val itemDef = itemDefs[bagItem.itemId]
         if (itemDef != null && itemDef.specialAbility == EItemUseKind.MOUNTS) {
             handleMountCollectionItem(session, characterId, bagIndex, bagItem, itemDef)
@@ -498,26 +498,26 @@ class ItemHandler(
 
         val useQty = minOf(quantity, bagItem.quantity)
 
-        // 計算物品使用效果
+        // tính hiệu quả sử dụng vật phẩm
         val result = itemUseProcessor.processUseItem(
             characterId, bagItem.itemId, useQty, followIndex, useType
         )
 
         if (!result.consumed) {
-            logger.trace { "物品使用未消耗：characterId=$characterId itemId=${bagItem.itemId}" }
+            logger.trace { "Dùng vật phẩm mà không tiêu hao: characterId=$characterId itemId=${bagItem.itemId}" }
             return
         }
 
-        // 扣除物品
+        // khấu trừ vật phẩm
         inventorySystem.removeFromBag(characterId, bagIndex, useQty)
         responseSender.sendReduceBagItem(session, bagIndex, useQty)
 
-        // 通知使用成功
+        // thông báo sử dụng thành công
         responseSender.sendUseItemSuccess(session, bagItem.itemId, useQty, showMsg = true)
 
-        // 發送屬性變化
-        // DVT S:008-001/S:008-002 都是「設定絕對值」而不是增量。
-        // 武將用 S:008-002；主角用 S:008-001。
+        // gửi thay đổi thuộc tính
+        // DVT S:008-001/S:008-002 đều là 'đặt giá trị tuyệt đối' chứ không phải gia số.
+        // tướng dùng S:008-002; nhân vật chính dùng S:008-001.
         for (change in result.attrChanges) {
             if (followIndex > 0) {
                 responseSender.sendFollowNpcAttribute(
@@ -530,20 +530,20 @@ class ItemHandler(
             }
         }
 
-        // 福袋獎勵物品入袋（支援溢出分格）
+        // vật phẩm thưởng túi phúc vào túi (hỗ trợ tràn sang ô khác)
         for (reward in result.rewardItems) {
             val addedList = inventorySystem.addItemsToBag(characterId, reward.itemId, reward.count)
             for ((slot, thing) in addedList) {
                 responseSender.sendSetBagItem(session, slot, thing, showMsg = true)
             }
             if (addedList.isEmpty()) {
-                logger.warn { "福袋獎勵入袋失敗（背包滿）：itemId=${reward.itemId} x${reward.count}" }
+                logger.warn { "Thưởng túi may mắn vào túi thất bại (túi đầy): itemId=${reward.itemId} x${reward.count}" }
             }
         }
 
-        // 回城符效果（傳送回儲存點）
+        // hiệu ứng phù về thành (dịch chuyển về điểm lưu)
         if (result.returnToSavePoint) {
-            // 傳送到預設起始點（TODO：改為角色儲存點）
+            // dịch chuyển đến điểm bắt đầu mặc định (TODO: đổi thành điểm lưu của nhân vật)
             val targetMap = tw.tsm.domain.constants.DEFAULT_START_MAP
             val targetX = tw.tsm.domain.constants.DEFAULT_START_X
             val targetY = tw.tsm.domain.constants.DEFAULT_START_Y
@@ -552,14 +552,14 @@ class ItemHandler(
             responseSender.sendSceneChange(session, session.playerId, targetMap, targetX, targetY, session.equipItemIds, session.titleId)
         }
 
-        logger.trace { "使用物品：characterId=$characterId itemId=${bagItem.itemId} qty=$useQty 效果=${result.attrChanges.size}筆 獎勵=${result.rewardItems.size}筆" }
+        logger.trace { "Dùng vật phẩm: characterId=$characterId itemId=${bagItem.itemId} qty=$useQty hiệu ứng=${result.attrChanges.size} dòng thưởng=${result.rewardItems.size} dòng" }
     }
 
     /**
-     * C:023-016 丟棄金錢到場景
+     * C:023-016 Vứt tiền ra cảnh
      *
-     * 格式：+amount(4)
-     * 來源：Item.lua:3174-3177
+     * Định dạng: +amount(4)
+     * Nguồn: Item.lua:3174-3177
      */
     private suspend fun handleDropMoney(session: GameSession, data: ByteArray) {
         val reader = PacketReader(data)
@@ -570,25 +570,25 @@ class ItemHandler(
 
         responseSender.sendSubtractMoney(session, amount)
 
-        // 在地面生成金錢
+        // sinh tiền trên mặt đất
         val gdIndex = groundItemManager.addItem(session.mapId, EGdThing.MONEY, amount, session.x, session.y, characterId)
         if (gdIndex >= 0) {
-            // 自己看到
+            // bản thân mình nhìn thấy
             responseSender.sendDropMoneyToGround(session, amount, session.x, session.y, true)
-            // 廣播給其他人
+            // phát rộng cho những người khác
             val broadcastData = buildDropMoneyPacket(amount, session.x, session.y, false)
             worldManager.broadcastToMap(session.mapId, broadcastData, exclude = session)
         }
     }
 
-    // ── 坐騎畫冊使用 ──
+    // ── dùng cho bộ sưu tập vật cưỡi ──
 
     /**
-     * 使用坐騎畫冊解鎖坐騎收集
+     * Dùng sổ tranh vật cưỡi để mở khoá sưu tập vật cưỡi
      *
-     * 對照 Item.lua L2311-2316：
-     * `specialAbility == EItemUseKind.Mounts`，`spare3` = 坐騎 NPC ID。
-     * 使用後設定 BitFlag → S:081-001 → 客戶端 `Mounts.OnGetCollection(flagId)`。
+     * Đối chiếu Item.lua L2311-2316:
+     * `specialAbility == EItemUseKind.Mounts`, `spare3` = ID NPC vật cưỡi.
+     * Sau khi dùng đặt BitFlag → S:081-001 → client `Mounts.OnGetCollection(flagId)`.
      */
     private suspend fun handleMountCollectionItem(
         session: GameSession, characterId: Long,
@@ -597,32 +597,32 @@ class ItemHandler(
         val npcId = itemDef.spare3
         val flagId = mountSystem.useCollectionItem(characterId, npcId) ?: return
 
-        // 消耗物品
+        // tiêu hao vật phẩm
         inventorySystem.removeFromBag(characterId, bagIndex, 1)
         responseSender.sendReduceBagItem(session, bagIndex, 1)
         responseSender.sendUseItemSuccess(session, bagItem.itemId, 1, showMsg = true)
 
-        // S:081-001 永標更新 → 觸發客戶端 Mounts.OnGetCollection
+        // S:081-001 cập nhật cờ vĩnh viễn → kích hoạt client Mounts.OnGetCollection
         responseSender.sendBitFlagChanges(session, listOf(flagId to true))
         dailyProgressSystem?.incrementRoleCount(
             session,
             DailyProgressSystem.MOUNTS,
         )
 
-        // 若自動選擇了此坐騎，通知客戶端
+        // nếu tự động chọn vật cưỡi này, thông báo client
         val mountData = mountSystem.getCache(characterId)
         if (mountData != null && mountData.currentNpcId == npcId) {
             responseSender.sendMountSwitch(session, npcId)
         }
     }
 
-    // ── 裝備加成重算 ──
+    // ── tính lại cộng hưởng trang bị ──
 
     /**
-     * 重算全身裝備加成並通知客戶端
+     * Tính lại cộng hưởng của toàn bộ trang bị và thông báo client
      *
-     * 穿上/卸下/丟棄裝備後統一呼叫。
-     * 參考 tskero `TSCharacter.refreshBonus()` 邏輯。
+     * Được gọi tập trung sau khi mặc/tháo/vứt trang bị.
+     * Tham khảo logic của tskero `TSCharacter.refreshBonus()`.
      */
     private fun recalcAndSendEquipBonus(session: GameSession, characterId: Long) {
         val allEquips = inventorySystem.getEquipment(characterId)
@@ -636,16 +636,16 @@ class ItemHandler(
         )
     }
 
-    // ── 記憶傳送符 ──
+    // ── Phù dịch chuyển ghi nhớ ──
 
     /**
-     * C:023-073 記憶傳送符
+     * C:023-073 Phù dịch chuyển ghi nhớ
      *
-     * 格式：+kind(1B) +index(1B)
-     * kind=1 使用（正常流程由 UISell 系統觸發，此處作備用路徑）
-     * kind=2 記憶當前位置
+     * Định dạng: +kind(1B) +index(1B)
+     * kind=1 sử dụng (luồng bình thường do hệ thống UISell kích hoạt, ở đây là đường dự phòng)
+     * kind=2 ghi nhớ vị trí hiện tại
      *
-     * 來源：UITeleport.lua:623-628
+     * Nguồn: UITeleport.lua:623-628
      */
     private suspend fun handleFlyPoint(session: GameSession, data: ByteArray) {
         if (data.size < 2) return
@@ -657,7 +657,7 @@ class ItemHandler(
 
         when (kind) {
             2 -> {
-                // 記憶當前位置
+                // ghi nhớ vị trí hiện tại
                 if (session.mapId <= 0) return
 
                 val extendCount = flyPointSystem.getExtendCount(charId)
@@ -665,18 +665,18 @@ class ItemHandler(
                     return
                 }
 
-                // 重新下發完整記憶傳送符資料
+                // gửi xuống lại đầy đủ dữ liệu phù dịch chuyển ghi nhớ
                 val points = flyPointSystem.loadAll(charId)
                 responseSender.sendFlyPointData(session, extendCount, points)
 
-                logger.info { "${session.characterName} 記憶傳送：index=$index → map=${session.mapId} (${session.x}, ${session.y})" }
+                logger.info { "${session.characterName} dịch chuyển theo điểm nhớ: index=$index → map=${session.mapId} (${session.x}, ${session.y})" }
             }
             1 -> {
-                // 使用傳送（備用路徑，正常由 UISell mainKind=84 處理）
+                // sử dụng dịch chuyển (đường dự phòng, bình thường do UISell mainKind=84 xử lý)
                 val points = flyPointSystem.loadAll(charId)
                 val point = points[index]
                 if (point == null) {
-                    logger.warn { "${session.characterName} 記憶傳送失敗：index=$index 不存在" }
+                    logger.warn { "${session.characterName} dịch chuyển điểm nhớ thất bại: index=$index không tồn tại" }
                     return
                 }
 
@@ -689,13 +689,13 @@ class ItemHandler(
                     session.equipItemIds, session.titleId
                 )
 
-                logger.info { "${session.characterName} 記憶傳送：index=$index → scene=${point.sceneId} (${point.x}, ${point.y})" }
+                logger.info { "${session.characterName} dịch chuyển theo điểm nhớ: index=$index → scene=${point.sceneId} (${point.x}, ${point.y})" }
             }
-            else -> logger.warn { "未處理的記憶傳送 kind=$kind" }
+            else -> logger.warn { "Dịch chuyển điểm nhớ chưa xử lý kind=$kind" }
         }
     }
 
-    // ── 輔助方法：組裝廣播封包 ──
+    // ── hàm phụ trợ: ghép gói tin phát rộng ──
 
     private fun buildRemoveGroundItemPacket(index: Int, isMe: Boolean): ByteArray {
         return tw.tsm.protocol.PacketWriter(6)
@@ -712,7 +712,7 @@ class ItemHandler(
             .writeShortLE(x)
             .writeShortLE(y)
             .writeByte(isMe)
-            .writeLongLE(0L)  // canPickPlayerId = 0（所有人可撿）
+            .writeLongLE(0L)  // canPickPlayerId = 0 (ai cũng nhặt được)
             .toByteArray()
     }
 

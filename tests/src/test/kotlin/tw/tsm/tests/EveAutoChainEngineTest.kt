@@ -10,13 +10,13 @@ import tw.tsm.gamelogic.systems.EventSession
 import tw.tsm.gamelogic.systems.PlayerEventState
 
 /**
- * EveAutoChainEngine 單元測試
+ * Kiểm thử đơn vị EveAutoChainEngine
  *
- * 涵蓋：shouldAttemptAutoChain / shouldSkipEvent / 4 層防護
+ * Bao gồm: shouldAttemptAutoChain / shouldSkipEvent / 4 lớp phòng hộ
  */
 class EveAutoChainEngineTest : DescribeSpec({
 
-    // ── 輔助函數 ──
+    // ── Hàm phụ trợ ──
 
     fun result(type: Int = 1, cls: Int = 0, param: Int = 0, pStyle: Int = 0) = EveResult(
         resultGroupNo = 0, resultNo = 1, resultType = type,
@@ -60,7 +60,7 @@ class EveAutoChainEngineTest : DescribeSpec({
 
     describe("shouldAttemptAutoChain") {
 
-        // 建立最小實例（shouldAttemptAutoChain 是純函數）
+        //  Tạo instance tối thiểu (shouldAttemptAutoChain là hàm thuần)
         val engine = EveAutoChainEngine(
             stateMachine = io.mockk.mockk(relaxed = true),
             stateBuilder = io.mockk.mockk(relaxed = true),
@@ -68,31 +68,31 @@ class EveAutoChainEngineTest : DescribeSpec({
             eveData = emptyMap()
         )
 
-        it("ClickNpc + eveNo>0 + depth<10 → 允許") {
+        it("ClickNpc + eveNo>0 + depth<10 → cho phép") {
             engine.shouldAttemptAutoChain(
                 session(triggerKind = 1, eveNo = 4, chainDepth = 0)
             ) shouldBe true
         }
 
-        it("MeetDoor + eveNo>0 + depth<10 → 允許") {
+        it("MeetDoor + eveNo>0 + depth<10 → cho phép") {
             engine.shouldAttemptAutoChain(
                 session(triggerKind = 8, eveNo = 2, chainDepth = 5)
             ) shouldBe true
         }
 
-        it("eveNo=0（fallback Talk）→ 不允許") {
+        it("eveNo=0 (fallback Talk) → không cho phép") {
             engine.shouldAttemptAutoChain(
                 session(triggerKind = 1, eveNo = 0, chainDepth = 0)
             ) shouldBe false
         }
 
-        it("深度達上限 → 不允許") {
+        it("độ sâu đạt giới hạn → không cho phép") {
             engine.shouldAttemptAutoChain(
                 session(triggerKind = 1, eveNo = 4, chainDepth = 10)
             ) shouldBe false
         }
 
-        it("非允許觸發類型 → 不允許") {
+        it("loại kích hoạt không nằm trong danh sách cho phép → không cho phép") {
             engine.shouldAttemptAutoChain(
                 session(triggerKind = 99, eveNo = 4, chainDepth = 0)
             ) shouldBe false
@@ -114,26 +114,26 @@ class EveAutoChainEngineTest : DescribeSpec({
 
         val events = listOf(1, 2, 3)
 
-        it("已完成且無 conditionClass=12 → 跳過") {
+        it("đã hoàn thành và không có conditionClass=12 → bỏ qua") {
             engine.shouldSkipEvent(
                 events, 1, eventData(1), state(completedEveCounts = mapOf(1 to 1))
             ) shouldBe true
         }
 
-        it("已完成但有 conditionClass=12 → 不跳過") {
+        it("đã hoàn thành nhưng có conditionClass=12 → không bỏ qua") {
             engine.shouldSkipEvent(
                 events, 1, eventData(1, listOf(cond(cls = 12))),
                 state(completedEveCounts = mapOf(1 to 1))
             ) shouldBe false
         }
 
-        it("未完成且後面有已完成事件（進度水位線）→ 跳過") {
+        it("chưa hoàn thành và phía sau có sự kiện đã xong (mức tiến độ) → bỏ qua") {
             engine.shouldSkipEvent(
                 events, 1, eventData(1), state(completedEveCounts = mapOf(2 to 1))
             ) shouldBe true
         }
 
-        it("未完成且後面無已完成事件 → 不跳過") {
+        it("chưa hoàn thành và phía sau không có sự kiện đã xong → không bỏ qua") {
             engine.shouldSkipEvent(
                 events, 2, eventData(2), state(completedEveCounts = mapOf(1 to 1))
             ) shouldBe false
@@ -141,7 +141,7 @@ class EveAutoChainEngineTest : DescribeSpec({
     }
 
     // ══════════════════════════════════════════════
-    //  #1 detectSameChain — 迴圈偵測
+    //  #1 detectSameChain — phát hiện vòng lặp
     // ══════════════════════════════════════════════
 
     describe("detectSameChain") {
@@ -153,19 +153,19 @@ class EveAutoChainEngineTest : DescribeSpec({
             eveData = emptyMap()
         )
 
-        it("conditionNo=0 相同 → 偵測為迴圈（修復前會漏判）") {
+        it("conditionNo=0 giống nhau → phát hiện vòng lặp (trước khi sửa sẽ bỏ sót)") {
             engine.detectSameChain(
                 session(condNo = 0), session(condNo = 0)
             ) shouldBe true
         }
 
-        it("conditionNo=1 相同 → 偵測為迴圈") {
+        it("conditionNo=1 giống nhau → phát hiện vòng lặp") {
             engine.detectSameChain(
                 session(condNo = 1), session(condNo = 1)
             ) shouldBe true
         }
 
-        it("conditionNo 不同 → 非迴圈（合法接續）") {
+        it("conditionNo khác nhau → không phải vòng lặp (nối hợp lệ)") {
             engine.detectSameChain(
                 session(condNo = 0), session(condNo = 1)
             ) shouldBe false
@@ -173,7 +173,7 @@ class EveAutoChainEngineTest : DescribeSpec({
     }
 
     // ══════════════════════════════════════════════
-    //  #2 detectReQuestion — 答題重問防護
+    //  #2 detectReQuestion — phòng việc hỏi lại đề
     // ══════════════════════════════════════════════
 
     describe("detectReQuestion") {
@@ -185,14 +185,14 @@ class EveAutoChainEngineTest : DescribeSpec({
             eveData = emptyMap()
         )
 
-        it("上次有選擇 + 新事件有 Surface → 重問") {
+        it("lần trước có lựa chọn + sự kiện mới có Surface → hỏi lại") {
             engine.detectReQuestion(
                 session(results = listOf(result(type = 6))),
                 session(choiceCode = 20)
             ) shouldBe true
         }
 
-        it("上次無選擇 → 非重問") {
+        it("lần trước không có lựa chọn → không phải hỏi lại") {
             engine.detectReQuestion(
                 session(results = listOf(result(type = 6))),
                 session(choiceCode = -1)
@@ -201,7 +201,7 @@ class EveAutoChainEngineTest : DescribeSpec({
     }
 
     // ══════════════════════════════════════════════
-    //  #3 detectReBattle — 戰鬥重打防護
+    //  #3 detectReBattle — phòng đánh lại trận chiến
     // ══════════════════════════════════════════════
 
     describe("detectReBattle") {
@@ -213,14 +213,14 @@ class EveAutoChainEngineTest : DescribeSpec({
             eveData = emptyMap()
         )
 
-        it("上次有戰鬥 + 新事件有 Battle → 重打") {
+        it("lần trước có chiến đấu + sự kiện mới có Battle → đánh lại") {
             engine.detectReBattle(
                 session(results = listOf(result(type = 3))),
                 session(battleResult = 1)
             ) shouldBe true
         }
 
-        it("上次無戰鬥 → 非重打") {
+        it("lần trước không chiến đấu → không phải đánh lại") {
             engine.detectReBattle(
                 session(results = listOf(result(type = 3))),
                 session(battleResult = 0)
@@ -229,7 +229,7 @@ class EveAutoChainEngineTest : DescribeSpec({
     }
 
     // ══════════════════════════════════════════════
-    //  #4 detectDuplicateItems — 物品重複防護
+    //  #4 detectDuplicateItems — phòng trùng lặp vật phẩm
     // ══════════════════════════════════════════════
 
     describe("detectDuplicateItems") {
@@ -241,21 +241,21 @@ class EveAutoChainEngineTest : DescribeSpec({
             eveData = emptyMap()
         )
 
-        it("相同物品 → 重複") {
+        it("vật phẩm giống nhau → trùng lặp") {
             engine.detectDuplicateItems(
                 session(results = listOf(result(cls = 1, pStyle = 1, param = 100))),
                 session(results = listOf(result(cls = 1, pStyle = 1, param = 100)))
             ) shouldBe true
         }
 
-        it("不同物品 → 非重複") {
+        it("vật phẩm khác nhau → không trùng") {
             engine.detectDuplicateItems(
                 session(results = listOf(result(cls = 1, pStyle = 1, param = 200))),
                 session(results = listOf(result(cls = 1, pStyle = 1, param = 100)))
             ) shouldBe false
         }
 
-        it("完成事件無給予物品 → 非重複") {
+        it("sự kiện hoàn thành không thưởng vật phẩm → không trùng") {
             engine.detectDuplicateItems(
                 session(results = listOf(result(cls = 1, pStyle = 1, param = 100))),
                 session(results = listOf(result()))

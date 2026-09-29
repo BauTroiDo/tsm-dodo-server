@@ -1,12 +1,12 @@
-# Eve Class 語意覆蓋分析
+# Phân tích phủ ngữ nghĩa Eve Class
 
-日期：2026-05-06
+Ngày: 2026-05-06
 
-本文件記錄 `Eve.emg` 的 `conditionClass`、`resultType`、`resultClass`
-語意對照與目前伺服器覆蓋狀態。Lua 與 Eve 資料是唯一真相來源；
-未被 Lua 或實際資料證明的語意不得直接硬寫成正式邏輯。
+Tài liệu này ghi lại `Eve.emg` cùng các trường `conditionClass`, `resultType`, `resultClass`
+đối chiếu ngữ nghĩa và trạng thái phủ hiện tại của server. Lua và dữ liệu Eve là nguồn chân lý duy nhất;
+Ngữ nghĩa chưa được Lua hoặc dữ liệu thực chứng minh thì không được hardcode thành logic chính thức.
 
-## 來源
+## Nguồn
 
 - `gamedata/Eve.emg`
 - `TSClient/TSMonline_TW/lua_decrypted/Data/Eve/Eve_NpcEventData.lua`
@@ -19,117 +19,117 @@
 - `gamelogic/.../EveResultExecutor.kt`
 - `gamelogic/.../EveFlowController.kt`
 
-## 解析基準
+## Cơ sở phân tích
 
-- Scene 目錄數：3823
-- 成功解析 Scene：3823
-- 解析錯誤：0
-- 已觀測 `conditionClass`：0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
-- 已觀測 `resultType`：0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
-- 已觀測 `resultClass`：0, 1, 2, 3, 4, 5, 7, 8, 10, 11, 12, 13, 14, 15
+- Số thư mục Scene: 3823
+- Scene phân tích thành công: 3823
+- Lỗi phân tích: 0
+- `conditionClass` đã quan sát: 0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
+- `resultType` đã quan sát: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+- `resultClass` đã quan sát: 0, 1, 2, 3, 4, 5, 7, 8, 10, 11, 12, 13, 14, 15
 
-## 信心等級
+## Thang độ tin cậy
 
-- 已確認：Lua 直接有處理器，或目前封包與實際流程已跑通。
-- 高信心推論：Lua 欄位名、事件上下文、參數分布一致，但仍需測試固定。
-- 中信心推論：有資料模式，但缺少完整客戶端執行語意。
-- 待驗證：不能直接實作成正式效果，只能加診斷或明確 no-op。
+- Đã xác nhận: Lua có handler trực tiếp, hoặc gói tin và flow thực tế hiện tại đã chạy thông.
+- Suy luận tin cậy cao: tên trường Lua, ngữ cảnh sự kiện, phân bố tham số nhất quán, nhưng vẫn cần test chốt.
+- Suy luận tin cậy trung bình: có mẫu dữ liệu nhưng thiếu ngữ nghĩa thực thi đầy đủ trên client.
+- Chưa xác minh: chưa được cài đặt thành hiệu ứng chính thức, chỉ thêm chẩn đoán hoặc no-op rõ ràng.
 
-## 重要修正
+## Hiệu chỉnh quan trọng
 
-1. `conditionClass=14` 目前文件與程式把它當成 RoleCount，這個判斷需要降級。
-   `Eve.emg` 中 class14 幾乎集中在 `param=0, pStyle=0, value=0`，
-   不像 `RoleCount.lua` 的索引分布。
-2. `conditionClass=18` 有 `param=668` 範例，對得上
-   `RoleCount.lua` 的 `ERoleCount.ReUseAct_1 = 668`。RoleCount 更可能在
-   class18，或至少 class18 的部分情境使用 RoleCount。
-3. `CheckCondition.lua` 的 `ECondition.RoleCount=14` 是通用條件系統，不可直接
-   1:1 套用到 Eve `conditionClass`。Eve class1 在資料中是物品條件，
-   但 `CheckCondition.ECondition.Gold=1`，兩者已明確不一致。
-4. `EventHandler.lua` 只定義 `EventHandler[0]` 到 `[6]`。`resultType=8/9/10`
-   雖存在於 Eve 資料，但客戶端沒有同名 handler；伺服器不得盲目送給客戶端。
-5. `conditionClass=7, param=2` 不可視為轉生次數。實際樣本主要是背包空間：
-   `pStyle=1` 接「背包滿」對話，`pStyle=2` 接正常給物品或互動流程。
-   背包容量需使用 `RoleCount[103/106/124]` 對齊 Lua `Item.RefreshRoleCount()`。
+1. `conditionClass=14` tài liệu và code hiện coi là RoleCount, nhận định này cần hạ bậc.
+   Trong `Eve.emg` class14 gần như dồn ở `param=0, pStyle=0, value=0`,
+   không khớp phân bố index của `RoleCount.lua`.
+2. `conditionClass=18` có ví dụ `param=668`, khớp với
+   dòng `RoleCount.lua` có `ERoleCount.ReUseAct_1 = 668`. RoleCount nhiều khả năng nằm ở
+   class18, hoặc ít nhất một số ngữ cảnh của class18 có dùng RoleCount.
+3. `CheckCondition.lua` có `ECondition.RoleCount=14` thuộc hệ điều kiện chung, không thể trực tiếp
+   1:1 áp dụng cho `conditionClass` của Eve. Trong dữ liệu, Eve class1 là điều kiện vật phẩm,
+   nhưng `CheckCondition.ECondition.Gold=1`, hai bên đã rõ ràng không nhất quán.
+4. `EventHandler.lua` chỉ định nghĩa từ `EventHandler[0]` đến `[6]`. `resultType=8/9/10`
+   tuy tồn tại trong dữ liệu Eve nhưng client không có handler cùng tên; server không được gửi mù quáng cho client.
+5. `conditionClass=7, param=2` không được coi là số lần chuyển sinh. Mẫu thực tế chủ yếu là không gian túi đồ:
+   `pStyle=1` nối hội thoại túi đồ đầy, `pStyle=2` nối flow cấp vật phẩm hoặc tương tác bình thường.
+   Dung lượng túi đồ phải dùng `RoleCount[103/106/124]` căn theo Lua `Item.RefreshRoleCount()`.
 
-## conditionClass 覆蓋表
+## Bảng phủ conditionClass
 
-| Class | 筆數 | 狀態 | 語意判斷 | 後續處理 |
+| Class | Số dòng | Trạng thái | Nhận định ngữ nghĩa | Xử lý tiếp |
 | --- | ---: | --- | --- | --- |
-| 0 | 17857 | 已確認 | 無條件 | 保持 true |
-| 1 | 4704 | 已確認 | 物品持有數量，`param=itemId` | 補 pStyle 分布測試 |
-| 2 | 29381 | 部分 | 任務步驟或任務旗標 | 補 pStyle 4/10；確認 pStyle 3 flag 合併 |
-| 3 | 783 | 高信心 | 場景物件可互動狀態；資料全部固定為 `pStyle=4,ops=5,value=0,subItem=0`，常接 `resultClass=3 pStyle=5` | 已補固定形狀，其他形狀保守 false |
-| 4 | 36 | 高信心 | 技能條件，`param=skillId` | 第一批實作，從 `SkillSystem` 讀技能等級 |
-| 5 | 142 | 高信心 | 金錢條件，`param=0/pStyle=1`；常見 `ops=2,value=金額-1` 表示身上金幣足夠 | 已接 `PlayerEventState.gold`，少數 `ops=4` 保守視為至少達門檻 |
-| 7 | 8531 | 部分 | 玩家狀態、等級、背包空間、裝備、性別、武將所在、騎乘狀態；未知 param 不可因 `ops=0,value=0` 誤通過 | 已補 param=2 背包空間（含 pStyle=4 剩餘格數）、param=5 性別、param=16 騎乘下馬；續補 param 8/12/18 等分支 |
-| 8 | 6242 | 已確認 | 戰鬥結果分支 | 保持 battleResult 比對 |
-| 9 | 2102 | 部分 | `param=0` 是隨身武將持有；`param!=0` 疑似武將等級、位置或狀態條件，不可用 `value=0` 誤通過 | 補 pStyle 1/2/3 與 param 非 0 情境 |
-| 10 | 6055 | 已確認 | Surface 選項分支，`param=surfaceId`、`pStyle=choiceCode` | 保持現況並補 regression |
-| 11 | 76 | 高信心 | 收驚婆婆流程確認；資料固定 `param=0,pStyle=1,ops=0,value=0` | 已補固定形狀，其他形狀保守 false |
-| 12 | 662 | 部分 | `param=0` 是當前 eveNo 完成次數；`param!=0` 尚未確認，不可用 0 值誤通過 | 補 param 1/2/3/4 與 pStyle 3/5/6 |
-| 13 | 99 | 已定位但未實作 | 軍團、城池、移民身分條件；樣本集中在城池設施、正副軍團長、城池軍團成員與移民資格 | 需先有軍團/城池/移民系統，暫時保守 false |
-| 14 | 291 | 中信心 | 不是已確認 RoleCount；多數為零值條件 | 先改文件與診斷，不再標已確認 |
-| 15 | 4 | 已支援 | `param=0` 是玩家轉生次數，場景 55002 以 `ops=6,value=0` 擋已轉生玩家、`ops=5,value=0` 開啟玩家轉生介面；`param=1` 是武將二轉入口狀態碼，依 Lua `UINpcTurn.CheckTurn(currentTurn=2)` 檢查隨身武將等級/忠誠與二轉道具 | `param=0` 對應 `rebornCount`；`param=1` 對應 `npcSecondReincarnationStatus`（0=可開啟，-1=顯示說明） |
-| 16 | 9 | 高信心 | 非背包倉儲物品檢查；`pStyle=1,subItem=0` 檢查錢莊+寶庫數量，與 class1 背包檢查互補 | 其他 pStyle/subItem 形狀仍保守 false |
-| 17 | 16 | 已定位但未實作 | 子女系統條件，包含子女是否存在、子女等級與子女出戰分支 | 需先有子女系統，暫時保守 false |
-| 18 | 11 | 高信心但需分流 | 部分樣本像 RoleCount；也有低 param 分支 | 只對已證明 RoleCount 索引實作 |
+| 0 | 17857 | Đã xác nhận | Không điều kiện | Giữ true |
+| 1 | 4704 | Đã xác nhận | Số lượng vật phẩm sở hữu, `param=itemId` | Bổ sung test phân bố pStyle |
+| 2 | 29381 | Một phần | Bước nhiệm vụ hoặc cờ nhiệm vụ | Bổ sung pStyle 4/10; xác nhận gộp flag pStyle 3 |
+| 3 | 783 | Tin cậy cao | Trạng thái tương tác được của vật thể trong cảnh; dữ liệu cố định toàn bộ `pStyle=4,ops=5,value=0,subItem=0`, thường nối `resultClass=3 pStyle=5` | Đã bổ sung hình cố định, hình khác bảo thủ false |
+| 4 | 36 | Tin cậy cao | Điều kiện kỹ năng, `param=skillId` | Cài đợt đầu, đọc cấp kỹ năng từ `SkillSystem` |
+| 5 | 142 | Tin cậy cao | Điều kiện tiền, `param=0/pStyle=1`; phổ biến `ops=2,value=tiền-1` có nghĩa vàng trên người đủ | Đã nối `PlayerEventState.gold`, một số `ops=4` bảo thủ coi là ít nhất đạt ngưỡng |
+| 7 | 8531 | Một phần | Trạng thái người chơi, cấp độ, không gian túi đồ, trang bị, giới tính, tướng đang có, trạng thái cưỡi; param chưa biết không được nhân `ops=0,value=0` mà thông nhầm | Đã bổ sung param=2 không gian túi đồ (gồm pStyle=4 số ô còn lại), param=5 giới tính, param=16 cưỡi/xuống ngựa; tiếp tục bổ nhánh param 8/12/18 |
+| 8 | 6242 | Đã xác nhận | Nhánh kết quả chiến đấu | Giữ so sánh battleResult |
+| 9 | 2102 | Một phần | `param=0` là sở hữu tướng theo người; `param!=0` nghi là điều kiện cấp, vị trí hoặc trạng thái tướng, không dùng `value=0` mà thông nhầm | Bổ sung pStyle 1/2/3 và param khác 0 |
+| 10 | 6055 | Đã xác nhận | Nhánh lựa chọn Surface, `param=surfaceId`, `pStyle=choiceCode` | Giữ hiện trạng và bổ sung regression |
+| 11 | 76 | Tin cậy cao | Xác nhận flow bà giải kinh; dữ liệu cố định `param=0,pStyle=1,ops=0,value=0` | Đã bổ sung hình cố định, hình khác bảo thủ false |
+| 12 | 662 | Một phần | `param=0` là số lần hoàn thành eveNo hiện tại; `param!=0` chưa xác nhận, không dùng giá trị 0 mà thông nhầm | Bổ sung param 1/2/3/4 và pStyle 3/5/6 |
+| 13 | 99 | Đã xác định nhưng chưa cài đặt | Điều kiện thân phận quân đoàn, thành trì, di dân; mẫu tập trung ở cơ sở thành trì, quân đoàn trưởng/phó, thành viên quân đoàn trong thành và tư cách di dân | Cần có hệ quân đoàn/thành trì/di dân trước, tạm bảo thủ false |
+| 14 | 291 | Tin cậy trung bình | Chưa xác nhận là RoleCount; đa số là điều kiện giá trị 0 | Trước hết sửa tài liệu và chẩn đoán, không gắn nhãn đã xác nhận |
+| 15 | 4 | Đã hỗ trợ | `param=0` là số lần chuyển sinh của người chơi, cảnh 55002 dùng `ops=6,value=0` chặn người đã chuyển sinh, `ops=5,value=0` mở giao diện chuyển sinh; `param=1` là mã trạng thái cổng chuyển sinh lần 2 của tướng, theo Lua `UINpcTurn.CheckTurn(currentTurn=2)` kiểm tra cấp/trung thành của tướng theo người và vật phẩm chuyển sinh lần 2 | `param=0` tương ứng `rebornCount`; `param=1` tương ứng `npcSecondReincarnationStatus` (0=mở được, -1=hiển thị hướng dẫn) |
+| 16 | 9 | Tin cậy cao | Kiểm tra vật phẩm kho ngoài túi đồ; `pStyle=1,subItem=0` kiểm tra số lượng Tiền Trang + kho báu, bổ trợ với kiểm tra túi đồ class1 | Hình dạng pStyle/subItem khác vẫn bảo thủ false |
+| 17 | 16 | Đã xác định nhưng chưa cài đặt | Điều kiện hệ con cái, gồm sự tồn tại, cấp độ của con và nhánh con ra trận | Cần hệ con cái trước, tạm bảo thủ false |
+| 18 | 11 | Tin cậy cao nhưng cần phân luồng | Một số mẫu giống RoleCount; cũng có nhánh param thấp | Chỉ cài đặt index RoleCount đã được chứng minh |
 
-## resultType 覆蓋表
+## Bảng phủ resultType
 
-| Type | 筆數 | 客戶端 handler | 狀態 | 後續處理 |
+| Type | Số dòng | Handler client | Trạng thái | Xử lý tiếp |
 | --- | ---: | --- | --- | --- |
-| 0 | 55156 | 有 | 已確認 | 伺服器執行 resultClass 效果 |
-| 1 | 70455 | 有 | 已確認 | Talk，送 S:020-001 |
-| 2 | 10058 | 有 | 已確認 | Door，走傳送流程 |
-| 3 | 23504 | 有 | 已確認 | Battle，等待戰鬥結果 |
-| 4 | 211 | 有 | 部分 | NPC 移動，客戶端處理為主 |
-| 5 | 230 | 有 | 部分 | Movie，客戶端處理為主 |
-| 6 | 2617 | 有 | 已確認 | Surface，等待選項 |
-| 7 | 727 | 無直接 handler | 伺服器特殊分流 | 需逐 pStyle 保持明確語意 |
-| 8 | 226 | 無 | 靜默跳過 | 不送客戶端；自動 advance |
-| 9 | 1611 | 無 | 靜默跳過 | 不送客戶端；自動 advance |
-| 10 | 115 | 無 | 靜默跳過 | 不送客戶端；自動 advance |
+| 0 | 55156 | Có | Đã xác nhận | Server thực thi hiệu ứng resultClass |
+| 1 | 70455 | Có | Đã xác nhận | Talk, gửi S:020-001 |
+| 2 | 10058 | Có | Đã xác nhận | Door, theo flow dịch chuyển |
+| 3 | 23504 | Có | Đã xác nhận | Battle, chờ kết quả chiến đấu |
+| 4 | 211 | Có | Một phần | NPC di chuyển, client xử lý là chính |
+| 5 | 230 | Có | Một phần | Movie, client xử lý là chính |
+| 6 | 2617 | Có | Đã xác nhận | Surface, chờ lựa chọn |
+| 7 | 727 | Không handler trực tiếp | Server phân luồng đặc biệt | Giữ ngữ nghĩa rõ ràng theo từng pStyle |
+| 8 | 226 | Không | Bỏ qua âm thầm | Không gửi client; tự advance |
+| 9 | 1611 | Không | Bỏ qua âm thầm | Không gửi client; tự advance |
+| 10 | 115 | Không | Bỏ qua âm thầm | Không gửi client; tự advance |
 
-## resultClass 覆蓋表
+## Bảng phủ resultClass
 
-| Class | 筆數 | 狀態 | 語意判斷 | 後續處理 |
+| Class | Số dòng | Trạng thái | Nhận định ngữ nghĩa | Xử lý tiếp |
 | --- | ---: | --- | --- | --- |
-| 0 | 23734 | 已確認 | 無伺服器效果 | 保持自動推進 |
-| 1 | 8248 | 部分 | 物品給予或扣除；pStyle 0/1 依 resultValue 正負增減，pStyle 2 明確扣除 | pStyle 3 仍待驗證 |
-| 2 | 11852 | 部分 | 任務步驟、完成、旗標；pStyle 4 直接設定 resultValue 指定 bitId，pStyle 5 只移除任務 | pStyle 0 單筆異常資料待驗證 |
-| 3 | 90514 | 部分 | NPC 隊伍、顯隱、移動或客戶端演出 | 補 pStyle 0/2/6 與 type 搭配 |
-| 4 | 34 | 已確認 | 技能學習或升級 | 補 conditionClass=4 對應測試 |
-| 5 | 402 | 高信心 | 金錢增減，`param=0`；pStyle=1 增加，pStyle=2 扣除 | 已接 `MoneySystem` 與金錢封包 |
-| 7 | 28125 | 部分 | 玩家、UI、商店、客棧、銀行、金錢；特殊 UI 只允許 `resultType=7`，`pStyle=6` 為金錢獎勵，`pStyle=10` 為無界排行榜 `S:036-010`，`pStyle=12` 為玩家轉生 UI `S:036-011`，`pStyle=13` 為殺敵點兌換商店 `S:036-013`，`pStyle=15` 為水戰奉邑續行入口 `S:036-015`，`pStyle=21` 為武將二轉 UI `S:044-003`，`pStyle=27/29/30/32/35/39` 為無 payload 活動訊息 | 其他 pStyle 7 以上仍需逐一對照 Lua/協定 |
-| 8 | 485 | 已確認 | 獎勵武將加入或離開 | 保持現況並補失敗路徑測試 |
-| 10 | 1337 | 明確 no-op | type=0、param/value/meanNo 皆為 0，pStyle 只見 1/2；客戶端無分支 | 伺服器靜默 no-op 後自動推進 |
-| 11 | 35 | 待驗證 | 稀有特殊效果 | 建立範例集 |
-| 12 | 21 | 待驗證 | 疑似親子或特殊 NPC | 對照 Talk showRole 分支 |
-| 13 | 89 | 待驗證 | 稀有特殊效果 | 建立範例集 |
-| 14 | 33 | 待驗證 | 稀有特殊效果 | 建立範例集 |
-| 15 | 1 | 待驗證 | 單筆特殊效果 | 單獨追事件上下文 |
+| 0 | 23734 | Đã xác nhận | Không có hiệu ứng server | Giữ tự động đẩy tiếp |
+| 1 | 8248 | Một phần | Cấp hoặc khấu trừ vật phẩm; pStyle 0/1 tăng giảm theo dấu của resultValue, pStyle 2 khấu trừ rõ ràng | pStyle 3 vẫn chưa xác minh |
+| 2 | 11852 | Một phần | Bước, hoàn thành, cờ nhiệm vụ; pStyle 4 đặt trực tiếp bitId chỉ định qua resultValue, pStyle 5 chỉ xoá nhiệm vụ | pStyle 0 một dòng dữ liệu bất thường, chưa xác minh |
+| 3 | 90514 | Một phần | Đội NPC, hiện/ẩn, di chuyển hoặc diễn xuất trên client | Bổ sung pStyle 0/2/6 kết hợp type |
+| 4 | 34 | Đã xác nhận | Học hoặc nâng cấp kỹ năng | Bổ sung test tương ứng conditionClass=4 |
+| 5 | 402 | Tin cậy cao | Tăng giảm tiền, `param=0`; pStyle=1 tăng, pStyle=2 khấu trừ | Đã nối `MoneySystem` và gói tin tiền |
+| 7 | 28125 | Một phần | Người chơi, UI, cửa hàng, lữ quán, ngân hàng, tiền; UI đặc biệt chỉ cho phép `resultType=7`, `pStyle=6` là thưởng tiền, `pStyle=10` là bảng xếp hạng vô giới `S:036-010`, `pStyle=12` là UI chuyển sinh người chơi `S:036-011`, `pStyle=13` là cửa hàng đổi điểm diệt địch `S:036-013`, `pStyle=15` là cổng tiếp nối thuỷ chiến phụng ấp `S:036-015`, `pStyle=21` là UI chuyển sinh lần 2 của tướng `S:044-003`, `pStyle=27/29/30/32/35/39` là tin hoạt động không payload | pStyle từ 7 trở lên vẫn cần đối chiếu từng cái với Lua/giao thức |
+| 8 | 485 | Đã xác nhận | Tướng thưởng thêm vào hoặc rời đi | Giữ hiện trạng và bổ sung test nhánh lỗi |
+| 10 | 1337 | no-op rõ ràng | type=0, param/value/meanNo đều bằng 0, pStyle chỉ thấy 1/2; client không có nhánh | Server no-op âm thầm rồi tự đẩy tiếp |
+| 11 | 35 | Chưa xác minh | Hiệu ứng đặc biệt hiếm | Xây bộ ví dụ |
+| 12 | 21 | Chưa xác minh | Nghi là cha mẹ-con hoặc NPC đặc biệt | Đối chiếu nhánh showRole của Talk |
+| 13 | 89 | Chưa xác minh | Hiệu ứng đặc biệt hiếm | Xây bộ ví dụ |
+| 14 | 33 | Chưa xác minh | Hiệu ứng đặc biệt hiếm | Xây bộ ví dụ |
+| 15 | 1 | Chưa xác minh | Một hiệu ứng đặc biệt | Truy riêng ngữ cảnh sự kiện |
 
-## 優先順序
+## Thứ tự ưu tiên
 
-1. 先建立 Eve class 範例與覆蓋測試，避免「已觀測但未分類」被忽略。
-2. 實作高信心且不會大幅改變流程的類別：
-   `conditionClass=4` 技能條件、`resultClass=1/2` 已知 pStyle 補齊、
-   `resultType=8/9/10` 明確 skip 策略。
-3. 修正 RoleCount 判斷：
-   class14 不再標成已確認 RoleCount；class18 只在參數命中
-   `RoleCount.lua` 已知索引時才讀 RoleCount。
-4. 集中處理高影響缺口：
-   `resultClass=10`、`resultClass=5`、`conditionClass=5/13/16/17/18`。
-5. 對每個待驗證類別建立最小事件樣本：
-   sceneId、eveNo、conditionNo、resultGroupNo、Lua 對照、預期行為。
+1. Trước tiên tạo bộ ví dụ và test phủ cho Eve class, tránh bỏ sót các trường đã quan sát nhưng chưa phân loại.
+2. Cài đặt các nhóm tin cậy cao và không làm thay đổi flow nhiều:
+   `conditionClass=4` điều kiện kỹ năng, bổ sung pStyle đã biết của `resultClass=1/2`,
+   `resultType=8/9/10` chiến lược skip rõ ràng.
+3. Sửa logic nhận diện RoleCount:
+   class14 không còn bị đánh dấu là RoleCount đã xác nhận; class18 chỉ khi tham số trùng
+   chỉ mục đã biết trong `RoleCount.lua` mới đọc RoleCount.
+4. Tập trung xử lý các khoảng trống ảnh hưởng lớn:
+   `resultClass=10`,`resultClass=5`,`conditionClass=5/13/16/17/18`.
+5. Lập mẫu sự kiện tối thiểu cho mỗi lớp chờ xác minh:
+   sceneId, eveNo, conditionNo, resultGroupNo, đối chiếu Lua, hành vi dự kiến.
 
-## 驗收標準
+## Tiêu chí nghiệm thu
 
-- 每個實際出現在 `Eve.emg` 的 `conditionClass` 都必須有：
-  已實作邏輯、明確 no-op、或待驗證診斷項目。
-- 每個實際出現在 `Eve.emg` 的 `resultType/resultClass` 都必須有：
-  伺服器效果、客戶端轉發、明確 skip，或待驗證診斷項目。
-- 正常主線任務流程不得出現未分類類別的 WARN。
-- 未驗證語意不得以「猜測通過」方式讓條件回傳 true。
-- 每次新增語意必須有 Eve 範例測試或純函數單元測試。
+- Mỗi `conditionClass` thực sự xuất hiện trong `Eve.emg` đều phải có:
+  logic đã cài đặt, no-op rõ ràng, hoặc mục chẩn đoán chờ xác minh.
+- Mỗi `resultType/resultClass` thực sự xuất hiện trong `Eve.emg` đều phải có:
+  hiệu ứng server, chuyển tiếp client, skip rõ ràng, hoặc mục chẩn đoán chờ xác minh.
+- Luồng nhiệm vụ chính thông thường không được xuất hiện WARN của lớp chưa phân loại.
+- Ngữ nghĩa chưa xác minh không được theo kiểu "đoán là qua" mà cho điều kiện trả về true.
+- Mỗi lần thêm ngữ nghĩa phải có test mẫu Eve hoặc test đơn vị hàm thuần túy.

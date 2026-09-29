@@ -3,19 +3,19 @@ package tw.tsm.persistence.tables
 import org.jetbrains.exposed.v1.core.Table
 
 /**
- * 角色進行中任務表
+ * Bảng nhiệm vụ đang thực hiện của nhân vật
  *
- * 儲存每個角色目前持有的任務及其步驟進度。
- * 對應客戶端 MarkManager.missions（missionId → step）。
+ * Lưu các nhiệm vụ nhân vật đang có và tiến độ bước của từng nhiệm vụ.
+ * Tương ứng MarkManager.missions của client (missionId → step).
  */
 object CharacterMissions : Table("character_missions") {
-    /** 角色 ID（外鍵對應 characters.id） */
+    /** ID nhân vật (ngoại khoá tương ứng characters.id)*/
     val charId = long("char_id")
 
-    /** 任務 ID（對應 Mark_C.dat 的 id 欄位） */
+    /** ID nhiệm vụ (tương ứng trường id trong Mark_C.dat)*/
     val missionId = integer("mission_id")
 
-    /** 當前步驟值 */
+    /** Giá trị bước hiện tại*/
     val step = integer("step").default(1)
 
     override val primaryKey = PrimaryKey(charId, missionId)

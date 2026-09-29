@@ -1,212 +1,212 @@
 package tw.tsm.domain.constants
 
 /**
- * 手遊版主 Opcode 定義
+ * Định nghĩa Opcode chính của bản mobile
  *
- * 來源：protocal.lua 的 protocolTable[mainKind][subKind] 結構
- * 每個 mainKind 下有多個 subKind，以二級路由分發
+ * Nguồn: cấu trúc protocolTable[mainKind][subKind] của protocal.lua
+ * Mỗi mainKind có nhiều subKind, phân phối qua định tuyến hai cấp
  */
 object Opcodes {
-    /** 連線/斷線通知 */
+    /** Thông báo kết nối/mất kết nối*/
     const val DISCONNECT = 0
 
-    /** 登入認證系統 */
+    /** Hệ thống xác thực đăng nhập*/
     const val LOGIN = 1
 
-    /** 聊天系統 */
+    /** Hệ thống trò chuyện*/
     const val CHAT = 2
 
-    /** 主角系統（選角/玩家出現/登入天數） */
+    /** Hệ thống nhân vật chính (chọn nhân vật/xuất hiện người chơi/số ngày đăng nhập)*/
     const val CHARACTER = 3
 
-    /** 玩家屬性/狀態 */
+    /** Thuộc tính/trạng thái người chơi*/
     const val PLAYER_STATUS = 5
 
-    /** 移動系統 */
+    /** Hệ thống di chuyển*/
     const val MOVE = 6
 
-    /** 地圖/場景 */
+    /** Bản đồ/cảnh*/
     const val SCENE = 7
 
-    /** 戰鬥屬性系統（S→C 屬性修改） */
+    /** Hệ thống thuộc tính chiến đấu (S→C sửa thuộc tính)*/
     const val BATTLE = 8
 
-    /** 戰鬥管理（C→S: PK/參戰/觀戰, S→C: 初始化/結束） */
+    /** Quản lý chiến đấu (C→S: PK/tham chiến/khán chiến, S→C: khởi tạo/kết thúc)*/
     const val BATTLE_MANAGE = 11
 
-    /** 戰鬥技能指令（C→S: 出招/道具, S→C: 攻擊結果） */
+    /** Lệnh kỹ năng chiến đấu (C→S: ra chiêu/vật phẩm, S→C: kết quả tấn công)*/
     const val BATTLE_COMMAND = 50
 
-    /** 戰鬥屬性變化（S→C only） */
+    /** Biến đổi thuộc tính chiến đấu (S→C only)*/
     const val BATTLE_ATTR_CHANGE = 51
 
-    /** 戰鬥倒數/回魔（S→C only） */
+    /** Đếm ngược chiến đấu/hồi MP (S→C only)*/
     const val BATTLE_COUNTDOWN = 52
 
-    /** 戰鬥狀態/特效（S→C only） */
+    /** Trạng thái/hiệu ứng chiến đấu (S→C only)*/
     const val BATTLE_STATUS = 53
 
-    /** 創角系統（手遊版 protocolTable[9]） */
+    /** Hệ thống tạo nhân vật (bản mobile protocolTable[9])*/
     const val CREATE_CHAR = 9
 
-    /** 心跳包 */
+    /** Gói heartbeat*/
     const val KEEPALIVE = 10
 
-    /** 場景切換完畢（C→S 12-001） */
+    /** Chuyển cảnh hoàn tất (C→S 12-001)*/
     const val RELOCATE = 12
 
-    /** 隊伍系統（protocolTable[13]） */
+    /** Hệ thống tổ đội (protocolTable[13])*/
     const val PARTY = 13
 
-    /** 好友系統（protocolTable[14]） */
+    /** Hệ thống bạn bè (protocolTable[14])*/
     const val FRIEND = 14
 
-    /** 跟隨武將管理（protocolTable[15]：新增/放逐/改名/馬車） */
+    /** Quản lý tướng theo sau (protocolTable[15]: thêm/thả/đổi tên/xe ngựa)*/
     const val FOLLOW_NPC = 15
 
-    /** GM/戰鬥問答（protocolTable[16]） */
+    /** Hỏi đáp GM/chiến đấu (protocolTable[16])*/
     const val GM_QUIZ = 16
 
-    /** 跟隨武將出戰控制（protocolTable[19]） */
+    /** Điều khiển tướng theo sau ra chiến đấu (protocolTable[19])*/
     const val FOLLOW_NPC_DEPLOY = 19
 
-    /** NPC 事件系統（對話/碰撞觸發/傳送門） */
+    /** Hệ thống sự kiện NPC (hội thoại/kích hoạt va chạm/cổng dịch chuyển)*/
     const val NPC_EVENT = 20
 
-    /** MapNpc 系列（S:022-001~010 NPC 巡邏/移動/隱形/初始化） */
+    /** Dòng MapNpc (S:022-001~010 NPC tuần tra/di chuyển/ẩn thân/khởi tạo)*/
     const val MAP_NPC = 22
 
-    /** NPC 商店系統 */
+    /** Hệ thống cửa hàng NPC*/
     const val SHOP = 23
 
-    /** 任務/標記系統（MarkManager） */
+    /** Hệ thống nhiệm vụ/cờ đánh dấu (MarkManager)*/
     const val MARK = 24
 
-    /** 玩家交易系統（物品/武將/快遞） */
+    /** Hệ thống giao dịch người chơi (vật phẩm/tướng/chuyển phát nhanh)*/
     const val TRADE = 25
 
-    /** 成就系統（protocolTable[82]） */
+    /** Hệ thống thành tựu (protocolTable[82])*/
     const val ACHIEVEMENT = 82
 
-    /** 信件系統（protocolTable[83]） */
+    /** Hệ thống thư (protocolTable[83])*/
     const val MAIL = 83
 
-    /** 排行榜系統（protocolTable[88]） */
+    /** Hệ thống bảng xếp hạng (protocolTable[88])*/
     const val LEADERBOARD = 88
 
-    /** 金錢系統（增減/初始化） */
+    /** Hệ thống tiền (tăng/giảm/khởi tạo)*/
     const val MONEY = 26
 
-    /** NPC 買賣 */
+    /** Mua bán với NPC*/
     const val NPC_TRADE = 27
 
-    /** 技能升級（C→S 028-001 玩家, 028-002 武將） */
+    /** Nâng cấp kỹ năng (C→S 028-001 người chơi, 028-002 tướng)*/
     const val SKILL_UPGRADE = 28
 
-    /** 錢莊/銀行（mainKind=29 為控制封包、mainKind=30 為物品操作） */
+    /** Tiền Trang/ngân hàng (mainKind=29 là gói điều khiển, mainKind=30 là thao tác vật phẩm)*/
     const val BANK_CONTROL = 29
-    /** 錢莊物品操作 */
+    /** Thao tác vật phẩm Tiền Trang*/
     const val BANK = 30
 
-    /** 客棧系統（protocolTable[31]） */
+    /** Hệ thống lữ quán (protocolTable[31])*/
     const val INN = 31
 
-    /** 快捷鍵系統（C:040-002 設定, S:040-001 資料, S:040-002 結果） */
+    /** Hệ thống phím tắt (C:040-002 cài đặt, S:040-001 dữ liệu, S:040-002 kết quả)*/
     const val HOTKEY = 40
 
-    /** 武將轉生系統（protocolTable[44]） */
+    /** Hệ thống chuyển sinh tướng (protocolTable[44])*/
     const val NPC_REINCARNATION = 44
 
-    /** 表情/動作系統（C:032-001 表情, C:032-002 動作, C:032-003 停止動作） */
+    /** Hệ thống biểu cảm/hành động (C:032-001 biểu cảm, C:032-002 hành động, C:032-003 dừng hành động)*/
     const val EMOTE = 32
 
-    /** PK 開關設定（C:033-001 PK開關, C:033-002 參戰開關） */
+    /** Cài đặt công tắc PK (C:033-001 công tắc PK, C:033-002 công tắc tham chiến)*/
     const val PK_SETTING = 33
 
-    /** 跨服系統 */
+    /** Hệ thống liên server*/
     const val CROSS_SERVER = 35
 
-    /** 副本/挑戰 */
+    /** Phụ bản/thử thách*/
     const val CHALLENGE = 36
 
-    /** 任務（主副線） */
+    /** Nhiệm vụ (tuyến chính/tuyến phụ)*/
     const val MISSION = 47
 
-    /** 坐騎系統（protocolTable[79]） */
+    /** Hệ thống vật cưỡi (protocolTable[79])*/
     const val MOUNT = 79
 
-    /** 武將強化（C:074-001 發起, C:074-002 確認, C:074-003 取消） */
+    /** Cường hoá tướng (C:074-001 bắt đầu, C:074-002 xác nhận, C:074-003 huỷ)*/
     const val NPC_UPGRADE = 74
 
-    /** 場景對象 */
+    /** Đối tượng trong cảnh*/
     const val SCENE_OBJECT = 63
 
-    /** 機關盒（內掛）系統 */
+    /** Hệ thống hộp cơ quan (treo trong)*/
     const val MACHINE_BOX = 65
 
-    /** 天行異能傳送（protocolTable[68]） */
+    /** Dịch chuyển Thiên Hành Dị Năng (protocolTable[68])*/
     const val TELEPORT = 68
 
-    /** 商城 / 轉蛋（DVT Mall，protocolTable[66]） */
+    /** Cửa hàng / quay thưởng (DVT Mall, protocolTable[66])*/
     const val MALL = 66
 
-    /** 永標系統（BitFlag） */
+    /** Hệ thống cờ vĩnh viễn (BitFlag)*/
     const val FOREVER_FLAG = 81
 
-    /** 介面消費系統（C:084-001 查詢介消, C:084-002 使用介消） */
+    /** Hệ thống tiêu phí giao diện (C:084-001 truy vấn 介消, C:084-002 sử dụng 介消)*/
     const val UI_SELL = 84
 
-    /** 玩家計數資料系統（背包格數、錢莊格數等），使用 S:085-001/002 */
+    /** Hệ thống dữ liệu đếm của người chơi (số ô túi đồ, số ô Tiền Trang, v.v.), dùng S:085-001/002*/
     const val ROLE_COUNT_SYSTEM = 85
 
-    /** 派遣系統（C:086-001 查詢, C:086-002 出發, C:086-005 完成） */
+    /** Hệ thống phái cử (C:086-001 truy vấn, C:086-002 xuất phát, C:086-005 hoàn thành)*/
     const val DISPATCH = 86
 
-    /** 角色計數資料（背包格數等） */
+    /** Dữ liệu đếm của nhân vật (số ô túi đồ, v.v.)*/
     const val ROLE_COUNT = 100
 
-    /** 寶庫（與錢莊平行的第二倉庫） */
+    /** Kho báu (kho thứ hai song song với Tiền Trang)*/
     const val STORAGE = 102
 
-    /** 武將倉庫（protocolTable[122]） */
+    /** Kho tướng (protocolTable[122])*/
     const val WARRIOR_REPO = 122
 
-    /** 狂歡/活動模型系統（protocolTable[124]） */
+    /** Hệ thống mô hình tiệc hội/sự kiện (protocolTable[124])*/
     const val ACTIVITY_MODEL = 124
 
-    /** 精靈系統（DVT UIElf.lua / protocolTable[107]） */
+    /** Hệ thống tinh linh (DVT UIElf.lua / protocolTable[107])*/
     const val ELF = 107
 
-    /** 除錯/測試 */
+    /** Gỡ lỗi/thử nghiệm*/
     const val DEBUG = 199
 }
 
-/** 協定事件碼（Socket 層） */
+/** Mã sự kiện giao thức (tầng Socket)*/
 object ProtocolEvent {
-    /** TCP 連線建立 */
+    /** Thiết lập kết nối TCP*/
     const val CONNECT = 101
-    /** 異常斷線 */
+    /** Mất kết nối bất thường*/
     const val EXCEPTION = 102
-    /** 正常斷線 */
+    /** Mất kết nối bình thường*/
     const val DISCONNECT = 103
-    /** 收到訊息 */
+    /** Nhận được message*/
     const val MESSAGE = 104
-    /** 網路不可用 */
+    /** Mạng không khả dụng*/
     const val INTERNET_UNAVAILABLE = 105
 }
 
-/** 新角色起始場景（新手村，地圖 1600×1152 px） */
+/** Cảnh khởi đầu của nhân vật mới (làng tân thủ, bản đồ 1600×1152 px)*/
 const val DEFAULT_START_MAP: Int = 10801
-/** 新角色起始 X 像素座標 */
+/** Toạ độ pixel X khởi đầu của nhân vật mới*/
 const val DEFAULT_START_X: Int = 570
-/** 新角色起始 Y 像素座標 */
+/** Toạ độ pixel Y khởi đầu của nhân vật mới*/
 const val DEFAULT_START_Y: Int = 770
 
-/** 客戶端版本號 */
+/** Số phiên bản client*/
 const val CLIENT_VERSION: Int = 258
 
-/** 預設伺服器埠 */
+/** Cổng server mặc định*/
 const val DEFAULT_PORT: Int = 6613
 
-/** 心跳間隔（秒） */
+/** Chu kỳ heartbeat (giây)*/
 const val HEARTBEAT_INTERVAL: Int = 20

@@ -3,24 +3,24 @@ package tw.tsm.persistence.tables
 import org.jetbrains.exposed.v1.core.Table
 
 /**
- * 角色計數器表（RoleCount）
+ * Bảng bộ đếm nhân vật (RoleCount)
  *
- * 對應客戶端 RoleCount.lua 的 ERoleCount 枚舉。
- * 追蹤各種累計/每日計數：捕捉次數、死亡次數、好友數量等。
+ * Tương ứng enum ERoleCount trong RoleCount.lua của client.
+ * Theo dõi các bộ đếm luỹ kế/hàng ngày: số lần bắt, số lần chết, số lượng bạn bè, v.v.
  *
- * 用途：成就條件（ECondition.RoleCount=14, FriendCount=18）、背包/錢莊格數、登入天數等。
+ * Mục đích: điều kiện thành tựu (ECondition.RoleCount=14, FriendCount=18), số ô túi đồ/Tiền Trang, số ngày đăng nhập, v.v.
  */
 object CharacterRoleCounts : Table("character_role_counts") {
-    /** 角色 ID */
+    /** ID nhân vật*/
     val charId = long("char_id")
 
-    /** RoleCount 索引（對應 ERoleCount 枚舉值） */
+    /** Chỉ số RoleCount (tương ứng giá trị enum ERoleCount)*/
     val countIndex = integer("count_index")
 
-    /** 當前值 */
+    /** Giá trị hiện tại*/
     val value = integer("value").default(0)
 
-    /** 上限值 */
+    /** Giá trị trần*/
     val maxValue = integer("max_value").default(0)
 
     override val primaryKey = PrimaryKey(charId, countIndex)

@@ -11,13 +11,13 @@ import tw.tsm.protocol.PacketReader
 private val logger = KotlinLogging.logger {}
 
 /**
- * 玩家交易處理器（mainKind = 25）
+ * Bộ xử lý giao dịch người chơi (mainKind = 25)
  *
- * 來源：protocal.lua protocolTable[25]
+ * Nguồn: protocal.lua protocolTable[25]
  *
- * 物品交易：C:025-001 發起, C:025-002 上傳物品, C:025-003 確認/取消
- * 武將交易：C:025-010 發起, C:025-011 上傳武將, C:025-012 確認/取消
- * 快遞系統：C:025-020~021（TODO：獨立子系統）
+ * Giao dịch vật phẩm: C:025-001 khởi tạo, C:025-002 tải vật phẩm lên, C:025-003 xác nhận/hủy
+ * Giao dịch tướng: C:025-010 khởi tạo, C:025-011 tải tướng lên, C:025-012 xác nhận/hủy
+ * Hệ thống chuyển phát nhanh: C:025-020~021 (TODO: subsystem độc lập)
  */
 class TradeHandler(
     private val tradeSystem: TradeSystem
@@ -35,29 +35,29 @@ class TradeHandler(
             10 -> handleRequestPetTrade(session, data)
             11 -> handleUploadPet(session, data)
             12 -> handleConfirmPetTrade(session, data)
-            20 -> { /* TODO：快遞系統 */ }
-            21 -> { /* TODO：取消快遞 */ }
-            else -> logger.warn { "未處理的交易子協定：subKind=$subKind" }
+            20 -> { /* TODO: hệ thống chuyển phát nhanh*/ }
+            21 -> { /* TODO: hủy chuyển phát nhanh*/ }
+            else -> logger.warn { "Sub-protocol giao dịch chưa xử lý: subKind=$subKind" }
         }
     }
 
     /**
-     * C:025-001 發起物品交易
+     * C:025-001 Bắt đầu giao dịch vật phẩm
      *
-     * 格式：+playerID(8)
+     * Định dạng: +playerID(8)
      */
     private fun handleRequestTrade(session: GameSession, data: ByteArray) {
         val reader = PacketReader(data)
         val targetId = reader.readULongLE()
 
-        logger.info { "${session.characterName} 發起交易 → targetId=$targetId" }
+        logger.info { "${session.characterName} mở giao dịch → targetId=$targetId" }
         tradeSystem.requestTrade(session, targetId)
     }
 
     /**
-     * C:025-002 上傳交易物品
+     * C:025-002 Tải lên vật phẩm giao dịch
      *
-     * 格式：+money(4) <<+bagIndex(1)>>
+     * Định dạng: +money(4) <<+bagIndex(1)>>
      */
     private fun handleUploadItems(session: GameSession, data: ByteArray) {
         val reader = PacketReader(data)
@@ -69,40 +69,40 @@ class TradeHandler(
             bagIndices.add(reader.readUByte())
         }
 
-        logger.info { "${session.characterName} 上傳交易：金額=$money 物品=${bagIndices.size}件" }
+        logger.info { "${session.characterName} gửi giao dịch: tiền=$money vật phẩm=${bagIndices.size} món" }
         tradeSystem.uploadItems(session.playerId, money, bagIndices)
     }
 
     /**
-     * C:025-003 確認/取消物品交易
+     * C:025-003 Xác nhận/huỷ giao dịch vật phẩm
      *
-     * 格式：+result(1) [1=確認, 2=取消]
+     * Định dạng: +result(1) [1=xác nhận, 2=hủy]
      */
     private fun handleConfirmTrade(session: GameSession, data: ByteArray) {
         val reader = PacketReader(data)
         val result = reader.readUByte()
 
-        logger.info { "${session.characterName} 交易操作：result=$result (${if (result == 1) "確認" else "取消"})" }
+        logger.info { "${session.characterName} thao tác giao dịch: result=$result (${if (result == 1) "確認" else "取消"})" }
         tradeSystem.confirmOrCancel(session.playerId, result, TradeSystem.MODE_ITEM)
     }
 
     /**
-     * C:025-010 發起武將交易
+     * C:025-010 Bắt đầu giao dịch tướng
      *
-     * 格式：+playerID(8)
+     * Định dạng: +playerID(8)
      */
     private fun handleRequestPetTrade(session: GameSession, data: ByteArray) {
         val reader = PacketReader(data)
         val targetId = reader.readULongLE()
 
-        logger.info { "${session.characterName} 發起武將交易 → targetId=$targetId" }
+        logger.info { "${session.characterName} mở giao dịch tướng → targetId=$targetId" }
         tradeSystem.requestTrade(session, targetId, TradeSystem.MODE_PET)
     }
 
     /**
-     * C:025-011 上傳交易武將
+     * C:025-011 Tải lên tướng giao dịch
      *
-     * 格式：+money(4) +followIndex(1)（0 = 只出金錢，UITrade.lua:375-379）
+     * Định dạng: +money(4) +followIndex(1) (0 = chỉ đưa tiền vàng, UITrade.lua:375-379)
      */
     private fun handleUploadPet(session: GameSession, data: ByteArray) {
         val reader = PacketReader(data)
@@ -110,20 +110,20 @@ class TradeHandler(
         if (money < 0) return
         val petSlot = reader.readUByte()
 
-        logger.info { "${session.characterName} 上傳武將交易：金額=$money petSlot=$petSlot" }
+        logger.info { "${session.characterName} gửi giao dịch tướng: tiền=$money petSlot=$petSlot" }
         tradeSystem.uploadPet(session.playerId, money, petSlot)
     }
 
     /**
-     * C:025-012 確認/取消武將交易
+     * C:025-012 Xác nhận/huỷ giao dịch tướng
      *
-     * 格式：+result(1) [1=確認, 2=取消]
+     * Định dạng: +result(1) [1=xác nhận, 2=hủy]
      */
     private fun handleConfirmPetTrade(session: GameSession, data: ByteArray) {
         val reader = PacketReader(data)
         val result = reader.readUByte()
 
-        logger.info { "${session.characterName} 武將交易操作：result=$result (${if (result == 1) "確認" else "取消"})" }
+        logger.info { "${session.characterName} thao tác giao dịch tướng: result=$result (${if (result == 1) "確認" else "取消"})" }
         tradeSystem.confirmOrCancel(session.playerId, result, TradeSystem.MODE_PET)
     }
 }

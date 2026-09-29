@@ -4,18 +4,18 @@ import tw.tsm.data.DatReader
 import tw.tsm.domain.data.NpcUpgradeDef
 
 /**
- * 武將強化載入器 — 對應 `NpcData.lua` NpcUpgradeData.New
+ * Loader cường hoá tướng — tương ứng `NpcData.lua` NpcUpgradeData.New
  *
- * 來源：`NpcUpgrade_C.dat`
- * 格式：count(Int32) + 每筆 lv(B) + requireMoney(U32) + requireDebris(U16)
+ * Nguồn: `NpcUpgrade_C.dat`
+ * Định dạng: count(Int32) + mỗi bản ghi lv(B) + requireMoney(U32) + requireDebris(U16)
  *       + requirePicture(B) + attributeAdd(B) + skillLv(B) + upgradeLvIcon(B)
  */
 object NpcUpgradeDatLoader {
 
     /**
-     * 載入武將強化資料
+     * Đọc dữ liệu cường hoá tướng
      *
-     * @return Map<目標星等, NpcUpgradeDef>
+     * @return Map<mức sao đích, NpcUpgradeDef>
      */
     fun load(data: ByteArray): Map<Int, NpcUpgradeDef> {
         val reader = DatReader(data)
@@ -23,13 +23,13 @@ object NpcUpgradeDatLoader {
         val result = LinkedHashMap<Int, NpcUpgradeDef>(count)
 
         for (i in 0 until count) {
-            val lv = reader.readByte()                    // 星等（key）
-            val requireMoney = reader.readUInt32()        // 需求遊戲幣
-            val requireDebris = reader.readUInt16()       // 需求碎片數量
-            val requirePicture = reader.readByte()        // 需求畫冊數量
-            val attributeAdd = reader.readByte()          // 強化隨機數值
-            val skillLv = reader.readByte()               // 強化技等級
-            val upgradeLvIcon = reader.readByte()         // 星等圖示
+            val lv = reader.readByte()                    // Mức sao (key)
+            val requireMoney = reader.readUInt32()        // Số game tệ yêu cầu
+            val requireDebris = reader.readUInt16()       // Số lượng mảnh vụn yêu cầu
+            val requirePicture = reader.readByte()        // Số lượng hoạ sách yêu cầu
+            val attributeAdd = reader.readByte()          // Giá trị ngẫu nhiên cường hoá
+            val skillLv = reader.readByte()               // Cấp độ kỹ năng cường hoá
+            val upgradeLvIcon = reader.readByte()         // Icon sao
 
             result[lv] = NpcUpgradeDef(
                 requireMoney = requireMoney,

@@ -15,7 +15,7 @@ import java.time.LocalDateTime
 private val jiugongLogger = KotlinLogging.logger {}
 
 /**
- * DVT 九宮格 (Daily) system.
+ * Hệ thống DVT bảng cửu cung (Daily).
  *
  * Authoritative client contracts:
  * - UIJiugongge.lua: daily button opens EUIJiugonggeOpenWay.Jiugongge.

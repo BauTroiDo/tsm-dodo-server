@@ -6,30 +6,30 @@ import tw.tsm.domain.interfaces.SessionSender
 import tw.tsm.protocol.PacketWriter
 
 /**
- * 場景相關封包序列化
+ * Tuần tự hoá gói tin liên quan cảnh
  *
- * mainKind = 7（場景）, 12（場景切換）, 22（MapNpc）
+ * mainKind = 7（cảnh）, 12（chuyển cảnh）, 22（MapNpc）
  */
 class SceneResponseSender {
 
     /**
-     * S:007-001 分區列表
+     * S:007-001 Danh sách phân khu
      *
-     * 格式：+count(1) + [index(2) + currentPlayers(2) + maxPlayers(2)]...
+     * Định dạng: +count(1) + [index(2) + currentPlayers(2) + maxPlayers(2)]...
      */
     fun sendAreaList(session: SessionSender, onlineCount: Int) {
         session.send(
             PacketWriter()
                 .writeByte(Opcodes.SCENE).writeByte(1).writeByte(0)
-                .writeByte(1)              // 分區數量 = 1
-                .writeShortLE(0)           // 分區 index = 0
+                .writeByte(1)              // Số lượng phân khu = 1
+                .writeShortLE(0)           // index phân khu = 0
                 .writeShortLE(onlineCount)
-                .writeShortLE(500)         // 最大人數
+                .writeShortLE(500)         // Số người tối đa
                 .toByteArray()
         )
     }
 
-    /** S:007-002 分區切換結果 */
+    /** S:007-002 Kết quả chuyển phân khu*/
     fun sendAreaSwitchResult(session: SessionSender, resultCode: Int) {
         session.send(
             PacketWriter()
@@ -40,9 +40,9 @@ class SceneResponseSender {
     }
 
     /**
-     * S:007-000 玩家瞬移
+     * S:007-000 Người chơi dịch chuyển tức thời
      *
-     * 格式：+roleId(8) +sceneId(2) +x(2) +y(2)
+     * Định dạng: +roleId(8) +sceneId(2) +x(2) +y(2)
      */
     fun sendPlayerTeleport(session: SessionSender, playerId: Long, sceneId: Int, x: Int, y: Int) {
         session.send(
@@ -57,9 +57,9 @@ class SceneResponseSender {
     }
 
     /**
-     * S:012-000 場景切換通知
+     * S:012-000 Thông báo chuyển cảnh
      *
-     * 格式：+roleId(8) +sceneId(2) +x(2) +y(2) +tag(2) +instanceId(2)
+     * Định dạng: +roleId(8) +sceneId(2) +x(2) +y(2) +tag(2) +instanceId(2)
      *       +equipCount(1) +[itemId(2)]... +outfitCount(1) +[outfitId(2)]... +titleId(2)
      */
     fun sendSceneChange(session: SessionSender, playerId: Long, sceneId: Int, x: Int, y: Int, equipItemIds: IntArray = intArrayOf(), titleId: Int = 0) {
@@ -71,22 +71,22 @@ class SceneResponseSender {
             .writeShortLE(y)
             .writeShortLE(0)   // sceneTag
             .writeShortLE(0)   // instanceId
-        // 裝備外觀
+        // Ngoại hình trang bị
         writer.writeByte(equipItemIds.size)
         for (itemId in equipItemIds) {
             writer.writeShortLE(itemId)
         }
-        // 外顯裝備（目前暫無）
+        // Trang bị hiển thị ngoài（hiện chưa có）
         writer.writeByte(0)
-        // 稱號
+        // Danh hiệu
         writer.writeShortLE(titleId)
         session.send(writer.toByteArray())
     }
 
     /**
-     * S:022-004 MapNpc 初始化
+     * S:022-004 Khởi tạo MapNpc
      *
-     * 格式：+數量(2) <<+索引(2) +圖序(1) +戰鬥類型(1) +位置x(2) +位置y(2) +顯示種類(1) +隱藏時間(4)>>
+     * Định dạng: +số lượng(2) <<+chỉ mục(2) +thứ tự hình(1) +loại chiến đấu(1) +vị trí x(2) +vị trí y(2) +loại hiển thị(1) +thời gian ẩn(4)>>
      */
     fun sendMapNpcInit(session: SessionSender, npcs: List<EveNpcPlacement>) {
         val activeNpcs = npcs.filter { !it.close }
@@ -95,20 +95,20 @@ class SceneResponseSender {
             .writeShortLE(activeNpcs.size)
         for (npc in activeNpcs) {
             writer.writeShortLE(npc.id)
-            writer.writeByte(0)                        // 圖序
-            writer.writeByte(0)                        // 戰鬥類型
+            writer.writeByte(0)                        // Thứ tự hình ảnh
+            writer.writeByte(0)                        // Loại chiến đấu
             writer.writeShortLE(npc.x)
             writer.writeShortLE(npc.y)
-            writer.writeByte(1)                        // 顯示種類
-            writer.writeUIntLE(0)                      // 隱藏時間
+            writer.writeByte(1)                        // Loại hiển thị
+            writer.writeUIntLE(0)                      // Thời gian ẩn
         }
         session.send(writer.toByteArray())
     }
 
     /**
-     * S:022-002 MapNpc 移動
+     * S:022-002 MapNpc di chuyển
      *
-     * 格式：+索引(2) +座標X(2) +座標Y(2)
+     * Định dạng: +chỉ số(2) +toạ độ X(2) +toạ độ Y(2)
      */
     fun buildMapNpcMovePacket(npcIndex: Int, x: Int, y: Int): ByteArray {
         return PacketWriter(9)

@@ -1,80 +1,80 @@
 package tw.tsm.domain.data
 
 /**
- * NPC 定義 — 對應 `NpcData.New(reader)`
+ * Định nghĩa NPC — tương ứng `NpcData.New(reader)`
  *
- * 來源：`Npc_C.dat`
- * 欄位順序嚴格對照 NpcData.lua 第 236-305 行。
+ * Nguồn: `Npc_C.dat`
+ * Thứ tự trường đối chiếu nghiêm ngặt dòng 236-305 của NpcData.lua.
  */
 data class NpcDef(
-    /** [1] 名稱（UTF-16LE） */
+    /** [1] Tên (UTF-16LE)*/
     val name: String,
-    /** [2] 類別（ENpc 列舉） */
+    /** [2] Loại (liệt kê ENpc)*/
     val kind: Int,
-    /** [4] 角色圖 */
+    /** [4] Ảnh nhân vật*/
     val picId: Int,
-    /** [5] 遮罩圖 */
+    /** [5] Ảnh mask*/
     val maskId: Int,
-    /** [6-9] 色盤（帽髮膚 / 衣配1配2 / 配3配4鞋 / 武底武配1腕） */
+    /** [6-9] Bảng màu (mũ/tóc/da / áo/phụ1/phụ2 / phụ3/phụ4/giày / nền vũ khí/phụ1 vũ khí/vòng tay)*/
     val colorTints: IntArray,
-    /** [10] 可否捕捉（0=可捉, 1=不可捉） */
+    /** [10] Có bắt được hay không (0=bắt được, 1=không bắt được)*/
     val canBeCatch: Boolean,
-    /** [11] 體型 */
+    /** [11] Thể hình*/
     val bodyKind: Int,
-    /** [12] 武器種類 */
+    /** [12] Loại vũ khí*/
     val weaponKind: Int,
-    /** [13] 等級 */
+    /** [13] Cấp độ*/
     val level: Int,
-    /** [14] 基礎 HP */
+    /** [14] HP cơ bản*/
     val hpBase: Int,
-    /** [15] 基礎 SP */
+    /** [15] SP cơ bản*/
     val spBase: Int,
-    /** [16] HP 上升幅度 */
+    /** [16] Mức tăng HP*/
     val hpx: Int,
-    /** [17] SP 上升幅度 */
+    /** [17] Mức tăng SP*/
     val spx: Int,
-    /** [18] 知力 */
+    /** [18] Trí lực*/
     val intelligence: Int,
-    /** [19] 攻擊 */
+    /** [19] Tấn công*/
     val atk: Int,
-    /** [20] 防禦 */
+    /** [20] Phòng thủ*/
     val def: Int,
-    /** [21] 敏捷 */
+    /** [21] Nhanh nhẹn*/
     val agi: Int,
-    /** [22] 陣營（0=無, 1=魏, 2=蜀, 3=吳, 4=黃巾, 5=遊俠） */
+    /** [22] Phe đảng (0=không, 1=Nguei, 2=Thục, 3=Ngô, 4=Hoàng Cân, 5=du hiệp)*/
     val moral: Int,
-    /** [23] 陣營值 */
+    /** [23] Giá trị phe đảng*/
     val moralValue: Int,
-    /** [24] 元素（1=地, 2=水, 3=火, 4=風） */
+    /** [24] Nguyên tố (1=đất, 2=nước, 3=lửa, 4=gió)*/
     val element: Int,
-    /** [25-27] 技能 ID（最多 3 個，Role.maxNpcSkill = 3） */
+    /** [25-27] ID kỹ năng (tối đa 3, Role.maxNpcSkill = 3)*/
     val skills: IntArray,
-    /** [35] 武將特有技 */
+    /** [35] Kỹ năng đặc hữu của tướng*/
     val specialSkill: Int,
-    /** [36] 轉生限制（0=未轉生, 1=轉生後） */
+    /** [36] Hạn chế chuyển sinh (0=chưa chuyển sinh, 1=sau chuyển sinh)*/
     val turn: Int,
-    /** [38] 被動技 ID */
+    /** [38] ID kỹ năng bị động*/
     val passiveSkill: Int,
-    /** [39] 被動技等級 */
+    /** [39] Cấp kỹ năng bị động*/
     val passiveSkillLv: Int,
-    /** [40] 馬鞍 */
+    /** [40] Yên ngựa*/
     val saddleKind: Int,
-    /** [41] 強化物品編號 */
+    /** [41] Số hiệu vật phẩm tăng cường*/
     val upgradeItemId: Int,
-    /** [42] 強化技能 */
+    /** [42] Kỹ năng tăng cường*/
     val upgradeSkill: Int,
-    /** [43] 限制條件（拆 low/high byte） */
+    /** [43] Điều kiện hạn chế (tách low/high byte)*/
     val limits: IntArray,
-    /** [44] 座騎位移 */
+    /** [44] Dịch chuyển vật cưỡi*/
     val rideOffsetH: Int,
-    /** [45] 圖片位移 X */
+    /** [45] Dịch ảnh theo X*/
     val picOffsetX: Int,
-    /** [46] 圖片位移 Y */
+    /** [46] Dịch ảnh theo Y*/
     val picOffsetY: Int,
-    /** [47] HUD 位移 */
+    /** [47] Dịch HUD*/
     val hudOffsetH: Int,
-    /** [48] 影子類型（0=不使用, 1=小, 2=長, 3=大） */
+    /** [48] Loại bóng (0=không dùng, 1=nhỏ, 2=dài, 3=lớn)*/
     val shadowKind: Int,
-    /** [49] 稀有階級（1-3=銅, 4=銀, 5=金） */
+    /** [49] Cấp độ hiếm (1-3=đồng, 4=bạc, 5=vàng)*/
     val rare: Int
 )

@@ -4,18 +4,18 @@ import tw.tsm.data.DatReader
 import tw.tsm.domain.data.ItemDef
 
 /**
- * 物品載入器 — 對應 `DataManager.OnLoadItemData`
+ * Loader vật phẩm — tương ứng `DataManager.OnLoadItemData`
  *
- * 來源：`Item_C.dat`
- * 格式：count(Int32) + count 筆 ItemData.New(reader)
- * Key = 物品 ID（id != 0 才存入）
+ * Nguồn: `Item_C.dat`
+ * Định dạng: count(Int32) + count bản ghi ItemData.New(reader)
+ * Key = ID vật phẩm (chỉ lưu khi id != 0)
  *
- * 欄位順序嚴格對照 ItemData.lua 第 300-385 行。
+ * Thứ tự trường đối chiếu nghiêm ngặt dòng 300-385 của ItemData.lua.
  */
 object ItemDatLoader {
 
     /**
-     * 載入物品資料
+     * Đọc dữ liệu vật phẩm
      */
     fun load(data: ByteArray): Map<Int, ItemDef> {
         val reader = DatReader(data)
@@ -30,7 +30,7 @@ object ItemDatLoader {
             val malePicId = reader.readUInt16()             // [5]
             val femalePicId = reader.readUInt16()           // [6]
 
-            // [7-12] 屬性 1, 2
+            // [7-12] Thuộc tính 1, 2
             val attr1Kind = reader.readUInt16()
             val attr1Item = reader.readByte()
             val attr1Value = reader.readInt32()
@@ -43,7 +43,7 @@ object ItemDatLoader {
             val fitType = reader.readByte()                 // [15]
             val specialAbility = reader.readUInt16()        // [16]
 
-            // [17-24] 色盤
+            // [17-24] Bảng màu
             val maleColorTints = IntArray(4) { reader.readInt32() }
             val femaleColorTints = IntArray(4) { reader.readInt32() }
 
@@ -77,7 +77,7 @@ object ItemDatLoader {
             val quality = reader.readByte()                 // [52]
             val auctionTag = reader.readByte()              // [53]
             val auctionSubTag = reader.readByte()           // [54]
-            val description = reader.readUnicodeString()    // 說明
+            val description = reader.readUnicodeString()    // Mô tả
 
             if (id != 0) {
                 result[id] = ItemDef(

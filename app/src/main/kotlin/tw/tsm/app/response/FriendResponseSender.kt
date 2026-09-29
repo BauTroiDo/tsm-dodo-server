@@ -11,17 +11,17 @@ import tw.tsm.protocol.PlayerInfoCodec.writeFriendExtra
 import tw.tsm.protocol.writeThingData
 
 /**
- * 好友系統封包序列化
+ * tuần tự hoá gói tin hệ thống bạn bè
  *
  * mainKind = 14
- * 來源：protocal.lua protocolTable[14], PlayerInfo.lua
+ * Nguồn: protocal.lua protocolTable[14], PlayerInfo.lua
  */
 class FriendResponseSender {
 
     /**
-     * S:014-003 好友邀請結果
+     * S:014-003 kết quả mời kết bạn
      *
-     * 格式：+nameLen(1B) +name(Big5) +result(1B)
+     * Định dạng: +nameLen(1B) +name(Big5) +result(1B)
      */
     fun sendFriendInviteResult(session: SessionSender, name: String, result: Int) {
         session.send(
@@ -34,9 +34,9 @@ class FriendResponseSender {
     }
 
     /**
-     * S:014-004 刪除好友通知
+     * S:014-004 thông báo xoá bạn bè
      *
-     * 格式：+playerId(8B LE)
+     * Định dạng: +playerId(8B LE)
      */
     fun sendFriendRemove(session: SessionSender, playerId: Long) {
         session.send(
@@ -48,10 +48,10 @@ class FriendResponseSender {
     }
 
     /**
-     * S:014-005 新增好友
+     * S:014-005 thêm bạn bè
      *
-     * 格式：+count(2B LE) <<+playerId(8B LE) +名片 +在線(1B) +信任度(2B LE)
-     *       +標記(1B) +結交時間(8B) +離線時間(8B)>>
+     * Định dạng: +count(2B LE) <<+playerId(8B LE) +danh thiếp +trực tuyến(1B) +độ tin cậy(2B LE)
+     *       +cờ đánh dấu(1B) +thời gian kết giao(8B) +thời gian offline(8B)>>
      */
     fun sendFriendAdd(session: SessionSender, friends: List<FriendDataDto>) {
         val writer = PacketWriter()
@@ -76,7 +76,7 @@ class FriendResponseSender {
     }
 
     /**
-     * S:014-006 好友信箱已滿
+     * S:014-006 hộp thư bạn bè đã đầy
      */
     fun sendFriendMailFull(session: SessionSender) {
         session.send(
@@ -87,9 +87,9 @@ class FriendResponseSender {
     }
 
     /**
-     * S:014-007 好友訊息
+     * S:014-007 tin nhắn bạn bè
      *
-     * 格式：+kind(1B)
+     * Định dạng: +kind(1B)
      */
     fun sendFriendMessage(session: SessionSender, kind: Int) {
         session.send(
@@ -101,9 +101,9 @@ class FriendResponseSender {
     }
 
     /**
-     * S:014-008 好友邀請列表
+     * S:014-008 danh sách lời mời bạn bè
      *
-     * 格式：+count(2B LE) <<+playerId(8B LE) +名片 +msg(1B)>>
+     * Định dạng: +count(2B LE) <<+playerId(8B LE) +danh thiếp +msg(1B)>>
      */
     fun sendFriendInvites(session: SessionSender, invites: List<FriendInviteDto>) {
         val writer = PacketWriter()
@@ -117,16 +117,16 @@ class FriendResponseSender {
                 turn3Element = inv.turn3Element, turn = inv.turn, career = inv.career,
                 sex = inv.sex, hair = inv.hair, color1 = inv.color1, color2 = inv.color2
             )
-            writer.writeByte(0) // msg（固定 0）
+            writer.writeByte(0) // msg (cố định 0)
         }
 
         session.send(writer.toByteArray())
     }
 
     /**
-     * S:014-009 刪除好友邀請
+     * S:014-009 xoá lời mời kết bạn
      *
-     * 格式：+playerId(8B LE)
+     * Định dạng: +playerId(8B LE)
      */
     fun sendFriendRemoveInvite(session: SessionSender, playerId: Long) {
         session.send(
@@ -138,9 +138,9 @@ class FriendResponseSender {
     }
 
     /**
-     * S:014-012 更新好友功能標記
+     * S:014-012 cập nhật cờ chức năng bạn bè
      *
-     * 格式：+count(1B) <<+playerId(8B LE) +flag(1B)>>
+     * Định dạng: +count(1B) <<+playerId(8B LE) +flag(1B)>>
      */
     fun sendFriendFunctionFlags(session: SessionSender, updates: List<Pair<Long, Int>>) {
         val writer = PacketWriter()
@@ -155,9 +155,9 @@ class FriendResponseSender {
     }
 
     /**
-     * S:014-013 更新好友信任度
+     * S:014-013 cập nhật độ tin cậy bạn bè
      *
-     * 格式：+playerId(8B LE) +friendly(2B LE)
+     * Định dạng: +playerId(8B LE) +friendly(2B LE)
      */
     fun sendFriendFriendly(session: SessionSender, playerId: Long, friendly: Int) {
         session.send(
@@ -170,9 +170,9 @@ class FriendResponseSender {
     }
 
     /**
-     * S:014-014 玩家資訊
+     * S:014-014 thông tin người chơi
      *
-     * 格式：+playerId(8B) +名片 +maxHp(4B) +maxSp(2B) +六圍(4B)×6
+     * Định dạng: +playerId(8B) +danh thiếp +maxHp(4B) +maxSp(2B) +lục chỉ số(4B)×6
      *       +equipCount(1B) <<+ThingData>> +outfitCount(1B) <<+itemId(2B)>>
      *       +titleId(2B) +marriage(1B)
      */
@@ -197,13 +197,13 @@ class FriendResponseSender {
             .writeIntLE(data.hpx)
             .writeIntLE(data.spx)
 
-        // 裝備
+        // trang bị
         writer.writeByte(data.equips.size)
         for (equip in data.equips) {
             writer.writeThingData(equip)
         }
 
-        // 外觀裝備
+        // trang bị ngoại hình
         writer.writeByte(data.outfitItemIds.size)
         for (itemId in data.outfitItemIds) {
             writer.writeShortLE(itemId)
@@ -217,9 +217,9 @@ class FriendResponseSender {
     }
 
     /**
-     * S:014-015 收禮結果
+     * S:014-015 kết quả nhận quà
      *
-     * 格式：+result(1B)
+     * Định dạng: +result(1B)
      */
     fun sendGiftReceiveResult(session: SessionSender, result: Int) {
         session.send(
@@ -231,9 +231,9 @@ class FriendResponseSender {
     }
 
     /**
-     * S:014-016 更新好友在線狀態
+     * S:014-016 cập nhật trạng thái trực tuyến của bạn bè
      *
-     * 格式：+playerId(8B LE) +online(1B)
+     * Định dạng: +playerId(8B LE) +online(1B)
      */
     fun sendFriendOnlineStatus(session: SessionSender, playerId: Long, online: Boolean) {
         session.send(
@@ -246,9 +246,9 @@ class FriendResponseSender {
     }
 
     /**
-     * S:014-017 歷史好友最大數量
+     * S:014-017 số lượng bạn bè lịch sử tối đa
      *
-     * 格式：+count(4B LE)
+     * Định dạng: +count(4B LE)
      */
     fun sendMaxRecordFriendCount(session: SessionSender, count: Int) {
         session.send(

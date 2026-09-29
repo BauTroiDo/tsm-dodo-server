@@ -15,10 +15,10 @@ import tw.tsm.protocol.PacketReader
 private val logger = KotlinLogging.logger {}
 
 /**
- * 技能升級處理器（mainKind = 28）
+ * Bộ xử lý nâng cấp kỹ năng (mainKind = 28)
  *
- * C:028-001 玩家技能升級：<<+skillId(2LE) +level(1)>>
- * C:028-002 武將技能升級：+followIndex(1) +<<skillId(2LE) +level(1)>>
+ * C:028-001 Nâng cấp kỹ năng người chơi: <<+skillId(2LE) +level(1)>>
+ * C:028-002 Nâng cấp kỹ năng tướng: +followIndex(1) +<<skillId(2LE) +level(1)>>
  */
 class SkillUpgradeHandler(
     private val skillSystem: SkillSystem,
@@ -39,7 +39,7 @@ class SkillUpgradeHandler(
             1 -> handlePlayerSkillUpgrade(session, characterId, data)
             2 -> handlePetSkillUpgrade(session, characterId, data)
             5 -> handleTurn2SkillUpgrade(session, characterId, data)
-            else -> logger.warn { "未處理的技能升級 subKind=$subKind" }
+            else -> logger.warn { "Nâng cấp kỹ năng chưa xử lý subKind=$subKind" }
         }
     }
 
@@ -82,7 +82,7 @@ class SkillUpgradeHandler(
             )
         }
 
-        // 成功或拒絕都回 authoritative snapshot，避免 client 保留本地暫存狀態。
+        // Dù thành công hay bị từ chối đều trả về snapshot uy quyền, tránh client giữ lại trạng thái tạm cục bộ.
         responseSender.sendPlayerSkillData(session, sc.element, sc.skillPoint, sc.skills)
         responseSender.sendTurn2Balls(session, sc.availableTurn2Balls, sc.activeTurn2Balls)
         responseSender.sendTurn2HeroSkills(session, sc.heroSkills)
@@ -106,10 +106,10 @@ class SkillUpgradeHandler(
     }
 
     /**
-     * C:028-001 玩家技能升級
+     * C:028-001 Nâng cấp kỹ năng người chơi
      *
-     * 封包格式：<<+skillId(2LE) +level(1)>>
-     * 可一次升多個技能（迴圈讀到結束）
+     * Định dạng gói tin: <<+skillId(2LE) +level(1)>>
+     * Có thể nâng nhiều kỹ năng cùng lúc (vòng lặp đọc đến hết)
      */
     private suspend fun handlePlayerSkillUpgrade(session: GameSession, characterId: Long, data: ByteArray) {
         if (data.isEmpty() || data.size % 3 != 0) return
@@ -125,7 +125,7 @@ class SkillUpgradeHandler(
 
         if (upgrades.isEmpty()) return
 
-        logger.info { "${session.characterName} 請求升級技能：$upgrades" }
+        logger.info { "${session.characterName} yêu cầu nâng cấp kỹ năng: $upgrades" }
 
         val state = playerStateManager.getState(characterId) ?: return
         val playerTurn = state.turn

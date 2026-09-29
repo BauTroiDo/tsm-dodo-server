@@ -16,9 +16,9 @@ import tw.tsm.persistence.tables.CharacterMissionFlags
 import tw.tsm.persistence.tables.CharacterMissions
 
 /**
- * QuestRepository 的 Exposed ORM 實作
+ * Triển khai QuestRepository bằng Exposed ORM
  *
- * 使用 character_missions 和 character_mission_flags 兩張表。
+ * Dùng hai bảng character_missions và character_mission_flags.
  */
 class QuestRepositoryImpl : QuestRepository {
 
@@ -65,7 +65,7 @@ class QuestRepositoryImpl : QuestRepository {
             Unit
         }
 
-    // ── 事件完成追蹤 ──
+    // ── Theo dõi hoàn thành sự kiện ──
 
     override suspend fun getCompletedEventCounts(charId: Long, mapId: Int): Map<Int, Int> =
         suspendTransaction {

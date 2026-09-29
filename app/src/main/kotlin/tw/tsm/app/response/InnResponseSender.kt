@@ -5,16 +5,16 @@ import tw.tsm.domain.valueobjects.FollowNpcData
 import tw.tsm.protocol.PacketWriter
 
 /**
- * 客棧/武將倉庫封包序列化
+ * tuần tự hoá gói tin lữ quán/kho tướng
  *
- * mainKind = 31（客棧）, 122（武將倉庫）
+ * mainKind = 31 (lữ quán), 122 (kho tướng)
  */
 class InnResponseSender {
 
     /**
-     * S:031-001 住宿結果
+     * S:031-001 kết quả nghỉ trọ
      *
-     * 格式：result(1B) 0=成功, 1=金錢不足, 2=HP已滿
+     * Định dạng: result(1B) 0=thành công, 1=không đủ tiền vàng, 2=HP đã đầy
      */
     fun sendInnRestResult(session: SessionSender, result: Int) {
         val writer = PacketWriter(4)
@@ -24,9 +24,9 @@ class InnResponseSender {
     }
 
     /**
-     * S:031-002 住宿確認（費用通知）
+     * S:031-002 xác nhận nghỉ trọ (thông báo chi phí)
      *
-     * 格式：cost(4B LE)
+     * Định dạng: cost(4B LE)
      */
     fun sendInnRestConfirm(session: SessionSender, cost: Int) {
         val writer = PacketWriter(7)
@@ -36,9 +36,9 @@ class InnResponseSender {
     }
 
     /**
-     * S:031-003 客棧存武將確認
+     * S:031-003 xác nhận lưu tướng vào lữ quán
      *
-     * 格式：innSlot(1B) + followSlot(1B)
+     * Định dạng: innSlot(1B) + followSlot(1B)
      */
     fun sendInnStoreConfirm(session: SessionSender, innSlot: Int, followSlot: Int) {
         val writer = PacketWriter(5)
@@ -48,9 +48,9 @@ class InnResponseSender {
     }
 
     /**
-     * S:031-004 客棧刪武將
+     * S:031-004 xoá tướng ở lữ quán
      *
-     * 格式：innSlot(1B)
+     * Định dạng: innSlot(1B)
      */
     fun sendInnDeleteNpc(session: SessionSender, innSlot: Int) {
         val writer = PacketWriter(4)
@@ -60,10 +60,10 @@ class InnResponseSender {
     }
 
     /**
-     * S:031-006 客棧武將資料
+     * S:031-006 dữ liệu tướng lữ quán
      *
-     * 格式：<<innSlot(1B) + npcId(2B LE) + level(1B) + exp(4B LE) + hp(4B LE) + nameLen(1B) + name(Big5) + status(1B)>>
-     * 來源：Inn.lua:29-35 Inn.SaveNpc()
+     * Định dạng: <<innSlot(1B) + npcId(2B LE) + level(1B) + exp(4B LE) + hp(4B LE) + nameLen(1B) + name(Big5) + status(1B)>>
+     * Nguồn: Inn.lua:29-35 Inn.SaveNpc()
      */
     fun sendInnNpcData(session: SessionSender, innPets: Map<Int, FollowNpcData>) {
         val writer = PacketWriter(3 + innPets.size * 20)
@@ -75,16 +75,16 @@ class InnResponseSender {
             writer.writeIntLE(pet.exp.toInt())
             writer.writeIntLE(pet.hp.toInt())
             writer.writeBig5WithByteLen(pet.name)
-            // status: 0=正常, 1=陣亡
+            // status: 0=bình thường, 1=tử trận
             writer.writeByte(pet.surplus)
         }
         session.send(writer.toByteArray())
     }
 
     /**
-     * S:031-007 開啟武將倉庫 UI
+     * S:031-007 mở UI kho tướng
      *
-     * 空包（僅 header）
+     * gói tin rỗng (chỉ header)
      */
     fun sendOpenWarriorRepository(session: SessionSender) {
         val writer = PacketWriter(3)
@@ -93,7 +93,7 @@ class InnResponseSender {
     }
 
     /**
-     * S:031-008 領武將動畫停止
+     * S:031-008 dừng hoạt ảnh nhận tướng
      */
     fun sendInnRetrieveAnimStop(session: SessionSender) {
         val writer = PacketWriter(3)
@@ -102,7 +102,7 @@ class InnResponseSender {
     }
 
     /**
-     * S:031-009 存武將動畫停止
+     * S:031-009 dừng hoạt ảnh lưu tướng
      */
     fun sendInnStoreAnimStop(session: SessionSender) {
         val writer = PacketWriter(3)
@@ -111,9 +111,9 @@ class InnResponseSender {
     }
 
     /**
-     * S:031-010 休息演出
+     * S:031-010 hiệu ứng nghỉ ngơi
      *
-     * 格式：kind(1B) 1=客棧, 2=行軍帳
+     * Định dạng: kind(1B) 1=lữ quán, 2=trướng hành quân
      */
     fun sendInnRestAnimation(session: SessionSender, kind: Int) {
         val writer = PacketWriter(4)
@@ -123,7 +123,7 @@ class InnResponseSender {
     }
 
     /**
-     * S:031-012 交換動畫停止
+     * S:031-012 dừng hoạt ảnh trao đổi
      */
     fun sendInnSwapAnimStop(session: SessionSender) {
         val writer = PacketWriter(3)
@@ -132,9 +132,9 @@ class InnResponseSender {
     }
 
     /**
-     * S:031-015 客棧等級
+     * S:031-015 cấp độ lữ quán
      *
-     * 格式：level(1B)
+     * Định dạng: level(1B)
      */
     fun sendInnLevel(session: SessionSender, level: Int) {
         val writer = PacketWriter(4)
@@ -143,13 +143,13 @@ class InnResponseSender {
         session.send(writer.toByteArray())
     }
 
-    // ── 武將倉庫 (mainKind=122) ──
+    // ── Kho tướng (mainKind=122) ──
 
     /**
-     * S:122-001 武將倉庫資訊
+     * S:122-001 thông tin kho tướng
      *
-     * 格式：count(4B LE) + <<完整武將格式 × count>>
-     * 每筆武將格式（Inn.lua:155-186 AddWarriorRepositoryWithInfo）：
+     * Định dạng: count(4B LE) + <<định dạng tướng đầy đủ × count>>
+     * Định dạng mỗi tướng (Inn.lua:155-186 AddWarriorRepositoryWithInfo):
      * npcId(2) + hp(4) + sp(2) + int(2) + atk(2) + def(2) + agi(2) + hpx(2) + spx(2)
      * + level(1) + exp(4) + skillPoint(2) + dieCount(1) + skillLv[4](4×1B)
      * + conjureGrow(2) + sublimeCount(1) + isSpecSkill(1) + soulId(2)
@@ -182,7 +182,7 @@ class InnResponseSender {
             writer.writeByte(pet.ascendPillCount)
             writer.writeByte(if (pet.canUseSpecialSkill) 1 else 0)
             writer.writeShortLE(pet.soulId)
-            // graspPillCount（捉寵丸）— 暫用 0
+            // graspPillCount (hoàn bắt thú) — tạm dùng 0
             writer.writeByte(0)
             writer.writeByte(pet.spPillCount)
             writer.writeByte(pet.hpPillCount)
@@ -195,9 +195,9 @@ class InnResponseSender {
     }
 
     /**
-     * S:122-002 存入武將倉庫結果
+     * S:122-002 kết quả lưu vào kho tướng
      *
-     * 格式：result(1B) 1=成功, 2=空間已滿, 255=失敗
+     * Định dạng: result(1B) 1=thành công, 2=không gian đã đầy, 255=thất bại
      */
     fun sendWarehouseStoreResult(session: SessionSender, result: Int) {
         val writer = PacketWriter(4)
@@ -207,9 +207,9 @@ class InnResponseSender {
     }
 
     /**
-     * S:122-003 取出武將倉庫結果
+     * S:122-003 kết quả lấy ra khỏi kho tướng
      *
-     * 格式：result(1B) 1=成功, 255=失敗
+     * Định dạng: result(1B) 1=thành công, 255=thất bại
      */
     fun sendWarehouseRetrieveResult(session: SessionSender, result: Int) {
         val writer = PacketWriter(4)

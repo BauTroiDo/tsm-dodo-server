@@ -172,8 +172,8 @@ class SkillSystem(
     }
 
     /**
-     * C:028-005 二轉技能升級。
-     * 天珠索引 1..12；英雄槽索引 6..13。所有附加狀態只在技能 batch 驗證成功後才提交。
+     * C:028-005 nâng cấp kỹ năng nhị chuyển.
+     * Chỉ mục thiên châu 1..12; chỉ mục khe anh hùng 6..13. Tất cả trạng thái kèm theo chỉ được commit sau khi kiểm tra hợp lệ batch kỹ năng thành công.
      */
     fun upgradeTurn2(
         characterId: Long,

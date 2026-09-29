@@ -11,10 +11,10 @@ import tw.tsm.protocol.PacketReader
 private val logger = KotlinLogging.logger {}
 
 /**
- * 排行榜 Handler (mainKind=88)
+ * Handler bảng xếp hạng (mainKind=88)
  *
- * 來源：protocal.lua protocolTable[88]
- * - C:088-001 查詢排行榜
+ * Nguồn: protocal.lua protocolTable[88]
+ * - C:088-001 tra cứu bảng xếp hạng
  */
 class LeaderboardHandler(
     private val leaderboardSystem: LeaderboardSystem
@@ -26,14 +26,14 @@ class LeaderboardHandler(
 
         when (subKind) {
             1 -> handleQuery(session, data)
-            else -> logger.warn { "未處理的排行榜子協定：subKind=$subKind" }
+            else -> logger.warn { "Sub-protocol bảng xếp hạng chưa xử lý: subKind=$subKind" }
         }
     }
 
     /**
-     * C:088-001 查詢排行榜
+     * C:088-001 tra cứu bảng xếp hạng
      *
-     * 格式：+leaderboardId(1B) +page(1B)
+     * Định dạng: +leaderboardId(1B) +page(1B)
      */
     private suspend fun handleQuery(session: GameSession, data: ByteArray) {
         if (data.size < 2) return

@@ -1,80 +1,80 @@
 package tw.tsm.domain.data
 
 /**
- * 機關盒啟動設定 — 客戶端 C:065-001 上傳的參數
+ * Thiết lập khởi động hộp máy — tham số client gửi lên C:065-001
  *
- * 對應 MachineBox.lua SetAutoFight() 的封包欄位。
+ * Tương ứng các trường gói tin của MachineBox.lua SetAutoFight().
  */
 data class MacroBoxSettings(
-    /** 玩家 HP 補品觸發下限（百分比，例如 50 = 50%） */
+    /** Ngưỡng dưới kích hoạt dùng dược phẩm HP của người chơi (phần trăm, ví dụ 50 = 50%)*/
     val playerHpPercent: Int,
-    /** 玩家 SP 補品觸發下限（百分比） */
+    /** Ngưỡng dưới kích hoạt dùng dược phẩm SP của người chơi (phần trăm)*/
     val playerSpPercent: Int,
-    /** HP 補品不足時回城 */
+    /** Về thành khi thiếu dược phẩm HP*/
     val hpReturnTown: Boolean,
-    /** SP 補品不足時回城 */
+    /** Về thành khi thiếu dược phẩm SP*/
     val spReturnTown: Boolean,
-    /** 玩家死亡時回城 */
+    /** Về thành khi người chơi chết*/
     val playerDeadReturn: Boolean,
-    /** 武將死亡時回城 */
+    /** Về thành khi tướng chết*/
     val npcDeadReturn: Boolean,
-    /** 自動使用經驗道具 */
+    /** Tự động dùng vật phẩm kinh nghiệm*/
     val autoExp: Boolean,
-    /** 出戰武將自動換鉛錘 */
+    /** Tướng xuất chiến tự đổi sang búa chì*/
     val autoShotput: Boolean
 )
 
 /**
- * 機關盒晶石槽位
+ * Khe tinh thạch của hộp máy
  */
 data class SparSlot(
-    /** 晶石物品 ID */
+    /** ID vật phẩm tinh thạch*/
     val sparId: Int,
-    /** 累計使用次數 */
+    /** Số lần sử dụng tích lũy*/
     var count: Int
 )
 
 /**
- * 機關盒經驗瓶槽位
+ * Khe bình kinh nghiệm của hộp máy
  */
 data class ExpBottleSlot(
-    /** 經驗瓶物品 ID */
+    /** ID vật phẩm bình kinh nghiệm*/
     val bottleId: Int,
-    /** 累計經驗值 */
+    /** Kinh nghiệm tích lũy*/
     var exp: Int
 )
 
 /**
- * 玩家機關盒運行時狀態
+ * Trạng thái runtime của hộp máy người chơi
  *
- * 不持久化到 DB，登入時從背包重新初始化。
+ * Không lưu bền vào DB, khi đăng nhập sẽ khởi tạo lại từ túi đồ.
  */
 data class MacroBoxState(
-    /** 機關盒是否啟動中 */
+    /** Hộp máy có đang bật hay không*/
     var isActive: Boolean = false,
-    /** 啟動設定 */
+    /** Thiết lập khởi động*/
     var settings: MacroBoxSettings? = null,
-    /** 晶石槽位（index → SparSlot），上限 MaxSparBase + sparExtendNum */
+    /** Khe tinh thạch (index → SparSlot), tối đa MaxSparBase + sparExtendNum*/
     val sparSlots: MutableMap<Int, SparSlot> = mutableMapOf(),
-    /** 已擴充晶石槽數 */
+    /** Số khe tinh thạch đã mở rộng*/
     var sparExtendNum: Int = 0,
-    /** 經驗瓶槽位（index → ExpBottleSlot） */
+    /** Khe bình kinh nghiệm (index → ExpBottleSlot)*/
     val expBottles: MutableMap<Int, ExpBottleSlot> = mutableMapOf(),
-    /** 已擴充經驗瓶槽數 */
+    /** Số khe bình kinh nghiệm đã mở rộng*/
     var expExtendNum: Int = 0,
-    /** 目前優先使用的經驗瓶索引 */
+    /** Chỉ số bình kinh nghiệm đang được ưu tiên dùng*/
     var expPriority: Int = 0
 ) {
     companion object {
-        /** 基本晶石槽數 */
+        /** Số khe tinh thạch cơ bản*/
         const val MAX_SPAR_BASE = 3
-        /** 最大可擴充晶石槽數 */
+        /** Số khe tinh thạch tối đa có thể mở rộng*/
         const val MAX_SPAR_EXT = 2
-        /** 同種晶石最多累加次數 */
+        /** Số lần tích lũy tối đa của cùng loại tinh thạch*/
         const val MAX_SPAR_COUNT = 60000
-        /** 基本經驗瓶槽數 */
+        /** Số khe bình kinh nghiệm cơ bản*/
         const val BASE_EXP_BOTTLE = 3
-        /** 最大可擴充經驗瓶槽數 */
+        /** Số khe bình kinh nghiệm tối đa có thể mở rộng*/
         const val MAX_EXP_EXT = 5
     }
 }

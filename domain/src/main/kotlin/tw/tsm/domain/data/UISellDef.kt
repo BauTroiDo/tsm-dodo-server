@@ -1,15 +1,15 @@
 package tw.tsm.domain.data
 
 /**
- * UI 介面消費（介消）定義 — 對應 `UISell_C.dat` / `UISellData.lua`
+ * Định nghĩa tiêu thụ trên UI (介消) — tương ứng `UISell_C.dat` / `UISellData.lua`
  *
- * 介消 = 客戶端各 UI 內建的小額消費入口（擴充格數、購買次數、立即完成等），
- * 由 `UISell.Launch(sellId)` 觸發 C:084-001 查詢 → C:084-002 使用。
+ * 介消 = cổng tiêu thụ nhỏ tích hợp sẵn trong các UI của client (mở rộng số ô, số lần mua, hoàn tất ngay),
+ * `UISell.Launch(sellId)` kích hoạt truy vấn C:084-001 → sử dụng C:084-002.
  *
- * @property rolecountId 限購次數 RoleCount 索引（0 = 無限購顯示）
- * @property moneyStringId 金錢消費確認字串 ID（TextData，0 = 無）
- * @property itemStringId 道具消費確認字串 ID（TextData，0 = 無 → 不支援道具路徑）
- * @property customStringId 自訂失敗訊息字串 ID（失敗原因 11 用，0 = 無）
+ * @property rolecountId chỉ mục RoleCount của số lần mua giới hạn (0 = hiển thị mua không giới hạn)
+ * @property moneyStringId ID chuỗi xác nhận tiêu tiền (TextData, 0 = không có)
+ * @property itemStringId ID chuỗi xác nhận tiêu vật phẩm (TextData, 0 = không có → không hỗ trợ đường dẫn vật phẩm)
+ * @property customStringId ID chuỗi thông báo thất bại tùy chỉnh (dùng cho nguyên nhân lỗi 11, 0 = không có)
  */
 data class UISellDef(
     val rolecountId: Int,
@@ -19,21 +19,21 @@ data class UISellDef(
 )
 
 /**
- * UI 介面消費公式定義 — 對應 `UISell_Formula_C.dat`
+ * Định nghĩa công thức tiêu thụ trên UI — tương ứng `UISell_Formula_C.dat`
  *
- * 此檔客戶端不讀取（DataManager 無 ReadData），為伺服器端費用表。
- * 格式（逆向自二進位）：count(4B) + 每筆 29B = id(U16) + kind(U8) + value(U32) + params(11×U16)。
+ * Client không đọc file này (DataManager không có ReadData), đây là bảng phí phía server.
+ * Định dạng (reverse từ binary): count(4B) + mỗi bản ghi 29B = id(U16) + kind(U8) + value(U32) + params(11×U16).
  *
- * 已確認語意（對照 UI 字串與客戶端行為）：
- * - sellId=7 記憶傳送：kind=1, value=2 → 無傳送符時花費 2 元寶前往
- * - sellId=8 記憶傳送點擴充：kind=6, value=59, params=[59,59,59,59] → 第 1~5 格各 59 元寶
- * - kind=6 的共同特徵為「遞進價格表」（value=第 1 次價格，params=後續價格）
+ * Ngữ nghĩa đã xác nhận (đối chiếu chuỗi UI và hành vi client):
+ * - sellId=7 dịch chuyển ký ức: kind=1, value=2 → không có bùa dịch chuyển thì tốn 2 nguyên bảo để đi
+ * - sellId=8 mở rộng điểm dịch chuyển ký ức: kind=6, value=59, params=[59,59,59,59] → mỗi ô 1~5 giá 59 nguyên bảo
+ * - Đặc điểm chung của kind=6 là 'bảng giá tăng dần' (value=giá lần 1, params=giá các lần sau)
  *
- * TODO：其餘 kind（12/14/15/16/17/18/19/20）語意未完全確認，待各 sellId 實作時逐一驗證
+ * TODO: ngữ nghĩa các kind còn lại (12/14/15/16/17/18/19/20) chưa xác nhận đầy đủ, sẽ kiểm chứng dần khi cài đặt từng sellId
  *
- * @property kind 公式種類（語意見上）
- * @property value 基礎數值（多數情況 = 首次價格，元寶）
- * @property params 參數列表（11 欄，遞進價格或公式參數）
+ * @property kind loại công thức (ngữ nghĩa xem phía trên)
+ * @property value giá trị cơ bản (phần lớn = giá lần đầu, nguyên bảo)
+ * @property params danh sách tham số (11 cột, giá tăng dần hoặc tham số công thức)
  */
 data class UISellFormulaDef(
     val kind: Int,

@@ -1,47 +1,47 @@
 package tw.tsm.domain.interfaces.repositories
 
 /**
- * 帳號資料存取介面
+ * Interface truy cập dữ liệu tài khoản
  *
- * domain 定義介面，persistence 提供實作。
+ * domain định nghĩa interface, persistence cung cấp phần triển khai.
  */
 interface AccountRepository {
     /**
-     * 根據帳號名稱查詢帳號 ID
+     * Truy vấn ID tài khoản theo tên tài khoản
      *
-     * @return 帳號 ID，不存在回傳 null
+     * @return ID tài khoản, trả về null nếu không tồn tại
      */
     suspend fun findByAccount(account: String): AccountRecord?
 
     /**
-     * 建立新帳號
+     * Tạo tài khoản mới
      *
-     * @return 新帳號的 ID
+     * @return ID của tài khoản mới
      */
     suspend fun create(account: String, passwordHash: String): Long
 
     /**
-     * 更新密碼
+     * Cập nhật mật khẩu
      */
     suspend fun updatePassword(accountId: Long, passwordHash: String)
 
     /**
-     * 更新 GM 等級
+     * Cập nhật cấp GM
      *
-     * @param accountId 帳號 ID
-     * @param gmLevel 新的 GM 等級（0=普通玩家, 1+=GM）
+     * @param accountId ID tài khoản
+     * @param gmLevel cấp GM mới (0=người chơi thường, 1+=GM)
      */
     suspend fun updateGmLevel(accountId: Long, gmLevel: Int)
 }
 
 /**
- * 帳號記錄值物件
+ * Đối tượng giá trị bản ghi tài khoản
  */
 data class AccountRecord(
     val id: Long,
     val account: String,
     val passwordHash: String,
     val isSuspended: Boolean = false,
-    /** GM 等級（0=普通玩家, 1+=GM） */
+    /** Cấp GM (0=người chơi thường, 1+=GM)*/
     val gmLevel: Int = 0
 )

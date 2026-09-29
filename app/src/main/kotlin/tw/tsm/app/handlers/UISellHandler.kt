@@ -23,21 +23,21 @@ import tw.tsm.protocol.PacketReader
 
 private val logger = KotlinLogging.logger {}
 
-/** 禁止記憶傳送的地圖（對應客戶端 UITeleport.CheckTeleport 的 sceneId == 10701） */
+/** Bản đồ cấm dịch chuyển ký ức (tương ứng sceneId == 10701 trong UITeleport.CheckTeleport của client)*/
 private const val FORBIDDEN_TELEPORT_MAP = 10701
 
 /**
- * 介面消費 Handler（mainKind=84）
+ * Handler tiêu hao giao diện (mainKind=84)
  *
- * 來源：protocal.lua protocolTable[84]、Logic/UISell.lua
+ * Nguồn: protocal.lua protocolTable[84], Logic/UISell.lua
  *
- * C:084-001 查詢介消資料 — +介消編號(2) +args(2×N)
- * C:084-002 使用介消 — +總類(1) +介消編號(2) 總類1:物品 +背包索引(1)；總類2:點數/免費 +args(2×N)
+ * C:084-001 truy vấn dữ liệu 介消 — +số hiệu 介消(2) +args(2×N)
+ * C:084-002 sử dụng 介消 — +loại(1) +số hiệu 介消(2) loại 1: vật phẩm +chỉ số túi đồ(1); loại 2: điểm/miễn phí +args(2×N)
  *
- * 已實作介消：
- * - sellId=1/2/3/56 錢莊/客棧/背包/寶庫格數擴充（RoleCount 遞增）
- * - sellId=7 記憶傳送使用（道具 46474 優先、元寶後備）
- * - sellId=8 記憶傳送點擴充（遞進價格、上限 5 格）
+ * 介消 đã cài đặt:
+ * - sellId=1/2/3/56 mở rộng số ô Tiền Trang/lữ quán/túi đồ/kho báu (RoleCount tăng dần)
+ * - sellId=7 sử dụng dịch chuyển ký ức (ưu tiên vật phẩm 46474, nguyên bảo dự phòng)
+ * - sellId=8 mở rộng điểm dịch chuyển ký ức (giá tăng dần, tối đa 5 ô)
  */
 class UISellHandler(
     private val responseSender: ResponseSender,
@@ -62,14 +62,14 @@ class UISellHandler(
         when (subKind) {
             1 -> handleQuery(session, data)
             2 -> handleUse(session, data)
-            else -> logger.warn { "未處理的介消子協定：subKind=$subKind" }
+            else -> logger.warn { "Sub-protocol ký gửi chưa xử lý: subKind=$subKind" }
         }
     }
 
     /**
-     * C:084-001 查詢介消資料
+     * C:084-001 truy vấn dữ liệu 介消
      *
-     * 格式：+介消編號(2) +args(2×N)
+     * Định dạng: +số hiệu 介消(2) +args(2×N)
      */
     private suspend fun handleQuery(session: GameSession, data: ByteArray) {
         if (data.size < 2) return
@@ -81,7 +81,7 @@ class UISellHandler(
         when (val quote = uiSellSystem.query(charId, sellId)) {
             is UiSellQuote.Fail -> {
                 responseSender.sendUiSellFail(session, 1, sellId, quote.reason, quote.value)
-                logger.debug { "${session.characterName} 介消查詢失敗：sellId=$sellId reason=${quote.reason}" }
+                logger.debug { "${session.characterName} tra cứu ký gửi thất bại: sellId=$sellId reason=${quote.reason}" }
             }
             is UiSellQuote.Money ->
                 responseSender.sendUiSellMoneyQuery(session, sellId, quote.currencyKind, quote.cost)
@@ -89,17 +89,17 @@ class UISellHandler(
                 responseSender.sendUiSellItemQuery(session, sellId, quote.itemId, quote.count)
         }
 
-        logger.debug { "${session.characterName} 介消查詢：sellId=$sellId args=$args" }
+        logger.debug { "${session.characterName} tra cứu ký gửi: sellId=$sellId args=$args" }
     }
 
     /**
-     * C:084-002 使用介消
+     * C:084-002 sử dụng 介消
      *
-     * 格式：+總類(1) +介消編號(2)
-     * 總類 1（物品）：+背包索引(1) +args(2×N)
-     * 總類 2（點數/免費）：+args(2×N)
+     * Định dạng: +loại(1) +số hiệu 介消(2)
+     * Loại 1 (vật phẩm): +chỉ số túi đồ(1) +args(2×N)
+     * Loại 2 (điểm/miễn phí): +args(2×N)
      *
-     * TODO：sellId=11 轉轉樂的多格道具形式（+L(1) <<+背包引(1) +數量(2)>>）尚未支援
+     * TODO: sellId=11 dạng nhiều ô của trò chơi vòng quay (+L(1) <<+chỉ số túi đồ(1) +số lượng(2)>>) chưa được hỗ trợ
      */
     private suspend fun handleUse(session: GameSession, data: ByteArray) {
         if (data.size < 3) return
@@ -116,14 +116,14 @@ class UISellHandler(
 
         val charId = session.roleId.toLong()
 
-        // 重新報價驗證（無狀態設計：以伺服器當下狀態為準，不信任客戶端）
+        // kiểm tra hợp lệ lại báo giá (thiết kế vô trạng thái: lấy trạng thái hiện tại của server làm chuẩn, không tin client)
         val quote = uiSellSystem.query(charId, sellId)
         if (quote is UiSellQuote.Fail) {
             responseSender.sendUiSellFail(session, 2, sellId, quote.reason, quote.value)
             return
         }
 
-        // 效果前置驗證（先驗證再扣款，避免扣款後效果失敗）
+        // kiểm tra hợp lệ hiệu ứng trước (kiểm tra trước rồi khấu trừ, tránh khấu trừ xong hiệu ứng thất bại)
         when (sellId) {
             UISellSystem.SELL_TURN3_UNLOCK_SKILL -> {
                 val reason = validateTurn3Unlock(charId, args)
@@ -148,10 +148,10 @@ class UISellHandler(
             }
         }
 
-        // 扣款
+        // khấu trừ tiền
         if (!processPayment(session, sellId, useKind, bagIndex, quote)) return
 
-        // 執行效果
+        // thực hiện hiệu ứng
         when (sellId) {
             UISellSystem.SELL_FLY_TELEPORT -> executeFlyTeleport(session, sellId, args)
             UISellSystem.SELL_FLY_EXTEND -> executeFlyExtend(session, sellId)
@@ -167,7 +167,7 @@ class UISellHandler(
     }
 
     /**
-     * 讀取封包尾端的 args（每個 2B LE）
+     * Đọc args ở cuối gói tin (mỗi trường 2B LE)
      */
     private fun readArgs(reader: PacketReader): List<Int> {
         val args = mutableListOf<Int>()
@@ -178,9 +178,9 @@ class UISellHandler(
     }
 
     /**
-     * 執行扣款
+     * Thực hiện khấu trừ tiền
      *
-     * @return true=扣款成功；失敗時已回覆錯誤封包
+     * @return true=khấu trừ tiền thành công; khi thất bại đã trả về gói tin lỗi
      */
     private suspend fun processPayment(
         session: GameSession, sellId: Int, useKind: Int, bagIndex: Int, quote: UiSellQuote
@@ -189,7 +189,7 @@ class UISellHandler(
 
         when (quote) {
             is UiSellQuote.Item -> {
-                // 客戶端選擇道具路徑：驗證背包格物品與報價一致
+                // đường dẫn client chọn vật phẩm: kiểm tra hợp lệ vật phẩm ô túi đồ khớp với báo giá
                 if (useKind != USE_KIND_ITEM) {
                     responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_PRICE_ERROR)
                     return false
@@ -204,7 +204,7 @@ class UISellHandler(
                     return false
                 }
                 responseSender.sendReduceBagItem(session, bagIndex, quote.count)
-                logger.info { "${session.characterName} 介消扣道具：sellId=$sellId item=${quote.itemId}×${quote.count} bag=$bagIndex" }
+                logger.info { "${session.characterName} ký gửi trừ vật phẩm: sellId=$sellId item=${quote.itemId}×${quote.count} bag=$bagIndex" }
             }
             is UiSellQuote.Money -> {
                 if (useKind != USE_KIND_POINT) {
@@ -215,12 +215,12 @@ class UISellHandler(
                     responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_GOLD_NOT_ENOUGH)
                     return false
                 }
-                // 刷新客戶端元寶顯示
+                // làm mới hiển thị nguyên bảo trên client
                 val (real, virtual) = pointSystem.getPoints(charId)
                 responseSender.sendPointBalance(session, real, virtual)
-                logger.info { "${session.characterName} 介消扣元寶：sellId=$sellId cost=${quote.cost} 剩餘=$real" }
+                logger.info { "${session.characterName} ký gửi trừ nguyên bảo: sellId=$sellId cost=${quote.cost} còn lại=$real" }
             }
-            is UiSellQuote.Fail -> return false  // 已在呼叫端處理
+            is UiSellQuote.Fail -> return false  // đã được xử lý ở bên gọi
         }
         return true
     }
@@ -299,16 +299,16 @@ class UISellHandler(
     }
 
     /**
-     * sellId=7 記憶傳送前置驗證
+     * sellId=7 kiểm tra hợp lệ trước khi dịch chuyển ký ức
      *
-     * 對應客戶端 UITeleport.CheckTeleport()：戰鬥中/特定場景/組隊中不可傳送。
-     * args = [類型(1=記憶傳送), 傳送點索引]
+     * Tương ứng UITeleport.CheckTeleport() của client: không thể dịch chuyển khi đang chiến đấu/ở cảnh cụ thể/đang tổ đội.
+     * args = [loại (1=dịch chuyển ký ức), chỉ số điểm dịch chuyển]
      *
-     * @return 0=通過，其餘為失敗原因碼
+     * @return 0=đạt, còn lại là mã nguyên nhân thất bại
      */
     private suspend fun validateFlyTeleport(session: GameSession, args: List<Int>): Int {
         if (args.size < 2 || args[0] != 1) {
-            // TODO：args[0] != 1 的其他傳送類型尚未在客戶端發現使用案例
+            // TODO: các loại dịch chuyển khác của args[0] != 1 chưa thấy trường hợp sử dụng trong client
             return UISellSystem.REASON_NOT_USABLE
         }
         if (session.battleId != 0L) return UISellSystem.REASON_NOT_USABLE
@@ -323,7 +323,7 @@ class UISellHandler(
     }
 
     /**
-     * sellId=7 執行記憶傳送
+     * sellId=7 thực hiện dịch chuyển ký ức
      */
     private suspend fun executeFlyTeleport(session: GameSession, sellId: Int, args: List<Int>) {
         val charId = session.roleId.toLong()
@@ -341,14 +341,14 @@ class UISellHandler(
             session.equipItemIds, session.titleId
         )
 
-        logger.info { "${session.characterName} 記憶傳送（介消）：index=$index → scene=${point.sceneId} (${point.x}, ${point.y})" }
+        logger.info { "${session.characterName} dịch chuyển điểm nhớ (ký gửi): index=$index → scene=${point.sceneId} (${point.x}, ${point.y})" }
     }
 
     /**
-     * sellId=1/2/3/56 執行格數擴充
+     * sellId=1/2/3/56 thực hiện mở rộng số ô
      *
-     * RoleCount 遞增後以 S:085-002 下發，客戶端 Item.RefreshRoleCount /
-     * Inn.RefreshRoleCount 會自動重算格數並刷新介面。
+     * Sau khi RoleCount tăng, gửi xuống bằng S:085-002, client Item.RefreshRoleCount /
+     * Inn.RefreshRoleCount sẽ tự động tính lại số ô và làm mới giao diện.
      */
     private suspend fun executeExpansion(session: GameSession, sellId: Int, roleCountIndex: Int) {
         val charId = session.roleId.toLong()
@@ -358,11 +358,11 @@ class UISellHandler(
         responseSender.sendUiSellSuccess(session, sellId)
         responseSender.sendRoleCountUpdate(session, mapOf(roleCountIndex to (newValue to maxValue)))
 
-        logger.info { "${session.characterName} 介消格數擴充：sellId=$sellId roleCount[$roleCountIndex]=$newValue" }
+        logger.info { "${session.characterName} mở rộng số ô ký gửi: sellId=$sellId roleCount[$roleCountIndex]=$newValue" }
     }
 
     /**
-     * sellId=8 執行記憶傳送點擴充
+     * sellId=8 thực hiện mở rộng điểm dịch chuyển ký ức
      */
     private suspend fun executeFlyExtend(session: GameSession, sellId: Int) {
         val charId = session.roleId.toLong()
@@ -370,18 +370,18 @@ class UISellHandler(
 
         responseSender.sendUiSellSuccess(session, sellId)
 
-        // 重新下發記憶傳送符資料，客戶端據此解鎖新格
+        // gửi lại dữ liệu phù dịch chuyển ký ức, client dựa vào đó mở khoá ô mới
         val points = flyPointSystem.loadAll(charId)
         responseSender.sendFlyPointData(session, newCount, points)
 
-        logger.info { "${session.characterName} 擴充記憶傳送點：已擴充 $newCount 格" }
+        logger.info { "${session.characterName} mở rộng điểm nhớ dịch chuyển: đã mở rộng $newCount ô" }
     }
 
     companion object {
-        /** C:084-002 總類 1：物品消費 */
+        /** C:084-002 loại 1: tiêu hao vật phẩm*/
         private const val USE_KIND_ITEM = 1
 
-        /** C:084-002 總類 2：點數/免費 */
+        /** C:084-002 loại 2: điểm/miễn phí*/
         private const val USE_KIND_POINT = 2
 
         private const val TURN3_LIGHT = 7

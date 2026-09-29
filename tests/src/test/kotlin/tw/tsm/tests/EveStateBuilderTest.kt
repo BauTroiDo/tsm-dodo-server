@@ -27,7 +27,7 @@ import tw.tsm.gamelogic.systems.RoleCountSystem
 import tw.tsm.gamelogic.systems.SkillSystem
 
 /**
- * EveStateBuilder 整合測試。
+ * Kiểm thử tích hợp EveStateBuilder.
  */
 class EveStateBuilderTest : DescribeSpec({
 
@@ -45,7 +45,7 @@ class EveStateBuilderTest : DescribeSpec({
     )
 
     describe("buildPlayerState") {
-        it("會帶入 RoleCount 給 conditionClass=18 使用") {
+        it("có đưa RoleCount cho conditionClass=18 sử dụng") {
             val charId = 1001L
             val mapId = 10801
 
@@ -153,7 +153,7 @@ class EveStateBuilderTest : DescribeSpec({
             EveConditionEvaluator.evaluate(cond(cls = 18, param = 822, ops = 5, value = 5), state) shouldBe true
         }
 
-        it("會依 Lua 武將二轉資格產生 class=15 param=1 狀態碼") {
+        it("sẽ theo tư cách nhị chuyển sinh tướng trong Lua sinh mã trạng thái class=15 param=1") {
             val charId = 1002L
             val mapId = 59102
 

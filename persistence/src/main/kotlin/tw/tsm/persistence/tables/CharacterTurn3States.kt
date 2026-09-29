@@ -2,7 +2,7 @@ package tw.tsm.persistence.tables
 
 import org.jetbrains.exposed.v1.core.Table
 
-/** 三轉獨立成長資料；不與一/二轉 EXP、六圍混用。 */
+/** Dữ liệu tăng trưởng độc lập của tam chuyển; không dùng lẫn EXP và sáu chỉ số của nhất/nhị chuyển.*/
 object CharacterTurn3States : Table("character_turn3_states") {
     val characterId = long("character_id")
     val element = integer("element").default(0)

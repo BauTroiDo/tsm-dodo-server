@@ -6,14 +6,14 @@ import tw.tsm.protocol.DvtRoleCountWire
 import tw.tsm.protocol.PacketWriter
 
 /**
- * 成就/RoleCount 封包序列化子模組 — mainKind=82, 85
+ * Submodule tuần tự hoá gói tin thành tựu/RoleCount — mainKind=82, 85
  */
 class AchievementResponseSender {
 
     /**
-     * S:082-001 完成成就回應
+     * S:082-001 phản hồi hoàn thành thành tựu
      *
-     * 客戶端 ReciveCompleteAchievement 無論結果都讀 result + id。
+     * ReciveCompleteAchievement của client dù kết quả thế nào đều đọc result + id.
      */
     fun sendAchievementComplete(session: SessionSender, result: Int, achievementId: Int) {
         session.send(
@@ -26,9 +26,9 @@ class AchievementResponseSender {
     }
 
     /**
-     * S:082-002 成就領獎回應
+     * S:082-002 phản hồi nhận thưởng thành tựu
      *
-     * 客戶端 ReciveGetAchievement 只在 result=0 時讀取 id。
+     * ReciveGetAchievement của client chỉ đọc id khi result=0.
      */
     fun sendAchievementReward(session: SessionSender, result: Int, achievementId: Int) {
         val writer = PacketWriter()
@@ -41,10 +41,10 @@ class AchievementResponseSender {
     }
 
     /**
-     * S:085-002 更新角色計數器（多筆）
+     * S:085-002 cập nhật bộ đếm nhân vật (nhiều bản ghi)
      *
-     * 對應客戶端 protocolTable[85][2]：
-     * +數量(2 LE) <<+索引(2 LE) +數值(4 LE, unsigned) +上限(4 LE, signed)>>
+     * Tương ứng protocolTable[85][2] của client:
+     * +số lượng(2 LE) <<+chỉ số(2 LE) +giá trị(4 LE, unsigned) +giới hạn trên(4 LE, signed)>>
      */
     fun sendRoleCountUpdate(session: SessionSender, counts: Map<Int, Pair<Int, Int>>) {
         if (counts.isEmpty()) return

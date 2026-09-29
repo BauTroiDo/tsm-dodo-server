@@ -1,7 +1,7 @@
 package tw.tsm.domain.interfaces.repositories
 
 /**
- * 記憶傳送點記錄
+ * Bản ghi điểm dịch chuyển ghi nhớ
  */
 data class FlyPointRecord(
     val index: Int,
@@ -11,26 +11,26 @@ data class FlyPointRecord(
 )
 
 /**
- * 記憶傳送符資料存取介面
+ * Interface truy cập dữ liệu bùa dịch chuyển ghi nhớ
  */
 interface FlyPointRepository {
 
     /**
-     * 取得角色所有記憶傳送點
+     * Lấy tất cả điểm dịch chuyển ghi nhớ của nhân vật
      *
-     * @param charId 角色 ID
-     * @return Map<索引(1-based), FlyPointRecord>
+     * @param charId ID nhân vật
+     * @return Map<chỉ số(1-based), FlyPointRecord>
      */
     suspend fun getAll(charId: Long): Map<Int, FlyPointRecord>
 
     /**
-     * 儲存/更新記憶傳送點
+     * Lưu/cập nhật điểm dịch chuyển ghi nhớ
      *
-     * @param charId 角色 ID
-     * @param index 傳送點索引（1-based）
-     * @param sceneId 場景 ID
-     * @param x X 座標
-     * @param y Y 座標
+     * @param charId ID nhân vật
+     * @param index chỉ số điểm dịch chuyển (1-based)
+     * @param sceneId ID cảnh
+     * @param x toạ độ X
+     * @param y toạ độ Y
      */
     suspend fun save(charId: Long, index: Int, sceneId: Int, x: Int, y: Int)
 }

@@ -15,7 +15,7 @@ import tw.tsm.persistence.tables.CharacterPets
 import tw.tsm.persistence.tables.Characters
 
 /**
- * CharacterRepository 的 Exposed ORM 實作
+ * Triển khai Exposed ORM cho CharacterRepository
  */
 class CharacterRepositoryImpl : CharacterRepository {
 
@@ -58,7 +58,7 @@ class CharacterRepositoryImpl : CharacterRepository {
                 it[men] = data.men
                 it[spr] = data.spr
                 it[level] = 1
-                it[skillPoint] = 2  // 1 等初始 2 點技能點
+                it[skillPoint] = 2  // Cấp 1 khởi đầu có 2 điểm kỹ năng
                 it[mapId] = tw.tsm.domain.constants.DEFAULT_START_MAP
                 it[x] = tw.tsm.domain.constants.DEFAULT_START_X
                 it[y] = tw.tsm.domain.constants.DEFAULT_START_Y
@@ -66,7 +66,7 @@ class CharacterRepositoryImpl : CharacterRepository {
             }[Characters.id]
         }
 
-    /** 更新角色轉生與職業 */
+    /** Cập nhật chuyển sinh và nghề của nhân vật*/
     override suspend fun updateTurnCareer(characterId: Long, turn: Int, career: Int) {
         suspendTransaction {
             Characters.update({ Characters.id eq characterId }) {
@@ -76,7 +76,7 @@ class CharacterRepositoryImpl : CharacterRepository {
         }
     }
 
-    /** 更新轉生後外觀 */
+    /** Cập nhật tạo hình sau chuyển sinh*/
     override suspend fun updateTurnAppearance(characterId: Long, hair: Int, color1: Int, color2: Int) {
         suspendTransaction {
             Characters.update({ Characters.id eq characterId }) {
@@ -87,7 +87,7 @@ class CharacterRepositoryImpl : CharacterRepository {
         }
     }
 
-    /** 更新角色等級 */
+    /** Cập nhật cấp độ nhân vật*/
     override suspend fun updateLevel(characterId: Long, level: Int) {
         suspendTransaction {
             Characters.update({ Characters.id eq characterId }) {
@@ -96,7 +96,7 @@ class CharacterRepositoryImpl : CharacterRepository {
         }
     }
 
-    /** 更新角色位置（斷線/登出時儲存） */
+    /** Cập nhật vị trí nhân vật (lưu khi mất kết nối/đăng xuất)*/
     override suspend fun updatePosition(characterId: Long, mapId: Int, x: Int, y: Int) {
         suspendTransaction {
             Characters.update({ Characters.id eq characterId }) {
@@ -107,7 +107,7 @@ class CharacterRepositoryImpl : CharacterRepository {
         }
     }
 
-    /** 更新角色技能點數 */
+    /** Cập nhật điểm kỹ năng của nhân vật*/
     override suspend fun updateSkillPoint(characterId: Long, skillPoint: Int) {
         suspendTransaction {
             Characters.update({ Characters.id eq characterId }) {
@@ -116,12 +116,12 @@ class CharacterRepositoryImpl : CharacterRepository {
         }
     }
 
-    /** 屬性配點 — 增加指定六圍欄位並設定新的 attrPoint */
+    /** Phân điểm thuộc tính — tăng các trường sáu chỉ số được chỉ định và đặt attrPoint mới*/
     override suspend fun addStatPoint(characterId: Long, column: String, addValue: Int, newAttrPoint: Int) {
         suspendTransaction {
             val col = STAT_COLUMNS[column]
-                ?: error("無效的配點欄位：$column")
-            // 先讀取目前值，再設定新值（避免使用棄用的 SqlExpressionBuilder.plus）
+                ?: error("Trường phân điểm không hợp lệ: $column")
+            // Đọc giá trị hiện tại trước rồi set giá trị mới (tránh dùng SqlExpressionBuilder.plus đã deprecated)
             val current = Characters.selectAll()
                 .where { Characters.id eq characterId }
                 .single()[col]
@@ -132,7 +132,7 @@ class CharacterRepositoryImpl : CharacterRepository {
         }
     }
 
-    /** 更新角色經驗和等級 */
+    /** Cập nhật EXP và cấp độ nhân vật*/
     override suspend fun updateExpAndLevel(characterId: Long, exp: Long, level: Int) {
         suspendTransaction {
             Characters.update({ Characters.id eq characterId }) {
@@ -142,7 +142,7 @@ class CharacterRepositoryImpl : CharacterRepository {
         }
     }
 
-    /** 更新記錄點（住宿後設定，飛回紀錄點/戰敗時傳送至此） */
+    /** Cập nhật điểm ghi (đặt sau khi nghỉ ở lữ quán, bay về điểm ghi/thua trận sẽ dịch chuyển tới đây)*/
     override suspend fun updateRecordPoint(characterId: Long, mapId: Int, x: Int, y: Int) {
         suspendTransaction {
             Characters.update({ Characters.id eq characterId }) {
@@ -153,7 +153,7 @@ class CharacterRepositoryImpl : CharacterRepository {
         }
     }
 
-    /** 查詢記錄點 */
+    /** Truy vấn điểm ghi*/
     override suspend fun getRecordPoint(characterId: Long): Triple<Int, Int, Int>? =
         suspendTransaction {
             Characters.selectAll()
@@ -162,7 +162,7 @@ class CharacterRepositoryImpl : CharacterRepository {
                 ?.let { Triple(it[Characters.recordMapId], it[Characters.recordX], it[Characters.recordY]) }
         }
 
-    /** 更新角色完整運行時狀態（斷線/登出儲存） */
+    /** Cập nhật toàn bộ trạng thái runtime của nhân vật (lưu khi mất kết nối/đăng xuất)*/
     override suspend fun updatePlayerState(
         characterId: Long, exp: Long, level: Int,
         attrPoint: Int, skillPoint: Int,
@@ -184,7 +184,7 @@ class CharacterRepositoryImpl : CharacterRepository {
         }
     }
 
-    /** 更新出戰武將 NPC ID */
+    /** Cập nhật NPC ID của tướng xuất chiến*/
     override suspend fun updateFightNpcId(characterId: Long, fightNpcId: Int) {
         suspendTransaction {
             Characters.update({ Characters.id eq characterId }) {
@@ -194,13 +194,13 @@ class CharacterRepositoryImpl : CharacterRepository {
     }
 
     /**
-     * 查詢排行榜所需的完整資料（角色 + 金錢 + 武將最高等級）
+     * Tra dữ liệu đầy đủ cần cho bảng xếp hạng (nhân vật + tiền vàng + cấp cao nhất của tướng)
      *
-     * 三步查詢在同一 transaction 中完成，記憶體內合併。
+     * Ba truy vấn hoàn tất trong cùng một transaction, ghép lại trong bộ nhớ.
      */
     override suspend fun findAllForLeaderboard(): List<LeaderboardCharRecord> =
         suspendTransaction {
-            // 1. 角色基礎資料
+            // 1. Dữ liệu cơ bản của nhân vật
             val chars = Characters.selectAll().map { row ->
                 LeaderboardCharRecord(
                     id = row[Characters.id],
@@ -216,7 +216,7 @@ class CharacterRepositoryImpl : CharacterRepository {
                 )
             }
 
-            // 2. 金錢資料（characterId → gold, auctionGold）
+            // 2. Dữ liệu tiền (characterId → gold, auctionGold)
             val moneyMap = CharacterMoney.selectAll().associate { row ->
                 row[CharacterMoney.characterId] to Pair(
                     row[CharacterMoney.gold],
@@ -224,12 +224,12 @@ class CharacterRepositoryImpl : CharacterRepository {
                 )
             }
 
-            // 3. 武將最高等級（characterId → MAX(level)）
+            // 3. Cấp cao nhất của tướng (characterId → MAX(level))
             val petMaxLevelMap = CharacterPets.selectAll()
                 .groupBy { it[CharacterPets.characterId] }
                 .mapValues { (_, rows) -> rows.maxOf { it[CharacterPets.level] } }
 
-            // 合併
+            // Gộp
             chars.map { char ->
                 val money = moneyMap[char.id]
                 val petMax = petMaxLevelMap[char.id] ?: 0
@@ -241,7 +241,7 @@ class CharacterRepositoryImpl : CharacterRepository {
             }
         }
 
-    /** 更新當前穿戴稱號 ID */
+    /** Cập nhật ID danh hiệu đang đeo*/
     override suspend fun updateTitleId(characterId: Long, titleId: Int) {
         suspendTransaction {
             Characters.update({ Characters.id eq characterId }) {
@@ -250,7 +250,7 @@ class CharacterRepositoryImpl : CharacterRepository {
         }
     }
 
-    /** 查詢元寶點數（實點, 虛點） */
+    /** Truy vấn điểm nguyên bảo (điểm thực, điểm ảo)*/
     override suspend fun loadPoints(characterId: Long): Pair<Int, Int> =
         suspendTransaction {
             Characters.selectAll()
@@ -260,7 +260,7 @@ class CharacterRepositoryImpl : CharacterRepository {
                 ?: Pair(0, 0)
         }
 
-    /** 儲存元寶點數 */
+    /** Lưu điểm nguyên bảo*/
     override suspend fun savePoints(characterId: Long, pointReal: Int, pointVirtual: Int) {
         suspendTransaction {
             Characters.update({ Characters.id eq characterId }) {
@@ -271,7 +271,7 @@ class CharacterRepositoryImpl : CharacterRepository {
     }
 
     /**
-     * ResultRow → CharacterRecord 映射
+     * Ánh xạ ResultRow → CharacterRecord
      */
     private fun ResultRow.toRecord() = CharacterRecord(
         id = this[Characters.id],
@@ -302,7 +302,7 @@ class CharacterRepositoryImpl : CharacterRepository {
     )
 
     companion object {
-        /** 允許配點的 DB 欄位白名單 */
+        /** Danh sách trắng các trường DB được phép phân điểm*/
         private val STAT_COLUMNS = mapOf(
             "str" to Characters.str,
             "dex" to Characters.dex,

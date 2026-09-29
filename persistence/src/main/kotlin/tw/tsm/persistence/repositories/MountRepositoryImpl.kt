@@ -14,9 +14,9 @@ import tw.tsm.persistence.tables.CharacterMountEquips
 import tw.tsm.persistence.tables.CharacterMounts
 
 /**
- * 坐騎資料存取實作（Exposed ORM）
+ * Triển khai truy xuất dữ liệu vật cưỡi (Exposed ORM)
  *
- * 主表用 upsert（characterId 唯一），裝備表用 delete + batchInsert。
+ * Bảng chính dùng upsert (characterId unique), bảng trang bị dùng delete + batchInsert.
  */
 class MountRepositoryImpl : MountRepository {
 
@@ -37,7 +37,7 @@ class MountRepositoryImpl : MountRepository {
             data.attributePoints[5] = row[CharacterMounts.attrPoint5]
             data.attributePoints[6] = row[CharacterMounts.attrPoint6]
 
-            // 載入裝備
+            // Nạp trang bị
             CharacterMountEquips.selectAll()
                 .where { CharacterMountEquips.characterId eq characterId }
                 .forEach { eqRow ->
@@ -71,7 +71,7 @@ class MountRepositoryImpl : MountRepository {
 
     override suspend fun save(characterId: Long, data: MountData) {
         suspendTransaction {
-            // 主表 upsert
+            // Upsert bảng chính
             val existing = CharacterMounts.selectAll()
                 .where { CharacterMounts.characterId eq characterId }
                 .firstOrNull()
@@ -101,7 +101,7 @@ class MountRepositoryImpl : MountRepository {
                 }
             }
 
-            // 裝備表 delete + batchInsert
+            // Bảng trang bị dùng delete + batchInsert
             CharacterMountEquips.deleteWhere { CharacterMountEquips.characterId eq characterId }
             val equipList = data.equips.entries.filter { !it.value.isEmpty }
             if (equipList.isNotEmpty()) {

@@ -8,17 +8,17 @@ import tw.tsm.gamelogic.systems.WorldManager
 import tw.tsm.protocol.PacketWriter
 
 /**
- * 聊天/移動相關封包序列化
+ * tuần tự hoá gói tin liên quan trò chuyện/di chuyển
  *
- * mainKind = 2（聊天）, 6（移動）
- * 需要 WorldManager 進行廣播
+ * mainKind = 2 (trò chuyện), 6 (di chuyển)
+ * cần WorldManager để phát rộng
  */
 class ChatResponseSender(private val worldManager: WorldManager) {
 
     /**
-     * S:006-001 廣播玩家移動
+     * S:006-001 phát rộng di chuyển của người chơi
      *
-     * 格式：+roleId(8) +direction(1) +destX(2 LE) +destY(2 LE)
+     * Định dạng: +roleId(8) +direction(1) +destX(2 LE) +destY(2 LE)
      */
     fun sendPlayerMove(sender: GameSession, playerId: Long, direction: Int, x: Int, y: Int) {
         val data = PacketWriter()
@@ -33,9 +33,9 @@ class ChatResponseSender(private val worldManager: WorldManager) {
     }
 
     /**
-     * S:002-{channel} 聊天訊息（全伺服器廣播）
+     * S:002-{channel} tin nhắn trò chuyện (phát rộng toàn server)
      *
-     * 格式：+senderId(8) +titleId(2) +senderNameLen(1) +senderName(Big5)
+     * Định dạng: +senderId(8) +titleId(2) +senderNameLen(1) +senderName(Big5)
      *       +messageLen(1) +message(UTF-16LE) +itemCount(1=0) +npcCount(1=0)
      */
     fun sendChatMessage(
@@ -46,7 +46,7 @@ class ChatResponseSender(private val worldManager: WorldManager) {
         worldManager.broadcastToAll(data)
     }
 
-    /** S:002-002 輕頻（場景廣播） */
+    /** S:002-002 kênh nhẹ (phát rộng cảnh)*/
     fun sendChatMessageToMap(
         sender: GameSession, channel: ChatChannel,
         senderId: Long, senderName: String, content: String,
@@ -56,7 +56,7 @@ class ChatResponseSender(private val worldManager: WorldManager) {
         worldManager.broadcastToMap(mapId, data, exclude = sender)
     }
 
-    /** S:002-003 密語 */
+    /** S:002-003 nhắn riêng*/
     fun sendWhisperMessage(
         target: SessionSender, senderId: Long, senderName: String, content: String,
         titleId: Int = 0
@@ -64,12 +64,12 @@ class ChatResponseSender(private val worldManager: WorldManager) {
         target.send(buildChatPacket(ChatChannel.WHISPER, senderId, senderName, content, titleId))
     }
 
-    /** S:002-000 系統訊息（只發給單一玩家） */
+    /** S:002-000 tin nhắn hệ thống (chỉ gửi cho một người chơi)*/
     fun sendSystemMessage(session: SessionSender, content: String) {
-        session.send(buildChatPacket(ChatChannel.SYSTEM, 0L, "系統", content, 0))
+        session.send(buildChatPacket(ChatChannel.SYSTEM, 0L, "Hệ thống", content, 0))
     }
 
-    /** 組裝聊天封包（共用） */
+    /** ghép gói tin trò chuyện (dùng chung)*/
     private fun buildChatPacket(
         channel: ChatChannel, senderId: Long, senderName: String, content: String,
         titleId: Int = 0

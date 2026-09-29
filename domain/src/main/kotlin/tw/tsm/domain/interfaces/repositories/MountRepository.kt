@@ -3,12 +3,12 @@ package tw.tsm.domain.interfaces.repositories
 import tw.tsm.domain.valueobjects.MountData
 
 /**
- * 坐騎資料存取介面
+ * Giao diện truy xuất dữ liệu vật cưỡi
  */
 interface MountRepository {
-    /** 載入角色坐騎資料 */
+    /** Tải dữ liệu vật cưỡi của nhân vật*/
     suspend fun findByCharacterId(characterId: Long): MountData?
 
-    /** 儲存角色坐騎資料（upsert 主表 + delete/batchInsert 裝備表） */
+    /** Lưu dữ liệu vật cưỡi của nhân vật (upsert bảng chính + delete/batchInsert bảng trang bị)*/
     suspend fun save(characterId: Long, data: MountData)
 }

@@ -15,9 +15,9 @@ import tw.tsm.persistence.tables.CharacterMoney
 import tw.tsm.persistence.tables.Inventories
 
 /**
- * InventoryRepository 的 Exposed ORM 實作
+ * Triển khai InventoryRepository bằng Exposed ORM
  *
- * 使用 inventories 單表存放背包/裝備/錢莊，以 storageType 區分。
+ * Dùng bảng đơn inventories chứa túi đồ/trang bị/Tiền Trang, phân biệt bằng storageType.
  */
 class InventoryRepositoryImpl : InventoryRepository {
 
@@ -52,12 +52,12 @@ class InventoryRepositoryImpl : InventoryRepository {
 
     override suspend fun saveAllItems(characterId: Long, storageType: Int, items: Map<Int, ThingData>) =
         suspendTransaction {
-            // 先清空該類型全部
+            // Xoá sạch toàn bộ dữ liệu loại đó trước
             Inventories.deleteWhere {
                 (Inventories.characterId eq characterId) and
                 (Inventories.storageType eq storageType)
             }
-            // 批量寫入（減少 DB round-trip）
+            // Ghi hàng loạt (giảm round-trip DB)
             val nonEmpty = items.filter { !it.value.isEmpty }
             if (nonEmpty.isNotEmpty()) {
                 Inventories.batchInsert(nonEmpty.entries.toList()) { (slot, thing) ->
@@ -108,10 +108,10 @@ class InventoryRepositoryImpl : InventoryRepository {
             Unit
         }
 
-    // ── 私有輔助 ──
+    // ── Helper riêng ──
 
     /**
-     * ResultRow → ThingData 映射
+     * Map ResultRow → ThingData
      */
     private fun ResultRow.toThingData() = ThingData(
         itemId = this[Inventories.itemId],
@@ -137,7 +137,7 @@ class InventoryRepositoryImpl : InventoryRepository {
     )
 
     /**
-     * ThingData → INSERT/UPSERT 欄位設定
+     * Thiết lập trường cho ThingData → INSERT/UPSERT
      */
     private fun org.jetbrains.exposed.v1.core.statements.UpdateBuilder<*>.setThingData(thing: ThingData) {
         this[Inventories.itemId] = thing.itemId

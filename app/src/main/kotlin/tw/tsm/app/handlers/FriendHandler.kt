@@ -11,17 +11,17 @@ import tw.tsm.protocol.PacketReader
 private val logger = KotlinLogging.logger {}
 
 /**
- * 好友系統 Handler (mainKind=14)
+ * Handler hệ thống bạn bè (mainKind=14)
  *
- * 來源：protocal.lua protocolTable[14]
- * - C:014-004 刪除好友
- * - C:014-005 邀請好友
- * - C:014-006 回覆邀請
- * - C:014-007 送禮
- * - C:014-008 收禮
- * - C:014-009 查詢玩家
- * - C:014-018 一鍵送禮
- * - C:014-019 一鍵收禮
+ * Nguồn: protocal.lua protocolTable[14]
+ * - C:014-004 Xoá bạn bè
+ * - C:014-005 Mời bạn bè
+ * - C:014-006 Trả lời lời mời
+ * - C:014-007 Tặng quà
+ * - C:014-008 Nhận quà
+ * - C:014-009 Tra cứu người chơi
+ * - C:014-018 Tặng quà một nút
+ * - C:014-019 Nhận quà một nút
  */
 class FriendHandler(
     private val friendSystem: FriendSystem
@@ -40,14 +40,14 @@ class FriendHandler(
             9 -> handleQueryPlayer(session, data)
             18 -> handleSendAllGifts(session, data)
             19 -> handleReceiveAllGifts(session, data)
-            else -> logger.warn { "未處理的好友子協定：subKind=$subKind" }
+            else -> logger.warn { "Sub-protocol bạn bè chưa xử lý: subKind=$subKind" }
         }
     }
 
     /**
-     * C:014-004 刪除好友
+     * C:014-004 Xoá bạn bè
      *
-     * 格式：+playerId(8B LE)
+     * Định dạng: +playerId(8B LE)
      */
     private suspend fun handleRemove(session: GameSession, data: ByteArray) {
         if (data.size < 8) return
@@ -57,22 +57,22 @@ class FriendHandler(
     }
 
     /**
-     * C:014-005 邀請好友
+     * C:014-005 Mời bạn bè
      *
-     * 格式：+nameLen(1B) +name(Big5) +msg(1B)
+     * Định dạng: +nameLen(1B) +name(Big5) +msg(1B)
      */
     private suspend fun handleInvite(session: GameSession, data: ByteArray) {
         if (data.size < 2) return
         val reader = PacketReader(data)
         val name = reader.readBig5WithByteLen()
-        // msg 忽略（客戶端固定發 0）
+        // msg bỏ qua (client luôn gửi 0)
         friendSystem.inviteFriend(session, name)
     }
 
     /**
-     * C:014-006 回覆邀請
+     * C:014-006 Trả lời lời mời
      *
-     * 格式：+playerId(8B LE) +result(1B) [1=接受, 2=拒絕]
+     * Định dạng: +playerId(8B LE) +result(1B) [1=chấp nhận, 2=từ chối]
      */
     private suspend fun handleReplyInvite(session: GameSession, data: ByteArray) {
         if (data.size < 9) return
@@ -83,9 +83,9 @@ class FriendHandler(
     }
 
     /**
-     * C:014-007 送禮
+     * C:014-007 Tặng quà
      *
-     * 格式：+playerId(8B LE)
+     * Định dạng: +playerId(8B LE)
      */
     private suspend fun handleSendGift(session: GameSession, data: ByteArray) {
         if (data.size < 8) return
@@ -95,9 +95,9 @@ class FriendHandler(
     }
 
     /**
-     * C:014-008 收禮
+     * C:014-008 Nhận quà
      *
-     * 格式：+playerId(8B LE)
+     * Định dạng: +playerId(8B LE)
      */
     private suspend fun handleReceiveGift(session: GameSession, data: ByteArray) {
         if (data.size < 8) return
@@ -107,9 +107,9 @@ class FriendHandler(
     }
 
     /**
-     * C:014-009 查詢玩家資訊
+     * C:014-009 Tra cứu thông tin người chơi
      *
-     * 格式：+playerId(8B LE) +nameLen(1B) +name(Big5)
+     * Định dạng: +playerId(8B LE) +nameLen(1B) +name(Big5)
      */
     private suspend fun handleQueryPlayer(session: GameSession, data: ByteArray) {
         if (data.size < 8) return
@@ -119,9 +119,9 @@ class FriendHandler(
     }
 
     /**
-     * C:014-018 一鍵送禮
+     * C:014-018 Tặng quà một nút
      *
-     * 格式：+count(1B) <<+playerId(8B LE)>>
+     * Định dạng: +count(1B) <<+playerId(8B LE)>>
      */
     private suspend fun handleSendAllGifts(session: GameSession, data: ByteArray) {
         if (data.size < 1) return
@@ -133,9 +133,9 @@ class FriendHandler(
     }
 
     /**
-     * C:014-019 一鍵收禮
+     * C:014-019 Nhận quà một nút
      *
-     * 格式：+count(1B) <<+playerId(8B LE)>>
+     * Định dạng: +count(1B) <<+playerId(8B LE)>>
      */
     private suspend fun handleReceiveAllGifts(session: GameSession, data: ByteArray) {
         if (data.size < 1) return

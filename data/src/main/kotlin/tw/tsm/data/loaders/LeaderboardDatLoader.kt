@@ -7,19 +7,19 @@ import tw.tsm.domain.data.LeaderboardDef
 private val logger = KotlinLogging.logger {}
 
 /**
- * LeaderbordInfo_C.dat 載入器
+ * Loader LeaderbordInfo_C.dat
  *
- * 對照 `LeaderboardData.lua` 的 `LeaderboardData.New(reader)` 和
+ * Đối chiếu `LeaderboardData.New(reader)` của `LeaderboardData.lua` và
  * `DataManager.OnLoadLeaderboardInfo()`。
  *
- * 格式（每筆）：
+ * Định dạng (mỗi bản ghi):
  * - id: Byte
  * - mainTagText: UInt32
  * - subTagText: UInt32
  * - scoreText: UInt32
  * - nameText: UInt32
  * - awardId: Byte
- * - scoreFormat: UnicodeString (2B LE 長度前綴 + UTF-16LE bytes)
+ * - scoreFormat: UnicodeString (prefix độ dài 2B LE + UTF-16LE bytes)
  * - stateEnable: Boolean
  * - rankAwards: 3 × UInt16 (flagId)
  * - bitFunction: Byte
@@ -27,10 +27,10 @@ private val logger = KotlinLogging.logger {}
 object LeaderboardDatLoader {
 
     /**
-     * 載入排行榜定義
+     * Đọc định nghĩa bảng xếp hạng
      *
-     * @param data 解密後的 .dat 二進位資料
-     * @return key = 排行榜 ID
+     * @param data dữ liệu nhị phân .dat đã giải mã
+     * @return key = ID bảng xếp hạng
      */
     fun load(data: ByteArray): Map<Int, LeaderboardDef> {
         val reader = DatReader(data)
@@ -63,7 +63,7 @@ object LeaderboardDatLoader {
             )
         }
 
-        logger.info { "LeaderbordInfo 載入完成：${result.size} 筆排行榜定義" }
+        logger.info { "Nạp LeaderbordInfo xong: ${result.size} định nghĩa bảng xếp hạng" }
         return result
     }
 }

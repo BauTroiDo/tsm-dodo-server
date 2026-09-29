@@ -13,7 +13,7 @@ import tw.tsm.persistence.tables.Accounts
 private val logger = KotlinLogging.logger {}
 
 /**
- * 帳號 Repository 實作
+ * Triển khai Repository tài khoản
  */
 class AccountRepositoryImpl : AccountRepository {
 
@@ -40,7 +40,7 @@ class AccountRepositoryImpl : AccountRepository {
                 it[Accounts.createdAt] = System.currentTimeMillis()
             } get Accounts.id
 
-            logger.info { "新帳號建立：$account (id=$id)" }
+            logger.info { "Tạo tài khoản mới: $account (id=$id)" }
             id
         }
 
@@ -58,6 +58,6 @@ class AccountRepositoryImpl : AccountRepository {
                 it[Accounts.gmLevel] = gmLevel
             }
         }
-        logger.info { "帳號 $accountId GM 等級更新為 $gmLevel" }
+        logger.info { "Tài khoản $accountId được đổi cấp GM thành $gmLevel" }
     }
 }

@@ -3,19 +3,19 @@ package tw.tsm.persistence.tables
 import org.jetbrains.exposed.v1.core.Table
 
 /**
- * 角色已完成任務標記表
+ * Bảng cờ đánh dấu nhiệm vụ đã hoàn thành của nhân vật
  *
- * 儲存任務完成後設定的 bit 標記（MarkManager.flags）。
- * 對應客戶端 MarkManager.bitMarkDatas（bitIndex → bitValue）。
+ * Lưu các bit flag được set sau khi hoàn thành nhiệm vụ (MarkManager.flags).
+ * Tương ứng MarkManager.bitMarkDatas của client (bitIndex → bitValue).
  */
 object CharacterMissionFlags : Table("character_mission_flags") {
-    /** 角色 ID */
+    /** ID nhân vật*/
     val charId = long("char_id")
 
-    /** 標記位元索引（對應 Mark_C.dat 的 bitId 欄位） */
+    /** Chỉ số bit flag (tương ứng trường bitId trong Mark_C.dat)*/
     val bitIndex = integer("bit_index")
 
-    /** 標記值（通常為 1） */
+    /** Giá trị flag (thường là 1)*/
     val bitValue = integer("bit_value").default(1)
 
     override val primaryKey = PrimaryKey(charId, bitIndex)

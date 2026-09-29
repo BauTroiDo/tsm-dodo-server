@@ -36,14 +36,14 @@ import tw.tsm.persistence.tables.Mails
 private val logger = KotlinLogging.logger {}
 
 /**
- * 資料庫初始化工廠
+ * Factory khởi tạo cơ sở dữ liệu
  *
- * 使用 HikariCP 連線池 + Exposed ORM
+ * Dùng pool kết nối HikariCP + Exposed ORM
  */
 object DatabaseFactory {
 
     /**
-     * 初始化資料庫連線並建立表結構
+     * Khởi tạo kết nối cơ sở dữ liệu và tạo cấu trúc bảng
      */
     fun init(url: String, user: String, password: String, maxPoolSize: Int = 10) {
         val config = HikariConfig().apply {
@@ -60,7 +60,7 @@ object DatabaseFactory {
         val dataSource = HikariDataSource(config)
         Database.connect(dataSource)
 
-        // 自動建表（含補齊新增欄位）
+        // Tự tạo bảng (kèm bổ sung các trường mới)
         transaction {
             SchemaUtils.createMissingTablesAndColumns(
                 Accounts, Characters, Inventories, CharacterMoney, CharacterCurrencies,
@@ -80,6 +80,6 @@ object DatabaseFactory {
             )
         }
 
-        logger.info { "資料庫初始化完成：$url（連線池 $maxPoolSize）" }
+        logger.info { "Khởi tạo cơ sở dữ liệu xong: $url (pool kết nối $maxPoolSize)" }
     }
 }

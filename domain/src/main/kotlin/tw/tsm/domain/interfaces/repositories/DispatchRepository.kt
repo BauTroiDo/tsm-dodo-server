@@ -3,16 +3,16 @@ package tw.tsm.domain.interfaces.repositories
 import tw.tsm.domain.data.DispatchSaveData
 
 /**
- * 派遣資料存取介面
+ * Giao diện truy xuất dữ liệu điều phái
  */
 interface DispatchRepository {
 
-    /** 查詢角色所有進行中的派遣 */
+    /** Truy vấn toàn bộ lượt điều phái đang tiến hành của nhân vật*/
     suspend fun findByCharacterId(characterId: Long): List<DispatchSaveData>
 
-    /** 新增一筆派遣記錄 */
+    /** Thêm một bản ghi điều phái*/
     suspend fun insert(characterId: Long, data: DispatchSaveData)
 
-    /** 刪除指定進度條的派遣記錄 */
+    /** Xoá bản ghi điều phái của thanh tiến trình chỉ định*/
     suspend fun deleteBySlot(characterId: Long, slotIndex: Int)
 }

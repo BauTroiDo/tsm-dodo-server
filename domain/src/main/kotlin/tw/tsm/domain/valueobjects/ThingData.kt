@@ -1,54 +1,54 @@
 package tw.tsm.domain.valueobjects
 
 /**
- * 物品實例值物件 — 對應 `Item.lua ThingData.New(data)` 第 81-100 行
+ * Object giá trị thực thể vật phẩm — tương ứng `Item.lua ThingData.New(data)` dòng 81-100
  *
- * DVT NFT build 網路傳輸格式：56 bytes（小端序）。
- * Base ThingData 為 35 bytes；Lua Item.lua 在 NFT define bật 時再讀 21 bytes Myth/NFT.
+ * Định dạng truyền mạng khi build DVT NFT: 56 bytes (little-endian).
+ * ThingData cơ sở dài 35 bytes; Lua Item.lua đọc thêm 21 bytes Myth/NFT khi bật NFT define.
  * Model này hiện chỉ lưu phần base; codec sẽ gửi phần NFT bằng 0 cho đến khi server hỗ trợ Myth.
  */
 data class ThingData(
-    /** 物品編號（UInt16） */
+    /** Số hiệu vật phẩm (UInt16)*/
     val itemId: Int = 0,
-    /** 物品數量（Int32） */
+    /** Số lượng vật phẩm (Int32)*/
     val quantity: Int = 0,
-    /** 毀壞度（Byte，0=完美, 250=壞掉） */
+    /** Độ hỏng (Byte, 0=hoàn hảo, 250=hỏng)*/
     val damage: Int = 0,
-    /** 屬性（Byte，0=無, 1=地, 2=水, 3=火, 4=風, 5=心, 6=?, 7=光, 8=暗） */
+    /** Thuộc tính (Byte, 0=không, 1=đất, 2=nước, 3=lửa, 4=gió, 5=tâm, 6=?, 7=ánh sáng, 8=bóng tối)*/
     val element: Int = 0,
-    /** 屬性值（Byte） */
+    /** Giá trị thuộc tính (Byte)*/
     val elementValue: Int = 0,
-    /** 抵抗（Byte） */
+    /** Kháng (Byte)*/
     val proofKind: Int = 0,
-    /** 成長等級（Byte，靈性武器用） */
+    /** Cấp trưởng thành (Byte, dùng cho vũ khí linh tính)*/
     val growLevel: Int = 0,
-    /** 成長經驗值（Int32，靈性武器用） */
+    /** Kinh nghiệm trưởng thành (Int32, dùng cho vũ khí linh tính)*/
     val growExp: Int = 0,
-    /** 特殊作用（Byte，0=無, 1=可交易 1 次） */
+    /** Tác dụng đặc biệt (Byte, 0=không, 1=có thể giao dịch 1 lần)*/
     val specialKind: Int = 0,
-    /** 靈石屬性（Byte） */
+    /** Thuộc tính linh thạch (Byte)*/
     val stoneAttr: Int = 0,
-    /** 靈石強化等級（Byte） */
+    /** Cấp tăng cường linh thạch (Byte)*/
     val stoneLevel: Int = 0,
-    /** 專武強化等級（Byte） */
+    /** Cấp tăng cường vũ khí chuyên dụng (Byte)*/
     val enhanceLevel: Int = 0,
-    /** 物品刪除時間（Double，OADate 格式） */
+    /** Thời gian xoá vật phẩm (Double, định dạng OADate)*/
     val deleteTime: Double = 0.0,
-    /** 損壞前物品 ID（UInt16） */
+    /** ID vật phẩm trước khi hỏng (UInt16)*/
     val damagedItemId: Int = 0,
-    /** 鎖定（Boolean） */
+    /** Khoá (Boolean)*/
     val isLocked: Boolean = false,
-    /** 升階等級（Byte） */
+    /** Cấp thăng giai (Byte)*/
     val reinforced: Int = 0,
-    /** 洗鍊等級 1（Byte） */
+    /** Cấp tẩy luyện 1 (Byte)*/
     val affix1: Int = 0,
-    /** 洗鍊等級 2（Byte） */
+    /** Cấp tẩy luyện 2 (Byte)*/
     val affix2: Int = 0,
-    /** 洗鍊等級 3（Byte） */
+    /** Cấp tẩy luyện 3 (Byte)*/
     val affix3: Int = 0,
-    /** 時裝強化等級（Byte） */
+    /** Cấp tăng cường thời trang (Byte)*/
     val styleLevel: Int = 0
 ) {
-    /** 此格是否為空 */
+    /** Ô này có trống hay không*/
     val isEmpty: Boolean get() = itemId == 0
 }

@@ -11,10 +11,10 @@ import kotlin.math.max
 private val logger = KotlinLogging.logger {}
 
 /**
- * 技能效果解析器 — 對應 Fight/Skills lua
+ * Trình phân tích hiệu ứng kỹ năng — tương ứng với Fight/Skills lua
  *
- * 負責解析技能的範圍、傷害、狀態效果，
- * 並生成完整的 S:050-001 攻擊結果資料。
+ * Chịu trách nhiệm phân tích phạm vi, sát thương, hiệu ứng trạng thái của kỹ năng,
+ * và tạo toàn bộ dữ liệu kết quả tấn công S:050-001.
  */
 class BattleSkillResolver(
     private val skillDefs: Map<Int, SkillDef>
@@ -44,20 +44,20 @@ class BattleSkillResolver(
     }
 
     /**
-     * 查詢技能定義（供 NPC AI 判斷技能類型）
+     * Tra cứu định nghĩa kỹ năng (để NPC AI phán định loại kỹ năng)
      */
     fun getSkillDef(skillId: Int): SkillDef? = skillDefs[skillId]
 
     /**
-     * 解析並執行技能
+     * Phân tích và thực thi kỹ năng
      *
-     * @param attacker 攻擊者
-     * @param grid 戰場棋盤
-     * @param skillId 使用的技能 ID（10000=普攻）
-     * @param targetCol 目標列
-     * @param targetRow 目標行
-     * @param terrain 地質屬性
-     * @return 技能執行結果
+     * @param attacker người tấn công
+     * @param grid bàn cờ chiến trường
+     * @param skillId ID kỹ năng được sử dụng (10000=tấn công thường)
+     * @param targetCol cột mục tiêu
+     * @param targetRow hàng mục tiêu
+     * @param terrain thuộc tính địa chất
+     * @return kết quả thực thi kỹ năng
      */
     fun resolveSkill(
         attacker: BattleFighter,
@@ -81,7 +81,7 @@ class BattleSkillResolver(
         // Lua SkillData rule: requireSp == 1 means consume ALL current SP.
         val requiredSp = skill?.requireSp ?: 0
         if (skill != null && attacker.sp < requiredSp) {
-            logger.debug { "${attacker.name} SP 不足：需要 $requiredSp，擁有 ${attacker.sp}" }
+            logger.debug { "${attacker.name} thiếu SP: cần $requiredSp, đang có ${attacker.sp}" }
             return SkillResolveResult(emptyList(), spConsumed = 0, fightArea = fightArea)
         }
 
@@ -90,7 +90,7 @@ class BattleSkillResolver(
             requiredSp == 1 -> attacker.sp.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
             else -> requiredSp
         }
-        // 決定目標列表 before mutation. A stale/invalid target must not burn SP.
+        // Quyết định danh sách mục tiêu trước khi biến đổi. Mục tiêu cũ/không hợp lệ không được tiêu tốn SP.
         val targets = if (targetsFriendlySide) {
             // Client target legality is driven by fightWay; friendly utility/dispel is not always HP heal.
             grid.resolveTargets(
@@ -115,7 +115,7 @@ class BattleSkillResolver(
         /* targets resolved above */
         val resolvedTargets = targets
 
-        // 攻擊次數（howMuchTimes，0 或 1 都算 1 次）
+        // Số lần tấn công (howMuchTimes, 0 hay 1 đều tính là 1 lần)
         val hitTimes = max(1, skill?.howMuchTimes ?: 1)
 
         val targetResults = mutableListOf<TargetResult>()
@@ -181,7 +181,7 @@ class BattleSkillResolver(
                 BattleDamageCalc.statusFromSkillId(skillId) != tw.tsm.domain.enums.BattleStatus.NONE
 
             var totalDamage = 0
-            var lastRawDamage = 0  // 造成死亡那擊的原始傷害（打飛判定用）
+            var lastRawDamage = 0  // Sát thương gốc của đòn gây tử vong (dùng cho phán định đánh bay)
             var finalAttackResult = EAttackResult.HIT
             var finalBeHitAction = EBeHitAction.HIT
             val allAttrChanges = dispelAttrChanges.toMutableList()
@@ -193,11 +193,11 @@ class BattleSkillResolver(
                     else -> BattleDamageCalc.calculateAttack(attacker, target, skill, terrain, skillId)
                 }
 
-                // 套用 Combo 倍率：僅對物理攻擊傷害生效（Combo 不影響回復技能）
+                // Áp hệ số Combo: chỉ có hiệu lực với sát thương tấn công vật lý (Combo không ảnh hưởng kỹ năng hồi phục)
                 val calcResult = if (!isHeal && comboMultiplier != 1.0) {
                     val scaledChanges = rawCalcResult.attrChanges.map { change ->
                         if (!change.isPositive) {
-                            // 傷害值 × comboMultiplier，至少 1
+                            // Giá trị sát thương × comboMultiplier, tối thiểu 1
                             val scaled = maxOf(1, (change.value * comboMultiplier).toInt())
                             change.copy(value = scaled)
                         } else change
@@ -210,12 +210,12 @@ class BattleSkillResolver(
                 finalAttackResult = calcResult.attackResult
                 finalBeHitAction = calcResult.beHitAction
 
-                // 套用傷害/回復
+                // Áp sát thương/hồi phục
                 for (change in calcResult.attrChanges) {
                     when (change.attrKind) {
                         EAttribute.HP -> {
                             if (change.isPositive) {
-                                // 回復
+                                // Hồi phục
                                 val actual = minOf(change.value.toLong(), target.maxHp - target.hp).toInt()
                                 target.hp = (target.hp + actual).coerceAtMost(target.maxHp)
                                 if (actual > 0) {
@@ -226,8 +226,8 @@ class BattleSkillResolver(
                                     }
                                 }
                             } else {
-                                // 傷害
-                                lastRawDamage = change.value  // 保留原始未 cap 傷害
+                                // Sát thương
+                                lastRawDamage = change.value  // Giữ sát thương gốc chưa cap
                                 val actual = minOf(change.value.toLong(), target.hp).toInt()
                                 target.hp = (target.hp - actual).coerceAtLeast(0)
                                 totalDamage += actual
@@ -251,7 +251,7 @@ class BattleSkillResolver(
                     }
                 }
 
-                // 施加狀態異常
+                // Gây trạng thái bất thường
                 if (calcResult.inflictedStatus != tw.tsm.domain.enums.BattleStatus.NONE) {
                     val group = modeledStatusGroup(calcResult.inflictedStatus)
                     if (group > 0) {
@@ -265,14 +265,14 @@ class BattleSkillResolver(
                     }
                 }
 
-                // 死亡判定
+                // Phán định tử vong
                 if (target.hp <= 0) {
                     target.isDead = true
-                    // 打飛判定：原始傷害 >= maxHp × 閾值倍率
+                    // Phán định đánh bay: sát thương gốc >= maxHp × hệ số ngưỡng
                     if (lastRawDamage >= (target.maxHp * BattleConstants.FLY_OUT_DAMAGE_RATIO).toLong()) {
                         target.isFlyOut = true
                     }
-                    break  // 死了就不再繼續打
+                    break  // Đã chết thì không đánh tiếp
                 }
             }
 
@@ -389,15 +389,15 @@ class BattleSkillResolver(
 
 }
 
-/** 技能解析結果 */
+/** Kết quả phân tích kỹ năng*/
 data class SkillResolveResult(
     val targets: List<TargetResult>,
     val spConsumed: Int,
-    /** 技能範圍（EFightArea）— 客戶端演出腳本據此計算特效覆蓋目標，必須原樣下發 */
+    /** Phạm vi kỹ năng (EFightArea) — script biểu diễn của client dựa vào đây tính các mục tiêu bị hiệu ứng phủ, phải gửi xuống nguyên dạng*/
     val fightArea: Int = 1
 )
 
-/** 單個目標的攻擊結果 */
+/** Kết quả tấn công trên một mục tiêu đơn lẻ*/
 data class TargetResult(
     val targetCol: Int,
     val targetRow: Int,
@@ -405,6 +405,6 @@ data class TargetResult(
     val beHitAction: Int,
     val attrChanges: List<BattleAttrChange>,
     val targetDied: Boolean = false,
-    /** 是否被打飛（超殺死亡） */
+    /** Có bị đánh bay hay không (chết kiểu overkill)*/
     val targetFlyOut: Boolean = false
 )

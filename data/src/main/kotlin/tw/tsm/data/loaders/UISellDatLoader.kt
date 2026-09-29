@@ -5,20 +5,20 @@ import tw.tsm.domain.data.UISellDef
 import tw.tsm.domain.data.UISellFormulaDef
 
 /**
- * UI 介面消費載入器 — 對應 `DataManager` 的 UISell 資料（DM: 439）
+ * Loader tiêu phí UI — tương ứng dữ liệu UISell của `DataManager` (DM: 439)
  *
- * 兩個來源檔：
- * - `UISell_C.dat`（客戶端 `Data/UISellData.lua` 讀取）：
- *   count(Int32) + 每筆 id(U16) + rolecountId(U16) + moneyString(U32) + itemString(U32) + customString(U32)
- * - `UISell_Formula_C.dat`（客戶端不讀，伺服器費用表）：
- *   count(Int32) + 每筆 id(U16) + kind(U8) + value(U32) + params(11×U16)
+ * Hai file nguồn:
+ * - `UISell_C.dat` (client `Data/UISellData.lua` đọc):
+ *   count(Int32) + mỗi bản ghi id(U16) + rolecountId(U16) + moneyString(U32) + itemString(U32) + customString(U32)
+ * - `UISell_Formula_C.dat` (client không đọc, bảng phí của server):
+ *   count(Int32) + mỗi bản ghi id(U16) + kind(U8) + value(U32) + params(11×U16)
  */
 object UISellDatLoader {
 
     /**
-     * 載入 UISell_C.dat（介消字串定義）
+     * Đọc UISell_C.dat (định nghĩa chuỗi 介消)
      *
-     * @return Map<sellId, UISellDef>（id != 0 才存入，對照 Lua 慣例）
+     * @return Map<sellId, UISellDef> (chỉ lưu khi id != 0, theo lệ Lua)
      */
     fun loadSellDefs(data: ByteArray): Map<Int, UISellDef> {
         val reader = DatReader(data)
@@ -46,7 +46,7 @@ object UISellDatLoader {
     }
 
     /**
-     * 載入 UISell_Formula_C.dat（介消費用公式）
+     * Đọc UISell_Formula_C.dat (công thức phí 介消)
      *
      * @return Map<sellId, UISellFormulaDef>
      */

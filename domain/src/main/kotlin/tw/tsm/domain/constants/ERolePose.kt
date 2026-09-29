@@ -1,10 +1,10 @@
 package tw.tsm.domain.constants
 
 /**
- * 角色動作 ID 常數
+ * Hằng số ID hành động nhân vật
  *
- * 來源：RoleController.lua ERolePose 列舉（第 198-221 行）
- * UIAction.lua 14 個可用動作按鈕
+ * Nguồn: liệt kê ERolePose trong RoleController.lua (dòng 198-221)
+ * 14 nút hành động khả dụng trong UIAction.lua
  */
 object ERolePose {
     const val WALK = 0
@@ -30,15 +30,15 @@ object ERolePose {
     const val TOWEL_BATH = 61
     const val NONE = -1
 
-    /** UIAction.lua 定義的 14 個可用動作 ID 集合 */
+    /** Tập hợp 14 ID hành động khả dụng do UIAction.lua định nghĩa*/
     val USABLE_POSES = setOf(
         SIT, WAVE, HIT, PREPARE, LIE, JUMP, MAGIC, ATTACK,
         WALK, STAND, SPECIAL, ARCHERY, MEDITATION, KISS
     )
 
-    /** 溫泉/家園場景限定動作 */
+    /** Hành động chỉ dùng trong cảnh suối nước nóng/gia viên*/
     val HOT_SPRING_ONLY = setOf(SIT, LIE)
 }
 
-/** 溫泉場景 ID（UIAction.lua:73-74） */
+/** ID cảnh suối nước nóng (UIAction.lua:73-74)*/
 val HOT_SPRING_MAPS = setOf(57401, 60441)

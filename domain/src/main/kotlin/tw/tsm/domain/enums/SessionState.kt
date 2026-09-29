@@ -1,17 +1,17 @@
 package tw.tsm.domain.enums
 
 /**
- * 連線階段狀態機
+ * Máy trạng thái phiên kết nối
  */
 enum class SessionState {
-    /** TCP 已連線，尚未驗證 */
+    /** Đã kết nối TCP, chưa xác thực*/
     CONNECTED,
-    /** 正在驗證帳號 */
+    /** Đang xác thực tài khoản*/
     AUTHENTICATING,
-    /** 已登入，選角畫面 */
+    /** Đã đăng nhập, màn hình chọn nhân vật*/
     LOGGED_IN,
-    /** 已進入遊戲世界 */
+    /** Đã vào thế giới game*/
     IN_GAME,
-    /** 已斷線 */
+    /** Đã mất kết nối*/
     DISCONNECTED
 }

@@ -1,7 +1,7 @@
 package tw.tsm.domain.interfaces.repositories
 
 /**
- * 快捷鍵資料項
+ * Mục dữ liệu phím tắt
  */
 data class HotkeyEntry(
     val dataIndex: Int,
@@ -10,15 +10,15 @@ data class HotkeyEntry(
 )
 
 /**
- * 快捷鍵持久層介面
+ * Giao diện tầng persist của phím tắt
  */
 interface HotkeyRepository {
-    /** 載入角色所有快捷鍵 */
+    /** Tải toàn bộ phím tắt của nhân vật*/
     suspend fun findByCharId(charId: Long): List<HotkeyEntry>
 
-    /** 設定單一快捷鍵（upsert） */
+    /** Đặt một phím tắt (upsert)*/
     suspend fun save(charId: Long, dataIndex: Int, keyIndex: Int, useId: Int)
 
-    /** 刪除角色所有快捷鍵 */
+    /** Xoá toàn bộ phím tắt của nhân vật*/
     suspend fun deleteByCharId(charId: Long)
 }

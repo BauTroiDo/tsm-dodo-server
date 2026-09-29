@@ -5,17 +5,17 @@ import tw.tsm.domain.interfaces.SessionSender
 import tw.tsm.protocol.PacketWriter
 
 /**
- * 介面消費封包序列化子模組 — mainKind=84, 35
+ * Phân mô-đun con tuần tự hoá gói tin 介消 — mainKind=84, 35
  *
- * 來源：protocal.lua protocolTable[84]、Logic/UISell.lua
+ * Nguồn: protocal.lua protocolTable[84], Logic/UISell.lua
  */
 class UISellResponseSender {
 
     /**
-     * S:084-001 / S:084-002 介消失敗（結果=0）
+     * S:084-001 / S:084-002 介消 thất bại (kết quả=0)
      *
-     * 格式：+介消編號(2) +結果(1)=0 +原因(1) +數值(4)
-     * 客戶端 string.GetUiSellFail(sellId, reason, value) 轉為失敗訊息。
+     * Định dạng: +mã số 介消(2) +kết quả(1)=0 +nguyên nhân(1) +giá trị(4)
+     * Client string.GetUiSellFail(sellId, reason, value) chuyển thành thông báo thất bại.
      */
     fun sendUiSellFail(session: SessionSender, subKind: Int, sellId: Int, reason: Int, value: Long) {
         session.send(
@@ -30,9 +30,9 @@ class UISellResponseSender {
     }
 
     /**
-     * S:084-001 介消金錢報價（結果 1=元寶 / 2=綁元 / 3=遊戲幣）
+     * S:084-001 介消 báo giá tiền (kết quả 1=nguyên bảo / 2=nguyên bảo khoá / 3=tiền game)
      *
-     * 格式：+介消編號(2) +結果(1) +金額(4)
+     * Định dạng: +số hiệu 介消(2) +kết quả(1) +số tiền(4)
      */
     fun sendUiSellMoneyQuery(session: SessionSender, sellId: Int, currencyKind: Int, cost: Long) {
         session.send(
@@ -46,10 +46,10 @@ class UISellResponseSender {
     }
 
     /**
-     * S:084-001 介消道具報價（結果=255）
+     * S:084-001 介消 báo giá vật phẩm (kết quả=255)
      *
-     * 格式：+介消編號(2) +結果(1)=255 +物品ID(2) +數量(2)
-     * ⚠ 數量為 2 bytes：客戶端 UISell.ReceiveQuery 用 ReadUInt16 讀取
+     * Định dạng: +số hiệu 介消(2) +kết quả(1)=255 +ID vật phẩm(2) +số lượng(2)
+     * ⚠ Số lượng là 2 bytes: client UISell.ReceiveQuery dùng ReadUInt16 để đọc
      */
     fun sendUiSellItemQuery(session: SessionSender, sellId: Int, itemId: Int, count: Int) {
         session.send(
@@ -64,9 +64,9 @@ class UISellResponseSender {
     }
 
     /**
-     * S:084-001 介消免費報價（結果=254）
+     * S:084-001 介消 báo giá miễn phí (kết quả=254)
      *
-     * 格式：+介消編號(2) +結果(1)=254
+     * Định dạng: +số hiệu 介消(2) +kết quả(1)=254
      */
     fun sendUiSellFreeQuery(session: SessionSender, sellId: Int) {
         session.send(
@@ -79,10 +79,10 @@ class UISellResponseSender {
     }
 
     /**
-     * S:084-002 介消成功結果
+     * S:084-002 Kết quả 介消 thành công
      *
-     * 格式：+介消編號(2) +結果(1)=1
-     * 客戶端 UISell.UISellResult 在結果 != 0 時觸發 callback。
+     * Định dạng: +số hiệu 介消(2) +kết quả(1)=1
+     * Client UISell.UISellResult kích hoạt callback khi kết quả != 0.
      */
     fun sendUiSellSuccess(session: SessionSender, sellId: Int) {
         session.send(
@@ -95,10 +95,10 @@ class UISellResponseSender {
     }
 
     /**
-     * S:035-005 顯示剩餘點數
+     * S:035-005 Hiển thị điểm còn lại
      *
-     * 格式：+實點(4) +虛點(4)
-     * 客戶端 Role.SetPoint(real) / Role.SetLockPoint(virtual)。
+     * Định dạng: +điểm thực(4) +điểm ảo(4)
+     * Client Role.SetPoint(real) / Role.SetLockPoint(virtual).
      */
     fun sendPointBalance(session: SessionSender, pointReal: Int, pointVirtual: Int) {
         session.send(

@@ -1,16 +1,16 @@
 package tw.tsm.domain.data
 
 /**
- * 任務標記定義 — 對應 Mark_C.dat 的 MarkData.ReadInfo()
+ * Định nghĩa cờ đánh dấu nhiệm vụ — tương ứng MarkData.ReadInfo() của Mark_C.dat
  *
- * 來源：`Mark_C.dat`
- * 伺服器主要需要 [bitId] 和 [kind] 欄位；name/description 為日誌用途。
+ * Nguồn: `Mark_C.dat`
+ * Server chủ yếu cần trường [bitId] và [kind]; name/description dùng cho log.
  *
- * @param name        任務名稱（UTF-16LE）
- * @param kind        類別（0:無 1:主線 2:支線 3:指引 4:單人副本 5:多人副本 6:其他 7:每日清 8:日清不秀）
- * @param bitId       完成標記位元索引（0 = 無完成標記）
- * @param gainWay     獲取方式（0:觸發者 1:觸發者及隊員）
- * @param description 說明（UTF-16LE）
+ * @param name        tên nhiệm vụ (UTF-16LE)
+ * @param kind        loại (0:không 1:dòng chính 2:dòng phụ 3:hướng dẫn 4:phó bản đơn 5:phó bản nhóm 6:khác 7:làm mới hằng ngày 8:làm mới hằng ngày không hiển thị)
+ * @param bitId       chỉ số bit của cờ hoàn thành (0 = không có cờ hoàn thành)
+ * @param gainWay     cách nhận (0:người kích hoạt 1:người kích hoạt và thành viên tổ đội)
+ * @param description mô tả (UTF-16LE)
  */
 data class MarkDef(
     val name: String,
@@ -21,12 +21,12 @@ data class MarkDef(
 )
 
 /**
- * 減少任務步驟的結果 — [tw.tsm.gamelogic.systems.QuestSystem.decMissionStep] 回傳
+ * Kết quả giảm bước nhiệm vụ — giá trị trả về của [tw.tsm.gamelogic.systems.QuestSystem.decMissionStep]
  *
- * 用於通知呼叫者任務是否因步驟歸零而完成，以及對應的完成標記 bitId。
+ * Dùng để thông báo cho nơi gọi biết nhiệm vụ có hoàn thành do bước về 0 hay không, cùng bitId cờ hoàn thành tương ứng.
  *
- * @param completed 任務是否完成（步驟歸零）
- * @param bitId     完成標記 bitId（0 = 無需設定標記）
+ * @param completed nhiệm vụ đã hoàn thành hay chưa (bước về 0)
+ * @param bitId     bitId cờ hoàn thành (0 = không cần đặt cờ)
  */
 data class DecMissionResult(
     val completed: Boolean,

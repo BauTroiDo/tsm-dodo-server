@@ -11,7 +11,7 @@ import tw.tsm.domain.interfaces.repositories.DispatchRepository
 import tw.tsm.persistence.tables.CharacterDispatches
 
 /**
- * 派遣資料存取實作（Exposed ORM）
+ * Triển khai truy xuất dữ liệu phái đi (Exposed ORM)
  */
 class DispatchRepositoryImpl : DispatchRepository {
 

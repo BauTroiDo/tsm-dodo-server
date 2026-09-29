@@ -1,29 +1,29 @@
 package tw.tsm.domain.enums
 
 /**
- * 裝備部位列舉 — 對應 `ItemData.lua` 的 `EItemFitType`
+ * Liệt kê vị trí trang bị — tương ứng `EItemFitType` của `ItemData.lua`
  *
- * 6 個基本裝備槽位。時裝(7-11)、外顯時裝(12-16)、披風(100) 延後處理。
+ * 6 ô trang bị cơ bản. Thời trang (7-11), thời trang hiển thị (12-16), áo choàng (100) xử lý sau.
  */
 enum class EquipSlot(val fitType: Int) {
-    /** 帽 */
+    /** Mũ*/
     HEAD(1),
-    /** 衣 */
+    /** Áo*/
     BODY(2),
-    /** 武器 */
+    /** Vũ khí*/
     WEAPON(3),
-    /** 護腕 */
+    /** Vòng hộ cổ tay*/
     WRIST(4),
-    /** 鞋子 */
+    /** Giày*/
     BOOTS(5),
-    /** 特殊 */
+    /** Đặc biệt*/
     SPECIAL(6);
 
     companion object {
-        /** 由 fitType 查找對應的裝備部位，找不到回傳 null */
+        /** Tra vị trí trang bị tương ứng từ fitType, không tìm thấy trả về null*/
         fun fromFitType(ft: Int): EquipSlot? = entries.find { it.fitType == ft }
 
-        /** 判斷 fitType 是否為基本裝備（1-6） */
+        /** Kiểm tra fitType có phải trang bị cơ bản (1-6) hay không*/
         fun isBasicEquip(fitType: Int): Boolean = fitType in 1..6
     }
 }

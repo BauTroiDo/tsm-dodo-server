@@ -7,16 +7,16 @@ import tw.tsm.domain.interfaces.SessionSender
 import tw.tsm.protocol.PacketWriter
 
 /**
- * 機關盒封包序列化 — mainKind=65 的 14 個 S→C 封包
+ * Tuần tự hoá gói tin hộp cơ quan — 14 gói S→C của mainKind=65
  *
- * 來源：protocal.lua protocolTable[65]
+ * Nguồn: protocal.lua protocolTable[65]
  */
 class MacroBoxResponseSender {
 
     private val mainKind = Opcodes.MACHINE_BOX
 
     /**
-     * S:065-001 機關盒啟動成功
+     * S:065-001 Hộp cơ quan khởi động thành công
      */
     fun sendMacroBoxStart(session: SessionSender) {
         val writer = PacketWriter(3)
@@ -25,7 +25,7 @@ class MacroBoxResponseSender {
     }
 
     /**
-     * S:065-002 機關盒暫停
+     * S:065-002 Hộp cơ quan tạm dừng
      */
     fun sendMacroBoxPause(session: SessionSender) {
         val writer = PacketWriter(3)
@@ -34,9 +34,9 @@ class MacroBoxResponseSender {
     }
 
     /**
-     * S:065-003 場景新增玩家小寵物
+     * S:065-003 Thêm thú cưng nhỏ của người chơi trong cảnh
      *
-     * 格式：+roleId(8B LE) +kind(1B)
+     * Định dạng: +roleId(8B LE) +kind(1B)
      */
     fun sendMiniPetAppear(session: SessionSender, roleId: Long, kind: Int) {
         val writer = PacketWriter(3 + 8 + 1)
@@ -47,9 +47,9 @@ class MacroBoxResponseSender {
     }
 
     /**
-     * S:065-004 舊玩家小寵物列表
+     * S:065-004 Danh sách thú cưng nhỏ của người chơi cũ
      *
-     * 格式：迴圈{roleId(8B LE) kind(1B)}
+     * Định dạng: vòng lặp{roleId(8B LE) kind(1B)}
      */
     fun sendMiniPetList(session: SessionSender, pets: Map<Long, Int>) {
         val writer = PacketWriter(3 + pets.size * 9)
@@ -62,7 +62,7 @@ class MacroBoxResponseSender {
     }
 
     /**
-     * S:065-005 開啟機關盒介面（空封包）
+     * S:065-005 Mở giao diện hộp cơ quan（gói tin trống）
      */
     fun sendMacroBoxOpen(session: SessionSender) {
         val writer = PacketWriter(3)
@@ -71,9 +71,9 @@ class MacroBoxResponseSender {
     }
 
     /**
-     * S:065-006 機關盒晶石資料
+     * S:065-006 Dữ liệu tinh thạch hộp cơ quan
      *
-     * 格式：迴圈{index(1B) sparId(2B LE) count(2B LE)}
+     * Định dạng: vòng lặp {index(1B) sparId(2B LE) count(2B LE)}
      */
     fun sendMacroBoxSparData(session: SessionSender, sparSlots: Map<Int, SparSlot>) {
         val writer = PacketWriter(3 + sparSlots.size * 5)
@@ -87,9 +87,9 @@ class MacroBoxResponseSender {
     }
 
     /**
-     * S:065-007 機關盒訊息
+     * S:065-007 Thông báo hộp cơ quan
      *
-     * 格式：+kind(1B)
+     * Định dạng: +kind(1B)
      */
     fun sendMacroBoxMessage(session: SessionSender, kind: Int) {
         val writer = PacketWriter(3 + 1)
@@ -99,9 +99,9 @@ class MacroBoxResponseSender {
     }
 
     /**
-     * S:065-008 機關盒晶石擴充數量
+     * S:065-008 Mở rộng số lượng tinh thạch hộp cơ quan
      *
-     * 格式：+count(1B) +showMsg(1B)
+     * Định dạng: +count(1B) +showMsg(1B)
      */
     fun sendMacroBoxSparExtend(session: SessionSender, count: Int, showMsg: Boolean) {
         val writer = PacketWriter(3 + 2)
@@ -112,7 +112,7 @@ class MacroBoxResponseSender {
     }
 
     /**
-     * S:065-009 機關盒晶石移除訊息（空封包）
+     * S:065-009 Thông báo xoá tinh thạch hộp cơ quan（gói tin trống）
      */
     fun sendMacroBoxSparRemoveMsg(session: SessionSender) {
         val writer = PacketWriter(3)
@@ -121,9 +121,9 @@ class MacroBoxResponseSender {
     }
 
     /**
-     * S:065-010 機關盒進行補給
+     * S:065-010 Hộp cơ quan tiến hành tiếp tế
      *
-     * 格式：+checkItem(1B bool)
+     * Định dạng: +checkItem(1B bool)
      */
     fun sendMacroBoxSupply(session: SessionSender, checkItem: Boolean) {
         val writer = PacketWriter(3 + 1)
@@ -133,9 +133,9 @@ class MacroBoxResponseSender {
     }
 
     /**
-     * S:065-011 經驗瓶資料
+     * S:065-011 Dữ liệu bình kinh nghiệm
      *
-     * 格式：+priority(1B) + 迴圈{index(1B) bottleId(2B LE) exp(4B LE)}
+     * Định dạng: +priority(1B) + vòng lặp {index(1B) bottleId(2B LE) exp(4B LE)}
      */
     fun sendMacroBoxExpBottleData(session: SessionSender, priority: Int, bottles: Map<Int, ExpBottleSlot>) {
         val writer = PacketWriter(3 + 1 + bottles.size * 7)
@@ -150,9 +150,9 @@ class MacroBoxResponseSender {
     }
 
     /**
-     * S:065-012 更新經驗瓶
+     * S:065-012 Cập nhật bình kinh nghiệm
      *
-     * 格式：+index(1B) +exp(4B LE)
+     * Định dạng: +index(1B) +exp(4B LE)
      */
     fun sendMacroBoxUpdateExpBottle(session: SessionSender, index: Int, exp: Int) {
         val writer = PacketWriter(3 + 1 + 4)
@@ -163,9 +163,9 @@ class MacroBoxResponseSender {
     }
 
     /**
-     * S:065-013 設定經驗瓶成功
+     * S:065-013 thiết lập bình kinh nghiệm thành công
      *
-     * 格式：+index(1B)
+     * Định dạng: +index(1B)
      */
     fun sendMacroBoxSetExpBottle(session: SessionSender, index: Int) {
         val writer = PacketWriter(3 + 1)
@@ -175,9 +175,9 @@ class MacroBoxResponseSender {
     }
 
     /**
-     * S:065-014 機關盒經驗瓶擴充數量
+     * S:065-014 số lượng mở rộng bình kinh nghiệm của hộp cơ quan
      *
-     * 格式：+count(1B) +showMsg(1B)
+     * Định dạng: +count(1B) +showMsg(1B)
      */
     fun sendMacroBoxExpExtend(session: SessionSender, count: Int, showMsg: Boolean) {
         val writer = PacketWriter(3 + 2)

@@ -19,7 +19,7 @@ import tw.tsm.persistence.tables.Friends
 private val logger = KotlinLogging.logger {}
 
 /**
- * 好友系統資料庫操作實作
+ * Triển khai thao tác CSDL của hệ thống bạn bè
  */
 class FriendRepositoryImpl : FriendRepository {
 
@@ -38,7 +38,7 @@ class FriendRepositoryImpl : FriendRepository {
 
     override suspend fun addFriend(charId1: Long, charId2: Long, addTime: Double): Unit =
         suspendTransaction {
-            // 雙向寫入
+            // Ghi hai chiều
             Friends.insert {
                 it[charId] = charId1
                 it[friendId] = charId2
@@ -53,7 +53,7 @@ class FriendRepositoryImpl : FriendRepository {
                 it[functionFlag] = 0
                 it[Friends.addTime] = addTime
             }
-            logger.info { "新增好友關係：$charId1 ↔ $charId2" }
+            logger.info { "Thêm quan hệ bạn bè: $charId1 ↔ $charId2" }
         }
 
     override suspend fun removeFriend(charId1: Long, charId2: Long): Unit = suspendTransaction {
@@ -61,7 +61,7 @@ class FriendRepositoryImpl : FriendRepository {
             ((charId eq charId1) and (friendId eq charId2)) or
                     ((charId eq charId2) and (friendId eq charId1))
         }
-        logger.info { "刪除好友關係：$charId1 ↔ $charId2" }
+        logger.info { "Xóa quan hệ bạn bè: $charId1 ↔ $charId2" }
     }
 
     override suspend fun countFriends(charId: Long): Int = suspendTransaction {
@@ -93,7 +93,7 @@ class FriendRepositoryImpl : FriendRepository {
 
     override suspend fun resetAllFunctionFlags(): Unit = suspendTransaction {
         Friends.update { it[functionFlag] = 0 }
-        logger.info { "每日重置所有好友功能標記" }
+        logger.info { "Reset hằng ngày toàn bộ mốc chức năng bạn bè" }
     }
 
     override suspend fun isFriend(charId1: Long, charId2: Long): Boolean = suspendTransaction {
@@ -102,7 +102,7 @@ class FriendRepositoryImpl : FriendRepository {
             .count() > 0
     }
 
-    // ── 邀請相關 ──
+    // ── liên quan đến lời mời ──
 
     override suspend fun findPendingInvites(targetCharId: Long): List<FriendInviteRecord> =
         suspendTransaction {

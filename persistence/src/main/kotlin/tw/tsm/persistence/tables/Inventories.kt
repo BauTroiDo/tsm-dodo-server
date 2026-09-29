@@ -3,62 +3,62 @@ package tw.tsm.persistence.tables
 import org.jetbrains.exposed.v1.core.Table
 
 /**
- * 物品資料表 — 統一存放背包/裝備/錢莊物品
+ * Bảng dữ liệu vật phẩm — lưu chung vật phẩm túi đồ/trang bị/Tiền Trang
  *
- * 複合主鍵：(characterId, storageType, slot)
- * storageType 對應 EThings：BAG=1, BANK=4, EQUIP=8
+ * Khoá chính phức hợp: (characterId, storageType, slot)
+ * storageType tương ứng EThings: BAG=1, BANK=4, EQUIP=8
  *
- * 每筆記錄持久化 ThingData base 欄位；DVT NFT wire còn có 21 bytes Myth metadata hiện chưa lưu DB.
+ * Mỗi bản ghi lưu giữ các trường base của ThingData; DVT NFT wire còn có 21 bytes Myth metadata hiện chưa lưu DB.
  */
 object Inventories : Table("inventories") {
-    /** 所屬角色 ID */
+    /** ID nhân vật sở hữu*/
     val characterId = long("character_id").index()
-    /** 儲存類型（1=背包, 4=錢莊, 8=裝備） */
+    /** Loại lưu trữ (1=túi đồ, 4=Tiền Trang, 8=trang bị)*/
     val storageType = integer("storage_type")
-    /** 格位索引 */
+    /** Chỉ số ô*/
     val slot = integer("slot")
 
-    // ── ThingData 欄位（對應 Item.lua:81-100） ──
+    // ── Các trường ThingData (tương ứng Item.lua:81-100) ──
 
-    /** 物品編號 */
+    /** Số hiệu vật phẩm*/
     val itemId = integer("item_id")
-    /** 物品數量 */
+    /** Số lượng vật phẩm*/
     val quantity = integer("quantity")
-    /** 毀壞度 */
+    /** Mức độ hư hỏng*/
     val damage = integer("damage").default(0)
-    /** 屬性 */
+    /** Thuộc tính*/
     val element = integer("element").default(0)
-    /** 屬性值 */
+    /** Giá trị thuộc tính*/
     val elementValue = integer("element_value").default(0)
-    /** 抵抗 */
+    /** Kháng*/
     val proofKind = integer("proof_kind").default(0)
-    /** 成長等級 */
+    /** Cấp tăng trưởng*/
     val growLevel = integer("grow_level").default(0)
-    /** 成長經驗值 */
+    /** EXP tăng trưởng*/
     val growExp = integer("grow_exp").default(0)
-    /** 特殊作用 */
+    /** Tác dụng đặc biệt*/
     val specialKind = integer("special_kind").default(0)
-    /** 靈石屬性 */
+    /** Thuộc tính linh thạch*/
     val stoneAttr = integer("stone_attr").default(0)
-    /** 靈石強化等級 */
+    /** Cấp cường hoá linh thạch*/
     val stoneLevel = integer("stone_level").default(0)
-    /** 專武強化等級 */
+    /** Cấp cường hoá vũ khí chuyên thuộc*/
     val enhanceLevel = integer("enhance_level").default(0)
-    /** 物品刪除時間（OADate） */
+    /** Thời gian xoá vật phẩm (OADate)*/
     val deleteTime = double("delete_time").default(0.0)
-    /** 損壞前物品 ID */
+    /** ID vật phẩm trước khi hỏng*/
     val damagedItemId = integer("damaged_item_id").default(0)
-    /** 鎖定 */
+    /** Khoá*/
     val isLocked = bool("is_locked").default(false)
-    /** 升階等級 */
+    /** Cấp thăng hạng*/
     val reinforced = integer("reinforced").default(0)
-    /** 洗鍊等級 1 */
+    /** Cấp tẩy luyện 1*/
     val affix1 = integer("affix1").default(0)
-    /** 洗鍊等級 2 */
+    /** Cấp tẩy luyện 2*/
     val affix2 = integer("affix2").default(0)
-    /** 洗鍊等級 3 */
+    /** Cấp tẩy luyện 3*/
     val affix3 = integer("affix3").default(0)
-    /** 時裝強化等級 */
+    /** Cấp cường hoá thời trang*/
     val styleLevel = integer("style_level").default(0)
 
     override val primaryKey = PrimaryKey(characterId, storageType, slot)

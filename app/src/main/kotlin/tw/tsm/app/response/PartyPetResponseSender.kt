@@ -7,15 +7,15 @@ import tw.tsm.protocol.PacketWriter
 import tw.tsm.protocol.writeThingData
 
 /**
- * 隊伍/武將相關封包序列化
+ * Tuần tự hoá gói tin liên quan tổ đội/tướng
  *
- * mainKind = 13（隊伍）, 15（武將）, 19（武將出戰）
+ * mainKind = 13（tổ đội）, 15（tướng）, 19（tướng tham chiến）
  */
 class PartyPetResponseSender {
 
-    // ── 隊伍系統 (mainKind=13) ──
+    // ── Hệ thống tổ đội (mainKind=13) ──
 
-    /** S:013-001 通知隊長有玩家要求加入 */
+    /** S:013-001 Thông báo đội trưởng có người chơi xin gia nhập*/
     fun sendPartyJoinRequest(session: SessionSender, requesterId: Long) {
         session.send(
             PacketWriter(11)
@@ -25,7 +25,7 @@ class PartyPetResponseSender {
         )
     }
 
-    /** S:013-003 通知要求方隊長的回覆 */
+    /** S:013-003 Thông báo phản hồi của đội trưởng bên yêu cầu*/
     fun sendPartyJoinResult(session: SessionSender, result: Int, leaderName: String) {
         session.send(
             PacketWriter(16)
@@ -36,7 +36,7 @@ class PartyPetResponseSender {
         )
     }
 
-    /** S:013-004 離隊通知 */
+    /** S:013-004 Thông báo rời đội*/
     fun sendPartyLeave(session: SessionSender, playerId: Long, x: Int, y: Int) {
         session.send(
             PacketWriter(15)
@@ -48,7 +48,7 @@ class PartyPetResponseSender {
         )
     }
 
-    /** S:013-005 加入隊伍通知 */
+    /** S:013-005 Thông báo gia nhập tổ đội*/
     fun sendPartyMemberJoin(session: SessionSender, leaderId: Long, newMemberId: Long) {
         session.send(
             PacketWriter(19)
@@ -59,7 +59,7 @@ class PartyPetResponseSender {
         )
     }
 
-    /** S:013-006 隊伍完整資料 */
+    /** S:013-006 Dữ liệu đầy đủ tổ đội*/
     fun sendPartyData(session: SessionSender, parties: Map<Long, List<Long>>) {
         val writer = PacketWriter(64)
             .writeByte(Opcodes.PARTY).writeByte(6).writeByte(0)
@@ -73,7 +73,7 @@ class PartyPetResponseSender {
         session.send(writer.toByteArray())
     }
 
-    /** S:013-007 設定軍師通知 */
+    /** S:013-007 Thông báo đặt quân sư*/
     fun sendPartySetAdviser(session: SessionSender, adviserId: Long) {
         session.send(
             PacketWriter(11)
@@ -83,7 +83,7 @@ class PartyPetResponseSender {
         )
     }
 
-    /** S:013-008 取消軍師通知 */
+    /** S:013-008 Thông báo huỷ quân sư*/
     fun sendPartyRemoveAdviser(session: SessionSender) {
         session.send(
             PacketWriter(3)
@@ -92,7 +92,7 @@ class PartyPetResponseSender {
         )
     }
 
-    /** S:013-009 邀請組隊 */
+    /** S:013-009 Mời lập đội*/
     fun sendPartyInvite(session: SessionSender, inviterId: Long) {
         session.send(
             PacketWriter(11)
@@ -102,7 +102,7 @@ class PartyPetResponseSender {
         )
     }
 
-    /** S:013-010 邀請組隊結果 */
+    /** S:013-010 Kết quả mời lập đội*/
     fun sendPartyInviteResult(session: SessionSender, result: Int, targetName: String) {
         session.send(
             PacketWriter(16)
@@ -113,7 +113,7 @@ class PartyPetResponseSender {
         )
     }
 
-    /** S:013-011 軍師資料（登入同步） */
+    /** S:013-011 Dữ liệu quân sư（đồng bộ khi đăng nhập）*/
     fun sendPartyAdviserData(session: SessionSender, adviserIds: List<Long>) {
         val writer = PacketWriter(3 + adviserIds.size * 8)
             .writeByte(Opcodes.PARTY).writeByte(11).writeByte(0)
@@ -123,7 +123,7 @@ class PartyPetResponseSender {
         session.send(writer.toByteArray())
     }
 
-    /** S:013-013 組隊訊息 */
+    /** S:013-013 Thông báo lập đội*/
     fun sendPartyMessage(session: SessionSender, kind: Int) {
         session.send(
             PacketWriter(4)
@@ -133,7 +133,7 @@ class PartyPetResponseSender {
         )
     }
 
-    /** S:013-014 換隊長通知 */
+    /** S:013-014 Thông báo đổi đội trưởng*/
     fun sendPartyChangeLeader(session: SessionSender, newLeaderId: Long, memberIds: List<Long>) {
         val writer = PacketWriter(11 + memberIds.size * 8)
             .writeByte(Opcodes.PARTY).writeByte(14).writeByte(0)
@@ -144,7 +144,7 @@ class PartyPetResponseSender {
         session.send(writer.toByteArray())
     }
 
-    /** S:013-015 組隊換移動狀態 */
+    /** S:013-015 Lập đội đổi trạng thái di chuyển*/
     fun sendPartyMoveStatus(session: SessionSender, playerId: Long, status: Int) {
         session.send(
             PacketWriter(12)
@@ -155,12 +155,12 @@ class PartyPetResponseSender {
         )
     }
 
-    // ── 武將系統 (mainKind=15) ──
+    // ── Hệ thống tướng (mainKind=15) ──
 
     /**
-     * S:015-008 主角隨身武將完整資料
+     * S:015-008 Dữ liệu đầy đủ tướng tuỳ thân của nhân vật chính
      *
-     * 格式：+count(1) <<+followIndex(1) +npcId(2LE) +data...>>
+     * Định dạng: +count(1) <<+followIndex(1) +npcId(2LE) +data...>>
      */
     fun sendFollowNpcFullData(session: SessionSender, pets: List<tw.tsm.domain.valueobjects.FollowNpcData>) {
         val writer = PacketWriter(512)
@@ -170,7 +170,7 @@ class PartyPetResponseSender {
         for (pet in pets) {
             writer.writeByte(pet.slotIndex)
             writer.writeShortLE(pet.npcId)
-            // 武將資料（Role.lua 行 830-866 讀取順序）
+            // Dữ liệu tướng（thứ tự đọc Role.lua dòng 830-866）
             writer.writeIntLE(pet.exp.toInt())
             writer.writeByte(pet.level)
             writer.writeUIntLE(pet.hp)
@@ -188,11 +188,11 @@ class PartyPetResponseSender {
             // Client gốc TSNPCVN Role.FollowNpcAppear đọc tên bằng
             // ReadString(len, DataManager.encoding_Unicode) => UTF-16LE.
             writer.writeUnicodeWithByteLen(pet.name)
-            // 技能等級 ×3
+            // Cấp kỹ năng ×3
             writer.writeByte(pet.skill1Lv)
             writer.writeByte(pet.skill2Lv)
             writer.writeByte(pet.skill3Lv)
-            // 裝備物品 ×6（固定 6 格 ThingData，Role.lua:851-853 無數量前綴）
+            // Vật phẩm trang bị ×6（cố định 6 ô ThingData，Role.lua:851-853 không có tiền tố số lượng）
             for (fitType in 1..6) {
                 writer.writeThingData(pet.equips[fitType] ?: ThingData())
             }
@@ -208,7 +208,7 @@ class PartyPetResponseSender {
         session.send(writer.toByteArray())
     }
 
-    /** S:015-001 新增隨身武將 */
+    /** S:015-001 Thêm tướng tuỳ thân*/
     fun sendFollowNpcAdd(session: SessionSender, playerId: Long, slotIndex: Int, npcId: Int, canGrow: Int, showMsg: Boolean) {
         session.send(
             PacketWriter(15)
@@ -222,7 +222,7 @@ class PartyPetResponseSender {
         )
     }
 
-    /** S:015-002 刪除隨身武將 */
+    /** S:015-002 Xoá tướng tuỳ thân*/
     fun sendFollowNpcRemove(session: SessionSender, playerId: Long, slotIndex: Int, showMsg: Boolean) {
         session.send(
             PacketWriter(13)
@@ -235,9 +235,9 @@ class PartyPetResponseSender {
     }
 
     /**
-     * S:015-010 馬車武將資料
+     * S:015-010 Dữ liệu tướng xe ngựa
      *
-     * 格式：<<+index(1) +npcId(2) +level(1) +hp(4) +nameLen(1) +name(Big5)>>
+     * Định dạng: <<+index(1) +npcId(2) +level(1) +hp(4) +nameLen(1) +name(Big5)>>
      */
     fun sendCartData(session: SessionSender, pets: List<tw.tsm.domain.valueobjects.FollowNpcData>) {
         val writer = PacketWriter(3 + pets.size * 32)
@@ -252,7 +252,7 @@ class PartyPetResponseSender {
         session.send(writer.toByteArray())
     }
 
-    /** S:015-011 刪除馬車武將 */
+    /** S:015-011 Xoá tướng xe ngựa*/
     fun sendCartRemove(session: SessionSender, slotIndex: Int) {
         session.send(
             PacketWriter(4)
@@ -262,9 +262,9 @@ class PartyPetResponseSender {
         )
     }
 
-    // ── 武將出戰 (mainKind=19) ──
+    // ── Tướng tham chiến (mainKind=19) ──
 
-    /** S:019-001 登入/初始化武將出戰（Client Role.SetFightNpc UInt16） */
+    /** S:019-001 Đăng nhập/khởi tạo tướng tham chiến（Client Role.SetFightNpc UInt16）*/
     fun sendFollowNpcDeployInit(session: SessionSender, npcId: Int) {
         session.send(
             PacketWriter(5)
@@ -274,7 +274,7 @@ class PartyPetResponseSender {
         )
     }
 
-    /** S:019-004 武將出戰（UInt16 版本） */
+    /** S:019-004 Tướng tham chiến（phiên bản UInt16）*/
     fun sendFollowNpcDeploy(session: SessionSender, npcId: Int) {
         session.send(
             PacketWriter(5)
@@ -284,7 +284,7 @@ class PartyPetResponseSender {
         )
     }
 
-    /** S:019-002 武將收回（空包） */
+    /** S:019-002 Thu hồi tướng（gói trống）*/
     fun sendFollowNpcRecall(session: SessionSender) {
         session.send(
             PacketWriter(3)
@@ -293,13 +293,13 @@ class PartyPetResponseSender {
         )
     }
 
-    // ── 武將強化 (mainKind=74, 8, 15) ──
+    // ── Cường hóa tướng (mainKind=74, 8, 15) ──
 
     /**
-     * S:008-011 武將操作暫存資料（強化/脫胎換骨屬性預覽）
+     * S:008-011 Dữ liệu tạm thao tác tướng（xem trước thuộc tính tăng cường/thoát thai hoán cốt）
      *
-     * 屬性線序：int, atk, def, agi, hpx, spx
-     * （客戶端 Battle.lua S008_011 依序讀入後顯示於 UIStatus 強化預覽）
+     * Thứ tự dòng thuộc tính: int, atk, def, agi, hpx, spx
+     * （client Battle.lua S008_011 đọc lần lượt rồi hiển thị ở xem trước tăng cường UIStatus）
      */
     fun sendPetTempUpgradeData(session: SessionSender, kind: Int, npcId: Int, gains: IntArray) {
         val writer = PacketWriter(12)
@@ -312,7 +312,7 @@ class PartyPetResponseSender {
         session.send(writer.toByteArray())
     }
 
-    /** S:015-020 武將強化星等更新 */
+    /** S:015-020 Cập nhật sao tăng cường tướng*/
     fun sendPetUpgradeLv(session: SessionSender, followIndex: Int, upgradeLv: Int) {
         session.send(
             PacketWriter(5)
@@ -323,7 +323,7 @@ class PartyPetResponseSender {
         )
     }
 
-    /** S:074-002 強化成功 / S:074-003 取消強化（皆空 payload） */
+    /** S:074-002 Tăng cường thành công / S:074-003 Huỷ tăng cường（đều trống payload）*/
     fun sendPetUpgradeResult(session: SessionSender, success: Boolean) {
         session.send(
             PacketWriter(3)
@@ -332,9 +332,9 @@ class PartyPetResponseSender {
         )
     }
 
-    // ── 武將轉生 (mainKind=44) ──
+    // ── Chuyển sinh tướng (mainKind=44) ──
 
-    /** S:044-001 武將轉生訊息（+種類(1)，對應客戶端 string 21070~21079） */
+    /** S:044-001 Thông báo chuyển sinh tướng（+loại(1)，tương ứng string 21070~21079 của client）*/
     fun sendPetRebornMessage(session: SessionSender, msgKind: Int) {
         session.send(
             PacketWriter(4)

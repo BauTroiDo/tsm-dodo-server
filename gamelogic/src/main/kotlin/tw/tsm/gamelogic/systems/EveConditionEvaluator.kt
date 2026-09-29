@@ -6,36 +6,36 @@ import tw.tsm.domain.data.EveCondition
 private val logger = KotlinLogging.logger {}
 
 /**
- * 玩家事件狀態快照 — 條件評估所需的所有資料
+ * Ảnh chụp nhanh trạng thái sự kiện người chơi — mọi dữ liệu cần cho đánh giá điều kiện
  *
- * 設計為不可變值物件，由呼叫者（NpcEventHandler）建構後傳入。
- * 評估器本身不查詢任何外部系統。
+ * Được thiết kế làm object giá trị bất biến, do bên gọi (NpcEventHandler) dựng rồi truyền vào.
+ * Bản thân bộ đánh giá không truy vấn bất kỳ hệ thống bên ngoài nào.
  *
- * @param missionSteps   任務 ID → 當前步驟（pStyle=1/2 條件用）
- * @param missionFlags   旗標 ID → 值（pStyle=3 條件用：已完成任務的 bitId）
- * @param bagItems       物品 ID → 持有數量
- * @param storedItems    錢莊/寶庫物品 ID → 持有數量（conditionClass=16 用）
- * @param bagUsedSlots   背包已使用格數（conditionClass=7 param=2 用）
- * @param bagCapacity    目前背包容量（含 RoleCount 擴充格）
- * @param equipItems     已裝備的物品 ID 集合
- * @param sex            角色性別（conditionClass=7 param=5 用，對應 pStyle=1/2）
- * @param level          角色等級
- * @param serverId       登入所選 Server ID（conditionClass=7 param=8）
- * @param realPoint      可用實點/Point（Role.GetPoint，conditionClass=7 param=19）
- * @param rebornCount    轉生次數
- * @param isMounted      是否正在騎乘坐騎（conditionClass=7 param=16 用）
- * @param lastSurfaceId  最後顯示的 Surface ID（conditionClass=10 比對用）
- * @param lastChoiceCode 最後選擇碼（conditionClass=10 比對用）
- * @param battleResult   戰鬥結果（0=無 1=勝 2=敗 3=逃，conditionClass=8 比對用）
- * @param completedEveCounts 此場景已完成事件計數（eveNo → 完成次數，conditionClass=12 比對用）
- * @param currentEveNo  當前正在評估的 eveNo（conditionClass=12 param=0 用）
- * @param followNpcIds   隨身武將 NPC ID 集合（conditionClass=9 武將持有檢查用）
- * @param innNpcIds      客棧武將 NPC ID 集合（conditionClass=7 param=6 pStyle=3 用）
- * @param cartNpcIds     馬車武將 NPC ID 集合（conditionClass=7 param=6 pStyle=2 用）
- * @param roleCountValues RoleCount 角色統計計數（conditionClass=18 部分索引用）
- * @param skillLevels    技能 ID → 技能等級（conditionClass=4 比對用）
- * @param gold           身上金幣（conditionClass=5 金錢條件用）
- * @param npcSecondReincarnationStatus 武將二轉入口狀態碼（0=可開啟，-1=無符合資格武將）
+ * @param missionSteps   ID nhiệm vụ → bước hiện tại (dùng cho điều kiện pStyle=1/2)
+ * @param missionFlags   ID cờ → giá trị (dùng cho điều kiện pStyle=3: bitId của nhiệm vụ đã hoàn thành)
+ * @param bagItems       ID vật phẩm → số lượng sở hữu
+ * @param storedItems    ID vật phẩm Tiền Trang/kho báu → số lượng sở hữu (dùng cho conditionClass=16)
+ * @param bagUsedSlots   số ô đã dùng trong túi đồ (dùng cho conditionClass=7 param=2)
+ * @param bagCapacity    dung lượng túi đồ hiện tại (bao gồm ô mở rộng RoleCount)
+ * @param equipItems     tập hợp ID vật phẩm đã trang bị
+ * @param sex            giới tính nhân vật (dùng cho conditionClass=7 param=5, tương ứng pStyle=1/2)
+ * @param level          cấp độ nhân vật
+ * @param serverId       Server ID đã chọn khi đăng nhập (conditionClass=7 param=8)
+ * @param realPoint      Point thực khả dụng (Role.GetPoint, conditionClass=7 param=19)
+ * @param rebornCount    số lần chuyển sinh
+ * @param isMounted      có đang cưỡi vật cưỡi hay không (dùng cho conditionClass=7 param=16)
+ * @param lastSurfaceId  ID Surface hiển thị cuối cùng (dùng để so sánh conditionClass=10)
+ * @param lastChoiceCode mã lựa chọn cuối cùng (dùng để so sánh conditionClass=10)
+ * @param battleResult   kết quả chiến đấu (0=không 1=thắng 2=thua 3=chạy, dùng để so sánh conditionClass=8)
+ * @param completedEveCounts số sự kiện đã hoàn thành của cảnh này (eveNo → số lần hoàn thành, dùng để so sánh conditionClass=12)
+ * @param currentEveNo  eveNo đang được đánh giá (dùng cho conditionClass=12 param=0)
+ * @param followNpcIds   tập hợp NPC ID tướng mang theo (dùng để kiểm tra sở hữu tướng conditionClass=9)
+ * @param innNpcIds      tập hợp NPC ID tướng lữ quán (dùng cho conditionClass=7 param=6 pStyle=3)
+ * @param cartNpcIds     tập hợp NPC ID tướng xe ngựa (dùng cho conditionClass=7 param=6 pStyle=2)
+ * @param roleCountValues số đếm thống kê nhân vật RoleCount (dùng cho một phần chỉ mục conditionClass=18)
+ * @param skillLevels    ID kỹ năng → cấp kỹ năng (dùng để so sánh conditionClass=4)
+ * @param gold           tiền vàng trên người (dùng cho điều kiện tiền conditionClass=5)
+ * @param npcSecondReincarnationStatus mã trạng thái lối vào chuyển sinh lần 2 của tướng (0=có thể mở, -1=không có tướng đủ điều kiện)
  */
 data class PlayerEventState(
     val missionSteps: Map<Int, Int> = emptyMap(),
@@ -68,33 +68,33 @@ data class PlayerEventState(
 )
 
 /**
- * Eve 條件評估器 — 純函數，不持有任何狀態
+ * Bộ đánh giá điều kiện Eve — hàm thuần, không giữ bất kỳ trạng thái nào
  *
- * 來源：客戶端不做條件評估（全部由伺服器判斷），
- * 條件語義從 Eve_NpcEventData.lua 欄位命名 + 遊戲行為推導。
+ * Nguồn gốc: client không đánh giá điều kiện (toàn bộ do server quyết định),
+ * Ngữ nghĩa điều kiện được suy ra từ cách đặt tên trường của Eve_NpcEventData.lua + hành vi trò chơi.
  *
- * 已驗證 conditionClass：0, 1, 2, 3(場景物件), 4, 5(金錢), 7, 8, 9(武將持有), 10, 11(收驚), 12, 15(玩家/武將轉生入口), 18(部分 RoleCount)
- * 未實作（保守 false）：6, 13, 14, 17
+ * Đã xác minh conditionClass: 0, 1, 2, 3(vật thể cảnh), 4, 5(tiền), 7, 8, 9(sở hữu tướng), 10, 11(thu kinh), 12, 15(lối vào chuyển sinh người chơi/tướng), 18(một phần RoleCount)
+ * Chưa cài đặt (bảo thủ trả false): 6, 13, 14, 17
  */
 object EveConditionEvaluator {
 
     /**
-     * 評估單一條件是否成立
+     * Đánh giá một điều kiện đơn lẻ có thỏa mãn không
      *
-     * @param cond  Eve.emg 條件資料
-     * @param state 玩家當前狀態快照
-     * @return true = 條件成立
+     * @param cond  dữ liệu điều kiện Eve.emg
+     * @param state ảnh chụp nhanh trạng thái hiện tại của người chơi
+     * @return true = điều kiện thỏa mãn
      */
     fun evaluate(cond: EveCondition, state: PlayerEventState): Boolean {
         return when (cond.conditionClass) {
-            0 -> true  // 無條件，永遠匹配
+            0 -> true  // Không điều kiện, luôn khớp
 
             1 -> {
-                // 背包物品持有檢查：param=itemId
-                // ops=2, val=N → qty > N（有物品，例如 val=0 → qty > 0，val=2 → qty > 2）
-                // ops=1, val=N → qty < N（缺少物品，例如 val=1 → qty < 1 即 qty == 0）
+                // Kiểm tra sở hữu vật phẩm túi đồ: param=itemId
+                // ops=2, val=N → qty > N (có vật phẩm, ví dụ val=0 → qty > 0, val=2 → qty > 2)
+                // ops=1, val=N → qty < N (thiếu vật phẩm, ví dụ val=1 → qty < 1 tức qty == 0)
                 // ops=0, val=N → qty == N
-                // ops=5, val=0 → qty == 0（無物品）
+                // ops=5, val=0 → qty == 0 (không có vật phẩm)
                 val qty = state.bagItems[cond.conditionParameter] ?: 0
                 val result = when (cond.conditionOps) {
                     0 -> qty == cond.conditionValue
@@ -109,12 +109,12 @@ object EveConditionEvaluator {
             }
 
             2 -> {
-                // 任務條件：param=missionId, ops=比較, val=目標值
-                // pStyle=3 → 同時檢查任務步驟與旗標，取較大值
-                //   進行中任務：step=1, flag=0 → actual=1
-                //   已完成任務：step=0, flag=1 → actual=1
-                //   未開始任務：step=0, flag=0 → actual=0
-                // pStyle=1/2 → 僅檢查任務步驟
+                // Điều kiện nhiệm vụ: param=missionId, ops=so sánh, val=giá trị mục tiêu
+                // pStyle=3 → đồng thời kiểm tra bước nhiệm vụ và cờ, lấy giá trị lớn hơn
+                //   Nhiệm vụ đang tiến hành: step=1, flag=0 → actual=1
+                //   Nhiệm vụ đã hoàn thành: step=0, flag=1 → actual=1
+                //   Nhiệm vụ chưa bắt đầu: step=0, flag=0 → actual=0
+                // pStyle=1/2 → chỉ kiểm tra bước nhiệm vụ
                 val step = state.missionSteps[cond.conditionParameter] ?: 0
                 val actual = if (cond.conditionParameterStyle == 3) {
                     val flag = state.missionFlags[cond.conditionParameter] ?: 0
@@ -129,7 +129,7 @@ object EveConditionEvaluator {
             }
 
             3 -> {
-                // 場景物件可互動狀態：Eve 樣本固定為 pStyle=4/ops=5/value=0/subItem=0。
+                // Trạng thái có thể tương tác của vật thể cảnh: mẫu Eve cố định là pStyle=4/ops=5/value=0/subItem=0.
                 val result = cond.conditionParameter > 0 &&
                     cond.conditionParameterStyle == 4 &&
                     cond.conditionOps == 5 &&
@@ -137,7 +137,7 @@ object EveConditionEvaluator {
                     cond.conditionSubItem == 0
                 if (!result) {
                     logger.warn {
-                        "conditionClass=3 非已知場景物件條件 param=${cond.conditionParameter} " +
+                        "conditionClass=3 điều kiện vật thể cảnh giới không xác định param=${cond.conditionParameter} " +
                             "pStyle=${cond.conditionParameterStyle} ops=${cond.conditionOps} " +
                             "val=${cond.conditionValue} sub=${cond.conditionSubItem} → false"
                     }
@@ -153,30 +153,30 @@ object EveConditionEvaluator {
             }
 
             5 -> {
-                // Eve 金錢條件：常見樣本為 ops=2,value=金額-1，表示金幣達到扣款門檻。
+                // Điều kiện tiền Eve: mẫu phổ biến là ops=2, value=số tiền-1, biểu thị tiền vàng đạt ngưỡng khấu trừ.
                 val result = evaluateMoneyCondition(state.gold, cond.conditionOps, cond.conditionValue)
                 logger.debug { "class=5 gold=${state.gold} ops=${cond.conditionOps} val=${cond.conditionValue} → $result" }
                 result
             }
 
             7 -> {
-                // 通用屬性：param 決定子類型
+                // Thuộc tính chung: param quyết định kiểu con
                 val actual: Int? = when (cond.conditionParameter) {
-                    0 -> state.level               // 等級
+                    0 -> state.level               // Cấp độ
                     2 -> {
-                        // 背包空間分支：pStyle=1 背包已滿；pStyle=2 背包有空位；pStyle=4 比較剩餘格數。
+                        // Nhánh không gian túi đồ: pStyle=1 túi đồ đã đầy; pStyle=2 túi đồ còn chỗ; pStyle=4 so sánh số ô còn lại.
                         evaluateBagSpaceCondition(cond, state)
                     }
                     3 -> {
-                        // 裝備物品檢查：val=itemId，有裝備回傳 itemId，無回傳 0
+                        // Kiểm tra vật phẩm trang bị: val=itemId, đã trang bị trả về itemId, không trả về 0
                         if (cond.conditionValue in state.equipItems) cond.conditionValue else 0
                     }
                     5 -> {
-                        // 武將空間分支：pStyle=1 隨身武將已滿(>=4)；pStyle=2 隨身武將有空位(<4)；pStyle=4 剩餘武將格數
+                        // Nhánh không gian tướng: pStyle=1 tướng mang theo đã đầy (>=4); pStyle=2 tướng mang theo còn chỗ trống (<4); pStyle=4 số ô tướng còn lại
                         evaluatePetSpaceCondition(cond, state)
                     }
                     6 -> {
-                        // 武將儲存位置檢查：pStyle=1 隨身 / 2 馬車 / 3 客棧，val=npcId
+                        // Kiểm tra vị trí lưu tướng: pStyle=1 mang theo / 2 xe ngựa / 3 lữ quán, val=npcId
                         val npcId = cond.conditionValue
                         val npcSet = when (cond.conditionParameterStyle) {
                             1 -> state.followNpcIds
@@ -202,9 +202,9 @@ object EveConditionEvaluator {
                     }
                     19 -> {
                         // DVT Point balance condition (Role.GetPoint / ECurrency.Gold).
-                        // Eve.emg 全量僅 6 筆，全部在 12180 主賭場：pStyle=2, subItem=0,
-                        // ops=5，門檻 9/45/90 或 10/50/100；同 chain 的 cls=7 pStyle=3
-                        // 直接購買 31171 x1/5/10，meanNo 即相同 Point 價格。
+                        // Toàn bộ Eve.emg chỉ có 6 bản ghi, tất cả ở sòng bạc chính 12180: pStyle=2, subItem=0,
+                        // ops=5, ngưỡng 9/45/90 hoặc 10/50/100; cùng chain với cls=7 pStyle=3
+                        // Mua trực tiếp 31171 x1/5/10, meanNo chính là giá Point tương ứng.
                         if (
                             cond.conditionParameterStyle == 2 &&
                             cond.conditionSubItem == 0 &&
@@ -212,7 +212,7 @@ object EveConditionEvaluator {
                         ) state.realPoint else null
                     }
                     16 -> {
-                        // 坐騎狀態：Eve 樣本固定 subItem=1 時接「請你下馬」對話。
+                        // Trạng thái vật cưỡi: mẫu Eve khi subItem=1 cố định sẽ nối hội thoại "mời xuống ngựa".
                         if (
                             cond.conditionParameterStyle == 1 &&
                             cond.conditionOps == 0 &&
@@ -225,31 +225,31 @@ object EveConditionEvaluator {
                 }
                 if (actual == null) {
                     logger.warn {
-                        "conditionClass=7 未實作 param=${cond.conditionParameter} " +
+                        "conditionClass=7 chưa triển khai param=${cond.conditionParameter} " +
                             "pStyle=${cond.conditionParameterStyle} ops=${cond.conditionOps} val=${cond.conditionValue} → false"
                     }
                     return false
                 }
-                // class=7 採正向比較：actual [ops] conditionValue。
+                // class=7 dùng so sánh thuận: actual [ops] conditionValue.
                 val result = compareStep(actual, cond.conditionOps, cond.conditionValue)
                 logger.debug { "class=7 param=${cond.conditionParameter} actual=$actual ops=${cond.conditionOps} val=${cond.conditionValue} → $result" }
                 result
             }
 
             8 -> {
-                // 戰鬥結果：pStyle=1 勝利 / 2 敗北 / 3 逃跑
+                // Kết quả chiến đấu: pStyle=1 thắng / 2 thua / 3 bỏ chạy
                 val result = cond.conditionParameterStyle == state.battleResult
                 logger.debug { "class=8 pStyle=${cond.conditionParameterStyle} battleResult=${state.battleResult} → $result" }
                 result
             }
 
             9 -> {
-                // 武將持有檢查：conditionValue=npcId
-                // 模式同 class=7 param=3（裝備檢查）：有 → 回傳 npcId，無 → 回傳 0
-                // 例：cls=9 v=22081 ops=5 → 有武將: 22081>=22081=true / 無: 0>=22081=false
+                // Kiểm tra sở hữu tướng: conditionValue=npcId
+                // Khuôn mẫu giống class=7 param=3 (kiểm tra trang bị): có → trả về npcId, không → trả về 0
+                // Ví dụ: cls=9 v=22081 ops=5 → có tướng: 22081>=22081=true / không: 0>=22081=false
                 if (cond.conditionParameter != 0) {
                     logger.warn {
-                        "conditionClass=9 進階武將條件未實作 param=${cond.conditionParameter} " +
+                        "conditionClass=9 chưa triển khai điều kiện thăng cấp tướng param=${cond.conditionParameter} " +
                             "pStyle=${cond.conditionParameterStyle} ops=${cond.conditionOps} val=${cond.conditionValue} → false"
                     }
                     return false
@@ -262,7 +262,7 @@ object EveConditionEvaluator {
             }
 
             10 -> {
-                // 對話選項選擇：param=surfaceId, pStyle=choiceCode
+                // Chọn lựa chọn hội thoại: param=surfaceId, pStyle=choiceCode
                 val result = state.lastSurfaceId == cond.conditionParameter &&
                              state.lastChoiceCode == cond.conditionParameterStyle
                 logger.debug { "class=10 surfaceId=${cond.conditionParameter} code=${cond.conditionParameterStyle} lastSurface=${state.lastSurfaceId} lastCode=${state.lastChoiceCode} → $result" }
@@ -270,7 +270,7 @@ object EveConditionEvaluator {
             }
 
             11 -> {
-                // 收驚婆婆流程確認：Eve 樣本固定為 param=0/pStyle=1/ops=0/value=0。
+                // Xác nhận luồng bà thu kinh: mẫu Eve cố định là param=0/pStyle=1/ops=0/value=0.
                 val result = cond.conditionParameter == 0 &&
                     cond.conditionParameterStyle == 1 &&
                     cond.conditionOps == 0 &&
@@ -278,7 +278,7 @@ object EveConditionEvaluator {
                     cond.conditionSubItem == 0
                 if (!result) {
                     logger.warn {
-                        "conditionClass=11 非已知收驚條件 param=${cond.conditionParameter} " +
+                        "conditionClass=11 điều kiện thu kinh không xác định param=${cond.conditionParameter} " +
                             "pStyle=${cond.conditionParameterStyle} ops=${cond.conditionOps} " +
                             "val=${cond.conditionValue} sub=${cond.conditionSubItem} → false"
                     }
@@ -287,11 +287,11 @@ object EveConditionEvaluator {
             }
 
             12 -> {
-                // DVT Eve: param=0 表示目前 eveNo 已完成的次數。
-                // 其他 param/pStyle 形狀仍沒有足夠 Lua 證據，不可用 0 假值誤放行。
+                // DVT Eve: param=0 biểu thị số lần eveNo hiện tại đã hoàn thành.
+                // Các dạng param/pStyle khác vẫn chưa đủ bằng chứng Lua, không được dùng giá trị giả 0 để thả qua nhầm.
                 if (cond.conditionParameter != 0) {
                     logger.warn {
-                        "conditionClass=12 非 param=0 語意未實作 param=${cond.conditionParameter} " +
+                        "conditionClass=12 ngoài param=0 chưa triển khai ngữ nghĩa param=${cond.conditionParameter} " +
                             "pStyle=${cond.conditionParameterStyle} ops=${cond.conditionOps} " +
                             "val=${cond.conditionValue} → false"
                     }
@@ -304,7 +304,7 @@ object EveConditionEvaluator {
             }
 
             14 -> {
-                logger.warn { "conditionClass=14 語意待驗證 param=${cond.conditionParameter} pStyle=${cond.conditionParameterStyle} ops=${cond.conditionOps} val=${cond.conditionValue} → false" }
+                logger.warn { "conditionClass=14 ngữ nghĩa cần kiểm chứng param=${cond.conditionParameter} pStyle=${cond.conditionParameterStyle} ops=${cond.conditionOps} val=${cond.conditionValue} → false" }
                 false
             }
 
@@ -313,7 +313,7 @@ object EveConditionEvaluator {
             16 -> {
                 if (cond.conditionParameterStyle != 1 || cond.conditionSubItem != 0) {
                     logger.warn {
-                        "conditionClass=16 未知形狀 param=${cond.conditionParameter} " +
+                        "conditionClass=16 hình dạng không xác định param=${cond.conditionParameter} " +
                             "pStyle=${cond.conditionParameterStyle} ops=${cond.conditionOps} " +
                             "val=${cond.conditionValue} sub=${cond.conditionSubItem} → false"
                     }
@@ -330,7 +330,7 @@ object EveConditionEvaluator {
 
             18 -> {
                 if (!isKnownRoleCountIndex(cond.conditionParameter)) {
-                    logger.warn { "conditionClass=18 非已知 RoleCount 索引 param=${cond.conditionParameter} pStyle=${cond.conditionParameterStyle} ops=${cond.conditionOps} val=${cond.conditionValue} → false" }
+                    logger.warn { "conditionClass=18 chỉ số RoleCount không xác định param=${cond.conditionParameter} pStyle=${cond.conditionParameterStyle} ops=${cond.conditionOps} val=${cond.conditionValue} → false" }
                     false
                 } else {
                     val actual = state.roleCountValues[cond.conditionParameter] ?: 0
@@ -341,15 +341,15 @@ object EveConditionEvaluator {
             }
 
             else -> {
-                // 未實作 conditionClass — WARN 級別方便診斷
-                logger.warn { "未實作 conditionClass=${cond.conditionClass} param=${cond.conditionParameter} pStyle=${cond.conditionParameterStyle} ops=${cond.conditionOps} val=${cond.conditionValue} → false" }
+                // conditionClass chưa cài đặt — mức WARN để dễ chẩn đoán
+                logger.warn { "Chưa triển khai conditionClass=${cond.conditionClass} param=${cond.conditionParameter} pStyle=${cond.conditionParameterStyle} ops=${cond.conditionOps} val=${cond.conditionValue} → false" }
                 false
             }
         }
     }
 
     private fun isKnownRoleCountIndex(index: Int): Boolean =
-        // 1=桃園結義對話計數、189=暑假作業活動計數（resultClass=14 寫入端已鑑定，見 docs/eve-gap-analysis.md）
+        // 1=số đếm hội thoại Đào Viên Kết Nghĩa, 189=số đếm event bài tập hè (đầu ghi resultClass=14 đã xác định, xem docs/eve-gap-analysis.md)
         index in setOf(1, 100, 101, 102, 108, 109, 189, 192, 668, 822)
 
     private fun evaluateBagSpaceCondition(cond: EveCondition, state: PlayerEventState): Int? {
@@ -389,7 +389,7 @@ object EveConditionEvaluator {
     private fun evaluateReincarnationCondition(cond: EveCondition, state: PlayerEventState): Boolean {
         if (cond.conditionParameterStyle != 0 || cond.conditionSubItem != 0) {
             logger.warn {
-                "conditionClass=15 非已確認轉生條件 param=${cond.conditionParameter} " +
+                "conditionClass=15 điều kiện chuyển sinh chưa được xác nhận param=${cond.conditionParameter} " +
                     "pStyle=${cond.conditionParameterStyle} ops=${cond.conditionOps} " +
                     "val=${cond.conditionValue} sub=${cond.conditionSubItem} → false"
             }
@@ -403,7 +403,7 @@ object EveConditionEvaluator {
         }
         if (actual == null) {
             logger.warn {
-                "conditionClass=15 未實作 param=${cond.conditionParameter} " +
+                "conditionClass=15 chưa triển khai param=${cond.conditionParameter} " +
                     "ops=${cond.conditionOps} val=${cond.conditionValue} → false"
             }
             return false
@@ -415,11 +415,11 @@ object EveConditionEvaluator {
     }
 
     /**
-     * 比較運算
+     * Phép toán so sánh
      *
      * DVT Lua DungeonCriteriaData.CompareResult：
      * 1→== / 2→< / 3→<= / 4→> / 5→>= / 6→!=。
-     * Eve.emg 另有大量 ops=0 的等值形狀，因此保留 Eve 專用 0→==。
+     * Eve.emg còn có nhiều dạng đẳng thức ops=0, vì vậy giữ lại 0→== dành riêng cho Eve.
      */
     fun compareStep(actual: Int, ops: Int, expected: Int): Boolean = when (ops) {
         0 -> actual == expected
@@ -430,7 +430,7 @@ object EveConditionEvaluator {
         5 -> actual >= expected
         6 -> actual != expected
         else -> {
-            logger.warn { "未知 ops=$ops actual=$actual expected=$expected → false" }
+            logger.warn { "ops=$ops không xác định actual=$actual expected=$expected → false" }
             false
         }
     }

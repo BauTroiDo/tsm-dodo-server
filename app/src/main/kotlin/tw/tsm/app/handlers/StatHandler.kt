@@ -18,13 +18,13 @@ import tw.tsm.protocol.PacketReader
 private val logger = KotlinLogging.logger {}
 
 /**
- * 屬性配點處理器（mainKind = 8）
+ * Bộ xử lý phân điểm thuộc tính (mainKind = 8)
  *
- * 子 opcode：
- * - C:008-001 屬性配點（Status.lua → 加點按鈕）
+ * opcode con:
+ * - C:008-001 phân điểm thuộc tính (Status.lua → nút cộng điểm)
  *
- * 📖 協定來源：protocal.lua protocolTable[8][1]
- * 📖 封包格式：+charIndex(2) +attrKind(1) +addPoints(4) +reserved(1)
+ * 📖 Nguồn giao thức: protocal.lua protocolTable[8][1]
+ * 📖 Định dạng gói tin: +charIndex(2) +attrKind(1) +addPoints(4) +reserved(1)
  */
 class StatHandler(
     private val playerStateManager: PlayerStateManager,
@@ -43,11 +43,11 @@ class StatHandler(
             1 -> handleAllocateStat(session, data)
             12 -> handleTurn3Element(session, data)
             13 -> handleRequestSkillData(session)
-            else -> logger.trace { "未處理的 C:008-$subKind" }
+            else -> logger.trace { "Chưa xử lý C:008-$subKind" }
         }
     }
 
-    /** C:008-012 第一次選擇三轉光/暗元素：payload element(Byte). */
+    /** C:008-012 Lần đầu chọn nguyên tố sáng/tối cho tam chuyển: payload element(Byte).*/
     private suspend fun handleTurn3Element(session: GameSession, data: ByteArray) {
         if (session.state != SessionState.IN_GAME || data.size != 1) return
         val charId = session.roleId.toLong()
@@ -162,19 +162,19 @@ class StatHandler(
     }
 
     /**
-     * 處理屬性配點 (C:008-001)
+     * Xử lý phân điểm thuộc tính (C:008-001)
      *
-     * 封包格式：+charIndex(2 UInt16 LE) +attrKind(1) +addPoints(4 Int32 LE) +reserved(1)
+     * Định dạng gói tin: +charIndex(2 UInt16 LE) +attrKind(1) +addPoints(4 Int32 LE) +reserved(1)
      * attrKind: 27=Int, 28=Atk, 29=Def, 30=Agi, 31=Hpx, 32=Spx
      */
     private suspend fun handleAllocateStat(session: GameSession, data: ByteArray) {
         if (session.state != SessionState.IN_GAME) {
-            logger.warn { "配點：未進入遊戲 state=${session.state}" }
+            logger.warn { "Phân điểm: chưa vào game state=${session.state}" }
             return
         }
 
         val reader = PacketReader(data)
-        val charIndex = reader.readUShortLE()  // 角色索引（目前只有單角色，忽略）
+        val charIndex = reader.readUShortLE()  // Chỉ số nhân vật (hiện chỉ có một nhân vật, bỏ qua)
         val attrKind = reader.readUByte()
         val addPoints = reader.readIntLE()
         if (reader.isReadable) reader.readUByte()  // reserved
@@ -183,7 +183,7 @@ class StatHandler(
 
         val charId = session.roleId.toLong()
 
-        logger.debug { "C:008-001 配點：charId=$charId attrKind=$attrKind addPoints=$addPoints" }
+        logger.debug { "C:008-001 phân điểm: charId=$charId attrKind=$attrKind addPoints=$addPoints" }
 
         val currentState = playerStateManager.getState(charId) ?: return
         if (currentState.turn >= 3) {
@@ -191,14 +191,14 @@ class StatHandler(
             return
         }
 
-        // PlayerStateManager 處理驗證 + 更新記憶體狀態
+        // PlayerStateManager xử lý kiểm tra hợp lệ + cập nhật trạng thái trong bộ nhớ
         val result = playerStateManager.allocateStat(charId, attrKind, addPoints)
         if (result == null) {
-            logger.warn { "配點被拒絕：charId=$charId attrKind=$attrKind addPoints=$addPoints" }
+            logger.warn { "Phân điểm bị từ chối: charId=$charId attrKind=$attrKind addPoints=$addPoints" }
             return
         }
 
-        // 持久化到 DB
+        // Lưu bền dữ liệu vào DB
         characterRepository.addStatPoint(charId, result.dbColumn, addPoints, result.newAttrPoint)
         dailyProgressSystem?.incrementRoleCount(
             session,
@@ -206,13 +206,13 @@ class StatHandler(
             addPoints,
         )
 
-        // S:008-001 回應 — 屬性新值
+        // S:008-001 phản hồi — giá trị mới của thuộc tính
         responseSender.sendSetAttribute(session, attrKind, result.newValue, isPositive = true)
 
-        // S:008-001 回應 — 剩餘屬性點數
+        // S:008-001 phản hồi — số điểm thuộc tính còn lại
         responseSender.sendSetAttribute(session, EAttribute.ATTR_POINT, result.newAttrPoint, isPositive = true)
 
-        // 如果配的是 HPX 或 SPX，需要重算 MaxHP/MaxSP（透過 PlayerStateManager 保護 synchronized）
+        // Nếu phân HPX hoặc SPX thì phải tính lại MaxHP/MaxSP (bảo vệ bằng synchronized qua PlayerStateManager)
         val state = playerStateManager.getState(charId)
         if (state != null && (attrKind == EAttribute.HPX || attrKind == EAttribute.SPX)) {
             if (attrKind == EAttribute.HPX) {

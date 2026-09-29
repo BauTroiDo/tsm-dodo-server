@@ -14,16 +14,16 @@ import tw.tsm.protocol.PacketReader
 private val logger = KotlinLogging.logger {}
 
 /**
- * 武將轉生 Handler（mainKind=44）
+ * Handler chuyển sinh tướng (mainKind=44)
  *
- * 來源：protocal.lua protocolTable[44]、UI/UINpcTurn.lua
+ * Nguồn: protocal.lua protocolTable[44], UI/UINpcTurn.lua
  *
- * C:044-001 武將轉生（一轉） — +武將索引(1)
- * C:044-002 學習特有技 — +武將索引(1)
- * C:044-003 武將二轉 — +武將索引(1)
+ * C:044-001 Chuyển sinh tướng (nhất chuyển) — +chỉ số tướng(1)
+ * C:044-002 Học kỹ năng riêng — +chỉ số tướng(1)
+ * C:044-003 Nhị chuyển tướng — +chỉ số tướng(1)
  *
- * 成功時依序下發：S:023-009 信物扣除 → S:044-001 種類0 → S:015-008 武將完整資料。
- * 失敗時下發 S:044-001 對應錯誤種類。
+ * Khi thành công lần lượt gửi xuống: S:023-009 khấu trừ tín vật → S:044-001 loại 0 → S:015-008 dữ liệu đầy đủ của tướng.
+ * Khi thất bại gửi xuống S:044-001 với loại lỗi tương ứng.
  */
 class PetRebornHandler(
     private val responseSender: ResponseSender,
@@ -43,12 +43,12 @@ class PetRebornHandler(
             1 -> handleReborn(session, followIndex, PetRebornSystem.REBORN_FIRST)
             2 -> handleLearnSpecialSkill(session, followIndex)
             3 -> handleReborn(session, followIndex, PetRebornSystem.REBORN_SECOND)
-            else -> logger.warn { "未處理的武將轉生子協定：subKind=$subKind" }
+            else -> logger.warn { "Sub-protocol chuyển sinh tướng chưa xử lý: subKind=$subKind" }
         }
     }
 
     /**
-     * C:044-001 一轉 / C:044-003 二轉
+     * C:044-001 nhất chuyển / C:044-003 nhị chuyển
      */
     private suspend fun handleReborn(session: GameSession, followIndex: Int, rebornKind: Int) {
         val charId = session.roleId.toLong()
@@ -59,32 +59,32 @@ class PetRebornHandler(
                 responseSender.sendPetRebornMessage(session, PetRebornSystem.MSG_SUCCESS)
                 responseSender.sendFollowNpcFullData(session, listOf(result.pet))
                 logger.info {
-                    "${session.characterName} 武將${if (rebornKind == PetRebornSystem.REBORN_FIRST) "一" else "二"}轉成功：" +
+                    "${session.characterName} tướng ${if (rebornKind == PetRebornSystem.REBORN_FIRST) "nhất chuyển" else "nhị chuyển"} thành công: " +
                         "slot=$followIndex → npcId=${result.pet.npcId}"
                 }
             }
             is RebornResult.Fail -> {
                 responseSender.sendPetRebornMessage(session, result.msgKind)
-                logger.debug { "${session.characterName} 武將轉生失敗：slot=$followIndex msgKind=${result.msgKind}" }
+                logger.debug { "${session.characterName} chuyển sinh tướng thất bại: slot=$followIndex msgKind=${result.msgKind}" }
             }
         }
     }
 
     /**
-     * C:044-002 學習特有技
+     * C:044-002 Học kỹ năng riêng
      *
-     * 學習資格由 S:036-012 開介面時的可學習清單控制（Eve 事件觸發），
-     * 伺服器端此處重新驗證武將存在且尚未學會。
+     * Điều kiện học do danh sách kỹ năng học được khi mở giao diện ở S:036-012 kiểm soát (do sự kiện Eve kích),
+     * Server kiểm tra lại ở đây rằng tướng tồn tại và vẫn chưa học kỹ năng đó.
      */
     private fun handleLearnSpecialSkill(session: GameSession, followIndex: Int) {
         val charId = session.roleId.toLong()
 
         val updated = petSystem.learnSpecialSkill(charId, followIndex) ?: run {
-            logger.warn { "${session.characterName} 學習特有技失敗：slot=$followIndex 無武將或已學會" }
+            logger.warn { "${session.characterName} học kỹ năng đặc hữu thất bại: slot=$followIndex không có tướng hoặc đã học" }
             return
         }
 
         responseSender.sendFollowNpcFullData(session, listOf(updated))
-        logger.info { "${session.characterName} 學習特有技：slot=$followIndex npcId=${updated.npcId}" }
+        logger.info { "${session.characterName} học kỹ năng đặc hữu: slot=$followIndex npcId=${updated.npcId}" }
     }
 }

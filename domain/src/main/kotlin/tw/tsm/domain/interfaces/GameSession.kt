@@ -5,149 +5,149 @@ import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.repositories.CharacterRecord
 
 /**
- * 連線身份識別 — 帳號、伺服器、登入方式
+ * Nhận dạng danh tính kết nối — tài khoản, server, phương thức đăng nhập
  */
 interface SessionIdentity {
-    /** 帳號名稱 */
+    /** Tên tài khoản*/
     var account: String
-    /** 登入方式 */
+    /** Phương thức đăng nhập*/
     var loginKind: LoginKind
-    /** 帳號資料庫 ID */
+    /** ID cơ sở dữ liệu của tài khoản*/
     var accountId: Long
-    /** 選擇的伺服器 ID */
+    /** ID server đã chọn*/
     var serverId: Int
-    /** 資料庫 ID（DBID） */
+    /** ID cơ sở dữ liệu (DBID)*/
     var dbId: Int
     /** Game Server ID */
     var gsId: Int
-    /** 連線序號（重連用） */
+    /** Số thứ tự kết nối (dùng khi kết nối lại)*/
     var connectCode: Long
-    /** GM 等級（0=普通玩家, 1+=GM） */
+    /** Cấp GM (0=người chơi thường, 1+=GM)*/
     var gmLevel: Int
 }
 
 /**
- * 連線狀態管理
+ * Quản lý trạng thái kết nối
  */
 interface SessionStatus {
-    /** 目前連線狀態 */
+    /** Trạng thái kết nối hiện tại*/
     var state: SessionState
-    /** 是否已完成登入序列 */
+    /** Đã hoàn tất chuỗi đăng nhập hay chưa*/
     var loginFinished: Boolean
 }
 
 /**
- * 角色基本資訊
+ * Thông tin cơ bản của nhân vật
  */
 interface SessionCharacter {
-    /** 玩家 ID（8 bytes） */
+    /** ID người chơi (8 bytes)*/
     var playerId: Long
-    /** 角色 ID */
+    /** ID nhân vật*/
     var roleId: Int
-    /** 角色名稱 */
+    /** Tên nhân vật*/
     var characterName: String
 }
 
 /**
- * 角色在世界中的位置
+ * Vị trí của nhân vật trong thế giới
  */
 interface SessionWorld {
-    /** 目前所在地圖 ID */
+    /** ID bản đồ đang ở hiện tại*/
     var mapId: Int
-    /** 目前 X 座標 */
+    /** Toạ độ X hiện tại*/
     var x: Int
-    /** 目前 Y 座標 */
+    /** Toạ độ Y hiện tại*/
     var y: Int
-    /** 目前朝向（0-7） */
+    /** Hướng hiện tại (0-7)*/
     var direction: Int
-    /** 上次位置儲存時間戳（防抖用，毫秒） */
+    /** Timestamp lưu vị trí lần trước (dùng chống rung, ms)*/
     var lastPositionSave: Long
-    /** 最後一次 Door 傳送時間戳（MeetDoor 冷卻用，毫秒） */
+    /** Timestamp lần dịch chuyển Door cuối (dùng cho hồi chiêu MeetDoor, ms)*/
     var lastDoorWarpTime: Long
-    /** 最後一次 Door 傳送的來源地圖（MeetDoor 冷卻只在同地圖生效） */
+    /** Bản đồ nguồn của lần dịch chuyển Door cuối (hồi chiêu MeetDoor chỉ có tác dụng trên cùng bản đồ)*/
     var lastDoorWarpMapId: Int
 }
 
 /**
- * 角色外觀資料 — 用於 S:003-000 玩家出現封包
+ * Dữ liệu ngoại hình nhân vật — dùng cho gói tin người chơi xuất hiện S:003-000
  */
 interface SessionAppearance {
-    /** 性別（0=男, 1=女） */
+    /** Giới tính (0=nam, 1=nữ)*/
     var sex: Int
-    /** 元素屬性 */
+    /** Thuộc tính nguyên tố*/
     var element: Int
-    /** 等級 */
+    /** Cấp*/
     var level: Int
-    /** 轉生次數 */
+    /** Số lần chuyển sinh*/
     var turn: Int
-    /** 二/三轉職業 */
+    /** Nghề chuyển sinh 2/3*/
     var career: Int
-    /** 三轉光暗元素 */
+    /** Nguyên tố sáng/tối chuyển sinh 3*/
     var turn3Element: Int
-    /** 頭型 */
+    /** Kiểu đầu*/
     var hair: Int
-    /** 臉圖 */
+    /** Hình mặt*/
     var face: Int
-    /** 色盤一（帽/髮/膚） */
+    /** Bảng màu 1 (mũ/tóc/da)*/
     var color1: Int
-    /** 色盤二（衣/配一/鞋） */
+    /** Bảng màu 2 (quần áo/phụ kiện 1/giày)*/
     var color2: Int
-    /** 裝備 item ID 列表（供 sendOtherPlayerAppear 外觀用） */
+    /** Danh sách item ID trang bị (dùng cho ngoại hình trong sendOtherPlayerAppear)*/
     var equipItemIds: IntArray
-    /** 當前穿戴稱號 ID（0 = 未穿戴） */
+    /** ID danh hiệu đang đeo (0 = không đeo)*/
     var titleId: Int
 }
 
 /**
- * 封包發送能力
+ * Khả năng gửi gói tin
  */
 interface SessionSender {
-    /** 發送原始封包資料到客戶端（含 mainKind+subKind+compress header） */
+    /** Gửi dữ liệu gói tin thô xuống client (bao gồm header mainKind+subKind+compress)*/
     fun send(data: ByteArray)
-    /** 關閉連線 */
+    /** Đóng kết nối*/
     fun close()
 }
 
 /**
- * 戰鬥狀態
+ * Trạng thái chiến đấu
  */
 interface SessionBattle {
-    /** 目前所在戰鬥 ID（0=不在戰鬥中） */
+    /** ID trận chiến hiện tại (0=không trong trận chiến)*/
     var battleId: Long
 }
 
 /**
- * PK 設定
+ * Cài đặt PK
  */
 interface SessionPk {
-    /** PK 開關（true=允許被 PK） */
+    /** Công tắc PK (true=cho phép bị PK)*/
     var pkEnabled: Boolean
-    /** 參戰開關（true=允許參戰） */
+    /** Công tắc tham chiến (true=cho phép tham chiến)*/
     var joinEnabled: Boolean
 }
 
 /**
- * 坐騎狀態 — 用於 S:003-000 玩家出現封包和 S:079-007 廣播
+ * Trạng thái vật cưỡi — dùng cho gói tin người chơi xuất hiện S:003-000 và phát rộng S:079-007
  */
 interface SessionMount {
-    /** 當前騎乘的坐騎 NPC ID（0 = 未騎乘） */
+    /** NPC ID của vật cưỡi đang cưỡi (0 = không cưỡi)*/
     var mountNpcId: Int
-    /** 坐騎等級（用於其他玩家出現封包的 MountsLv 屬性） */
+    /** Cấp vật cưỡi (dùng cho thuộc tính MountsLv trong gói tin người chơi khác xuất hiện)*/
     var mountLevel: Int
 }
 
 /**
- * 遊戲連線階段 — 組合所有子介面
+ * Giai đoạn kết nối trò chơi — kết hợp tất cả interface con
  *
- * 每個 TCP 連線對應一個 GameSession 實例。
- * 拆分為多個小介面，讓各層只依賴需要的部分。
+ * Mỗi kết nối TCP tương ứng một thể hiện GameSession.
+ * Tách thành nhiều interface nhỏ để mỗi lớp chỉ phụ thuộc phần cần thiết.
  */
 interface GameSession : SessionIdentity, SessionStatus, SessionCharacter, SessionWorld, SessionAppearance, SessionBattle, SessionPk, SessionMount, SessionSender
 
 /**
- * 從角色記錄載入基本資訊到 session（角色 ID、名稱、外觀）
+ * Nạp thông tin cơ bản từ bản ghi nhân vật vào session (ID nhân vật, tên, ngoại hình)
  *
- * LoginHandler 和 SelectCharHandler 共用。
+ * Dùng chung giữa LoginHandler và SelectCharHandler.
  */
 fun GameSession.loadFromRecord(record: CharacterRecord) {
     roleId = record.id.toInt()

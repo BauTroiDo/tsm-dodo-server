@@ -1,75 +1,75 @@
 package tw.tsm.domain.valueobjects
 
 /**
- * 武將資料值物件
+ * Đối tượng giá trị dữ liệu tướng
  *
- * 對應 S:015-008 登入下發格式。
- * 來源：Role.lua FollowNpcAppear()
+ * Tương ứng định dạng gửi xuống khi đăng nhập của S:015-008.
+ * Nguồn: Role.lua FollowNpcAppear()
  */
 data class FollowNpcData(
-    /** 跟隨索引（1-4） */
+    /** Chỉ số đi theo (1-4)*/
     val slotIndex: Int,
     /** NPC ID */
     val npcId: Int,
-    /** 儲存類型：1=隨身, 2=馬車, 3=客棧, 4=武將倉庫 */
+    /** Loại lưu trữ: 1=mang theo người, 2=xe ngựa, 3=lữ quán, 4=kho tướng*/
     val storageType: Int = 1,
     /** Tên võ tướng; S:015-008 của client TSNPCVN đọc bằng UTF-16LE. */
     val name: String = "",
-    /** 等級 */
+    /** Cấp*/
     val level: Int = 1,
-    /** 經驗值 */
+    /** Kinh nghiệm*/
     val exp: Long = 0,
-    /** 血量 */
+    /** Lượng máu*/
     val hp: Long = 0,
-    /** 魔力 */
+    /** Ma lực*/
     val sp: Int = 0,
-    /** 攻擊 */
+    /** Tấn công*/
     val atk: Int = 0,
-    /** 防禦 */
+    /** Phòng thủ*/
     val def: Int = 0,
-    /** 敏捷 */
+    /** Nhanh nhẹn*/
     val agi: Int = 0,
-    /** 智力 */
+    /** Trí tuệ*/
     val intelligence: Int = 0,
-    /** HP 增幅 */
+    /** Mức tăng HP*/
     val hpx: Int = 0,
-    /** SP 增幅 */
+    /** Mức tăng SP*/
     val spx: Int = 0,
-    /** 陣亡次數 */
+    /** Số lần tử trận*/
     val deathCount: Int = 0,
-    /** 忠誠度 */
+    /** Lòng trung thành*/
     val loyalty: Int = 60,
-    /** 技能點數 */
+    /** Điểm kỹ năng*/
     val skillPoint: Int = 0,
-    /** 技能 1 等級 */
+    /** Cấp kỹ năng 1*/
     val skill1Lv: Int = 0,
-    /** 技能 2 等級 */
+    /** Cấp kỹ năng 2*/
     val skill2Lv: Int = 0,
-    /** 技能 3 等級 */
+    /** Cấp kỹ năng 3*/
     val skill3Lv: Int = 0,
-    /** 成長類型：0=不可成長, 1=可成長 */
+    /** Loại phát triển: 0=không thể phát triển, 1=có thể phát triển*/
     val canGrow: Int = 1,
-    /** 魂玉 ID */
+    /** ID hồn ngọc*/
     val soulId: Int = 0,
-    /** 強化等級 */
+    /** Cấp cường hóa*/
     val upgradeLv: Int = 0,
-    /** 昇華丹次數 */
+    /** Số lần dùng đan thăng hoa*/
     val ascendPillCount: Int = 0,
-    /** 是否可使用特有技 */
+    /** Có dùng được kỹ năng đặc hữu hay không*/
     val canUseSpecialSkill: Boolean = false,
-    /** HP 丹數量 */
+    /** Số lượng đan HP*/
     val hpPillCount: Int = 0,
-    /** SP 丹數量 */
+    /** Số lượng đan SP*/
     val spPillCount: Int = 0,
-    /** 技能 4 等級（武將倉庫序列化用） */
+    /** Cấp kỹ năng 4 (dùng để tuần tự hoá kho tướng)*/
     val skill4Lv: Int = 0,
-    /** 法力成長（武將倉庫序列化用） */
+    /** Mức tăng ma lực (dùng để tuần tự hoá kho tướng)*/
     val conjureGrow: Int = 0,
-    /** 轉生次數 */
+    /** Số lần chuyển sinh*/
     val turnKind: Int = 0,
-    /** 存活狀態（0=正常, 1=陣亡） */
+    /** Trạng thái sống sót (0=bình thường, 1=tử trận)*/
     val surplus: Int = 0,
-    /** 升級時間戳（OLE Date） */
+    /** Mốc thời gian nâng cấp (OLE Date)*/
     val lvUpTime: Double = 0.0,
     /**
      * Marker dữ liệu pet đã dùng seed LV1 đúng chuẩn DVT.
@@ -79,10 +79,10 @@ data class FollowNpcData(
      */
     val seedFixed: Boolean = true,
     /**
-     * 武將裝備（fitType 1帽/2衣/3武器/4護脕/5鞋/6特殊 → ThingData）
+     * Trang bị tướng (fitType 1 mũ/2 áo/3 vũ khí/4 hộ uyển/5 giày/6 đặc biệt → ThingData)
      *
-     * 與玩家共用 6 格裝備模型（Item.lua MaxEquip=6, EItemFitType）。
-     * 裝備跟著武將本體走：進馬車/客棧/倉庫不卸裝。
+     * Dùng chung mô hình trang bị 6 ô với người chơi (Item.lua MaxEquip=6, EItemFitType).
+     * Trang bị đi theo bản thân tướng: vào xe ngựa/lữ quán/kho không cởi trang bị.
      */
     val equips: Map<Int, ThingData> = emptyMap()
 )

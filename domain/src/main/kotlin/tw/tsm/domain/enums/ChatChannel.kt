@@ -1,30 +1,30 @@
 package tw.tsm.domain.enums
 
 /**
- * 聊天頻道定義
+ * Định nghĩa kênh trò chuyện
  *
- * 來源：protocal.lua protocolTable[2] subKind 對應
+ * Nguồn: tương ứng subKind của protocolTable[2] trong protocal.lua
  */
 enum class ChatChannel(val code: Int) {
-    /** 系統訊息 */
+    /** Tin hệ thống*/
     SYSTEM(0),
-    /** 全頻（世界頻道） */
+    /** Kênh chung (kênh thế giới)*/
     WORLD(1),
-    /** 輕頻（場景/區域頻道） */
+    /** Kênh nhẹ (kênh cảnh/khu vực)*/
     SCENE(2),
-    /** 密頻（私人訊息） */
+    /** Kênh mật (tin nhắn riêng)*/
     WHISPER(3),
-    /** GM 頻道 */
+    /** Kênh GM*/
     GM(4),
-    /** 隊伍頻道 */
+    /** Kênh tổ đội*/
     TEAM(5),
-    /** 團頻（軍團/公會頻道） */
+    /** Kênh bang (kênh quân đoàn/công hội)*/
     ORGANIZATION(6),
-    /** 盟頻（同盟頻道） */
+    /** Kênh minh (kênh liên minh)*/
     ALLY(7);
 
     companion object {
-        /** 根據 subKind 取得頻道（S→C 的 subKind = 頻道代碼） */
+        /** Lấy kênh theo subKind (subKind của S→C = mã kênh)*/
         fun fromCode(code: Int): ChatChannel? = entries.find { it.code == code }
     }
 }

@@ -1,15 +1,15 @@
 package tw.tsm.domain.data
 
 /**
- * NPC 掉落定義
+ * Định nghĩa rơi đồ của NPC
  *
- * 定義單個 NPC 可能掉落的物品及其機率。
- * 來源：伺服器端 `gamedata/npc_drops.json`
+ * Định nghĩa các vật phẩm mà một NPC có thể rơi và xác suất tương ứng.
+ * Nguồn: phía server `gamedata/npc_drops.json`
  *
- * @param itemId 掉落物品 ID
- * @param rate 掉落機率（0-100，百分比）
- * @param minQty 最小掉落數量
- * @param maxQty 最大掉落數量
+ * @param itemId ID vật phẩm rơi
+ * @param rate xác suất rơi (0-100, phần trăm)
+ * @param minQty số lượng rơi nhỏ nhất
+ * @param maxQty số lượng rơi lớn nhất
  */
 data class NpcDropDef(
     val itemId: Int,

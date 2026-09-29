@@ -11,17 +11,17 @@ import tw.tsm.domain.interfaces.repositories.QuestRepository
 private val logger = KotlinLogging.logger {}
 
 /**
- * Eve 事件流程控制器
+ * Bộ điều khiển luồng sự kiện Eve
  *
- * 職責：
- * - 開始分發（startEvent）— 由 [EveTriggerRouter] 觸發後呼叫
- * - 事件推進（advanceEvent）— C:020-006
- * - 事件選擇（chooseEvent）— C:020-009
- * - 戰鬥恢復（resumeAfterBattle）— BattleManager 回呼
- * - 結果分發（dispatchResult）— resultType 分流
- * - 事件完成（completeCurrentEvent / finalCompleteAndEnd）— auto-chain 或結束
+ * Nhiệm vụ:
+ * - Bắt đầu phân phát (startEvent) — được gọi sau khi [EveTriggerRouter] kích hoạt
+ * - Tiến sự kiện (advanceEvent) — C:020-006
+ * - Chọn sự kiện (chooseEvent) — C:020-009
+ * - Tiếp tục sau chiến đấu (resumeAfterBattle) — callback BattleManager
+ * - Phân phát kết quả (dispatchResult) — rẽ nhánh theo resultType
+ * - Hoàn thành sự kiện (completeCurrentEvent / finalCompleteAndEnd) — auto-chain hoặc kết thúc
  *
- * 從 EveFlowEngine 抽取推進/完成邏輯，協調
+ * Tách logic đẩy tiến/hoàn thành khỏi EveFlowEngine, phối hợp
  * EveAutoChainEngine / EveResultExecutor / EveDoorWarpService / EveBattleService。
  */
 private const val BEGINNER_UNLOCK_MISSION_ID = 11804
@@ -42,14 +42,14 @@ class EveFlowController(
 ) {
 
     /**
-     * 開始分發第一個 result（由 [EveTriggerRouter] 呼叫）
+     * Bắt đầu phân phát result đầu tiên (được [EveTriggerRouter] gọi)
      */
     suspend fun startEvent(session: GameSession, firstResult: EveResult) {
         dispatchResult(session, firstResult)
     }
 
     /**
-     * C:020-006 事件下一步
+     * C:020-006 bước tiếp theo của sự kiện
      */
     suspend fun advanceEvent(session: GameSession) {
         val charId = session.roleId.toLong()
@@ -107,9 +107,9 @@ class EveFlowController(
             }
         }
 
-        // sealed class 狀態檢查
+        // Kiểm tra trạng thái sealed class
         if (eventSession?.phase is EventPhase.AwaitingBattle) {
-            logger.debug { "020-006 收到但戰鬥進行中，忽略" }
+            logger.debug { "Nhận 020-006 nhưng đang chiến đấu, bỏ qua" }
             return
         }
 
@@ -136,7 +136,7 @@ class EveFlowController(
                 return
             }
             if (eventSession?.phase is EventPhase.AwaitingChoice) {
-                logger.debug { "020-006 收到但 Surface 等待選擇中，不完成事件" }
+                logger.debug { "Nhận 020-006 nhưng Surface đang chờ lựa chọn, không hoàn tất sự kiện" }
                 return
             }
             completeCurrentEvent(session, charId)
@@ -144,24 +144,24 @@ class EveFlowController(
     }
 
     /**
-     * C:020-009 事件選擇
+     * C:020-009 chọn sự kiện
      */
     suspend fun chooseEvent(session: GameSession, code: Int) {
         val charId = session.roleId.toLong()
-        logger.info { "${session.characterName} 事件選擇：code=$code" }
+        logger.info { "${session.characterName} chọn sự kiện: code=$code" }
 
         stateMachine.setChoiceCode(charId, code)
 
         val eventSession = stateMachine.getSession(charId)
         if (eventSession == null) {
-            logger.warn { "handleChoice：charId=$charId 無進行中事件" }
+            logger.warn { "handleChoice: charId=$charId không có sự kiện đang chạy" }
             responseSender.sendEventEnd(session)
             return
         }
 
         val eventData = eveData[eventSession.mapId]?.npcEvents?.get(eventSession.eveNo)
         if (eventData == null) {
-            logger.warn { "handleChoice：找不到 eveNo=${eventSession.eveNo} 事件資料" }
+            logger.warn { "handleChoice: không tìm thấy dữ liệu sự kiện eveNo=${eventSession.eveNo}" }
             completeCurrentEvent(session, charId)
             return
         }
@@ -177,36 +177,36 @@ class EveFlowController(
             stateMachine.replaceResultsAndResume(charId, resolved.results)
             val first = stateMachine.advance(charId)
             if (first != null) {
-                logger.info { "${session.characterName} 選擇匹配：code=$code → ${resolved.results.size} 個 result" }
+                logger.info { "${session.characterName} khớp lựa chọn: code=$code → ${resolved.results.size} result" }
                 dispatchResult(session, first)
             } else {
                 completeCurrentEvent(session, charId)
             }
         } else {
             if (code == 40) {
-                logger.info { "${session.characterName} Surface 取消（code=40）→ 取消事件（不記錄完成）" }
+                logger.info { "${session.characterName} Surface hủy (code=40) → hủy sự kiện (không ghi nhận hoàn thành)" }
                 cancelAndEnd(session, charId)
             } else {
-                logger.info { "${session.characterName} 選擇無匹配（code=$code）→ 取消事件（不記錄完成）" }
+                logger.info { "${session.characterName} lựa chọn không khớp (code=$code) → hủy sự kiện (không ghi nhận hoàn thành)" }
                 cancelAndEnd(session, charId)
             }
         }
     }
 
     /**
-     * 戰鬥結束後恢復事件流程 — 由 BattleManager 透過回呼呼叫
+     * Khôi phục luồng sự kiện sau khi chiến đấu kết thúc — BattleManager gọi qua callback
      */
     suspend fun resumeAfterBattle(session: GameSession, playerId: Long, playerWin: Boolean) {
         val battlePStyle = if (playerWin) 1 else 2
         val charId = session.roleId.toLong()
 
         stateMachine.setBattleResult(charId, battlePStyle)
-        // ★ 修復：先恢復到 Executing，確保 fallback 路徑的 advance() 能正常運作
+        // ★ Sửa lỗi: khôi phục về Executing trước, đảm bảo advance() của nhánh fallback hoạt động bình thường
         stateMachine.resumeFromBattle(charId)
 
         val eventSession = stateMachine.getSession(charId)
         if (eventSession == null) {
-            logger.warn { "resumeAfterBattle：charId=$charId 無進行中事件" }
+            logger.warn { "resumeAfterBattle: charId=$charId không có sự kiện đang chạy" }
             responseSender.sendEventEnd(session)
             return
         }
@@ -229,7 +229,7 @@ class EveFlowController(
             stateMachine.replaceResultsAndResume(charId, resolved.results)
             val first = stateMachine.advance(charId)
             if (first != null) {
-                logger.info { "${session.characterName} 戰鬥後匹配：pStyle=$battlePStyle → ${resolved.results.size} 個 result" }
+                logger.info { "${session.characterName} khớp sau trận: pStyle=$battlePStyle → ${resolved.results.size} result" }
                 dispatchResult(session, first)
             } else {
                 completeCurrentEvent(session, charId)
@@ -240,40 +240,40 @@ class EveFlowController(
                 advanceEvent(session)
             } else {
                 finalCompleteAndEnd(session, charId)
-                logger.info { "${session.characterName} 戰鬥失敗，事件結束" }
+                logger.info { "${session.characterName} thua trận, kết thúc sự kiện" }
             }
         }
     }
 
     // ══════════════════════════════════════════════
-    //  結果分發
+    //  Phân phát kết quả
     // ══════════════════════════════════════════════
 
     /**
-     * 依 resultType 分流處理
+     * Xử lý rẽ nhánh theo resultType
      *
-     * 對應客戶端 EventHandler.lua 7 個 handler：
-     * type=0：伺服器端效果，自動推進（客戶端 EventHandler[0] → SetConduct(true)）
-     * type=1：Talk 對話，送到客戶端等 C:020-006
-     * type=2：Door 傳送
-     * type=3：戰鬥觸發（客戶端 EventHandler[3] → SetSession(true)）
-     * type=4：NPC 移動（客戶端 EventHandler[4] → SetConduct(true)，自動推進）
-     * type=5：過場動畫（客戶端 EventHandler[5] → SetConduct(false)，動畫結束後推進）
-     * type=6：Surface 選擇介面
-     * type=8/9/10：靜默跳過（客戶端無 EventHandler，不處理）
+     * Tương ứng 7 handler của EventHandler.lua phía client:
+     * type=0: hiệu ứng phía server, tự động đẩy tiến (client EventHandler[0] → SetConduct(true))
+     * type=1: hội thoại Talk, gửi tới client chờ C:020-006
+     * type=2: dịch chuyển Door
+     * type=3: kích hoạt chiến đấu (client EventHandler[3] → SetSession(true))
+     * type=4: NPC di chuyển (client EventHandler[4] → SetConduct(true), tự động đẩy tiến)
+     * type=5: hoạt cảnh chuyển cảnh (client EventHandler[5] → SetConduct(false), đẩy tiến sau khi hoạt cảnh kết thúc)
+     * type=6: giao diện chọn Surface
+     * type=8/9/10: bỏ qua lặng lẽ (client không có EventHandler, không xử lý)
      */
     private suspend fun dispatchResult(session: GameSession, result: EveResult) {
         logger.info { "${session.characterName} dispatch: type=${result.resultType} cls=${result.resultClass} pStyle=${result.parameterStyle} param=${result.parameter} val=${result.resultValue} group=${result.resultGroupNo} no=${result.resultNo}" }
 
-        // ═══ 統一過濾：任務鏈中跳過服務 NPC UI 操作 ═══
-        // cls=7 pStyle 1~5 是服務 NPC 的 UI（寶庫/錢莊/商店/客棧/住宿）
-        // 判斷依據：結果鏈含 cls 1~3（物品/任務/NPC）= 任務鏈 → 跳過
+        // ═══ Lọc thống nhất: bỏ qua thao tác UI NPC phục vụ trong chuỗi nhiệm vụ ═══
+        // cls=7 pStyle 1~5 là UI của NPC phục vụ (kho báu/Tiền Trang/cửa hàng/lữ quán/lưu trú)
+        // Căn cứ xác định: chuỗi kết quả chứa cls 1~3 (vật phẩm/nhiệm vụ/NPC) = chuỗi nhiệm vụ → bỏ qua
         if (result.resultClass == 7 &&
             EveResultClassPolicy.isRepeatableServicePlayerOperation(result.parameterStyle, result.resultValue)) {
             val es = stateMachine.getSession(session.roleId.toLong())
             val isQuestChain = es?.results?.any { it.resultClass in 1..3 } == true
             if (isQuestChain) {
-                logger.debug { "${session.characterName} 跳過服務 UI：pStyle=${result.parameterStyle}（任務鏈）" }
+                logger.debug { "${session.characterName} bỏ qua UI phục vụ: pStyle=${result.parameterStyle} (chuỗi nhiệm vụ)" }
                 advanceOrComplete(session)
                 return
             }
@@ -281,10 +281,10 @@ class EveFlowController(
 
         when (result.resultType) {
             0 -> {
-                // type=0：伺服器端效果
+                // type=0: hiệu ứng phía server
                 if (result.resultClass == 7 && result.parameterStyle == 1 &&
                     EveResultClassPolicy.isRepeatableServicePlayerOperation(result.parameterStyle, result.resultValue)) {
-                    // pStyle=1 上下文感知：客棧 NPC → 儲存紀錄點 / 錢莊 NPC → 開啟寶庫
+                    // pStyle=1 nhận biết ngữ cảnh: NPC lữ quán → lưu điểm ghi / NPC Tiền Trang → mở kho báu
                     val charId0 = session.roleId.toLong()
                     val eventSession = stateMachine.getSession(charId0)
                     val npcClickId = eventSession?.npcClickId ?: -1
@@ -297,23 +297,23 @@ class EveFlowController(
                 } else if (result.resultClass != 0) {
                     resultExecutor.executeResultClass(session, result)
                     if (result.resultClass == 3) {
-                        // NPC 視覺操作（隱形/顯現/變身/追擊）→ 送客戶端
+                        // Thao tác hình ảnh NPC (tàng hình/hiện ra/biến hình/truy kích) → gửi client
                         responseSender.sendCommonEvent(session, result)
                     } else if (result.resultClass == 7 &&
                         EveResultClassPolicy.isRepeatableServicePlayerOperation(result.parameterStyle, result.resultValue)) {
-                        // 服務 NPC（錢莊/商店/客棧/住宿）→ 不記錄完成，確保可重複
+                        // NPC phục vụ (Tiền Trang/cửa hàng/lữ quán/lưu trú) → không ghi nhận hoàn thành, đảm bảo dùng lại được
                         serviceAdvanceOrEnd(session)
                     } else {
-                        // resultClass=1,2 等：伺服器已處理，自動推進
+                        // resultClass=1,2 v.v.: server đã xử lý, tự động đẩy tiến
                         advanceOrComplete(session)
                     }
                 } else {
-                    // resultClass=0：無效果，自動推進
+                    // resultClass=0: không có hiệu ứng, tự động đẩy tiến
                     advanceOrComplete(session)
                 }
             }
             1 -> {
-                // type=1：Talk 對話 → 送到客戶端，等玩家點擊 C:020-006
+                // type=1: hội thoại Talk → gửi tới client, chờ người chơi bấm C:020-006
                 responseSender.sendCommonEvent(session, result)
             }
             2 -> {
@@ -334,24 +334,24 @@ class EveFlowController(
                 advanceOrComplete(session)
             }
             4 -> {
-                // type=4：NPC 移動 → 送到客戶端，等 C:020-006
-                // 客戶端 EventHandler[4]：role:Move() + SetConduct(true) → 自動 C:020-006
-                logger.debug { "${session.characterName} NPC 移動：param=${result.parameter} value=${result.resultValue}" }
+                // type=4: NPC di chuyển → gửi tới client, chờ C:020-006
+                // EventHandler[4] client: role:Move() + SetConduct(true) → tự động C:020-006
+                logger.debug { "${session.characterName} NPC di chuyển: param=${result.parameter} value=${result.resultValue}" }
                 responseSender.sendCommonEvent(session, result)
             }
             5 -> {
-                // type=5：過場動畫 → 送到客戶端，等 C:020-006
-                // 客戶端 EventHandler[5]：pStyle=1/2 時 SetConduct(false)，動畫結束後 SetConduct(true) → C:020-006
-                logger.debug { "${session.characterName} 過場動畫：movieId=${result.resultValue} pStyle=${result.parameterStyle}" }
+                // type=5: hoạt cảnh chuyển cảnh → gửi tới client, chờ C:020-006
+                // EventHandler[5] client: khi pStyle=1/2 SetConduct(false), sau khi hoạt cảnh kết thúc SetConduct(true) → C:020-006
+                logger.debug { "${session.characterName} hoạt cảnh chuyển cảnh: movieId=${result.resultValue} pStyle=${result.parameterStyle}" }
                 responseSender.sendCommonEvent(session, result)
             }
             6 -> {
-                // type=6：Surface 選擇介面
+                // type=6: giao diện chọn Surface
                 logger.info { "${session.characterName} Surface resultMeanNo=${result.resultMeanNo} pStyle=${result.parameterStyle}" }
                 val charId = session.roleId.toLong()
                 stateMachine.enterAwaitingChoice(charId, result.resultMeanNo)
 
-                // optionMode=1（買賣視窗）→ 追蹤商品清單供 C:027-001 查詢
+                // optionMode=1 (cửa sổ mua bán) → theo dõi danh sách hàng hóa để C:027-001 truy vấn
                 val surfaceData = eveData[session.mapId]?.surfaceDatas?.get(result.resultMeanNo)
                 if (surfaceData != null && surfaceData.optionMode == 1) {
                     val itemIds = surfaceData.sentences.entries
@@ -364,14 +364,14 @@ class EveFlowController(
                 responseSender.sendCommonEvent(session, result)
             }
             7 -> {
-                // type=7：伺服器端玩家操作（客戶端無 EventHandler[7]）
+                // type=7: thao tác người chơi phía server (client không có EventHandler[7])
                 val charId7 = session.roleId.toLong()
                 if (result.resultClass == 7 && result.parameterStyle == 1 &&
                     EveResultClassPolicy.isRepeatableServicePlayerOperation(result.parameterStyle, result.resultValue)) {
-                    // pStyle=1：依上下文區分
+                    // pStyle=1: phân biệt theo ngữ cảnh
                     val eventSession = stateMachine.getSession(charId7)
                     if (eventSession != null && eventSession.lastChoiceCode != -1) {
-                        // Surface 選擇後：客棧 NPC → 儲存紀錄點 / 錢莊 NPC → 開啟寶庫
+                        // Sau khi chọn Surface: NPC lữ quán → lưu điểm ghi / NPC Tiền Trang → mở kho báu
                         if (isInnServiceNpc(session.mapId, eventSession.npcClickId)) {
                             saveRecordPoint(session, charId7)
                         } else {
@@ -379,25 +379,25 @@ class EveFlowController(
                         }
                         serviceAdvanceOrEnd(session)
                     } else {
-                        // 初次觸發 → pStyle=1 = 開啟 Surface 選擇介面
+                        // Kích hoạt lần đầu → pStyle=1 = mở giao diện chọn Surface
                         openSurfaceForServiceNpc(session, result, charId7)
                     }
                 } else {
-                    // 其他 pStyle：直接執行（cls=7 的服務 UI 獨立於事件系統運作）
+                    // pStyle khác: thực hiện trực tiếp (UI phục vụ cls=7 hoạt động độc lập với hệ thống sự kiện)
                     if (result.resultClass != 0) {
                         resultExecutor.executeResultClass(session, result)
                     }
-                    // 服務 NPC 可重複使用 — 不記錄完成
+                    // NPC phục vụ dùng được nhiều lần — không ghi nhận hoàn thành
                     serviceAdvanceOrEnd(session)
                 }
             }
             else -> {
                 if (EveResultTypePolicy.shouldSkipWithoutClientHandler(result.resultType)) {
-                    logger.debug { "${session.characterName} resultType=${result.resultType} 無客戶端 handler，靜默跳過" }
+                    logger.debug { "${session.characterName} resultType=${result.resultType} không có handler phía client, âm thầm bỏ qua" }
                     advanceOrComplete(session)
                 } else {
-                    // 未知 type → 自動推進（送客戶端會因無 handler 而卡死）
-                    logger.warn { "${session.characterName} 未知 resultType=${result.resultType} cls=${result.resultClass}，自動跳過" }
+                    // type không xác định → tự động đẩy tiến (gửi client sẽ bị kẹt vì không có handler)
+                    logger.warn { "${session.characterName} resultType=${result.resultType} không xác định cls=${result.resultClass}, tự động bỏ qua" }
                     advanceOrComplete(session)
                 }
             }
@@ -405,22 +405,22 @@ class EveFlowController(
     }
 
     /**
-     * resultType=7 pStyle=1：開啟 Surface 選擇介面
+     * resultType=7 pStyle=1: mở giao diện chọn Surface
      *
-     * 等同 type=6 行為，但 resultMeanNo=0，需自行找場景 surfaceData。
-     * 典型用途：錢莊 NPC 先 Talk 再開選單（錢莊/寶庫/離開）。
+     * Tương đương hành vi type=6, nhưng resultMeanNo=0, phải tự tìm surfaceData của cảnh.
+     * Ứng dụng điển hình: NPC Tiền Trang nói Talk trước rồi mở menu (Tiền Trang/kho báu/rời đi).
      */
     private suspend fun openSurfaceForServiceNpc(session: GameSession, result: EveResult, charId: Long) {
         val sceneEve = eveData[session.mapId]
         if (sceneEve == null || sceneEve.surfaceDatas.isEmpty()) {
-            logger.warn { "${session.characterName} type=7 pStyle=1 但場景 ${session.mapId} 無 surfaceData → 自動推進" }
+            logger.warn { "${session.characterName} type=7 pStyle=1 nhưng cảnh ${session.mapId} không có surfaceData → tự đẩy tới" }
             advanceOrComplete(session)
             return
         }
 
         val surfaceEntry = sceneEve.surfaceDatas.entries.firstOrNull()
         if (surfaceEntry == null) {
-            logger.warn { "${session.characterName} type=7 pStyle=1 但場景 ${session.mapId} 無 surfaceData → 自動推進" }
+            logger.warn { "${session.characterName} type=7 pStyle=1 nhưng cảnh ${session.mapId} không có surfaceData → tự đẩy tới" }
             advanceOrComplete(session)
             return
         }
@@ -429,7 +429,7 @@ class EveFlowController(
         val surfaceData = surfaceEntry.value
         stateMachine.enterAwaitingChoice(charId, surfaceId)
 
-        // optionMode=1（買賣視窗）→ 追蹤商品清單
+        // optionMode=1 (cửa sổ mua bán) → theo dõi danh sách hàng hóa
         if (surfaceData.optionMode == 1) {
             val itemIds = surfaceData.sentences.entries
                 .sortedBy { it.key }
@@ -438,14 +438,14 @@ class EveFlowController(
             npcShopManager.setShopItems(charId, itemIds)
         }
 
-        // 以 type=6 發送給客戶端，讓 EventHandler[6] 處理 Surface 顯示
+        // Gửi cho client theo type=6, để EventHandler[6] xử lý hiển thị Surface
         val surfaceResult = result.copy(resultType = 6, resultMeanNo = surfaceId)
         responseSender.sendCommonEvent(session, surfaceResult)
-        logger.info { "${session.characterName} type=7 pStyle=1 → 開啟 Surface（surfaceId=$surfaceId）" }
+        logger.info { "${session.characterName} type=7 pStyle=1 → mở Surface (surfaceId=$surfaceId)" }
     }
 
     /**
-     * 推進到下一個 result 或完成事件 — 自動推進 resultType 的共用入口
+     * Đẩy tiến sang result kế tiếp hoặc hoàn thành sự kiện — lối vào dùng chung cho resultType tự động đẩy tiến
      */
     private suspend fun advanceOrComplete(session: GameSession) {
         val charId = session.roleId.toLong()
@@ -454,10 +454,10 @@ class EveFlowController(
     }
 
     /**
-     * 服務 NPC 結果推進 — 有下一個 result 則繼續，否則取消事件（不記錄完成）
+     * Đẩy tiến kết quả NPC phục vụ — có result kế tiếp thì tiếp tục, ngược lại hủy sự kiện (không ghi nhận hoàn thành)
      *
-     * 與 [advanceOrComplete] 的差異：結束時走 [cancelAndEnd] 而非 [completeCurrentEvent]，
-     * 確保服務事件（寶庫/錢莊/商店/客棧/住宿）可重複使用。
+     * Khác với [advanceOrComplete]: khi kết thúc đi qua [cancelAndEnd] thay vì [completeCurrentEvent],
+     * Đảm bảo các sự kiện phục vụ (kho báu/Tiền Trang/cửa hàng/lữ quán/lưu trú) dùng được nhiều lần.
      */
     private suspend fun serviceAdvanceOrEnd(session: GameSession) {
         val charId = session.roleId.toLong()
@@ -466,15 +466,15 @@ class EveFlowController(
     }
 
     // ══════════════════════════════════════════════
-    //  Door 傳送後自動 MeetDoor
+    //  Sau dịch chuyển Door tự động MeetDoor
     // ══════════════════════════════════════════════
 
     // ══════════════════════════════════════════════
-    //  事件完成
+    //  Hoàn thành sự kiện
     // ══════════════════════════════════════════════
 
     /**
-     * 完成當前事件 — 統一入口，嘗試 auto-chain 或結束
+     * Hoàn thành sự kiện hiện tại — lối vào thống nhất, thử auto-chain hoặc kết thúc
      */
     private suspend fun completeCurrentEvent(session: GameSession, charId: Long) {
         val completedSession = completeEventInternal(charId)
@@ -485,7 +485,7 @@ class EveFlowController(
                     dispatchResult(session, chainResult.firstResult)
                     return
                 }
-                is AutoChainResult.NoMatch -> { /* 繼續到 sendEventEnd */ }
+                is AutoChainResult.NoMatch -> { /* Tiếp tục đến sendEventEnd*/ }
             }
         }
 
@@ -493,9 +493,9 @@ class EveFlowController(
     }
 
     /**
-     * 強制結束事件 — 不嘗試 auto-chain
+     * Buộc kết thúc sự kiện — không thử auto-chain
      *
-     * Door 傳送、戰鬥失敗、Surface 取消等情境使用。
+     * Dùng cho các tình huống dịch chuyển Door, thua trận, hủy Surface, v.v.
      */
     private suspend fun finalCompleteAndEnd(session: GameSession, charId: Long) {
         completeEventInternal(charId)
@@ -503,10 +503,10 @@ class EveFlowController(
     }
 
     /**
-     * 取消事件 — 清除狀態但不記錄完成
+     * Hủy sự kiện — xóa trạng thái nhưng không ghi nhận hoàn thành
      *
-     * Surface 取消（code=40）等玩家主動取消情境使用。
-     * 與 finalCompleteAndEnd 的差異：不記錄 condNo、不持久化 DB。
+     * Dùng cho các tình huống người chơi chủ động hủy như Surface (code=40).
+     * Khác với finalCompleteAndEnd: không ghi condNo, không lưu bền DB.
      */
     private fun cancelAndEnd(session: GameSession, charId: Long) {
         npcShopManager.clearShop(charId)
@@ -515,10 +515,10 @@ class EveFlowController(
     }
 
     /**
-     * 判斷 NPC 是否為客棧類型
+     * Xác định NPC có thuộc loại lữ quán không
      *
-     * 掃描 NPC 的所有事件結果，若包含 pStyle=4（客棧 UI）或 pStyle=5（住宿）
-     * 則判定為客棧 NPC。用於 pStyle=1 上下文分流：客棧=儲存紀錄點 / 錢莊=開啟寶庫。
+     * Quét mọi kết quả sự kiện của NPC, nếu chứa pStyle=4 (UI lữ quán) hoặc pStyle=5 (lưu trú)
+     * thì được xác định là NPC lữ quán. Dùng cho rẽ nhánh ngữ cảnh pStyle=1: lữ quán=lưu điểm ghi / Tiền Trang=mở kho báu.
      */
     private fun isInnServiceNpc(mapId: Int, npcClickId: Int): Boolean {
         val sceneData = eveData[mapId] ?: return false
@@ -537,7 +537,7 @@ class EveFlowController(
     }
 
     /**
-     * 儲存紀錄點 — 將玩家當前位置存入 DB 作為重生點
+     * Lưu điểm ghi — lưu vị trí hiện tại của người chơi vào DB làm điểm hồi sinh
      */
     private suspend fun saveRecordPoint(session: GameSession, charId: Long) {
         val mapId = session.mapId
@@ -545,27 +545,27 @@ class EveFlowController(
         val y = session.y
         try {
             characterRepository.updateRecordPoint(charId, mapId, x, y)
-            logger.info { "${session.characterName} 儲存紀錄點：mapId=$mapId ($x,$y)" }
+            logger.info { "${session.characterName} lưu điểm kiểm tra: mapId=$mapId ($x,$y)" }
         } catch (e: Exception) {
-            logger.error(e) { "${session.characterName} 儲存紀錄點失敗：mapId=$mapId ($x,$y)" }
+            logger.error(e) { "${session.characterName} lưu điểm kiểm tra thất bại: mapId=$mapId ($x,$y)" }
         }
     }
 
     /**
-     * 完成事件內部邏輯 — 記錄完成 + 持久化
+     * Logic nội bộ hoàn thành sự kiện — ghi nhận hoàn thành + lưu bền
      */
     private suspend fun completeEventInternal(charId: Long): EventSession? {
         val completedSession = stateMachine.complete(charId)
 
-        // 事件結束 → 清除商店狀態
+        // Sự kiện kết thúc → xóa trạng thái cửa hàng
         npcShopManager.clearShop(charId)
 
-        // 持久化事件完成記錄（class=12 條件依賴完成次數，Talk-only 事件也需計入）
+        // Lưu bền bản ghi hoàn thành sự kiện (điều kiện class=12 phụ thuộc số lần hoàn thành, sự kiện chỉ Talk cũng phải tính)
         if (completedSession != null && completedSession.eveNo != 0) {
             try {
                 questRepository.insertCompletedEvent(charId, completedSession.mapId, completedSession.eveNo)
             } catch (e: Exception) {
-                logger.error(e) { "持久化事件完成記錄失敗：charId=$charId mapId=${completedSession.mapId} eveNo=${completedSession.eveNo}" }
+                logger.error(e) { "Lưu hoàn thành sự kiện xuống DB thất bại: charId=$charId mapId=${completedSession.mapId} eveNo=${completedSession.eveNo}" }
             }
         }
 

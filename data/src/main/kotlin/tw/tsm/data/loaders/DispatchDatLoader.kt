@@ -5,17 +5,17 @@ import tw.tsm.domain.data.DispatchBonusDef
 import tw.tsm.domain.data.DispatchDef
 
 /**
- * 派遣資料載入器
+ * Trình nạp dữ liệu phái cử
  *
- * 來源：DispatchData.lua
+ * Nguồn: DispatchData.lua
  */
 object DispatchDatLoader {
 
     /**
-     * 載入 Dispatch_C.dat
+     * Nạp Dispatch_C.dat
      *
-     * 格式：count(Int32) + count 筆 DispatchData.New(reader)
-     * 每筆：mainKind(1) + subKind(1) + minLv(1) + awardId(2) + expKind(1) + exp(4)
+     * Định dạng: count(Int32) + count bản ghi DispatchData.New(reader)
+     * Mỗi bản ghi: mainKind(1) + subKind(1) + minLv(1) + awardId(2) + expKind(1) + exp(4)
      *
      * @return Map<mainKind, Map<subKind, DispatchDef>>
      */
@@ -44,10 +44,10 @@ object DispatchDatLoader {
     }
 
     /**
-     * 載入 DispatchBonus_C.dat
+     * Nạp DispatchBonus_C.dat
      *
-     * 格式：count(Int32) + count 筆 DispatchBonusData.New(reader)
-     * 每筆：id(1) + conditionKind(1) + conditionValue(1) + effectIndex(1) + effectKind(1) + effectValue(2) + effectContent(4)
+     * Định dạng: count(Int32) + count bản ghi DispatchBonusData.New(reader)
+     * Mỗi bản ghi: id(1) + conditionKind(1) + conditionValue(1) + effectIndex(1) + effectKind(1) + effectValue(2) + effectContent(4)
      *
      * @return Map<id, DispatchBonusDef>
      */

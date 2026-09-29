@@ -7,7 +7,7 @@ import tw.tsm.domain.data.JiugonggeInfoDef
 import tw.tsm.domain.data.JiugonggeMissionDef
 
 /**
- * DVT 九宮格 loaders, 1:1 with:
+ * Loader kiểu ô 3x3 DVT, 1:1 với:
  * - Data/JiugonggeInfo.lua
  * - Data/JiugonggeMissionData.lua
  * - Data/ActivityTime.lua

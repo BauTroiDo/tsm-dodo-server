@@ -9,9 +9,9 @@ import tw.tsm.domain.interfaces.repositories.FlyPointRepository
 import tw.tsm.persistence.tables.CharacterFlyPoints
 
 /**
- * FlyPointRepository 的 Exposed ORM 實作
+ * Triển khai FlyPointRepository bằng Exposed ORM
  *
- * 使用 character_fly_points 表存儲記憶傳送符位置。
+ * Dùng bảng character_fly_points lưu vị trí bùa dịch chuyển ký ức.
  */
 class FlyPointRepositoryImpl : FlyPointRepository {
 

@@ -12,16 +12,16 @@ import tw.tsm.protocol.PacketReader
 private val logger = KotlinLogging.logger {}
 
 /**
- * NPC 事件處理器（mainKind = 20）
+ * Bộ xử lý sự kiện NPC (mainKind = 20)
  *
- * 來源：protocal.lua protocolTable[20]
+ * Nguồn: protocal.lua protocolTable[20]
  *
- * C→S 格式：
- * - subKind 1~5, 7, 8（事件觸發）：+triggerID(2B LE)
- * - subKind 6（事件下一步）：空封包
- * - subKind 9（事件選擇）：+code(1B)
+ * Định dạng C→S:
+ * - subKind 1~5, 7, 8 (kích hoạt sự kiện): +triggerID(2B LE)
+ * - subKind 6 (bước tiếp theo của sự kiện): gói tin rỗng
+ * - subKind 9 (lựa chọn sự kiện): +code(1B)
  *
- * 薄包裝層：觸發委派 [EveTriggerRouter]，推進/選擇/恢復委派 [EveFlowController]。
+ * Lớp bọc mỏng: kích hoạt giao cho [EveTriggerRouter], thúc đẩy/chọn/hồi phục giao cho [EveFlowController].
  */
 class NpcEventHandler(
     private val triggerRouter: EveTriggerRouter,
@@ -43,7 +43,7 @@ class NpcEventHandler(
                 val code = if (data.isNotEmpty()) PacketReader(data).readUByte() else 0
                 flowController.chooseEvent(session, code)
             }
-            else -> logger.warn { "未處理的 NPC 事件子協定：subKind=$subKind" }
+            else -> logger.warn { "Sub-protocol sự kiện NPC chưa xử lý: subKind=$subKind" }
         }
     }
 }

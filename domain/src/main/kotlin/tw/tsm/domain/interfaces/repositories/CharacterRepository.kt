@@ -1,59 +1,59 @@
 package tw.tsm.domain.interfaces.repositories
 
 /**
- * 角色資料存取介面
+ * Interface truy xuất dữ liệu nhân vật
  */
 interface CharacterRepository {
     /**
-     * 查詢帳號下所有角色
+     * Truy vấn mọi nhân vật thuộc tài khoản
      */
     suspend fun findByAccountId(accountId: Long): List<CharacterRecord>
 
     /**
-     * 根據角色 ID 查詢
+     * Truy vấn theo ID nhân vật
      */
     suspend fun findById(characterId: Long): CharacterRecord?
 
     /**
-     * 檢查角色名稱是否已存在
+     * Kiểm tra tên nhân vật đã tồn tại chưa
      */
     suspend fun isNameTaken(name: String): Boolean
 
     /**
-     * 建立新角色
+     * Tạo nhân vật mới
      *
-     * @return 新角色 ID
+     * @return ID nhân vật mới
      */
     suspend fun create(accountId: Long, data: CharacterCreateData): Long
 
     /**
-     * 更新角色等級
+     * Cập nhật cấp độ nhân vật
      */
     suspend fun updateLevel(characterId: Long, level: Int)
 
-    /** 更新轉生次數與二轉職業。 */
+    /** Cập nhật số lần chuyển sinh và nghề nhị chuyển.*/
     suspend fun updateTurnCareer(characterId: Long, turn: Int, career: Int)
 
-    /** 更新轉生後外觀。 */
+    /** Cập nhật ngoại hình sau chuyển sinh.*/
     suspend fun updateTurnAppearance(characterId: Long, hair: Int, color1: Int, color2: Int)
 
     /**
-     * 更新角色位置（斷線/登出時儲存）
+     * Cập nhật vị trí nhân vật (lưu khi mất kết nối/đăng xuất)
      */
     suspend fun updatePosition(characterId: Long, mapId: Int, x: Int, y: Int)
 
     /**
-     * 更新角色技能點數
+     * Cập nhật điểm kỹ năng của nhân vật
      */
     suspend fun updateSkillPoint(characterId: Long, skillPoint: Int)
 
     /**
-     * 屬性配點 — 增加指定六圍欄位並扣減 attrPoint
+     * Phân điểm thuộc tính — tăng field lục chỉ số được chỉ định và khấu trừ attrPoint
      *
-     * @param characterId 角色 ID
-     * @param column 要增加的 DB 欄位名（str/dex/vit/int_/men/spr）
-     * @param addValue 增加的點數
-     * @param newAttrPoint 扣減後的剩餘屬性點數
+     * @param characterId ID nhân vật
+     * @param column tên field DB cần tăng (str/dex/vit/int_/men/spr)
+     * @param addValue số điểm tăng thêm
+     * @param newAttrPoint số điểm thuộc tính còn lại sau khấu trừ
      */
     suspend fun addStatPoint(characterId: Long, column: String, addValue: Int, newAttrPoint: Int)
 
@@ -61,27 +61,27 @@ interface CharacterRepository {
     suspend fun updateAttrPoint(characterId: Long, newAttrPoint: Int)
 
     /**
-     * 更新角色經驗和等級（戰鬥獎勵/斷線儲存時呼叫）
+     * Cập nhật EXP và cấp độ nhân vật (gọi khi thưởng chiến đấu/lưu khi mất kết nối)
      */
     suspend fun updateExpAndLevel(characterId: Long, exp: Long, level: Int)
 
     /**
-     * 更新記錄點（住宿後設定，飛回紀錄點/戰敗時傳送至此）
+     * Cập nhật điểm ghi nhớ (đặt sau khi nghỉ tại lữ quán; bay về điểm ghi nhớ/thua trận sẽ dịch chuyển đến đây)
      */
     suspend fun updateRecordPoint(characterId: Long, mapId: Int, x: Int, y: Int)
 
     /**
-     * 查詢記錄點
+     * Truy vấn điểm ghi nhớ
      *
-     * @return (mapId, x, y) 或 null（角色不存在時）
+     * @return (mapId, x, y) hoặc null (khi nhân vật không tồn tại)
      */
     suspend fun getRecordPoint(characterId: Long): Triple<Int, Int, Int>?
 
     /**
-     * 更新角色完整運行時狀態（斷線/登出儲存）
+     * Cập nhật toàn bộ trạng thái runtime của nhân vật (lưu khi mất kết nối/đăng xuất)
      *
-     * 保存 exp/level + attrPoint/skillPoint + 六圍，確保升級/配點後的狀態不丟失。
-     * ⚠️ Characters 表沒有 hp/sp 欄位，HP/SP 在登入時從 maxHp/maxSp 初始化。
+     * Lưu exp/level + attrPoint/skillPoint + 6 chỉ số, đảm bảo trạng thái sau lên cấp/phân điểm không bị mất.
+     * ⚠️ Bảng Characters không có field hp/sp, HP/SP được khởi tạo từ maxHp/maxSp khi đăng nhập.
      */
     suspend fun updatePlayerState(
         characterId: Long, exp: Long, level: Int,
@@ -90,44 +90,44 @@ interface CharacterRepository {
     )
 
     /**
-     * 更新出戰武將 NPC ID（斷線/登出時保存）
+     * Cập nhật NPC ID của tướng xuất chiến (lưu khi mất kết nối/đăng xuất)
      *
-     * @param fightNpcId 出戰武將 NPC ID，0 表示無出戰
+     * @param fightNpcId NPC ID tướng xuất chiến, 0 có nghĩa là không xuất chiến
      */
     suspend fun updateFightNpcId(characterId: Long, fightNpcId: Int)
 
     /**
-     * 更新當前穿戴稱號 ID
+     * Cập nhật ID danh hiệu đang đeo hiện tại
      *
-     * @param titleId 稱號 ID，0 表示未穿戴
+     * @param titleId ID danh hiệu, 0 có nghĩa là không đeo
      */
     suspend fun updateTitleId(characterId: Long, titleId: Int)
 
     /**
-     * 查詢所有角色的排行榜基礎資料
+     * Truy vấn dữ liệu nền tảng xếp hạng của mọi nhân vật
      *
-     * 用於排行榜定時快取刷新，只取必要欄位。
+     * Dùng cho việc làm mới cache định kỳ của bảng xếp hạng, chỉ lấy các field cần thiết.
      */
     suspend fun findAllForLeaderboard(): List<LeaderboardCharRecord>
 
     /**
-     * 查詢元寶點數
+     * Truy vấn điểm nguyên bảo
      *
-     * @return (實點, 虛點)，角色不存在回 (0, 0)
+     * @return (điểm thực, điểm ảo), nếu nhân vật không tồn tại trả (0, 0)
      */
     suspend fun loadPoints(characterId: Long): Pair<Int, Int>
 
     /**
-     * 儲存元寶點數
+     * Lưu điểm nguyên bảo
      *
-     * @param pointReal 實點（儲值元寶）
-     * @param pointVirtual 虛點（綁元）
+     * @param pointReal điểm thực (nguyên bảo nạp)
+     * @param pointVirtual điểm ảo (nguyên bảo khoá)
      */
     suspend fun savePoints(characterId: Long, pointReal: Int, pointVirtual: Int)
 }
 
 /**
- * 角色記錄值物件
+ * Object giá trị ghi nhận của nhân vật
  */
 data class CharacterRecord(
     val id: Long,
@@ -158,14 +158,14 @@ data class CharacterRecord(
 )
 
 /**
- * 建立角色所需資料
+ * Dữ liệu cần để tạo nhân vật
  *
- * 對應 C:009-001 封包格式：
- * +姓名(?) +性別(1) +0(1) +髮型(1) +0(1)
- * +色盤一(4) +色盤二(4) +屬性(1) +六圍(1)*6 +隱私(1)
+ * Tương ứng định dạng gói tin C:009-001:
+ * +họ tên(?) +giới tính(1) +0(1) +kiểu tóc(1) +0(1)
+ * +bảng màu 1(4) +bảng màu 2(4) +thuộc tính(1) +sáu chỉ số(1)*6 +riêng tư(1)
  */
 /**
- * 排行榜用精簡角色資料
+ * Dữ liệu nhân vật rút gọn dùng cho bảng xếp hạng
  */
 data class LeaderboardCharRecord(
     val id: Long,
@@ -178,37 +178,37 @@ data class LeaderboardCharRecord(
     val hair: Int,
     val color1: Int,
     val color2: Int,
-    /** 金錢（來自 CharacterMoney） */
+    /** Tiền (từ CharacterMoney)*/
     val gold: Int = 0,
-    /** 拍賣金（來自 CharacterMoney） */
+    /** Tiền đấu giá (từ CharacterMoney)*/
     val auctionGold: Int = 0,
-    /** 武將最高等級（來自 CharacterPets MAX(level)） */
+    /** Cấp độ tướng cao nhất (từ CharacterPets MAX(level))*/
     val petMaxLevel: Int = 0
 )
 
 data class CharacterCreateData(
-    /** 角色名稱（Big5 編碼，最長 14 bytes） */
+    /** Tên nhân vật (mã hoá Big5, dài nhất 14 bytes)*/
     val name: String,
-    /** 性別（1=男, 2=女） */
+    /** Giới tính (1=nam, 2=nữ)*/
     val sex: Int,
-    /** 髮型索引 */
+    /** Chỉ số kiểu tóc*/
     val hair: Int,
-    /** 色盤一（帽/髮/膚 RGB 十進位編碼） */
+    /** Bảng màu 1 (mã RGB thập phân mũ/tóc/da)*/
     val color1: Int,
-    /** 色盤二（衣/配/鞋 RGB 十進位編碼） */
+    /** Bảng màu 2 (mã RGB thập phân áo/phụ kiện/giày)*/
     val color2: Int,
-    /** 五行屬性（1-5） */
+    /** Thuộc tính ngũ hành (1-5)*/
     val element: Int,
-    /** 力量配點 */
+    /** Điểm phân bổ lực lượng*/
     val str: Int,
-    /** 敏捷配點 */
+    /** Điểm phân bổ nhanh nhẹn*/
     val dex: Int,
-    /** 體力配點 */
+    /** Điểm phân bổ thể lực*/
     val vit: Int,
-    /** 智力配點 */
+    /** Điểm phân bổ trí lực*/
     val int_: Int,
-    /** 精神配點 */
+    /** Điểm phân bổ tinh thần*/
     val men: Int,
-    /** 靈力配點 */
+    /** Điểm phân bổ linh lực*/
     val spr: Int
 )

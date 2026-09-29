@@ -3,9 +3,9 @@ package tw.tsm.persistence.tables
 import org.jetbrains.exposed.v1.core.Table
 
 /**
- * 二轉技能附加狀態。
- * kind=1: index 0 = 可用天珠數, index 1..12 = 已啟動天珠。
- * kind=2: index 6..13 = 二轉英雄技能槽，value = skillId。
+ * Trạng thái bổ sung của kỹ năng nhị chuyển.
+ * kind=1: index 0 = số Thiên Châu khả dụng, index 1..12 = Thiên Châu đã kích hoạt.
+ * kind=2: index 6..13 = ô kỹ năng anh hùng nhị chuyển, value = skillId.
  */
 object CharacterTurn2Skills : Table("character_turn2_skills") {
     val characterId = long("character_id")

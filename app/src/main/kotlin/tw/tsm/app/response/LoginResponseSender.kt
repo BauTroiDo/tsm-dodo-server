@@ -9,17 +9,17 @@ import tw.tsm.protocol.DvtRoleCountWire
 import tw.tsm.protocol.PacketWriter
 
 /**
- * 登入/角色相關封包序列化
+ * Tuần tự hoá gói tin liên quan đăng nhập/nhân vật
  *
- * mainKind = 0（斷線）, 1（登入）, 3（角色）, 5（玩家資料）, 9（創角）, 10（心跳）, 85（RoleCount）, 40（熱鍵）
+ * mainKind = 0（mất kết nối）, 1（đăng nhập）, 3（nhân vật）, 5（dữ liệu người chơi）, 9（tạo nhân vật）, 10（nhịp tim）, 85（RoleCount）, 40（phím tắt）
  */
 class LoginResponseSender {
 
     /**
-     * S:001-002 登入結果
+     * S:001-002 Kết quả đăng nhập
      *
-     * 封包格式：
-     * +Result(1) [成功時繼續] +DBID(2) +GSID(2) +PlayerId(8)
+     * Định dạng gói tin:
+     * +Result(1) [tiếp tục khi thành công] +DBID(2) +GSID(2) +PlayerId(8)
      * +ServerTime(Double/8) +ServerSwitch(1)
      * +L(1)+Account(Big5) +L(1)+Password(Big5) +AccountKind(1) +NetworkDisconnectMessage(4)
      */
@@ -47,16 +47,16 @@ class LoginResponseSender {
                 .writeLongLE(playerId)          // PlayerId (Int64)
                 .writeDoubleLE(serverTime)      // ServerTime (Double/8B)
                 .writeByte(0)                   // ServerSwitch
-                .writeBig5WithByteLen(account)  // 帳號
-                .writeBig5WithByteLen(password) // 密碼
-                .writeByte(accountKind)         // 帳號綁定類型
+                .writeBig5WithByteLen(account)  // Tài khoản
+                .writeBig5WithByteLen(password) // Mật khẩu
+                .writeByte(accountKind)         // Loại liên kết tài khoản
                 .writeIntLE(0)                  // DVT: no network-disconnect message override
         }
 
         session.send(writer.toByteArray())
     }
 
-    /** S:001-003 登入成功 */
+    /** S:001-003 Đăng nhập thành công*/
     fun sendLoginSuccess(session: SessionSender, needChangePassword: Boolean) {
         session.send(
             PacketWriter()
@@ -66,7 +66,7 @@ class LoginResponseSender {
         )
     }
 
-    /** S:001-013 登入序列完成 */
+    /** S:001-013 Hoàn tất chuỗi đăng nhập*/
     fun sendLoginFinished(session: SessionSender, connectCode: Long) {
         session.send(
             PacketWriter()
@@ -77,17 +77,17 @@ class LoginResponseSender {
     }
 
     /**
-     * S:005-003 玩家資料大包
+     * S:005-003 Gói lớn dữ liệu người chơi
      *
-     * 來源：protocal.lua protocolTable[5][3] → Role.ReceivePlayerData(data)
-     * 嚴格按照客戶端 Read 順序寫入
+     * Nguồn: protocal.lua protocolTable[5][3] → Role.ReceivePlayerData(data)
+     * Ghi vào nghiêm ngặt theo thứ tự Read của client
      */
     fun sendPlayerData(session: SessionSender, data: PlayerDataDto) {
         val writer = PacketWriter(256)
             .writeByte(Opcodes.PLAYER_STATUS)   // mainKind = 5
             .writeByte(3)                        // subKind = 3
             .writeByte(0)                        // compress
-            // 基礎屬性
+            // Thuộc tính cơ bản
             .writeByte(data.element)
             .writeUIntLE(data.hp)
             .writeShortLE(data.sp)
@@ -107,7 +107,7 @@ class LoginResponseSender {
             .writeShortLE(data.astrolabePoint)
             .writeUIntLE(data.maxHp)
             .writeShortLE(data.maxSp)
-            // 裝備加值
+            // Giá trị cộng thêm từ trang bị
             .writeIntLE(data.equipAtk)
             .writeIntLE(data.equipDef)
             .writeIntLE(data.equipInt)
@@ -117,7 +117,7 @@ class LoginResponseSender {
             .writeIntLE(data.equipHpx)
             .writeIntLE(data.equipSpx)
 
-        // 陣營好感度（5 個 UInt16）
+        // Độ thân thiện phe đảng（5 UInt16）
         for (i in 0 until 5) {
             writer.writeShortLE(data.moral.getOrElse(i) { 0 })
         }
@@ -127,14 +127,14 @@ class LoginResponseSender {
             .writeUIntLE(data.organization)
             .writeByte(data.autoEatCount)
 
-        // 初轉技能列表
+        // Danh sách kỹ năng chuyển sinh lần đầu
         writer.writeShortLE(data.skills.size)
         for ((skillId, skillLv) in data.skills) {
             writer.writeShortLE(skillId)
             writer.writeByte(skillLv)
         }
 
-        // 三轉資料
+        // Dữ liệu chuyển sinh lần 3
         writer
             .writeByte(data.turn3Element)
             .writeLongLE(data.turn3Exp)
@@ -145,7 +145,7 @@ class LoginResponseSender {
             .writeShortLE(data.turn3Hpx)
             .writeShortLE(data.turn3Spx)
 
-        // 三轉技能列表
+        // Danh sách kỹ năng chuyển sinh lần 3
         writer.writeShortLE(data.turn3Skills.size)
         for ((skillId, skillLv) in data.turn3Skills) {
             writer.writeShortLE(skillId)
@@ -153,7 +153,7 @@ class LoginResponseSender {
         }
 
         // DVT Role.ReceivePlayerData reuses the hp/sp locals; no second wire copy.
-        // 新增動態屬性
+        // Thêm thuộc tính động
         writer.writeByte(data.newAttrs.size)
         for ((attrType, attrValue) in data.newAttrs) {
             writer.writeByte(attrType)
@@ -163,7 +163,7 @@ class LoginResponseSender {
         session.send(writer.toByteArray())
     }
 
-    /** S:005-011 丹藥次數 */
+    /** S:005-011 Số lần đan dược*/
     fun sendPillCounts(session: SessionSender, attrPill: Int, hpPill: Int, spPill: Int, skillPill: Int) {
         session.send(
             PacketWriter()
@@ -176,7 +176,7 @@ class LoginResponseSender {
         )
     }
 
-    /** S:003-001 登入天數 */
+    /** S:003-001 Số ngày đăng nhập*/
     fun sendLoginDay(session: SessionSender, loginDay: Int, continueLogin: Int) {
         session.send(
             PacketWriter()
@@ -187,7 +187,7 @@ class LoginResponseSender {
         )
     }
 
-    /** S:003-002 每日在線時間 */
+    /** S:003-002 Thời gian trực tuyến hằng ngày*/
     fun sendOnlineTime(session: SessionSender, time: Double) {
         session.send(
             PacketWriter()
@@ -197,7 +197,7 @@ class LoginResponseSender {
         )
     }
 
-    /** S:003-003 半月卡時間 */
+    /** S:003-003 Thời gian thẻ nửa tháng*/
     fun sendHalfMonthCardTime(session: SessionSender, time: Double) {
         session.send(
             PacketWriter()
@@ -208,9 +208,9 @@ class LoginResponseSender {
     }
 
     /**
-     * S:003-000 玩家出現
+     * S:003-000 Người chơi xuất hiện
      *
-     * 來源：protocal.lua protocolTable[3][0] → Role.PlayerAppear(index, data)
+     * Nguồn: protocal.lua protocolTable[3][0] → Role.PlayerAppear(index, data)
      */
     fun sendPlayerAppear(session: SessionSender, playerId: Long, record: CharacterRecord, serverId: Int, turn3Element: Int = 0) {
         val writer = PacketWriter(128)
@@ -218,42 +218,42 @@ class LoginResponseSender {
             .writeLongLE(playerId)
             .writeByte(record.sex)
             .writeByte(record.element)
-            .writeByte(turn3Element)          // 三轉元素
+            .writeByte(turn3Element)          // Nguyên tố chuyển sinh lần 3
             .writeByte(record.level)
-            .writeByte(0)                     // 衰神標記
-            .writeUIntLE(0)                   // 福神標記
-            .writeShortLE(0)                  // 精靈 No
+            .writeByte(0)                     // Cờ đánh dấu suy thần
+            .writeUIntLE(0)                   // Cờ đánh dấu phúc thần
+            .writeShortLE(0)                  // Số tinh linh
             .writeShortLE(record.mapId)
             .writeShortLE(record.x)
             .writeShortLE(record.y)
-            .writeByte(0)                     // 臉圖
+            .writeByte(0)                     // Ảnh mặt
             .writeByte(record.hair)
-            .writeByte(0)                     // 身型
+            .writeByte(0)                     // Dáng người
             .writeIntLE(record.color1)
             .writeIntLE(record.color2)
-            .writeShortLE(0)                  // PVP 勝場
-            .writeByte(0)                     // PVP 名次
-            .writeByte(1)                     // 在線狀態
-            .writeByte(0)                     // NPC 挑戰賽
+            .writeShortLE(0)                  // Số trận thắng PVP
+            .writeByte(0)                     // Hạng PVP
+            .writeByte(1)                     // Trạng thái trực tuyến
+            .writeByte(0)                     // Giải thách đấu NPC
             .writeByte(serverId)
-            .writeByte(record.turn)           // 轉生種類
-            .writeByte(record.career)         // 職業種類
+            .writeByte(record.turn)           // Loại chuyển sinh
+            .writeByte(record.career)         // Loại nghề nghiệp
             .writeBig5WithByteLen(record.name)
-            .writeShortLE(0)                  // 分區
-            .writeShortLE(0)                  // 坐騎 NPC ID
-            .writeByte(0)                     // 坐騎等級
-            .writeByte(0)                     // 裝備數量
-            .writeShortLE(record.titleId)     // 稱號 ID
-            .writeUIntLE(0)                   // 軍團 ID
-            .writeByte(0)                     // 外顯裝備數量
+            .writeShortLE(0)                  // Phân khu
+            .writeShortLE(0)                  // ID NPC vật cưỡi
+            .writeByte(0)                     // Cấp độ vật cưỡi
+            .writeByte(0)                     // Số lượng trang bị
+            .writeShortLE(record.titleId)     // ID danh hiệu
+            .writeUIntLE(0)                   // ID quân đoàn
+            .writeByte(0)                     // Số lượng trang bị hiển thị ngoài
 
         session.send(writer.toByteArray())
     }
 
     /**
-     * S:005-012 玩家更換稱號
+     * S:005-012 Người chơi đổi danh hiệu
      *
-     * 格式：+roleId(8) +titleId(2)
+     * Định dạng: +roleId(8) +titleId(2)
      */
     fun sendTitleChange(target: SessionSender, roleId: Long, titleId: Int) {
         target.send(
@@ -265,7 +265,7 @@ class LoginResponseSender {
         )
     }
 
-    /** S:009-001 創角成功 */
+    /** S:009-001 Tạo nhân vật thành công*/
     fun sendCreateCharSuccess(session: SessionSender) {
         session.send(
             PacketWriter(3)
@@ -274,7 +274,7 @@ class LoginResponseSender {
         )
     }
 
-    /** S:009-003 檢查名字結果 */
+    /** S:009-003 Kết quả kiểm tra tên*/
     fun sendCheckNameResult(session: SessionSender, result: Int) {
         session.send(
             PacketWriter(4)
@@ -284,7 +284,7 @@ class LoginResponseSender {
         )
     }
 
-    /** S:010-000 心跳回應 */
+    /** S:010-000 Phản hồi nhịp tim*/
     fun sendKeepalive(session: SessionSender) {
         session.send(
             PacketWriter(3)
@@ -305,55 +305,55 @@ class LoginResponseSender {
         )
     }
 
-    /** S:003-000 其他玩家出現（簡易版） */
+    /** S:003-000 Người chơi khác xuất hiện（bản rút gọn）*/
     fun sendOtherPlayerAppear(target: SessionSender, other: GameSession) {
         val writer = PacketWriter(128)
             .writeByte(Opcodes.CHARACTER).writeByte(0).writeByte(0)
             .writeLongLE(other.playerId)
             .writeByte(other.sex)
             .writeByte(other.element)
-            .writeByte(other.turn3Element) // 三轉元素
+            .writeByte(other.turn3Element) // Nguyên tố chuyển sinh lần 3
             .writeByte(other.level)
-            .writeByte(0)                  // 衰神標記
-            .writeUIntLE(0)                // 福神標記
-            .writeShortLE(0)               // 精靈 No
+            .writeByte(0)                  // Cờ đánh dấu suy thần
+            .writeUIntLE(0)                // Cờ đánh dấu phúc thần
+            .writeShortLE(0)               // Số tinh linh
             .writeShortLE(other.mapId)
             .writeShortLE(other.x)
             .writeShortLE(other.y)
             .writeByte(other.face)
             .writeByte(other.hair)
-            .writeByte(0)                  // 身型
+            .writeByte(0)                  // Dáng người
             .writeIntLE(other.color1)
             .writeIntLE(other.color2)
-            .writeShortLE(0)               // PVP 勝場
-            .writeByte(0)                  // PVP 名次
-            .writeByte(1)                  // 在線狀態
-            .writeByte(0)                  // NPC 挑戰賽
+            .writeShortLE(0)               // Số trận thắng PVP
+            .writeByte(0)                  // Hạng PVP
+            .writeByte(1)                  // Trạng thái trực tuyến
+            .writeByte(0)                  // Giải thách đấu NPC
             .writeByte(other.serverId)
-            .writeByte(other.turn)         // 轉生種類
-            .writeByte(other.career)       // 職業種類
+            .writeByte(other.turn)         // Loại chuyển sinh
+            .writeByte(other.career)       // Loại nghề nghiệp
             .writeBig5WithByteLen(other.characterName)
-            .writeShortLE(0)               // 分區
-            .writeShortLE(other.mountNpcId) // 坐騎 NPC ID
-            .writeByte(other.mountLevel)   // 坐騎等級
-        // 裝備外觀
+            .writeShortLE(0)               // Phân khu
+            .writeShortLE(other.mountNpcId) // ID NPC vật cưỡi
+            .writeByte(other.mountLevel)   // Cấp độ vật cưỡi
+        // Ngoại hình trang bị
         val equips = other.equipItemIds
         writer.writeByte(equips.size)
         for (itemId in equips) {
             writer.writeShortLE(itemId)
         }
         writer
-            .writeShortLE(other.titleId)   // 稱號 ID
-            .writeUIntLE(0)                // 軍團 ID
-            .writeByte(0)                  // 外顯裝備數量
+            .writeShortLE(other.titleId)   // ID danh hiệu
+            .writeUIntLE(0)                // ID quân đoàn
+            .writeByte(0)                  // Số lượng trang bị hiển thị ngoài
 
         target.send(writer.toByteArray())
     }
 
     /**
-     * S:085-001 角色計數資料
+     * S:085-001 Dữ liệu đếm nhân vật
      *
-     * 格式：數量(4 LE) + <<索引(2 LE) + 數值(4 LE) + 上限(4 LE)>>
+     * Định dạng: số lượng(4 LE) + <<chỉ số(2 LE) + giá trị(4 LE) + giới hạn(4 LE)>>
      */
     fun sendRoleCountData(session: SessionSender, counts: Map<Int, Int>) {
         val writer = PacketWriter(3 + 4 + counts.size * 10)
@@ -368,20 +368,20 @@ class LoginResponseSender {
     }
 
     /**
-     * S:040-001 熱鍵資料
+     * S:040-001 Dữ liệu phím tắt
      *
-     * 格式：PlayerMain [頁數(1)+鍵數(1)+<<ID(2)>>] + PlayerSub [頁數(1)+鍵數(1)+<<ID(2)>>]
+     * Định dạng: PlayerMain [số trang(1)+số phím(1)+<<ID(2)>>] + PlayerSub [số trang(1)+số phím(1)+<<ID(2)>>]
      */
     fun sendHotkeyData(session: SessionSender, mainKeys: List<Int>, subKeys: List<Int>) {
         val writer = PacketWriter(3 + 2 + mainKeys.size * 2 + 2 + subKeys.size * 2)
             .writeByte(40).writeByte(1).writeByte(0)
-        // PlayerMain 段（技能快捷）
+        // Đoạn PlayerMain（phím tắt kỹ năng）
         writer.writeByte(1)
         writer.writeByte(mainKeys.size)
         for (id in mainKeys) {
             writer.writeShortLE(id)
         }
-        // PlayerSub 段（物品快捷）
+        // Đoạn PlayerSub（phím tắt vật phẩm）
         writer.writeByte(1)
         writer.writeByte(subKeys.size)
         for (id in subKeys) {
@@ -391,9 +391,9 @@ class LoginResponseSender {
     }
 
     /**
-     * S:040-002 快捷鍵設定結果
+     * S:040-002 kết quả thiết lập phím tắt
      *
-     * 格式：result(1B) + [若成功] dataIndex(1B) + pageIndex(1B) + keyIndex(1B) + useId(2B LE)
+     * Định dạng: result(1B) + [nếu thành công] dataIndex(1B) + pageIndex(1B) + keyIndex(1B) + useId(2B LE)
      */
     fun sendHotkeySetResult(session: SessionSender, result: Int,
                             dataIndex: Int = 0, pageIndex: Int = 0,

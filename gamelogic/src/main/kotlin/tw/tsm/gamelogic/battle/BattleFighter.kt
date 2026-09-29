@@ -5,33 +5,33 @@ import tw.tsm.domain.constants.EHuman
 import tw.tsm.domain.enums.BattleStatus
 
 /**
- * 戰鬥參戰角色 — 對應 `FightField.lua` fightHum[]
+ * Nhân vật tham chiến — tương ứng `FightField.lua` fightHum[]
  *
- * 代表棋盤上的一個戰鬥單位（玩家、武將、或怪物）。
- * 使用普通 class 而非 data class，因為：
- * - IntArray 在 data class 中破壞 equals/hashCode 語義
- * - @Volatile 在 data class.copy() 後失效
- * - 此類別以 roleId 作為唯一身份標識
+ * Đại diện một đơn vị chiến đấu trên bàn cờ (người chơi, tướng, hoặc quái).
+ * Dùng class thường thay vì data class, vì:
+ * - IntArray phá vỡ ngữ nghĩa equals/hashCode trong data class
+ * - @Volatile mất hiệu lực sau data class.copy()
+ * - Lớp này dùng roleId làm định danh duy nhất
  */
 class BattleFighter(
-    /** 角色 ID（玩家=characterId, 怪物=自動生成負數 ID） */
+    /** ID nhân vật (người chơi=characterId, quái=ID số âm tự sinh)*/
     val roleId: Long,
-    /** 角色種類（EHuman） */
+    /** Loại nhân vật (EHuman)*/
     val kind: Int,
-    /** 主人 ID（玩家自己=0，武將=玩家 ID） */
+    /** ID chủ nhân (người chơi tự thân=0, tướng=ID người chơi)*/
     val masterId: Long = 0,
-    /** NPC 地圖索引（怪物用） */
+    /** Chỉ số bản đồ NPC (dùng cho quái)*/
     val mapNpcIdx: Int = 0,
 
-    // ── 名稱/外觀 ──
+    // ── Tên/ngoại hình ──
     val name: String,
     val npcId: Int = 0,
 
-    // ── 棋盤位置 ──
+    // ── Vị trí trên bàn cờ ──
     var col: Int,
     var row: Int,
 
-    // ── 戰鬥屬性 ──
+    // ── Thuộc tính chiến đấu ──
     var maxHp: Long,
     var maxSp: Long,
     var hp: Long,
@@ -44,12 +44,12 @@ class BattleFighter(
     var agi: Int,
     var intelligence: Int,
 
-    // ── 技能（最多 3 個） ──
+    // ── Kỹ năng (tối đa 3) ──
     val skills: IntArray = intArrayOf(),
     /** Skill level snapshot; needed by SkillData:GetFightArea(skillLv). */
     val skillLevels: Map<Int, Int> = emptyMap(),
 
-    // ── 玩家專屬外觀資料（kind=Player 時使用） ──
+    // ── Dữ liệu ngoại hình riêng của người chơi (dùng khi kind=Player) ──
     var sex: Int = 0,
     var face: Int = 0,
     var hair: Int = 0,
@@ -65,11 +65,11 @@ class BattleFighter(
     var equipItemIds: IntArray = intArrayOf(),
     var outfitItemIds: IntArray = intArrayOf(),
 
-    // ── 戰鬥狀態 ──
+    // ── Trạng thái chiến đấu ──
     var isDead: Boolean = false,
-    /** 是否被打飛（超殺死亡，無法戰場復活） */
+    /** Có bị đánh bay không (chết do siêu sát, không thể hồi sinh trên chiến trường)*/
     var isFlyOut: Boolean = false,
-    /** 本回合是否處於防禦狀態（KERO: dest.def → 傷害減半） */
+    /** Hiệp này có ở trạng thái phòng thủ không (KERO: dest.def → sát thương giảm một nửa)*/
     var isDefending: Boolean = false,
     var statusEffect: BattleStatus = BattleStatus.NONE,
     var statusRounds: Int = 0,
@@ -80,25 +80,25 @@ class BattleFighter(
     /** Independent client status groups (Seal/Vary/Faint/Spec/Strong). */
     val groupedStatuses: MutableMap<Int, GroupedBattleStatus> = mutableMapOf(),
 
-    /** 本回合是否已行動（跨執行緒：Netty 寫入 / 協程讀取） */
+    /** Hiệp này đã hành động chưa (đa luồng: Netty ghi / coroutine đọc)*/
     @Volatile var hasActed: Boolean = false,
 
-    /** 本回合選擇的行動（跨執行緒：Netty 寫入 / 協程讀取） */
+    /** Hành động đã chọn trong hiệp này (đa luồng: Netty ghi / coroutine đọc)*/
     @Volatile var pendingAction: BattleAction? = null
 ) {
-    /** 是否為玩家方（列 2-3，右側） */
+    /** Có phải phe người chơi không (cột 2-3, bên phải)*/
     val isPlayerSide: Boolean get() = col >= 2
 
-    /** 是否為敵方（列 0-1，左側） */
+    /** Có phải phe địch không (cột 0-1, bên trái)*/
     val isEnemySide: Boolean get() = col < 2
 
-    /** 是否為真人玩家（PLAYER 或 PLAYERS，用於 PVP 區分人與 NPC） */
+    /** Có phải người chơi thật không (PLAYER hoặc PLAYERS, dùng để phân biệt người và NPC trong PVP)*/
     val isHumanPlayer: Boolean get() = kind == EHuman.PLAYER || kind == EHuman.PLAYERS
 
-    /** 是否由玩家操控（包含武將等 masterID 綁定角色，客戶端 FindMasterID 判斷用） */
+    /** Có do người chơi điều khiển không (bao gồm tướng và các nhân vật ràng buộc masterID, dùng cho client FindMasterID phán đoán)*/
     val isPlayerControlled: Boolean get() = isHumanPlayer || kind == EHuman.FOLLOW_NPC
 
-    /** 是否存活 */
+    /** Có còn sống không*/
     val isAlive: Boolean get() = !isDead && hp > 0
 
     /** Seal prevents acting; client IsCanControl also blocks command input while Chaos is active. */
@@ -131,28 +131,28 @@ class BattleFighter(
         statusAppliedRound = primary?.appliedRound ?: -1
     }
 
-    /** 棋盤索引 (col * MAX_ROW + row) */
+    /** Chỉ số bàn cờ (col * MAX_ROW + row)*/
     val gridIndex: Int get() = col * BattleConstants.MAX_ROW + row
 
     /**
-     * Combo 傷害倍率（每次連擊累計 ×1.2，每回合結束重置為 1.0）
+     * Hệ số sát thương Combo (mỗi lần liên kích nhân dồn ×1.2, kết thúc mỗi hiệp reset về 1.0)
      *
-     * 由 BattleInstance.resolveRound() 在 actingFighters 排序後計算並注入。
+     * Được BattleInstance.resolveRound() tính và tiêm sau khi sắp xếp actingFighters.
      */
     var comboMultiplier: Double = 1.0
 
     companion object {
         /**
-         * 判斷 [prev] → [curr] 是否構成 Combo
+         * Xác định [prev] → [curr] có tạo thành Combo không
          *
-         * Combo 條件（對應 PC 版 C# 原版邏輯）：
-         * 1. 兩者的行動都是技能（不是物品/逃跑等）
-         * 2. 兩個技能都是物理技能（SkillDef.fightWay == 1）
-         * 3. 兩個技能的目標格子相同（targetCol + targetRow 均相等）
+         * Điều kiện Combo (tương ứng logic gốc C# bản PC):
+         * 1. Hành động của cả hai đều là kỹ năng (không phải vật phẩm/bỏ chạy v.v.)
+         * 2. Cả hai kỹ năng đều là kỹ năng vật lý (SkillDef.fightWay == 1)
+         * 3. Ô mục tiêu của hai kỹ năng giống nhau (targetCol + targetRow đều bằng nhau)
          *
-         * @param prev 前一個行動者
-         * @param curr 當前行動者
-         * @param getSkillDef 查詢技能定義的 lambda（可傳入 BattleSkillResolver::getSkillDef）
+         * @param prev người hành động trước đó
+         * @param curr người hành động hiện tại
+         * @param getSkillDef lambda truy vấn định nghĩa kỹ năng (có thể truyền BattleSkillResolver::getSkillDef)
          */
         fun checkCombo(
             prev: BattleFighter,
@@ -162,18 +162,18 @@ class BattleFighter(
             val prevAction = prev.pendingAction ?: return false
             val currAction = curr.pendingAction ?: return false
 
-            // 條件 1：兩者都是技能行動
+            // Điều kiện 1: cả hai đều là hành động kỹ năng
             if (prevAction.actionKind != BattleAction.KIND_SKILL) return false
             if (currAction.actionKind != BattleAction.KIND_SKILL) return false
 
-            // 條件 2：兩個技能都是物理技能（fightWay == 1 或普攻 10000）
+            // Điều kiện 2: cả hai kỹ năng đều là kỹ năng vật lý (fightWay == 1 hoặc đánh thường 10000)
             val prevIsPhysical = prevAction.id == BattleConstants.HAND_FIGHT_SKILL_ID ||
                 (getSkillDef(prevAction.id)?.fightWay == 1)
             val currIsPhysical = currAction.id == BattleConstants.HAND_FIGHT_SKILL_ID ||
                 (getSkillDef(currAction.id)?.fightWay == 1)
             if (!prevIsPhysical || !currIsPhysical) return false
 
-            // 條件 3：目標格子相同
+            // Điều kiện 3: ô mục tiêu giống nhau
             if (prevAction.targetCol != currAction.targetCol) return false
             if (prevAction.targetRow != currAction.targetRow) return false
 
@@ -183,16 +183,16 @@ class BattleFighter(
 }
 
 /**
- * 戰鬥行動（玩家選擇或 AI 決定）
+ * Hành động chiến đấu (người chơi chọn hoặc AI quyết định)
  */
 data class BattleAction(
-    /** 行動種類：1=技能, 2=物品, 3=捕捉, 4=逃跑 */
+    /** Loại hành động: 1=kỹ năng, 2=vật phẩm, 3=bắt, 4=bỏ chạy*/
     val actionKind: Int,
-    /** 技能/物品 ID */
+    /** ID kỹ năng/vật phẩm*/
     val id: Int,
-    /** 目標列 */
+    /** Cột mục tiêu*/
     val targetCol: Int,
-    /** 目標行 */
+    /** Hàng mục tiêu*/
     val targetRow: Int
 ) {
     companion object {

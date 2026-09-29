@@ -11,13 +11,13 @@ import tw.tsm.protocol.PacketWriter
 private val logger = KotlinLogging.logger {}
 
 /**
- * NPC 事件/任務/永標相關封包序列化
+ * Tuần tự hoá gói tin liên quan sự kiện NPC/nhiệm vụ/cờ vĩnh viễn
  *
- * mainKind = 20（NPC 事件）, 24（任務）, 81（永標）
+ * mainKind = 20（sự kiện NPC）, 24（nhiệm vụ）, 81（cờ vĩnh viễn）
  */
 class NpcEventResponseSender {
 
-    /** S:020-007 事件換場景通知 */
+    /** S:020-007 Thông báo sự kiện đổi cảnh*/
     fun sendEventChangeScene(session: SessionSender) {
         session.send(
             PacketWriter(3)
@@ -27,14 +27,14 @@ class NpcEventResponseSender {
     }
 
     /**
-     * S:020-001 一般事件結果
+     * S:020-001 Kết quả sự kiện thông thường
      *
-     * 格式（15 bytes LE）：
+     * Định dạng (15 bytes LE):
      * +resultDiagnosis(1) +resultGroupNo(2) +resultNo(1) +resultType(1)
      * +resultClass(1) +parameter(2) +parameterStyle(1) +resultValue(4) +resultMeanNo(2)
      */
     fun sendCommonEvent(session: SessionSender, result: EveResult) {
-        logger.debug { "發送 S:020-001：type=${result.resultType} class=${result.resultClass} " +
+        logger.debug { "Gửi S:020-001: type=${result.resultType} class=${result.resultClass} " +
             "groupNo=${result.resultGroupNo} no=${result.resultNo} param=${result.parameter} " +
             "style=${result.parameterStyle} value=${result.resultValue} meanNo=${result.resultMeanNo}" }
         session.send(
@@ -54,9 +54,9 @@ class NpcEventResponseSender {
     }
 
     /**
-     * S:020-008 事件結束
+     * S:020-008 Kết thúc sự kiện
      *
-     * 格式：+endKind(1)
+     * Định dạng: +endKind(1)
      */
     fun sendEventEnd(session: SessionSender, endKind: Int) {
         session.send(
@@ -68,9 +68,9 @@ class NpcEventResponseSender {
     }
 
     /**
-     * S:036-011 開啟玩家第一次轉生介面
+     * S:036-011 Mở giao diện chuyển sinh lần đầu của người chơi
      *
-     * 客戶端固定執行 UI.Open(UITurn, ETrunMode.Reincarnation, 1)，封包本體無資料。
+     * Client luôn thực thi UI.Open(UITurn, ETrunMode.Reincarnation, 1)，bản thân gói tin không có dữ liệu.
      */
     fun sendOpenPlayerReincarnation(session: SessionSender) {
         session.send(
@@ -81,9 +81,9 @@ class NpcEventResponseSender {
     }
 
     /**
-     * S:036-013 開啟殺敵點兌換商店
+     * S:036-013 Mở cửa hàng đổi điểm diệt địch
      *
-     * 客戶端依 protocolTable[36][13] 自行用 giftDot > 0 的道具組出兌換清單，封包本身無 payload。
+     * Client theo protocolTable[36][13] tự dùng vật phẩm có giftDot > 0 để dựng danh sách đổi thưởng, bản thân gói tin không có payload.
      */
     fun sendOpenKillPointShop(session: SessionSender) {
         session.send(
@@ -94,9 +94,9 @@ class NpcEventResponseSender {
     }
 
     /**
-     * S:036-015 開啟水戰奉邑介面或續行事件
+     * S:036-015 Mở giao diện thuỷ chiến phụng ấp hoặc tiếp tục sự kiện
      *
-     * 客戶端水戰 UI 已停用，Lua 只呼叫 EventManager.SetConduct(true)，封包本身無 payload。
+     * UI thuỷ chiến của client đã bị vô hiệu, Lua chỉ gọi EventManager.SetConduct(true)，bản thân gói tin không có payload.
      */
     fun sendOpenWaterWarOrgManage(session: SessionSender) {
         session.send(
@@ -107,9 +107,9 @@ class NpcEventResponseSender {
     }
 
     /**
-     * S:044-003 開啟武將二轉介面
+     * S:044-003 Mở giao diện chuyển sinh lần 2 của tướng
      *
-     * 客戶端固定執行 UI.Open(UINpcTurn, 2)，封包本體無資料。
+     * Client luôn thực thi UI.Open(UINpcTurn, 2)，bản thân gói tin không có dữ liệu.
      */
     fun sendOpenNpcSecondReincarnation(session: SessionSender) {
         session.send(
@@ -120,9 +120,9 @@ class NpcEventResponseSender {
     }
 
     /**
-     * S:044-002 開啟武將轉生（一轉）介面
+     * S:044-002 Mở giao diện chuyển sinh tướng（chuyển sinh lần 1）
      *
-     * 客戶端固定執行 UI.Open(UINpcTurn, 1)，封包本體無資料。
+     * Client luôn thực thi UI.Open(UINpcTurn, 1)，bản thân gói tin không có dữ liệu.
      */
     fun sendOpenNpcReincarnation(session: SessionSender) {
         session.send(
@@ -132,7 +132,7 @@ class NpcEventResponseSender {
         )
     }
 
-    /** S:020-027 尋找惡魔巴豆妖錯誤訊息 */
+    /** S:020-027 Thông báo lỗi tìm ác ma Ba Đậu Yêu*/
     fun sendBadoErrorMessage(session: SessionSender) {
         session.send(
             PacketWriter(3)
@@ -141,7 +141,7 @@ class NpcEventResponseSender {
         )
     }
 
-    /** S:020-029 尋找惡魔巴豆妖開始訊息 */
+    /** S:020-029 Thông báo bắt đầu tìm ác ma Ba Đậu Yêu*/
     fun sendBadoStartMessage(session: SessionSender) {
         session.send(
             PacketWriter(3)
@@ -150,7 +150,7 @@ class NpcEventResponseSender {
         )
     }
 
-    /** S:036-010 開啟無界排行榜 */
+    /** S:036-010 Mở bảng xếp hạng Vô Giới*/
     fun sendOpenGalaxyLeaderboard(session: SessionSender) {
         session.send(
             PacketWriter(3)
@@ -159,7 +159,7 @@ class NpcEventResponseSender {
         )
     }
 
-    /** S:020-030 聖誕節活動訊息 */
+    /** S:020-030 Thông báo sự kiện lễ Giáng sinh*/
     fun sendChristmasEventMessage(session: SessionSender) {
         session.send(
             PacketWriter(3)
@@ -168,7 +168,7 @@ class NpcEventResponseSender {
         )
     }
 
-    /** S:020-032 擂台賽錯誤訊息 */
+    /** S:020-032 Thông báo lỗi giải đấu đài*/
     fun sendArenaErrorMessage(session: SessionSender) {
         session.send(
             PacketWriter(3)
@@ -177,7 +177,7 @@ class NpcEventResponseSender {
         )
     }
 
-    /** S:020-035 元宵節錯誤訊息 */
+    /** S:020-035 Thông báo lỗi lễ Nguyên Tiêu*/
     fun sendLanternErrorMessage(session: SessionSender) {
         session.send(
             PacketWriter(3)
@@ -186,7 +186,7 @@ class NpcEventResponseSender {
         )
     }
 
-    /** S:020-039 未知活動訊息 */
+    /** S:020-039 Thông báo sự kiện không xác định*/
     fun sendUnknownActivityMessage(session: SessionSender) {
         session.send(
             PacketWriter(3)
@@ -195,9 +195,9 @@ class NpcEventResponseSender {
         )
     }
 
-    // ── 任務系統 (mainKind=24) ──
+    // ── Hệ thống nhiệm vụ (mainKind=24) ──
 
-    /** S:024-001 新增任務步驟 */
+    /** S:024-001 Thêm bước nhiệm vụ*/
     fun sendAddMissionStep(session: SessionSender, missionId: Int, step: Int) {
         session.send(
             PacketWriter()
@@ -208,7 +208,7 @@ class NpcEventResponseSender {
         )
     }
 
-    /** S:024-002 減少任務步驟 */
+    /** S:024-002 Giảm bước nhiệm vụ*/
     fun sendDecMissionStep(session: SessionSender, missionId: Int, step: Int) {
         session.send(
             PacketWriter()
@@ -219,7 +219,7 @@ class NpcEventResponseSender {
         )
     }
 
-    /** S:024-004 刪除任務 */
+    /** S:024-004 Xoá nhiệm vụ*/
     fun sendRemoveMission(session: SessionSender, missionId: Int) {
         session.send(
             PacketWriter()
@@ -230,9 +230,9 @@ class NpcEventResponseSender {
     }
 
     /**
-     * S:024-006 初始化任務步驟（登入時）
+     * S:024-006 Khởi tạo bước nhiệm vụ（khi đăng nhập）
      *
-     * 格式：+count(4B LE) +<<index(1B) +missionId(2B LE) +step(1B)>>
+     * Định dạng: +count(4B LE) +<<index(1B) +missionId(2B LE) +step(1B)>>
      */
     fun sendInitMissionSteps(session: SessionSender, missions: List<MissionRecord>) {
         val writer = PacketWriter()
@@ -247,9 +247,9 @@ class NpcEventResponseSender {
     }
 
     /**
-     * S:024-007 初始化任務標記（登入時）
+     * S:024-007 Khởi tạo cờ đánh dấu nhiệm vụ（khi đăng nhập）
      *
-     * 客戶端 InitMissionFlag 格式：+count(2B LE) +<<byteIndex(2B LE) +byteValue(1B)>>
+     * Định dạng InitMissionFlag của client: +count(2B LE) +<<byteIndex(2B LE) +byteValue(1B)>>
      */
     fun sendInitMissionFlags(session: SessionSender, flags: List<MissionFlagRecord>) {
         val byteMap = mutableMapOf<Int, Int>()
@@ -272,10 +272,10 @@ class NpcEventResponseSender {
     }
 
     /**
-     * S:024-005 設定任務標記
+     * S:024-005 Đặt cờ đánh dấu nhiệm vụ
      *
-     * 格式：+count(4B LE UInt32) <<+bitIndex(2B LE UInt16) +bitValue(1B Boolean)>>
-     * 注意：count 用 UInt32（4B），與 S:024-007（count=UInt16）格式不同！
+     * Định dạng: +count(4B LE UInt32) <<+bitIndex(2B LE UInt16) +bitValue(1B Boolean)>>
+     * Lưu ý: count dùng UInt32（4B），khác định dạng với S:024-007（count=UInt16）!
      */
     fun sendSetMissionFlags(session: SessionSender, flags: List<MissionFlagRecord>) {
         val writer = PacketWriter()
@@ -288,12 +288,12 @@ class NpcEventResponseSender {
         session.send(writer.toByteArray())
     }
 
-    // ── 永標系統 (mainKind=81) ──
+    // ── Hệ thống cờ vĩnh viễn (mainKind=81) ──
 
     /**
-     * S:081-002 初始化永標
+     * S:081-002 Khởi tạo cờ vĩnh viễn
      *
-     * 格式：+size(2B LE UInt16) +永標字節陣列(size×1B)
+     * Định dạng: +size(2B LE UInt16) +mảng byte cờ vĩnh viễn(size×1B)
      */
     fun sendInitBitFlags(session: SessionSender, packedFlags: ByteArray) {
         val writer = PacketWriter()
@@ -304,9 +304,9 @@ class NpcEventResponseSender {
     }
 
     /**
-     * S:081-001 永標變更
+     * S:081-001 Thay đổi cờ vĩnh viễn
      *
-     * 格式：+count(4B LE UInt32) <<+flagId(2B LE UInt16) +value(1B Boolean)>>
+     * Định dạng: +count(4B LE UInt32) <<+flagId(2B LE UInt16) +value(1B Boolean)>>
      */
     fun sendBitFlagChanges(session: SessionSender, changes: List<Pair<Int, Boolean>>) {
         val writer = PacketWriter()

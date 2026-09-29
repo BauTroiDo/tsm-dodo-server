@@ -1,9 +1,9 @@
 package tw.tsm.domain.enums
 
 /**
- * 八元素列舉
+ * Liệt kê bát nguyên tố
  *
- * 對照 `define.lua` 的元素定義。
+ * Đối chiếu định nghĩa nguyên tố trong `define.lua`.
  */
 enum class Element(val id: Int) {
     EARTH(1),
@@ -16,7 +16,7 @@ enum class Element(val id: Int) {
     DARK(8);
 
     companion object {
-        /** 根據 ID 取得元素，找不到回傳 NONE */
+        /** Lấy nguyên tố theo ID, không tìm thấy trả về NONE*/
         fun fromId(id: Int): Element = entries.firstOrNull { it.id == id } ?: NONE
     }
 }

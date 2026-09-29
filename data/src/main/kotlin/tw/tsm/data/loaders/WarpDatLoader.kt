@@ -4,16 +4,16 @@ import tw.tsm.data.DatReader
 import tw.tsm.domain.data.WarpDef
 
 /**
- * 傳送門載入器 — 對應 `DataManager.OnLoadWarpData`
+ * Loader cổng dịch chuyển — tương ứng `DataManager.OnLoadWarpData`
  *
- * 來源：`Warp_C.dat`
- * 格式：count(Int32) + count 筆 WarpData.New(reader)
+ * Nguồn: `Warp_C.dat`
+ * Định dạng: count(Int32) + count bản ghi WarpData.New(reader)
  * Key = 0-based index（warpDatas[i - 1] = data）
  */
 object WarpDatLoader {
 
     /**
-     * 載入傳送門資料
+     * Đọc dữ liệu cổng dịch chuyển
      */
     fun load(data: ByteArray): Map<Int, WarpDef> {
         val reader = DatReader(data)

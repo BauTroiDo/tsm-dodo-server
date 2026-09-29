@@ -1,10 +1,10 @@
 package tw.tsm.domain.data
 
 /**
- * 公式參數 — 對應 `Calculator.lua` 的 `Calc.Initialize(reader)` 讀取結果
+ * Tham số công thức — tương ứng kết quả đọc của `Calc.Initialize(reader)` trong `Calculator.lua`
  *
- * 來源：`Formula.dat`
- * 讀取順序嚴格對照 Calculator.lua 第 42-75 行。
+ * Nguồn: `Formula.dat`
+ * Thứ tự đọc đối chiếu chính xác dòng 42-75 của Calculator.lua.
  */
 data class FormulaParams(
     val w1: Double,

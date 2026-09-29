@@ -14,14 +14,14 @@ import tw.tsm.protocol.PacketReader
 private val logger = KotlinLogging.logger {}
 
 /**
- * 聊天處理器（mainKind = 2）
+ * Bộ xử lý trò chuyện (mainKind = 2)
  *
- * 來源：protocal.lua protocolTable[2]
- * C→S subKind 1=全頻 2=輕頻 3=密頻 4=GM 5=隊頻 6=團頻 7=盟頻
- * S→C subKind 0=系統 1=全頻 2=輕頻 3=密頻 4=GM 5=隊頻 6=團頻 7=盟頻
+ * Nguồn: protocal.lua protocolTable[2]
+ * C→S subKind 1=toàn kênh 2=kênh nhẹ 3=kênh riêng tư 4=GM 5=kênh tổ đội 6=kênh quân đoàn 7=kênh liên minh
+ * S→C subKind 0=hệ thống 1=toàn kênh 2=kênh nhẹ 3=kênh riêng tư 4=GM 5=kênh tổ đội 6=kênh quân đoàn 7=kênh liên minh
  *
- * C→S 通用格式（非密頻）：+contentLen(1) +content(Big5) +itemCount(1) +[items...] +npcCount(1) +[npcs...]
- * C→S 密頻格式：+targetId(8) +targetNameLen(1) +targetName(Big5) +contentLen(1) +content(Big5) +itemCount(1) +npcCount(1)
+ * Định dạng C→S chung (không phải kênh riêng tư): +contentLen(1) +content(Big5) +itemCount(1) +[items...] +npcCount(1) +[npcs...]
+ * Định dạng C→S kênh riêng tư: +targetId(8) +targetNameLen(1) +targetName(Big5) +contentLen(1) +content(Big5) +itemCount(1) +npcCount(1)
  */
 class ChatHandler(
     private val worldManager: WorldManager,
@@ -34,8 +34,8 @@ class ChatHandler(
     override suspend fun handle(session: GameSession, subKind: Int, data: ByteArray) {
         if (session.state != SessionState.IN_GAME) return
 
-        // GM 指令攔截：全頻/輕頻/GM頻，訊息以 "/" 開頭
-        // /設權限 指令無需 GM 權限（Bootstrap：讓第一個管理員能提升自己）
+        // Chặn lệnh GM: toàn kênh/kênh nhẹ/kênh GM, tin nhắn bắt đầu bằng "/"
+        // Lệnh /設權限 không cần quyền GM (Bootstrap: cho quản trị viên đầu tiên tự nâng cấp mình)
         if (subKind in intArrayOf(1, 2, 4)) {
             val content = readChatContent(data)
             if (content != null && content.startsWith("/")) {
@@ -56,18 +56,18 @@ class ChatHandler(
             5 -> handleTeamChat(session, data)
             6 -> handleOrganizationChat(session, data)
             7 -> handleAllyChat(session, data)
-            else -> logger.warn { "未處理的聊天子協定：subKind=$subKind" }
+            else -> logger.warn { "Sub-protocol chat chưa xử lý: subKind=$subKind" }
         }
     }
 
     /**
-     * C:002-001 全頻發話
+     * C:002-001 nói trên toàn kênh
      */
     private fun handleWorldChat(session: GameSession, data: ByteArray) {
         val content = readChatContent(data) ?: return
-        logger.info { "[全頻] ${session.characterName}: $content" }
+        logger.info { "[Kênh toàn cầu] ${session.characterName}: $content" }
 
-        // 廣播給所有在線玩家
+        // Phát rộng cho tất cả người chơi trực tuyến
         responseSender.sendChatMessage(
             session, ChatChannel.WORLD,
             session.playerId, session.characterName, content
@@ -75,13 +75,13 @@ class ChatHandler(
     }
 
     /**
-     * C:002-002 輕頻發話（場景頻道）
+     * C:002-002 nói trên kênh nhẹ (kênh cảnh)
      */
     private fun handleSceneChat(session: GameSession, data: ByteArray) {
         val content = readChatContent(data) ?: return
-        logger.info { "[輕頻] ${session.characterName}: $content" }
+        logger.info { "[Kênh lân cận] ${session.characterName}: $content" }
 
-        // 廣播給同地圖玩家
+        // Phát rộng cho người chơi cùng bản đồ
         responseSender.sendChatMessageToMap(
             session, ChatChannel.SCENE,
             session.playerId, session.characterName, content,
@@ -90,77 +90,77 @@ class ChatHandler(
     }
 
     /**
-     * C:002-003 密頻發話
+     * C:002-003 nói trên kênh riêng tư
      *
-     * 格式：+targetId(8) +targetNameLen(1) +targetName(Big5) +contentLen(1) +content(Big5) +itemCount(1) +npcCount(1)
+     * Định dạng: +targetId(8) +targetNameLen(1) +targetName(Big5) +contentLen(1) +content(Big5) +itemCount(1) +npcCount(1)
      */
     private fun handleWhisperChat(session: GameSession, data: ByteArray) {
-        if (data.size < 10) return  // 最小：playerId(8) + nameLen(1) + contentLen(1)
+        if (data.size < 10) return  // Tối thiểu: playerId(8) + nameLen(1) + contentLen(1)
         val reader = PacketReader(data)
         val targetPlayerId = reader.readULongLE()
         val targetName = reader.readBig5WithByteLen()
         val content = reader.readUnicodeWithByteLen()
 
-        logger.info { "[密頻] ${session.characterName} → $targetName: $content" }
+        logger.info { "[Kênh riêng] ${session.characterName} → $targetName: $content" }
 
-        // 找到目標玩家
+        // Tìm người chơi mục tiêu
         val target = worldManager.getPlayerById(targetPlayerId)
             ?: worldManager.getPlayerByName(targetName)
 
         if (target == null) {
-            // TODO：發送「對方不在線」訊息
-            logger.info { "密語目標 $targetName 不在線" }
+            // TODO: gửi thông báo «đối phương không trực tuyến»
+            logger.info { "Mục tiêu nhắn riêng $targetName không trực tuyến" }
             return
         }
 
-        // 發送給目標玩家
+        // Gửi cho người chơi mục tiêu
         responseSender.sendWhisperMessage(
             target, session.playerId, session.characterName, content, session.titleId
         )
     }
 
     /**
-     * C:002-004 GM 頻發話
+     * C:002-004 nói trên kênh GM
      */
     private fun handleGMChat(session: GameSession, data: ByteArray) {
-        if (session.gmLevel <= 0) return  // 非 GM 不可使用 GM 頻
+        if (session.gmLevel <= 0) return  // Không phải GM không được dùng kênh GM
         val content = readChatContent(data) ?: return
-        logger.info { "[GM頻] ${session.characterName}: $content" }
+        logger.info { "[Kênh GM] ${session.characterName}: $content" }
     }
 
     /**
-     * C:002-005 隊頻發話
+     * C:002-005 nói trên kênh tổ đội
      */
     private fun handleTeamChat(session: GameSession, data: ByteArray) {
         val content = readChatContent(data) ?: return
-        logger.info { "[隊頻] ${session.characterName}: $content" }
-        // TODO：Phase 9 組隊系統完成後實作隊伍廣播
+        logger.info { "[Kênh tổ đội] ${session.characterName}: $content" }
+        // TODO: cài đặt phát rộng tổ đội sau khi hệ thống lập nhóm Phase 9 hoàn tất
     }
 
     /**
-     * C:002-006 團頻發話
+     * C:002-006 nói trên kênh quân đoàn
      */
     private fun handleOrganizationChat(session: GameSession, data: ByteArray) {
         val content = readChatContent(data) ?: return
-        logger.info { "[團頻] ${session.characterName}: $content" }
-        // TODO：Phase 11 公會系統完成後實作
+        logger.info { "[Kênh đoàn đội] ${session.characterName}: $content" }
+        // TODO: cài đặt sau khi hệ thống công hội Phase 11 hoàn tất
     }
 
     /**
-     * C:002-007 盟頻發話
+     * C:002-007 nói trên kênh liên minh
      */
     private fun handleAllyChat(session: GameSession, data: ByteArray) {
         val content = readChatContent(data) ?: return
-        logger.info { "[盟頻] ${session.characterName}: $content" }
-        // TODO：Phase 11 公會系統完成後實作
+        logger.info { "[Kênh minh] ${session.characterName}: $content" }
+        // TODO: cài đặt sau khi hệ thống công hội Phase 11 hoàn tất
     }
 
     /**
-     * 讀取聊天封包的文字內容
+     * Đọc nội dung chữ của gói tin trò chuyện
      *
-     * 通用格式：+contentLen(1) +content(UTF-16LE) +itemCount(1) +[items...] +npcCount(1) +[npcs...]
-     * 客戶端用 WriteStringWithByteL(msg, encoding_Unicode) 發送（code page 1200 = UTF-16LE）
-     * 目前只讀文字，跳過物品和 NPC 連結
+     * Định dạng chung: +contentLen(1) +content(UTF-16LE) +itemCount(1) +[items...] +npcCount(1) +[npcs...]
+     * Client dùng WriteStringWithByteL(msg, encoding_Unicode) để gửi (code page 1200 = UTF-16LE)
+     * Hiện chỉ đọc chữ, bỏ qua liên kết vật phẩm và NPC
      */
     private fun readChatContent(data: ByteArray): String? {
         if (data.isEmpty()) return null

@@ -12,15 +12,15 @@ import tw.tsm.domain.valueobjects.FollowNpcData
 private val logger = KotlinLogging.logger {}
 
 /**
- * Eve 事件狀態建構器
+ * Bộ dựng trạng thái sự kiện Eve
  *
- * 職責：
- * - 建構 PlayerEventState 快照（整合 QuestSystem / InventorySystem / PetSystem）
- * - Fallback Talk 查找
- * - 距離驗證
+ * Nhiệm vụ:
+ * - Dựng ảnh chụp PlayerEventState (tích hợp QuestSystem / InventorySystem / PetSystem)
+ * - Tìm kiếm Talk fallback
+ * - Kiểm tra khoảng cách
  *
- * 條件解析（resolveEvent）和 GroupData 過濾（applyGroupData）
- * 已移至 [EveConditionResolver]，本類只負責「狀態建構」。
+ * Phân tích điều kiện (resolveEvent) và lọc GroupData (applyGroupData)
+ * Đã chuyển sang [EveConditionResolver], lớp này chỉ chịu trách nhiệm "dựng trạng thái".
  */
 class EveStateBuilder(
     private val questSystem: QuestSystem,
@@ -37,16 +37,16 @@ class EveStateBuilder(
 ) {
 
     /**
-     * 建構玩家事件狀態快照
+     * Dựng ảnh chụp nhanh trạng thái sự kiện người chơi
      *
-     * 從各系統收集當前狀態，傳入 EveConditionEvaluator 進行純函數評估。
-     * completedEveCounts 從 DB 載入 + 記憶體合併，確保重登不遺失。
+     * Thu thập trạng thái hiện tại từ các hệ thống, truyền vào EveConditionEvaluator để đánh giá bằng hàm thuần.
+     * completedEveCounts nạp từ DB + hợp nhất trong bộ nhớ, đảm bảo đăng nhập lại không mất.
      */
     suspend fun buildPlayerState(charId: Long, mapId: Int, session: GameSession? = null): PlayerEventState {
         val missionSteps = questSystem.getMissions(charId)
             .associateBy({ it.missionId }, { it.step })
 
-        // 任務旗標（conditionClass=2 pStyle=3 條件用）
+        // Cờ nhiệm vụ (dùng cho điều kiện conditionClass=2 pStyle=3)
         val rawFlags = questSystem.getFlags(charId)
             .associateBy({ it.bitIndex }, { it.bitValue })
         val missionFlagValues = mutableMapOf<Int, Int>()
@@ -55,7 +55,7 @@ class EveStateBuilder(
             if (flagValue > 0) missionFlagValues[missionId] = flagValue
         }
 
-        // 從 DB 載入已完成事件計數並合併到記憶體
+        // Nạp số đếm sự kiện đã hoàn thành từ DB và hợp nhất vào bộ nhớ
         val dbCompleted = questRepository.getCompletedEventCounts(charId, mapId)
         if (dbCompleted.isNotEmpty()) {
             stateMachine.prePopulateCompleted(charId, mapId, dbCompleted)
@@ -124,7 +124,7 @@ class EveStateBuilder(
     }
 
     /**
-     * 從 NPC 事件中找第一個 Talk result 作為 fallback 對話
+     * Tìm result Talk đầu tiên trong sự kiện NPC làm hội thoại fallback
      */
     fun findFallbackTalk(sceneData: SceneEveData, eveNos: List<Int>): EveResult? {
         for (eveNo in eveNos) {
@@ -139,17 +139,17 @@ class EveStateBuilder(
     }
 
     /**
-     * 距離驗證：玩家 (0,0) 表示初始化中無位置，跳過驗證
+     * Kiểm tra khoảng cách: người chơi (0,0) nghĩa là đang khởi tạo chưa có vị trí, bỏ qua kiểm tra
      */
     fun isWithinRange(px: Int, py: Int, tx: Int, ty: Int): Boolean {
-        if (px == 0 && py == 0) return true  // 玩家初始化中，無位置資料
+        if (px == 0 && py == 0) return true  // Người chơi đang khởi tạo, không có dữ liệu vị trí
         val dx = (px - tx).toLong()
         val dy = (py - ty).toLong()
         return dx * dx + dy * dy <= MAX_INTERACT_DISTANCE_SQ
     }
 
     companion object {
-        /** 互動距離上限平方值（200 像素，比客戶端 130 寬鬆） */
+        /** Giá trị bình phương giới hạn khoảng cách tương tác (200 pixel, lỏng hơn client 130)*/
         private const val MAX_INTERACT_DISTANCE_SQ = 200L * 200L
         private const val ROLE_COUNT_BAG_1 = 103
         private const val ROLE_COUNT_BAG_2 = 106

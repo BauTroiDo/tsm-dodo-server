@@ -15,10 +15,10 @@ import tw.tsm.protocol.PacketReader
 private val logger = KotlinLogging.logger {}
 
 /**
- * NPC 買賣處理器（mainKind = 27）
+ * Bộ xử lý mua bán NPC (mainKind = 27)
  *
- * 來源：protocal.lua protocolTable[27]
- * C:027-001 買東西, C:027-002 賣東西（事件商店）, C:027-003 賣東西（隨身雜貨商）
+ * Nguồn: protocal.lua protocolTable[27]
+ * C:027-001 mua đồ, C:027-002 bán đồ (cửa hàng sự kiện), C:027-003 bán đồ (tiệm tạp hóa đi theo người)
  */
 class NpcTradeHandler(
     private val inventorySystem: InventorySystem,
@@ -36,19 +36,19 @@ class NpcTradeHandler(
         when (subKind) {
             1 -> handleBuy(session, data)
             2 -> handleSell(session, data)
-            3 -> handleSell(session, data)  // 隨身雜貨商賣出，格式與 subKind=2 相同
-            else -> logger.warn { "未處理的交易子協定：subKind=$subKind" }
+            3 -> handleSell(session, data)  // tiệm tạp hóa đi theo người bán, định dạng giống subKind=2
+            else -> logger.warn { "Sub-protocol giao dịch chưa xử lý: subKind=$subKind" }
         }
     }
 
     /**
-     * C:027-001 買東西
+     * C:027-001 mua đồ
      *
-     * 格式：+index(1) +quantity(4)
-     * 來源：UIShop.lua:98-102
+     * Định dạng: +index(1) +quantity(4)
+     * Nguồn: UIShop.lua:98-102
      *
-     * index = 商品在 UIShop options 列表中的 0-based 索引，
-     * 對應 [NpcShopManager] 中由 Eve Surface optionMode=1 建立的商品清單。
+     * index = chỉ số 0-based của món hàng trong danh sách options của UIShop,
+     * tương ứng danh sách hàng hóa do Eve Surface tạo với optionMode=1 trong [NpcShopManager].
      */
     private suspend fun handleBuy(session: GameSession, data: ByteArray) {
         if (data.size < 5) return  // index(1) + quantity(4)
@@ -63,57 +63,57 @@ class NpcTradeHandler(
 
         val charId = session.roleId.toLong()
 
-        // 查詢商品 — 由 EveFlowController 在 Surface optionMode=1 時設定
+        // tra cứu hàng hóa — do EveFlowController thiết lập khi Surface optionMode=1
         val itemId = npcShopManager.getShopItem(charId, index)
         if (itemId == null) {
-            responseSender.sendBuyResult(session, 6)  // 6=物品關閉（無商店資料）
-            logger.debug { "${session.characterName} 購買失敗：無商店資料或索引越界 index=$index" }
+            responseSender.sendBuyResult(session, 6)  // 6=vật phẩm bị đóng (không có dữ liệu cửa hàng)
+            logger.debug { "${session.characterName} mua thất bại: không có dữ liệu cửa hàng hoặc chỉ số vượt giới hạn index=$index" }
             return
         }
 
         val def = itemDefs[itemId]
         if (def == null) {
-            responseSender.sendBuyResult(session, 3)  // 3=物品不存在
-            logger.warn { "${session.characterName} 購買失敗：itemDefs[$itemId] 不存在" }
+            responseSender.sendBuyResult(session, 3)  // 3=vật phẩm không tồn tại
+            logger.warn { "${session.characterName} mua thất bại: itemDefs[$itemId] không tồn tại" }
             return
         }
 
-        // 計算總價（用 Long 防溢位）
+        // tính tổng giá (dùng Long để tránh tràn số)
         val totalPrice = def.price.toLong() * quantity
         if (totalPrice > Int.MAX_VALUE || totalPrice <= 0) {
             responseSender.sendBuyResult(session, 3)
             return
         }
 
-        // 扣錢
+        // trừ tiền
         if (!moneySystem.subtractGold(charId, totalPrice.toInt())) {
-            responseSender.sendBuyResult(session, 1)  // 1=錢不夠
+            responseSender.sendBuyResult(session, 1)  // 1=không đủ tiền
             return
         }
 
-        // 加物品到背包
+        // thêm vật phẩm vào túi đồ
         val added = inventorySystem.addItemToBag(charId, itemId, quantity)
         if (added == null) {
-            // 背包滿 → 退錢
+            // túi đồ đầy → hoàn tiền
             moneySystem.addGold(charId, totalPrice.toInt())
-            responseSender.sendBuyResult(session, 2)  // 2=背包滿
+            responseSender.sendBuyResult(session, 2)  // 2=túi đồ đầy
             return
         }
 
-        // 成功 — 發送金錢扣除 + 物品新增 + 購買結果
+        // thành công — gửi khấu trừ tiền + thêm vật phẩm + kết quả mua
         responseSender.sendSubtractMoney(session, totalPrice.toInt())
         val (slot, thing) = added
         responseSender.sendSetBagItem(session, slot, thing, showMsg = false)
-        responseSender.sendBuyResult(session, 0)  // 0=成功
+        responseSender.sendBuyResult(session, 0)  // 0=thành công
 
-        logger.info { "${session.characterName} 購買成功：itemId=$itemId x$quantity 花費 $totalPrice 金 → slot=$slot" }
+        logger.info { "${session.characterName} mua thành công: itemId=$itemId x$quantity hết $totalPrice tiền vàng → slot=$slot" }
     }
 
     /**
-     * C:027-002 賣東西（事件商店）/ C:027-003 賣東西（隨身雜貨商）
+     * C:027-002 bán đồ (cửa hàng sự kiện) / C:027-003 bán đồ (tiệm tạp hóa đi theo người)
      *
-     * 格式：+len(1) +<<bagIndex(1) +quantity(4)>>
-     * 來源：UINpcStore.lua:343-355
+     * Định dạng: +len(1) +<<bagIndex(1) +quantity(4)>>
+     * Nguồn: UINpcStore.lua:343-355
      */
     private suspend fun handleSell(session: GameSession, data: ByteArray) {
         if (data.size < 1) return
@@ -133,9 +133,9 @@ class NpcTradeHandler(
             val def = itemDefs[bagItem.itemId] ?: continue
 
             val sellQty = minOf(quantity, bagItem.quantity)
-            val sellPrice = def.sellPrice.toLong() * sellQty  // 用 Long 防溢位
+            val sellPrice = def.sellPrice.toLong() * sellQty  // dùng Long để tránh tràn số
 
-            // 增加金錢
+            // tăng tiền
             if (sellPrice > 0 && sellPrice <= Int.MAX_VALUE) {
                 if (!moneySystem.addGold(characterId, sellPrice.toInt())) {
                     responseSender.sendMoneyFull(session, 1)
@@ -144,16 +144,16 @@ class NpcTradeHandler(
                 responseSender.sendAddMoney(session, sellPrice.toInt())
             }
 
-            // 扣除物品
+            // khấu trừ vật phẩm
             inventorySystem.removeFromBag(characterId, bagIndex, sellQty)
             responseSender.sendReduceBagItem(session, bagIndex, sellQty)
             soldIndices.add(bagIndex)
         }
 
-        // 回傳賣出結果：0=成功
+        // trả về kết quả bán: 0=thành công
         val result = if (soldIndices.isNotEmpty()) 0 else 4
         responseSender.sendSellResult(session, result, soldIndices)
 
-        logger.info { "${session.characterName} 賣東西：賣出${soldIndices.size}件" }
+        logger.info { "${session.characterName} bán đồ: đã bán ${soldIndices.size} món" }
     }
 }

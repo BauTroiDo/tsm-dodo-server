@@ -29,10 +29,10 @@ import java.util.concurrent.atomic.AtomicLong
 private val logger = KotlinLogging.logger {}
 
 /**
- * 戰鬥管理器 — 管理所有進行中的戰鬥
+ * Trình quản lý chiến đấu — quản lý mọi trận đấu đang diễn ra
  *
- * 負責戰鬥的建立、指令分發、回合迴圈、結算。
- * 戰鬥結束後透過回呼恢復 NPC 事件流程（避免循環依賴 NpcEventHandler）。
+ * Chịu trách nhiệm tạo trận, phân phát lệnh, vòng lặp hiệp đấu, quyết toán.
+ * Sau khi trận đấu kết thúc, phục hồi luồng sự kiện NPC thông qua callback (tránh phụ thuộc vòng với NpcEventHandler).
  */
 class BattleManager(
     private val responseSender: ResponseSender,
@@ -54,22 +54,22 @@ class BattleManager(
     private val sceneSetDefs: Map<Int, SceneSetDef> = emptyMap(),
     private val dailyProgressSystem: DailyProgressSystem? = null,
 ) {
-    /** 戰鬥道具解析器（無狀態，全戰鬥共用） */
+    /** Trình phân tích vật phẩm chiến đấu (stateless, dùng chung cho toàn trận)*/
     private val battleItemResolver = BattleItemResolver(inventorySystem, itemDefs)
 
     /**
-     * 戰鬥結束回呼 — 由 ServerModule 設定，呼叫 NpcEventHandler.resumeAfterBattle()
+     * Callback khi kết thúc trận — do ServerModule thiết lập, gọi NpcEventHandler.resumeAfterBattle()
      *
-     * 參數：(session, playerId, playerWin)
+     * Tham số: (session, playerId, playerWin)
      */
     var onBattleEndCallback: (suspend (GameSession, Long, Boolean) -> Unit)? = null
-    /** 所有進行中的戰鬥（battleId → BattleInstance） */
+    /** Mọi trận đấu đang diễn ra (battleId → BattleInstance)*/
     private val battles = ConcurrentHashMap<Long, BattleInstance>()
 
-    /** 玩家 → 戰鬥 ID 的映射 */
+    /** Ánh xạ người chơi → ID trận đấu*/
     private val playerBattleMap = ConcurrentHashMap<Long, Long>()
 
-    /** 戰鬥 ID 生成器 */
+    /** Trình tạo ID trận đấu*/
     private val nextBattleId = AtomicLong(1)
 
     /**
@@ -101,11 +101,11 @@ class BattleManager(
     }
 
     /**
-     * 建立 PvE 戰鬥（事件觸發）
+     * Tạo trận PvE (sự kiện kích hoạt)
      *
-     * @param session 觸發的玩家
-     * @param fightData 戰鬥配置（從 Eve_FightData 載入）
-     * @param terrain 地質資訊
+     * @param session người chơi kích hoạt
+     * @param fightData cấu hình chiến đấu (tải từ Eve_FightData)
+     * @param terrain thông tin địa chất
      */
     suspend fun createPveBattle(
         session: GameSession,
@@ -113,18 +113,18 @@ class BattleManager(
         terrain: Int = 0
     ) {
         if (isInBattle(session.playerId)) {
-            logger.warn { "玩家 ${session.playerId} 已在戰鬥中，無法發起新戰鬥" }
+            logger.warn { "Người chơi ${session.playerId} đang trong trận chiến, không thể mở trận mới" }
             return
         }
 
-        // terrain=0 代表未設定，fallback 到 101（CDN 中最小的有效 ffield）
+        // terrain=0 nghĩa là chưa đặt, fallback về 101 (ffield hợp lệ nhỏ nhất trong CDN)
         val effectiveTerrain = if (terrain == 0) 101 else terrain
 
         val battleId = nextBattleId.getAndIncrement()
         val skillResolver = BattleSkillResolver(skillDefs)
         val grid = BattleGrid()
 
-        // 收集涉及的 NPC 定義（npcId + NpcDef）
+        // Thu thập định nghĩa NPC liên quan (npcId + NpcDef)
         val involvedNpcs = mutableListOf<Pair<Int, NpcDef>>()
 
         val battle = BattleInstance(
@@ -139,7 +139,7 @@ class BattleManager(
         )
         battle.linkToResult = fightData.linkToResult
 
-        // 1. 判斷是否有出戰武將 — 有的話玩家退到後排、武將站前排
+        // 1. Phán định có tướng xuất chiến hay không — nếu có thì người chơi lùi về hàng sau, tướng đứng hàng trước
         val charId = session.roleId.toLong()
         val hasFightNpc = (petSystem.getCache(charId)?.fightNpcId ?: 0) > 0
         val playerCol = if (hasFightNpc) BattleConstants.PLAYER_BACK_COL else BattleConstants.PLAYER_FRONT_COL
@@ -147,45 +147,45 @@ class BattleManager(
         battle.addFighter(playerFighter)
         battle.playerSessions[session.playerId] = session
 
-        // 1.5 若有出戰武將，加入棋盤前排（col=2）
+        // 1.5 Nếu có tướng xuất chiến, thêm vào hàng trước bàn cờ (col=2)
         if (hasFightNpc) {
             addFollowNpcIfDeployed(session, battle, col = BattleConstants.PLAYER_FRONT_COL)
         }
 
-        // 2. 將敵方 NPC 加入棋盤（左側 col=0-1，居中排列）
+        // 2. Thêm NPC phe địch vào bàn cờ (bên trái col=0-1, sắp canh giữa)
         addCenteredEnemies(fightData.leftEnemies, battle, battleId, involvedNpcs)
 
-        // rightEnemies（通常為空，備用，同樣居中排列，使用玩家側列）
+        // rightEnemies (thường để trống, dự phòng, cũng sắp canh giữa, dùng cột phía người chơi)
         addCenteredEnemies(
             fightData.rightEnemies, battle, battleId, involvedNpcs,
             frontCol = BattleConstants.PLAYER_FRONT_COL,
             backCol = BattleConstants.PLAYER_BACK_COL
         )
 
-        // 3. 註冊戰鬥
+        // 3. Đăng ký trận đấu
         battles[battleId] = battle
         playerBattleMap[session.playerId] = battleId
         session.battleId = battleId
 
-        logger.info { "戰鬥 $battleId 建立：玩家 ${session.characterName} vs ${involvedNpcs.size} 個敵人（事件 ${fightData.eveNo}）leftEnemies=${fightData.leftEnemies.size} rightEnemies=${fightData.rightEnemies.size}" }
+        logger.info { "Tạo trận $battleId: người chơi ${session.characterName} vs ${involvedNpcs.size} kẻ địch (sự kiện ${fightData.eveNo}) leftEnemies=${fightData.leftEnemies.size} rightEnemies=${fightData.rightEnemies.size}" }
 
         installCatchOwnerValidator(battle)
 
-        // 4. 發送戰鬥初始化封包
+        // 4. Gửi gói tin khởi tạo chiến đấu
         sendBattleInit(battle)
 
-        // 5. 啟動回合迴圈
+        // 5. Khởi động vòng lặp hiệp đấu
         scope.launch {
             runBattleLoop(battle)
         }
     }
 
     /**
-     * 建立地圖 NPC 戰鬥（PK / 木人樁訓練）
+     * Tạo trận NPC trên bản đồ (PK / luyện tập với bù nhìn gỗ)
      *
-     * @param session 發起戰鬥的玩家
-     * @param npcId NPC 編號
-     * @param placementIndex 地圖擺放索引
+     * @param session người chơi khởi xướng trận đấu
+     * @param npcId số hiệu NPC
+     * @param placementIndex index bố trí trên bản đồ
      */
     suspend fun createMapNpcBattle(
         session: GameSession,
@@ -193,13 +193,13 @@ class BattleManager(
         placementIndex: Int = 0
     ) {
         if (isInBattle(session.playerId)) {
-            logger.warn { "玩家 ${session.playerId} 已在戰鬥中，無法發起新戰鬥" }
+            logger.warn { "Người chơi ${session.playerId} đang trong trận chiến, không thể mở trận mới" }
             return
         }
 
         val npcDef = npcDefs[npcId]
         if (npcDef == null) {
-            logger.warn { "createMapNpcBattle: 找不到 NPC 定義 npcId=$npcId" }
+            logger.warn { "createMapNpcBattle: không tìm thấy định nghĩa NPC npcId=$npcId" }
             return
         }
 
@@ -222,7 +222,7 @@ class BattleManager(
             involvedNpcDefs = involvedNpcs
         )
 
-        // 1. 判斷是否有出戰武將 — 有的話玩家退到後排、武將站前排
+        // 1. Phán định có tướng xuất chiến hay không — nếu có thì người chơi lùi về hàng sau, tướng đứng hàng trước
         val charId = session.roleId.toLong()
         val hasFightNpc = (petSystem.getCache(charId)?.fightNpcId ?: 0) > 0
         val playerCol = if (hasFightNpc) BattleConstants.PLAYER_BACK_COL else BattleConstants.PLAYER_FRONT_COL
@@ -230,42 +230,42 @@ class BattleManager(
         battle.addFighter(playerFighter)
         battle.playerSessions[session.playerId] = session
 
-        // 1.5 若有出戰武將，加入棋盤前排（col=2）
+        // 1.5 Nếu có tướng xuất chiến, thêm vào hàng trước bàn cờ (col=2)
         if (hasFightNpc) {
             addFollowNpcIfDeployed(session, battle, col = BattleConstants.PLAYER_FRONT_COL)
         }
 
-        // 2. 將敵方 NPC 加入棋盤 (col=BattleConstants.ENEMY_FRONT_COL, row=BattleConstants.CENTER_ROW)
+        // 2. Thêm NPC phe địch vào bàn cờ (col=BattleConstants.ENEMY_FRONT_COL, row=BattleConstants.CENTER_ROW)
         val enemyFighter = createNpcFighter(npcDef, BattleConstants.ENEMY_FRONT_COL, BattleConstants.CENTER_ROW, battleId, npcId)
         battle.addFighter(enemyFighter)
 
-        // 3. 註冊戰鬥
+        // 3. Đăng ký trận đấu
         battles[battleId] = battle
         playerBattleMap[session.playerId] = battleId
         session.battleId = battleId
 
-        logger.info { "戰鬥 $battleId 建立：玩家 ${session.characterName} vs MapNpc ${npcDef.name} (id=$npcId, placement=$placementIndex)" }
+        logger.info { "Tạo trận $battleId: người chơi ${session.characterName} vs MapNpc ${npcDef.name} (id=$npcId, placement=$placementIndex)" }
 
         installCatchOwnerValidator(battle)
 
-        // 4. 發送戰鬥初始化封包
+        // 4. Gửi gói tin khởi tạo chiến đấu
         sendBattleInit(battle)
 
-        // 5. 啟動回合迴圈
+        // 5. Khởi động vòng lặp hiệp đấu
         scope.launch {
             runBattleLoop(battle)
         }
     }
 
     /**
-     * 建立 PvP 戰鬥（玩家 PK）
+     * Tạo trận PvP (người chơi PK)
      *
-     * @param attacker 發起 PK 的玩家
-     * @param defender 被 PK 的玩家
+     * @param attacker người chơi khởi xướng PK
+     * @param defender người chơi bị PK
      */
     suspend fun createPvpBattle(attacker: GameSession, defender: GameSession) {
         if (isInBattle(attacker.playerId) || isInBattle(defender.playerId)) {
-            logger.warn { "PVP 建立失敗：玩家已在戰鬥中" }
+            logger.warn { "Tạo PVP thất bại: người chơi đang trong trận chiến" }
             return
         }
 
@@ -284,7 +284,7 @@ class BattleManager(
             involvedNpcDefs = emptyList()
         )
 
-        // 攻擊方 → 右側（有武將時退到後排 col=3，否則前排 col=2）
+        // Phe tấn công → bên phải (có tướng thì lùi hàng sau col=3, không thì hàng trước col=2)
         val atkCharId = attacker.roleId.toLong()
         val atkHasNpc = (petSystem.getCache(atkCharId)?.fightNpcId ?: 0) > 0
         val atkCol = if (atkHasNpc) BattleConstants.PLAYER_BACK_COL else BattleConstants.PLAYER_FRONT_COL
@@ -293,7 +293,7 @@ class BattleManager(
         battle.playerSessions[attacker.playerId] = attacker
         if (atkHasNpc) addFollowNpcIfDeployed(attacker, battle, col = BattleConstants.PLAYER_FRONT_COL)
 
-        // 防守方 → 左側（有武將時退到後排 col=1，否則前排 col=0）
+        // Bên phòng thủ → bên trái (có tướng thì lùi về hàng sau col=1, ngược lại hàng trước col=0)
         val defCharId = defender.roleId.toLong()
         val defHasNpc = (petSystem.getCache(defCharId)?.fightNpcId ?: 0) > 0
         val defCol = if (defHasNpc) BattleConstants.ENEMY_BACK_COL else BattleConstants.ENEMY_FRONT_COL
@@ -302,40 +302,40 @@ class BattleManager(
         battle.playerSessions[defender.playerId] = defender
         if (defHasNpc) addFollowNpcIfDeployed(defender, battle, col = BattleConstants.ENEMY_FRONT_COL)
 
-        // 註冊戰鬥
+        // Đăng ký trận đấu
         battles[battleId] = battle
         playerBattleMap[attacker.playerId] = battleId
         playerBattleMap[defender.playerId] = battleId
         attacker.battleId = battleId
         defender.battleId = battleId
 
-        logger.info { "PVP 戰鬥 $battleId 建立：${attacker.characterName} vs ${defender.characterName}" }
+        logger.info { "Tạo trận PVP $battleId: ${attacker.characterName} vs ${defender.characterName}" }
 
         installCatchOwnerValidator(battle)
 
-        // 發送戰鬥初始化封包
+        // Gửi gói tin khởi tạo chiến đấu
         sendBattleInit(battle)
 
-        // 啟動回合迴圈
+        // Khởi động vòng lặp hiệp đấu
         scope.launch {
             runBattleLoop(battle)
         }
     }
 
     /**
-     * 處理玩家戰鬥指令（含武將）
+     * Xử lý lệnh chiến đấu của người chơi (bao gồm tướng)
      *
-     * @param playerId 發送指令的玩家 ID
-     * @param srcCol 發招者所在列（用於定位角色，武將的 roleId ≠ playerId）
-     * @param srcRow 發招者所在行
-     * @param action 選擇的行動
+     * @param playerId ID người chơi gửi lệnh
+     * @param srcCol cột của bên ra chiêu (dùng để định vị nhân vật, roleId của tướng ≠ playerId)
+     * @param srcRow hàng của bên ra chiêu
+     * @param action hành động được chọn
      */
     fun handlePlayerAction(playerId: Long, srcCol: Int, srcRow: Int, action: BattleAction): Boolean {
         val battleId = playerBattleMap[playerId] ?: return false
         val battle = battles[battleId] ?: return false
 
         if (battle.state != BattleInstance.State.WAITING_COMMANDS) {
-            logger.debug { "戰鬥 $battleId: 目前不接受指令（state=${battle.state}）" }
+            logger.debug { "Trận $battleId: hiện không nhận lệnh (state=${battle.state})" }
             return false
         }
 
@@ -343,7 +343,7 @@ class BattleManager(
     }
 
     /**
-     * 取得玩家所在戰鬥
+     * Lấy trận đấu mà người chơi đang ở
      */
     fun getPlayerBattle(playerId: Long): BattleInstance? {
         val battleId = playerBattleMap[playerId] ?: return null
@@ -351,26 +351,26 @@ class BattleManager(
     }
 
     /**
-     * 玩家是否在戰鬥中
+     * Người chơi có đang trong trận đấu hay không
      */
     fun isInBattle(playerId: Long): Boolean = playerBattleMap.containsKey(playerId)
 
     /**
-     * 加入正在進行的戰鬥（參戰）
+     * Tham gia trận đấu đang diễn ra (tham chiến)
      *
-     * 玩家點擊正在戰鬥中的角色「參戰」按鈕時呼叫。
-     * 加入者會分配到與目標相同的陣營。
+     * Được gọi khi người chơi bấm nút "tham chiến" trên nhân vật đang chiến đấu.
+     * Người tham gia được xếp vào cùng phe với mục tiêu.
      *
-     * @param joiner 要加入的玩家 session
-     * @param battle 要加入的戰鬥實例
-     * @param targetPlayerId 被點擊的目標玩家 ID（用於判斷陣營）
-     * @return true=成功加入, false=加入失敗（隊伍滿）
+     * @param joiner session người chơi cần tham gia
+     * @param battle instance trận đấu cần tham gia
+     * @param targetPlayerId ID người chơi mục tiêu bị bấm (dùng để phán định phe đảng)
+     * @return true=vào thành công, false=vào thất bại (tổ đội đầy)
      */
     suspend fun joinBattle(joiner: GameSession, battle: BattleInstance, targetPlayerId: Long): Boolean {
-        // 1. 判斷目標在哪一方
+        // 1. Phán định mục tiêu ở bên nào
         val targetOnRight = battle.isPlayerOnRightSide(targetPlayerId)
         if (targetOnRight == null) {
-            logger.warn { "joinBattle: 目標 $targetPlayerId 不在戰鬥 ${battle.battleId} 中" }
+            logger.warn { "joinBattle: mục tiêu $targetPlayerId không ở trong trận ${battle.battleId}" }
             return false
         }
 
@@ -380,29 +380,29 @@ class BattleManager(
             BattleConstants.ENEMY_FRONT_COL to BattleConstants.ENEMY_BACK_COL
         }
 
-        // 2. 檢查是否有武將
+        // 2. Kiểm tra có tướng hay không
         val charId = joiner.roleId.toLong()
         val hasNpc = (petSystem.getCache(charId)?.fightNpcId ?: 0) > 0
 
-        // 3. 找空位（有武將需要 2 格：武將前排、本體後排）
+        // 3. Tìm chỗ trống (có tướng cần 2 ô: tướng hàng trước, bản thân hàng sau)
         if (hasNpc) {
             val npcSlot = battle.grid.findEmptySlot(frontCol, backCol)
             val playerSlot = battle.grid.findEmptySlot(frontCol, backCol)
-            // 實際上需要確認兩格都有空位
+            // Thực tế cần xác nhận cả hai ô đều trống
             val occupied = battle.grid.countOccupied(frontCol, backCol)
             if (occupied + 2 > BattleConstants.MAX_ROW * 2) {
-                logger.info { "joinBattle: 戰鬥 ${battle.battleId} 隊伍已滿（${occupied}/10），無法加入" }
+                logger.info { "joinBattle: trận ${battle.battleId} đội đã đầy (${occupied}/10), không thể tham gia" }
                 return false
             }
         } else {
             val occupied = battle.grid.countOccupied(frontCol, backCol)
             if (occupied >= BattleConstants.MAX_ROW * 2) {
-                logger.info { "joinBattle: 戰鬥 ${battle.battleId} 隊伍已滿（${occupied}/10），無法加入" }
+                logger.info { "joinBattle: trận ${battle.battleId} đội đã đầy (${occupied}/10), không thể tham gia" }
                 return false
             }
         }
 
-        // 4. 放置玩家本體
+        // 4. Đặt bản thân người chơi
         val kind = if (targetOnRight) EHuman.PLAYER else EHuman.PLAYERS
         val playerCol = if (hasNpc) backCol else frontCol
         val playerSlot = battle.grid.findEmptySlot(
@@ -410,17 +410,17 @@ class BattleManager(
             if (hasNpc) frontCol else backCol
         )
         if (playerSlot == null) {
-            logger.info { "joinBattle: 戰鬥 ${battle.battleId} 找不到空格位" }
+            logger.info { "joinBattle: trận ${battle.battleId} không tìm thấy ô trống" }
             return false
         }
 
         val joinerFighter = createPlayerFighter(joiner, col = playerSlot.first, kind = kind)
-        // 覆寫 row（findEmptySlot 已決定位置）
+        // Ghi đè row (findEmptySlot đã quyết định vị trí)
         joinerFighter.row = playerSlot.second
         battle.addFighter(joinerFighter)
         battle.playerSessions[joiner.playerId] = joiner
 
-        // 5. 放置武將
+        // 5. Đặt tướng
         if (hasNpc) {
             val npcSlot = battle.grid.findEmptySlot(frontCol, backCol)
             if (npcSlot != null) {
@@ -428,11 +428,11 @@ class BattleManager(
             }
         }
 
-        // 6. 註冊
+        // 6. Đăng ký
         playerBattleMap[joiner.playerId] = battle.battleId
         joiner.battleId = battle.battleId
 
-        // 7. 序列化新加入角色的資料（給已有玩家看 S:011-005）
+        // 7. Tuần tự hoá dữ liệu nhân vật mới tham gia (cho người chơi hiện có xem, S:011-005)
         val newFighters = battle.getAllFighters().filter { f ->
             f.roleId == joiner.playerId || f.masterId == joiner.playerId
         }
@@ -466,54 +466,54 @@ class BattleManager(
         }
         val newRoleBytes = BattleRoleSerializer.serializeAll(newRoleDataList)
 
-        // 8. 發送完整戰鬥資訊給加入者（S:011-250 + S:011-010）
+        // 8. Gửi toàn bộ thông tin chiến đấu cho người tham gia (S:011-250 + S:011-010)
         sendBattleInit(battle, onlyTo = joiner)
 
-        // 9. 通知已有玩家：新角色加入（S:011-005）
+        // 9. Thông báo cho người chơi hiện có: nhân vật mới tham gia (S:011-005)
         for (session in battle.playerSessions.values) {
             if (session.playerId != joiner.playerId) {
                 responseSender.sendBattleJoinRoleAppear(session, newRoleBytes)
             }
         }
 
-        // 10. 廣播地圖：場景玩家戰鬥類型更新（S:011-004）
+        // 10. Phát rộng bản đồ: cập nhật loại chiến đấu của người chơi trong cảnh (S:011-004)
         val warTypeWriter = PacketWriter(12)
             .writeByte(EHuman.PLAYER)
             .writeLongLE(joiner.playerId)
             .writeShortLE(0)
             .writeByte(EWar.JOIN)
         val warTypeEntries = warTypeWriter.toByteArray()
-        // 通知同地圖所有玩家（包含加入者自己）
-        // 此封包由 Handler 層透過 worldManager 廣播，這裡先不做
-        // （BattleManager 不持有 worldManager 引用）
+        // Thông báo mọi người chơi cùng bản đồ (bao gồm cả chính người tham gia)
+        // Gói tin này do tầng Handler phát rộng qua worldManager, ở đây chưa xử lý
+        // (BattleManager không giữ tham chiếu worldManager)
 
-        logger.info { "戰鬥 ${battle.battleId}: ${joiner.characterName} 參戰（${if (targetOnRight) "右方" else "左方"}）" }
+        logger.info { "Trận ${battle.battleId}: ${joiner.characterName} tham chiến (${if (targetOnRight) "右方" else "左方"}）" }
         return true
     }
 
     /**
-     * 處理玩家斷線（戰鬥中斷線）
+     * Xử lý người chơi mất kết nối (mất kết nối khi đang chiến đấu)
      */
     fun handleDisconnect(playerId: Long) {
         val battleId = playerBattleMap.remove(playerId) ?: return
         val battle = battles[battleId] ?: return
 
         battle.playerSessions.remove(playerId)
-        logger.info { "戰鬥 $battleId: 玩家 $playerId 斷線離開" }
+        logger.info { "Trận $battleId: người chơi $playerId mất kết nối và rời đi" }
 
-        // 如果沒有玩家了，結束戰鬥
+        // Nếu không còn người chơi nào, kết thúc trận đấu
         if (battle.playerSessions.isEmpty()) {
             battle.state = BattleInstance.State.FINISHED
         }
     }
 
-    // ── 私有方法 ──
+    // ── Phương thức private ──
 
     /**
-     * 將敵人先填前排再填後排，每排內居中排列
+     * Xếp kẻ địch vào hàng trước trước rồi hàng sau, trong mỗi hàng sắp canh giữa
      *
-     * 前排最多 MAX_ROW（5）隻，溢出到後排。
-     * 居中公式：startRow = (MAX_ROW - count) / 2，每隻 row = startRow + index
+     * Hàng trước tối đa MAX_ROW (5) con, tràn sang hàng sau.
+     * Công thức canh giữa: startRow = (MAX_ROW - count) / 2, mỗi con row = startRow + index
      */
     private fun addCenteredEnemies(
         enemies: List<EveFightEnemy>,
@@ -530,7 +530,7 @@ class BattleManager(
     }
 
     /**
-     * 將一排敵人居中放置
+     * Bố trí canh giữa cho một hàng kẻ địch
      */
     private fun addColumnCentered(
         enemies: List<EveFightEnemy>,
@@ -545,7 +545,7 @@ class BattleManager(
         enemies.forEachIndexed { index, enemy ->
             val npcDef = npcDefs[enemy.npcId]
             if (npcDef == null) {
-                logger.warn { "戰鬥 $battleId: 找不到 NPC 定義 npcId=${enemy.npcId}" }
+                logger.warn { "Trận $battleId: không tìm thấy định nghĩa NPC npcId=${enemy.npcId}" }
                 return@forEachIndexed
             }
             involvedNpcs.add(enemy.npcId to npcDef)
@@ -555,12 +555,12 @@ class BattleManager(
     }
 
     /**
-     * 發送戰鬥初始化封包給所有參戰玩家（或指定玩家）
+     * Gửi gói tin khởi tạo chiến đấu cho mọi người chơi tham chiến (hoặc người chơi chỉ định)
      *
-     * @param onlyTo 若非 null，則只發給該玩家（用於參戰加入時）
+     * @param onlyTo nếu khác null thì chỉ gửi cho người chơi đó (dùng khi tham chiến)
      */
     private fun sendBattleInit(battle: BattleInstance, onlyTo: GameSession? = null) {
-        // 序列化所有角色資料
+        // Tuần tự hoá dữ liệu của mọi nhân vật
         val roleDataList = battle.getAllFighters().map { fighter ->
             BattleRoleData(
                 warType = battle.warType,
@@ -593,45 +593,45 @@ class BattleManager(
 
         val targets = if (onlyTo != null) listOf(onlyTo) else battle.playerSessions.values.toList()
 
-        // S:011-250 戰鬥初始化
+        // S:011-250 khởi tạo chiến đấu
         for (session in targets) {
             responseSender.sendBattleInit(session, battle.terrain, battle.eventNo, roleBytes)
         }
 
-        // S:011-010 戰場類型（Normal PvE）
+        // S:011-010 loại chiến trường (Normal PvE)
         for (session in targets) {
             responseSender.sendBattleFieldType(session, battle.warStyle, 0, 0, 0)
         }
     }
 
     /**
-     * 回合迴圈協程
+     * Coroutine vòng lặp hiệp đấu
      */
     private suspend fun runBattleLoop(battle: BattleInstance) {
         try {
-            // 等待客戶端載入戰鬥場景（進場動畫 ~1.5s + 網路延遲）
+            // Chờ client tải cảnh chiến đấu (hoạt ảnh vào trận ~1.5s + độ trễ mạng)
             delay(BattleConstants.SCENE_LOAD_DELAY_MS)
 
             battle.state = BattleInstance.State.COUNTDOWN
 
             while (battle.state != BattleInstance.State.FINISHED) {
-                // 1. 發送倒數計時
+                // 1. Gửi đếm ngược
                 broadcastCountdown(battle)
                 battle.state = BattleInstance.State.WAITING_COMMANDS
 
-                // 2. 等待玩家指令（最多 20 秒 或所有玩家就緒）
+                // 2. Chờ lệnh người chơi (tối đa 20 giây hoặc tất cả người chơi đã sẵn sàng)
                 waitForCommands(battle, BattleConstants.COUNTDOWN_NORMAL * 1000L)
 
-                // 3. NPC AI 決策
+                // 3. AI NPC ra quyết định
                 battle.resolveNpcActions()
 
-                // 4. 執行回合
+                // 4. Thực hiện hiệp
                 val roundResult = battle.resolveRound()
 
-                // 5. 廣播回合結果
+                // 5. Phát rộng kết quả hiệp
                 broadcastRoundResult(battle, roundResult)
 
-                // 5.5 逃跑成功 → 檢查是否所有玩家都逃跑了
+                // 5.5 Bỏ chạy thành công → kiểm tra liệu tất cả người chơi đã bỏ chạy chưa
                 if (roundResult.escapeResults.isNotEmpty()) {
                     val escapedPlayerIds = roundResult.escapeResults
                         .filter { it.fighter.isHumanPlayer }
@@ -639,21 +639,21 @@ class BattleManager(
                         .toSet()
 
                     if (escapedPlayerIds.isNotEmpty()) {
-                        // 所有玩家方都逃跑 → 戰鬥失敗結束
+                        // Tất cả phía người chơi đều bỏ chạy → kết thúc thua trận
                         val remainingPlayers = battle.grid.getAlivePlayerSide()
                             .filter { it.isHumanPlayer }
                         if (remainingPlayers.isEmpty()) {
-                            logger.info { "戰鬥 ${battle.battleId}: 所有玩家逃跑，戰鬥結束" }
+                            logger.info { "Trận ${battle.battleId}: toàn bộ người chơi bỏ chạy, kết thúc trận" }
                             handleBattleEnd(battle, BattleEndResult(playerWin = false))
                             break
                         }
                     }
                 }
 
-                // 6. 等待最後一個動畫播完
+                // 6. Chờ hoạt ảnh cuối cùng phát xong
                 delay(BattleConstants.ROUND_END_DELAY_MS)
 
-                // 7. 檢查戰鬥結束
+                // 7. Kiểm tra kết thúc trận đấu
                 val endResult = battle.checkBattleEnd()
                 if (endResult != null) {
                     handleBattleEnd(battle, endResult)
@@ -663,16 +663,16 @@ class BattleManager(
                 battle.state = BattleInstance.State.COUNTDOWN
             }
         } catch (e: CancellationException) {
-            logger.debug { "戰鬥 ${battle.battleId} 協程取消" }
+            logger.debug { "Trận ${battle.battleId} coroutine bị hủy" }
         } catch (e: Exception) {
-            logger.error(e) { "戰鬥 ${battle.battleId} 回合迴圈異常" }
+            logger.error(e) { "Trận ${battle.battleId} vòng lặp lượt gặp lỗi" }
         } finally {
             cleanupBattle(battle)
         }
     }
 
     /**
-     * 發送倒數計時
+     * Gửi đếm ngược
      */
     private fun broadcastCountdown(battle: BattleInstance) {
         for (session in battle.playerSessions.values) {
@@ -681,20 +681,20 @@ class BattleManager(
     }
 
     /**
-     * 等待玩家指令
+     * Chờ lệnh người chơi
      */
     private suspend fun waitForCommands(battle: BattleInstance, timeoutMs: Long) {
         val startTime = System.currentTimeMillis()
         while (System.currentTimeMillis() - startTime < timeoutMs) {
             if (battle.allPlayersReady()) break
             if (battle.state == BattleInstance.State.FINISHED) break
-            delay(200)  // 每 200ms 檢查一次
+            delay(200)  // Kiểm tra mỗi 200ms một lần
         }
 
-        // 超時未行動的玩家操控角色自動普攻（含武將）
+        // Người chơi quá hạn chưa hành động thì nhân vật của họ tự động tấn công thường (bao gồm tướng)
         for (fighter in battle.getAllFighters()) {
             if (fighter.isPlayerControlled && fighter.isAlive && !fighter.isStunned && !fighter.hasActed) {
-                // 根據所在陣營選擇目標（PVP 中兩邊都是玩家）
+                // Chọn mục tiêu theo phe đang ở (trong PVP hai bên đều là người chơi)
                 val enemies = if (fighter.isPlayerSide)
                     battle.grid.getAliveEnemySide()
                 else
@@ -709,8 +709,8 @@ class BattleManager(
                     )
                     fighter.hasActed = true
 
-                    // 發送 S:053-005 通知客戶端此角色已確認動作
-                    // 客戶端 FightField.NextControlMan() 依賴此封包推進 conIdx
+                    // Gửi S:053-005 thông báo client nhân vật này đã xác nhận động tác
+                    // Client FightField.NextControlMan() phụ thuộc gói tin này để tiến conIdx
                     val ownerSession = findOwnerSession(battle, fighter)
                     if (ownerSession != null) {
                         sendActSetOK(ownerSession, fighter.col, fighter.row)
@@ -734,7 +734,7 @@ class BattleManager(
         BattleConstants.ACTION_COMMAND_PACING_MS
 
     private suspend fun broadcastRoundResult(battle: BattleInstance, roundResult: RoundResult) {
-        // 0. 逃跑成功者 — 先發 S:011-001 讓角色離開戰場
+        // 0. Người bỏ chạy thành công — gửi S:011-001 trước để nhân vật rời chiến trường
         for (escape in roundResult.escapeResults) {
             for (session in battle.playerSessions.values) {
                 responseSender.sendBattleExitFight(session, escape.fighter.col, escape.fighter.row)
@@ -762,25 +762,25 @@ class BattleManager(
             }
         }
 
-        // 1.2 S:023-009 戰鬥道具消耗 — 通知擁有者背包扣除
+        // 1.2 S:023-009 tiêu hao vật phẩm chiến đấu — thông báo khấu trừ từ túi đồ của chủ sở hữu
         for (consumed in roundResult.consumedItems) {
             battle.playerSessions[consumed.ownerPlayerId]?.let { ownerSession ->
                 responseSender.sendReduceBagItem(ownerSession, consumed.bagSlot, consumed.amount)
             }
         }
 
-        // 1.5 S:053-003 打飛（攻擊結果之後、狀態恢復之前）
+        // 1.5 S:053-003 đánh bay (sau kết quả tấn công, trước phục hồi trạng thái)
         if (roundResult.flyOutTargets.isNotEmpty()) {
-            delay(BattleConstants.FLY_OUT_ANIM_DELAY_MS)  // 等待傷害數字動畫開始
+            delay(BattleConstants.FLY_OUT_ANIM_DELAY_MS)  // Chờ hoạt ảnh số sát thương bắt đầu
             for ((col, row) in roundResult.flyOutTargets) {
                 for (session in battle.playerSessions.values) {
                     responseSender.sendBattleFlyOut(session, col, row)
                 }
-                logger.info { "戰鬥 ${battle.battleId}: 角色 ($col,$row) 被打飛" }
+                logger.info { "Trận ${battle.battleId}: nhân vật ($col,$row) bị đánh văng" }
             }
         }
 
-        // 2. S:053-001 狀態恢復
+        // 2. S:053-001 phục hồi trạng thái
         if (roundResult.statusRestores.isNotEmpty()) {
             val statusData = serializeStatusRestores(roundResult.statusRestores)
             for (session in battle.playerSessions.values) {
@@ -788,8 +788,8 @@ class BattleManager(
             }
         }
 
-        // 3. 同步玩家 HP/SP 到 PlayerState + S:008-001 更新主角 HUD
-        //    回合中如實同步（HP=0 = 死亡），保底 1 只在戰鬥結束時做
+        // 3. Đồng bộ HP/SP người chơi vào PlayerState + S:008-001 cập nhật HUD nhân vật chính
+        //    Đồng bộ đúng thực tế trong mỗi hiệp (HP=0 = chết), mức đảm bảo 1 chỉ áp dụng khi kết thúc trận
         for ((playerId, session) in battle.playerSessions) {
             val playerFighter = battle.getAllFighters().firstOrNull { it.roleId == playerId } ?: continue
             val charId = session.roleId.toLong()
@@ -819,26 +819,26 @@ class BattleManager(
     }
 
     /**
-     * 處理戰鬥結束
+     * Xử lý kết thúc trận đấu
      */
     private suspend fun handleBattleEnd(battle: BattleInstance, endResult: BattleEndResult) {
         battle.state = BattleInstance.State.FINISHED
-        logger.info { "戰鬥 ${battle.battleId} 結束：玩家${if (endResult.playerWin) "勝利" else "失敗"}" }
+        logger.info { "Trận ${battle.battleId} kết thúc: người chơi${if (endResult.playerWin) "勝利" else "失敗"}" }
 
         for ((playerId, session) in battle.playerSessions) {
-            // 獎勵（僅勝利時）
+            // Thưởng (chỉ khi thắng)
             if (endResult.playerWin) {
                 val reward = battle.calculateRewards(session.level, npcDropTable)
-                logger.info { "戰鬥 ${battle.battleId}: 玩家 $playerId 獲得 exp=${reward.exp} gold=${reward.gold} drops=${reward.drops.size}" }
+                logger.info { "Trận ${battle.battleId}: người chơi $playerId nhận exp=${reward.exp} gold=${reward.gold} drops=${reward.drops.size}" }
 
-                // 掉落物品動畫 + 實際發放
+                // Hoạt ảnh rơi vật phẩm + thực tế phát ra
                 if (reward.drops.isNotEmpty()) {
                     val charId = session.roleId.toLong()
-                    // 找死亡敵人和玩家的位置（用於動畫）
+                    // Tìm vị trí kẻ địch và người chơi đã chết (dùng cho hoạt ảnh)
                     val deadEnemy = battle.getAllFighters().firstOrNull { it.isEnemySide && it.isDead }
                     val playerFighter = battle.getAllFighters().firstOrNull { it.roleId == playerId }
                     for (drop in reward.drops) {
-                        // S:053-004 掉寶動畫
+                        // S:053-004 hoạt ảnh rơi đồ
                         responseSender.sendBattleDrop(
                             session,
                             drop.itemId,
@@ -847,17 +847,17 @@ class BattleManager(
                             toCol = playerFighter?.col ?: 2,
                             toRow = playerFighter?.row ?: 0
                         )
-                        // 實際加入背包
+                        // Thực sự thêm vào túi đồ
                         val addResult = inventorySystem.addItemToBag(charId, drop.itemId, drop.quantity)
                         if (addResult != null) {
                             val (slot, thing) = addResult
                             responseSender.sendSetBagItem(session, slot, thing, showMsg = true)
                         }
-                        logger.info { "戰鬥 ${battle.battleId}: 玩家 $playerId 獲得物品 itemId=${drop.itemId} x${drop.quantity}" }
+                        logger.info { "Trận ${battle.battleId}: người chơi $playerId nhận vật phẩm itemId=${drop.itemId} x${drop.quantity}" }
                     }
                 }
 
-                // 經驗發放
+                // Phát EXP
                 val charId = session.roleId.toLong()
                 val state = playerStateManager.getState(charId)
                 if (state != null && reward.exp > 0) {
@@ -907,32 +907,32 @@ class BattleManager(
                                 )
                             }
                             logger.info {
-                                "戰鬥 ${battle.battleId}: 武將 npcId=${gain.after.npcId} " +
-                                    "獲得 exp=$petExp lv=${gain.before.level}->${gain.after.level}"
+                                "Trận ${battle.battleId}: tướng npcId=${gain.after.npcId} " +
+                                    "nhận exp=$petExp lv=${gain.before.level}->${gain.after.level}"
                             }
                         }
                     }
                 }
 
-                // 金錢發放
+                // Phát tiền vàng
                 if (reward.gold > 0) {
                     val goldCharId = session.roleId.toLong()
                     if (moneySystem.addGold(goldCharId, reward.gold)) {
                         responseSender.sendAddMoney(session, reward.gold)
                         responseSender.sendSystemMessage(session, "Nhận được ${reward.gold} vàng.")
-                        logger.info { "戰鬥 ${battle.battleId}: 玩家 $playerId 獲得金錢 ${reward.gold}" }
+                        logger.info { "Trận ${battle.battleId}: người chơi $playerId nhận ${reward.gold} tiền vàng" }
                     }
                 }
             }
 
-            // 捕捉成功的 NPC → 加入 PetSystem + 發送客戶端封包
+            // NPC bắt thành công → thêm vào PetSystem + gửi gói tin cho client
             if (endResult.playerWin && battle.capturedNpcs.isNotEmpty()) {
                 val charId = session.roleId.toLong()
                 for ((capturerPlayerId, npcId) in battle.capturedNpcs) {
                     if (capturerPlayerId != playerId) continue
                     val npcDef = npcDefs[npcId]
                     if (npcDef == null) {
-                        logger.warn { "戰鬥 ${battle.battleId}: 捕獲 npcId=$npcId 但 npcDefs 無此定義" }
+                        logger.warn { "Trận ${battle.battleId}: bắt được npcId=$npcId nhưng npcDefs không có định nghĩa này" }
                         continue
                     }
                     val added = petSystem.addFollowNpc(
@@ -947,12 +947,12 @@ class BattleManager(
                             session,
                             DailyProgressSystem.CATCH_SUCCESS,
                         )
-                        logger.info { "戰鬥 ${battle.battleId}: 玩家 $playerId 捕獲武將 npcId=$npcId → slot=$slotIndex" }
+                        logger.info { "Trận ${battle.battleId}: người chơi $playerId bắt được tướng npcId=$npcId → slot=$slotIndex" }
                     } else {
-                        logger.warn { "戰鬥 ${battle.battleId}: 武將 npcId=$npcId 加入失敗（重複或隊伍滿）" }
+                        logger.warn { "Trận ${battle.battleId}: thêm tướng npcId=$npcId thất bại (trùng hoặc đội đầy)" }
                     }
                 }
-                // 同步完整武將資料給客戶端
+                // Đồng bộ toàn bộ dữ liệu tướng cho client
                 val allPets = petSystem.getFollowPets(charId)
                 if (allPets.isNotEmpty()) {
                     responseSender.sendFollowNpcFullData(session, allPets.values.sortedBy { it.slotIndex })
@@ -962,11 +962,11 @@ class BattleManager(
             // ERoleCount.Fight=163 — mỗi trận kết thúc tăng một lần.
             dailyProgressSystem?.incrementRoleCount(session, DailyProgressSystem.FIGHT)
 
-            // 同步玩家最終 HP/SP 到 PlayerState + 更新主角 HUD
+            // Đồng bộ HP/SP cuối cùng của người chơi vào PlayerState + cập nhật HUD nhân vật chính
             val playerFighter = battle.getAllFighters().firstOrNull { it.roleId == playerId }
             if (playerFighter != null) {
                 val syncCharId = session.roleId.toLong()
-                // HP 保底 1：戰敗時 HP=0 → 強制為 1（瀕死狀態），避免下次進戰鬥直接躺著
+                // HP đảm bảo tối thiểu 1: khi thua HP=0 → ép về 1 (trạng thái thập tử nhất sinh), tránh lần vào trận sau nằm luôn
                 val syncHp = playerFighter.hp.coerceAtLeast(1)
                 playerStateManager.setHp(syncCharId, syncHp)
                 playerStateManager.setSp(syncCharId, playerFighter.sp.toInt())
@@ -974,7 +974,7 @@ class BattleManager(
                 responseSender.sendSetAttribute(session, EAttribute.SP, playerFighter.sp.toInt(), true)
             }
 
-            // 同步武將最終 HP/SP 到 PetSystem + 客戶端 Role followNpc。
+            // Đồng bộ HP/SP cuối cùng của tướng vào PetSystem + Role followNpc của client.
             //
             // DVT MachineBox.Supply() không đọc HP/SP từ FightField mà đọc trực tiếp
             // Role.GetFollowNpcs(). Nếu chỉ cập nhật cache server, client vẫn giữ HP/SP
@@ -1026,10 +1026,10 @@ class BattleManager(
                 moneySystem.saveMoney(checkpointCharId)
                 petSystem.save(checkpointCharId)
             } catch (e: Exception) {
-                logger.error(e) { "戰鬥 ${battle.battleId}: lưu checkpoint thất bại charId=$checkpointCharId" }
+                logger.error(e) { "Trận ${battle.battleId}: lưu checkpoint thất bại charId=$checkpointCharId" }
             }
 
-            // S:011-000 結束戰鬥
+            // S:011-000 kết thúc chiến đấu
             responseSender.sendBattleEnd(session, playerId, 0)
 
             // Chỉ kích hoạt tiếp tế khi Hộp Cơ Quan thực sự đang bật.
@@ -1040,7 +1040,7 @@ class BattleManager(
             }
         }
 
-        // 延遲後發送離場
+        // Trì hoãn rồi gửi gói rời đi
         delay(500)
 
         for (fighter in battle.getAllFighters()) {
@@ -1049,13 +1049,13 @@ class BattleManager(
             }
         }
 
-        // PVP 戰鬥與地圖 NPC PK 不走事件回呼
+        // Trận PVP và PK với NPC trên bản đồ không đi qua callback sự kiện
         if (battle.warType == EWar.PK_PLAYERS || battle.warType == EWar.PK_MAP_NPC) {
-            logger.info { "非事件戰鬥 ${battle.battleId} 結束，不觸發事件回呼" }
+            logger.info { "Trận ${battle.battleId} không thuộc sự kiện đã kết thúc, không gọi callback sự kiện" }
             return
         }
 
-        // PVE 事件戰鬥：恢復 NPC 事件流程（透過回呼，由 NpcEventHandler 處理）
+        // Trận chiến sự kiện PVE: phục hồi luồng sự kiện NPC (thông qua callback, do NpcEventHandler xử lý)
         delay(300)
         val callback = onBattleEndCallback
         if (callback != null) {
@@ -1063,11 +1063,11 @@ class BattleManager(
                 try {
                     callback(session, playerId, endResult.playerWin)
                 } catch (e: Exception) {
-                    logger.error(e) { "戰鬥 ${battle.battleId}: 事件恢復回呼異常 playerId=$playerId" }
+                    logger.error(e) { "Trận ${battle.battleId}: callback phục hồi sự kiện lỗi playerId=$playerId" }
                 }
             }
         } else {
-            // 無回呼（測試環境等），直接結束事件
+            // Không có callback (môi trường thử nghiệm v.v.), kết thúc sự kiện trực tiếp
             for (session in battle.playerSessions.values) {
                 responseSender.sendEventEnd(session)
             }
@@ -1075,9 +1075,9 @@ class BattleManager(
     }
 
     /**
-     * 發放經驗值並處理升級
+     * Phát EXP và xử lý lên cấp
      *
-     * 累加經驗 → 檢查升級 → 重算 maxHP/maxSP → 通知客戶端
+     * Cộng dồn EXP → kiểm tra lên cấp → tính lại maxHP/maxSP → thông báo client
      */
     private suspend fun distributeExp(session: GameSession, charId: Long, state: PlayerState, expGain: Long) {
         if (state.turn >= 3) {
@@ -1135,9 +1135,9 @@ class BattleManager(
                     responseSender.sendSetAttribute(session, EAttribute.MAX_SP, maxSp, true)
                     responseSender.sendSetAttribute(session, EAttribute.SP, sp, true)
                 }
-                logger.info { "三轉升級：charId=$charId +$gained → Lv.$level, exp=$exp" }
+                logger.info { "Lên cấp sau chuyển sinh 3: charId=$charId +$gained → Lv.$level, exp=$exp" }
             } else {
-                logger.info { "三轉經驗：charId=$charId +$expGain → $exp" }
+                logger.info { "EXP chuyển sinh 3: charId=$charId +$expGain → $exp" }
             }
             return
         }
@@ -1171,14 +1171,14 @@ class BattleManager(
             }
 
             if (levelsGained > 0) {
-                // 每級 +2 技能點、+3 屬性點
+                // Mỗi cấp +2 điểm kỹ năng, +3 điểm thuộc tính
                 val skillPointGain = levelsGained * 2
                 val attrPointGain = levelsGained * 3
                 state.skillPoint += skillPointGain
                 state.attrPoint += attrPointGain
                 skillSystem?.adjustSkillPoint(charId, skillPointGain)
 
-                // 重算 maxHP/maxSP（含裝備加成）
+                // Tính lại maxHP/maxSP (bao gồm cộng dồn trang bị)
                 val newMaxHp = statSystem.calculateMaxHp(
                     level = state.level, hpx = state.hpx,
                     equipMaxHp = state.equipMaxHp, extraHp = 0,
@@ -1190,13 +1190,13 @@ class BattleManager(
                     turn = state.turn, career = state.career, turn3Lv = 0
                 )
 
-                // 升級回滿
+                // Lên cấp hồi đầy
                 playerStateManager.updateMaxHp(charId, newMaxHp)
                 playerStateManager.updateMaxSp(charId, newMaxSp)
                 playerStateManager.fullHp(charId)
                 playerStateManager.fullSp(charId)
 
-                // 通知客戶端（SetAttribute 是絕對設定，必須發送總量而非增量）
+                // Thông báo client (SetAttribute là thiết đặt tuyệt đối, phải gửi tổng giá trị chứ không gửi lượng gia tăng)
                 responseSender.sendSetAttribute(session, EAttribute.LV, state.level, true)
                 responseSender.sendSetAttribute(session, EAttribute.EXP, state.exp.toInt(), true)
                 responseSender.sendSetAttribute(session, EAttribute.MAX_HP, newMaxHp.toInt(), true)
@@ -1206,10 +1206,10 @@ class BattleManager(
                 responseSender.sendSetAttribute(session, EAttribute.SKILL_POINT, state.skillPoint, true)
                 responseSender.sendSetAttribute(session, EAttribute.ATTR_POINT, state.attrPoint, true)
 
-                // 更新 session
+                // Cập nhật session
                 session.level = state.level
 
-                logger.info { "升級：charId=$charId 升了 $levelsGained 級 → Lv.${state.level} 技能點+$skillPointGain 屬性點+$attrPointGain" }
+                logger.info { "Lên cấp: charId=$charId tăng $levelsGained cấp → Lv.${state.level} điểm kỹ năng+$skillPointGain điểm thuộc tính+$attrPointGain" }
             }
 
         }
@@ -1226,7 +1226,7 @@ class BattleManager(
     }
 
     /**
-     * 清理戰鬥資源
+     * Dọn dẹp tài nguyên trận đấu
      */
     private fun cleanupBattle(battle: BattleInstance) {
         battles.remove(battle.battleId)
@@ -1236,7 +1236,7 @@ class BattleManager(
                 session.battleId = 0
             }
         }
-        logger.debug { "戰鬥 ${battle.battleId} 資源已清理" }
+        logger.debug { "Trận ${battle.battleId} đã dọn tài nguyên" }
     }
 
     companion object {
@@ -1248,49 +1248,49 @@ class BattleManager(
         private const val RIDING_SKILL_ID = 14034
     }
 
-    // ── 封包序列化輔助 ──
+    // ── Hỗ trợ tuần tự hoá gói tin ──
 
     /**
-     * 序列化 S:050-001 技能結果資料
+     * Tuần tự hoá dữ liệu kết quả kỹ năng S:050-001
      *
-     * 格式：迴圈 [長度(2) + 攻擊者列(1) + 行(1) + 技能ID(2) + 場地(1)
-     *        + 目標數(1) + 迴圈 [目標列(1) + 目標行(1) + 攻擊結果(1) + 動作(1)
-     *        + 屬性數(1) + 迴圈 [種類(1) + 值(4) + 正負(1)]]]
+     * Định dạng: vòng lặp [độ dài(2) + cột kẻ tấn công(1) + hàng(1) + ID kỹ năng(2) + trường chiến(1)
+     *        + số mục tiêu(1) + vòng lặp [cột mục tiêu(1) + hàng mục tiêu(1) + kết quả tấn công(1) + động tác(1)
+     *        + số thuộc tính(1) + vòng lặp [loại(1) + giá trị(4) + âm/dương(1)]]]
      */
     private fun serializeSkillResults(results: List<ActionResult>): ByteArray {
         val outer = PacketWriter(256)
         for (result in results) {
-            // 分段組裝：先寫內容到暫存，再加長度前綴
+            // Lắp từng phần: ghi nội dung vào bộ tạm trước, rồi thêm tiền tố độ dài
             val segment = PacketWriter(64)
-            segment.writeByte(result.attackerCol)     // 攻擊者列
-            segment.writeByte(result.attackerRow)     // 攻擊者行
-            segment.writeShortLE(result.skillId)      // 技能 ID
-            segment.writeByte(result.fightArea)       // 場地
-            segment.writeByte(result.targets.size)    // 目標數
+            segment.writeByte(result.attackerCol)     // Cột kẻ tấn công
+            segment.writeByte(result.attackerRow)     // Hàng kẻ tấn công
+            segment.writeShortLE(result.skillId)      // ID kỹ năng
+            segment.writeByte(result.fightArea)       // Trường chiến
+            segment.writeByte(result.targets.size)    // Số mục tiêu
 
             for (target in result.targets) {
-                segment.writeByte(target.targetCol)          // 目標列
-                segment.writeByte(target.targetRow)          // 目標行
-                segment.writeByte(target.attackResult)        // 攻擊結果
-                segment.writeByte(target.beHitAction)         // 目標動作
-                segment.writeByte(target.attrChanges.size)    // 屬性數
+                segment.writeByte(target.targetCol)          // Cột mục tiêu
+                segment.writeByte(target.targetRow)          // Hàng mục tiêu
+                segment.writeByte(target.attackResult)        // Kết quả tấn công
+                segment.writeByte(target.beHitAction)         // Động tác mục tiêu
+                segment.writeByte(target.attrChanges.size)    // Số thuộc tính
 
                 for (change in target.attrChanges) {
-                    segment.writeByte(change.attrKind)        // 屬性種類
-                    segment.writeIntLE(change.value)          // 數值
-                    segment.writeByte(if (change.isPositive) 0 else 1) // 正負：0=加, 1=扣
+                    segment.writeByte(change.attrKind)        // Loại thuộc tính
+                    segment.writeIntLE(change.value)          // Giá trị
+                    segment.writeByte(if (change.isPositive) 0 else 1) // Dấu: 0=cộng, 1=trừ
                 }
             }
 
             val segmentBytes = segment.toByteArray()
-            outer.writeShortLE(segmentBytes.size)    // 長度前綴
-            outer.writeBytes(segmentBytes)           // 內容
+            outer.writeShortLE(segmentBytes.size)    // Tiền tố độ dài
+            outer.writeBytes(segmentBytes)           // Nội dung
         }
         return outer.toByteArray()
     }
 
     /**
-     * 序列化 S:053-001 狀態恢復資料
+     * Tuần tự hoá dữ liệu phục hồi trạng thái S:053-001
      */
     private fun serializeStatusRestores(restores: List<StatusRestore>): ByteArray {
         val writer = PacketWriter(restores.size * 5)
@@ -1304,7 +1304,7 @@ class BattleManager(
     }
 
     /**
-     * 發送 S:053-005 動作設定完成
+     * Gửi S:053-005 hoàn tất thiết lập động tác
      */
     private fun sendActSetOK(session: GameSession, col: Int, row: Int) {
         val writer = PacketWriter(5)
@@ -1317,7 +1317,7 @@ class BattleManager(
     }
 
     /**
-     * 找到角色的主人 session（玩家本人或武將的主人）
+     * Tìm session của chủ nhân vật (chính người chơi hoặc chủ của tướng)
      */
     private fun findOwnerSession(battle: BattleInstance, fighter: BattleFighter): GameSession? {
         if (fighter.isHumanPlayer) {
@@ -1329,13 +1329,13 @@ class BattleManager(
         return null
     }
 
-    // ── 角色建立輔助 ──
+    // ── Hỗ trợ tạo nhân vật ──
 
     /**
-     * 從 GameSession 建立玩家戰鬥角色
+     * Tạo nhân vật chiến đấu của người chơi từ GameSession
      *
-     * 屬性來源：PlayerStateManager（登入時由 PlayerDataDto + StatSystem 計算）
-     * 裝備來源：InventorySystem（用於戰鬥外觀序列化）
+     * Nguồn thuộc tính: PlayerStateManager (tính lúc đăng nhập bởi PlayerDataDto + StatSystem)
+     * Nguồn trang bị: InventorySystem (dùng để tuần tự hoá ngoại hình chiến đấu)
      */
     private suspend fun createPlayerFighter(
         session: GameSession,
@@ -1344,7 +1344,7 @@ class BattleManager(
     ): BattleFighter {
         val charId = session.roleId.toLong()
         val state = playerStateManager.getState(charId)
-            ?: error("玩家 charId=$charId (playerId=${session.playerId}) 無運行時狀態")
+            ?: error("Người chơi charId=$charId (playerId=${session.playerId}) không có trạng thái runtime")
 
         val equips = inventorySystem.getEquipment(charId)
         // Keep the SPECIAL slot authoritative for Light/Dark summon validation.
@@ -1399,11 +1399,11 @@ class BattleManager(
     }
 
     /**
-     * 若玩家有出戰武將，將其加入戰鬥棋盤
+     * Nếu người chơi có tướng xuất chiến, thêm tướng đó vào bàn cờ chiến đấu
      *
-     * @param session 玩家 session
-     * @param battle 戰鬥實例
-     * @param col 武將放置的列（預設 PLAYER_BACK_COL=3，PVP 防守方用 ENEMY_BACK_COL=0）
+     * @param session session người chơi
+     * @param battle instance trận đấu
+     * @param col cột đặt tướng (mặc định PLAYER_BACK_COL=3, phe thủ trong PVP dùng ENEMY_BACK_COL=0)
      */
     private fun addFollowNpcIfDeployed(
         session: GameSession,
@@ -1418,25 +1418,25 @@ class BattleManager(
         val npcDef = npcDefs[fightNpcId]
         val petData = petSystem.getFollowPets(charId).values.find { it.npcId == fightNpcId }
         if (npcDef == null || petData == null) {
-            logger.warn { "出戰武將 npcId=$fightNpcId 但找不到定義或資料" }
+            logger.warn { "Tướng xuất chiến npcId=$fightNpcId nhưng không tìm thấy định nghĩa hoặc dữ liệu" }
             return
         }
 
         val followFighter = createFollowNpcFighter(npcDef, petData, session.playerId, fightNpcId, col, row)
         battle.addFighter(followFighter)
-        logger.info { "戰鬥 ${battle.battleId}: 武將 ${npcDef.name} (npcId=$fightNpcId) 加入玩家 ${session.characterName} 方 col=$col row=$row" }
+        logger.info { "Trận ${battle.battleId}: tướng ${npcDef.name} (npcId=$fightNpcId) vào phe người chơi ${session.characterName} col=$col row=$row" }
     }
 
     /**
-     * 從 FollowNpcData 建立出戰武將戰鬥角色
+     * Tạo nhân vật chiến đấu của tướng xuất chiến từ FollowNpcData
      *
-     * 屬性優先使用 FollowNpcData（武將可能已升級），技能從 NpcDef 取得。
+     * Thuộc tính ưu tiên dùng FollowNpcData (tướng có thể đã lên cấp), kỹ năng lấy từ NpcDef.
      *
-     * @param npcDef NPC 基礎定義（技能來源）
-     * @param petData 武將運行時資料（屬性來源）
-     * @param masterId 主人玩家 ID
-     * @param npcDataId NPC 種類 ID
-     * @param col 棋盤列
+     * @param npcDef định nghĩa cơ bản của NPC (nguồn kỹ năng)
+     * @param petData dữ liệu lúc chạy của tướng (nguồn thuộc tính)
+     * @param masterId ID người chơi chủ
+     * @param npcDataId ID loại NPC
+     * @param col cột bàn cờ
      */
     private fun createFollowNpcFighter(
         npcDef: NpcDef,
@@ -1446,7 +1446,7 @@ class BattleManager(
         col: Int = BattleConstants.PLAYER_BACK_COL,
         row: Int = BattleConstants.CENTER_ROW
     ): BattleFighter {
-        // 武將裝備加成（Calc.GetMaxHp：hpx 與 EquipHpx 同階計入，EquipMaxHp 直接相加）
+        // Cộng dồn trang bị của tướng (Calc.GetMaxHp: hpx và EquipHpx cùng bậc được tính, EquipMaxHp cộng trực tiếp)
         val equipBonus = EquipBonusCalculator.calculateTotalBonus(petData.equips, itemDefs)
 
         // DVT Calculator.lua handles FollowNpc with the normal stat formula;
@@ -1511,21 +1511,21 @@ class BattleManager(
     }
 
     /**
-     * 從 NpcDef 建立 NPC 戰鬥角色
+     * Tạo nhân vật chiến đấu của NPC từ NpcDef
      *
-     * @param npcDataId NPC 編號（Npc_C.dat 的 key，客戶端用 npcDatas[roleId] 查精靈圖）
+     * @param npcDataId số hiệu NPC (key của Npc_C.dat, client dùng npcDatas[roleId] tra sprite)
      */
     private fun createNpcFighter(npcDef: NpcDef, col: Int, row: Int, battleId: Long, npcDataId: Int): BattleFighter {
         // NPC HP = hpBase + level * hpx
         val hp = (npcDef.hpBase + npcDef.level * npcDef.hpx).toLong()
         val sp = (npcDef.spBase + npcDef.level * npcDef.spx).toLong()
 
-        logger.info { "戰鬥 $battleId: NPC ${npcDef.name} (id=$npcDataId) lv=${npcDef.level} " +
+        logger.info { "Trận $battleId: NPC ${npcDef.name} (id=$npcDataId) lv=${npcDef.level} " +
             "hp=$hp atk=${npcDef.atk} def=${npcDef.def} agi=${npcDef.agi} int=${npcDef.intelligence} " +
             "element=${npcDef.element} skills=${npcDef.skills.filter { it > 0 }}" }
 
         return BattleFighter(
-            roleId = npcDataId.toLong(),  // NPC 編號 → 客戶端用 npcDatas[roleId] 查精靈圖
+            roleId = npcDataId.toLong(),  // Số hiệu NPC → client dùng npcDatas[roleId] tra sprite
             kind = EHuman.MINE_NPC,
             npcId = npcDataId,
             name = npcDef.name,

@@ -7,13 +7,13 @@ import tw.tsm.gamelogic.systems.EveConditionEvaluator
 import tw.tsm.gamelogic.systems.PlayerEventState
 
 /**
- * EveConditionEvaluator 單元測試
+ * Kiểm thử đơn vị EveConditionEvaluator
  *
- * 涵蓋：compareStep 7 個 ops + 9 個 conditionClass
+ * Bao gồm: 7 ops của compareStep + 9 conditionClass
  */
 class EveConditionEvaluatorTest : DescribeSpec({
 
-    // ── 輔助函數 ──
+    // ── Hàm phụ trợ ──
 
     fun cond(
         cls: Int = 0, param: Int = 0, pStyle: Int = 0,
@@ -29,35 +29,35 @@ class EveConditionEvaluatorTest : DescribeSpec({
     val emptyState = PlayerEventState()
 
     // ══════════════════════════════════════════════
-    //  compareStep — 7 個 ops
+    //  compareStep — 7 ops
     // ══════════════════════════════════════════════
 
     describe("compareStep") {
-        it("ops=0 等於") {
+        it("ops=0 bằng") {
             EveConditionEvaluator.compareStep(5, 0, 5) shouldBe true
             EveConditionEvaluator.compareStep(5, 0, 3) shouldBe false
         }
-        it("ops=1 等於") {
+        it("ops=1 bằng") {
             EveConditionEvaluator.compareStep(5, 1, 5) shouldBe true
             EveConditionEvaluator.compareStep(5, 1, 3) shouldBe false
         }
-        it("ops=2 小於") {
+        it("ops=2 nhỏ hơn") {
             EveConditionEvaluator.compareStep(3, 2, 5) shouldBe true
             EveConditionEvaluator.compareStep(5, 2, 5) shouldBe false
         }
-        it("ops=3 小等") {
+        it("ops=3 nhỏ hơn hoặc bằng") {
             EveConditionEvaluator.compareStep(5, 3, 5) shouldBe true
             EveConditionEvaluator.compareStep(6, 3, 5) shouldBe false
         }
-        it("ops=4 大於") {
+        it("ops=4 lớn hơn") {
             EveConditionEvaluator.compareStep(6, 4, 5) shouldBe true
             EveConditionEvaluator.compareStep(5, 4, 5) shouldBe false
         }
-        it("ops=5 大等") {
+        it("ops=5 lớn hơn hoặc bằng") {
             EveConditionEvaluator.compareStep(5, 5, 5) shouldBe true
             EveConditionEvaluator.compareStep(4, 5, 5) shouldBe false
         }
-        it("ops=6 不等") {
+        it("ops=6 khác") {
             EveConditionEvaluator.compareStep(4, 6, 5) shouldBe true
             EveConditionEvaluator.compareStep(5, 6, 5) shouldBe false
         }
@@ -67,34 +67,34 @@ class EveConditionEvaluatorTest : DescribeSpec({
     //  conditionClass
     // ══════════════════════════════════════════════
 
-    describe("class=0 無條件") {
-        it("永遠 true") {
+    describe("class=0 không điều kiện") {
+        it("luôn luôn true") {
             EveConditionEvaluator.evaluate(cond(cls = 0), emptyState) shouldBe true
         }
     }
 
-    describe("class=1 物品持有（反向比較）") {
+    describe("class=1 sở hữu vật phẩm (so sánh ngược)") {
         val state = PlayerEventState(bagItems = mapOf(100 to 3))
 
-        it("val=0 ops=2 → 有此物品（0 < 3）") {
+        it("val=0 ops=2 → có vật phẩm này (0 < 3)") {
             EveConditionEvaluator.evaluate(
                 cond(cls = 1, param = 100, ops = 2, value = 0), state
             ) shouldBe true
         }
-        it("val=0 ops=5 → 沒有此物品（0 >= 3 = false）") {
+        it("val=0 ops=5 → không có vật phẩm này (0 >= 3 = false)") {
             EveConditionEvaluator.evaluate(
                 cond(cls = 1, param = 100, ops = 5, value = 0), state
             ) shouldBe false
         }
-        it("沒有的物品 val=0 ops=5 → true（0 >= 0）") {
+        it("vật phẩm không có, val=0 ops=5 → true (0 >= 0)") {
             EveConditionEvaluator.evaluate(
                 cond(cls = 1, param = 999, ops = 5, value = 0), state
             ) shouldBe true
         }
     }
 
-    describe("class=16 非背包倉儲物品") {
-        it("只檢查錢莊/寶庫彙總數量，不重用背包數量") {
+    describe("class=16 vật phẩm kho ngoài túi đồ") {
+        it("chỉ kiểm tra tổng số lượng Tiền trang/kho báu, không dùng lại số lượng túi đồ") {
             val state = PlayerEventState(
                 bagItems = mapOf(20059 to 1),
                 storedItems = mapOf(20059 to 0, 29348 to 2)
@@ -112,18 +112,18 @@ class EveConditionEvaluatorTest : DescribeSpec({
         }
     }
 
-    describe("class=2 任務步驟") {
+    describe("class=2 bước nhiệm vụ") {
         val state = PlayerEventState(
             missionSteps = mapOf(10 to 2),
             missionFlags = mapOf(10 to 1)
         )
 
-        it("pStyle=1 只看 step — step=2 ops=5 val=1 → 2>=1 true") {
+        it("pStyle=1 chỉ xem step — step=2 ops=5 val=1 → 2>=1 true") {
             EveConditionEvaluator.evaluate(
                 cond(cls = 2, param = 10, pStyle = 1, ops = 5, value = 1), state
             ) shouldBe true
         }
-        it("pStyle=3 取 max(step, flag) — 已完成任務用旗標值") {
+        it("pStyle=3 lấy max(step, flag) — nhiệm vụ đã xong dùng giá trị cờ") {
             // mission 20: step=0, flag=1 → actual = max(0,1) = 1
             val s = PlayerEventState(
                 missionSteps = emptyMap(),
@@ -133,7 +133,7 @@ class EveConditionEvaluatorTest : DescribeSpec({
                 cond(cls = 2, param = 20, pStyle = 3, ops = 5, value = 1), s
             ) shouldBe true
         }
-        it("pStyle=3 未開始任務 → actual=0") {
+        it("pStyle=3 nhiệm vụ chưa bắt đầu → actual=0") {
             val s = PlayerEventState()
             EveConditionEvaluator.evaluate(
                 cond(cls = 2, param = 99, pStyle = 3, ops = 1, value = 0), s
@@ -141,8 +141,8 @@ class EveConditionEvaluatorTest : DescribeSpec({
         }
     }
 
-    describe("class=7 通用屬性") {
-        it("param=0 等級檢查") {
+    describe("class=7 thuộc tính chung") {
+        it("param=0 kiểm tra cấp") {
             val state = PlayerEventState(level = 10)
             EveConditionEvaluator.evaluate(
                 cond(cls = 7, param = 0, ops = 5, value = 5), state
@@ -151,33 +151,33 @@ class EveConditionEvaluatorTest : DescribeSpec({
                 cond(cls = 7, param = 0, ops = 5, value = 15), state
             ) shouldBe false
         }
-        it("param=3 裝備檢查 — 有裝備") {
+        it("param=3 kiểm tra trang bị — có trang bị") {
             val state = PlayerEventState(equipItems = setOf(500))
             EveConditionEvaluator.evaluate(
                 cond(cls = 7, param = 3, ops = 5, value = 500), state
             ) shouldBe true
         }
-        it("param=3 裝備檢查 — 無裝備") {
+        it("param=3 kiểm tra trang bị — không trang bị") {
             val state = PlayerEventState(equipItems = emptySet())
             EveConditionEvaluator.evaluate(
                 cond(cls = 7, param = 3, ops = 5, value = 500), state
             ) shouldBe false
         }
-        it("param=2 pStyle=1 代表背包已滿，不可因轉生次數為 0 誤通過") {
+        it("param=2 pStyle=1 nghĩa là túi đồ đã đầy, không được nhầm qua vì số lần chuyển sinh = 0") {
             val state = PlayerEventState(rebornCount = 0, bagUsedSlots = 49, bagCapacity = 50)
 
             EveConditionEvaluator.evaluate(
                 cond(cls = 7, param = 2, pStyle = 1, ops = 0, value = 0), state
             ) shouldBe false
         }
-        it("param=2 pStyle=1 背包滿時通過") {
+        it("param=2 pStyle=1 qua khi túi đầy") {
             val state = PlayerEventState(bagUsedSlots = 50, bagCapacity = 50)
 
             EveConditionEvaluator.evaluate(
                 cond(cls = 7, param = 2, pStyle = 1, ops = 0, value = 0), state
             ) shouldBe true
         }
-        it("param=2 pStyle=2 代表背包有空位") {
+        it("param=2 pStyle=2 nghĩa là túi đồ còn chỗ") {
             val state = PlayerEventState(bagUsedSlots = 49, bagCapacity = 50)
 
             EveConditionEvaluator.evaluate(
@@ -188,7 +188,7 @@ class EveConditionEvaluatorTest : DescribeSpec({
                 state.copy(bagUsedSlots = 50)
             ) shouldBe false
         }
-        it("param=2 pStyle=4 使用背包剩餘格數比較") {
+        it("param=2 pStyle=4 dùng số ô còn lại của túi để so sánh") {
             val state = PlayerEventState(bagUsedSlots = 47, bagCapacity = 50)
 
             EveConditionEvaluator.evaluate(
@@ -198,16 +198,16 @@ class EveConditionEvaluatorTest : DescribeSpec({
                 cond(cls = 7, param = 2, pStyle = 4, ops = 5, value = 4), state
             ) shouldBe false
         }
-        it("未知 param 即使 ops=0/value=0 也不可誤通過") {
+        it("param không xác định dù ops=0/value=0 cũng không được nhầm qua") {
             EveConditionEvaluator.evaluate(
                 cond(cls = 7, param = 99, ops = 0, value = 0), emptyState
             ) shouldBe false
         }
-        it("param=5 使用 pStyle 比對隨身武將空間") {
+        it("param=5 dùng pStyle so khớp không gian tướng tùy thân") {
             val emptyPets = PlayerEventState(followPetCount = 0, maxFollowPets = 4)
             val fullPets = PlayerEventState(followPetCount = 4, maxFollowPets = 4)
 
-            // pStyle=1: 武將已滿
+            // pStyle=1: tướng đã đầy
             EveConditionEvaluator.evaluate(
                 cond(cls = 7, param = 5, pStyle = 1, ops = 0, value = 0), fullPets
             ) shouldBe true
@@ -215,7 +215,7 @@ class EveConditionEvaluatorTest : DescribeSpec({
                 cond(cls = 7, param = 5, pStyle = 1, ops = 0, value = 0), emptyPets
             ) shouldBe false
 
-            // pStyle=2: 武將有空位
+            // pStyle=2: tướng còn chỗ trống
             EveConditionEvaluator.evaluate(
                 cond(cls = 7, param = 5, pStyle = 2, ops = 0, value = 0), emptyPets
             ) shouldBe true
@@ -223,13 +223,13 @@ class EveConditionEvaluatorTest : DescribeSpec({
                 cond(cls = 7, param = 5, pStyle = 2, ops = 0, value = 0), fullPets
             ) shouldBe false
 
-            // pStyle=4: 比較剩餘格數
+            // pStyle=4: so sánh số ô còn lại
             EveConditionEvaluator.evaluate(
                 cond(cls = 7, param = 5, pStyle = 4, ops = 5, value = 2),
                 PlayerEventState(followPetCount = 2, maxFollowPets = 4)
             ) shouldBe true
         }
-        it("param=8 使用登入 Server ID；覆蓋 Eve.emg 真實 shape") {
+        it("param=8 dùng Server ID đăng nhập; bao phủ shape thật của Eve.emg") {
             val normal = PlayerEventState(serverId = 1)
             val galaxy97 = PlayerEventState(serverId = 97)
             val galaxy197 = PlayerEventState(serverId = 197)
@@ -294,7 +294,7 @@ class EveConditionEvaluatorTest : DescribeSpec({
             ) shouldBe false
         }
 
-        it("param=16 subItem=1 代表騎乘中需要下馬") {
+        it("param=16 subItem=1 nghĩa là đang cưỡi ngựa cần xuống ngựa") {
             val mounted = PlayerEventState(isMounted = true)
             val notMounted = PlayerEventState(isMounted = false)
 
@@ -310,7 +310,7 @@ class EveConditionEvaluatorTest : DescribeSpec({
                 notMounted
             ) shouldBe false
         }
-        it("param=16 subItem=2 樣本為空結果條件，暫不當成下馬分支") {
+        it("param=16 subItem=2 mẫu là điều kiện kết quả trống, tạm không coi là nhánh xuống ngựa") {
             val mounted = PlayerEventState(isMounted = true)
 
             EveConditionEvaluator.evaluate(
@@ -320,14 +320,14 @@ class EveConditionEvaluatorTest : DescribeSpec({
         }
     }
 
-    describe("class=8 戰鬥結果") {
-        it("pStyle=1 勝利匹配") {
+    describe("class=8 kết quả chiến đấu") {
+        it("pStyle=1 khớp chiến thắng") {
             val state = PlayerEventState(battleResult = 1)
             EveConditionEvaluator.evaluate(
                 cond(cls = 8, pStyle = 1), state
             ) shouldBe true
         }
-        it("pStyle=2 敗北不匹配勝利") {
+        it("pStyle=2 thất bại không khớp chiến thắng") {
             val state = PlayerEventState(battleResult = 1)
             EveConditionEvaluator.evaluate(
                 cond(cls = 8, pStyle = 2), state
@@ -335,20 +335,20 @@ class EveConditionEvaluatorTest : DescribeSpec({
         }
     }
 
-    describe("class=9 武將持有") {
-        it("有武將 → true") {
+    describe("class=9 sở hữu tướng") {
+        it("có tướng → true") {
             val state = PlayerEventState(followNpcIds = setOf(22081))
             EveConditionEvaluator.evaluate(
                 cond(cls = 9, ops = 5, value = 22081), state
             ) shouldBe true
         }
-        it("無武將 → false") {
+        it("không tướng → false") {
             val state = PlayerEventState(followNpcIds = emptySet())
             EveConditionEvaluator.evaluate(
                 cond(cls = 9, ops = 5, value = 22081), state
             ) shouldBe false
         }
-        it("param 非 0 的進階武將條件不可用 value=0 誤通過") {
+        it("điều kiện tướng nâng cao có param khác 0 không được dùng value=0 để nhầm qua") {
             val state = PlayerEventState(followNpcIds = setOf(15384))
 
             EveConditionEvaluator.evaluate(
@@ -357,14 +357,14 @@ class EveConditionEvaluatorTest : DescribeSpec({
         }
     }
 
-    describe("class=10 對話選擇") {
-        it("surfaceId + code 都匹配") {
+    describe("class=10 lựa chọn hội thoại") {
+        it("surfaceId + code đều khớp") {
             val state = PlayerEventState(lastSurfaceId = 100, lastChoiceCode = 30)
             EveConditionEvaluator.evaluate(
                 cond(cls = 10, param = 100, pStyle = 30), state
             ) shouldBe true
         }
-        it("surfaceId 不匹配") {
+        it("surfaceId không khớp") {
             val state = PlayerEventState(lastSurfaceId = 999, lastChoiceCode = 30)
             EveConditionEvaluator.evaluate(
                 cond(cls = 10, param = 100, pStyle = 30), state
@@ -372,13 +372,13 @@ class EveConditionEvaluatorTest : DescribeSpec({
         }
     }
 
-    describe("class=11 收驚流程確認") {
-        it("param=0 pStyle=1 ops=0 value=0 為已觀測的固定收驚確認條件") {
+    describe("class=11 xác nhận quy trình thu kinh") {
+        it("param=0 pStyle=1 ops=0 value=0 là điều kiện xác nhận thu kinh cố định đã quan sát") {
             EveConditionEvaluator.evaluate(
                 cond(cls = 11, param = 0, pStyle = 1, ops = 0, value = 0), emptyState
             ) shouldBe true
         }
-        it("其他 class=11 形狀保守不通過") {
+        it("các shape khác của class=11 bảo thủ không qua") {
             EveConditionEvaluator.evaluate(
                 cond(cls = 11, param = 0, pStyle = 0, ops = 0, value = 0), emptyState
             ) shouldBe false
@@ -388,22 +388,22 @@ class EveConditionEvaluatorTest : DescribeSpec({
         }
     }
 
-    describe("class=12 事件完成計數（正向比較）") {
-        it("val=1 ops=2(<) → 當前 eveNo 完成次數 < 1 才通過") {
-            // eveNo=5 完成 0 次 → 0 < 1 = true
+    describe("class=12 bộ đếm hoàn thành sự kiện (so sánh thuận)") {
+        it("val=1 ops=2(<) → phải số lần hoàn thành eveNo hiện tại < 1 mới qua") {
+            // eveNo=5 hoàn thành 0 lần → 0 < 1 = true
             val state0 = PlayerEventState(completedEveCounts = emptyMap(), currentEveNo = 5)
             EveConditionEvaluator.evaluate(
                 cond(cls = 12, param = 0, ops = 2, value = 1), state0
             ) shouldBe true
 
-            // eveNo=5 完成 1 次 → 1 < 1 = false
+            // eveNo=5 hoàn thành 1 lần → 1 < 1 = false
             val state1 = PlayerEventState(completedEveCounts = mapOf(5 to 1), currentEveNo = 5)
             EveConditionEvaluator.evaluate(
                 cond(cls = 12, param = 0, ops = 2, value = 1), state1
             ) shouldBe false
         }
 
-        it("val=2 ops=1(==) → 當前 eveNo 完成 2 次才通過") {
+        it("val=2 ops=1(==) → phải hoàn thành eveNo hiện tại 2 lần mới qua") {
             val state2 = PlayerEventState(completedEveCounts = mapOf(1 to 2), currentEveNo = 1)
             EveConditionEvaluator.evaluate(
                 cond(cls = 12, param = 0, ops = 1, value = 2), state2
@@ -415,15 +415,15 @@ class EveConditionEvaluatorTest : DescribeSpec({
             ) shouldBe false  // 1 == 2 = false
         }
 
-        it("未知 param 不可因 value=0/ops=0 誤通過") {
+        it("param không xác định không được nhầm qua vì value=0/ops=0") {
             EveConditionEvaluator.evaluate(
                 cond(cls = 12, param = 3, ops = 0, value = 0), emptyState
             ) shouldBe false
         }
     }
 
-    describe("class=15 玩家轉生條件") {
-        it("param=0 讀取玩家轉生次數並套用 Eve 比較") {
+    describe("class=15 điều kiện chuyển sinh người chơi") {
+        it("param=0 đọc số lần chuyển sinh người chơi và áp dụng so sánh của Eve") {
             val notTurned = PlayerEventState(rebornCount = 0)
             val turned = PlayerEventState(rebornCount = 1)
 
@@ -438,7 +438,7 @@ class EveConditionEvaluatorTest : DescribeSpec({
             ) shouldBe true
         }
 
-        it("param=1 以武將二轉入口狀態碼判斷：0 可開啟，-1 顯示說明") {
+        it("param=1 phân biệt bằng mã trạng thái cửa nhị chuyển sinh tướng: 0 mở được, -1 hiển thị hướng dẫn") {
             val canOpen = PlayerEventState(npcSecondReincarnationStatus = 0)
             val blocked = PlayerEventState(npcSecondReincarnationStatus = -1)
 
@@ -461,14 +461,14 @@ class EveConditionEvaluatorTest : DescribeSpec({
         }
     }
 
-    describe("class=3 場景物件可互動狀態") {
-        it("Eve 已觀測固定形狀 pStyle=4 ops=5 value=0 通過") {
+    describe("class=3 trạng thái tương tác của vật thể trong cảnh") {
+        it("shape cố định đã quan sát của Eve: pStyle=4 ops=5 value=0 qua") {
             EveConditionEvaluator.evaluate(
                 cond(cls = 3, param = 1, pStyle = 4, ops = 5, value = 0), emptyState
             ) shouldBe true
         }
 
-        it("其他 class=3 形狀保守不通過") {
+        it("các shape khác của class=3 bảo thủ không qua") {
             EveConditionEvaluator.evaluate(
                 cond(cls = 3, param = 1, pStyle = 3, ops = 5, value = 0), emptyState
             ) shouldBe false
@@ -481,8 +481,8 @@ class EveConditionEvaluatorTest : DescribeSpec({
         }
     }
 
-    describe("class=4 技能條件") {
-        it("會用技能等級比對 conditionValue") {
+    describe("class=4 điều kiện kỹ năng") {
+        it("sẽ so cấp kỹ năng với conditionValue") {
             val state = PlayerEventState(skillLevels = mapOf(14001 to 2))
 
             EveConditionEvaluator.evaluate(
@@ -493,7 +493,7 @@ class EveConditionEvaluatorTest : DescribeSpec({
             ) shouldBe false
         }
 
-        it("未學技能等級視為 0") {
+        it("kỹ năng chưa học tính cấp là 0") {
             val state = PlayerEventState(skillLevels = emptyMap())
 
             EveConditionEvaluator.evaluate(
@@ -502,8 +502,8 @@ class EveConditionEvaluatorTest : DescribeSpec({
         }
     }
 
-    describe("class=5 金錢條件") {
-        it("ops=2 且 value=金額減一時代表金幣足夠") {
+    describe("class=5 điều kiện tiền") {
+        it("ops=2 và value=bằng số tiền trừ 1 nghĩa là vàng đủ") {
             val state = PlayerEventState(gold = 100)
 
             EveConditionEvaluator.evaluate(
@@ -514,7 +514,7 @@ class EveConditionEvaluatorTest : DescribeSpec({
             ) shouldBe false
         }
 
-        it("ops=4 出現在扣款鏈時保守視為至少達門檻") {
+        it("ops=4 khi xuất hiện trong chuỗi trừ tiền, bảo thủ coi là đã đạt ngưỡng") {
             val state = PlayerEventState(gold = 50)
 
             EveConditionEvaluator.evaluate(
@@ -526,8 +526,8 @@ class EveConditionEvaluatorTest : DescribeSpec({
         }
     }
 
-    describe("RoleCount Eve 條件分流") {
-        it("class=18 且參數為已知 RoleCount 索引時會讀 roleCountValues") {
+    describe("Phân luồng điều kiện RoleCount của Eve") {
+        it("class=18 và tham số là chỉ số RoleCount đã biết thì sẽ đọc roleCountValues") {
             val state = PlayerEventState(roleCountValues = mapOf(668 to 120))
 
             EveConditionEvaluator.evaluate(
@@ -535,7 +535,7 @@ class EveConditionEvaluatorTest : DescribeSpec({
             ) shouldBe true
         }
 
-        it("class=18 param=1 桃園結義對話計數已鑑定為 RoleCount（resultClass=14 寫入端證據）") {
+        it("class=18 param=1 bộ đếm hội thoại Đào Viên Kết Nghĩa đã được xác định là RoleCount (bằng chứng phía ghi resultClass=14)") {
             val state = PlayerEventState(roleCountValues = mapOf(1 to 3))
 
             EveConditionEvaluator.evaluate(
@@ -543,7 +543,7 @@ class EveConditionEvaluatorTest : DescribeSpec({
             ) shouldBe true
         }
 
-        it("class=18 未鑑定的低參數不會誤用 RoleCount") {
+        it("class=18 tham số nhỏ chưa xác định sẽ không dùng nhầm RoleCount") {
             val state = PlayerEventState(roleCountValues = mapOf(2 to 999))
 
             EveConditionEvaluator.evaluate(
@@ -551,7 +551,7 @@ class EveConditionEvaluatorTest : DescribeSpec({
             ) shouldBe false
         }
 
-        it("class=14 不再標示為已確認 RoleCount") {
+        it("class=14 không còn đánh dấu là RoleCount đã xác nhận") {
             val state = PlayerEventState(roleCountValues = mapOf(0 to 999))
 
             EveConditionEvaluator.evaluate(
@@ -560,8 +560,8 @@ class EveConditionEvaluatorTest : DescribeSpec({
         }
     }
 
-    describe("未知 class") {
-        it("保守回傳 false") {
+    describe("class không xác định") {
+        it("bảo thủ trả về false") {
             EveConditionEvaluator.evaluate(cond(cls = 99), emptyState) shouldBe false
         }
     }

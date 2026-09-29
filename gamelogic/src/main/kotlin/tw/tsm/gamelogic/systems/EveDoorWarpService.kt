@@ -11,14 +11,14 @@ import tw.tsm.domain.interfaces.repositories.CharacterRepository
 private val logger = KotlinLogging.logger {}
 
 /**
- * Eve Door 傳送服務
+ * Dịch vụ dịch chuyển Door Eve
  *
- * 職責：執行 resultType=2（Door 傳送）的完整流程。
+ * Nhiệm vụ: thực hiện toàn bộ luồng resultType=2 (dịch chuyển Door).
  *
- * 封包順序：S:020-001 → S:020-007 → leaveMap/enterMap →
- *          S:012-000 → S:007-000 → [等待 C:012-001] → completeAndEnd
+ * Thứ tự gói tin: S:020-001 → S:020-007 → leaveMap/enterMap →
+ *          S:012-000 → S:007-000 → [chờ C:012-001] → completeAndEnd
  *
- * 從 NpcEventHandler.handleDoorWarp() 抽取。
+ * Tách ra từ NpcEventHandler.handleDoorWarp().
  */
 class EveDoorWarpService(
     private val responseSender: ResponseSender,
@@ -29,11 +29,11 @@ class EveDoorWarpService(
 ) {
 
     /**
-     * 執行 Door 傳送
+     * Thực hiện dịch chuyển Door
      *
-     * @param session     玩家 session
-     * @param result      resultType=2 的 EveResult
-     * @param onComplete  傳送完成後的回呼（通常為 completeAndEnd）
+     * @param session     session của người chơi
+     * @param result      EveResult có resultType=2
+     * @param onComplete  callback sau khi dịch chuyển hoàn tất (thường là completeAndEnd)
      */
     suspend fun execute(session: GameSession, result: EveResult, onComplete: suspend () -> Unit) {
         responseSender.sendCommonEvent(session, result)
@@ -49,7 +49,7 @@ class EveDoorWarpService(
         // thực tế của client là 810/510, không phải tọa độ xuất hiện mặc định.
         val internetCafeExit = session.mapId == 10801 && sceneInfoKey == 1
         if (sceneInfo == null && !beginnerGate) {
-            logger.warn { "${session.characterName} Door sceneInfoKey=$sceneInfoKey 不在場景 ${session.mapId} — 結束事件" }
+            logger.warn { "${session.characterName} Door sceneInfoKey=$sceneInfoKey không ở cảnh ${session.mapId} — kết thúc sự kiện" }
             responseSender.sendEventEnd(session)
             stateMachine.complete(session.roleId.toLong())
             return
@@ -69,7 +69,7 @@ class EveDoorWarpService(
             else -> sceneInfo!!.playerAppearY * 20
         }
         val oldMapId = session.mapId
-        logger.info { "${session.characterName} Door 傳送：sceneInfo[$sceneInfoKey] → scene=$targetScene ($targetX,$targetY)" }
+        logger.info { "${session.characterName} Door dịch chuyển: sceneInfo[$sceneInfoKey] → scene=$targetScene ($targetX,$targetY)" }
 
         responseSender.sendEventChangeScene(session)
         worldManager.leaveMap(session)
@@ -86,17 +86,17 @@ class EveDoorWarpService(
         session.lastDoorWarpMapId = targetScene
         session.lastDoorWarpTime = System.currentTimeMillis()
 
-        // 必須先註冊等待器，再发送场景包。否则客户端很快返回
-        // C:012-001 时没有 waiter，角色会停在黑屏/加载状态。
+        // Phải đăng ký bộ chờ trước rồi mới gửi gói cảnh. Nếu không client trả về rất nhanh
+        // Khi C:012-001 không có waiter, nhân vật sẽ dừng ở trạng thái màn hình đen/đang tải.
         val deferred = worldManager.createSceneLoadDeferred(session.playerId)
         responseSender.sendPlayerTeleport(session, session.playerId, targetScene, targetX, targetY)
         responseSender.sendSceneChange(session, session.playerId, targetScene, targetX, targetY, session.equipItemIds, session.titleId)
 
-        // 掛起等待 C:012-001（客戶端場景載入完畢）
-        logger.debug { "${session.characterName} 場景更新：$oldMapId → $targetScene（等待 C:012-001）" }
+        // Treo để chờ C:012-001 (client tải cảnh xong)
+        logger.debug { "${session.characterName} cập nhật cảnh: $oldMapId → $targetScene (chờ C:012-001)" }
 
         withTimeoutOrNull(10_000L) { deferred.await() }
-            ?: logger.warn { "${session.characterName} 等待 C:012-001 超時（10s），強制完成事件" }
+            ?: logger.warn { "${session.characterName} chờ C:012-001 quá hạn (10s), buộc hoàn tất sự kiện" }
 
         onComplete()
     }

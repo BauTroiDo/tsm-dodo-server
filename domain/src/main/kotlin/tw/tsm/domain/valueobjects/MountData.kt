@@ -1,19 +1,19 @@
 package tw.tsm.domain.valueobjects
 
 /**
- * 角色坐騎運行時資料 — 對應 Mounts.lua 的模組狀態
+ * Dữ liệu runtime vật cưỡi của nhân vật — tương ứng trạng thái module Mounts.lua
  *
- * 登入載入/斷線保存。DB 持久化對象。
+ * Nạp khi đăng nhập/lưu khi mất kết nối. Đối tượng lưu trữ bền vững trong DB.
  */
 class MountData(
-    /** 坐騎等級（1-based） */
+    /** Cấp độ vật cưỡi (1-based)*/
     var level: Int = 1,
-    /** 6 種屬性點數（index 1-6，Lua 以 1-based 存取，index 0 不用） */
+    /** 6 loại điểm thuộc tính (index 1-6, Lua truy cập theo 1-based, không dùng index 0)*/
     val attributePoints: IntArray = IntArray(7),
-    /** 坐騎裝備（fitType → ThingData） */
+    /** Trang bị vật cưỡi (fitType → ThingData)*/
     val equips: MutableMap<Int, ThingData> = mutableMapOf(),
-    /** 當前選擇的坐騎 NPC ID（0 = 未選擇） */
+    /** ID NPC vật cưỡi đang chọn (0 = chưa chọn)*/
     var currentNpcId: Int = 0,
-    /** 是否正在騎乘中（不持久化，登入時為 false） */
+    /** Có đang cưỡi hay không (không lưu bền vững, khi đăng nhập là false)*/
     var isRiding: Boolean = false
 )

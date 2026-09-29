@@ -15,14 +15,14 @@ import tw.tsm.protocol.PacketWriter
 private val logger = KotlinLogging.logger {}
 
 /**
- * 表情/動作系統 Handler（mainKind = 32）
+ * Handler hệ thống biểu cảm/động tác (mainKind = 32)
  *
- * 來源：protocal.lua protocolTable[32]（第 6969-7010 行）
+ * Nguồn: protocal.lua protocolTable[32] (dòng 6969-7010)
  *
- * C→S 格式：
- * - subKind 1（使用表情）：+表情ID(1)
- * - subKind 2（使用動作）：+動作ID(1)
- * - subKind 3（停止動作）：無資料
+ * Định dạng C→S:
+ * - subKind 1 (dùng biểu cảm): +ID biểu cảm(1)
+ * - subKind 2 (dùng động tác): +ID động tác(1)
+ * - subKind 3 (dừng động tác): không có dữ liệu
  */
 class EmoteHandler(
     private val worldManager: WorldManager,
@@ -38,30 +38,30 @@ class EmoteHandler(
             1 -> handleEmoji(session, data)
             2 -> handleAction(session, data)
             3 -> handleStopAction(session)
-            else -> logger.warn { "未處理的表情/動作子協定：subKind=$subKind" }
+            else -> logger.warn { "Sub-protocol biểu cảm/động tác chưa xử lý: subKind=$subKind" }
         }
     }
 
     /**
-     * C:032-001 使用表情符號
+     * C:032-001 Dùng biểu tượng biểu cảm
      *
-     * 客戶端發送表情 ID（100-124，UIEmotion.lua:18 → 99+i）
-     * 廣播 S:032-001 給同地圖所有玩家
+     * Client gửi ID biểu cảm (100-124, UIEmotion.lua:18 → 99+i)
+     * Phát rộng S:032-001 cho mọi người chơi cùng bản đồ
      */
     private fun handleEmoji(session: GameSession, data: ByteArray) {
         if (data.isEmpty()) return
         val reader = PacketReader(data)
         val emojiId = reader.readUByte()
 
-        // 驗證：表情 ID 範圍（客戶端發送 100-124）
+        // Kiểm tra hợp lệ: khoảng ID biểu cảm (client gửi 100-124)
         if (emojiId < 100 || emojiId > 124) {
-            logger.debug { "${session.characterName} 發送無效表情 ID：$emojiId" }
+            logger.debug { "${session.characterName} gửi ID biểu cảm không hợp lệ: $emojiId" }
             return
         }
 
-        logger.trace { "${session.characterName} 使用表情 #$emojiId" }
+        logger.trace { "${session.characterName} dùng biểu cảm #$emojiId" }
 
-        // 預先序列化一次，廣播到同地圖（含自己）
+        // Tuần tự hoá trước một lần, phát rộng tới cùng bản đồ (bao gồm chính mình)
         val packet = PacketWriter(12)
             .writeByte(Opcodes.EMOTE).writeByte(1).writeByte(0)
             .writeLongLE(session.playerId)
@@ -72,38 +72,38 @@ class EmoteHandler(
     }
 
     /**
-     * C:032-002 使用情感動作
+     * C:032-002 Dùng động tác cảm xúc
      *
-     * 業務規則（UIAction.lua:68-101）：
-     * - 騎馬中禁止
-     * - 溫泉場景（57401/60441）只允許 Sit/Lie
+     * Quy tắc nghiệp vụ (UIAction.lua:68-101):
+     * - đang cưỡi ngựa thì cấm
+     * - cảnh suối nước nóng (57401/60441) chỉ cho phép Sit/Lie
      */
     private fun handleAction(session: GameSession, data: ByteArray) {
         if (data.isEmpty()) return
         val reader = PacketReader(data)
         val poseId = reader.readUByte()
 
-        // 驗證：動作 ID 在合法集合中
+        // Kiểm tra hợp lệ: ID động tác nằm trong tập hợp hợp lệ
         if (poseId !in ERolePose.USABLE_POSES) {
-            logger.debug { "${session.characterName} 發送無效動作 ID：$poseId" }
+            logger.debug { "${session.characterName} gửi ID động tác không hợp lệ: $poseId" }
             return
         }
 
-        // 驗證：騎馬中禁止做動作
+        // Kiểm tra hợp lệ: đang cưỡi ngựa cấm làm động tác
         if (session.mountNpcId != 0) {
-            logger.debug { "${session.characterName} 騎馬中無法使用動作" }
+            logger.debug { "${session.characterName} đang cưỡi ngựa không dùng được động tác" }
             return
         }
 
-        // 驗證：溫泉場景只允許 Sit/Lie
+        // Kiểm tra hợp lệ: cảnh suối nước nóng chỉ cho phép Sit/Lie
         if (session.mapId in HOT_SPRING_MAPS && poseId !in ERolePose.HOT_SPRING_ONLY) {
-            logger.debug { "${session.characterName} 溫泉場景只允許坐下/躺下" }
+            logger.debug { "${session.characterName} cảnh suối nước nóng chỉ cho phép ngồi/nằm" }
             return
         }
 
-        logger.trace { "${session.characterName} 使用動作 #$poseId" }
+        logger.trace { "${session.characterName} dùng động tác #$poseId" }
 
-        // S:032-002 格式：<<+玩家ID(8LE) +動作ID(1)>>
+        // S:032-002 Định dạng: <<+ID người chơi(8LE) +ID động tác(1)>>
         val packet = PacketWriter(12)
             .writeByte(Opcodes.EMOTE).writeByte(2).writeByte(0)
             .writeLongLE(session.playerId)
@@ -114,12 +114,12 @@ class EmoteHandler(
     }
 
     /**
-     * C:032-003 停止情感動作
+     * C:032-003 Dừng động tác cảm xúc
      *
-     * 廣播 S:032-002 恢復站立（ERolePose.STAND=8）
+     * Phát rộng S:032-002 hồi phục tư thế đứng (ERolePose.STAND=8)
      */
     private fun handleStopAction(session: GameSession) {
-        logger.trace { "${session.characterName} 停止動作" }
+        logger.trace { "${session.characterName} dừng động tác" }
 
         val packet = PacketWriter(12)
             .writeByte(Opcodes.EMOTE).writeByte(2).writeByte(0)

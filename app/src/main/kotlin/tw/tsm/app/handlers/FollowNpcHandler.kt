@@ -13,10 +13,10 @@ import tw.tsm.protocol.PacketReader
 private val logger = KotlinLogging.logger {}
 
 /**
- * 武將管理處理器（mainKind = 15）
+ * Bộ xử lý quản lý tướng (mainKind = 15)
  *
- * 來源：protocal.lua protocolTable[15]
- * 處理武將放逐、馬車存取、改名等操作。
+ * Nguồn: protocal.lua protocolTable[15]
+ * Xử lý các thao tác như đày tướng, cất/lấy xe ngựa, đổi tên.
  */
 class FollowNpcHandler(
     private val petSystem: PetSystem,
@@ -44,14 +44,14 @@ class FollowNpcHandler(
             10 -> handleStoreToCart(session, characterId, data, capacity)
             11 -> handleRetrieveFromCart(session, characterId, data)
             12 -> handleSwap(session, characterId, data)
-            else -> logger.trace { "未處理的武將管理 subKind=$subKind" }
+            else -> logger.trace { "Quản lý tướng chưa xử lý subKind=$subKind" }
         }
     }
 
     /**
-     * C:015-002 放逐武將
+     * C:015-002 Đày tướng
      *
-     * 格式：+索引(1)
+     * Định dạng: +chỉ số(1)
      */
     private fun handleKick(session: GameSession, characterId: Long, data: ByteArray) {
         val reader = PacketReader(data)
@@ -59,19 +59,19 @@ class FollowNpcHandler(
 
         val pet = petSystem.kickFollowNpc(characterId, slotIndex)
         if (pet == null) {
-            logger.debug { "放逐失敗：charId=$characterId slot=$slotIndex" }
+            logger.debug { "Thải hồi thất bại: charId=$characterId slot=$slotIndex" }
             return
         }
 
-        // S:015-002 通知刪除
+        // S:015-002 Thông báo xoá
         responseSender.sendFollowNpcRemove(session, session.playerId, slotIndex, showMsg = true)
-        logger.info { "${session.characterName} 放逐武將 slot=$slotIndex npc=${pet.npcId}" }
+        logger.info { "${session.characterName} thải hồi tướng slot=$slotIndex npc=${pet.npcId}" }
     }
 
     /**
-     * C:015-010 武將存入馬車
+     * C:015-010 Cất tướng vào xe ngựa
      *
-     * 格式：+索引(1)
+     * Định dạng: +chỉ số(1)
      */
     private fun handleStoreToCart(session: GameSession, characterId: Long, data: ByteArray, capacity: Int) {
         val reader = PacketReader(data)
@@ -79,22 +79,22 @@ class FollowNpcHandler(
 
         val cartSlot = petSystem.storeToCart(characterId, followSlot, capacity)
         if (cartSlot < 0) {
-            logger.debug { "存入馬車失敗：charId=$characterId slot=$followSlot" }
+            logger.debug { "Gửi vào xe ngựa thất bại: charId=$characterId slot=$followSlot" }
             return
         }
 
-        // S:015-002 刪除隨身（不顯示訊息）
+        // S:015-002 Xoá khỏi theo người (không hiển thị tin nhắn)
         responseSender.sendFollowNpcRemove(session, session.playerId, followSlot, showMsg = false)
 
-        // 重送馬車資料
+        // Gửi lại dữ liệu xe ngựa
         val cartPets = petSystem.getCartPets(characterId)
         responseSender.sendCartData(session, cartPets.values.toList())
     }
 
     /**
-     * C:015-011 武將領出馬車
+     * C:015-011 Lấy tướng ra khỏi xe ngựa
      *
-     * 格式：+索引(1)
+     * Định dạng: +chỉ số(1)
      */
     private fun handleRetrieveFromCart(session: GameSession, characterId: Long, data: ByteArray) {
         val reader = PacketReader(data)
@@ -102,14 +102,14 @@ class FollowNpcHandler(
 
         val followSlot = petSystem.retrieveFromCart(characterId, cartSlot)
         if (followSlot < 0) {
-            logger.debug { "領出馬車失敗：charId=$characterId cartSlot=$cartSlot" }
+            logger.debug { "Lấy đồ từ xe ngựa thất bại: charId=$characterId cartSlot=$cartSlot" }
             return
         }
 
-        // S:015-011 刪除馬車
+        // S:015-011 Xoá khỏi xe ngựa
         responseSender.sendCartRemove(session, cartSlot)
 
-        // S:015-001 新增隨身（透過重發全部隨身武將資料）
+        // S:015-001 Thêm vào theo người (bằng cách gửi lại toàn bộ dữ liệu tướng theo người)
         val followPets = petSystem.getFollowPets(characterId)
         val newPet = followPets[followSlot]
         if (newPet != null) {
@@ -120,9 +120,9 @@ class FollowNpcHandler(
     }
 
     /**
-     * C:015-012 交換武將（隨身 ↔ 馬車）
+     * C:015-012 Đổi tướng (theo người ↔ xe ngựa)
      *
-     * 格式：+跟隨索引(1) +馬車索引(1)
+     * Định dạng: +chỉ số theo sau(1) +chỉ số xe ngựa(1)
      */
     private fun handleSwap(session: GameSession, characterId: Long, data: ByteArray) {
         val reader = PacketReader(data)
@@ -130,11 +130,11 @@ class FollowNpcHandler(
         val cartSlot = reader.readUByte()
 
         if (!petSystem.swapFollowAndCart(characterId, followSlot, cartSlot)) {
-            logger.debug { "交換失敗：charId=$characterId follow=$followSlot cart=$cartSlot" }
+            logger.debug { "Trao đổi thất bại: charId=$characterId follow=$followSlot cart=$cartSlot" }
             return
         }
 
-        // 重發隨身和馬車資料
+        // Gửi lại dữ liệu theo người và xe ngựa
         val followPets = petSystem.getFollowPets(characterId)
         // Remove the replaced role first so transient state cannot survive the swap.
         responseSender.sendFollowNpcRemove(session, session.playerId, followSlot, showMsg = false)

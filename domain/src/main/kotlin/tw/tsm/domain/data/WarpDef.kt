@@ -1,20 +1,20 @@
 package tw.tsm.domain.data
 
 /**
- * 傳送門定義 — 對應 `WarpData.New(reader)`
+ * Định nghĩa cổng dịch chuyển — tương ứng `WarpData.New(reader)`
  *
- * 來源：`Warp_C.dat`
- * 每筆 14 bytes：name(4) + scene(2) + mark(2) + x(4) + y(4) = 16 bytes（含 ReadUInt32）
+ * Nguồn: `Warp_C.dat`
+ * Mỗi bản ghi 14 bytes: name(4) + scene(2) + mark(2) + x(4) + y(4) = 16 bytes (bao gồm ReadUInt32)
  */
 data class WarpDef(
-    /** 名稱 ID（string.Get 對照用） */
+    /** ID tên (để đối chiếu với string.Get)*/
     val name: Long,
-    /** 傳送目標場景 ID */
+    /** ID cảnh đích dịch chuyển*/
     val scene: Int,
-    /** 身上標記 */
+    /** Cờ đánh dấu trên người*/
     val mark: Int,
-    /** 目標 X 座標 */
+    /** Toạ độ X mục tiêu*/
     val x: Int,
-    /** 目標 Y 座標 */
+    /** Toạ độ Y mục tiêu*/
     val y: Int
 )

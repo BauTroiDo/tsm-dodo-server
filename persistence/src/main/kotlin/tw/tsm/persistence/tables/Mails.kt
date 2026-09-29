@@ -3,23 +3,23 @@ package tw.tsm.persistence.tables
 import org.jetbrains.exposed.v1.core.Table
 
 /**
- * 信件資料表
+ * Bảng dữ liệu thư
  *
- * 存放玩家收到的信件（系統信、活動獎勵、GM 發信等）。
- * mailId 對應客戶端 Social.mails[mailId]。
+ * Lưu thư người chơi nhận được (thư hệ thống, thưởng hoạt động, GM gửi thư, v.v.).
+ * mailId tương ứng Social.mails[mailId] phía client.
  */
 object Mails : Table("mails") {
-    /** 信件 ID（自動遞增，對應客戶端 UInt32） */
+    /** ID thư (tự tăng dần, tương ứng UInt32 phía client)*/
     val id = integer("id").autoIncrement()
-    /** 收件人角色 ID */
+    /** ID nhân vật người nhận*/
     val charId = long("char_id").index()
-    /** 過期時間（OADate 格式 Double） */
+    /** Thời gian hết hạn (Double định dạng OADate)*/
     val expireTime = double("expire_time")
-    /** 信件狀態（0=未讀, 1=已讀, 2=已領取） */
+    /** trạng thái thư (0=chưa đọc, 1=đã đọc, 2=đã nhận)*/
     val state = integer("state").default(0)
-    /** 信件內容（UTF-8 存儲，發送時轉 Big5） */
+    /** Nội dung thư (lưu UTF-8, khi gửi chuyển sang Big5)*/
     val content = text("content")
-    /** 建立時間（Unix 毫秒） */
+    /** Thời gian tạo (Unix mili giây)*/
     val createdAt = long("created_at")
 
     override val primaryKey = PrimaryKey(id)

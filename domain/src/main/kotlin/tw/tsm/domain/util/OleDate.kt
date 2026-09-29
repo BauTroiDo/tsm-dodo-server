@@ -4,28 +4,28 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 /**
- * OLE Automation Date 轉換工具
+ * Công cụ chuyển đổi OLE Automation Date
  *
- * OADate 是 Windows COM 的日期格式：以 1899-12-30 00:00:00 為基準，
- * 整數部分代表天數，小數部分代表當天已過的時間比例。
- * 例如 1.5 = 1899-12-31 12:00:00
+ * OADate là định dạng ngày của Windows COM: lấy 1899-12-30 00:00:00 làm mốc,
+ * Phần nguyên biểu thị số ngày, phần thập phân biểu thị tỷ lệ thời gian đã trôi qua trong ngày.
+ * Ví dụ 1.5 = 1899-12-31 12:00:00
  */
 object OleDate {
 
-    /** OADate 基準點與 Unix epoch (1970-01-01) 的天數差 */
+    /** Hiệu số ngày giữa mốc OADate và Unix epoch (1970-01-01)*/
     private const val OA_EPOCH_OFFSET_DAYS = 25569.0
 
-    /** 每天的毫秒數 */
+    /** Số mili giây trong một ngày*/
     private const val MILLIS_PER_DAY = 86_400_000.0
 
     /** OLE epoch as a wall-clock calendar date. */
     private val OA_EPOCH_DATE: LocalDate = LocalDate.of(1899, 12, 30)
 
-    /** Unix 毫秒 → OADate */
+    /** Unix mili giây → OADate*/
     fun fromMillis(millis: Long): Double =
         millis / MILLIS_PER_DAY + OA_EPOCH_OFFSET_DAYS
 
-    /** OADate → Unix 毫秒 */
+    /** OADate → Unix mili giây*/
     fun toMillis(oaDate: Double): Long =
         ((oaDate - OA_EPOCH_OFFSET_DAYS) * MILLIS_PER_DAY).toLong()
 
@@ -41,12 +41,12 @@ object OleDate {
         return days.toDouble() + seconds / 86_400.0
     }
 
-    /** 取得當前 UTC-based OADate (persistence durations). */
+    /** Lấy OADate hiện tại theo UTC (persistence durations).*/
     fun now(): Double = fromMillis(System.currentTimeMillis())
 
     /** DVT protocol server clock: local wall-clock OADate. */
     fun nowLocal(): Double = fromLocalDateTime(LocalDateTime.now())
 
-    /** 從現在起算 N 天後的 OADate（用於信件過期時間等） */
+    /** OADate của N ngày kể từ hiện tại (dùng cho thời hạn thư v.v.)*/
     fun daysFromNow(days: Int): Double = now() + days.toDouble()
 }

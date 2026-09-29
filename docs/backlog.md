@@ -1,119 +1,119 @@
-# 待開發系統清單（Backlog）
+# Danh sách hệ thống chờ phát triển (Backlog)
 
-> 盤點基準：手遊客戶端 `protocal.lua` 共 107 個 mainKind。
-> 伺服器現況：37 個已有 C→S Handler、約 7 個純 S→C 已有發送端、約 63 個完全未實作。
-> 更新日期：2026-06-12（盤點 commit：d090488）
+> Chuẩn kiểm kê: client game mobile `protocal.lua` tổng cộng 107 mainKind.
+> Hiện trạng server: 37 đã có C→S Handler, khoảng 7 thuần S→C đã có đầu gửi, khoảng 63 hoàn toàn chưa cài đặt.
+> Ngày cập nhật: 2026-06-12 (commit kiểm kê: d090488)
 
-## 優先順序建議
+## Đề xuất thứ tự ưu tiên
 
-以「玩家進遊戲就會碰到」為準：
+Lấy "người chơi vào game là sẽ gặp" làm chuẩn:
 
-1. **武將養成線**（74 強化 / 44 轉生 — 與既有 PetSystem 銜接最近）
-2. **副本**（47 — 核心遊戲循環）
-3. **軍團**（39 — 規模最大，社交基礎）
-4. **活動/福利**（36 + 87 + 80 — 留存功能）
-5. 小遊戲群與大逃殺最後
+1. **Tuyến nuôi dưỡng tướng** (74 cường hóa / 44 chuyển sinh — khớp nối gần nhất với PetSystem hiện có)
+2. **Phó bản** (47 — vòng lặp game cốt lõi)
+3. **Quân đoàn** (39 — quy mô lớn nhất, nền tảng xã hội)
+4. **Hoạt động/phúc lợi** (36 + 87 + 80 — tính năng giữ chân người chơi)
+5. Nhóm mini game và battle royale để sau cùng
 
 ---
 
-## 未實作系統（按類別）
+## Hệ thống chưa cài đặt (theo nhóm)
 
-### 大型核心系統
+### Hệ thống cốt lõi cỡ lớn
 
-| mainKind | 系統 | 子封包數 | 備註 |
+| mainKind | Hệ thống | Số gói con | Ghi chú |
 |---|---|---|---|
-| 39 | 軍團（公會） | 71 | 全專案最大單一系統 |
-| 37 | 團P | 6 | 依賴軍團 |
-| 41 | 城戰 | 23 | 依賴軍團 |
-| 43 | 同盟 | 8 | 依賴軍團 |
-| 47 | 副本 | 21 | 核心循環 |
-| 97 | 限時副本 | 1 | 依賴副本 |
-| 63 | 戰役系統 | 15 | |
-| 48 | 永恆地層 | 4 | 爬塔型副本 |
-| 36 | SERVER 啟動型介面（活動） | 25 | 活動/儲值 UI 入口 |
-| 35 | 帳號（儲值/點數卡） | 13 | S:035-005 已實作 |
-| 87 | 福利（簽到/禮包） | 10 | |
-| 45 | 結婚系統 | 16 | |
-| 110 | 大逃殺 | 14 | |
-| 95 | 收集冊 | 11 | |
-| 66 | 虛寶兌換 | 10 | |
+| 39 | Quân đoàn (công hội) | 71 | Hệ thống đơn lẻ lớn nhất toàn dự án |
+| 37 | Đoàn P | 6 | Phụ thuộc quân đoàn |
+| 41 | Công thành chiến | 23 | Phụ thuộc quân đoàn |
+| 43 | Đồng minh | 8 | Phụ thuộc quân đoàn |
+| 47 | Phó bản | 21 | Vòng lặp cốt lõi |
+| 97 | Phó bản giới hạn thời gian | 1 | Phụ thuộc phó bản |
+| 63 | Hệ thống chiến dịch | 15 | |
+| 48 | Tầng địa vĩnh hằng | 4 | Phó bản kiểu leo tháp |
+| 36 | Giao diện khởi động SERVER (hoạt động) | 25 | Lối vào UI hoạt động/nạp tiền |
+| 35 | Tài khoản (nạp tiền/thẻ điểm) | 13 | S:035-005 đã cài đặt |
+| 87 | Phúc lợi (điểm danh/gói quà) | 10 | |
+| 45 | Hệ thống kết hôn | 16 | |
+| 110 | Battle Royale | 14 | |
+| 95 | Album sưu tập | 11 | |
+| 66 | Quy đổi quà ảo | 10 | |
 
-### 武將養成線
+### Tuyến nuôi dưỡng tướng
 
-| mainKind | 系統 | 子封包數 |
+| mainKind | Hệ thống | Số gói tin con |
 |---|---|---|
-| 74 | 武將強化 | 2 |
-| 44 | 武將轉生 | 3 |
-| 69 | 二代武將 | 11 |
-| 76 | 武將經驗拉拉 | 5 |
-| 112 | 羈絆系統 | 2 |
-| 121 | 武將裝備（裝備/卸下） | 8 |
-| 42 | 重置技能屬性 | 4 |
+| 74 | Tăng cường tướng | 2 |
+| 44 | Chuyển sinh tướng | 3 |
+| 69 | Tướng thế hệ hai | 11 |
+| 76 | Kéo EXP tướng | 5 |
+| 112 | Hệ thống khế ước | 2 |
+| 121 | Trang bị tướng (trang bị/tháo) | 8 |
+| 42 | Đặt lại thuộc tính kỹ năng | 4 |
 
-### 戰鬥進階
+### Chiến đấu nâng cao
 
-| mainKind | 系統 | 子封包數 |
+| mainKind | Hệ thống | Số gói tin con |
 |---|---|---|
-| 53 | 戰鬥軍師回魔 | 18 |
-| 51 | 戰鬥使用物品 | 1 |
-| 52 | 戰鬥中立即修改數值 | 2 |
-| 54 | 額外 Buff 資訊 | 1 |
+| 53 | Quân sư hồi MP trong chiến đấu | 18 |
+| 51 | Dùng vật phẩm trong chiến đấu | 1 |
+| 52 | Đổi chỉ số tức thì trong chiến đấu | 2 |
+| 54 | Thông tin Buff bổ sung | 1 |
 
-### PVP / 活動戰
+### PVP / Chiến sự kiện
 
-| mainKind | 系統 | 子封包數 |
+| mainKind | Hệ thống | Số gói tin con |
 |---|---|---|
-| 73 | 世界 Boss 戰 | 4 |
-| 99 | 資料對戰（PVP） | 6 |
-| 64 | 水戰系統 | 3 |
-| 70 | 龍舟賽 | 8 |
-| 61 | 樂透 | 10 |
+| 73 | Chiến Boss thế giới | 4 |
+| 99 | Đối chiến dữ liệu (PVP) | 6 |
+| 64 | Hệ thống thủy chiến | 3 |
+| 70 | Đua thuyền rồng | 8 |
+| 61 | Xổ số | 10 |
 
-### 博奕小遊戲群
+### Nhóm mini-game cá cược
 
-| mainKind | 系統 | 子封包數 |
+| mainKind | Hệ thống | Số gói tin con |
 |---|---|---|
-| 57 | 小遊戲 | 3 |
-| 58 | 比大小 | 1 |
-| 59 | 骰子 | 3 |
-| 60 | 牌局 | 4 |
-| 67 | 改運換名符 | 2 |
-| 72 | 小瑪莉 | 6 |
-| 89 | 熔爐 | 3 |
-| 90 | 兌換卡 | 2 |
-| 91 | 九宮格 | 4 |
-| 92 | 戳戳樂 | 3 |
-| 93 | 大富翁 | 2 |
+| 57 | Trò chơi nhỏ | 3 |
+| 58 | So lớn nhỏ | 1 |
+| 59 | Xúc xắc | 3 |
+| 60 | Bàn bài | 4 |
+| 67 | Bùa đổi vận đổi tên | 2 |
+| 72 | Tiểu Mary | 6 |
+| 89 | Lò luyện | 3 |
+| 90 | Thẻ quy đổi | 2 |
+| 91 | Khung cửu cung | 4 |
+| 92 | Trò chọc lỗ | 3 |
+| 93 | Cờ tỷ phú | 2 |
 | 98 | prize | 4 |
 
-### 生活 / 營運
+### Đời sống / Vận hành
 
-| mainKind | 系統 | 子封包數 |
+| mainKind | Hệ thống | Số gói tin con |
 |---|---|---|
-| 105 | 送禮 | 9 |
-| 106 | 小屋（家園） | 14 |
-| 107 | 小精靈 | 6 |
-| 96 | 拍賣 | 6 |
-| 75 | VIP 系統 | 2 |
-| 78 | 七星命盤 | 1 |
-| 80 | 每日登入獎勵 | 2 |
-| 71 | 防沉迷 | 2 |
-| 46 | 移民 | 3 |
-| 55 | 網咖代號 | 2 |
-| 123 | 祕寶 | 3 |
-| 124 | 營運模板 | 8 |
-| 126 | 分組排行榜 | 2 |
-| 199 | 客服中心 | 2 |
-| 16 | 機智問答（GM） | 26 |
-| 101 | SERVER 清資料 | 3 |
-| 56 / 62 / 77 | （protocal.lua 無標題） | 1/2/6 |
+| 105 | Tặng quà | 9 |
+| 106 | Nhà nhỏ (gia viên) | 14 |
+| 107 | Tinh linh nhỏ | 6 |
+| 96 | Đấu giá | 6 |
+| 75 | Hệ thống VIP | 2 |
+| 78 | Mệnh bàn thất tinh | 1 |
+| 80 | Thưởng đăng nhập hằng ngày | 2 |
+| 71 | Chống nghiện | 2 |
+| 46 | Di dân | 3 |
+| 55 | Mã quán net | 2 |
+| 123 | Bí bảo | 3 |
+| 124 | Mẫu vận hành | 8 |
+| 126 | Bảng xếp hạng theo nhóm | 2 |
+| 199 | Trung tâm chăm sóc khách hàng | 2 |
+| 16 | Đố vui trí tuệ (GM) | 26 |
+| 101 | SERVER xóa dữ liệu | 3 |
+| 56 / 62 / 77 | (protocal.lua không có tiêu đề) | 1/2/6 |
 
 ---
 
-## 已實作但內部仍有缺口
+## Đã cài đặt nhưng bên trong vẫn còn thiếu sót
 
-- **mainKind=23 物品**：客戶端 111 個子封包，ItemHandler 只覆蓋一部分（強化/鑲嵌/專武/靈石等未做）
-- **UISell 介消（84）**：69 個 sellId 已實作 6 個（1/2/3/7/8/56），其餘回「不可使用」
-  - 待接：4 機關盒晶石空間、5/6/9 派遣相關、52 經驗瓶空間、53/61 限購類（需跨日重置）
-- **程式碼 TODO 約 41 處**：集中在 BattleManageHandler(11)、TradeHandler(7)、ChatHandler(4)
-- **儲值介面 S:035-006** 未實作
+- **mainKind=23 vật phẩm**: client có 111 gói tin con, ItemHandler chỉ phủ một phần (chưa làm tăng cường/kảm nạm/chuyên vũ/thạch linh)
+- **UISell 介消 (84)**: trong 69 sellId đã cài đặt 6 (1/2/3/7/8/56), còn lại trả về "không sử dụng được"
+  - Chờ nối: 4 không gian tinh thạch hộp cơ quan, 5/6/9 liên quan phái đi, 52 không gian bình EXP, 53/61 nhóm giới hạn mua (cần reset sang ngày mới)
+- **TODO trong code khoảng 41 chỗ**: tập trung ở BattleManageHandler(11), TradeHandler(7), ChatHandler(4)
+- **Giao diện nạp tiền S:035-006** chưa cài đặt

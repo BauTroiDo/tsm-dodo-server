@@ -1,29 +1,29 @@
 package tw.tsm.domain.constants
 
 /**
- * PK 要求結果碼（S:033-001）
+ * Mã kết quả yêu cầu PK (S:033-001)
  *
- * 來源：protocal.lua protocolTable[33][1]（第 7019-7031 行）
+ * Nguồn: protocal.lua protocolTable[33][1] (dòng 7019-7031)
  */
 object PkResultCode {
-    /** 對方未開 PK 開關 */
+    /** Đối phương chưa bật công tắc PK*/
     const val PK_OFF = 1
-    /** 對方未開參戰開關 */
+    /** Đối phương chưa bật công tắc tham chiến*/
     const val JOIN_OFF = 2
-    /** 對方戰鬥問答中 */
+    /** Đối phương đang trong lúc hỏi đáp chiến đấu*/
     const val IN_QUESTION = 3
-    /** 特殊戰鬥不能參戰 */
+    /** Chiến đấu đặc biệt không thể tham chiến*/
     const val SPECIAL_BATTLE = 4
-    /** 城門戰，不同盟不能參戰 */
+    /** Trận cổng thành, khác liên minh không được tham chiến*/
     const val CITY_DIFF_ALLY = 5
-    /** 城門戰，不同軍團不能參戰 */
+    /** Trận cổng thành, khác quân đoàn không được tham chiến*/
     const val CITY_DIFF_GROUP = 6
-    /** 該玩家目前在住宿中 */
+    /** Người chơi đó hiện đang ở lữ quán*/
     const val RESTING = 7
-    /** 此場景不可參戰 */
+    /** Cảnh này không thể tham chiến*/
     const val SCENE_NO_PK = 8
-    /** 同盟不可 PK */
+    /** Không được PK trong cùng liên minh*/
     const val SAME_ALLY = 9
-    /** 對方無敵狀態中，無法攻擊 */
+    /** Đối phương đang ở trạng thái vô địch, không thể tấn công*/
     const val INVINCIBLE = 10
 }

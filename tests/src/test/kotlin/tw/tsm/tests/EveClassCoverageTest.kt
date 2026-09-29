@@ -7,7 +7,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 class EveClassCoverageTest : DescribeSpec({
-    describe("Eve.emg 類別集合") {
+    describe("Tập hợp lớp của Eve.emg") {
         val eveFile = listOf(
             Path.of("gamedata", "Eve.emg"),
             Path.of("..", "gamedata", "Eve.emg")
@@ -15,7 +15,7 @@ class EveClassCoverageTest : DescribeSpec({
         val eveBytes = Files.readAllBytes(eveFile)
         val events = EveDataLoader.load(eveBytes).values.flatMap { it.npcEvents.values }
 
-        it("conditionClass 集合必須被明確追蹤") {
+        it("tập conditionClass phải được theo dõi tường minh") {
             val actual = events
                 .flatMap { it.conditions }
                 .map { it.conditionClass }
@@ -24,7 +24,7 @@ class EveClassCoverageTest : DescribeSpec({
             actual shouldBe setOf(0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18)
         }
 
-        it("resultType 集合必須被明確追蹤") {
+        it("tập resultType phải được theo dõi tường minh") {
             val actual = events
                 .flatMap { event -> event.conditions.flatMap { it.results } }
                 .map { it.resultType }
@@ -33,7 +33,7 @@ class EveClassCoverageTest : DescribeSpec({
             actual shouldBe setOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
         }
 
-        it("resultClass 集合必須被明確追蹤") {
+        it("tập resultClass phải được theo dõi tường minh") {
             val actual = events
                 .flatMap { event -> event.conditions.flatMap { it.results } }
                 .map { it.resultClass }

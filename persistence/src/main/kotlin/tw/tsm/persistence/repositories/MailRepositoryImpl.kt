@@ -20,7 +20,7 @@ import tw.tsm.persistence.tables.Mails
 private val logger = KotlinLogging.logger {}
 
 /**
- * 信件資料庫操作實作
+ * Triển khai thao tác CSDL thư
  */
 class MailRepositoryImpl : MailRepository {
 
@@ -72,7 +72,7 @@ class MailRepositoryImpl : MailRepository {
             }
         }
 
-        logger.info { "建立信件：mailId=$mailId, charId=$charId, 附件=${attachments.size}" }
+        logger.info { "Tạo thư: mailId=$mailId, charId=$charId, phim_đính=${attachments.size}" }
         mailId
     }
 
@@ -107,7 +107,7 @@ class MailRepositoryImpl : MailRepository {
         )
     }
 
-    /** 將 DB row 轉換為 MailAttachmentData */
+    /** Chuyển DB row thành MailAttachmentData*/
     private fun rowToAttachment(row: org.jetbrains.exposed.v1.core.ResultRow): MailAttachmentData {
         val kind = row[MailAttachments.kind]
         return MailAttachmentData(
@@ -139,7 +139,7 @@ class MailRepositoryImpl : MailRepository {
         )
     }
 
-    /** 將 ThingData 寫入 MailAttachments batch insert */
+    /** Ghi ThingData vào batch insert của MailAttachments*/
     private fun org.jetbrains.exposed.v1.core.statements.BatchInsertStatement.writeThingData(att: MailAttachmentData) {
         val td = att.thingData
         if (td != null) {

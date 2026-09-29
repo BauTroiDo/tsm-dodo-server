@@ -1,31 +1,31 @@
 package tw.tsm.domain.data
 
 /**
- * 場景設定定義 — 對應 `SceneData.ReadSceneSetData(reader)`
+ * định nghĩa cấu hình cảnh — tương ứng `SceneData.ReadSceneSetData(reader)`
  *
- * 來源：`SceneSet_C.dat`
+ * nguồn: `SceneSet_C.dat`
  */
 data class SceneSetDef(
-    /** 場景名稱 ID（string.Get 對照用） */
+    /** ID tên cảnh (dùng để đối chiếu với string.Get)*/
     val nameId: Long,
-    /** 副本種類（0=無, 1=靜態, 2=動態） */
+    /** loại Dungeon (0=không, 1=tĩnh, 2=động)*/
     val kind: Int,
-    /** 最大人數 */
+    /** số người tối đa*/
     val maxPlayer: Int,
-    /** 限制條件 1（不可丟棄/使用道具/卷軸/符咒/安全交易/交易武將/設攤/快遞） */
+    /** điều kiện giới hạn 1 (không được vứt bỏ / dùng vật phẩm / dùng cuộn trục / dùng phù chú / giao dịch an toàn / giao dịch tướng / mở sạp / chuyển phát nhanh)*/
     val limit1: Int,
-    /** 限制條件 2（不可 PK NPC/PK 玩家/參戰/騎馬/機關盒/跟隨武將/組隊/強制 PK） */
+    /** điều kiện giới hạn 2 (không được PK NPC / PK người chơi / tham chiến / cưỡi ngựa / hộp cơ quan / đi theo tướng / lập tổ đội / cưỡng chế PK)*/
     val limit2: Int,
-    /** 場景特效（0=無, 1=落葉, 2=雪花, 4=雷雨, 8=黑暗, 16=流星, 32=下雨） */
+    /** hiệu ứng cảnh (0=không, 1=lá rụng, 2=tuyết rơi, 4=bão kèm sấm, 8=bóng tối, 16=sao băng, 32=mưa)*/
     val effect: Int,
-    /** 建議最低等級 */
+    /** cấp độ tối thiểu khuyên dùng*/
     val minLv: Int,
-    /** 建議最高等級 */
+    /** cấp độ tối đa khuyên dùng*/
     val maxLv: Int,
-    /** 顯示條件（0=無限制, 1=不顯示自身武將, 2=不顯示他人武將, 4=不顯示其他玩家） */
+    /** điều kiện hiển thị (0=không giới hạn, 1=không hiển thị tướng của mình, 2=không hiển thị tướng người khác, 4=không hiển thị người chơi khác)*/
     val viewSetting: Int,
-    /** 子 ID */
+    /** ID con*/
     val subId: Int,
-    /** 限制條件 3（0=無限制, 1=死亡不減少經驗值） */
+    /** điều kiện giới hạn 3 (0=không giới hạn, 1=chết không mất EXP)*/
     val limit3: Int
 )

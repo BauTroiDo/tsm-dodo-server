@@ -1,30 +1,30 @@
 package tw.tsm.domain.data
 
 /**
- * 排行榜定義 — 對應 `LeaderboardData.lua`
+ * Định nghĩa bảng xếp hạng — tương ứng `LeaderboardData.lua`
  *
- * 來源：`LeaderbordInfo_C.dat`
- * 伺服器只需要 id 和 stateEnable，其餘屬性供客戶端 UI 使用。
+ * Nguồn: `LeaderbordInfo_C.dat`
+ * Server chỉ cần id và stateEnable, các thuộc tính còn lại dành cho UI của client.
  */
 data class LeaderboardDef(
-    /** 排行榜 ID */
+    /** ID bảng xếp hạng*/
     val id: Int,
-    /** 主標籤文字 ID（客戶端用） */
+    /** ID văn bản nhãn chính (dùng cho client)*/
     val mainTagText: Long,
-    /** 子標籤文字 ID（客戶端用） */
+    /** ID chuỗi văn bản của tab con (dùng cho client)*/
     val subTagText: Long,
-    /** 分數欄位名文字 ID（客戶端用） */
+    /** ID chuỗi văn bản tên trường điểm số (dùng cho client)*/
     val scoreText: Long,
-    /** 玩家名欄位名文字 ID（客戶端用） */
+    /** ID chuỗi văn bản tên trường tên người chơi (dùng cho client)*/
     val nameText: Long,
-    /** 獎勵 ID */
+    /** ID phần thưởng*/
     val awardId: Int,
-    /** 分數格式化範本 */
+    /** Mẫu định dạng điểm số*/
     val scoreFormat: String,
-    /** 是否顯示升降狀態 */
+    /** Có hiển thị trạng thái tăng/giảm hay không*/
     val stateEnable: Boolean,
-    /** 前三名獎勵 flagId */
+    /** flagId phần thưởng top 3*/
     val rankAwardFlagIds: List<Int>,
-    /** 功能位元旗標 */
+    /** Cờ bit chức năng*/
     val bitFunction: Int
 )

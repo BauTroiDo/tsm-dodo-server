@@ -1,12 +1,12 @@
 # Batch Steps 41–50 — Battle area/item lifecycle audit
 
 ## Step 41 — Fight area 255
-Lua FightField.GetEnemyIdx(kind, target) có nhánh kind == 255 với chú thích 敵我雙方全體 và duyệt toàn bộ fightHum.
+Lua FightField.GetEnemyIdx(kind, target) có nhánh kind == 255 với chú thích `敵我雙方全體` (toàn thể cả ta lẫn địch) và duyệt toàn bộ fightHum.
 BattleGrid trước đây không hỗ trợ 255 nên fallback thành một target.
 Server nay resolve area 255 thành toàn bộ fighter còn sống của cả hai phe.
 
 ## Step 42 — Revive target semantics
-FightField.UpdateSelectFrame xác nhận item kind=50 là 復活道具目標是死人 và gọi OpenSelectFrame(..., true).
+FightField.UpdateSelectFrame xác nhận item kind=50 là `復活道具目標是死人` (đạo cụ hồi sinh, mục tiêu là người đã chết) và gọi OpenSelectFrame(..., true).
 Prevalidation Step32 trước đó vô tình yêu cầu target sống. Đã tách kind=50 để cho phép target chết cùng phe và từ chối fighter đã FlyOut.
 
 ## Step 43 — Revive queue/resolve

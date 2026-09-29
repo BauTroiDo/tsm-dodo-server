@@ -3,18 +3,18 @@ package tw.tsm.persistence.tables
 import org.jetbrains.exposed.v1.core.Table
 
 /**
- * 好友邀請資料表
+ * Bảng dữ liệu mời kết bạn
  *
- * 待處理的好友邀請。接受/拒絕後刪除。
+ * Lời mời kết bạn đang chờ xử lý. Xoá sau khi chấp nhận/từ chối.
  */
 object FriendInvites : Table("friend_invites") {
-    /** 自動遞增 ID */
+    /** ID tự tăng*/
     val id = long("id").autoIncrement()
-    /** 被邀請者角色 ID */
+    /** ID nhân vật được mời*/
     val targetCharId = long("target_char_id").index()
-    /** 邀請者角色 ID */
+    /** ID nhân vật mời*/
     val inviterCharId = long("inviter_char_id")
-    /** 邀請時間（Unix 毫秒） */
+    /** Thời gian mời (Unix mili giây)*/
     val createdAt = long("created_at")
 
     override val primaryKey = PrimaryKey(id)

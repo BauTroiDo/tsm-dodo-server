@@ -1,120 +1,120 @@
-# Eve.emg 全量缺口分析報告
+# Báo cáo phân tích toàn bộ khoảng trống của Eve.emg
 
-> 產出日期：2026-06-12。分析工具：`tools/eve_analyze.py`（鏡像 EveDataLoader.kt 解析邏輯）。
-> 解析成功率 3823/3823 場景（100%），共 25457 事件 / 77001 條件 / 164910 結果。
+> Ngày tạo: 2026-06-12. Công cụ phân tích: `tools/eve_analyze.py` (phản chiếu logic phân tích của EveDataLoader.kt).
+> Tỉ lệ phân tích thành công 3823/3823 cảnh (100%), tổng 25457 sự kiện / 77001 điều kiện / 164910 kết quả.
 
-## 1. 分析方法
+## 1. Phương pháp phân tích
 
-1. 以 Python 重現 `EveDataLoader.kt` 的二進位解析，全量掃描 Eve.emg
-2. 統計 conditionClass / resultClass / (resultType, resultClass, pStyle) 使用分佈
-3. 與伺服器現支援面（EveConditionEvaluator / EveResultExecutor / EveResultClassPolicy）比對
-4. 對缺口傾印完整事件上下文（條件鏈 + 結果鏈 + Talk 文字），用 Talk_C.dat 對話內容鑑定語意
+1. Dùng Python tái hiện phân tích nhị phân của `EveDataLoader.kt`, quét toàn bộ Eve.emg
+2. Thống kê phân bố sử dụng conditionClass / resultClass / (resultType, resultClass, pStyle)
+3. Đối chiếu với mặt hiện hỗ trợ của server (EveConditionEvaluator / EveResultExecutor / EveResultClassPolicy)
+4. Với các khoảng trống, dump ngữ cảnh sự kiện đầy đủ (chuỗi điều kiện + chuỗi kết quả + văn bản Talk), dùng nội dung hội thoại Talk_C.dat để giám định ngữ nghĩa
 
-**Talk 文字來源**：`CompreseData/Talk_C.dat` — count(4) + 每筆 id(U16) + len(U16) + UTF-16LE。
-（注意：事件對話的 resultMeanNo 查 Talk_C.dat，不是 TextData_C.dat）
+**Nguồn văn bản Talk**: `CompreseData/Talk_C.dat` — count(4) + mỗi bản ghi id(U16) + len(U16) + UTF-16LE.
+(Lưu ý: resultMeanNo của hội thoại sự kiện tra Talk_C.dat, không phải TextData_C.dat)
 
-## 2. 條件面缺口（conditionClass）
+## 2. Khoảng trống mặt điều kiện (conditionClass)
 
-| Class | 筆數 | 場景數 | 鑑定結果 | 信心 |
+| Class | Số bản ghi | Số cảnh | Kết quả giám định | Độ tin cậy |
 |------:|-----:|------:|---------|------|
-| **13** | 99 | 17 | 軍團城池狀態：param=1 城池歸屬比對（val=城池編號 1~5）、param=2 玩家是否正副軍團長（pStyle=1/2/3 分支） | 高（五大主城客棧 11031/11041/12071/12081/19031 設施興建事件） |
-| **14** | 291 | 47 | 現為 stub（一律回 false）；param=0 形狀疑似活動期/領取狀態計數，語意待驗證 | 低 |
-| **17** | 16 | 2 | 養子（二代武將）狀態：餵養/教育進度（全部在隱世村 12721），param=0/3 | 中 |
+| **13** | 99 | 17 | Trạng thái thành trì quân đoàn: param=1 đối chiếu quyền sở hữu thành (val = số hiệu thành 1~5), param=2 người chơi có phải chính/phó đoàn trưởng không (nhánh pStyle=1/2/3) | Cao (sự kiện xây cơ sở tại lữ quán năm thành lớn 11031/11041/12071/12081/19031) |
+| **14** | 291 | 47 | Hiện là stub (đồng loạt trả false); param=0 hình dạng nghi là bộ đếm giai đoạn hoạt động/trạng thái đã nhận, ngữ nghĩa chờ xác minh | Thấp |
+| **17** | 16 | 2 | Trạng thái con nuôi (tướng thế hệ hai): tiến độ cho ăn/giáo dục (tất cả ở thôn ẩn thế 12721), param=0/3 | Trung |
 
-> 勘誤：class=16（寄存物品數量比對 storedItems）伺服器**已支援**，初版誤列為未支援。
+> Cải chính: class=16 (đối chiếu số lượng vật phẩm ký gửi storedItems) server **đã hỗ trợ**, bản đầu liệt kê nhầm là chưa hỗ trợ.
 
-### conditionClass=7（屬性/狀態）未支援的 param
+### param chưa hỗ trợ của conditionClass=7 (thuộc tính/trạng thái)
 
-目前支援 param=0(等級)/2(背包空間)/3(裝備)/5(性別)/6(武將位置)/8(Server ID)/16(騎乘)/19(實 Point/Role.GetPoint)。未支援：
+Hiện hỗ trợ param=0(cấp độ)/2(chỗ trống túi đồ)/3(trang bị)/5(giới tính)/6(vị trí tướng)/8(Server ID)/16(cưỡi thú)/19(Point thực/Role.GetPoint). Chưa hỗ trợ:
 
-| param | 筆數 | param | 筆數 |
+| param | Số bản ghi | param | Số bản ghi |
 |------:|-----:|------:|-----:|
 | 1 | 106 | 10 | 176 |
 | 4 | 8 | 11 | 10 |
 | 7 | 54 | 12 | 97 |
-| 14 | 32 | 18（subItem 連動，領養小孩用） | 38 |
+| 14 | 32 | 18 (liên động subItem, dùng cho nhận con nuôi) | 38 |
 | 9 | 41 | 15 | 20 |
 
-> **param=8 已鑑定：Server ID（468 筆）**。
-> authoritative Lua：登入封包把 `aSID` 寫入 `Network.serverId`；`Migrant.lua` 定義銀河 Server 為 90..99，且 serverId>100 時以 `%100` 判斷，並明確定義 54901..54904 為 Arena scene。
-> Eve.emg 全量分佈與此完全吻合：`val=96~99/196~199` 集中於 54901..54904；另有 `val=1/2/100~104` 與 `ops=1/2/5` 的 Server 分流條件。
-> Server 已直接保留 login request 的 `session.serverId`，因此 conditionClass=7/param=8 讀此值並套用既有 DVT comparison operators；未知 pStyle/subItem 仍保守 false。
+> **param=8 đã giám định: Server ID (468 bản ghi)**.
+> authoritative Lua: gói đăng nhập ghi `aSID` vào `Network.serverId`; `Migrant.lua` định nghĩa Server Ngân Hà là 90..99, và khi serverId>100 thì dùng `%100` để nhận diện, đồng thời định nghĩa rõ 54901..54904 là Arena scene.
+> Phân bố toàn bộ của Eve.emg khớp hoàn toàn với điều này: `val=96~99/196~199` tập trung tại 54901..54904; ngoài ra còn có điều kiện phân luồng Server với `val=1/2/100~104` và `ops=1/2/5`.
+> Server đã giữ trực tiếp `session.serverId` của login request, vì vậy conditionClass=7/param=8 đọc giá trị này và áp dụng các DVT comparison operators sẵn có; pStyle/subItem chưa biết vẫn thận trọng trả false.
 >
-> **param=19 已鑑定：可用實 Point（`Role.GetPoint()`，6 筆）**。全量 Eve.emg 僅出現在 scene 12180 主賭場，固定 `pStyle=2/subItem=0/ops=5`；serverId=100 分支門檻 9/45/90，普通分支門檻 10/50/100。每個門檻都與同 chain 的 resultClass=7/pStyle=3 直購結果成對：`131171/531171/1031171` 解碼為 item31171 ×1/5/10，`resultMeanNo` 恰為相同 Point 價格。Lua `Role.GetPoint()` 是 real Point，與 lockPoint 分離；`UISlotMachine` 對 item31171 亦直接以 `Role.GetPoint()` + `ECurrency.Gold` 購買。Kotlin 因此讀 `PointSystem.getRealPoint()`；未知 shape 仍 false。
-> 其餘 param（1/4/7/9/10/11/12/14/15）語意未明；評估時保守回 `false`，對應分支走不到。
+> **param=19 đã giám định: Point thực khả dụng (`Role.GetPoint()`, 6 bản ghi)**. Toàn bộ Eve.emg chỉ xuất hiện ở scene 12180 sòng bài chính, cố định `pStyle=2/subItem=0/ops=5`; ngưỡng nhánh serverId=100 là 9/45/90, ngưỡng nhánh thường là 10/50/100. Mỗi ngưỡng đều ghép cặp với kết quả mua trực tiếp resultClass=7/pStyle=3 cùng chain: `131171/531171/1031171` giải mã thành item31171 ×1/5/10, `resultMeanNo` đúng bằng giá Point tương ứng. Lua `Role.GetPoint()` là real Point, tách biệt với lockPoint; `UISlotMachine` với item31171 cũng mua trực tiếp bằng `Role.GetPoint()` + `ECurrency.Gold`. Kotlin vì vậy đọc `PointSystem.getRealPoint()`; shape chưa biết vẫn false.
+> Các param còn lại (1/4/7/9/10/11/12/14/15) ngữ nghĩa chưa rõ; khi đánh giá thận trọng trả `false`, nhánh tương ứng không đi tới được.
 
-## 3. 結果面缺口（resultClass，僅 type=0/7 需伺服器執行）
+## 3. Khoảng trống mặt kết quả (resultClass, chỉ type=0/7 cần server thực thi)
 
-| Class | 筆數 | 鑑定結果 | 信心 | 範例 |
+| Class | Số bản ghi | Kết quả giám định | Độ tin cậy | Ví dụ |
 |------:|-----:|---------|------|------|
-| **11** | 35 | 軍團/城池資源增減：pStyle=1~5 對應五種資源（農/畜/礦/林/資金，對照 S:041-011 城池四業值），val=量 | 中高 | 11572/26522/26525/57523，val=50~1000 |
-| **12** | 21 | 全部掛在 type=1（Talk）上，伺服器無需執行 | 高 | 12721/12722 |
-| **13** | 89 | **活動獎勵包發放**：val=獎勵編號（12/13/40/49/52/69~78），常掛 resultGroupNo 機率分組。已證偽初版「介消 sellId」假設（val 78 > UISell 上限 69；Talk 對話均為「這是給你的獎勵」類活動 NPC：闖關獎勵 13096、燈籠兌換 34288、史詩徽章 52570、暑假作業 58400、萬聖節 23419、玉兔 15361）。**獎勵編號對應的獎勵表未定位**（推測為伺服器端資料，客戶端無此表） | 高（語意）/ 低（獎勵表） | 12003 eve=24 任務步驟 N → 獎勵 67+N |
-| **14** | 33 | **RoleCount 計數增減（已實作）**：param=計數索引、pStyle=1 加 val / 2 減 val / 3 歸零；與 conditionClass=18（讀計數）成對。例：10951 桃園結義對話選項 ±RoleCount[1]，12002 暑假作業活動 RoleCount[189] 與獎品數量同步 +1/+10/+20 | 高 | 12002 eve=28 param=189 |
-| **15** | 1 | 單筆孤例（10821 eve=3 param=1） | 低 | — |
+| **11** | 35 | Tăng giảm tài nguyên quân đoàn/thành trì: pStyle=1~5 ứng với năm loại tài nguyên (nông nghiệp/chăn nuôi/khoáng sản/lâm nghiệp/tiền quỹ, đối chiếu giá trị bốn ngành thành trì S:041-011), val = lượng | Trung cao | 11572/26522/26525/57523, val=50~1000 |
+| **12** | 21 | Toàn bộ gắn trên type=1 (Talk), server không cần thực thi | Cao | 12721/12722 |
+| **13** | 89 | **Phát gói thưởng hoạt động**: val = mã phần thưởng (12/13/40/49/52/69~78), thường gắn nhóm xác suất resultGroupNo. Đã bác bỏ giả thuyết bản đầu "介消 sellId" (val 78 > giới hạn trên UISell 69; hội thoại Talk đều thuộc loại NPC hoạt động kiểu "đây là phần thưởng cho bạn": thưởng ải quan 13096,đổi đèn lồng 34288,huy hiệu sử thi 52570,bài tập nghỉ hè 58400,Lễ hội Halloween 23419,ngọc thỏ 15361). **Chưa xác định được bảng thưởng ứng với mã phần thưởng** (đoán là dữ liệu phía server, client không có bảng này) | Cao (ngữ nghĩa)/ Thấp (bảng thưởng) | 12003 eve=24 bước nhiệm vụ N → thưởng 67+N |
+| **14** | 33 | **Tăng giảm bộ đếm RoleCount (đã cài đặt)**: param = chỉ mục bộ đếm, pStyle=1 cộng val / 2 trừ val / 3 đưa về 0; ghép cặp với conditionClass=18 (đọc bộ đếm). Ví dụ: 10951 lựa chọn hội thoại Đào Viên kết nghĩa ±RoleCount[1], 12002 hoạt động bài tập nghỉ hè RoleCount[189] đồng bộ số lượng quà +1/+10/+20 | Cao | 12002 eve=28 param=189 |
+| **15** | 1 | Ví dụ đơn lẻ (10821 eve=3 param=1) | Thấp | — |
 
-## 4. resultClass=7（玩家操作）未映射 pStyle 鑑定表
+## 4. Bảng giám định pStyle chưa ánh xạ của resultClass=7 (thao tác người chơi)
 
-僅列 type=0/7（伺服器需發包）的未映射項，已依 Talk 對話內容鑑定：
+Chỉ liệt kê các mục chưa ánh xạ của type=0/7 (server cần gửi gói), đã giám định theo nội dung hội thoại Talk:
 
-| pStyle | 筆數 | 鑑定功能 | 對應封包 | 信心 | 證據 |
+| pStyle | Số bản ghi | Chức năng giám định | Gói tin tương ứng | Độ tin cậy | Bằng chứng |
 |-------:|-----:|---------|---------|------|------|
-| **7** | 11 | 留言板（觀看分支） | S:036-003 開啟留言板 / S:036-004 所有訊息 | 中高 | 10951 eve=8 選項31→7、選項30→8 |
-| **8** | 7 | 留言板（開啟，先發禮儀 Talk 19032） | S:036-003/004 | 高 | Talk 19032「留言板禮儀…每天三則」 |
-| **14** | 2 | 結婚禮堂送禮金 | S:045-005 開啟發禮金介面 | 高 | 12911 結婚禮堂、Talk 13894 禮金說明 |
-| **17** | 1 | 問答活動（機制問答） | S:020-017 事件問問題（推測） | 低 | 12003 eve=32 無條件觸發 |
-| **20** | 1 | 戰功兌獎處 | S:036-013 開啟戰功買賣介面（同 pStyle=13?） | 中 | 12711、Talk 28300「戰功兌獎處」 |
-| **22** | 2 | 轉蛋機 | S:023-107 轉蛋介面 | 高 | 12180、Talk 33108~33113 轉蛋說明 |
-| **33** | 10 | 擂台賽場景的活動開關（[20][33] 新年活動開關?） | 待驗證 | 低 | 49403~49449 擂台場景 eve=7 |
-| **34** | 20 | 軍團城池設施興建介面 | S:036-021 城池商店升級（UICityStation）（推測） | 中 | 五大主城客棧、Talk 37733~37736 設施興建 |
-| **36** | 1 | 領養小孩（二代武將） | S:036-023 二代武將養育介面（客戶端已停用 Se_ChildForm） | 中高 | 12721 伏羲、Talk 42858 領養 |
-| **38** | 1 | 節日禮物領取 | 待驗證 | 低 | 12001 eve=64、Talk 45697~45699 禮物 |
-| 9/11/16 等其餘 | <10 | 多掛在 type=8/10（客戶端無 handler，現行已靜默跳過），無需處理 | — | — |
+| **7** | 11 | Bảng nhắn (nhánh xem) | S:036-003 mở bảng nhắn / S:036-004 mọi tin nhắn | Trung cao | 10951 eve=8 lựa chọn 31→7, lựa chọn 30→8 |
+| **8** | 7 | Bảng nhắn (mở, gửi trước phần lễ nghi Talk 19032) | S:036-003/004 | Cao | Talk 19032 "lễ nghi bảng nhắn...mỗi ngày ba tin" |
+| **14** | 2 | Tặng lễ kim tại nhà cử hành hôn lễ | S:045-005 mở giao diện phát lễ kim | Cao | 12911 nhà cử hành hôn lễ, Talk 13894 giải thích lễ kim |
+| **17** | 1 | Hoạt động vấn đáp (hỏi đáp cơ chế) | S:020-017 sự kiện hỏi câu hỏi (đoán) | Thấp | 12003 eve=32 kích phát không điều kiện |
+| **20** | 1 | Nơi đổi thưởng chiến công | S:036-013 mở giao diện mua bán chiến công (giống pStyle=13?) | Trung | 12711, Talk 28300 "nơi đổi thưởng chiến công" |
+| **22** | 2 | Máy quay trứng | S:023-107 giao diện quay trứng | Cao | 12180, Talk 33108~33113 giải thích quay trứng |
+| **33** | 10 | Công tắc hoạt động của cảnh tỉ võ ([20][33] công tắc hoạt động năm mới?) | Chờ xác minh | Thấp | 49403~49449 cảnh tỉ võ eve=7 |
+| **34** | 20 | Giao diện xây cơ sở thành trì quân đoàn | S:036-021 nâng cấp cửa hàng thành trì (UICityStation) (đoán) | Trung | lữ quán năm thành lớn, Talk 37733~37736 xây cơ sở |
+| **36** | 1 | Nhận con nuôi (tướng thế hệ hai) | S:036-023 giao diện nuôi dưỡng tướng thế hệ hai (client đã tắt Se_ChildForm) | Trung cao | 12721 Phục Hy, Talk 42858 nhận nuôi |
+| **38** | 1 | Nhận quà lễ tết | Chờ xác minh | Thấp | 12001 eve=64, Talk 45697~45699 quà |
+| 9/11/16 và các mục còn lại | <10 | Chủ yếu gắn trên type=8/10 (client không có handler, hiện đã bỏ qua tĩnh), không cần xử lý | — | — |
 
-> 另：type=7 cls=7 pStyle=31/32 同時出現在擂台場景 49403~49449，pStyle=32 已映射為擂台賽錯誤訊息。
+> Ngoài ra: type=7 cls=7 pStyle=31/32 xuất hiện đồng thời ở cảnh tỉ võ 49403~49449, pStyle=32 đã ánh xạ thành thông báo lỗi đấu đài.
 
-### 4.1 已映射 pStyle 的「帶值變體」（誤觸風險，已加防呆）
+### 4.1 "biến thể kèm giá trị" của pStyle đã ánh xạ (rủi ro kích hoạt nhầm, đã thêm chống nhầm)
 
-- **pStyle=1 + val≠0**：val=擂臺編號（99/98/97、199/198/197）= 無界鬥陣擂臺傳送，
-  不是「開啟寶庫/紀錄點」。場景 12003 eve=31/35 無界傳送師，選項選擂臺 1/2/3。
-- **pStyle=3 + val≠0**：已確認的直購 shape 為 `parameter=0`、`val=數量×100000+物品ID`、`meanNo=實 Point 價格`。scene12180 的六筆為 31171×1/5/10，server100 價 9/45/90、普通 server 價 10/50/100。伺服器已實作此精確 shape：檢查/扣 `PointSystem.realPoint`、完整容量檢查後加 item、同步 S35-5 Point；其餘 pStyle=3 帶值 shape 仍 conservative skip。
-- **pStyle=1 + val≠0** 仍只做防呆 skip，無界鬥陣傳送 subsystem 尚未實作。
+- **pStyle=1 + val≠0**: val = số hiệu đài (99/98/97, 199/198/197) = dịch chuyển đấu đài Vô Giới,
+  không phải "mở kho báu/điểm ghi". Cảnh 12003 eve=31/35 pháp sư dịch chuyển Vô Giới, lựa chọn đài 1/2/3.
+- **pStyle=3 + val≠0**: shape mua trực tiếp đã xác nhận là `parameter=0`, `val=數量×100000+物品ID`, `meanNo=實 Point 價格`. Sáu bản ghi của scene12180 là 31171×1/5/10, giá server100 9/45/90, giá server thường 10/50/100. Server đã cài đặt shape chính xác này: kiểm tra/khấu `PointSystem.realPoint`, sau khi kiểm tra dung lượng đầy đủ thì thêm item, đồng bộ S35-5 Point; các shape pStyle=3 kèm giá trị khác vẫn conservative skip.
+- **pStyle=1 + val≠0** vẫn chỉ làm chống nhầm skip, subsystem dịch chuyển đấu đài Vô Giới chưa cài đặt.
 
-## 5. 重要結論：武將養成線的 Eve 入口
+## 5. Kết luận quan trọng: lối vào Eve của tuyến nuôi dưỡng tướng
 
-**Eve.emg 中不存在以下介面的開啟入口**（全量掃描確認）：
+**Trong Eve.emg không tồn tại lối mở các giao diện sau đây** (xác nhận bằng quét toàn bộ):
 
-- 武將一轉介面 S:044-002（`UI.Open(UINpcTurn, 1)`）
-- 武將特殊技介面 S:036-012（需帶可學習武將索引清單）
-- 玩家三轉介面 S:036-014
+- Giao diện chuyển sinh lần 1 của tướng S:044-002 (`UI.Open(UINpcTurn, 1)`)
+- Giao diện kỹ năng đặc biệt của tướng S:036-012 (cần kèm danh sách chỉ mục tướng có thể học)
+- Giao diện chuyển sinh lần 3 của người chơi S:036-014
 
-含義：這些功能不是由 NPC 事件直接觸發，可能由**任務系統（mainKind=47）的對話腳本**、
-**活動系統**或營運後台動態下發。實作任務系統時需回頭驗證。
-→ 先前在 PetRebornHandler 留的「一轉介面 Eve pStyle 待查證」TODO 可關閉：**答案是沒有**，
-GM 指令 `/武將轉生 [1|2]` 是目前唯一入口。
+Ý nghĩa: các tính năng này không do sự kiện NPC kích phát trực tiếp, có thể do **script hội thoại của hệ thống nhiệm vụ (mainKind=47)**,
+**hệ thống hoạt động** hoặc backend vận hành gửi xuống động. Khi cài đặt hệ thống nhiệm vụ cần quay lại xác minh.
+→ TODO để lại trong PetRebornHandler trước đây "giao diện chuyển sinh lần 1 Eve pStyle chờ kiểm chứng" có thể đóng: **đáp án là không có**,
+Lệnh GM `/武將轉生 [1|2]` là lối vào duy nhất hiện tại.
 
-## 6. resultType 8/9/10（客戶端無 handler）
+## 6. resultType 8/9/10 (client không có handler)
 
-| type | 筆數 | 現行處理 |
+| type | Số bản ghi | Xử lý hiện hành |
 |-----:|-----:|---------|
-| 8 | 226 | 靜默跳過（EveResultTypePolicy） |
-| 9 | 1611 | 靜默跳過 |
-| 10 | 115 | 靜默跳過 |
+| 8 | 226 | Bỏ qua tĩnh (EveResultTypePolicy) |
+| 9 | 1611 | Bỏ qua tĩnh |
+| 10 | 115 | Bỏ qua tĩnh |
 
-type=9 量大（cls=3 pStyle=1/2 為主），多為 NPC 視覺輔助操作的變體；客戶端 EventHandler 只定義 0~6，跳過正確。
+type=9 số lượng lớn (chủ yếu cls=3 pStyle=1/2), phần lớn là biến thể thao tác hỗ trợ hình ảnh của NPC; client EventHandler chỉ định nghĩa 0~6, bỏ qua là đúng.
 
-## 7. 建議實作優先序
+## 7. Thứ tự ưu tiên cài đặt đề xuất
 
-1. ~~resultClass=14（RoleCount 增減）~~ — **已實作**（EveResultExecutor.handleRoleCountResult）
-2. ~~conditionClass=7 param=8~~ — **已鑑定 Server ID + runtime PASS**；~~param19~~ — **已鑑定 real Point + build/test PASS，待 runtime**
-3. **resultClass=13（活動獎勵包）** — 89 筆，語意已定但獎勵編號表未定位；做活動系統時優先定位（候選：伺服器端遺失資料，需從 PC 版或封包樣本逆推）
-4. **留言板（pStyle=7/8 + mainKind=36-001~007）** — 完整小系統，社群功能
-5. **結婚禮金（pStyle=14 + S:045-005）** — 結婚系統（mainKind=45）的一環，宜隨結婚系統一起做
-6. **軍團城池線（conditionClass=13 + resultClass=11 + pStyle=34）** — 依賴軍團系統（mainKind=39/41/43），規模大，做軍團時一併處理
-7. 轉蛋機（pStyle=22）/ 養子（pStyle=36，客戶端介面已停用）/ 活動訊息類 — 低優先
+1. ~~resultClass=14 (tăng giảm RoleCount)~~ — **đã cài đặt** (EveResultExecutor.handleRoleCountResult)
+2. ~~conditionClass=7 param=8~~ — **đã giám định Server ID + runtime PASS**; ~~param19~~ — **đã giám định real Point + build/test PASS, chờ runtime**
+3. **resultClass=13 (gói thưởng hoạt động)** — 89 bản ghi, ngữ nghĩa đã định nhưng chưa xác định được bảng mã phần thưởng; khi làm hệ thống hoạt động ưu tiên xác định vị trí trước (ứng viên: dữ liệu phía server bị thiếu, cần suy ngược từ bản PC hoặc mẫu gói tin)
+4. **Bảng nhắn (pStyle=7/8 + mainKind=36-001~007)** — hệ thống nhỏ hoàn chỉnh, tính năng cộng đồng
+5. **Lễ kim hôn nhân (pStyle=14 + S:045-005)** — một phần của hệ thống hôn nhân (mainKind=45), nên làm cùng hệ thống hôn nhân
+6. **Tuyến thành trì quân đoàn (conditionClass=13 + resultClass=11 + pStyle=34)** — phụ thuộc hệ thống quân đoàn (mainKind=39/41/43), quy mô lớn, khi làm quân đoàn thì xử lý luôn
+7. Máy quay trứng (pStyle=22)/ con nuôi (pStyle=36, giao diện client đã tắt)/ loại tin tức hoạt động — ưu tiên thấp
 
-## 8. 工具
+## 8. Công cụ
 
-- `tools/eve_analyze.py` — 全量統計（conditionClass/resultClass/pStyle 分佈 + 未映射範例），輸出 `_eve_report.txt`
-- `tools/eve_focus.py` — 缺口事件完整上下文傾印（條件鏈 + 結果鏈），輸出 `_eve_focus.txt`
-- 執行：`python tools/eve_analyze.py`（路徑寫死在腳本頂部，必要時調整）
+- `tools/eve_analyze.py` — thống kê toàn bộ (phân bố conditionClass/resultClass/pStyle + ví dụ chưa ánh xạ), xuất ra `_eve_report.txt`
+- `tools/eve_focus.py` — dump ngữ cảnh đầy đủ của sự kiện khoảng trống (chuỗi điều kiện + chuỗi kết quả), xuất ra `_eve_focus.txt`
+- Chạy: `python tools/eve_analyze.py` (đường dẫn hardcode ở đầu script, cần thì điều chỉnh)

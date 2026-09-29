@@ -3,49 +3,49 @@ package tw.tsm.domain.constants
 import tw.tsm.domain.data.LeaderboardDef
 
 /**
- * 排行榜類型常數
+ * Hằng số loại bảng xếp hạng
  *
- * 根據 LeaderbordInfo_C.dat 解碼結果，26 個排行榜分 7 種類型。
+ * Theo kết quả giải mã LeaderbordInfo_C.dat, 26 bảng xếp hạng chia thành 7 loại.
  */
 object LeaderboardConstants {
 
-    /** 五行等級排行（按元素篩選）— IDs 1-5, 32-36 */
+    /** Xếp hạng cấp độ Ngũ Hành (lọc theo nguyên tố) — IDs 1-5, 32-36*/
     val ELEMENT_LEVEL_IDS = setOf(1, 2, 3, 4, 5, 32, 33, 34, 35, 36)
 
-    /** 轉生排行 */
+    /** Xếp hạng chuyển sinh*/
     const val REBORN_ID = 6
 
-    /** 總等級排行 */
+    /** Xếp hạng tổng cấp độ*/
     const val TOTAL_LEVEL_ID = 7
 
-    /** 成就等級排行（與總等級同排序邏輯） */
+    /** Xếp hạng cấp độ thành tựu (cùng logic sắp xếp với tổng cấp độ)*/
     const val ACHIEVEMENT_ID = 20
 
-    /** 金錢排行 */
+    /** Xếp hạng tiền*/
     const val GOLD_ID = 10
 
-    /** 拍賣金排行 */
+    /** Xếp hạng tiền đấu giá*/
     const val AUCTION_GOLD_ID = 11
 
-    /** 武將等級排行 */
+    /** Xếp hạng cấp độ tướng*/
     const val PET_LEVEL_ID = 16
 
-    /** 尚未實作的排行榜（需未來系統支援） */
+    /** Bảng xếp hạng chưa cài đặt (cần hệ thống tương lai hỗ trợ)*/
     val NOT_IMPLEMENTED_IDS = setOf(8, 9, 17, 19, 27, 29, 30, 31, 40, 44)
 
-    /** subTag → 五行元素映射（金木水火土 = 1-5） */
+    /** subTag → ánh xạ nguyên tố Ngũ Hành (Kim Mộc Thuỷ Hoả Thổ = 1-5)*/
     private val SUBTAG_TO_ELEMENT = mapOf(
-        20557L to 1, // 金
-        20558L to 2, // 木
-        20559L to 3, // 水
-        20560L to 4, // 火
-        20570L to 5  // 土
+        20557L to 1, // Kim
+        20558L to 2, // Mộc
+        20559L to 3, // Thuỷ
+        20560L to 4, // Hoả
+        20570L to 5  // Thổ
     )
 
     /**
-     * 從排行榜定義解析五行元素
+     * Phân tích nguyên tố Ngũ Hành từ định nghĩa bảng xếp hạng
      *
-     * @return 元素 ID（1-5），無法識別時回傳 0
+     * @return ID nguyên tố (1-5), không nhận dạng được thì trả về 0
      */
     fun resolveElement(def: LeaderboardDef): Int = SUBTAG_TO_ELEMENT[def.subTagText] ?: 0
 }

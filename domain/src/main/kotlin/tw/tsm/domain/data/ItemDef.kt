@@ -1,101 +1,101 @@
 package tw.tsm.domain.data
 
 /**
- * 物品定義 — 對應 `ItemData.New(reader)`
+ * Định nghĩa vật phẩm — tương ứng `ItemData.New(reader)`
  *
- * 來源：`Item_C.dat`
- * 欄位順序嚴格對照 ItemData.lua 第 300-385 行（共 54 個欄位 + name + description）。
+ * Nguồn: `Item_C.dat`
+ * Thứ tự trường đối chiếu nghiêm ngặt dòng 300-385 của ItemData.lua (tổng cộng 54 trường + name + description).
  */
 data class ItemDef(
-    /** [1] 名稱（UTF-16LE） */
+    /** [1] Tên (UTF-16LE)*/
     val name: String,
-    /** [2] 類別（EItemKind） */
+    /** [2] Loại (EItemKind)*/
     val kind: Int,
-    /** [4] 圖示 ID */
+    /** [4] ID biểu tượng*/
     val iconId: Int,
-    /** [5] 男身圖號 */
+    /** [5] Số hình thân nam*/
     val malePicId: Int,
-    /** [6] 女身圖號 */
+    /** [6] Số hình thân nữ*/
     val femalePicId: Int,
-    /** [7-9] 屬性 1（kind, attrItem, value） */
+    /** [7-9] Thuộc tính 1 (kind, attrItem, value)*/
     val attr1Kind: Int,
     val attr1Item: Int,
     val attr1Value: Int,
-    /** [10-12] 屬性 2（kind, attrItem, value） */
+    /** [10-12] Thuộc tính 2 (kind, attrItem, value)*/
     val attr2Kind: Int,
     val attr2Item: Int,
     val attr2Value: Int,
-    /** [13] 材質 */
+    /** [13] Chất liệu*/
     val material: Int,
-    /** [14] 等級 */
+    /** [14] Cấp*/
     val level: Int,
-    /** [15] 裝備方式（EItemFitType） */
+    /** [15] Kiểu trang bị (EItemFitType)*/
     val fitType: Int,
-    /** [16] 特別作用 */
+    /** [16] Tác dụng đặc biệt*/
     val specialAbility: Int,
-    /** [17-24] 色盤（男 4 個 + 女 4 個） */
+    /** [17-24] Bảng màu (nam 4 + nữ 4)*/
     val maleColorTints: IntArray,
     val femaleColorTints: IntArray,
-    /** [25] 開放否（0=開放, 1=否） */
+    /** [25] Có mở hay không (0=mở, 1=không)*/
     val openUsed: Int,
-    /** [26] 限制等級 */
+    /** [26] Giới hạn cấp*/
     val needLv: Int,
-    /** [27] 價格 */
+    /** [27] Giá*/
     val price: Int,
-    /** [28] 賣價 */
+    /** [28] Giá bán*/
     val sellPrice: Int,
-    /** [29] 性別限制（1=男, 2=女） */
+    /** [29] Giới hạn giới tính (1=nam, 2=nữ)*/
     val gender: Int,
-    /** [30] 處理限制 */
+    /** [30] Giới hạn xử lý*/
     val restrict: Int,
-    /** [31] 發出數 */
+    /** [31] Số lượng phát hành*/
     val threshold: Int,
-    /** [32] 屬性（0=無, 1-8） */
+    /** [32] Thuộc tính (0=không, 1-8)*/
     val element: Int,
-    /** [33] 屬值 */
+    /** [33] Giá trị thuộc tính*/
     val elementValue: Int,
-    /** [34] 參考技能 ID */
+    /** [34] ID kỹ năng tham khảo*/
     val skillLink: Int,
-    /** [35] 轉生限制 */
+    /** [35] Giới hạn chuyển sinh*/
     val turn: Int,
-    /** [36] 戰功兌換點數 */
+    /** [36] Điểm đổi chiến công*/
     val giftDot: Int,
-    /** [37] 備用 2 */
+    /** [37] Dự phòng 2*/
     val spare2: Int,
-    /** [38] 備用 3 */
+    /** [38] Dự phòng 3*/
     val spare3: Int,
-    /** [39] 處理限制 2 */
+    /** [39] Giới hạn xử lý 2*/
     val restrict2: Int,
-    /** [40] 套裝 ID */
+    /** [40] ID bộ trang bị*/
     val suitId: Int,
-    /** [41] 備用 5 */
+    /** [41] Dự phòng 5*/
     val spare5: Int,
-    /** [42] 直接使用（0=否, 1=是） */
+    /** [42] Sử dụng trực tiếp (0=không, 1=có)*/
     val directUse: Int,
-    /** [43] RoleCount 索引 */
+    /** [43] Chỉ mục RoleCount*/
     val roleCountIndex: Int,
-    /** [44] RoleCount 值 */
+    /** [44] Giá trị RoleCount*/
     val roleCountValue: Int,
-    /** [45] 排序 */
+    /** [45] Sắp xếp*/
     val sort: Int,
-    /** [46] 男裝備開關 */
+    /** [46] Công tắc trang bị nam*/
     val maleEquipSwitch: Int,
-    /** [47] 女裝備開關 */
+    /** [47] Công tắc trang bị nữ*/
     val femaleEquipSwitch: Int,
-    /** [48] 使用鈕關閉原因 */
+    /** [48] Lý do đóng nút sử dụng*/
     val btnState: Int,
-    /** [49] 耐久顯示 */
+    /** [49] Hiển thị độ bền*/
     val durable: Int,
-    /** [50] 熔爐種類 */
+    /** [50] Loại lò luyện*/
     val furnaceKind: Int,
-    /** [51] 熔爐碎片數量 */
+    /** [51] Số lượng mảnh vỡ lò luyện*/
     val furnaceCount: Long,
-    /** [52] 品質（0=白, 1=綠, 2=藍, 3=紫, 4=紅） */
+    /** [52] Chất lượng (0=trắng, 1=xanh lá, 2=xanh dương, 3=tím, 4=đỏ)*/
     val quality: Int,
-    /** [53] 拍賣主頁 */
+    /** [53] Trang chính đấu giá*/
     val auctionTag: Int,
-    /** [54] 拍賣子類 */
+    /** [54] Phân loại con đấu giá*/
     val auctionSubTag: Int,
-    /** 說明（UTF-16LE） */
+    /** Mô tả (UTF-16LE)*/
     val description: String
 )

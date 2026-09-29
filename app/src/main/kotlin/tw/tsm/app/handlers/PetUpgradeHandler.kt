@@ -14,18 +14,18 @@ import tw.tsm.protocol.PacketReader
 private val logger = KotlinLogging.logger {}
 
 /**
- * 武將強化 Handler（mainKind=74）
+ * Handler cường hoá tướng (mainKind=74)
  *
- * 來源：protocal.lua protocolTable[74]、UIStatus.lua 強化流程
+ * Nguồn: protocal.lua protocolTable[74], quy trình cường hoá trong UIStatus.lua
  *
- * C:074-001 武將強化 — +武將索引(1) +NPCID(2)
- * C:074-002 武將確定強化 — 空 payload
- * C:074-003 武將取消強化 — 空 payload
+ * C:074-001 Cường hoá tướng — +chỉ số tướng(1) +NPCID(2)
+ * C:074-002 Xác nhận cường hoá tướng — payload trống
+ * C:074-003 Huỷ cường hoá tướng — payload trống
  *
- * 三段流程：
- * 1. 發起 → 驗證資源 → 預擲六圍 → S:008-011 屬性預覽
- * 2. 確認 → 扣資源（遊戲幣/碎片/畫冊）→ S:074-002 + S:015-020 + 武將完整資料刷新
- * 3. 取消 → 清除暫存 → S:074-003
+ * Quy trình ba bước:
+ * 1. Bắt đầu → kiểm tra tài nguyên → roll thử sáu chỉ số → S:008-011 xem trước thuộc tính
+ * 2. Xác nhận → khấu trừ tài nguyên (tiền game/mảnh/sổ tranh) → S:074-002 + S:015-020 + làm mới dữ liệu đầy đủ của tướng
+ * 3. Huỷ → xoá dữ liệu tạm → S:074-003
  */
 class PetUpgradeHandler(
     private val responseSender: ResponseSender,
@@ -41,14 +41,14 @@ class PetUpgradeHandler(
             1 -> handleStart(session, data)
             2 -> handleConfirm(session)
             3 -> handleCancel(session)
-            else -> logger.warn { "未處理的武將強化子協定：subKind=$subKind" }
+            else -> logger.warn { "Sub-protocol cường hóa tướng chưa xử lý: subKind=$subKind" }
         }
     }
 
     /**
-     * C:074-001 發起強化
+     * C:074-001 Bắt đầu cường hoá
      *
-     * 格式：+武將索引(1) +NPCID(2)
+     * Định dạng: +chỉ số tướng(1) +NPCID(2)
      */
     private fun handleStart(session: GameSession, data: ByteArray) {
         if (data.size < 3) return
@@ -59,21 +59,21 @@ class PetUpgradeHandler(
         val charId = session.roleId.toLong()
         when (val result = petUpgradeSystem.startUpgrade(charId, followIndex, npcId)) {
             is UpgradeStartResult.Ok -> {
-                // S:008-011 屬性預覽（kind=1 強化）
+                // S:008-011 xem trước thuộc tính (kind=1 cường hoá)
                 responseSender.sendPetTempUpgradeData(session, 1, npcId, result.pending.gains)
-                logger.debug { "${session.characterName} 強化發起：slot=$followIndex npcId=$npcId" }
+                logger.debug { "${session.characterName} bắt đầu cường hóa: slot=$followIndex npcId=$npcId" }
             }
             is UpgradeStartResult.Fail -> {
-                // 驗證失敗 → S:074-003 讓客戶端清除強化狀態
+                // Kiểm tra hợp lệ thất bại → S:074-003 để client xoá trạng thái cường hoá
                 responseSender.sendPetUpgradeResult(session, false)
             }
         }
     }
 
     /**
-     * C:074-002 確認強化
+     * C:074-002 Xác nhận cường hoá
      *
-     * 扣款後依序下發：金錢/碎片/畫冊扣除 → 強化成功 → 星等更新 → 武將完整資料。
+     * Sau khi khấu tiền lần lượt gửi xuống: khấu trừ tiền/mảnh/sổ tranh → cường hoá thành công → cập nhật cấp sao → dữ liệu đầy đủ của tướng.
      */
     private suspend fun handleConfirm(session: GameSession) {
         val charId = session.roleId.toLong()
@@ -82,7 +82,7 @@ class PetUpgradeHandler(
             return
         }
 
-        // 扣款明細
+        // Chi tiết khấu tiền
         if (result.moneySpent > 0) {
             responseSender.sendSubtractMoney(session, result.moneySpent.toInt())
         }
@@ -96,18 +96,18 @@ class PetUpgradeHandler(
             responseSender.sendReduceBagItem(session, slot, count)
         }
 
-        // 強化結果與資料刷新
+        // Kết quả cường hoá và làm mới dữ liệu
         responseSender.sendPetUpgradeResult(session, true)
         responseSender.sendPetUpgradeLv(session, result.followSlot, result.upgraded.upgradeLv)
         responseSender.sendFollowNpcFullData(session, listOf(result.upgraded))
 
         logger.info {
-            "${session.characterName} 強化成功：npcId=${result.upgraded.npcId} → ${result.upgraded.upgradeLv}星"
+            "${session.characterName} cường hóa thành công: npcId=${result.upgraded.npcId} → ${result.upgraded.upgradeLv} sao"
         }
     }
 
     /**
-     * C:074-003 取消強化
+     * C:074-003 Huỷ cường hoá
      */
     private fun handleCancel(session: GameSession) {
         val charId = session.roleId.toLong()

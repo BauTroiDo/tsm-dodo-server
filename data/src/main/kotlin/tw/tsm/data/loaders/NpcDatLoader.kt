@@ -4,13 +4,13 @@ import tw.tsm.data.DatReader
 import tw.tsm.domain.data.NpcDef
 
 /**
- * NPC 載入器 — 對應 `DataManager.OnLoadNpcData`
+ * Loader NPC — tương ứng `DataManager.OnLoadNpcData`
  *
- * 來源：`Npc_C.dat`
- * 格式：count(Int32) + count 筆 NpcData.New(reader)
- * Key = NPC ID（id != 0 才存入）
+ * Nguồn: `Npc_C.dat`
+ * Định dạng: count(Int32) + count bản ghi NpcData.New(reader)
+ * Key = NPC ID (chỉ lưu khi id != 0)
  *
- * 欄位順序嚴格對照 NpcData.lua 第 236-305 行。
+ * Thứ tự trường đối chiếu nghiêm ngặt dòng 236-305 của NpcData.lua.
  * Role.maxNpcSkill = 3。
  */
 object NpcDatLoader {
@@ -18,7 +18,7 @@ object NpcDatLoader {
     private const val MAX_NPC_SKILL = 3
 
     /**
-     * 載入 NPC 資料
+     * Đọc dữ liệu NPC
      */
     fun load(data: ByteArray): Map<Int, NpcDef> {
         val reader = DatReader(data)
@@ -26,14 +26,14 @@ object NpcDatLoader {
         val result = LinkedHashMap<Int, NpcDef>(count)
 
         for (i in 0 until count) {
-            val name = reader.readUnicodeString()        // [1] 名稱
-            val kind = reader.readByte()                  // [2] 類別
-            val id = reader.readUInt16()                  // [3] 編號
-            val picId = reader.readUInt16()                // [4] 角色圖
-            val maskId = reader.readUInt16()               // [5] 遮罩圖
+            val name = reader.readUnicodeString()        // [1] Tên
+            val kind = reader.readByte()                  // [2] Loại
+            val id = reader.readUInt16()                  // [3] Số hiệu
+            val picId = reader.readUInt16()                // [4] Ảnh nhân vật
+            val maskId = reader.readUInt16()               // [5] Ảnh che (mask)
 
             val colorTints = IntArray(4) {
-                reader.readInt32()                         // [6-9] 色盤
+                reader.readInt32()                         // [6-9] Bảng màu
             }
 
             val canBeCatch = reader.readByte() == 1        // [10]
@@ -43,7 +43,7 @@ object NpcDatLoader {
             val hpBase = reader.readInt32()                // [14]
             val spBase = reader.readInt32()                // [15]
 
-            // [16-21] 屬性：hpx, spx, int, atk, def, agi
+            // [16-21] Thuộc tính: hpx, spx, int, atk, def, agi
             val hpx = reader.readUInt16()
             val spx = reader.readUInt16()
             val intelligence = reader.readUInt16()

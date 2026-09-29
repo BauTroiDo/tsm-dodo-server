@@ -1,4 +1,4 @@
-// app — 進入點 + Koin DI + Handlers
+// app — Điểm vào + Koin DI + Handlers
 plugins {
     application
 }
@@ -7,7 +7,7 @@ application {
     mainClass.set("tw.tsm.app.MainKt")
 }
 
-// run task 的工作目錄設為專案根目錄，讓相對路徑（gamedata/ 等）正確解析
+// Đặt thư mục làm việc của run task thành thư mục gốc dự án，để đường dẫn tương đối（gamedata/ v.v.）phân giải chính xác
 tasks.named<JavaExec>("run") {
     workingDir = rootProject.projectDir
 }

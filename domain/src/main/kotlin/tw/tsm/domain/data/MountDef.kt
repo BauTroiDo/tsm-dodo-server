@@ -1,18 +1,18 @@
 package tw.tsm.domain.data
 
 /**
- * 坐騎定義 — 對應 `MountsData.lua`
+ * Định nghĩa vật cưỡi — tương ứng `MountsData.lua`
  *
- * 來源：`Mounts_C.dat`
- * 格式：npcId(UInt16) + flagId(UInt16) + source(UInt32) + scale(Byte) * 0.01
+ * Nguồn: `Mounts_C.dat`
+ * Định dạng: npcId(UInt16) + flagId(UInt16) + source(UInt32) + scale(Byte) * 0.01
  */
 data class MountDef(
-    /** NPC ID（也是坐騎辨識 key） */
+    /** NPC ID (cũng là key nhận dạng vật cưỡi)*/
     val npcId: Int,
-    /** 收集用 BitFlag ID */
+    /** BitFlag ID dùng để thu thập*/
     val flagId: Int,
-    /** 來源描述字串 ID */
+    /** ID chuỗi mô tả nguồn*/
     val source: Long,
-    /** 縮放比例（原始值 * 0.01） */
+    /** Tỷ lệ thu phóng (giá trị gốc * 0.01)*/
     val scale: Double
 )

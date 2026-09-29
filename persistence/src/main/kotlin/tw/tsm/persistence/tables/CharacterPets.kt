@@ -3,77 +3,77 @@ package tw.tsm.persistence.tables
 import org.jetbrains.exposed.v1.core.Table
 
 /**
- * 角色武將資料表
+ * Bảng dữ liệu tướng của nhân vật
  *
- * 儲存隨身、馬車、客棧、武將倉庫中的武將資料。
- * storageType: 1=隨身, 2=馬車, 3=客棧, 4=武將倉庫
+ * Lưu dữ liệu tướng trong tùy thân, xe ngựa, lữ quán và kho tướng.
+ * storageType: 1=tùy thân, 2=xe ngựa, 3=lữ quán, 4=kho tướng
  */
 object CharacterPets : Table("character_pets") {
     val id = long("id").autoIncrement()
     val characterId = long("character_id").index()
-    /** 儲存類型：1=隨身, 2=馬車, 3=客棧, 4=武將倉庫 */
+    /** Loại lưu trữ: 1=mang theo người, 2=xe ngựa, 3=lữ quán, 4=kho tướng*/
     val storageType = integer("storage_type").default(1)
-    /** 槽位索引 */
+    /** Chỉ số ô*/
     val slotIndex = integer("slot_index")
     /** NPC ID */
     val npcId = integer("npc_id")
-    /** 名稱 */
+    /** Tên*/
     val name = varchar("name", 64).default("")
-    /** 等級 */
+    /** Cấp*/
     val level = integer("level").default(1)
-    /** 經驗值 */
+    /** Kinh nghiệm*/
     val exp = long("exp").default(0)
-    /** 血量 */
+    /** Lượng máu*/
     val hp = long("hp").default(0)
-    /** 魔力 */
+    /** Ma lực*/
     val sp = integer("sp").default(0)
-    /** 攻擊 */
+    /** Tấn công*/
     val atk = integer("atk").default(0)
-    /** 防禦 */
+    /** Phòng thủ*/
     val def = integer("def").default(0)
-    /** 敏捷 */
+    /** Nhanh nhẹn*/
     val agi = integer("agi").default(0)
-    /** 智力 */
+    /** Trí tuệ*/
     val intelligence = integer("intelligence").default(0)
-    /** HP 增幅 */
+    /** Mức tăng HP*/
     val hpx = integer("hpx").default(0)
-    /** SP 增幅 */
+    /** Mức tăng SP*/
     val spx = integer("spx").default(0)
-    /** 陣亡次數 */
+    /** Số lần tử trận*/
     val deathCount = integer("death_count").default(0)
-    /** 忠誠度 */
+    /** Lòng trung thành*/
     val loyalty = integer("loyalty").default(60)
-    /** 技能點數 */
+    /** Điểm kỹ năng*/
     val skillPoint = integer("skill_point").default(0)
-    /** 技能 1 等級 */
+    /** Cấp kỹ năng 1*/
     val skill1Lv = integer("skill1_lv").default(0)
-    /** 技能 2 等級 */
+    /** Cấp kỹ năng 2*/
     val skill2Lv = integer("skill2_lv").default(0)
-    /** 技能 3 等級 */
+    /** Cấp kỹ năng 3*/
     val skill3Lv = integer("skill3_lv").default(0)
-    /** 成長類型：0=不可成長, 1=可成長 */
+    /** Loại phát triển: 0=không thể phát triển, 1=có thể phát triển*/
     val canGrow = integer("can_grow").default(1)
-    /** 魂玉 ID */
+    /** ID hồn ngọc*/
     val soulId = integer("soul_id").default(0)
-    /** 強化等級 */
+    /** Cấp cường hóa*/
     val upgradeLv = integer("upgrade_lv").default(0)
-    /** 昇華丹次數 */
+    /** Số lần dùng đan thăng hoa*/
     val ascendPillCount = integer("ascend_pill_count").default(0)
-    /** 是否可使用特有技 */
+    /** Có dùng được kỹ năng đặc hữu hay không*/
     val canUseSpecialSkill = bool("can_use_special_skill").default(false)
-    /** HP 丹數量 */
+    /** Số lượng đan HP*/
     val hpPillCount = integer("hp_pill_count").default(0)
-    /** SP 丹數量 */
+    /** Số lượng đan SP*/
     val spPillCount = integer("sp_pill_count").default(0)
-    /** 技能 4 等級 */
+    /** Cấp kỹ năng 4*/
     val skill4Lv = integer("skill4_lv").default(0)
-    /** 法力成長 */
+    /** Tăng trưởng pháp lực*/
     val conjureGrow = integer("conjure_grow").default(0)
-    /** 轉生次數 */
+    /** Số lần chuyển sinh*/
     val turnKind = integer("turn_kind").default(0)
-    /** 存活狀態 */
+    /** Trạng thái còn sống*/
     val surplus = integer("surplus").default(0)
-    /** 升級時間戳 */
+    /** Timestamp lên cấp*/
     val lvUpTime = double("lv_up_time").default(0.0)
     /** Đã migrate seed pet legacy sang LV1 chuẩn DVT. Record cũ mặc định false. */
     val seedFixed = bool("seed_fixed").default(false)

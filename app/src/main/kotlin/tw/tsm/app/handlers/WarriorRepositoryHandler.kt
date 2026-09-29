@@ -13,11 +13,11 @@ import tw.tsm.protocol.PacketReader
 private val logger = KotlinLogging.logger {}
 
 /**
- * 武將倉庫 Handler（mainKind=122）
+ * Handler kho tướng (mainKind=122)
  *
- * C:122-001 查詢武將倉庫
- * C:122-002 存入武將倉庫
- * C:122-003 取出武將
+ * C:122-001 truy vấn kho tướng
+ * C:122-002 lưu vào kho tướng
+ * C:122-003 lấy tướng ra
  */
 class WarriorRepositoryHandler(
     private val petSystem: PetSystem,
@@ -32,26 +32,26 @@ class WarriorRepositoryHandler(
             1 -> handleQuery(session)
             2 -> handleStore(session, data)
             3 -> handleRetrieve(session, data)
-            else -> logger.warn { "未處理的武將倉庫子協定：subKind=$subKind" }
+            else -> logger.warn { "Sub-protocol kho tướng chưa xử lý: subKind=$subKind" }
         }
     }
 
     /**
-     * C:122-001 查詢武將倉庫
+     * C:122-001 truy vấn kho tướng
      *
-     * 空包 — 客戶端開啟武將倉庫 UI 時發送
+     * gói tin rỗng — client gửi khi mở UI kho tướng
      */
     private fun handleQuery(session: GameSession) {
         val charId = session.roleId.toLong()
         val pets = petSystem.getWarehousePets(charId)
         innResponseSender.sendWarehouseData(session, pets)
-        logger.debug { "${session.characterName} 查詢武將倉庫：${pets.size} 隻" }
+        logger.debug { "${session.characterName} tra cứu kho tướng: ${pets.size} vị" }
     }
 
     /**
-     * C:122-002 存入武將倉庫
+     * C:122-002 lưu vào kho tướng
      *
-     * 格式：followSlot(1B) + npcId(2B LE)
+     * Định dạng: followSlot(1B) + npcId(2B LE)
      */
     private fun handleStore(session: GameSession, data: ByteArray) {
         if (data.size < 3) return
@@ -60,54 +60,54 @@ class WarriorRepositoryHandler(
         val npcId = reader.readUShortLE()
         val charId = session.roleId.toLong()
 
-        // 驗證 npcId 與 followSlot 一致
+        // kiểm tra hợp lệ npcId khớp với followSlot
         val pet = petSystem.getFollowNpc(charId, followSlot)
         if (pet == null || pet.npcId != npcId) {
-            innResponseSender.sendWarehouseStoreResult(session, 255)  // 失敗
+            innResponseSender.sendWarehouseStoreResult(session, 255)  // thất bại
             return
         }
 
         if (!petSystem.storeToWarehouse(charId, followSlot)) {
-            // 倉庫已滿
+            // kho đã đầy
             innResponseSender.sendWarehouseStoreResult(session, 2)
             return
         }
 
-        // 成功
+        // thành công
         innResponseSender.sendWarehouseStoreResult(session, 1)
-        // 從隨身移除
+        // gỡ khỏi tướng tuỳ thân
         responseSender.sendFollowNpcRemove(session, session.playerId, followSlot, false)
 
-        logger.info { "${session.characterName} 存入武將倉庫：follow=$followSlot npcId=$npcId" }
+        logger.info { "${session.characterName} gửi vào kho tướng: follow=$followSlot npcId=$npcId" }
     }
 
     /**
-     * C:122-003 取出武將
+     * C:122-003 lấy tướng ra
      *
-     * 格式：followSlot(1B) + npcId(2B LE)
-     * 注意：followSlot 為客戶端期望的目標槽位（伺服器自行分配）
+     * Định dạng: followSlot(1B) + npcId(2B LE)
+     * Lưu ý: followSlot là ô đích mà client mong muốn (server tự phân bổ)
      */
     private fun handleRetrieve(session: GameSession, data: ByteArray) {
         if (data.size < 3) return
         val reader = PacketReader(data)
-        val _followSlot = reader.readUByte()  // 客戶端提供，伺服器忽略
+        val _followSlot = reader.readUByte()  // client cung cấp, server bỏ qua
         val npcId = reader.readUShortLE()
         val charId = session.roleId.toLong()
 
         val followSlot = petSystem.retrieveFromWarehouse(charId, npcId)
         if (followSlot < 0) {
-            innResponseSender.sendWarehouseRetrieveResult(session, 255)  // 失敗
+            innResponseSender.sendWarehouseRetrieveResult(session, 255)  // thất bại
             return
         }
 
-        // 成功
+        // thành công
         innResponseSender.sendWarehouseRetrieveResult(session, 1)
-        // 下發新隨身武將
+        // gửi xuống tướng tuỳ thân mới
         val pet = petSystem.getFollowNpc(charId, followSlot)
         if (pet != null) {
             responseSender.sendFollowNpcFullData(session, listOf(pet))
         }
 
-        logger.info { "${session.characterName} 取出武將倉庫：npcId=$npcId → follow=$followSlot" }
+        logger.info { "${session.characterName} lấy từ kho tướng: npcId=$npcId → follow=$followSlot" }
     }
 }

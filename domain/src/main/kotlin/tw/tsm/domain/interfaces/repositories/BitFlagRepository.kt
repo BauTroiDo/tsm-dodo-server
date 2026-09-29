@@ -1,34 +1,34 @@
 package tw.tsm.domain.interfaces.repositories
 
 /**
- * 永標資料庫存取介面 — 對應客戶端 BitFlag.lua
+ * Giao diện truy cập CSDL cờ vĩnh viễn — tương ứng BitFlag.lua của client
  *
- * 永標（foreverFlags）用於記錄教學完成、收集達成等永久狀態。
- * 行存在 = flag 已設定，行不存在 = 未設定。
+ * Cờ vĩnh viễn (foreverFlags) dùng để ghi trạng thái vĩnh viễn như đã hoàn thành hướng dẫn, đã đạt thu thập.
+ * Dòng tồn tại = flag đã được đặt, dòng không tồn tại = chưa đặt.
  */
 interface BitFlagRepository {
 
     /**
-     * 取得角色所有已設定的永標 ID
+     * Lấy tất cả ID cờ vĩnh viễn đã đặt của nhân vật
      *
-     * @param charId 角色 ID
-     * @return 已設定的 flagId 集合
+     * @param charId ID nhân vật
+     * @return tập hợp flagId đã được đặt
      */
     suspend fun getSetFlagIds(charId: Long): Set<Int>
 
     /**
-     * 設定永標
+     * Đặt cờ vĩnh viễn
      *
-     * @param charId 角色 ID
-     * @param flagId 永標 ID
+     * @param charId ID nhân vật
+     * @param flagId ID cờ vĩnh viễn
      */
     suspend fun setFlag(charId: Long, flagId: Int)
 
     /**
-     * 清除永標
+     * Xoá cờ vĩnh viễn
      *
-     * @param charId 角色 ID
-     * @param flagId 永標 ID
+     * @param charId ID nhân vật
+     * @param flagId ID cờ vĩnh viễn
      */
     suspend fun clearFlag(charId: Long, flagId: Int)
 }

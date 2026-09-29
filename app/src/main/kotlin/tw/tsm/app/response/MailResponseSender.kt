@@ -8,17 +8,17 @@ import tw.tsm.protocol.PacketWriter
 import tw.tsm.protocol.writeThingData
 
 /**
- * 信件系統封包序列化
+ * Tuần tự hoá gói tin hệ thống thư
  *
  * mainKind = 83
- * 來源：protocal.lua protocolTable[83], Social.lua AddMail
+ * Nguồn: protocal.lua protocolTable[83], Social.lua AddMail
  */
 class MailResponseSender {
 
     /**
-     * S:083-001 新增信件
+     * S:083-001 thêm thư mới
      *
-     * 格式：+count(4B LE) <<+mailId(4B) +time(8B Double) +state(1B)
+     * Định dạng: +count(4B LE) <<+mailId(4B) +time(8B Double) +state(1B)
      *       +contentLen(2B LE) +content(Big5) +attachCount(1B)
      *       <<+kind(1B) +data(ThingData/NpcData)>>>>
      */
@@ -58,9 +58,9 @@ class MailResponseSender {
     }
 
     /**
-     * S:083-002 領取信件確認
+     * S:083-002 xác nhận nhận thư
      *
-     * 格式：+count(4B LE) <<+mailId(4B LE)>>
+     * Định dạng: +count(4B LE) <<+mailId(4B LE)>>
      */
     fun sendMailTakeConfirm(session: SessionSender, mailIds: List<Int>) {
         val writer = PacketWriter()
@@ -73,9 +73,9 @@ class MailResponseSender {
     }
 
     /**
-     * S:083-003 刪除信件確認
+     * S:083-003 xác nhận xoá thư
      *
-     * 格式：+count(4B LE) <<+mailId(4B LE)>>
+     * Định dạng: +count(4B LE) <<+mailId(4B LE)>>
      */
     fun sendMailDeleteConfirm(session: SessionSender, mailIds: List<Int>) {
         val writer = PacketWriter()
@@ -88,9 +88,9 @@ class MailResponseSender {
     }
 
     /**
-     * S:083-004 已讀信件確認
+     * S:083-004 xác nhận thư đã đọc
      *
-     * 格式：+count(4B LE) <<+mailId(4B LE)>>
+     * Định dạng: +count(4B LE) <<+mailId(4B LE)>>
      */
     fun sendMailReadConfirm(session: SessionSender, mailIds: List<Int>) {
         val writer = PacketWriter()
@@ -103,9 +103,9 @@ class MailResponseSender {
     }
 
     /**
-     * S:083-005 信件錯誤碼
+     * S:083-005 mã lỗi của thư
      *
-     * 格式：+kind(1B)
+     * Định dạng: +kind(1B)
      */
     fun sendMailError(session: SessionSender, errorKind: Int) {
         session.send(

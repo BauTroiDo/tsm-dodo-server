@@ -5,41 +5,41 @@ import tw.tsm.domain.data.BlissBagDef
 import tw.tsm.domain.data.BlissBagItem
 
 /**
- * 福袋載入器 — 對應 `DataManager.OnLoadBlissBagData`
+ * Trình nạp túi phúc — tương ứng `DataManager.OnLoadBlissBagData`
  *
- * 來源：`BlissBag_C.dat`
- * 格式：count(Int32) + count 筆 BlissBagData.New(reader)
+ * Nguồn: `BlissBag_C.dat`
+ * Định dạng: count(Int32) + count bản ghi BlissBagData.New(reader)
  *
- * 每筆格式：
- * - id: UInt16       ← 福袋物品 ID（key，同 id 歸為同一個福袋）
- * - itemId: UInt16   ← 獎勵物品 ID
- * - count: UInt32    ← 獎勵數量
- * - pr: UInt32       ← 機率權重
- * - kind: Byte       ← 種類分組（開袋時按 kind 各抽一個）
+ * Định dạng mỗi bản ghi:
+ * - id: UInt16       ← ID vật phẩm túi phúc (key, cùng id gộp thành một túi phúc)
+ * - itemId: UInt16   ← ID vật phẩm thưởng
+ * - count: UInt32    ← số lượng thưởng
+ * - pr: UInt32       ← trọng số xác suất
+ * - kind: Byte       ← phân nhóm loại (khi mở túi rút mỗi kind một cái)
  *
- * Key = 福袋物品 ID → BlissBagDef（含該 id 下所有獎勵項目）
- * kindCount = 同 id 中最大的 kind 值
+ * Key = ID vật phẩm túi phúc → BlissBagDef (chứa tất cả mục thưởng của id đó)
+ * kindCount = giá trị kind lớn nhất trong cùng id
  */
 object BlissBagDatLoader {
 
     /**
-     * 載入福袋資料
+     * Nạp dữ liệu túi phúc
      *
-     * @return 福袋物品 ID → BlissBagDef 映射
+     * @return ánh xạ ID vật phẩm túi phúc → BlissBagDef
      */
     fun load(data: ByteArray): Map<Int, BlissBagDef> {
         val reader = DatReader(data)
         val count = reader.readInt32()
 
-        // 暫存：按 id 分組
+        // Tạm lưu: nhóm theo id
         val grouped = LinkedHashMap<Int, MutableList<BlissBagItem>>()
 
         for (i in 0 until count) {
-            val id = reader.readUInt16()       // 福袋物品 ID
-            val itemId = reader.readUInt16()   // 獎勵物品 ID
-            val itemCount = reader.readUInt32().toInt() // 獎勵數量
-            val pr = reader.readUInt32().toInt()       // 機率權重
-            val kind = reader.readByte()       // 種類分組
+            val id = reader.readUInt16()       // ID vật phẩm túi phúc
+            val itemId = reader.readUInt16()   // ID vật phẩm thưởng
+            val itemCount = reader.readUInt32().toInt() // Số lượng thưởng
+            val pr = reader.readUInt32().toInt()       // Trọng số xác suất
+            val kind = reader.readByte()       // Phân nhóm loại
 
             val item = BlissBagItem(
                 itemId = itemId,
@@ -50,7 +50,7 @@ object BlissBagDatLoader {
             grouped.getOrPut(id) { mutableListOf() }.add(item)
         }
 
-        // 轉換為 BlissBagDef
+        // Chuyển thành BlissBagDef
         val result = LinkedHashMap<Int, BlissBagDef>(grouped.size)
         for ((bagItemId, items) in grouped) {
             val kindCount = items.maxOfOrNull { it.kind } ?: 1

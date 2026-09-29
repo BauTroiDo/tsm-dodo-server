@@ -11,7 +11,7 @@ import tw.tsm.domain.interfaces.repositories.HotkeyRepository
 import tw.tsm.persistence.tables.CharacterHotkeys
 
 /**
- * 快捷鍵持久層實作
+ * Triển khai tầng persistence của phím tắt
  */
 class HotkeyRepositoryImpl : HotkeyRepository {
 
@@ -28,13 +28,13 @@ class HotkeyRepositoryImpl : HotkeyRepository {
     }
 
     override suspend fun save(charId: Long, dataIndex: Int, keyIndex: Int, useId: Int) = suspendTransaction {
-        // 先刪除舊的
+        // Xoá bản cũ trước
         CharacterHotkeys.deleteWhere {
             (CharacterHotkeys.characterId eq charId) and
                 (CharacterHotkeys.dataIndex eq dataIndex) and
                 (CharacterHotkeys.keyIndex eq keyIndex)
         }
-        // 只在 useId != 0 時插入（0 = 清除快捷鍵）
+        // Chỉ chèn khi useId != 0 (0 = xoá phím tắt)
         if (useId != 0) {
             CharacterHotkeys.insert {
                 it[CharacterHotkeys.characterId] = charId

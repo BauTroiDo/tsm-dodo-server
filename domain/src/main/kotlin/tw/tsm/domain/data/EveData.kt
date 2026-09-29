@@ -1,26 +1,26 @@
 package tw.tsm.domain.data
 
 /**
- * NPC 事件系統值物件 — 對應 Eve.emg 資料結構
+ * Value object của hệ thống sự kiện NPC — tương ứng cấu trúc dữ liệu Eve.emg
  *
- * 來源：客戶端 Lua 路徑 `Data/Eve/`
+ * Nguồn: đường dẫn Lua của client `Data/Eve/`
  *   - Eve_NpcData.lua        → [EveNpcPlacement]
  *   - Eve_NpcEventData.lua   → [NpcEventData]、[EveCondition]、[EveResult]
  */
 
 /**
- * 事件結果 — 對應 Eve_NpcEventData.lua ResultArray 單筆
+ * Kết quả sự kiện — tương ứng từng bản ghi trong ResultArray của Eve_NpcEventData.lua
  *
- * 欄位與 S:020-001 封包 1:1 對應（15 bytes）。
+ * Các trường tương ứng 1:1 với gói tin S:020-001 (15 bytes).
  *
  * @param resultGroupNo  S:020-001 resultGroupNo (2B)
  * @param resultNo       S:020-001 resultNo (1B)
- * @param resultType     S:020-001 resultType (1B)：0=物品效果 1=對話 2=門 3=戰鬥 4=NPC移動 5=動畫 6=互動
- * @param resultClass    S:020-001 resultClass (1B)：3=NPC 7=玩家
- * @param parameter      S:020-001 parameter (2B)：NPC clickId（用於面向旋轉）
+ * @param resultType     S:020-001 resultType (1B): 0=hiệu ứng vật phẩm 1=hội thoại 2=cửa 3=chiến đấu 4=di chuyển NPC 5=hoạt ảnh 6=tương tác
+ * @param resultClass    S:020-001 resultClass (1B): 3=NPC 7=người chơi
+ * @param parameter      S:020-001 parameter (2B): clickId của NPC (dùng để xoay hướng mặt)
  * @param parameterStyle S:020-001 parameterStyle (1B)
  * @param resultValue    S:020-001 resultValue (4B)
- * @param resultMeanNo   S:020-001 resultMeanNo (2B)：對話 ID（客戶端查 talkDatas[]）
+ * @param resultMeanNo   S:020-001 resultMeanNo (2B): ID hội thoại (client tra bảng talkDatas[])
  */
 data class EveResult(
     val resultGroupNo: Int,
@@ -34,18 +34,18 @@ data class EveResult(
 )
 
 /**
- * 事件條件（含 ResultArray）— 對應 Eve_NpcEventData.lua ConditionArray 單筆
+ * Điều kiện sự kiện (kèm ResultArray) — tương ứng từng bản ghi trong ConditionArray của Eve_NpcEventData.lua
  *
- * @param conditionNo        條件序號
- * @param conditionClass     條件分類（0=無條件；2=任務步驟；其他=待確認語義）
- * @param conditionParameter 條件參數（conditionClass=2 時為任務 ID）
- * @param conditionParameterStyle 條件參數樣式（語義依 conditionClass 而異）
- * @param conditionOps       條件運算子（0/1=等於 2=小於 3=小等 4=大於 5=大等 6=不等）
- * @param conditionValue     條件比較值
- * @param conditionSubItem   條件子項目（UInt16，語義待確認）
- * @param toResult           若此條件符合，跳到哪個結果位置（AND 鏈結構用）
- * @param andNum             與後 N 個條件 AND（>0 表示此條件是 AND 鏈的前置）
- * @param results            符合此條件時要執行的結果列表
+ * @param conditionNo        số thứ tự điều kiện
+ * @param conditionClass     phân loại điều kiện (0=không điều kiện; 2=bước nhiệm vụ; còn lại=ngữ nghĩa chưa xác minh)
+ * @param conditionParameter tham số điều kiện (khi conditionClass=2 là ID nhiệm vụ)
+ * @param conditionParameterStyle kiểu tham số điều kiện (ngữ nghĩa thay đổi theo conditionClass)
+ * @param conditionOps       toán tử điều kiện (0/1=bằng 2=nhỏ hơn 3=nhỏ hơn hoặc bằng 4=lớn hơn 5=lớn hơn hoặc bằng 6=khác)
+ * @param conditionValue     giá trị so sánh của điều kiện
+ * @param conditionSubItem   mục con của điều kiện (UInt16, ngữ nghĩa chưa xác minh)
+ * @param toResult           nếu điều kiện này thoả thì nhảy đến vị trí kết quả nào (dùng cho cấu trúc chuỗi AND)
+ * @param andNum             AND với N điều kiện phía sau (>0 có nghĩa điều kiện này là tiền đề của chuỗi AND)
+ * @param results            danh sách kết quả cần thực thi khi điều kiện này thoả
  */
 data class EveCondition(
     val conditionNo: Int,
@@ -61,13 +61,13 @@ data class EveCondition(
 )
 
 /**
- * NPC 事件資料 — 對應 Eve_NpcEventData.lua
+ * Dữ liệu sự kiện NPC — tương ứng Eve_NpcEventData.lua
  *
- * @param eveNo      事件編號（NpcData.events[] 中的 EveNo）
- * @param whenHappen 觸發時機旗標（4 個 boolean）：
+ * @param eveNo      số thứ tự sự kiện (EveNo trong NpcData.events[])
+ * @param whenHappen cờ thời điểm kích hoạt (4 boolean):
  *                   [0]=OnClickObject（ClickNpc）、[1]=OnStrokeObject（BumpNpc）、
- *                   [2]=OnIntoObjectArea（ScanNpc）、[3]=OnSerStrokeObject（伺服器碰撞）
- * @param conditions 條件列表（依序評估，第一個符合的條件會被執行）
+ *                   [2]=OnIntoObjectArea (ScanNpc), [3]=OnSerStrokeObject (server va chạm)
+ * @param conditions danh sách điều kiện (đánh giá theo thứ tự, điều kiện đầu tiên thoả sẽ được thực thi)
  */
 data class NpcEventData(
     val eveNo: Int,
@@ -76,22 +76,22 @@ data class NpcEventData(
 )
 
 /**
- * NPC 擺放資料 — 對應 Eve_NpcData.lua
+ * Dữ liệu bố trí NPC — tương ứng Eve_NpcData.lua
  *
- * @param id     clickId（客戶端發送觸發封包時附帶的索引）
- * @param npcId  對應 Npc_C.dat 的 NPC 種類 ID
- * @param events 此 NPC 關聯的事件 EveNo 列表
- * @param x      NPC 座標 X（用於 S:022-004 初始化和伺服器端距離驗證）
- * @param y      NPC 座標 Y
- * @param close  NPC 是否關閉（不顯示）
- * @param motionType    巡邏類型：1=站立 2=隨機走 3=範圍走 4=路徑走
- * @param motionBack    motionType=4 時：1=停止 2=循環
- * @param motionCycleNum 路徑循環次數（0=無限）
- * @param direction     初始朝向（0-7，逆時鐘）
- * @param motionSuspendMS 每個路點停留時間（毫秒）
- * @param motionSpeedLv 移動速度等級（1=慢 2=中 3=快）
- * @param motionNodes   巡邏路點座標列表 (x, y)
- * @param traceRadius   追擊半徑（>0 時 NPC 會追擊玩家）
+ * @param id     clickId (chỉ số đính kèm khi client gửi gói tin kích hoạt)
+ * @param npcId  ID loại NPC tương ứng trong Npc_C.dat
+ * @param events danh sách EveNo của các sự kiện liên kết với NPC này
+ * @param x      toạ độ X của NPC (dùng cho S:022-004 khởi tạo và kiểm tra khoảng cách phía server)
+ * @param y      toạ độ Y của NPC
+ * @param close  NPC có bị đóng hay không (không hiển thị)
+ * @param motionType    kiểu tuần tra: 1=đứng yên 2=đi ngẫu nhiên 3=đi trong phạm vi 4=đi theo đường dẫn
+ * @param motionBack    khi motionType=4: 1=dừng 2=lặp vòng
+ * @param motionCycleNum số vòng lặp đường dẫn (0=vô hạn)
+ * @param direction     hướng ban đầu (0-7, ngược chiều kim đồng hồ)
+ * @param motionSuspendMS thời gian dừng tại mỗi điểm đường dẫn (ms)
+ * @param motionSpeedLv cấp tốc độ di chuyển (1=chậm 2=vừa 3=nhanh)
+ * @param motionNodes   danh sách toạ độ điểm tuần tra (x, y)
+ * @param traceRadius   bán kính truy kích (>0 thì NPC sẽ đuổi theo người chơi)
  */
 data class EveNpcPlacement(
     val id: Int,
@@ -108,21 +108,21 @@ data class EveNpcPlacement(
     val motionSpeedLv: Int = 1,
     val motionNodes: List<Pair<Int, Int>> = emptyList(),
     val traceRadius: Int = 0,
-    /** NPC 成長性：0=不可成長（橘色名字）、1=可成長（藍色名字） */
+    /** Khả năng trưởng thành của NPC: 0=không trưởng thành được (tên màu cam), 1=trưởng thành được (tên màu xanh)*/
     val canGrow: Int = 0
 )
 
 /**
- * 傳送點擺放資料 — 對應 Eve_DoorData.lua
+ * Dữ liệu bố trí điểm dịch chuyển — tương ứng Eve_DoorData.lua
  *
- * Door 和 NPC 共享同一個 NpcEventData 表，但各自有獨立的 ID 空間。
- * 客戶端觸發 Door 時送 C:020-004（ClickDoor）或 C:020-008（MeetDoor），
- * triggerID = Door.id（非 NPC clickId）。
+ * Door và NPC dùng chung bảng NpcEventData, nhưng mỗi bên có không gian ID riêng.
+ * Khi client kích hoạt Door sẽ gửi C:020-004 (ClickDoor) hoặc C:020-008 (MeetDoor),
+ * triggerID = Door.id (không phải clickId của NPC).
  *
- * @param id     傳送點 ID（客戶端 DoorData.id）
- * @param events 此傳送點關聯的事件 EveNo 列表
- * @param x      傳送點像素座標 X（UInt16，用於伺服器端距離驗證）
- * @param y      傳送點像素座標 Y（UInt16，用於伺服器端距離驗證）
+ * @param id     ID điểm dịch chuyển (DoorData.id của client)
+ * @param events danh sách EveNo của các sự kiện liên kết với điểm dịch chuyển này
+ * @param x      toạ độ pixel X của điểm dịch chuyển (UInt16, dùng để kiểm tra khoảng cách phía server)
+ * @param y      toạ độ pixel Y của điểm dịch chuyển (UInt16, dùng để kiểm tra khoảng cách phía server)
  */
 data class EveDoorPlacement(
     val id: Int,
@@ -132,16 +132,16 @@ data class EveDoorPlacement(
 )
 
 /**
- * 場景資訊資料 — 對應 Eve_SceneInfoData.lua
+ * Dữ liệu thông tin cảnh — tương ứng Eve_SceneInfoData.lua
  *
- * resultType=2（Door 傳送）時，result.parameter = 此表的 eveNo 鍵值。
- * 伺服器查詢此表取得目標場景 ID 和出現座標。
+ * Khi resultType=2 (Door dịch chuyển), result.parameter = giá trị khoá eveNo của bảng này.
+ * Server tra bảng này để lấy ID cảnh đích và toạ độ xuất hiện.
  *
- * @param eveNo          事件編號（SceneInfo 表的 key）
- * @param backgroundNo   目標場景 ID
- * @param playerAppearX  玩家出現 X 座標
- * @param playerAppearY  玩家出現 Y 座標
- * @param direction      面向方向
+ * @param eveNo          số thứ tự sự kiện (key của bảng SceneInfo)
+ * @param backgroundNo   ID cảnh đích
+ * @param playerAppearX  toạ độ X xuất hiện của người chơi
+ * @param playerAppearY  toạ độ Y xuất hiện của người chơi
+ * @param direction      hướng mặt
  */
 data class EveSceneInfo(
     val eveNo: Int,
@@ -152,12 +152,12 @@ data class EveSceneInfo(
 )
 
 /**
- * 戰鬥敵人配置 — 對應 Eve_FightData.lua ReadEnemy()
+ * Cấu hình kẻ địch chiến đấu — tương ứng ReadEnemy() trong Eve_FightData.lua
  *
- * @param no          敵人編號
- * @param npcId       NPC 種類 ID（對應 Npc_C.dat）
- * @param locationPos 棋盤位置（相對於敵方側：0-4=前排 col2 row0-4，5-9=後排 col3 row0-4）
- * @param ai          AI 行為模式
+ * @param no          mã số kẻ địch
+ * @param npcId       ID loại NPC (tương ứng Npc_C.dat)
+ * @param locationPos vị trí bàn cờ (tương đối phía kẻ địch: 0-4=hàng trước col2 row0-4, 5-9=hàng sau col3 row0-4)
+ * @param ai          chế độ hành vi AI
  */
 data class EveFightEnemy(
     val no: Int,
@@ -165,24 +165,24 @@ data class EveFightEnemy(
     val locationPos: Int,
     val ai: Int
 ) {
-    /** 棋盤列（敵方前排=0, 後排=1；左側面朝右） */
+    /** Cột bàn cờ (hàng trước kẻ địch=0, hàng sau=1; bên trái quay mặt sang phải)*/
     val col: Int get() = locationPos / 5
-    /** 棋盤行（0-4） */
+    /** Hàng bàn cờ (0-4)*/
     val row: Int get() = locationPos % 5
 }
 
 /**
- * 事件戰鬥資料 — 對應 Eve_FightData.lua FightData.New()
+ * Dữ liệu chiến đấu sự kiện — tương ứng Eve_FightData.lua FightData.New()
  *
- * resultType=3 時，EveResult.resultMeanNo = 此表的 eveNo 鍵值。
- * 伺服器查詢此表取得敵方陣容和戰鬥設定。
+ * Khi resultType=3, EveResult.resultMeanNo = giá trị key eveNo của bảng này.
+ * Server tra bảng này để lấy đội hình và cấu hình chiến đấu của kẻ địch.
  *
- * @param eveNo        事件編號（FightData 表的 key）
- * @param fightType    戰鬥型態
- * @param linkToResult 連接結果（戰鬥結束後跳轉用）
- * @param leftEnemies  左側敵人陣列（主要敵方群組）
- * @param rightEnemies 右側敵人陣列（次要群組，通常為空）
- * @param fightLimit   戰鬥限制旗標
+ * @param eveNo        mã sự kiện (key của bảng FightData)
+ * @param fightType    kiểu chiến đấu
+ * @param linkToResult liên kết kết quả (dùng để nhảy sau khi chiến đấu kết thúc)
+ * @param leftEnemies  mảng kẻ địch bên trái (nhóm địch chính)
+ * @param rightEnemies mảng kẻ địch bên phải (nhóm phụ, thường để trống)
+ * @param fightLimit   cờ giới hạn chiến đấu
  */
 data class EveFightData(
     val eveNo: Int,
@@ -194,12 +194,12 @@ data class EveFightData(
 )
 
 /**
- * Surface 句子 — 對應 Eve_SurfaceData.lua sentence
+ * Câu Surface — tương ứng Eve_SurfaceData.lua sentence
  *
- * @param dataId    DB 編號（Talk.dat / Item.dat / Npc.dat 索引）
- * @param dataKind  資料來源（1=Talk.dat 2=Item.dat 3=Npc.dat）
- * @param style     顯示方式（1=Label/文字 2=Button/按鈕 3=ListItem/選單選項 4=CloseButton/關閉按鈕）
- * @param canCut    是否換行（僅 Button 使用）
+ * @param dataId    mã DB (index của Talk.dat / Item.dat / Npc.dat)
+ * @param dataKind  nguồn dữ liệu (1=Talk.dat 2=Item.dat 3=Npc.dat)
+ * @param style     kiểu hiển thị (1=Label/chữ 2=Button/nút 3=ListItem/lựa chọn menu 4=CloseButton/nút đóng)
+ * @param canCut    có xuống dòng hay không (chỉ Button dùng)
  */
 data class EveSentence(
     val dataId: Int,
@@ -209,17 +209,17 @@ data class EveSentence(
 )
 
 /**
- * Surface 互動資料 — 對應 Eve_SurfaceData.lua
+ * Dữ liệu tương tác Surface — tương ứng Eve_SurfaceData.lua
  *
- * resultType=6 時，EveResult.resultMeanNo = 此表的 id 鍵值。
- * 客戶端查詢本地 surfaceDatas[resultMeanNo] 顯示 UI。
+ * Khi resultType=6, EveResult.resultMeanNo = giá trị key id của bảng này.
+ * Client tra surfaceDatas[resultMeanNo] cục bộ để hiển thị UI.
  *
- * @param id            互動編號
- * @param sentenceCount Sentence 數量（已扣除被忽略的 dataId=20393）
- * @param optionIndex   第一個選項在 sentences[] 中的 index（1-based）
- * @param optionCount   選項個數
- * @param optionMode    選單觸發模式（0=一般對話 1=買賣視窗 2=招兵生產 3=預留）
- * @param sentences     句子列表（1-based index，跳過 dataId=20393 的洞）
+ * @param id            mã tương tác
+ * @param sentenceCount số Sentence (đã khấu trừ dataId=20393 bị bỏ qua)
+ * @param optionIndex   index của lựa chọn đầu tiên trong sentences[] (1-based)
+ * @param optionCount   số lượng lựa chọn
+ * @param optionMode    chế độ kích hoạt menu (0=hội thoại thường 1=cửa sổ mua bán 2=chiêu binh sản xuất 3=dự phòng)
+ * @param sentences     danh sách câu (index 1-based, bỏ qua khoảng trống tại dataId=20393)
  */
 data class EveSurfaceData(
     val id: Int,
@@ -231,22 +231,22 @@ data class EveSurfaceData(
 )
 
 /**
- * GroupData — 對應 Eve_GroupData.lua
+ * GroupData — tương ứng Eve_GroupData.lua
  *
- * 結果分組機制：`EveResult.resultGroupNo > 0` 時引用此表。
- * 伺服器依 `ProbabilityRateAy` 從 `MemberNoAy` 中選一個 `resultNo`，
- * 只保留被選中的結果。
+ * Cơ chế phân nhóm kết quả: khi `EveResult.resultGroupNo > 0` thì tham chiếu bảng này.
+ * Server dựa vào `ProbabilityRateAy` để chọn một `resultNo` từ `MemberNoAy`,
+ * Chỉ giữ lại kết quả được chọn.
  *
- * 客戶端 `EventData.lua` 儲存 `self.Group[group.EveNo] = group`，
- * 但 EventManager/EventHandler 從不使用 → 純伺服器端邏輯。
+ * Client lưu `self.Group[group.EveNo] = group` trong `EventData.lua`,
+ * Nhưng EventManager/EventHandler không bao giờ dùng → thuần logic phía server.
  *
- * @param eveNo            GroupData 自身 ID（= 結果的 resultGroupNo 引用值）
- * @param eventNo          所屬 NpcEvent 事件編號
- * @param conditionNo      所屬條件編號
- * @param useMode          選擇模式
- * @param memberNoAy       成員的 resultNo 列表
- * @param probabilityRateAy 每個成員的機率權重
- * @param pickMember       預選成員（0=無）
+ * @param eveNo            ID của chính GroupData (= giá trị resultGroupNo được kết quả tham chiếu)
+ * @param eventNo          mã sự kiện NpcEvent trực thuộc
+ * @param conditionNo      mã điều kiện trực thuộc
+ * @param useMode          chế độ lựa chọn
+ * @param memberNoAy       danh sách resultNo của các thành viên
+ * @param probabilityRateAy trọng số xác suất của từng thành viên
+ * @param pickMember       thành viên chọn trước (0=không)
  */
 data class EveGroupData(
     val eveNo: Int,
@@ -286,15 +286,15 @@ data class EveMinePlacement(
 }
 
 /**
- * 場景事件資料（NPC + Door + Mine + 事件 + chiến đấu + Surface + GroupData）
+ * Dữ liệu sự kiện cảnh (NPC + Door + Mine + sự kiện + chiến đấu + Surface + GroupData)
  *
  * @param npcs         clickId → EveNpcPlacement
  * @param doors        doorId  → EveDoorPlacement
  * @param npcEvents    eveNo   → NpcEventData
- * @param sceneInfos   eveNo   → EveSceneInfo（Door 傳送目的地）
- * @param fightDatas   eveNo   → EveFightData（事件戰鬥敵方配置）
- * @param surfaceDatas id      → EveSurfaceData（Surface 互動定義）
- * @param groupDatas   eveNo   → EveGroupData（結果分組選擇）
+ * @param sceneInfos   eveNo   → EveSceneInfo (đích dịch chuyển của Door)
+ * @param fightDatas   eveNo   → EveFightData (cấu hình kẻ địch của chiến đấu sự kiện)
+ * @param surfaceDatas id      → EveSurfaceData (định nghĩa tương tác Surface)
+ * @param groupDatas   eveNo   → EveGroupData (chọn phân nhóm kết quả)
  * @param mines        mineId  → EveMinePlacement（server-triggered random encounter zone）
  */
 data class SceneEveData(

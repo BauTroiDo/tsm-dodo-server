@@ -10,9 +10,9 @@ import tw.tsm.domain.interfaces.repositories.BitFlagRepository
 import tw.tsm.persistence.tables.CharacterBitFlags
 
 /**
- * BitFlagRepository 的 Exposed ORM 實作
+ * Triển khai Exposed ORM cho BitFlagRepository
  *
- * 使用 character_bit_flags 表存儲永標狀態。
+ * Dùng bảng character_bit_flags để lưu trạng thái cờ vĩnh viễn.
  */
 class BitFlagRepositoryImpl : BitFlagRepository {
 

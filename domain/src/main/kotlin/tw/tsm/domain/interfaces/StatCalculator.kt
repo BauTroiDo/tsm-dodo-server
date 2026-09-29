@@ -1,15 +1,15 @@
 package tw.tsm.domain.interfaces
 
 /**
- * 屬性計算器介面
+ * Giao diện bộ tính thuộc tính
  *
- * domain 層定義介面，gamelogic 的 StatSystem 實作。
- * 讓 PlayerDataDto 可以在不依賴 gamelogic 的情況下使用。
+ * Tầng domain định nghĩa interface, StatSystem của gamelogic hiện thực.
+ * Để PlayerDataDto dùng được mà không phụ thuộc gamelogic.
  */
 interface StatCalculator {
 
     /**
-     * 計算最大 HP
+     * Tính HP tối đa
      */
     fun calculateMaxHp(
         level: Int,
@@ -22,7 +22,7 @@ interface StatCalculator {
     ): Long
 
     /**
-     * 計算最大 SP
+     * Tính SP tối đa
      */
     fun calculateMaxSp(
         level: Int,

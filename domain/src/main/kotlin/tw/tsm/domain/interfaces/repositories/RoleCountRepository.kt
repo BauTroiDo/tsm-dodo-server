@@ -1,34 +1,34 @@
 package tw.tsm.domain.interfaces.repositories
 
 /**
- * 角色計數器資料存取介面
+ * Interface truy cập dữ liệu bộ đếm của nhân vật
  *
- * 對應客戶端 RoleCount.lua 的持久化層。
+ * Lớp lưu trữ bền vững tương ứng RoleCount.lua phía client.
  */
 interface RoleCountRepository {
 
     /**
-     * 載入角色所有計數器
+     * Nạp toàn bộ bộ đếm của nhân vật
      *
-     * @param charId 角色 ID
+     * @param charId ID nhân vật
      * @return Map<countIndex, Pair<value, maxValue>>
      */
     suspend fun loadAll(charId: Long): Map<Int, Pair<Int, Int>>
 
     /**
-     * 設定計數器值
+     * Đặt giá trị bộ đếm
      *
-     * @param charId 角色 ID
-     * @param countIndex RoleCount 索引
-     * @param value 當前值
-     * @param maxValue 上限值
+     * @param charId ID nhân vật
+     * @param countIndex chỉ số RoleCount
+     * @param value giá trị hiện tại
+     * @param maxValue giá trị trần
      */
     suspend fun upsert(charId: Long, countIndex: Int, value: Int, maxValue: Int)
 
     /**
-     * 批量儲存計數器
+     * Lưu hàng loạt bộ đếm
      *
-     * @param charId 角色 ID
+     * @param charId ID nhân vật
      * @param counts Map<countIndex, Pair<value, maxValue>>
      */
     suspend fun saveAll(charId: Long, counts: Map<Int, Pair<Int, Int>>)

@@ -4,36 +4,36 @@ import java.io.ByteArrayOutputStream
 import java.nio.charset.Charset
 
 /**
- * 手遊版封包寫入器（小端序）
+ * Bộ ghi gói tin bản mobile (little endian)
  *
- * 對照 ByteBuffer.lua 的 WriteNumber / WriteString
- * 所有數值皆為 Little Endian
+ * Đối chiếu WriteNumber / WriteString của ByteBuffer.lua
+ * Mọi giá trị số đều là Little Endian
  */
 class PacketWriter(initialCapacity: Int = 64) {
     private val buffer = ByteArrayOutputStream(initialCapacity)
 
-    /** 目前已寫入的位元組數 */
+    /** Số byte đã ghi tính đến hiện tại*/
     val size: Int get() = buffer.size()
 
-    /** 取得最終結果 */
+    /** Lấy kết quả cuối cùng*/
     fun toByteArray(): ByteArray = buffer.toByteArray()
 
-    // ── 數值寫入 ──
+    // ── Ghi giá trị số ──
 
-    /** 寫入 1 byte */
+    /** Ghi 1 byte*/
     fun writeByte(value: Int): PacketWriter {
         buffer.write(value and 0xFF)
         return this
     }
 
-    /** 寫入 2 bytes（LE） */
+    /** Ghi 2 bytes (LE)*/
     fun writeShortLE(value: Int): PacketWriter {
         buffer.write(value and 0xFF)
         buffer.write((value ushr 8) and 0xFF)
         return this
     }
 
-    /** 寫入 4 bytes（LE） */
+    /** Ghi 4 bytes (LE)*/
     fun writeIntLE(value: Int): PacketWriter {
         buffer.write(value and 0xFF)
         buffer.write((value ushr 8) and 0xFF)
@@ -42,7 +42,7 @@ class PacketWriter(initialCapacity: Int = 64) {
         return this
     }
 
-    /** 寫入 4 bytes 無號（LE） */
+    /** Ghi 4 bytes unsigned (LE)*/
     fun writeUIntLE(value: Long): PacketWriter {
         buffer.write((value and 0xFF).toInt())
         buffer.write(((value ushr 8) and 0xFF).toInt())
@@ -51,7 +51,7 @@ class PacketWriter(initialCapacity: Int = 64) {
         return this
     }
 
-    /** 寫入 8 bytes（LE） */
+    /** Ghi 8 bytes (LE)*/
     fun writeLongLE(value: Long): PacketWriter {
         for (i in 0 until 8) {
             buffer.write(((value ushr (i * 8)) and 0xFF).toInt())
@@ -59,23 +59,23 @@ class PacketWriter(initialCapacity: Int = 64) {
         return this
     }
 
-    /** 寫入 8 bytes Double（LE） */
+    /** Ghi 8 bytes Double (LE)*/
     fun writeDoubleLE(value: Double): PacketWriter {
         writeLongLE(value.toBits())
         return this
     }
 
-    // ── 布林 ──
+    // ── Boolean ──
 
-    /** 寫入布林值（1 byte） */
+    /** Ghi giá trị boolean (1 byte)*/
     fun writeBoolean(value: Boolean): PacketWriter {
         buffer.write(if (value) 1 else 0)
         return this
     }
 
-    // ── 字串 ──
+    // ── Chuỗi ──
 
-    /** 寫入固定長度 Big5 字串（不足補零） */
+    /** Ghi chuỗi Big5 độ dài cố định (thiếu thì bù 0)*/
     fun writeBig5(value: String, length: Int): PacketWriter {
         val bytes = encodeBig5OrUtf8(value)
         val actual = minOf(bytes.size, length)
@@ -84,7 +84,7 @@ class PacketWriter(initialCapacity: Int = 64) {
         return this
     }
 
-    /** 寫入 1 byte 長度前綴 + Big5 字串 */
+    /** Ghi tiền tố độ dài 1 byte + chuỗi Big5*/
     fun writeBig5WithByteLen(value: String): PacketWriter {
         val bytes = encodeBig5OrUtf8(value)
         writeByte(bytes.size)
@@ -92,7 +92,7 @@ class PacketWriter(initialCapacity: Int = 64) {
         return this
     }
 
-    /** 寫入 2 bytes 長度前綴 + Big5 字串（LE） */
+    /** Ghi tiền tố độ dài 2 bytes + chuỗi Big5 (LE)*/
     fun writeBig5WithShortLen(value: String): PacketWriter {
         val bytes = encodeBig5OrUtf8(value)
         writeShortLE(bytes.size)
@@ -100,7 +100,7 @@ class PacketWriter(initialCapacity: Int = 64) {
         return this
     }
 
-    /** 寫入 1 byte 長度前綴 + UTF-8 字串（自動補 UTF-8 BOM 以兼容手機端 ByteBuffer.lua） */
+    /** Ghi tiền tố độ dài 1 byte + chuỗi UTF-8 (tự thêm BOM UTF-8 để tương thích ByteBuffer.lua phía mobile)*/
     fun writeUtf8WithByteLen(value: String): PacketWriter {
         val clean = if (value.startsWith("\uFEFF")) value else "\uFEFF$value"
         val bytes = clean.toByteArray(UTF8)
@@ -109,7 +109,7 @@ class PacketWriter(initialCapacity: Int = 64) {
         return this
     }
 
-    /** 寫入 2 bytes 長度前綴 + UTF-8 字串（LE，自動補 UTF-8 BOM） */
+    /** Ghi tiền tố độ dài 2 bytes + chuỗi UTF-8 (LE, tự thêm BOM UTF-8)*/
     fun writeUtf8WithShortLen(value: String): PacketWriter {
         val clean = if (value.startsWith("\uFEFF")) value else "\uFEFF$value"
         val bytes = clean.toByteArray(UTF8)
@@ -118,7 +118,7 @@ class PacketWriter(initialCapacity: Int = 64) {
         return this
     }
 
-    /** 寫入 1 byte 長度前綴 + UTF-16LE 字串（聊天訊息用） */
+    /** Ghi tiền tố độ dài 1 byte + chuỗi UTF-16LE (dùng cho tin chat)*/
     fun writeUnicodeWithByteLen(value: String): PacketWriter {
         val bytes = value.toByteArray(UTF16LE)
         writeByte(bytes.size)
@@ -126,25 +126,25 @@ class PacketWriter(initialCapacity: Int = 64) {
         return this
     }
 
-    // ── 原始資料 ──
+    // ── Dữ liệu gốc ──
 
-    /** 寫入原始位元組 */
+    /** Ghi các byte gốc*/
     fun writeBytes(data: ByteArray): PacketWriter {
         buffer.write(data)
         return this
     }
 
     /**
-     * 嘗試用 Big5 編碼，若失敗（含非 Big5 字元）則改用 UTF-8 並加上 UTF-8 BOM。
+     * Thử mã hoá bằng Big5, nếu thất bại (chứa ký tự ngoài Big5) thì chuyển sang UTF-8 và thêm BOM UTF-8.
      *
-     * 用於兼容英文名稱及多語系字元（如越南文帶調符號）。
-     * 手機端 ByteBuffer.lua:ReadString 會根據前 3 bytes (0xEF, 0xBB, 0xBF)
-     * 判斷是否為 UTF-8，若無 BOM 則會強制使用 Big5 解碼導致越南文變亂碼。
+     * Dùng để tương thích tên tiếng Anh và ký tự đa ngữ (như tiếng Việt có dấu thanh).
+     * ByteBuffer.lua:ReadString phía mobile sẽ dựa vào 3 bytes đầu (0xEF, 0xBB, 0xBF)
+     * Xác định có phải UTF-8 không, nếu không có BOM sẽ cưỡng chế dùng Big5 giải mã khiến tiếng Việt bị loạn mã.
      */
     private fun encodeBig5OrUtf8(value: String): ByteArray {
         return try {
             val big5Bytes = value.toByteArray(BIG5)
-            // 檢查是否有替換字元（表示 Big5 無法編碼）
+            // Kiểm tra có ký tự thay thế hay không (nghĩa là Big5 không mã hoá được)
             val decoded = String(big5Bytes, BIG5)
             if (decoded == value) {
                 big5Bytes

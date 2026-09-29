@@ -1,28 +1,28 @@
 package tw.tsm.domain.enums
 
 /**
- * 登入方式枚舉
+ * Enum phương thức đăng nhập
  *
- * 來源：Network.lua 的 ELogin 定義
+ * Nguồn: định nghĩa ELogin trong Network.lua
  */
 enum class LoginKind(val code: Int) {
-    /** 帳號密碼登入 */
+    /** Đăng nhập bằng tài khoản mật khẩu*/
     ACC_PWD(1),
-    /** 遊客登入 */
+    /** Đăng nhập khách*/
     GUEST(2),
-    /** Facebook 登入 */
+    /** Đăng nhập Facebook*/
     FACEBOOK(3),
-    /** Google 登入 */
+    /** Đăng nhập Google*/
     GOOGLE(4),
-    /** Apple 登入 */
+    /** Đăng nhập Apple*/
     APPLE(7),
-    /** 無界伺服器登入 */
+    /** Đăng nhập server không biên giới*/
     UNBOUNDED(255);
 
     companion object {
         private val byCode = entries.associateBy { it.code }
 
-        /** 根據代碼取得登入方式，未知代碼回傳 null */
+        /** Lấy phương thức đăng nhập theo mã, mã không xác định trả về null*/
         fun fromCode(code: Int): LoginKind? = byCode[code]
     }
 }

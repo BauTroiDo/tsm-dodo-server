@@ -14,14 +14,14 @@ import tw.tsm.protocol.PacketReader
 private val logger = KotlinLogging.logger {}
 
 /**
- * 創角處理器（mainKind = 9）
+ * Bộ xử lý tạo nhân vật (mainKind = 9)
  *
- * 子 opcode：
- * - C:009-001 建立新角色
- * - C:009-002 檢查名字是否可用
+ * opcode con:
+ * - C:009-001 tạo nhân vật mới
+ * - C:009-002 kiểm tra tên có khả dụng không
  *
- * 📖 協定來源：protocal.lua protocolTable[9]
- * 📖 封包組裝：UICreateRole.lua OnClick_Next
+ * 📖 Nguồn giao thức: protocal.lua protocolTable[9]
+ * 📖 Ghép gói tin: UICreateRole.lua OnClick_Next
  */
 class CreateCharHandler(
     private val characterRepository: CharacterRepository,
@@ -31,114 +31,114 @@ class CreateCharHandler(
     override val mainKind: Int = Opcodes.CREATE_CHAR
 
     override suspend fun handle(session: GameSession, subKind: Int, data: ByteArray) {
-        // 必須已登入
+        // Phải đã đăng nhập
         if (session.state != SessionState.LOGGED_IN) {
-            logger.warn { "未登入就嘗試創角：state=${session.state}" }
+            logger.warn { "Thử tạo nhân vật khi chưa đăng nhập: state=${session.state}" }
             return
         }
 
         when (subKind) {
             1 -> handleCreateChar(session, data)
             2 -> handleCheckName(session, data)
-            else -> logger.warn { "未處理的創角子協定：subKind=$subKind" }
+            else -> logger.warn { "Sub-protocol tạo nhân vật chưa xử lý: subKind=$subKind" }
         }
     }
 
     /**
-     * 處理建立新角色 (C:009-001)
+     * Xử lý tạo nhân vật mới (C:009-001)
      *
-     * 封包格式（UICreateRole.lua OnClick_Next 實際寫入順序）：
-     * +姓名(ByteL+Big5) +性別(1) +0(1) +髮型(1) +0(1)
-     * +色盤一(Int32) +色盤二(Int32) +屬性(1)
-     * +六圍(1)*6 +隱私旗標(1)
+     * Định dạng gói tin (thứ tự ghi thực tế của UICreateRole.lua OnClick_Next):
+     * +họ tên(ByteL+Big5) +giới tính(1) +0(1) +kiểu tóc(1) +0(1)
+     * +bảng màu 1(Int32) +bảng màu 2(Int32) +thuộc tính(1)
+     * +sáu chỉ số(1)*6 +cờ riêng tư(1)
      *
-     * ⚠️ 注意：實際封包順序是「姓名優先」，
-     *    與 protocal.lua 註解的「性別優先」不同！
+     * ⚠️ Lưu ý: thứ tự gói tin thực tế là «ưu tiên tên»,
+     *    Khác với «ưu tiên giới tính» trong chú thích của protocal.lua!
      */
     private suspend fun handleCreateChar(session: GameSession, data: ByteArray) {
         val reader = PacketReader(data)
 
-        // 姓名（1 byte byte-length + UTF-16LE；對齊 VTC ByteBuffer.WriteStringWithByteL）
+        // Tên (1 byte byte-length + UTF-16LE; căn chỉnh VTC ByteBuffer.WriteStringWithByteL)
         val name = reader.readUnicodeWithByteLen()
 
-        // 驗證名稱
+        // Kiểm tra hợp lệ tên
         if (!isValidName(name)) {
-            logger.warn { "角色名稱非法：'$name'" }
+            logger.warn { "Tên nhân vật không hợp lệ: '$name'" }
             responseSender.sendCheckNameResult(session, NAME_RESULT_ILLEGAL)
             return
         }
 
-        // 性別（1=男, 2=女）
+        // Giới tính (1=nam, 2=nữ)
         val sex = reader.readUByte()
-        reader.readUByte()    // 填充 0（臉圖，固定 0）
+        reader.readUByte()    // Điền 0 (ảnh mặt, cố định 0)
 
-        // 髮型
+        // Kiểu tóc
         val hair = reader.readUByte()
-        reader.readUByte()    // 填充 0（體型，固定 0）
+        reader.readUByte()    // Điền 0 (dáng người, cố định 0)
 
-        // 色盤（Int32 LE）
+        // Bảng màu (Int32 LE)
         val color1 = reader.readIntLE()
         val color2 = reader.readIntLE()
 
-        // 五行屬性（1-4）
+        // Thuộc tính ngũ hành (1-4)
         val element = reader.readUByte()
 
-        // 六圍配點（對照 UICreateRole.lua attributeValue[1~6] 順序）
-        val int_ = reader.readUByte()   // [1] 知力
-        val str = reader.readUByte()    // [2] 攻擊力
-        val vit = reader.readUByte()    // [3] 防禦力
-        val spr = reader.readUByte()    // [4] Hp幅度
-        val men = reader.readUByte()    // [5] Sp幅度
-        val dex = reader.readUByte()    // [6] 敏捷
+        // Phân điểm sáu chỉ số (theo thứ tự UICreateRole.lua attributeValue[1~6])
+        val int_ = reader.readUByte()   // [1] trí lực
+        val str = reader.readUByte()    // [2] tấn công
+        val vit = reader.readUByte()    // [3] phòng thủ
+        val spr = reader.readUByte()    // [4] biên độ Hp
+        val men = reader.readUByte()    // [5] biên độ Sp
+        val dex = reader.readUByte()    // [6] nhanh nhẹn
 
-        // 隱私旗標（忽略）
+        // Cờ riêng tư (bỏ qua)
         if (reader.isReadable) {
             reader.readUByte()
         }
 
-        // ── 伺服器端驗證 ──
+        // ── Kiểm tra hợp lệ phía server ──
 
-        // 性別驗證（1=男, 2=女）
+        // Kiểm tra hợp lệ giới tính (1=nam, 2=nữ)
         if (sex !in 1..2) {
-            logger.warn { "無效性別：$sex" }
+            logger.warn { "Giới tính không hợp lệ: $sex" }
             return
         }
 
-        // 髮型驗證（未轉：男 0-4, 女 0-6）
+        // Kiểm tra hợp lệ kiểu tóc (chưa đổi: nam 0-4, nữ 0-6)
         val maxHair = if (sex == 1) MAX_HAIR_MALE else MAX_HAIR_FEMALE
         if (hair !in 0 until maxHair) {
-            logger.warn { "無效髮型：hair=$hair sex=$sex (上限=$maxHair)" }
+            logger.warn { "Kiểu tóc không hợp lệ: hair=$hair sex=$sex (tối đa=$maxHair)" }
             return
         }
 
-        // 五行驗證（1-4，客戶端 UI 只有 4 個選項）
+        // Kiểm tra hợp lệ ngũ hành (1-4, UI client chỉ có 4 lựa chọn)
         if (element !in 1..4) {
-            logger.warn { "無效屬性：$element" }
+            logger.warn { "Thuộc tính không hợp lệ: $element" }
             return
         }
 
-        // 六圍配點總和必須剛好等於 6（必須分配完所有初始點數）
+        // Tổng điểm phân bổ sáu chỉ số phải đúng bằng 6 (phải chia hết toàn bộ điểm ban đầu)
         val totalStats = str + dex + vit + int_ + men + spr
         if (totalStats != MAX_INITIAL_STAT_POINTS) {
-            logger.warn { "配點不正確：$totalStats ≠ $MAX_INITIAL_STAT_POINTS" }
+            logger.warn { "Phân điểm không đúng: $totalStats ≠ $MAX_INITIAL_STAT_POINTS" }
             responseSender.sendCheckNameResult(session, NAME_RESULT_OTHER_ERROR)
             return
         }
 
-        // 每個屬性不能超過 6
+        // Mỗi thuộc tính không được vượt quá 6
         if (listOf(str, dex, vit, int_, men, spr).any { it > MAX_INITIAL_STAT_POINTS }) {
-            logger.warn { "單項配點超過上限" }
+            logger.warn { "Một chỉ số phân điểm vượt giới hạn" }
             return
         }
 
-        // 名稱重複檢查
+        // Kiểm tra tên trùng
         if (characterRepository.isNameTaken(name)) {
-            logger.info { "角色名稱重複：'$name'" }
+            logger.info { "Tên nhân vật bị trùng: '$name'" }
             responseSender.sendCheckNameResult(session, NAME_RESULT_DUPLICATE)
             return
         }
 
-        // ── 建立角色 ──
+        // ── Tạo nhân vật ──
         val createData = CharacterCreateData(
             name = name,
             sex = sex,
@@ -159,20 +159,20 @@ class CreateCharHandler(
             session.characterName = name
             session.roleId = characterId.toInt()
 
-            logger.info { "角色建立成功：'$name' (id=$characterId) 帳號=${session.accountId}" }
+            logger.info { "Tạo nhân vật thành công: '$name' (id=$characterId) tài khoản=${session.accountId}" }
 
-            // S:009-001 創角成功
+            // S:009-001 tạo nhân vật thành công
             responseSender.sendCreateCharSuccess(session)
         } catch (e: Exception) {
-            logger.error(e) { "角色建立失敗：'$name'" }
+            logger.error(e) { "Tạo nhân vật thất bại: '$name'" }
             responseSender.sendCheckNameResult(session, NAME_RESULT_OTHER_ERROR)
         }
     }
 
     /**
-     * 處理檢查名字 (C:009-002)
+     * Xử lý kiểm tra tên (C:009-002)
      *
-     * 封包格式：+名字(ByteL+UTF-16LE；VTC encoding_Unicode)
+     * Định dạng gói tin: +tên(ByteL+UTF-16LE；VTC encoding_Unicode)
      */
     private suspend fun handleCheckName(session: GameSession, data: ByteArray) {
         val reader = PacketReader(data)
@@ -184,41 +184,41 @@ class CreateCharHandler(
             else -> NAME_RESULT_AVAILABLE
         }
 
-        logger.info { "檢查名字：'$name' → result=$result" }
+        logger.info { "Kiểm tra tên: '$name' → result=$result" }
         responseSender.sendCheckNameResult(session, result)
     }
 
     /**
-     * 驗證角色名稱是否合法
+     * Kiểm tra hợp lệ tên nhân vật
      *
-     * 規則（來源：UICreateRole.lua + string.lua CheckName）：
-     * - 不得為空
-     * - Big5 或 UTF-8 跨碼後不超過限制 bytes
-     * - 不得包含空白字元
+     * Quy tắc (nguồn: UICreateRole.lua + string.lua CheckName):
+     * - Không được để trống
+     * - Không vượt quá giới hạn bytes sau khi chuyển mã Big5 hoặc UTF-8
+     * - Không được chứa ký tự khoảng trắng
      *
-     * ⚠️ 原 Big5-only 邏輯已放寬，改為支援 UTF-8（兼容英文及多語系名稱）。
-     *    原因：客戶端以 Big5 跨碼，但 Big5 無法表示中文字元以外的 Unicode
-     *    （如越南文帶調符號），導致名稱被拒。改用 UTF-8 fallback 兼容所有語言。
+     * ⚠️ Logic chỉ-Big5 ban đầu đã nới lỏng, chuyển sang hỗ trợ UTF-8 (tương thích tên tiếng Anh và đa ngôn ngữ).
+     *    Lý do: client chuyển mã bằng Big5, nhưng Big5 không biểu thị được Unicode ngoài ký tự tiếng Trung
+     *    (như tiếng Việt có dấu), dẫn đến tên bị từ chối. Đổi sang UTF-8 fallback để tương thích mọi ngôn ngữ.
      */
     private fun isValidName(name: String): Boolean {
         if (name.isBlank()) return false
 
-        // 不允許空白
+        // Không cho phép khoảng trắng
         if (name.contains(' ') || name.contains('\t')) return false
 
-        // 嘗試 Big5 跨碼（原版客戶端兼容）
+        // Thử chuyển mã Big5 (tương thích client gốc)
         val big5Bytes = try {
             name.toByteArray(charset("Big5"))
         } catch (_: Exception) {
             null
         }
 
-        // 若 Big5 可編碼且長度合法，直接通過
+        // Nếu Big5 mã hoá được và độ dài hợp lệ thì cho qua trực tiếp
         if (big5Bytes != null && big5Bytes.isNotEmpty() && big5Bytes.size <= MAX_NAME_LENGTH_BIG5) {
             return true
         }
 
-        // Big5 跨碼失敗（含非 Big5 字元），改用 UTF-8 長度檢查
+        // Chuyển mã Big5 thất bại (có ký tự ngoài Big5), đổi sang kiểm tra độ dài UTF-8
         val utf8Bytes = name.toByteArray(Charsets.UTF_8)
         if (utf8Bytes.isEmpty() || utf8Bytes.size > MAX_NAME_LENGTH_UTF8) return false
 
@@ -226,20 +226,20 @@ class CreateCharHandler(
     }
 
     companion object {
-        /** 名字 Big5 最大長度 */
+        /** Độ dài tối đa tên theo Big5*/
         const val MAX_NAME_LENGTH_BIG5 = 14
 
-        /** 名字 UTF-8 最大長度（UTF-8 每字最多 4 bytes，允許較長英文名） */
+        /** Độ dài tối đa tên theo UTF-8 (UTF-8 mỗi ký tự tối đa 4 bytes, cho phép tên tiếng Anh dài hơn)*/
         const val MAX_NAME_LENGTH_UTF8 = 14
 
-        /** 初始配點上限 */
+        /** Giới hạn điểm phân bổ ban đầu*/
         const val MAX_INITIAL_STAT_POINTS = 6
 
-        /** 髮型上限（未轉職，來源：Role.hairStyleCount[0]） */
-        const val MAX_HAIR_MALE = 5    // 男：0-4
-        const val MAX_HAIR_FEMALE = 7  // 女：0-6
+        /** Giới hạn kiểu tóc (chưa chuyển nghề, nguồn: Role.hairStyleCount[0])*/
+        const val MAX_HAIR_MALE = 5    // Nam: 0-4
+        const val MAX_HAIR_FEMALE = 7  // Nữ: 0-6
 
-        /** 名字結果碼 */
+        /** Mã kết quả tên*/
         const val NAME_RESULT_AVAILABLE = 0
         const val NAME_RESULT_DUPLICATE = 1
         const val NAME_RESULT_ILLEGAL = 2

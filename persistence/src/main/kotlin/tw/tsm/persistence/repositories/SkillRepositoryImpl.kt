@@ -15,7 +15,7 @@ import tw.tsm.persistence.tables.CharacterTurn3States
 import tw.tsm.persistence.tables.CharacterTurn3Skills
 
 /**
- * SkillRepository 的 Exposed ORM 實作
+ * Triển khai SkillRepository bằng Exposed ORM
  */
 class SkillRepositoryImpl : SkillRepository {
 
@@ -28,7 +28,7 @@ class SkillRepositoryImpl : SkillRepository {
 
     override suspend fun saveAll(characterId: Long, skills: Map<Int, Int>) {
         suspendTransaction {
-            // 刪除舊資料再批量寫入（簡單且安全）
+            // Xoá dữ liệu cũ rồi ghi hàng loạt (đơn giản và an toàn)
             CharacterSkills.deleteWhere { CharacterSkills.characterId eq characterId }
             if (skills.isNotEmpty()) {
                 CharacterSkills.batchInsert(skills.entries.toList()) { (skillId, level) ->

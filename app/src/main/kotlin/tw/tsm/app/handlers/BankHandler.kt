@@ -15,12 +15,12 @@ import tw.tsm.protocol.PacketReader
 private val logger = KotlinLogging.logger {}
 
 /**
- * 錢莊處理器（mainKind = 30）
+ * Bộ xử lý Tiền Trang (mainKind = 30)
  *
- * 來源：protocal.lua protocolTable[30]
- * C:030-001 領物品, C:030-002 存物品, C:030-003 升級, C:030-008 關閉錢莊
+ * Nguồn: protocal.lua protocolTable[30]
+ * C:030-001 nhận vật phẩm, C:030-002 gửi vật phẩm, C:030-003 nâng cấp, C:030-008 đóng Tiền Trang
  *
- * @param itemDefs 物品定義表，用於 restrict 驗證
+ * @param itemDefs bảng định nghĩa vật phẩm, dùng để kiểm tra hợp lệ restrict
  */
 class BankHandler(
     private val inventorySystem: InventorySystem,
@@ -32,7 +32,7 @@ class BankHandler(
     override val mainKind: Int = Opcodes.BANK  // 30
 
     companion object {
-        /** 單次封包最大操作筆數（防止惡意封包） */
+        /** Số thao tác tối đa mỗi gói tin (chống gói tin độc hại)*/
         private const val MAX_BATCH = 50
     }
 
@@ -44,15 +44,15 @@ class BankHandler(
             2 -> handleDeposit(session, data)
             3 -> handleUpgrade(session)
             8 -> handleClose(session)
-            else -> logger.warn { "未處理的錢莊子協定：subKind=$subKind" }
+            else -> logger.warn { "Sub-protocol Tiền trang chưa xử lý: subKind=$subKind" }
         }
     }
 
     /**
-     * C:030-001 錢莊領物品
+     * C:030-001 Tiền Trang nhận vật phẩm
      *
-     * 格式：<<+index(2) +quantity(4)>>
-     * 來源：UIBank.lua:477
+     * Định dạng: <<+index(2) +quantity(4)>>
+     * Nguồn: UIBank.lua:477
      */
     private suspend fun handleWithdraw(session: GameSession, data: ByteArray) {
         if (data.isEmpty() || data.size % 6 != 0) return
@@ -79,10 +79,10 @@ class BankHandler(
     }
 
     /**
-     * C:030-002 錢莊存物品
+     * C:030-002 Tiền Trang gửi vật phẩm
      *
-     * 格式：<<+index(2) +quantity(4)>>
-     * 來源：UIBank.lua:478
+     * Định dạng: <<+index(2) +quantity(4)>>
+     * Nguồn: UIBank.lua:478
      */
     private suspend fun handleDeposit(session: GameSession, data: ByteArray) {
         if (data.isEmpty() || data.size % 6 != 0) return
@@ -97,14 +97,14 @@ class BankHandler(
 
             val bagItem = inventorySystem.getBagItem(characterId, bagSlot) ?: continue
 
-            // 伺服器端 restrict bit 32 驗證（UIBank.lua:165）
+            // Server kiểm tra hợp lệ bit 32 của restrict (UIBank.lua:165)
             if (!inventorySystem.canDepositToBank(bagItem.itemId)) {
-                logger.debug { "${session.characterName} 嘗試存入禁止物品 itemId=${bagItem.itemId}" }
+                logger.debug { "${session.characterName} thử gửi vật phẩm bị cấm itemId=${bagItem.itemId}" }
                 continue
             }
 
             val depositQty = minOf(quantity, bagItem.quantity)
-            // 動態格數：25 + (Bank_1+Bank_2+Bank_3)×5（介消 sellId=1 擴充）
+            // Số ô động: 25 + (Bank_1+Bank_2+Bank_3)×5 (介消 sellId=1 mở rộng)
             val maxSlots = roleCountSystem.getBankCapacity(characterId)
 
             val (errorCode, bankSlot, bankThing) = inventorySystem.depositToBank(characterId, bagSlot, depositQty, maxSlots)
@@ -118,21 +118,21 @@ class BankHandler(
     }
 
     /**
-     * C:030-003 錢莊升級
+     * C:030-003 nâng cấp Tiền Trang
      *
-     * 錢莊/寶庫擴充已由介消系統處理（UISell.Launch(1)/Launch(56) → mainKind=84），
-     * 此封包客戶端未發現使用案例，保留 stub。
+     * Mở rộng Tiền Trang/kho đã được hệ thống 介消 xử lý (UISell.Launch(1)/Launch(56) → mainKind=84),
+     * Gói tin này chưa thấy client sử dụng, giữ lại stub.
      */
     private fun handleUpgrade(session: GameSession) {
-        logger.debug { "${session.characterName} 收到 C:030-003 錢莊升級（擴充流程走 mainKind=84 介消）" }
+        logger.debug { "${session.characterName} nhận C:030-003 nâng cấp Tiền trang (phần mở rộng đi theo mainKind=84)" }
     }
 
     /**
-     * C:030-008 關閉錢莊
+     * C:030-008 đóng Tiền Trang
      *
-     * 來源：UIBank.lua:126-127
+     * Nguồn: UIBank.lua:126-127
      */
     private fun handleClose(session: GameSession) {
-        logger.trace { "${session.characterName} 關閉錢莊" }
+        logger.trace { "${session.characterName} đóng Tiền trang" }
     }
 }

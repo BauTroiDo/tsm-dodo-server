@@ -3,28 +3,28 @@ package tw.tsm.persistence.tables
 import org.jetbrains.exposed.v1.core.Table
 
 /**
- * 帳號資料表
+ * Bảng tài khoản
  */
 object Accounts : Table("accounts") {
-    /** 自動遞增 ID */
+    /** ID tự tăng*/
     val id = long("id").autoIncrement()
 
-    /** 帳號名稱（唯一索引） */
+    /** Tên tài khoản (index duy nhất)*/
     val account = varchar("account", 64).uniqueIndex()
 
-    /** BCrypt 密碼雜湊 */
+    /** Hash mật khẩu bằng BCrypt*/
     val passwordHash = varchar("password_hash", 72)
 
-    /** 是否封鎖 */
+    /** Có bị cấm (ban) hay không*/
     val isSuspended = bool("is_suspended").default(false)
 
-    /** 最後登入時間（Unix millis） */
+    /** Thời gian đăng nhập gần nhất (Unix millis)*/
     val lastLoginAt = long("last_login_at").nullable()
 
-    /** 建立時間（Unix millis） */
+    /** Thời gian tạo (Unix millis)*/
     val createdAt = long("created_at")
 
-    /** GM 等級（0=普通玩家, 1+=GM） */
+    /** Cấp GM (0=người chơi thường, 1+=GM)*/
     val gmLevel = integer("gm_level").default(0)
 
     override val primaryKey = PrimaryKey(id)

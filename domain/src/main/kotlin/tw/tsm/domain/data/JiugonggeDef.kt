@@ -1,6 +1,6 @@
 package tw.tsm.domain.data
 
-/** Static nine-grid (九宮格) definitions read by the DVT client. */
+/** Định nghĩa tĩnh lưới 9 ô mà client DVT đọc.*/
 data class JiugonggeAwardDef(
     val itemId: Int,
     val quantity: Long,
@@ -18,7 +18,7 @@ data class JiugonggeInfoDef(
 
 data class JiugonggeMissionDef(
     val id: Int,
-    /** Board number (盤面編號) from IOS_JiugonggeMission_C.dat. */
+    /** Số bàn cờ từ IOS_JiugonggeMission_C.dat.*/
     val boardNumber: Long,
     val kind: Int,
     val kindValue1: Int,

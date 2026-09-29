@@ -10,15 +10,15 @@ import tw.tsm.protocol.ThingDataWire
 import tw.tsm.protocol.writeThingData
 
 /**
- * 物品/裝備/金錢/交易/錢莊相關封包序列化
+ * tuần tự hoá gói tin liên quan vật phẩm/trang bị/tiền vàng/giao dịch/Tiền Trang
  *
- * mainKind = 23（背包/裝備/場景物品）, 25（交易）, 26（金錢）, 27（NPC 買賣）, 30（錢莊）
+ * mainKind = 23 (túi đồ/trang bị/vật phẩm cảnh), 25 (giao dịch), 26 (tiền vàng), 27 (NPC mua bán), 30 (Tiền Trang)
  */
 class InventoryResponseSender {
 
-    // ── 背包 (mainKind=23) ──
+    // ── Túi đồ (mainKind=23) ──
 
-    /** S:023-005 背包所有物品 */
+    /** S:023-005 toàn bộ vật phẩm túi đồ*/
     fun sendAllBagItems(session: SessionSender, items: Map<Int, ThingData>, refresh: Boolean) {
         val writer = PacketWriter(6 + items.size * (2 + ThingDataWire.SIZE))
             .writeByte(Opcodes.SHOP).writeByte(5).writeByte(0)
@@ -31,7 +31,7 @@ class InventoryResponseSender {
         session.send(writer.toByteArray())
     }
 
-    /** S:023-008 背包設定物品 */
+    /** S:023-008 đặt vật phẩm túi đồ*/
     fun sendSetBagItem(session: SessionSender, slot: Int, thing: ThingData, showMsg: Boolean) {
         session.send(
             PacketWriter(40)
@@ -43,7 +43,7 @@ class InventoryResponseSender {
         )
     }
 
-    /** S:023-009 背包減少物品 */
+    /** S:023-009 giảm vật phẩm túi đồ*/
     fun sendReduceBagItem(session: SessionSender, slot: Int, amount: Int) {
         session.send(
             PacketWriter(8)
@@ -54,7 +54,7 @@ class InventoryResponseSender {
         )
     }
 
-    /** S:023-010 背包移動物品 */
+    /** S:023-010 di chuyển vật phẩm túi đồ*/
     fun sendMoveBagItem(session: SessionSender, fromSlot: Int, amount: Int, toSlot: Int) {
         session.send(
             PacketWriter(9)
@@ -66,9 +66,9 @@ class InventoryResponseSender {
         )
     }
 
-    // ── 裝備 (mainKind=23) ──
+    // ── Trang bị (mainKind=23) ──
 
-    /** S:023-011 所有裝備 */
+    /** S:023-011 toàn bộ trang bị*/
     fun sendAllEquipment(session: SessionSender, equips: Map<Int, ThingData>) {
         val writer = PacketWriter(4 + equips.size * ThingDataWire.SIZE)
             .writeByte(Opcodes.SHOP).writeByte(11).writeByte(0)
@@ -79,7 +79,7 @@ class InventoryResponseSender {
         session.send(writer.toByteArray())
     }
 
-    /** S:023-012 刪除裝備 */
+    /** S:023-012 xoá trang bị*/
     fun sendDeleteEquip(session: SessionSender, fitType: Int) {
         session.send(
             PacketWriter(4)
@@ -89,7 +89,7 @@ class InventoryResponseSender {
         )
     }
 
-    /** S:023-015 使用物品成功 */
+    /** S:023-015 dùng vật phẩm thành công*/
     fun sendUseItemSuccess(session: SessionSender, itemId: Int, count: Int, showMsg: Boolean) {
         session.send(
             PacketWriter(10)
@@ -101,7 +101,7 @@ class InventoryResponseSender {
         )
     }
 
-    /** S:023-016 卸下裝備 */
+    /** S:023-016 cởi trang bị*/
     fun sendUnequip(session: SessionSender, fitType: Int, bagSlot: Int) {
         session.send(
             PacketWriter(5)
@@ -112,7 +112,7 @@ class InventoryResponseSender {
         )
     }
 
-    /** S:023-017 穿上裝備 */
+    /** S:023-017 mặc trang bị*/
     fun sendEquip(session: SessionSender, bagSlot: Int) {
         session.send(
             PacketWriter(4)
@@ -122,9 +122,9 @@ class InventoryResponseSender {
         )
     }
 
-    // ── 武將裝備 (mainKind=23) ──
+    // ── Trang bị tướng (mainKind=23) ──
 
-    /** S:023-021 武將卸下裝備（直接刪除，丟棄用） */
+    /** S:023-021 tướng cởi trang bị (xoá trực tiếp, dùng khi ném đi)*/
     fun sendPetEquipDelete(session: SessionSender, followSlot: Int, fitType: Int) {
         session.send(
             PacketWriter(5)
@@ -135,7 +135,7 @@ class InventoryResponseSender {
         )
     }
 
-    /** S:023-022 武將卸下裝備到背包 */
+    /** S:023-022 tướng cởi trang bị vào túi đồ*/
     fun sendPetUnequipToBag(session: SessionSender, followSlot: Int, fitType: Int, bagSlot: Int) {
         session.send(
             PacketWriter(6)
@@ -148,9 +148,9 @@ class InventoryResponseSender {
     }
 
     /**
-     * S:023-023 武將穿上裝備
+     * S:023-023 tướng mặc trang bị
      *
-     * 客戶端收到後自行做背包格 ↔ 裝備格互換（protocal.lua:3992-4012）。
+     * client nhận xong tự đổi ô túi đồ ↔ ô trang bị (protocal.lua:3992-4012).
      */
     fun sendPetEquip(session: SessionSender, followSlot: Int, bagSlot: Int) {
         session.send(
@@ -162,7 +162,7 @@ class InventoryResponseSender {
         )
     }
 
-    /** S:023-025 拾取結果 */
+    /** S:023-025 Kết quả nhặt*/
     fun sendPickupResult(session: SessionSender, result: Int, kind: Int, value: Int, x: Int, y: Int) {
         val writer = PacketWriter(12)
             .writeByte(Opcodes.SHOP).writeByte(25).writeByte(0)
@@ -176,7 +176,7 @@ class InventoryResponseSender {
         session.send(writer.toByteArray())
     }
 
-    /** S:023-003 新增場景物品 */
+    /** S:023-003 thêm vật phẩm cảnh*/
     fun sendAddGroundItem(session: SessionSender, itemId: Int, x: Int, y: Int, isMe: Int, canPickPlayerId: Long) {
         session.send(
             PacketWriter(18)
@@ -190,7 +190,7 @@ class InventoryResponseSender {
         )
     }
 
-    /** S:023-002 刪除場景物品 */
+    /** S:023-002 xoá vật phẩm cảnh*/
     fun sendRemoveGroundItem(session: SessionSender, index: Int, isMe: Boolean) {
         session.send(
             PacketWriter(6)
@@ -201,7 +201,7 @@ class InventoryResponseSender {
         )
     }
 
-    /** S:023-018 丟棄金錢到場景 */
+    /** S:023-018 ném tiền vàng ra cảnh*/
     fun sendDropMoneyToGround(session: SessionSender, amount: Int, x: Int, y: Int, isMe: Boolean) {
         session.send(
             PacketWriter(12)
@@ -214,9 +214,9 @@ class InventoryResponseSender {
         )
     }
 
-    // ── 金錢 (mainKind=26) ──
+    // ── Tiền (mainKind=26) ──
 
-    /** S:026-004 初始化金錢 */
+    /** S:026-004 khởi tạo tiền vàng*/
     fun sendInitMoney(session: SessionSender, gold: Int, auctionGold: Int) {
         session.send(
             PacketWriter(11)
@@ -227,7 +227,7 @@ class InventoryResponseSender {
         )
     }
 
-    /** S:026-001 增加金錢 */
+    /** S:026-001 tăng tiền vàng*/
     fun sendAddMoney(session: SessionSender, amount: Int) {
         session.send(
             PacketWriter(7)
@@ -237,7 +237,7 @@ class InventoryResponseSender {
         )
     }
 
-    /** S:026-002 減少金錢 */
+    /** S:026-002 giảm tiền vàng*/
     fun sendSubtractMoney(session: SessionSender, amount: Int) {
         session.send(
             PacketWriter(7)
@@ -247,7 +247,7 @@ class InventoryResponseSender {
         )
     }
 
-    /** S:026-003 金錢容量已滿 */
+    /** S:026-003 sức chứa tiền vàng đã đầy*/
     fun sendMoneyFull(session: SessionSender, kind: Int) {
         session.send(
             PacketWriter(4)
@@ -257,9 +257,9 @@ class InventoryResponseSender {
         )
     }
 
-    // ── NPC 買賣 (mainKind=27) ──
+    // ── NPC mua bán (mainKind=27) ──
 
-    /** S:027-001 買東西結果 */
+    /** S:027-001 kết quả mua đồ*/
     fun sendBuyResult(session: SessionSender, result: Int) {
         session.send(
             PacketWriter(4)
@@ -269,7 +269,7 @@ class InventoryResponseSender {
         )
     }
 
-    /** S:027-002 賣東西結果 */
+    /** S:027-002 kết quả bán đồ*/
     fun sendSellResult(session: SessionSender, result: Int, bagIndices: List<Int>) {
         val writer = PacketWriter(5 + bagIndices.size)
             .writeByte(Opcodes.NPC_TRADE).writeByte(2).writeByte(0)
@@ -281,7 +281,7 @@ class InventoryResponseSender {
         session.send(writer.toByteArray())
     }
 
-    /** S:027-003 開啟 NPC 賣東西介面 */
+    /** S:027-003 mở giao diện NPC bán đồ*/
     fun sendOpenNpcStore(session: SessionSender, kind: Int) {
         session.send(
             PacketWriter(4)
@@ -291,9 +291,9 @@ class InventoryResponseSender {
         )
     }
 
-    // ── 錢莊 (mainKind=30) ──
+    // ── Tiền Trang (mainKind=30) ──
 
-    /** S:030-001 錢莊所有物品 */
+    /** S:030-001 toàn bộ vật phẩm Tiền Trang*/
     fun sendBankAllItems(session: SessionSender, items: Map<Int, ThingData>) {
         val writer = PacketWriter(3 + items.size * (2 + ThingDataWire.SIZE))
             .writeByte(Opcodes.BANK).writeByte(1).writeByte(0)
@@ -304,7 +304,7 @@ class InventoryResponseSender {
         session.send(writer.toByteArray())
     }
 
-    /** S:030-004 錢莊設定物品 */
+    /** S:030-004 đặt vật phẩm Tiền Trang*/
     fun sendBankSetItem(session: SessionSender, slot: Int, thing: ThingData) {
         session.send(
             PacketWriter(5 + ThingDataWire.SIZE)
@@ -315,7 +315,7 @@ class InventoryResponseSender {
         )
     }
 
-    /** S:030-005 錢莊減少物品 */
+    /** S:030-005 giảm vật phẩm Tiền Trang*/
     fun sendBankReduceItem(session: SessionSender, slot: Int, amount: Int) {
         session.send(
             PacketWriter(8)
@@ -326,7 +326,7 @@ class InventoryResponseSender {
         )
     }
 
-    /** S:030-007 錢莊操作失敗 */
+    /** S:030-007 thao tác Tiền Trang thất bại*/
     fun sendBankFail(session: SessionSender, failCode: Int) {
         session.send(
             PacketWriter(4)
@@ -336,7 +336,7 @@ class InventoryResponseSender {
         )
     }
 
-    /** S:030-008 清空錢莊物品 */
+    /** S:030-008 xoá sạch vật phẩm Tiền Trang*/
     fun sendBankClear(session: SessionSender) {
         session.send(
             PacketWriter(3)
@@ -345,9 +345,9 @@ class InventoryResponseSender {
         )
     }
 
-    // ── 錢莊控制 (mainKind=29) ──
+    // ── Điều khiển Tiền Trang (mainKind=29) ──
 
-    /** S:029-006 開啟錢莊 UI */
+    /** S:029-006 mở UI Tiền Trang*/
     fun sendOpenBank(session: SessionSender) {
         session.send(
             PacketWriter(3)
@@ -356,7 +356,7 @@ class InventoryResponseSender {
         )
     }
 
-    /** S:029-009 錢莊等級 */
+    /** S:029-009 cấp độ Tiền Trang*/
     fun sendBankLevel(session: SessionSender, level: Int) {
         session.send(
             PacketWriter(4)
@@ -366,9 +366,9 @@ class InventoryResponseSender {
         )
     }
 
-    // ── 寶庫 (mainKind=102) ──
+    // ── Bảo khố (mainKind=102) ──
 
-    /** S:102-001 寶庫所有物品 */
+    /** S:102-001 toàn bộ vật phẩm kho báu*/
     fun sendStorageAllItems(session: SessionSender, items: Map<Int, ThingData>) {
         val writer = PacketWriter(3 + items.size * (1 + ThingDataWire.SIZE))
             .writeByte(Opcodes.STORAGE).writeByte(1).writeByte(0)
@@ -379,7 +379,7 @@ class InventoryResponseSender {
         session.send(writer.toByteArray())
     }
 
-    /** S:102-004 寶庫設定物品 */
+    /** S:102-004 đặt vật phẩm kho báu*/
     fun sendStorageSetItem(session: SessionSender, slot: Int, thing: ThingData) {
         session.send(
             PacketWriter(4 + ThingDataWire.SIZE)
@@ -390,7 +390,7 @@ class InventoryResponseSender {
         )
     }
 
-    /** S:102-005 寶庫減少物品 */
+    /** S:102-005 giảm vật phẩm kho báu*/
     fun sendStorageReduceItem(session: SessionSender, slot: Int, amount: Int) {
         session.send(
             PacketWriter(8)
@@ -401,7 +401,7 @@ class InventoryResponseSender {
         )
     }
 
-    /** S:102-007 寶庫操作失敗 */
+    /** S:102-007 Thao tác kho báu thất bại*/
     fun sendStorageFail(session: SessionSender, failCode: Int) {
         session.send(
             PacketWriter(4)
@@ -411,7 +411,7 @@ class InventoryResponseSender {
         )
     }
 
-    /** S:102-008 清空寶庫物品 */
+    /** S:102-008 Xoá sạch vật phẩm trong kho báu*/
     fun sendStorageClear(session: SessionSender) {
         session.send(
             PacketWriter(3)
@@ -420,26 +420,26 @@ class InventoryResponseSender {
         )
     }
 
-    // ── 記憶傳送 (mainKind=23) ──
+    // ── Dịch chuyển đã ghi nhớ (mainKind=23) ──
 
-    /** S:023-118 記憶傳送符資料 */
+    /** S:023-118 dữ liệu phù dịch chuyển ký ức*/
     fun sendFlyPointData(session: SessionSender, flyPointCount: Int, points: Map<Int, FlyPointRecord>) {
         val writer = PacketWriter(5 + points.size * 7)
             .writeByte(Opcodes.SHOP).writeByte(118).writeByte(0)
-            .writeByte(flyPointCount)          // 已開啟的額外數量
-            .writeByte(points.size)            // 已記憶的傳送點數量
+            .writeByte(flyPointCount)          // Số lượng mở thêm đã mở
+            .writeByte(points.size)            // Số điểm dịch chuyển đã ghi nhớ
         for ((index, record) in points) {
-            writer.writeByte(index)            // 索引（1-based）
-            writer.writeShortLE(record.sceneId) // 場景 ID
-            writer.writeShortLE(record.x)      // X 座標
-            writer.writeShortLE(record.y)      // Y 座標
+            writer.writeByte(index)            // Chỉ số (1-based)
+            writer.writeShortLE(record.sceneId) // ID cảnh
+            writer.writeShortLE(record.x)      // Toạ độ X
+            writer.writeShortLE(record.y)      // Toạ độ Y
         }
         session.send(writer.toByteArray())
     }
 
-    // ── 玩家交易 (mainKind=25) ──
+    // ── Giao dịch người chơi (mainKind=25) ──
 
-    /** S:025-001 交易物品開始 */
+    /** S:025-001 bắt đầu giao dịch vật phẩm*/
     fun sendTradeStart(session: SessionSender, partnerId: Long) {
         session.send(
             PacketWriter(11)
@@ -449,7 +449,7 @@ class InventoryResponseSender {
         )
     }
 
-    /** S:025-002 交易取消/完成 */
+    /** S:025-002 giao dịch hủy/hoàn thành*/
     fun sendTradeCancel(session: SessionSender, reason: Int) {
         session.send(
             PacketWriter(4)
@@ -460,9 +460,9 @@ class InventoryResponseSender {
     }
 
     /**
-     * S:025-003 交易物品確認 — 展示對方出價
+     * S:025-003 xác nhận giao dịch vật phẩm — hiển thị giá bên kia đưa ra
      *
-     * 客戶端讀法：ReadInt32() 金錢，然後 for 1~25 用 data.length > 0 判斷
+     * cách client đọc: ReadInt32() tiền vàng, rồi for 1~25 dùng data.length > 0 để kiểm tra
      */
     fun sendTradeConfirm(session: SessionSender, money: Int, items: List<ThingData>) {
         val writer = PacketWriter(7 + items.size * 35)
@@ -474,7 +474,7 @@ class InventoryResponseSender {
         session.send(writer.toByteArray())
     }
 
-    /** S:025-010 交易武將開始 */
+    /** S:025-010 bắt đầu giao dịch tướng*/
     fun sendPetTradeStart(session: SessionSender, partnerId: Long) {
         session.send(
             PacketWriter(11)
@@ -484,7 +484,7 @@ class InventoryResponseSender {
         )
     }
 
-    /** S:025-011 交易武將取消/完成 */
+    /** S:025-011 giao dịch tướng hủy/hoàn thành*/
     fun sendPetTradeCancel(session: SessionSender, reason: Int) {
         session.send(
             PacketWriter(4)
@@ -495,12 +495,12 @@ class InventoryResponseSender {
     }
 
     /**
-     * S:025-012 交易武將確認 — 展示對方出價
+     * S:025-012 xác nhận giao dịch tướng — hiển thị giá bên kia đưa ra
      *
-     * 格式以客戶端解析為準（UITrade.lua:227-255，protocal.lua 註解已過時）：
-     * +金錢(4) +NPCID(2) [+等級(1) +MaxHp(2) +Hp(2) +MaxSp(2) +Sp(2) +L(1)+名字(L)
-     * +忠誠(1) +昇華丹(1) +SP丹(1) +HP丹(1) +裝備數量(1) <<+ThingData(35)>>]
-     * 對方不出武將時 NPCID=0，客戶端查無 npcData 即清空展示區。
+     * định dạng theo cách client phân tích làm chuẩn (UITrade.lua:227-255, chú thích protocal.lua đã cũ):
+     * +tiền(4) +NPCID(2) [+cấp(1) +MaxHp(2) +Hp(2) +MaxSp(2) +Sp(2) +L(1)+tên(L)
+     * +lòng trung thành(1) +đan thăng hoa(1) +đan SP(1) +đan HP(1) +số lượng trang bị(1) <<+ThingData(35)>>]
+     * khi bên kia không đưa tướng ra thì NPCID=0, client không tìm thấy npcData sẽ xoá sạch vùng hiển thị.
      */
     fun sendPetTradeConfirm(session: SessionSender, money: Int, pet: FollowNpcData?, maxHp: Int, maxSp: Int) {
         if (pet == null) {

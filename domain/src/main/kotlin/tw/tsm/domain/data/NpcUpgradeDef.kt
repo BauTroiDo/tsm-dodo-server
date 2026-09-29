@@ -1,16 +1,16 @@
 package tw.tsm.domain.data
 
 /**
- * 武將強化定義 — 對應 `NpcUpgrade_C.dat` / `NpcData.lua` NpcUpgradeData
+ * định nghĩa cường hoá tướng — tương ứng `NpcUpgrade_C.dat` / NpcUpgradeData trong `NpcData.lua`
  *
- * key = 目標星等（1~15），即「強化到第 N 星」的需求與效果。
+ * key = cấp sao đích (1~15), tức yêu cầu và hiệu quả khi cường hoá lên sao thứ N.
  *
- * @property requireMoney 需求遊戲幣
- * @property requireDebris 需求武將碎片（RoleCount[110] NpcDebris）
- * @property requirePicture 需求畫冊數（NpcDef.upgradeItemId 對應物品）
- * @property attributeAdd 強化隨機數值（隨機分配到六圍的總點數）
- * @property skillLv 強化技等級（TODO：與技能系統連動方式待查證）
- * @property upgradeLvIcon 星等圖示
+ * @property requireMoney tiền game cần dùng
+ * @property requireDebris mảnh vỡ tướng cần dùng (RoleCount[110] NpcDebris)
+ * @property requirePicture số tranh cần dùng (vật phẩm tương ứng với NpcDef.upgradeItemId)
+ * @property attributeAdd chỉ số ngẫu nhiên khi cường hoá (tổng điểm chia ngẫu nhiên vào sáu chỉ số)
+ * @property skillLv cấp kỹ năng cường hoá (TODO: cách liên động với hệ thống kỹ năng chưa xác minh)
+ * @property upgradeLvIcon biểu tượng cấp sao
  */
 data class NpcUpgradeDef(
     val requireMoney: Long,

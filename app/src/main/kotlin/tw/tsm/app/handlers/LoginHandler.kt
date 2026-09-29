@@ -20,11 +20,11 @@ import tw.tsm.protocol.PacketWriter
 private val logger = KotlinLogging.logger {}
 
 /**
- * 登入處理器（mainKind = 1）
+ * Bộ xử lý đăng nhập (mainKind = 1)
  *
- * 子 opcode：
- * - C:001-000 登入請求
- * - C:001-001 重連
+ * opcode con:
+ * - C:001-000 yêu cầu đăng nhập
+ * - C:001-001 kết nối lại
  */
 class LoginHandler(
     private val authSystem: AuthSystem,
@@ -40,19 +40,19 @@ class LoginHandler(
             0 -> handleLogin(session, data)
             1 -> handleReconnect(session, data)
             16 -> handleServerTimeQuery(session)
-            else -> logger.warn { "未處理的登入子協定：subKind=$subKind" }
+            else -> logger.warn { "Sub-protocol đăng nhập chưa xử lý: subKind=$subKind" }
         }
     }
 
     /**
-     * 處理登入請求 (C:001-000)
+     * Xử lý yêu cầu đăng nhập (C:001-000)
      *
-     * 封包格式（來自 Network.lua OnConnect）：
+     * Định dạng gói tin (từ Network.lua OnConnect):
      * +Version(UInt16) +ServerId(UInt16) +ConnectCode(UInt32) +LoginKind(Byte)
-     * LoginKind=1(帳密)：+L(Byte)+Account(Big5) +L(Byte)+Password(Big5)
-     * LoginKind=2(遊客)：（無額外欄位）
+     * LoginKind=1(tài khoản mật khẩu): +L(Byte)+Account(Big5) +L(Byte)+Password(Big5)
+     * LoginKind=2(khách vãng lai): (không có trường bổ sung)
      * LoginKind=3/7(FB/Apple)：+L(UInt16)+Account +L(UInt16)+Token
-     * LoginKind=255(無界)：+L(Byte)+Account +L(Byte)+Password +RoleId(Int64) +SN(UInt32)
+     * LoginKind=255(Vô Giới): +L(Byte)+Account +L(Byte)+Password +RoleId(Int64) +SN(UInt32)
      */
     private suspend fun handleLogin(session: GameSession, data: ByteArray) {
         val reader = PacketReader(data)
@@ -62,16 +62,16 @@ class LoginHandler(
         val connectCode = reader.readUIntLE()
         val loginKindCode = reader.readUByte()
 
-        // 版本檢查
+        // kiểm tra phiên bản
         if (version != CLIENT_VERSION) {
-            logger.warn { "版本不符：客戶端=$version 伺服器=$CLIENT_VERSION" }
+            logger.warn { "Lệch phiên bản: client=$version server=$CLIENT_VERSION" }
             responseSender.sendLoginResult(session, resultCode = RESULT_VERSION_MISMATCH)
             return
         }
 
         val loginKind = LoginKind.fromCode(loginKindCode)
         if (loginKind == null) {
-            logger.warn { "未知登入方式：$loginKindCode" }
+            logger.warn { "Cách đăng nhập không xác định: $loginKindCode" }
             responseSender.sendLoginResult(session, resultCode = RESULT_LOGIN_KIND_ERROR)
             return
         }
@@ -80,7 +80,7 @@ class LoginHandler(
         session.loginKind = loginKind
         session.state = SessionState.AUTHENTICATING
 
-        logger.info { "登入請求：serverId=$serverId kind=$loginKind connectCode=$connectCode" }
+        logger.info { "Yêu cầu đăng nhập: serverId=$serverId kind=$loginKind connectCode=$connectCode" }
 
         when (loginKind) {
             LoginKind.ACC_PWD -> {
@@ -92,10 +92,10 @@ class LoginHandler(
                 handleGuestLogin(session)
             }
             LoginKind.FACEBOOK, LoginKind.APPLE -> {
-                val userId = reader.readBig5WithShortLen()   // 2B 長度前綴
+                val userId = reader.readBig5WithShortLen()   // tiền tố độ dài 2B
                 val token = reader.readBig5WithShortLen()
-                logger.info { "第三方登入：kind=$loginKind userId=$userId" }
-                // TODO：第三方登入驗證
+                logger.info { "Đăng nhập bên thứ ba: kind=$loginKind userId=$userId" }
+                // TODO: xác thực đăng nhập bên thứ ba
                 responseSender.sendLoginResult(session, resultCode = RESULT_LOGIN_KIND_ERROR)
             }
             LoginKind.UNBOUNDED -> {
@@ -103,22 +103,22 @@ class LoginHandler(
                 val password = reader.readBig5WithByteLen()
                 val roleId = reader.readULongLE()
                 val sn = reader.readUIntLE()
-                logger.info { "無界登入：account=$account roleId=$roleId sn=$sn" }
-                // TODO：無界伺服器邏輯
+                logger.info { "Đăng nhập Vô Giới: account=$account roleId=$roleId sn=$sn" }
+                // TODO: logic server Vô Giới
                 responseSender.sendLoginResult(session, resultCode = RESULT_LOGIN_KIND_ERROR)
             }
             LoginKind.GOOGLE -> {
-                logger.info { "Google 登入（客戶端未實作）" }
+                logger.info { "Đăng nhập Google (client chưa triển khai)" }
                 responseSender.sendLoginResult(session, resultCode = RESULT_LOGIN_KIND_ERROR)
             }
         }
     }
 
     /**
-     * 帳密登入
+     * Đăng nhập tài khoản mật khẩu
      */
     private suspend fun handleAccountLogin(session: GameSession, account: String, password: String) {
-        logger.info { "帳密登入：$account" }
+        logger.info { "Đăng nhập tài khoản/mật khẩu: $account" }
 
         val result = authSystem.authenticate(account, password)
         when (result) {
@@ -139,10 +139,10 @@ class LoginHandler(
     }
 
     /**
-     * 遊客登入
+     * Đăng nhập khách vãng lai
      */
     private suspend fun handleGuestLogin(session: GameSession) {
-        logger.info { "遊客登入" }
+        logger.info { "Đăng nhập khách" }
 
         val result = authSystem.authenticateGuest()
         when (result) {
@@ -156,22 +156,22 @@ class LoginHandler(
     }
 
     /**
-     * 登入成功 — 設定 session 並根據角色狀態分流
+     * Đăng nhập thành công — thiết lập session và phân luồng theo trạng thái nhân vật
      *
-     * - 已有角色：S:001-002 → 直接執行角色進入序列（跳過 UICreateRole）
-     * - 無角色：S:001-002 + S:001-003 → 開啟 UICreateRole
+     * - đã có nhân vật: S:001-002 → chạy thẳng trình tự vào game bằng nhân vật (bỏ qua UICreateRole)
+     * - chưa có nhân vật: S:001-002 + S:001-003 → mở UICreateRole
      */
     private suspend fun completeLogin(session: GameSession, accountId: Long, account: String, password: String) {
         session.accountId = accountId
         session.account = account
-        session.dbId = 1       // 單服模式
+        session.dbId = 1       // chế độ một server
         session.gsId = 1
         session.playerId = accountId
 
-        // 踢掉同帳號舊 session（防止幽靈玩家）
+        // đá session cũ cùng tài khoản (chặn người chơi ảo)
         val oldSession = worldManager.getPlayerById(accountId)
         if (oldSession != null && oldSession !== session) {
-            logger.warn { "帳號 $account 已在線，踢掉舊連線" }
+            logger.warn { "Tài khoản $account đã trực tuyến, đá kết nối cũ" }
             worldManager.removePlayer(oldSession)
             oldSession.close()
         }
@@ -181,7 +181,7 @@ class LoginHandler(
 
         val serverTime = LoginService.currentServerTime()
 
-        // S:001-002 登入結果（成功）— 固定發送
+        // S:001-002 kết quả đăng nhập (thành công) — luôn gửi
         responseSender.sendLoginResult(
             session = session,
             resultCode = 0,
@@ -190,18 +190,18 @@ class LoginHandler(
             playerId = session.playerId,
             serverTime = serverTime,
             account = account,
-            password = "",  // 不回傳明文密碼
+            password = "",  // không trả về mật khẩu dạng plaintext
             accountKind = 0
         )
 
-        // 查詢是否已有角色
+        // tra xem đã có nhân vật chưa
         val characters = characterRepository.findByAccountId(accountId)
         if (characters.isNotEmpty()) {
-            // 已有角色：直接進入遊戲（跳過 S:001-003 / UICreateRole）
+            // đã có nhân vật: vào game luôn (bỏ qua S:001-003 / UICreateRole)
             val record = characters.first()
             session.loadFromRecord(record)
 
-            logger.info { "已有角色，直接進入：'${record.name}' (id=${record.id}) 帳號=$account" }
+            logger.info { "Đã có nhân vật, vào thẳng: '${record.name}' (id=${record.id}) tài khoản=$account" }
 
             loginService.executeCharacterEnterSequence(
                 session = session,
@@ -212,14 +212,14 @@ class LoginHandler(
             )
             session.loginFinished = true
         } else {
-            // 無角色：發送 S:001-003 開啟創角 UI
+            // chưa có nhân vật: gửi S:001-003 để mở UI tạo nhân vật
             responseSender.sendLoginSuccess(session, needChangePassword = false)
-            logger.info { "新帳號，開啟創角：$account (id=$accountId)" }
+            logger.info { "Tài khoản mới, mở tạo nhân vật: $account (id=$accountId)" }
         }
     }
 
     /**
-     * C:001-016 <查Server時間>
+     * C:001-016 <tra thời gian Server>
      *
      * DVT client opens time-sensitive UIs (UIJiugongge/UIActivity/BattlePass/...)
      * by first requesting the current server clock. protocal.lua[1][16] then
@@ -242,13 +242,13 @@ class LoginHandler(
     }
 
     /**
-     * 處理重連 (C:001-001)
+     * Xử lý kết nối lại (C:001-001)
      */
     private suspend fun handleReconnect(session: GameSession, data: ByteArray) {
         val reader = PacketReader(data)
         val connectCode = reader.readUIntLE()
-        logger.info { "重連請求：connectCode=$connectCode" }
-        // TODO：實作重連邏輯
+        logger.info { "Yêu cầu kết nối lại: connectCode=$connectCode" }
+        // TODO: cài đặt logic kết nối lại
     }
 
     companion object {

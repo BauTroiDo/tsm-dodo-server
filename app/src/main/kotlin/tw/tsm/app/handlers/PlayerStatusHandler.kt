@@ -14,12 +14,12 @@ import tw.tsm.protocol.PacketReader
 private val logger = KotlinLogging.logger {}
 
 /**
- * 玩家狀態處理器（mainKind = 5）
+ * Bộ xử lý trạng thái người chơi (mainKind = 5)
  *
- * 處理客戶端發送的玩家狀態相關封包。
- * 目前支援：
- * - C:005-008 看完新手教學
- * - C:005-012 更換稱號
+ * Xử lý các gói tin client gửi lên liên quan đến trạng thái người chơi.
+ * Hiện hỗ trợ:
+ * - C:005-008 xem xong hướng dẫn người mới
+ * - C:005-012 đổi danh hiệu
  */
 class PlayerStatusHandler(
     private val bitFlagSystem: BitFlagSystem,
@@ -33,16 +33,16 @@ class PlayerStatusHandler(
         when (subKind) {
             8 -> handleTeachComplete(session, data)
             12 -> handleChangeTitle(session, data)
-            else -> logger.trace { "未處理的 C:005-$subKind" }
+            else -> logger.trace { "Chưa xử lý C:005-$subKind" }
         }
     }
 
     /**
-     * C:005-008 看完新手教學
+     * C:005-008 Xem xong hướng dẫn người mới
      *
-     * 格式：+guideId(1B)
-     * 客戶端 UITeach.lua 在教學完成時發送。
-     * 伺服器查詢對應的 bitFlagId，設定到資料庫，並回傳 S:081-001。
+     * Định dạng: +guideId(1B)
+     * Client UITeach.lua gửi khi hoàn thành hướng dẫn.
+     * Server tra bitFlagId tương ứng, ghi vào cơ sở dữ liệu và trả về S:081-001.
      */
     private suspend fun handleTeachComplete(session: GameSession, data: ByteArray) {
         val reader = PacketReader(data)
@@ -58,32 +58,32 @@ class PlayerStatusHandler(
     }
 
     /**
-     * C:005-012 更換稱號
+     * C:005-012 Đổi danh hiệu
      *
-     * 格式：+titleId(2B UInt16 LE)
-     * titleId=0 表示卸下稱號。
-     * 更新 session + DB，並廣播 S:005-012 給同地圖所有玩家。
+     * Định dạng: +titleId(2B UInt16 LE)
+     * titleId=0 có nghĩa là tháo danh hiệu.
+     * Cập nhật session + DB và phát rộng S:005-012 cho mọi người chơi cùng bản đồ.
      */
     private suspend fun handleChangeTitle(session: GameSession, data: ByteArray) {
         if (session.state != SessionState.IN_GAME) return
         if (data.size < 2) return
-        if (session.battleId != 0L) return  // 戰鬥中不能換稱號
+        if (session.battleId != 0L) return  // Đang chiến đấu không được đổi danh hiệu
 
         val reader = PacketReader(data)
         val titleId = reader.readUShortLE()
 
-        // 更新 session 狀態
+        // Cập nhật trạng thái session
         session.titleId = titleId
 
-        // 持久化到 DB
+        // Lưu bền dữ liệu vào DB
         characterRepository.updateTitleId(session.roleId.toLong(), titleId)
 
-        // 廣播 S:005-012 給同地圖所有玩家（含自己）
+        // Phát rộng S:005-012 cho mọi người chơi cùng bản đồ (gồm cả mình)
         val players = worldManager.getPlayersInMap(session.mapId)
         for (player in players) {
             responseSender.sendTitleChange(player, session.playerId, titleId)
         }
 
-        logger.info { "${session.characterName} 更換稱號：$titleId" }
+        logger.info { "${session.characterName} đổi danh hiệu: $titleId" }
     }
 }
