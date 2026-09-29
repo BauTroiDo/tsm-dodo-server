@@ -42,4 +42,17 @@ class DvtInventoryCapacityTest {
         system.setValue(charId, RoleCountSystem.BANK_1, 100)
         assertEquals(500, system.getBankCapacity(charId))
     }
+
+    @Test
+    fun `DVT warrior repository starts at 5 adds one per RoleCount822 and caps at 150`() {
+        val system = RoleCountSystem(mockk<RoleCountRepository>(relaxed = true))
+        val charId = 31L
+
+        assertEquals(5, system.getWarriorRepositoryCapacity(charId))
+        system.setValue(charId, RoleCountSystem.WARRIOR_REPOSITORY, 1)
+        assertEquals(6, system.getWarriorRepositoryCapacity(charId))
+        system.setValue(charId, RoleCountSystem.WARRIOR_REPOSITORY, 999)
+        assertEquals(150, system.getWarriorRepositoryCapacity(charId))
+        assertEquals(145, RoleCountSystem.WARRIOR_REPOSITORY_MAX_EXPANSIONS)
+    }
 }

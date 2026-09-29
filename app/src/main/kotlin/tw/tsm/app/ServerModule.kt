@@ -279,6 +279,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<StatSystem>(),
             get<GameDataManager>().npcDefs,
             get<GameDataManager>().itemDefs,
+            get<RoleCountSystem>(),
         )
     }
     single {

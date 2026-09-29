@@ -141,6 +141,18 @@ class RoleCountSystem(
     }
 
     /**
+     * Dung lượng kho võ tướng.
+     *
+     * DVT Inn.lua:
+     * - warriorRepositoryMin = 5
+     * - warriorRepositoryMax = 150
+     * - RefreshWarriorRepositoryCount = RoleCount[822] + 5
+     */
+    fun getWarriorRepositoryCapacity(characterId: Long): Int =
+        (WARRIOR_REPOSITORY_BASE_SLOTS + getValue(characterId, WARRIOR_REPOSITORY))
+            .coerceAtMost(WARRIOR_REPOSITORY_MAX_SLOTS)
+
+    /**
      * Lưu bộ đếm nhân vật vào DB
      */
     suspend fun saveCounts(characterId: Long) {
@@ -204,6 +216,16 @@ class RoleCountSystem(
 
         /** Mở rộng thêm kho võ tướng */
         const val WARRIOR_REPOSITORY = 822
+
+        /** DVT Inn.lua warriorRepositoryMin. */
+        const val WARRIOR_REPOSITORY_BASE_SLOTS = 5
+
+        /** DVT Inn.lua warriorRepositoryMax. */
+        const val WARRIOR_REPOSITORY_MAX_SLOTS = 150
+
+        /** Mỗi lần mua sellId=69 tăng 1 ô: 150 - 5 = 145 lần tối đa. */
+        const val WARRIOR_REPOSITORY_MAX_EXPANSIONS =
+            WARRIOR_REPOSITORY_MAX_SLOTS - WARRIOR_REPOSITORY_BASE_SLOTS
 
         /** Mảnh võ tướng (Tiêu hao để cường hóa) */
         const val NPC_DEBRIS = 110

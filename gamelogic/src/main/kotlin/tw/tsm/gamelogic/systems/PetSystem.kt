@@ -20,7 +20,8 @@ class PetSystem(
     private val petRepository: PetRepository,
     private val statCalculator: StatSystem,
     private val npcDefs: Map<Int, NpcDef> = emptyMap(),
-    private val itemDefs: Map<Int, ItemDef> = emptyMap()
+    private val itemDefs: Map<Int, ItemDef> = emptyMap(),
+    private val roleCountSystem: RoleCountSystem? = null
 ) {
 
     companion object {
@@ -848,8 +849,12 @@ class PetSystem(
             // Đang xuất chiến thì không thể cất
             if (pc.fightNpcId == pet.npcId) return false
 
-            // Kiểm tra sức chứa của kho
-            if (pc.warehouse.size >= MAX_WAREHOUSE) return false
+            // DVT: 5 ô mặc định + RoleCount[822], tối đa 150.
+            // Không chỉ dựa vào UI client; server cũng phải chặn vượt dung lượng đã mua.
+            val warehouseCapacity = roleCountSystem
+                ?.getWarriorRepositoryCapacity(characterId)
+                ?: MAX_WAREHOUSE
+            if (pc.warehouse.size >= warehouseCapacity) return false
 
             // Di chuyển (Kho dùng list, slotIndex dùng list index)
             pc.follow.remove(followSlot)

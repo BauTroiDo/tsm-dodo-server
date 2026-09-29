@@ -80,7 +80,12 @@ class UISellSystem(
         // Mở rộng túi đồ 5 ô: 199 KNB/lần, tối đa 2 lần (formula kind=6 bảng giá [199,199]), 50 → 60 ô
         SELL_BAG_EXPAND to ExpansionSpec(RoleCountSystem.BAG_1, 2),
         // Mở rộng bảo khố 5 ô: tối đa 14 lần = MaxStorageGrid(70)/5 (Server lậu mặc định Storage_1=14 đã đầy)
-        SELL_STORAGE_EXPAND to ExpansionSpec(RoleCountSystem.STORAGE_1, 14)
+        SELL_STORAGE_EXPAND to ExpansionSpec(RoleCountSystem.STORAGE_1, 14),
+        // Kho võ tướng: DVT bắt đầu 5 ô, tối đa 150, mỗi lần +1 ô.
+        SELL_WARRIOR_REPOSITORY_EXPAND to ExpansionSpec(
+            RoleCountSystem.WARRIOR_REPOSITORY,
+            RoleCountSystem.WARRIOR_REPOSITORY_MAX_EXPANSIONS
+        )
     )
 
     /**
@@ -91,10 +96,18 @@ class UISellSystem(
      * @return Kết quả báo giá
      */
     suspend fun query(charId: Long, sellId: Int): UiSellQuote {
-        val formula = formulaDefs[sellId]
-        if (uiSellDefs[sellId] == null || formula == null) {
+        if (uiSellDefs[sellId] == null) {
             return UiSellQuote.Fail(REASON_NO_DATA)
         }
+
+        // DVT nút kho tướng gọi UISell.Launch(69), nhưng các bản
+        // UISell_Formula_C.dat đi kèm client/server đều không có record 69.
+        // TextData gốc 24906 ghi rõ mỗi ô mở rộng tốn 150 nguyên bảo.
+        if (sellId == SELL_WARRIOR_REPOSITORY_EXPAND) {
+            return queryWarriorRepositoryExpansion(charId)
+        }
+
+        val formula = formulaDefs[sellId] ?: return UiSellQuote.Fail(REASON_NO_DATA)
 
         return when (sellId) {
             SELL_FLY_TELEPORT -> queryFlyTeleport(charId, formula)
@@ -118,6 +131,14 @@ class UISellSystem(
             return UiSellQuote.Fail(REASON_LIMIT_REACHED)
         }
         return UiSellQuote.Money(CURRENCY_GOLD, priceAt(formula, purchased))
+    }
+
+    private fun queryWarriorRepositoryExpansion(charId: Long): UiSellQuote {
+        val purchased = roleCountSystem.getValue(charId, RoleCountSystem.WARRIOR_REPOSITORY)
+        if (purchased >= RoleCountSystem.WARRIOR_REPOSITORY_MAX_EXPANSIONS) {
+            return UiSellQuote.Fail(REASON_LIMIT_REACHED)
+        }
+        return UiSellQuote.Money(CURRENCY_GOLD, WARRIOR_REPOSITORY_SLOT_PRICE)
     }
 
     /**
@@ -203,6 +224,12 @@ class UISellSystem(
 
         /** Tiêu phí UI 56: Mở rộng bảo khố 5 ô (UIBank.OnClick_Unlock → Launch(56)) */
         const val SELL_STORAGE_EXPAND = 56
+
+        /** UINpcInn.OnClick_AddWarriorRepositorySpace → UISell.Launch(69). */
+        const val SELL_WARRIOR_REPOSITORY_EXPAND = 69
+
+        /** TextData gốc 24906: mỗi ô kho võ tướng cần 150 nguyên bảo. */
+        const val WARRIOR_REPOSITORY_SLOT_PRICE = 150L
 
         /** Tiêu phí UI 7: Sử dụng dịch chuyển ghi nhớ (UITeleport.OnClick_Teleport → Launch(7, _, 1, index)) */
         const val SELL_FLY_TELEPORT = 7

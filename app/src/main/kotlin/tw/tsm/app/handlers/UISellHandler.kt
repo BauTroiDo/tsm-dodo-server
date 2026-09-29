@@ -549,7 +549,14 @@ class UISellHandler(
     private suspend fun executeExpansion(session: GameSession, sellId: Int, roleCountIndex: Int) {
         val charId = session.roleId.toLong()
         val newValue = roleCountSystem.increment(charId, roleCountIndex)
-        val maxValue = roleCountSystem.getMaxValue(charId, roleCountIndex)
+        val maxValue = if (sellId == UISellSystem.SELL_WARRIOR_REPOSITORY_EXPAND) {
+            RoleCountSystem.WARRIOR_REPOSITORY_MAX_EXPANSIONS
+        } else {
+            roleCountSystem.getMaxValue(charId, roleCountIndex)
+        }
+        if (sellId == UISellSystem.SELL_WARRIOR_REPOSITORY_EXPAND) {
+            roleCountSystem.setValue(charId, roleCountIndex, newValue, maxValue)
+        }
 
         responseSender.sendUiSellSuccess(session, sellId)
         responseSender.sendRoleCountUpdate(session, mapOf(roleCountIndex to (newValue to maxValue)))
