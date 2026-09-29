@@ -382,7 +382,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { SceneHandler(get(), get()) }
     single { RelocateHandler(get(), get()) }
     single { NpcEventHandler(get<EveTriggerRouter>(), get<EveFlowController>()) }
-    single { ItemHandler(get(), get(), get(), get(), get(), get<GameDataManager>().itemDefs, get(), get<PlayerStateManager>(), get<StatSystem>(), get(), get<FlyPointSystem>(), get<CharacterRepository>(), get<PetEquipSystem>(), get<QuestSystem>(), get<SkillSystem>(), get<DailyProgressSystem>()) }
+    single { ItemHandler(get(), get(), get(), get(), get(), get<GameDataManager>().itemDefs, get(), get<PlayerStateManager>(), get<StatSystem>(), get(), get<FlyPointSystem>(), get<CharacterRepository>(), get<PetEquipSystem>(), get<QuestSystem>(), get<SkillSystem>(), get<DailyProgressSystem>(), get<PetSystem>(), get<GameDataManager>().npcDefs) }
     single { NpcTradeHandler(get(), get(), get(), get<GameDataManager>().itemDefs, get()) }
     single { BankHandler(get(), get(), get<GameDataManager>().itemDefs, get()) }
     single { StorageHandler(get(), get(), get<GameDataManager>().itemDefs, get()) }
