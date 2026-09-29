@@ -6,6 +6,7 @@ import tw.tsm.domain.constants.EItemUseKind
 import tw.tsm.domain.constants.ItemConstants
 import tw.tsm.domain.constants.Opcodes
 import tw.tsm.domain.data.ItemDef
+import tw.tsm.domain.data.NpcDef
 import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.PacketHandler
@@ -22,6 +23,7 @@ import tw.tsm.gamelogic.systems.ItemUseProcessor
 import tw.tsm.gamelogic.systems.MoneySystem
 import tw.tsm.gamelogic.systems.MountSystem
 import tw.tsm.gamelogic.systems.PetEquipSystem
+import tw.tsm.gamelogic.systems.PetSystem
 import tw.tsm.gamelogic.systems.PlayerStateManager
 import tw.tsm.gamelogic.systems.QuestSystem
 import tw.tsm.gamelogic.systems.SkillSystem
@@ -53,6 +55,8 @@ class ItemHandler(
     private val questSystem: QuestSystem,
     private val skillSystem: SkillSystem,
     private val dailyProgressSystem: DailyProgressSystem? = null,
+    private val petSystem: PetSystem? = null,
+    private val npcDefs: Map<Int, NpcDef> = emptyMap(),
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.SHOP  // 23
@@ -489,8 +493,12 @@ class ItemHandler(
         val characterId = session.roleId.toLong()
         val bagItem = inventorySystem.getBagItem(characterId, bagIndex) ?: return
 
-        // xử lý đặc biệt bộ sưu tập vật cưỡi (specialAbility=217)
+        // Các direct-use đặc biệt cần mutation server + packet riêng.
         val itemDef = itemDefs[bagItem.itemId]
+        if (itemDef != null && itemDef.specialAbility == EItemUseKind.NPC_PICTURE) {
+            handleNpcPictureItem(session, characterId, bagIndex, bagItem, itemDef)
+            return
+        }
         if (itemDef != null && itemDef.specialAbility == EItemUseKind.MOUNTS) {
             handleMountCollectionItem(session, characterId, bagIndex, bagItem, itemDef)
             return
@@ -578,6 +586,83 @@ class ItemHandler(
             // phát rộng cho những người khác
             val broadcastData = buildDropMoneyPacket(amount, session.x, session.y, false)
             worldManager.broadcastToMap(session.mapId, broadcastData, exclude = session)
+        }
+    }
+
+    // ── dùng cho võ tướng họa sách / token ──
+
+    /**
+     * DVT EItemUseKind.NpcPicture = 195.
+     *
+     * Lua Item.UseItem kiểm tra:
+     * - không có cùng npcId trong FollowNpc;
+     * - Inn.HaveNpc() không có cùng npcId (khách sạn + kho võ tướng);
+     * - còn ô FollowNpc trống;
+     * rồi mới gửi C:023-015.
+     *
+     * spare3 là npcId. Cart cố ý không nằm trong duplicate-check của Lua, vì vậy
+     * allowDuplicateInCart=true để khớp client DVT.
+     */
+    private suspend fun handleNpcPictureItem(
+        session: GameSession,
+        characterId: Long,
+        bagIndex: Int,
+        bagItem: ThingData,
+        itemDef: ItemDef,
+    ) {
+        val pets = petSystem
+        if (pets == null) {
+            logger.error { "NpcPicture chưa được nối PetSystem: itemId=${bagItem.itemId}" }
+            return
+        }
+
+        val npcId = itemDef.spare3
+        val npcDef = npcDefs[npcId]
+        if (npcId <= 0 || npcDef == null) {
+            logger.warn {
+                "NpcPicture dữ liệu không hợp lệ: itemId=${bagItem.itemId} spare3=$npcId npcDef=${npcDef != null}"
+            }
+            return
+        }
+
+        // DVT chỉ nhận một võ tướng cho mỗi lần dùng token. Nếu trùng/đầy,
+        // addFollowNpc trả null và tuyệt đối không tiêu hao item.
+        val added = pets.addFollowNpc(
+            characterId = characterId,
+            npcId = npcId,
+            npcDef = npcDef,
+            canGrow = 1,
+            allowDuplicateInCart = true,
+        ) ?: run {
+            logger.debug {
+                "NpcPicture từ chối (trùng hoặc đầy): charId=$characterId itemId=${bagItem.itemId} npcId=$npcId"
+            }
+            return
+        }
+
+        // Thêm pet trước để validate toàn bộ semantics DVT, rồi tiêu token.
+        // Nếu inventory mutation thất bại thì rollback pet vừa tạo.
+        if (!inventorySystem.removeFromBag(characterId, bagIndex, 1)) {
+            pets.removeFollowNpcByNpcId(characterId, npcId)
+            logger.error {
+                "NpcPicture rollback: không thể tiêu item charId=$characterId itemId=${bagItem.itemId} npcId=$npcId"
+            }
+            return
+        }
+
+        val (slotIndex, pet) = added
+        responseSender.sendReduceBagItem(session, bagIndex, 1)
+        responseSender.sendUseItemSuccess(session, bagItem.itemId, 1, showMsg = true)
+        responseSender.sendFollowNpcAdd(
+            session, session.playerId, slotIndex, npcId, pet.canGrow, showMsg = true
+        )
+        responseSender.sendFollowNpcFullData(
+            session,
+            pets.getFollowPets(characterId).values.sortedBy { it.slotIndex }
+        )
+
+        logger.info {
+            "${session.characterName} dùng NpcPicture: itemId=${bagItem.itemId} npcId=$npcId → followSlot=$slotIndex"
         }
     }
 
