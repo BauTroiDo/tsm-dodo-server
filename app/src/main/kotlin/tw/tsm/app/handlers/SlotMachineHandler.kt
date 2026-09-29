@@ -85,6 +85,11 @@ class SlotMachineHandler(
                     "SlotMachine reward direct-use chưa có semantics DVT: item=" +
                         result.itemId + " player=" + session.characterName
                 }
+                // DVT client only leaves ESlotMachineState.Run after S72-2 supplies
+                // the target slot. Keep the coin unchanged and finish the visual
+                // spin even when the reward effect itself is still unsupported.
+                response.sendSlotMachineCoin(session, result.state.coin)
+                response.sendSlotMachineSpinResult(session, result.resultSlotIndices)
                 response.sendSlotMachineMessage(session, 11)
             }
         }

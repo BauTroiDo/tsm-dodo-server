@@ -26,7 +26,11 @@ sealed interface SlotMachineSpinOutcome {
     data object BagFull : SlotMachineSpinOutcome
     data object InvalidBoard : SlotMachineSpinOutcome
     data object RewardGrantFailed : SlotMachineSpinOutcome
-    data class UnsupportedDirectReward(val itemId: Int) : SlotMachineSpinOutcome
+    data class UnsupportedDirectReward(
+        val itemId: Int,
+        val state: SlotMachineStateData,
+        val resultSlotIndices: List<Int>,
+    ) : SlotMachineSpinOutcome
 }
 
 /**
@@ -147,13 +151,18 @@ class SlotMachineSystem(
             // Tam liên đạn returns three indices in one S72-2. DVT client does not
             // require them to be distinct.
             val selected = List(drawCount) { pickBoardAward(state.awards) }
+            val selectedSlots = selected.map { it.slotIndex }
 
             val bagRewards = mutableListOf<Pair<Int, Int>>()
             val currencyRewards = linkedMapOf<Int, Int>()
 
             for (award in selected) {
                 val def = itemDefs[award.itemId]
-                    ?: return@withLock SlotMachineSpinOutcome.UnsupportedDirectReward(award.itemId)
+                    ?: return@withLock SlotMachineSpinOutcome.UnsupportedDirectReward(
+                        award.itemId,
+                        state,
+                        selectedSlots
+                    )
                 val rewardCount = award.count * multiplier
 
                 if (def.directUse == 1) {
@@ -167,7 +176,11 @@ class SlotMachineSystem(
                         if (currencyKind !in PlayerCurrencySystem.MIN_KIND..PlayerCurrencySystem.MAX_KIND ||
                             amount <= 0
                         ) {
-                            return@withLock SlotMachineSpinOutcome.UnsupportedDirectReward(award.itemId)
+                            return@withLock SlotMachineSpinOutcome.UnsupportedDirectReward(
+                                award.itemId,
+                                state,
+                                selectedSlots
+                            )
                         }
                         currencyRewards[currencyKind] =
                             (currencyRewards[currencyKind] ?: 0) + amount
@@ -175,7 +188,11 @@ class SlotMachineSystem(
                         // IOS_Slot currently also contains item 31922
                         // (directUse=1, specialAbility=239). Its server effect is
                         // not proven by DVT Lua/data, so do not fake it as a bag item.
-                        return@withLock SlotMachineSpinOutcome.UnsupportedDirectReward(award.itemId)
+                        return@withLock SlotMachineSpinOutcome.UnsupportedDirectReward(
+                            award.itemId,
+                            state,
+                            selectedSlots
+                        )
                     }
                 } else {
                     bagRewards += award.itemId to rewardCount
@@ -233,7 +250,7 @@ class SlotMachineSystem(
 
             SlotMachineSpinOutcome.Success(
                 state = deducted,
-                resultSlotIndices = selected.map { it.slotIndex },
+                resultSlotIndices = selectedSlots,
                 changedBagSlots = changed,
                 currencyBalances = currencyRewards.keys.associateWith {
                     playerCurrencySystem.get(characterId, it)

@@ -4,6 +4,7 @@ import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import tw.tsm.app.handlers.SlotMachineHandler
 import tw.tsm.app.handlers.UISellHandler
 import tw.tsm.app.response.SlotMachineResponseSender
 import tw.tsm.data.loaders.ItemDatLoader
@@ -228,6 +229,40 @@ class DvtSlotMachineTest {
             byteArrayOf(72, 6, 0, 0x01, 0x02),
             packets[3]
         )
+    }
+
+    @Test
+    fun `unsupported direct reward finishes client spin without consuming coin`() = runTest {
+        val rewardItemId = 31922
+        val board = (1..16).map {
+            SlotMachineAward(it, rewardItemId, 1, it)
+        }
+        var stored = SlotMachineStateData(coin = 10, awards = board)
+        val repo = object : SlotMachineRepository {
+            override suspend fun load(characterId: Long) = stored
+            override suspend fun save(characterId: Long, state: SlotMachineStateData) {
+                stored = state
+            }
+        }
+        val inventory = mockk<InventorySystem>(relaxed = true)
+        val currencies = mockk<PlayerCurrencySystem>(relaxed = true)
+        val system = SlotMachineSystem(repo, pools, inventory, currencies, itemDefs)
+        val response = mockk<ResponseSender>(relaxed = true)
+        val session = inGameSession()
+        val handler = SlotMachineHandler(system, response)
+
+        handler.handle(session, SlotMachineSystem.SUB_NORMAL, byteArrayOf())
+
+        assertEquals(10, stored.coin)
+        verify(exactly = 1) { response.sendSlotMachineCoin(session, 10) }
+        verify(exactly = 1) {
+            response.sendSlotMachineSpinResult(
+                session,
+                match { it.size == 1 && it.single() in 1..16 }
+            )
+        }
+        verify(exactly = 1) { response.sendSlotMachineMessage(session, 11) }
+        coVerify(exactly = 0) { inventory.addRewardsToBagExact(any(), any()) }
     }
 
     @Test
