@@ -44,6 +44,7 @@ class EveResultExecutor(
     private val bitFlagSystem: BitFlagSystem,
     private val roleCountSystem: RoleCountSystem,
     private val dailyProgressSystem: DailyProgressSystem? = null,
+    private val pointSystem: PointSystem? = null,
 ) {
     private companion object {
         val FUNCTION_UNLOCK_MARKER_MISSION_IDS = setOf(11804, 12283, 12285, 12396)
@@ -183,6 +184,83 @@ class EveResultExecutor(
     }
 
     /**
+     * DVT resultClass=7 / pStyle=3 direct Point purchase.
+     *
+     * Scene 12180 encodes value = quantity*100000 + itemId and meanNo = Point price.
+     * The paired conditionClass=7/param19 checks the same real Point balance first.
+     */
+    private suspend fun handleDirectPointPurchase(
+        session: GameSession,
+        purchase: EvePointPurchase
+    ) {
+        val points = pointSystem
+        if (points == null) {
+            logger.warn { "${session.characterName} Direct Point purchase: PointSystem chưa được nối" }
+            return
+        }
+
+        val charId = session.roleId.toLong()
+        val currentPoint = points.getRealPoint(charId)
+        if (currentPoint < purchase.price) {
+            logger.warn {
+                "${session.characterName} Direct Point purchase không đủ Point: " +
+                    "có=$currentPoint cần=${purchase.price} item=${purchase.itemId} x${purchase.quantity}"
+            }
+            return
+        }
+
+        if (!inventorySystem.canAddItemToBag(charId, purchase.itemId, purchase.quantity)) {
+            logger.warn {
+                "${session.characterName} Direct Point purchase thất bại: túi không đủ chỗ " +
+                    "item=${purchase.itemId} x${purchase.quantity}"
+            }
+            return
+        }
+
+        if (!points.subtractRealPoint(charId, purchase.price)) {
+            logger.warn { "${session.characterName} Direct Point purchase: khấu trừ Point thất bại" }
+            return
+        }
+
+        val added = try {
+            inventorySystem.addItemsToBagExact(charId, purchase.itemId, purchase.quantity)
+        } catch (e: Exception) {
+            points.addRealPoint(charId, purchase.price)
+            logger.error(e) {
+                "${session.characterName} Direct Point purchase lỗi khi thêm vật phẩm; đã hoàn Point"
+            }
+            return
+        }
+
+        if (added == null) {
+            points.addRealPoint(charId, purchase.price)
+            logger.warn {
+                "${session.characterName} Direct Point purchase bị race/túi thay đổi; đã hoàn ${purchase.price} Point"
+            }
+            return
+        }
+
+        // Vật phẩm đã được InventorySystem ghi DB; lưu Point ngay để giảm cửa sổ lệch trạng thái khi server dừng đột ngột.
+        try {
+            points.savePoints(charId)
+        } catch (e: Exception) {
+            logger.error(e) {
+                "${session.characterName} Direct Point purchase đã hoàn tất nhưng lưu Point tức thời thất bại; autosave sẽ thử lại"
+            }
+        }
+
+        for ((slot, thing) in added) {
+            responseSender.sendSetBagItem(session, slot, thing, showMsg = true)
+        }
+        val (real, virtual) = points.getPoints(charId)
+        responseSender.sendPointBalance(session, real, virtual)
+        logger.info {
+            "${session.characterName} Direct Point purchase: -${purchase.price} Point, " +
+                "item=${purchase.itemId} x${purchase.quantity}, còn=$real"
+        }
+    }
+
+    /**
      * resultClass=7 (Thao tác người chơi)
      *
      * Thống kê Eve.emg (resultType=7 cls=7):
@@ -200,12 +278,23 @@ class EveResultExecutor(
      * - pStyle=27/29 (Mỗi cái 11 lần type=7): Thông báo hoạt động tìm Ba Đậu Yêu ác quỷ → S:020-027 / S:020-029
      * - pStyle=30/32/35/39: Thông báo hoạt động không có payload → S:020-030/032/035/039
      */
-    private fun handlePlayerResult(session: GameSession, result: EveResult) {
+    private suspend fun handlePlayerResult(session: GameSession, result: EveResult) {
         val charId = session.roleId.toLong()
+
+        val pointPurchase = EveResultClassPolicy.directPointPurchase(
+            parameterStyle = result.parameterStyle,
+            parameter = result.parameter,
+            resultValue = result.resultValue,
+            resultMeanNo = result.resultMeanNo,
+        )
+        if (pointPurchase != null) {
+            handleDirectPointPurchase(session, pointPurchase)
+            return
+        }
 
         // Phòng ngừa lỗi các biến thể có mang giá trị (docs/eve-gap-analysis.md):
         // pStyle=1 + val=Mã số lôi đài (96~99/196~199) = Truyền tống đến lôi đài Vô Giới Đấu Trận, không phải mở bảo khố
-        // pStyle=3 + val=Số lượng×100000+ID Vật phẩm (meanNo=Giá Nguyên Bảo) = Mua trực tiếp bằng Nguyên Bảo qua NPC, không phải mở cửa hàng
+        // pStyle=3 có value nhưng không đúng shape direct purchase đã chứng minh vẫn conservative skip.
         if (result.parameterStyle in setOf(1, 3) && result.resultValue != 0) {
             logger.warn {
                 "${session.characterName} resultClass=7 pStyle=${result.parameterStyle} biến thể mang giá trị chưa được hiện thực: " +

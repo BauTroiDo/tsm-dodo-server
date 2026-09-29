@@ -87,6 +87,22 @@ class EveResultClassPolicyTest : DescribeSpec({
             EveResultClassPolicy.isRepeatableServicePlayerOperation(3, 131171) shouldBe false
         }
 
+        it("resultClass=7 pStyle=3 giải mã đúng direct Point purchase đã chứng minh") {
+            EveResultClassPolicy.directPointPurchase(3, 0, 131171, 10) shouldBe
+                tw.tsm.gamelogic.systems.EvePointPurchase(itemId = 31171, quantity = 1, price = 10)
+            EveResultClassPolicy.directPointPurchase(3, 0, 531171, 50) shouldBe
+                tw.tsm.gamelogic.systems.EvePointPurchase(itemId = 31171, quantity = 5, price = 50)
+            EveResultClassPolicy.directPointPurchase(3, 0, 1031171, 100) shouldBe
+                tw.tsm.gamelogic.systems.EvePointPurchase(itemId = 31171, quantity = 10, price = 100)
+        }
+
+        it("direct Point purchase không được nuốt các pStyle=3 semantics khác") {
+            EveResultClassPolicy.directPointPurchase(3, 1, 1, 0) shouldBe null
+            EveResultClassPolicy.directPointPurchase(3, 2, 5000, 0) shouldBe null
+            EveResultClassPolicy.directPointPurchase(3, 0, 131171, 0) shouldBe null
+            EveResultClassPolicy.directPointPurchase(2, 0, 131171, 10) shouldBe null
+        }
+
         it("resultClass=7 type=0 pStyle=1..5 不應誤觸發特殊 UI") {
             EveResultClassPolicy.playerOperation(0, 1) shouldBe null
             EveResultClassPolicy.playerOperation(0, 2) shouldBe null

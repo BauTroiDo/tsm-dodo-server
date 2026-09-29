@@ -21,6 +21,7 @@ import tw.tsm.gamelogic.systems.InventorySystem
 import tw.tsm.gamelogic.systems.MoneySystem
 import tw.tsm.gamelogic.systems.PetSystem
 import tw.tsm.gamelogic.systems.PlayerStateManager
+import tw.tsm.gamelogic.systems.PointSystem
 import tw.tsm.gamelogic.systems.QuestSystem
 import tw.tsm.gamelogic.systems.RoleCountSystem
 import tw.tsm.gamelogic.systems.SkillSystem
@@ -71,6 +72,9 @@ class EveStateBuilderTest : DescribeSpec({
                 override suspend fun saveAll(characterId: Long, skills: Map<Int, Int>) = Unit
             }
             val characterRepository = mockk<CharacterRepository>(relaxed = true)
+            coEvery { characterRepository.loadPoints(charId) } returns (125 to 7)
+            val pointSystem = PointSystem(characterRepository)
+            pointSystem.loadPoints(charId)
             val skillSystem = SkillSystem(skillRepository, characterRepository, emptyMap())
             skillSystem.load(charId, element = 1, skillPoint = 0)
 
@@ -123,7 +127,8 @@ class EveStateBuilderTest : DescribeSpec({
                 roleCountSystem = roleCountSystem,
                 skillSystem = skillSystem,
                 moneySystem = moneySystem,
-                questRepository = questRepository
+                questRepository = questRepository,
+                pointSystem = pointSystem
             )
 
             val state = builder.buildPlayerState(charId, mapId, session)
@@ -141,6 +146,7 @@ class EveStateBuilderTest : DescribeSpec({
             state.sex shouldBe 2
             state.level shouldBe 30
             state.serverId shouldBe 97
+            state.realPoint shouldBe 125
             state.skillLevels shouldBe mapOf(14001 to 2)
             state.gold shouldBe 250
             state.npcSecondReincarnationStatus shouldBe -1

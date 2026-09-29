@@ -269,6 +269,31 @@ class EveConditionEvaluatorTest : DescribeSpec({
             ) shouldBe false
         }
 
+        it("param=19 dùng Point thực; khóa đúng 6 threshold casino của Eve.emg") {
+            val state = PlayerEventState(realPoint = 50)
+
+            for (threshold in listOf(9, 10, 45, 50)) {
+                EveConditionEvaluator.evaluate(
+                    cond(cls = 7, param = 19, pStyle = 2, ops = 5, value = threshold), state
+                ) shouldBe true
+            }
+            for (threshold in listOf(90, 100)) {
+                EveConditionEvaluator.evaluate(
+                    cond(cls = 7, param = 19, pStyle = 2, ops = 5, value = threshold), state
+                ) shouldBe false
+            }
+        }
+
+        it("param=19 thiếu Point hoặc shape lạ phải bảo thủ false") {
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 19, pStyle = 2, ops = 5, value = 10), PlayerEventState()
+            ) shouldBe false
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 19, pStyle = 1, ops = 5, value = 10),
+                PlayerEventState(realPoint = 100)
+            ) shouldBe false
+        }
+
         it("param=16 subItem=1 代表騎乘中需要下馬") {
             val mounted = PlayerEventState(isMounted = true)
             val notMounted = PlayerEventState(isMounted = false)

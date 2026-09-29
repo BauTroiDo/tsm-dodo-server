@@ -32,7 +32,8 @@ class EveStateBuilder(
     private val roleCountSystem: RoleCountSystem,
     private val skillSystem: SkillSystem,
     private val moneySystem: MoneySystem,
-    private val questRepository: QuestRepository
+    private val questRepository: QuestRepository,
+    private val pointSystem: PointSystem? = null
 ) {
 
     /**
@@ -88,6 +89,7 @@ class EveStateBuilder(
         val bagCapacity = calculateBagCapacity(roleCountValues)
         val skillLevels = skillSystem.getCache(charId)?.skills?.toMap() ?: emptyMap()
         val gold = moneySystem.getGold(charId)
+        val realPoint = pointSystem?.getRealPoint(charId) ?: -1
 
         val eventSession = stateMachine.getSession(charId)
 
@@ -102,6 +104,7 @@ class EveStateBuilder(
             sex = session?.sex ?: 0,
             level = session?.level ?: 0,
             serverId = session?.serverId?.takeIf { it > 0 } ?: -1,
+            realPoint = realPoint,
             rebornCount = playerStateManager.getState(charId)?.turn ?: 0,
             isMounted = (session?.mountNpcId ?: 0) != 0,
             lastSurfaceId = eventSession?.lastSurfaceId ?: -1,

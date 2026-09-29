@@ -21,6 +21,7 @@ private val logger = KotlinLogging.logger {}
  * @param sex            角色性別（conditionClass=7 param=5 用，對應 pStyle=1/2）
  * @param level          角色等級
  * @param serverId       登入所選 Server ID（conditionClass=7 param=8）
+ * @param realPoint      可用實點/Point（Role.GetPoint，conditionClass=7 param=19）
  * @param rebornCount    轉生次數
  * @param isMounted      是否正在騎乘坐騎（conditionClass=7 param=16 用）
  * @param lastSurfaceId  最後顯示的 Surface ID（conditionClass=10 比對用）
@@ -47,6 +48,7 @@ data class PlayerEventState(
     val sex: Int = 0,
     val level: Int = 0,
     val serverId: Int = -1,
+    val realPoint: Int = -1,
     val rebornCount: Int = 0,
     val isMounted: Boolean = false,
     val lastSurfaceId: Int = -1,
@@ -197,6 +199,17 @@ object EveConditionEvaluator {
                             cond.conditionSubItem == 0 &&
                             state.serverId > 0
                         ) state.serverId else null
+                    }
+                    19 -> {
+                        // DVT Point balance condition (Role.GetPoint / ECurrency.Gold).
+                        // Eve.emg 全量僅 6 筆，全部在 12180 主賭場：pStyle=2, subItem=0,
+                        // ops=5，門檻 9/45/90 或 10/50/100；同 chain 的 cls=7 pStyle=3
+                        // 直接購買 31171 x1/5/10，meanNo 即相同 Point 價格。
+                        if (
+                            cond.conditionParameterStyle == 2 &&
+                            cond.conditionSubItem == 0 &&
+                            state.realPoint >= 0
+                        ) state.realPoint else null
                     }
                     16 -> {
                         // 坐騎狀態：Eve 樣本固定 subItem=1 時接「請你下馬」對話。

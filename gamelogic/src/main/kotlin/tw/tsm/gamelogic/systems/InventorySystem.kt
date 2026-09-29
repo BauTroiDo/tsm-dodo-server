@@ -101,6 +101,68 @@ class InventorySystem(
         bags[characterId]?.get(slot)
 
     /**
+     * Kiểm tra toàn bộ số lượng vật phẩm có thể được thêm vào túi mà không bị thêm một phần.
+     *
+     * Dùng trước các giao dịch có khấu trừ tiền/Point để tránh mất tiền khi túi đã đầy.
+     * Tính cả chỗ trống còn lại trong stack hiện có và các ô trống động theo RoleCount.
+     */
+    fun canAddItemToBag(characterId: Long, itemId: Int, totalQty: Int): Boolean {
+        if (totalQty <= 0) return false
+        val bag = bags[characterId] ?: return false
+        val def = itemDefs[itemId] ?: return false
+        val stackLimit = if (def.fitType == 0) ItemConstants.MAX_STACK else 1
+
+        var remaining = totalQty
+        if (stackLimit > 1) {
+            for (thing in bag.values) {
+                if (thing.itemId == itemId && thing.quantity < stackLimit) {
+                    remaining -= (stackLimit - thing.quantity)
+                    if (remaining <= 0) return true
+                }
+            }
+        }
+
+        val capacity = roleCountSystem.getBagCapacity(characterId)
+        var emptySlots = 0
+        for (slot in 0 until capacity) {
+            if (!bag.containsKey(slot)) emptySlots++
+        }
+        val slotsNeeded = (remaining + stackLimit - 1) / stackLimit
+        return emptySlots >= slotsNeeded
+    }
+
+    /**
+     * Thêm chính xác toàn bộ số lượng hoặc hoàn tác trạng thái vật phẩm cùng ID nếu có lỗi/race.
+     */
+    suspend fun addItemsToBagExact(
+        characterId: Long,
+        itemId: Int,
+        totalQty: Int
+    ): List<Pair<Int, ThingData>>? {
+        if (!canAddItemToBag(characterId, itemId, totalQty)) return null
+        val bag = bags[characterId] ?: return null
+        val before = bag.filterValues { it.itemId == itemId }.toMap()
+        val beforeQty = before.values.sumOf { it.quantity }
+
+        val results = addItemsToBag(characterId, itemId, totalQty)
+        val afterQty = bag.values.filter { it.itemId == itemId }.sumOf { it.quantity }
+        if (afterQty - beforeQty == totalQty) return results
+
+        // Khôi phục đúng các slot trước giao dịch; trường hợp này chỉ xảy ra nếu trạng thái
+        // túi thay đổi giữa bước kiểm tra dung lượng và bước thêm.
+        val currentSlots = bag.entries.filter { it.value.itemId == itemId }.map { it.key }.toSet()
+        for (slot in currentSlots union before.keys) {
+            val original = before[slot]
+            if (original == null) bag.remove(slot) else bag[slot] = original
+            inventoryRepo.saveItem(characterId, EThings.BAG, slot, original)
+        }
+        logger.warn {
+            "Hoàn tác addItemsToBagExact: characterId=$characterId itemId=$itemId qty=$totalQty"
+        }
+        return null
+    }
+
+    /**
      * Có đang sở hữu đạo cụ nhị chuyển (chuyển sinh lần 2) của võ tướng chỉ định hay không
      *
      * Tương ứng với Lua `UINpcTurn.CheckTurn(currentTurn=2)`:

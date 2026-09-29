@@ -63,6 +63,12 @@ data class EveMoneyResultOperation(
     val amount: Int
 )
 
+data class EvePointPurchase(
+    val itemId: Int,
+    val quantity: Int,
+    val price: Int
+)
+
 object EveResultClassPolicy {
     fun isExplicitNoOp(resultClass: Int, parameterStyle: Int): Boolean =
         resultClass == 10 && parameterStyle in setOf(1, 2)
@@ -84,6 +90,28 @@ object EveResultClassPolicy {
             2, 4, 5 -> true
             else -> false
         }
+
+    /**
+     * DVT direct Point purchase encoded in resultClass=7 / pStyle=3.
+     *
+     * Proven Eve.emg samples are the six 主賭場 branches on scene 12180:
+     * value = quantity * 100000 + itemId, parameter=0, meanNo=Point price.
+     * Other pStyle=3 samples use different semantics and must not be decoded here.
+     */
+    fun directPointPurchase(
+        parameterStyle: Int,
+        parameter: Int,
+        resultValue: Int,
+        resultMeanNo: Int
+    ): EvePointPurchase? {
+        if (parameterStyle != 3 || parameter != 0 || resultValue < 100000 || resultMeanNo <= 0) {
+            return null
+        }
+        val quantity = resultValue / 100000
+        val itemId = resultValue % 100000
+        if (quantity <= 0 || itemId <= 0) return null
+        return EvePointPurchase(itemId = itemId, quantity = quantity, price = resultMeanNo)
+    }
 
     fun itemDelta(parameterStyle: Int, resultValue: Int): Int? =
         when (parameterStyle) {
