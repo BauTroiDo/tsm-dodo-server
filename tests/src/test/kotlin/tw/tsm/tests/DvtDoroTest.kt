@@ -36,14 +36,22 @@ class DvtDoroTest {
 
     private val goods by lazy {
         GoodsSaleDatLoader.load(
-            Files.readAllBytes(existing("File.dat", "Data", "GS_C.dat"))
+            Files.readAllBytes(existing("File.dat", "Data-ios", "IOS_GS_C.dat"))
         )
     }
 
     private val bliss by lazy {
         BlissBagDatLoader.load(
-            Files.readAllBytes(existing("File.dat", "Data", "BlissBag_C.dat"))
+            Files.readAllBytes(existing("File.dat", "Data-ios", "IOS_BlissBag_C.dat"))
         )
+    }
+
+    @Test
+    fun `Mobile DVT IOS_GS exposes all 32 Doro packages across seven tabs`() {
+        val doro = goods.filter { it.storeKind == 5 }
+        assertEquals(32, doro.size)
+        assertEquals(setOf(1, 2, 3, 4, 5, 6, 7), doro.map { it.subKind }.toSet())
+        assertTrue(doro.all { it.open && it.bitFunction == 3 })
     }
 
     @Test

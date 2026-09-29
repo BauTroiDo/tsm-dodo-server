@@ -617,14 +617,21 @@ Regression:
 - end-to-end C66-1 Limited x1: -100 Point -> item34625 -> packet order bag/Point/S23-150/S66-3.
 - `gradlew clean test build`: **BUILD SUCCESSFUL**.
 
-Runtime cần test sau deploy/restart:
-1. server tạo bảng `character_currencies` tự động;
-2. login UI Hồn vẫn mở bình thường;
-3. dùng `/addpoint 1000` nếu thiếu Point;
-4. quay Limited 1 lần (100): Point -100, UIDoro mở 1 egg, bag nhận đúng 1 hộp reward;
-5. quay Limited 10 lần (900): Point -900, UIDoro có 10 egg/result, bag nhận đủ tổng 10 reward;
-6. đóng/login lại: Point và bag reward vẫn còn;
-7. vé Soul/ColorSoul sẽ hiển thị từ S35-50 và persist; cần nguồn/add currency riêng để test payment bằng vé nếu account hiện có 0.
+Runtime vòng 1 sau deploy `2c13c9f/a831464`: FAIL trước bước payment.
+- client gửi C66-1 đúng, ví dụ 34623 giá100 show1 index1; 34624 giá900 index2; 32992 giá1 index3;
+- server log báo `Doro request không khớp GS_C`, nên UI hiển thị chung như "không đủ tiền";
+- root cause: production `GAMEDATA_PATH=cdn/mirror/tsr/2.4.76/ResourcesPacked`; server đã load `Data/GS_C.dat` của CDN, file này chỉ có 8 Doro và SHA256 `ae7e31...`;
+- Mobile Lua DVT thực tế load `IOS_GS_C.dat` + `IOS_BlissBag_C.dat`; bộ `File.dat/Data-ios` có 32 Doro/7 tab và khớp packet client đang gửi.
+- fix mới: Mall/Doro ưu tiên `Data-ios/IOS_GS_C.dat` + `IOS_BlissBag_C.dat`; giữ `BlissBag_C.dat` cũ riêng cho logic mở túi để tránh regression subsystem khác.
+- regression khóa 32 Doro packages / 7 tabs từ IOS_GS và targeted + full `clean test build` đều PASS.
+
+Runtime cần test lại sau deploy/restart bản fix nguồn IOS:
+1. startup log phải có `IOS_GS ... Doro=32`;
+2. quay Limited 1 lần (100): Point -100, UIDoro mở 1 egg, bag nhận reward;
+3. quay Limited 10 lần (900): Point -900, UIDoro có 10 egg/result, bag nhận đủ;
+4. thử thêm tab Võ tướng bằng vàng/Point để xác nhận generic currency1/3;
+5. relog xác nhận Point/reward vẫn giữ;
+6. special currency 4..16 cần số dư server thật để test payment bằng vé.
 
 ### Gap lớn khác đã phát hiện: mainKind 36 — UIMessageboard
 

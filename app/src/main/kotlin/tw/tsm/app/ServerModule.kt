@@ -249,7 +249,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { MoneySystem(get()) }
     single { PointSystem(get()) }
     single { PlayerCurrencySystem(get<CharacterCurrencyRepository>()) }
-    single { DoroSystem(get<GameDataManager>().goodsSaleDefs, get<GameDataManager>().blissBagDefs) }
+    single { DoroSystem(get<GameDataManager>().goodsSaleDefs, get<GameDataManager>().doroBlissBagDefs) }
     single { GroundItemManager() }
     single { PlayerStateManager() }
     single { ItemUseProcessor(get(), get<PetSystem>(), get<GameDataManager>().itemDefs, get<GameDataManager>().blissBagDefs) }

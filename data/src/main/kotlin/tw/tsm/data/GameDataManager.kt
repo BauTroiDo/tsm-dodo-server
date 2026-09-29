@@ -63,8 +63,12 @@ class GameDataManager(
     var blissBagDefs: Map<Int, BlissBagDef> = emptyMap()
         private set
 
-    /** Mall/Doro goods from GS_C.dat in file order. */
+    /** Mall/Doro goods from the Mobile DVT IOS_GS_C.dat in file order. */
     var goodsSaleDefs: List<GoodsSaleDef> = emptyList()
+        private set
+
+    /** Doro reward pools from Mobile DVT IOS_BlissBag_C.dat. */
+    var doroBlissBagDefs: Map<Int, BlissBagDef> = emptyMap()
         private set
 
     /** 地圖地質資料（key = mapId, value = geolBaseAtt）— 用於戰鬥背景 */
@@ -222,18 +226,50 @@ class GameDataManager(
             }
         }
 
-        // BlissBag（福袋獎勵定義）
+        // BlissBag（一般開袋邏輯沿用目前 server data）
         loadFile(dataDir, "BlissBag_C.dat") { bytes ->
             blissBagDefs = BlissBagDatLoader.load(bytes)
             logger.info { "BlissBag 載入完成：${blissBagDefs.size} 筆福袋定義" }
         }
 
-        // GS_C（商城 / 轉蛋商品定義）
-        loadFile(dataDir, "GS_C.dat") { bytes ->
-            goodsSaleDefs = GoodsSaleDatLoader.load(bytes)
-            logger.info {
-                "GS 載入完成：${goodsSaleDefs.size} 筆，其中 Doro=${goodsSaleDefs.count { it.storeKind == 5 }}"
+        // Mall/Doro 必須跟 Mobile DVT client 同一 bộ data:
+        // Lua DataManager.OnLoadGoodsSaleData / OnLoadBlissBagData 讀 IOS_*.
+        // Runtime basePath 的 Data/GS_C.dat có thể là bộ CDN khác (production 2.4.76 chỉ có 8 Doro),
+        // trong khi client đang gửi ID theo IOS_GS_C.dat (32 Doro). Ưu tiên Data-ios.
+        val iosGs = dataIosDir.resolve("IOS_GS_C.dat")
+        val iosBliss = dataIosDir.resolve("IOS_BlissBag_C.dat")
+
+        if (Files.exists(iosGs)) {
+            try {
+                goodsSaleDefs = GoodsSaleDatLoader.load(Files.readAllBytes(iosGs))
+                logger.info {
+                    "IOS_GS 載入完成：${goodsSaleDefs.size} 筆，其中 Doro=${goodsSaleDefs.count { it.storeKind == 5 }} source=$iosGs"
+                }
+            } catch (e: Exception) {
+                logger.error(e) { "載入 IOS_GS_C.dat 失敗：$iosGs" }
             }
+        } else {
+            loadFile(dataDir, "GS_C.dat") { bytes ->
+                goodsSaleDefs = GoodsSaleDatLoader.load(bytes)
+                logger.warn {
+                    "IOS_GS_C.dat 不存在，fallback GS_C.dat：${goodsSaleDefs.size} 筆，其中 Doro=${goodsSaleDefs.count { it.storeKind == 5 }}"
+                }
+            }
+        }
+
+        if (Files.exists(iosBliss)) {
+            try {
+                doroBlissBagDefs = BlissBagDatLoader.load(Files.readAllBytes(iosBliss))
+                logger.info {
+                    "IOS_BlissBag 載入完成：${doroBlissBagDefs.size} 筆 Doro pool source=$iosBliss"
+                }
+            } catch (e: Exception) {
+                logger.error(e) { "載入 IOS_BlissBag_C.dat 失敗：$iosBliss" }
+            }
+        }
+        if (doroBlissBagDefs.isEmpty()) {
+            doroBlissBagDefs = blissBagDefs
+            logger.warn { "Doro fallback dùng BlissBag_C.dat vì IOS_BlissBag_C.dat không khả dụng" }
         }
 
         // Ground.mmg（地圖地質資料，從 CompreseData/ 目錄讀取）
