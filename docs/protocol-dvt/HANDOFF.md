@@ -5,7 +5,7 @@
 > Cập nhật: 2026-09-29
 > Repo: `BauTroiDo/tsm-dodo-server`
 > Branch: `main`
-> Code checkpoint gần nhất: `36d3bb0`
+> Code checkpoint gần nhất: `97e5ffa`
 
 ## 1. Nguyên tắc tối cao
 
@@ -386,10 +386,40 @@ Reward authoritative:
 - server trả S:091-003 success.
 - Full `gradlew clean test build`: **BUILD SUCCESSFUL**.
 
-Runtime `36d3bb0`: **PENDING**. Cần restart production/login lại để S85-1 seed đủ 190..195, rồi kiểm tra:
-1. không còn `New Text`/ô trắng;
-2. skill/stat progress tăng đúng;
-3. khi đủ 3 ô một hàng/cột, icon reward chuyển trạng thái và item vào bag sau claim.
+Runtime `36d3bb0`: **PASS**.
+- người dùng xác nhận UI Daily đã hết lỗi `New Text`/ô trắng;
+- progress/condition đã hoạt động;
+- reward claim hoạt động;
+- còn 3 mission phụ thuộc môi trường server test/multi-user/subsystem nên chưa thể runtime-test riêng; đây là UNTESTABLE trong môi trường hiện tại, không tính FAIL của Jiugongge.
+
+#### M. ActivityModel C:124-004 timed refresh — chờ runtime
+Commit:
+- `97e5ffa Handle DVT ActivityModel refresh`
+
+Triệu chứng production:
+- log lặp warning `Chưa đăng ký mainKind=124 subKind=4 (0 bytes)`.
+
+Bằng chứng Lua DVT:
+- `Game.lua` gọi `UIActivityModel.UpdateRedDot()` sau khi vào game;
+- `UIActivityModel.UpdateRedDot()` tự đăng timer 180 giây và gửi `Network.Send(124, 4)` không payload;
+- `S:124-004` có wire:
+  `count(UInt32) + << missionId(UInt32) + finishCount(UInt32) >>`;
+- client xử lý từng record bằng `ActivityModel.GetFinishCount(data)`;
+- `ActivityModel.ActivityData` và `PlayerAwardCount` khởi tạo rỗng và chỉ được populate khi server gửi dynamic ActivityModel definitions qua `S:124-000`.
+
+Current server chưa implement/publish `S:124-000` hay subsystem ActivityModel động. Vì vậy không được invent mission/progress. Compatibility semantics hiện tại:
+- nhận đúng `C:124-004` payload rỗng;
+- trả `S:124-004` với `count=0`;
+- payload bất ngờ bị reject;
+- các subKind 124 khác vẫn giữ unsupported/warn cho tới khi audit riêng.
+
+Đã sửa:
+- thêm `Opcodes.ACTIVITY_MODEL = 124`;
+- thêm/register `ActivityModelHandler`;
+- thêm regression `DvtActivityModelWireTest` khóa packet `124,4,0 + UInt32(0)`;
+- full `gradlew clean test build`: **BUILD SUCCESSFUL**.
+
+Runtime `97e5ffa`: **PENDING**. Sau deploy/restart cần xác nhận warning 124:4 không còn lặp và không phát sinh lỗi client.
 
 ## 6. EXP semantics hiện tại
 
@@ -426,14 +456,20 @@ Theo `DungeonCriteriaData.CompareResult`:
 
 ## 8. Điểm audit đang dở / NEXT
 
-### Ưu tiên hiện tại: runtime Daily `36d3bb0`, sau đó `mainKind=124 subKind=4`
+### Ưu tiên hiện tại: runtime `mainKind=124 subKind=4`
 
-Người dùng yêu cầu thứ tự:
-1. restart/login và xác nhận Daily `36d3bb0` hết `New Text`, progress 190/191 đúng và claim reward thực sự vào bag;
-2. khi Daily PASS, audit warning production `mainKind=124 subKind=4 (0 bytes)` bằng Lua/client gốc trước khi implement;
-3. sau đó mới quay lại EVE param8.
+Daily/Jiugongge đã runtime PASS.
 
-Không invent handler 124:4 chỉ từ warning; phải tìm protocolTable/client callsite/data semantics trước.
+`97e5ffa` đã implement compatibility handler dựa trên Lua DVT authoritative:
+- C:124-004 là refresh request rỗng mỗi 180 giây;
+- current server chưa publish S:124-000 nên response hiện tại là S:124-004 count=0;
+- full build/test PASS.
+
+Việc kế tiếp:
+1. deploy/restart production với `97e5ffa`;
+2. xác nhận warning `mainKind=124 subKind=4 (0 bytes)` biến mất;
+3. kiểm tra client không có regression;
+4. nếu PASS thì chuyển sang EVE param8.
 
 ### Sau đó: EVE `conditionClass=7, conditionParameter=8`
 
@@ -488,7 +524,8 @@ Sau lỗi item wire đã PASS, còn nên audit:
 ## 10. Recent commits để chat mới định vị nhanh
 
 ```text
-36d3bb0 Fix DVT daily special RoleCount wire         — runtime PENDING
+97e5ffa Handle DVT ActivityModel refresh              — runtime PENDING
+36d3bb0 Fix DVT daily special RoleCount wire         — runtime PASS
 5c686ed Fix DVT daily mission progress tracking      — gameplay bridge working; superseded by 36d3bb0 for UI wire
 1706f00 Fix DVT daily runtime window                 — runtime timing fixed; feature still needed progress bridge
 32b8b6f Fix pet SP sync and EXP chat                 — runtime PASS
@@ -504,11 +541,11 @@ fe7633c Fix DVT NFT item wire alignment              — runtime PASS
 
 Chat mới chỉ cần đọc file này, sau đó:
 1. kiểm tra HEAD GitHub hiện tại;
-2. ưu tiên xác nhận runtime `36d3bb0`: login lại, mở Hằng ngày, kiểm tra đủ 9 ô không còn `New Text`;
-3. test RoleCount190/191 bằng tiêu skill/stat point và test reward sau khi hoàn thành trọn một hàng/cột;
-4. mission `Gia nhập quân đoàn` (flag1497) vẫn chờ subsystem Organization; không tự invent;
-5. khi Daily PASS, audit **mainKind=124 subKind=4** theo Lua/client gốc như người dùng yêu cầu;
-6. sau 124:4 mới quay lại **EVE conditionClass=7 / param=8**;
-7. không yêu cầu người dùng kể lại lịch sử và không mở lại các phần đã runtime PASS nếu không có regression mới.
+2. Daily/Jiugongge `36d3bb0` đã runtime PASS; không mở lại nếu không có regression mới;
+3. ưu tiên deploy/restart và runtime test `97e5ffa` cho **mainKind=124 subKind=4**;
+4. xác nhận production không còn warning 124:4 lặp mỗi 180 giây và client không phát sinh lỗi;
+5. nếu PASS, chuyển sang **EVE conditionClass=7 / param=8**;
+6. mission Daily phụ thuộc environment/subsystem chưa test riêng vẫn là UNTESTABLE, không tự invent;
+7. không yêu cầu người dùng kể lại lịch sử.
 
-**Điểm tiếp tục hiện tại: code Daily `36d3bb0` đã build/test PASS, đang chờ deploy/restart + runtime; sau Daily là mainKind124:4.**
+**Điểm tiếp tục hiện tại: `97e5ffa` ActivityModel C124-4 đã build/test PASS, đang chờ production runtime; sau đó là EVE conditionClass=7 / param=8.**
