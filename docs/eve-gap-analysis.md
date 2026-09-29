@@ -25,7 +25,7 @@
 
 ### conditionClass=7（屬性/狀態）未支援的 param
 
-目前支援 param=0(等級)/2(背包空間)/3(裝備)/5(性別)/6(武將位置)/8(Server ID)/16(騎乘)。未支援：
+目前支援 param=0(等級)/2(背包空間)/3(裝備)/5(性別)/6(武將位置)/8(Server ID)/16(騎乘)/19(實 Point/Role.GetPoint)。未支援：
 
 | param | 筆數 | param | 筆數 |
 |------:|-----:|------:|-----:|
@@ -34,13 +34,14 @@
 | 7 | 54 | 12 | 97 |
 | 14 | 32 | 18（subItem 連動，領養小孩用） | 38 |
 | 9 | 41 | 15 | 20 |
-| 19 | 6 |  |  |
 
 > **param=8 已鑑定：Server ID（468 筆）**。
 > authoritative Lua：登入封包把 `aSID` 寫入 `Network.serverId`；`Migrant.lua` 定義銀河 Server 為 90..99，且 serverId>100 時以 `%100` 判斷，並明確定義 54901..54904 為 Arena scene。
 > Eve.emg 全量分佈與此完全吻合：`val=96~99/196~199` 集中於 54901..54904；另有 `val=1/2/100~104` 與 `ops=1/2/5` 的 Server 分流條件。
 > Server 已直接保留 login request 的 `session.serverId`，因此 conditionClass=7/param=8 讀此值並套用既有 DVT comparison operators；未知 pStyle/subItem 仍保守 false。
-> 其餘 param（1/4/7/9/10/11/12/14/15/19）語意未明；評估時保守回 `false`，對應分支走不到。
+>
+> **param=19 已鑑定：可用實 Point（`Role.GetPoint()`，6 筆）**。全量 Eve.emg 僅出現在 scene 12180 主賭場，固定 `pStyle=2/subItem=0/ops=5`；serverId=100 分支門檻 9/45/90，普通分支門檻 10/50/100。每個門檻都與同 chain 的 resultClass=7/pStyle=3 直購結果成對：`131171/531171/1031171` 解碼為 item31171 ×1/5/10，`resultMeanNo` 恰為相同 Point 價格。Lua `Role.GetPoint()` 是 real Point，與 lockPoint 分離；`UISlotMachine` 對 item31171 亦直接以 `Role.GetPoint()` + `ECurrency.Gold` 購買。Kotlin 因此讀 `PointSystem.getRealPoint()`；未知 shape 仍 false。
+> 其餘 param（1/4/7/9/10/11/12/14/15）語意未明；評估時保守回 `false`，對應分支走不到。
 
 ## 3. 結果面缺口（resultClass，僅 type=0/7 需伺服器執行）
 
@@ -76,9 +77,8 @@
 
 - **pStyle=1 + val≠0**：val=擂臺編號（99/98/97、199/198/197）= 無界鬥陣擂臺傳送，
   不是「開啟寶庫/紀錄點」。場景 12003 eve=31/35 無界傳送師，選項選擂臺 1/2/3。
-- **pStyle=3 + val≠0**：val=數量×100000+物品ID、meanNo=元寶價 = NPC 元寶直購，
-  不是「開啟賣場」。例：12180 元宵 NPC 賣燈籠 31171×1/5/10 = 9/45/90 元寶（Talk 48728~48730 歡樂幣）。
-- 伺服器已在 handlePlayerResult 對 pStyle=1/3 且 val≠0 加防呆（warn + 跳過），待各自系統實作。
+- **pStyle=3 + val≠0**：已確認的直購 shape 為 `parameter=0`、`val=數量×100000+物品ID`、`meanNo=實 Point 價格`。scene12180 的六筆為 31171×1/5/10，server100 價 9/45/90、普通 server 價 10/50/100。伺服器已實作此精確 shape：檢查/扣 `PointSystem.realPoint`、完整容量檢查後加 item、同步 S35-5 Point；其餘 pStyle=3 帶值 shape 仍 conservative skip。
+- **pStyle=1 + val≠0** 仍只做防呆 skip，無界鬥陣傳送 subsystem 尚未實作。
 
 ## 5. 重要結論：武將養成線的 Eve 入口
 
@@ -106,7 +106,7 @@ type=9 量大（cls=3 pStyle=1/2 為主），多為 NPC 視覺輔助操作的變
 ## 7. 建議實作優先序
 
 1. ~~resultClass=14（RoleCount 增減）~~ — **已實作**（EveResultExecutor.handleRoleCountResult）
-2. **conditionClass=7 param=8** — 468 筆條件，先逆向確認語意（影響大量事件分支正確性）
+2. ~~conditionClass=7 param=8~~ — **已鑑定 Server ID + runtime PASS**；~~param19~~ — **已鑑定 real Point + build/test PASS，待 runtime**
 3. **resultClass=13（活動獎勵包）** — 89 筆，語意已定但獎勵編號表未定位；做活動系統時優先定位（候選：伺服器端遺失資料，需從 PC 版或封包樣本逆推）
 4. **留言板（pStyle=7/8 + mainKind=36-001~007）** — 完整小系統，社群功能
 5. **結婚禮金（pStyle=14 + S:045-005）** — 結婚系統（mainKind=45）的一環，宜隨結婚系統一起做

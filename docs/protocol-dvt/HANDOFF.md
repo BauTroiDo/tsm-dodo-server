@@ -5,7 +5,7 @@
 > Cập nhật: 2026-09-29
 > Repo: `BauTroiDo/tsm-dodo-server`
 > Branch: `main`
-> Code checkpoint gần nhất: `7e42afd`
+> Code checkpoint gần nhất: `faf0a81`
 
 ## 1. Nguyên tắc tối cao
 
@@ -461,43 +461,54 @@ Theo `DungeonCriteriaData.CompareResult`:
 
 ## 8. Điểm audit đang dở / NEXT
 
-### Ưu tiên hiện tại: runtime EVE `conditionClass=7, conditionParameter=8`
+### Ưu tiên hiện tại: runtime EVE `conditionClass=7, conditionParameter=19` + direct Point purchase
 
-Commit:
-- `7e42afd Restore DVT Eve server-id condition` — build/test PASS, runtime PENDING.
+Commit code:
+- `faf0a81 Restore DVT Eve Point purchase semantics` — **build/test PASS, runtime PENDING**.
 
-Kết luận authoritative:
-- `conditionClass=7 / conditionParameter=8` = **Server ID**, không phải arena participant/arena index.
-- Lua login đọc `aSID` và gán vào `Network.serverId`.
-- Kotlin LoginHandler cũng đã giữ đúng giá trị này trong `session.serverId`.
-- Lua `Migrant.lua` định nghĩa galaxy server `90..99`; nếu `serverId > 100` thì lấy `serverId % 100`.
-- `Migrant.IsArenaScene()` định nghĩa chính xác map `54901..54904`.
-- Scan toàn bộ Eve.emg có đúng **468** condition class7/param8:
-  - val 96/97/98/99 và 196/197/198/199 tập trung ở 54901..54904;
-  - ngoài ra có val 1/2/100/101/102/104 ở 12003/12180/12244;
-  - tất cả sample đều pStyle=1, subItem=0; ops chỉ 1/2/5.
-- Pattern này khớp Server ID và các mốc phân luồng server; giả thuyết cũ ở local commit `387373f` đã bị thay thế.
+Param8 trước đó đã **runtime PASS**:
+- `conditionClass=7 / param=8` = Server ID;
+- runtime tại map12180/NPC Chủ Sòng Bạc: serverId=1 làm eve2 `1 == 100 -> false`, eve17 `1 < 100 -> true`, rồi dispatch đúng nhánh event17.
 
-Đã sửa:
-- thêm `serverId` vào `PlayerEventState`;
-- `EveStateBuilder` lấy trực tiếp `session.serverId`;
-- class7/param8 chỉ nhận shape đã quan sát `pStyle=1/subItem=0`, nếu thiếu serverId/shape lạ thì conservative false;
-- comparison dùng operator semantics DVT đã audit: 1==, 2<, 3<=, 4>, 5>=, 6!=, Eve extension 0==;
-- regression tests khóa các shape thật: serverId 1 <100, serverId100 ==100, galaxy 97/197 với ops5 threshold;
-- `gradlew clean test build`: **BUILD SUCCESSFUL**.
+Kết luận authoritative cho param19:
+- toàn bộ Eve.emg chỉ có **6** condition `class=7,param=19`;
+- tất cả ở scene `12180`, cố định `pStyle=2/subItem=0/ops=5`;
+- eve2 (serverId=100): ngưỡng `9/45/90`;
+- eve17 (serverId<100): ngưỡng `10/50/100`;
+- các ngưỡng này ghép trực tiếp với resultClass7/pStyle3:
+  - `131171` / price 9 hoặc 10 → item `31171 x1`;
+  - `531171` / price 45 hoặc 50 → item `31171 x5`;
+  - `1031171` / price 90 hoặc 100 → item `31171 x10`.
+- encoding đã chứng minh: `resultValue = quantity * 100000 + itemId`, `resultMeanNo = Point price`.
+- Lua `Role.GetPoint()` trả **real Point**; lockPoint là biến riêng.
+- `UISlotMachine.lua` dùng chính item `31171`; khi thiếu coin nó tính số mua từ `Role.GetPoint()`, currency `ECurrency.Gold`, rồi gọi `UISell.Launch(11)`.
+=> `param19` = **real Point / Role.GetPoint**, không phải gold coin, locked Point hay casino score riêng.
 
-Runtime `7e42afd`: **PASS**.
-- production HEAD `bd4cf0f` (chứa code `7e42afd`);
-- process mới chạy lúc 07:46:17;
-- client login thành công lúc 07:47:02 với `serverId=1`, đúng giá trị mà evaluator sẽ dùng;
-- không có crash/exception/regression do patch sau restart;
-- runtime test thật tại map `12180`, NPC `Chủ Sòng Bạc` (`npcId=16030`, placement 1, close=0, events `[2,17]`);
-- với `serverId=1`: `eveNo=2` kiểm tra `actual=1 ops=1 val=100 -> false`; `eveNo=17` kiểm tra `actual=1 ops=2 val=100 -> true`;
-- `EveFlowController` sau đó dispatch result của nhánh event17;
-- không có exception/regression.
+Đã sửa trong `faf0a81`:
+- thêm `PlayerEventState.realPoint`;
+- `EveStateBuilder` lấy `PointSystem.getRealPoint()`;
+- param19 chỉ chấp nhận đúng shape đã thấy `pStyle=2/subItem=0`, shape khác vẫn conservative false;
+- thêm decoder hẹp cho direct purchase: chỉ `pStyle=3, parameter=0, value>=100000, meanNo>0`;
+- direct purchase kiểm tra real Point, kiểm tra đủ chỗ toàn bộ số item, trừ Point, thêm item chính xác, rollback Point nếu thêm item thất bại, lưu Point ngay và sync balance client;
+- các pStyle3 mang value khác vẫn giữ conservative skip;
+- thêm `InventorySystem.canAddItemToBag` + `addItemsToBagExact` để tránh mất Point khi túi đầy/partial add;
+- regression khóa cả 6 ngưỡng 9/10/45/50/90/100 và ba encoding item31171;
+- end-to-end test khóa giao dịch `10 Point -> item31171 x1`, thiếu Point thì không trừ/không trao item;
+- full `gradlew clean test build`: **BUILD SUCCESSFUL**.
 
-Ghi chú: NPC 15275/map12003 trước đó không phù hợp để test vì placement16 có `close=1`; Lua `MapNpcManager.OnEnterScene()` cũng không tạo Role.mapNpcs cho NPC close=true, nên không phải regression server.
-Arena 54901..54904 phụ thuộc multi-server có thể để UNTESTABLE trên server offline.
+Runtime cần test sau deploy/restart:
+1. production serverId hiện là `1`, nên dùng nhánh eve17 với giá `10/50/100`;
+2. nhân vật cần ít nhất 10 real Point;
+3. map `12180`, NPC **Chủ Sòng Bạc** (`npcId=16030`, placement1);
+4. chọn đổi/mua **1 tiền Thôn thực vui vẻ**;
+5. kỳ vọng log: `class=7 param=19 actual=<point> ops=5 val=10 -> true`;
+6. kỳ vọng executor: `Direct Point purchase: -10 Point, item=31171 x1`;
+7. client giảm 10 Point, túi nhận item31171 x1 và Talk48728 hiển thị.
+Server100 giá 9/45/90 không cần giả lập trên server offline hiện tại.
+
+Ghi chú param8 hidden NPC:
+- NPC15275/map12003 placement16 có `close=1`; Lua client cũng không tạo NPC close=true khi vào scene, nên không dùng nó làm runtime test.
+- Runtime param8 đã được chốt bằng NPC Chủ Sòng Bạc close=0, không cần mở lại.
 
 ### Gap lớn khác đã phát hiện: mainKind 36 — UIMessageboard
 
@@ -536,6 +547,8 @@ Sau lỗi item wire đã PASS, còn nên audit:
 ## 10. Recent commits để chat mới định vị nhanh
 
 ```text
+faf0a81 Restore DVT Eve Point purchase semantics      — build/test PASS; runtime PENDING
+b196786 Mark DVT server-id Eve condition runtime pass — docs checkpoint
 7e42afd Restore DVT Eve server-id condition           — runtime PASS
 97e5ffa Handle DVT ActivityModel refresh              — runtime PASS
 36d3bb0 Fix DVT daily special RoleCount wire         — runtime PASS
@@ -554,11 +567,11 @@ fe7633c Fix DVT NFT item wire alignment              — runtime PASS
 
 Chat mới chỉ cần đọc file này, sau đó:
 1. kiểm tra HEAD GitHub hiện tại;
-2. Daily/Jiugongge và ActivityModel C124-4 đã runtime PASS; không mở lại nếu không có regression mới;
-3. ưu tiên deploy/restart và runtime test `7e42afd` cho **EVE conditionClass=7 / param=8 = Server ID**;
-4. nếu event 12003/12180/12244 hoạt động đúng thì ghi runtime PASS; arena 54901..54904 phụ thuộc multi-server có thể để UNTESTABLE trên server offline;
-5. sau param8, tiếp tục gap kế tiếp theo user/roadmap (hiện nổi bật: mainKind36 UIMessageboard hoặc EVE gap khác);
+2. Daily/Jiugongge, ActivityModel C124-4 và EVE param8 đã runtime PASS; không mở lại nếu không có regression mới;
+3. ưu tiên deploy/restart và runtime test `faf0a81` cho **EVE conditionClass=7 / param19 = real Point + direct Point purchase**;
+4. test tại map12180/NPC Chủ Sòng Bạc trên serverId=1: đủ >=10 Point, chọn đổi 1 tiền Thôn thực vui vẻ; xác nhận Point -10 và item31171 x1;
+5. nếu PASS, ghi runtime PASS rồi tiếp tục gap kế tiếp (mainKind36 UIMessageboard hoặc EVE gap tiếp theo);
 6. mission Daily phụ thuộc environment/subsystem chưa test riêng vẫn là UNTESTABLE, không tự invent;
 7. không yêu cầu người dùng kể lại lịch sử.
 
-**Điểm tiếp tục hiện tại: `7e42afd` EVE class7/param8 đã xác định là Server ID và build/test PASS, đang chờ deploy/restart + runtime.**
+**Điểm tiếp tục hiện tại: `faf0a81` param19/direct Point purchase đã build/test PASS, đang chờ deploy/restart + runtime tại Chủ Sòng Bạc.**
