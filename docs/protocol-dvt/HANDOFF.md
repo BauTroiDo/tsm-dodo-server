@@ -505,14 +505,21 @@ Runtime checkpoint trước `d66bed7`:
 - regression mới khóa đúng eve17: serverId=1 + realPoint>=10 vẫn phải chọn cond1, không được nhảy Talk48728;
 - full `gradlew clean test build`: **BUILD SUCCESSFUL**.
 
-Runtime cần test sau deploy/restart `d66bed7`:
-1. production serverId hiện là `1`, nên dùng nhánh eve17;
-2. nhân vật cần ít nhất 10 real Point;
-3. map `12180`, NPC **Chủ Sòng Bạc** (`npcId=16030`, placement1);
-4. chọn đổi/mua **1 tiền Thôn thực vui vẻ**;
-5. kỳ vọng log: `class=7 param=19 actual=<point> ops=5 val=10 -> true`;
-6. kỳ vọng executor: `Direct Point purchase: -10 Point, item=31171 x1`;
-7. client giảm 10 Point, túi nhận item31171 x1 và Talk48728 hiển thị.
+Runtime sau deploy/restart `d66bed7`: **PASS phần resolver / hội thoại Chủ Sòng Bạc**.
+- production serverId=`1`, char31 ở map12180;
+- click NPC placement1 vào đúng `eve17 -> cond1`, gửi Talk22363 rồi mở Surface1; **không còn nhảy thẳng Talk48728**;
+- log xác nhận `param19 actual=10` có thể match nhánh hậu giao dịch, nhưng data-order tie-break giữ đúng cond1 ban đầu;
+- user sau đó bấm `code=30` và `code=31`; server resolve đúng conditionClass10 nhưng gặp `resultType=10 / class7 / param=2 / pStyle=1|2` và hiện chỉ silent-skip.
+
+Audit tiếp từ DVT data/client:
+- Surface1 chính xác là menu `Tài xỉu` (code30) / `18 đậu` (code31) + nút đóng; không phải menu đổi tiền;
+- Surface23 là menu đổi `1/5/10 tiền Thôn Thực`, nhưng trong map12180 chỉ eve17 dẫn tới Surface23 bằng condition `surface1/code32`; Surface1 thực tế chỉ có 2 option nên nhánh này không có đường chọn qua UI hiện tại;
+- toàn Eve.emg có 115 mẫu `resultType=10`, tất cả `resultClass=7`; đây là server-side special command family, không phải client EventHandler thường;
+- Lua Mobile chỉ có EventHandler[0..6], không có EventHandler[10]; do đó server không được gửi raw type10 cho client;
+- client Mobile hiện không có EFunction/UI riêng cho Tài xỉu hoặc 18 đậu. EFunction có SlotMachine/Poke/etc.; asset cũng có SlotMachine/Poke/Bingo/ChessMahjong nhưng không thấy module Tài xỉu/18 đậu;
+- map12180 eve11: có item31171 thì type10/class7/param1/pStyle26, cho thấy type10 còn chứa các lệnh game/service legacy khác; chưa đủ bảng mapping authoritative để implement generic.
+=> trạng thái `resultType=10`: **UNKNOWN/legacy, chưa patch**. Không tự chế packet/semantics.
+=> direct Point purchase `faf0a81`: build/test PASS nhưng đường Surface23 hiện không reachable qua Surface1 của client hiện tại, nên **runtime transaction vẫn PENDING/UNREACHABLE qua UI này**.
 Server100 giá 9/45/90 không cần giả lập trên server offline hiện tại.
 
 Ghi chú param8 hidden NPC:
