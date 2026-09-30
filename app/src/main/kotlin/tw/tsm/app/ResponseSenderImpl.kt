@@ -560,6 +560,9 @@ class ResponseSenderImpl(worldManager: WorldManager) : ResponseSender {
     override fun sendFollowNpcRecall(session: SessionSender) =
         partyPet.sendFollowNpcRecall(session)
 
+    override fun sendFollowNpcDeployState(session: SessionSender, slotIndex: Int, enabled: Boolean) =
+        partyPet.sendFollowNpcDeployState(session, slotIndex, enabled)
+
     override fun sendPetTempUpgradeData(session: SessionSender, kind: Int, npcId: Int, gains: IntArray) =
         partyPet.sendPetTempUpgradeData(session, kind, npcId, gains)
 

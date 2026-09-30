@@ -26,6 +26,8 @@ class BattleFighter(
     // ── Tên/ngoại hình ──
     val name: String,
     val npcId: Int = 0,
+    /** Carried follow slot for player-owned battle pets; 0 for non-follow fighters. */
+    val followSlot: Int = 0,
 
     // ── Vị trí trên bàn cờ ──
     var col: Int,

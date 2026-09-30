@@ -30,27 +30,40 @@ class NinePetRosterPolicyTest {
     }
 
     @Test
-    fun progressionUnlocksSlotsFiveThroughNineAtLevelMilestones() {
+    fun progressionDoesNotLockCarriedRoster() {
         val policy = PetRosterPolicy(
             ninePetEnabled = true,
             extensionMaxCarried = 9,
             progressionEnabled = true,
         )
 
-        assertEquals(4, policy.unlockedCapacity(level = 39, turn = 0))
-        assertEquals(5, policy.unlockedCapacity(level = 40, turn = 0))
-        assertEquals(6, policy.unlockedCapacity(level = 80, turn = 0))
-        assertEquals(7, policy.unlockedCapacity(level = 120, turn = 0))
-        assertEquals(8, policy.unlockedCapacity(level = 160, turn = 0))
-        assertEquals(9, policy.unlockedCapacity(level = 200, turn = 0))
-        assertEquals(40, policy.nextUnlockLevel(level = 39, turn = 0))
-        assertEquals(80, policy.nextUnlockLevel(level = 40, turn = 0))
-        assertEquals(200, policy.nextUnlockLevel(level = 199, turn = 0))
-        assertEquals(null, policy.nextUnlockLevel(level = 200, turn = 0))
+        assertEquals(9, policy.unlockedCapacity(level = 1, turn = 0))
+        assertEquals(9, policy.unlockedCapacity(level = 39, turn = 0))
+        assertEquals(null, policy.nextUnlockLevel(level = 1, turn = 0))
     }
 
     @Test
-    fun rebirthMayUnlockAllExtensionSlotsImmediately() {
+    fun progressionUnlocksBattleFollowersFiveThroughNineAtLevelMilestones() {
+        val policy = PetRosterPolicy(
+            ninePetEnabled = true,
+            extensionMaxCarried = 9,
+            progressionEnabled = true,
+        )
+
+        assertEquals(4, policy.battleDeploymentCapacity(level = 39, turn = 0))
+        assertEquals(5, policy.battleDeploymentCapacity(level = 40, turn = 0))
+        assertEquals(6, policy.battleDeploymentCapacity(level = 80, turn = 0))
+        assertEquals(7, policy.battleDeploymentCapacity(level = 120, turn = 0))
+        assertEquals(8, policy.battleDeploymentCapacity(level = 160, turn = 0))
+        assertEquals(9, policy.battleDeploymentCapacity(level = 200, turn = 0))
+        assertEquals(40, policy.nextBattleUnlockLevel(level = 39, turn = 0))
+        assertEquals(80, policy.nextBattleUnlockLevel(level = 40, turn = 0))
+        assertEquals(200, policy.nextBattleUnlockLevel(level = 199, turn = 0))
+        assertEquals(null, policy.nextBattleUnlockLevel(level = 200, turn = 0))
+    }
+
+    @Test
+    fun rebirthMayUnlockAllBattleFollowersImmediately() {
         val policy = PetRosterPolicy(
             ninePetEnabled = true,
             extensionMaxCarried = 9,
@@ -58,13 +71,14 @@ class NinePetRosterPolicyTest {
             rebirthUnlockAll = true,
         )
 
-        assertEquals(4, policy.unlockedCapacity(level = 1, turn = 0))
-        assertEquals(9, policy.unlockedCapacity(level = 1, turn = 1))
-        assertEquals(null, policy.nextUnlockLevel(level = 1, turn = 1))
+        assertEquals(9, policy.unlockedCapacity(level = 1, turn = 0))
+        assertEquals(4, policy.battleDeploymentCapacity(level = 1, turn = 0))
+        assertEquals(9, policy.battleDeploymentCapacity(level = 1, turn = 1))
+        assertEquals(null, policy.nextBattleUnlockLevel(level = 1, turn = 1))
     }
 
     @Test
-    fun progressionDisabledPreservesFullExtensionCapacity() {
+    fun progressionDisabledPreservesFullRosterAndLegacySingleBattlePet() {
         val policy = PetRosterPolicy(
             ninePetEnabled = true,
             extensionMaxCarried = 9,
@@ -72,6 +86,7 @@ class NinePetRosterPolicyTest {
         )
 
         assertEquals(9, policy.unlockedCapacity(level = 1, turn = 0))
+        assertEquals(1, policy.battleDeploymentCapacity(level = 200, turn = 0))
     }
 
 }

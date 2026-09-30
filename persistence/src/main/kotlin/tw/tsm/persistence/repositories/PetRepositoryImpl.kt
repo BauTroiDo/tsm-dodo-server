@@ -89,6 +89,7 @@ class PetRepositoryImpl : PetRepository {
                         surplus = row[CharacterPets.surplus],
                         lvUpTime = row[CharacterPets.lvUpTime],
                         seedFixed = row[CharacterPets.seedFixed],
+                        isDeployed = row[CharacterPets.isDeployed],
                         equips = equipsByPet[row[CharacterPets.storageType] to row[CharacterPets.slotIndex]] ?: emptyMap()
                     )
                 }
@@ -133,6 +134,7 @@ class PetRepositoryImpl : PetRepository {
                     this[CharacterPets.surplus] = pet.surplus
                     this[CharacterPets.lvUpTime] = pet.lvUpTime
                     this[CharacterPets.seedFixed] = pet.seedFixed
+                    this[CharacterPets.isDeployed] = pet.isDeployed
                 }
             }
 

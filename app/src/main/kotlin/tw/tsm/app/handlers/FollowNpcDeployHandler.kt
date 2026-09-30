@@ -30,7 +30,7 @@ class FollowNpcDeployHandler(
 
     override suspend fun handle(session: GameSession, subKind: Int, data: ByteArray) {
         if (session.state != SessionState.IN_GAME) return
-        val expected = when (subKind) { 1 -> 2; 2 -> 0; else -> return }
+        val expected = when (subKind) { 1 -> 2; 2 -> 0; 8 -> 2; else -> return }
         if (data.size != expected) return
         val characterId = session.roleId.toLong()
         if (characterId <= 0) return
@@ -38,6 +38,7 @@ class FollowNpcDeployHandler(
         when (subKind) {
             1 -> handleDeploy(session, characterId, data)
             2 -> handleRecall(session, characterId)
+            8 -> handleToggleDeploy(session, characterId, data)
             else -> logger.trace { "Xuất chiến chưa xử lý subKind=$subKind" }
         }
     }
@@ -61,6 +62,7 @@ class FollowNpcDeployHandler(
         // Không chờ C:000 disconnect vì đóng app/mất kết nối có thể không gửi packet đó.
         try {
             characterRepository?.updateFightNpcId(characterId, npcId)
+            petSystem.save(characterId)
         } catch (e: Exception) {
             logger.error(e) { "Lưu võ tướng xuất chiến thất bại: charId=$characterId npc=$npcId" }
         }
@@ -86,6 +88,7 @@ class FollowNpcDeployHandler(
         // Thu hồi cũng phải ghi ngay, nếu không DB có thể khôi phục nhầm pet cũ ở lần login sau.
         try {
             characterRepository?.updateFightNpcId(characterId, 0)
+            petSystem.save(characterId)
         } catch (e: Exception) {
             logger.error(e) { "Lưu trạng thái thu hồi võ tướng thất bại: charId=$characterId" }
         }
@@ -94,4 +97,54 @@ class FollowNpcDeployHandler(
         responseSender.sendFollowNpcRecall(session)
         logger.info { "${session.characterName} thu hồi tướng" }
     }
+
+    /**
+     * C:019-008 custom multi-select deployment.
+     * Payload: logical follow slot(1) + enabled(1).
+     */
+    private suspend fun handleToggleDeploy(session: GameSession, characterId: Long, data: ByteArray) {
+        val reader = PacketReader(data)
+        val slot = reader.readUByte()
+        val enabled = reader.readUByte() != 0
+
+        val result = petSystem.setFollowNpcDeployment(characterId, slot, enabled)
+        if (!result.success) {
+            // Echo authoritative state so stale/modified clients cannot exceed capacity.
+            val authoritative = petSystem.getFollowPets(characterId)[slot]?.isDeployed == true
+            responseSender.sendFollowNpcDeployState(session, slot, authoritative)
+            if (enabled && result.nextUnlockLevel != null) {
+                responseSender.sendSystemMessage(
+                    session,
+                    "Cần đạt Lv${result.nextUnlockLevel} để mở pet xuất chiến thứ ${result.capacity + 1}."
+                )
+            }
+            logger.info {
+                "Từ chối multi-deploy: charId=$characterId slot=$slot enabled=$enabled " +
+                    "selected=${result.selectedCount}/${result.capacity} nextLv=${result.nextUnlockLevel}"
+            }
+            return
+        }
+
+        try {
+            petSystem.save(characterId)
+            characterRepository?.updateFightNpcId(
+                characterId,
+                petSystem.getCache(characterId)?.fightNpcId ?: 0
+            )
+        } catch (e: Exception) {
+            logger.error(e) { "Lưu trạng thái multi-deploy thất bại: charId=$characterId slot=$slot" }
+        }
+
+        responseSender.sendFollowNpcDeployState(session, slot, enabled)
+        if (enabled) {
+            dailyProgressSystem?.setConditionFlag(
+                session,
+                DailyProgressSystem.FLAG_DEPLOY_FOLLOW_NPC,
+            )
+        }
+        logger.info {
+            "${session.characterName} đặt trạng thái xuất chiến slot=$slot npc=${result.npcId} enabled=$enabled"
+        }
+    }
+
 }

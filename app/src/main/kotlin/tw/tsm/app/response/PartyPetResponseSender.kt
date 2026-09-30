@@ -293,6 +293,17 @@ class PartyPetResponseSender {
         )
     }
 
+    /** S:019-008 custom multi-select state: logical follow slot + ON/OFF. */
+    fun sendFollowNpcDeployState(session: SessionSender, slotIndex: Int, enabled: Boolean) {
+        session.send(
+            PacketWriter(5)
+                .writeByte(Opcodes.FOLLOW_NPC_DEPLOY).writeByte(8).writeByte(0)
+                .writeByte(slotIndex)
+                .writeByte(if (enabled) 1 else 0)
+                .toByteArray()
+        )
+    }
+
     // ── Cường hóa tướng (mainKind=74, 8, 15) ──
 
     /**

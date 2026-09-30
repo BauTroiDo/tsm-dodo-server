@@ -139,17 +139,24 @@ class BattleManager(
         )
         battle.linkToResult = fightData.linkToResult
 
-        // 1. Phán định có tướng xuất chiến hay không — nếu có thì người chơi lùi về hàng sau, tướng đứng hàng trước
+        // 1. Nine-pet extension: roster ownership is always open; battle progression
+        // controls how many logical carried slots may enter this battle.
         val charId = session.roleId.toLong()
-        val hasFightNpc = (petSystem.getCache(charId)?.fightNpcId ?: 0) > 0
-        val playerCol = if (hasFightNpc) BattleConstants.PLAYER_BACK_COL else BattleConstants.PLAYER_FRONT_COL
+        val battlePets = petSystem.getBattleDeployableFollowPets(charId)
+        val hasBattlePets = battlePets.isNotEmpty()
+        val playerCol = if (hasBattlePets) BattleConstants.PLAYER_BACK_COL else BattleConstants.PLAYER_FRONT_COL
         val playerFighter = createPlayerFighter(session, col = playerCol)
         battle.addFighter(playerFighter)
         battle.playerSessions[session.playerId] = session
 
-        // 1.5 Nếu có tướng xuất chiến, thêm vào hàng trước bàn cờ (col=2)
-        if (hasFightNpc) {
-            addFollowNpcIfDeployed(session, battle, col = BattleConstants.PLAYER_FRONT_COL)
+        // 1.5 Fill the remaining player-side grid slots with deployed followers.
+        if (hasBattlePets) {
+            addBattleFollowNpcs(
+                session, battle,
+                frontCol = BattleConstants.PLAYER_FRONT_COL,
+                backCol = BattleConstants.PLAYER_BACK_COL,
+                pets = battlePets
+            )
         }
 
         // 2. Thêm NPC phe địch vào bàn cờ (bên trái col=0-1, sắp canh giữa)
@@ -222,17 +229,24 @@ class BattleManager(
             involvedNpcDefs = involvedNpcs
         )
 
-        // 1. Phán định có tướng xuất chiến hay không — nếu có thì người chơi lùi về hàng sau, tướng đứng hàng trước
+        // 1. Nine-pet extension: roster ownership is always open; battle progression
+        // controls how many logical carried slots may enter this battle.
         val charId = session.roleId.toLong()
-        val hasFightNpc = (petSystem.getCache(charId)?.fightNpcId ?: 0) > 0
-        val playerCol = if (hasFightNpc) BattleConstants.PLAYER_BACK_COL else BattleConstants.PLAYER_FRONT_COL
+        val battlePets = petSystem.getBattleDeployableFollowPets(charId)
+        val hasBattlePets = battlePets.isNotEmpty()
+        val playerCol = if (hasBattlePets) BattleConstants.PLAYER_BACK_COL else BattleConstants.PLAYER_FRONT_COL
         val playerFighter = createPlayerFighter(session, col = playerCol)
         battle.addFighter(playerFighter)
         battle.playerSessions[session.playerId] = session
 
-        // 1.5 Nếu có tướng xuất chiến, thêm vào hàng trước bàn cờ (col=2)
-        if (hasFightNpc) {
-            addFollowNpcIfDeployed(session, battle, col = BattleConstants.PLAYER_FRONT_COL)
+        // 1.5 Fill the remaining player-side grid slots with deployed followers.
+        if (hasBattlePets) {
+            addBattleFollowNpcs(
+                session, battle,
+                frontCol = BattleConstants.PLAYER_FRONT_COL,
+                backCol = BattleConstants.PLAYER_BACK_COL,
+                pets = battlePets
+            )
         }
 
         // 2. Thêm NPC phe địch vào bàn cờ (col=BattleConstants.ENEMY_FRONT_COL, row=BattleConstants.CENTER_ROW)
@@ -284,23 +298,38 @@ class BattleManager(
             involvedNpcDefs = emptyList()
         )
 
-        // Phe tấn công → bên phải (có tướng thì lùi hàng sau col=3, không thì hàng trước col=2)
+        // Phe tấn công → bên phải. Player reserves the back-center slot; followers
+        // fill the remaining cells according to battle deployment progression.
         val atkCharId = attacker.roleId.toLong()
-        val atkHasNpc = (petSystem.getCache(atkCharId)?.fightNpcId ?: 0) > 0
-        val atkCol = if (atkHasNpc) BattleConstants.PLAYER_BACK_COL else BattleConstants.PLAYER_FRONT_COL
+        val atkBattlePets = petSystem.getBattleDeployableFollowPets(atkCharId)
+        val atkHasPets = atkBattlePets.isNotEmpty()
+        val atkCol = if (atkHasPets) BattleConstants.PLAYER_BACK_COL else BattleConstants.PLAYER_FRONT_COL
         val attackerFighter = createPlayerFighter(attacker, col = atkCol)
         battle.addFighter(attackerFighter)
         battle.playerSessions[attacker.playerId] = attacker
-        if (atkHasNpc) addFollowNpcIfDeployed(attacker, battle, col = BattleConstants.PLAYER_FRONT_COL)
+        if (atkHasPets) {
+            addBattleFollowNpcs(
+                attacker, battle,
+                BattleConstants.PLAYER_FRONT_COL, BattleConstants.PLAYER_BACK_COL,
+                atkBattlePets
+            )
+        }
 
-        // Bên phòng thủ → bên trái (có tướng thì lùi về hàng sau col=1, ngược lại hàng trước col=0)
+        // Bên phòng thủ → bên trái, cùng quy tắc deployment.
         val defCharId = defender.roleId.toLong()
-        val defHasNpc = (petSystem.getCache(defCharId)?.fightNpcId ?: 0) > 0
-        val defCol = if (defHasNpc) BattleConstants.ENEMY_BACK_COL else BattleConstants.ENEMY_FRONT_COL
+        val defBattlePets = petSystem.getBattleDeployableFollowPets(defCharId)
+        val defHasPets = defBattlePets.isNotEmpty()
+        val defCol = if (defHasPets) BattleConstants.ENEMY_BACK_COL else BattleConstants.ENEMY_FRONT_COL
         val defenderFighter = createPlayerFighter(defender, col = defCol, kind = EHuman.PLAYERS)
         battle.addFighter(defenderFighter)
         battle.playerSessions[defender.playerId] = defender
-        if (defHasNpc) addFollowNpcIfDeployed(defender, battle, col = BattleConstants.ENEMY_FRONT_COL)
+        if (defHasPets) {
+            addBattleFollowNpcs(
+                defender, battle,
+                BattleConstants.ENEMY_FRONT_COL, BattleConstants.ENEMY_BACK_COL,
+                defBattlePets
+            )
+        }
 
         // Đăng ký trận đấu
         battles[battleId] = battle
@@ -380,34 +409,25 @@ class BattleManager(
             BattleConstants.ENEMY_FRONT_COL to BattleConstants.ENEMY_BACK_COL
         }
 
-        // 2. Kiểm tra có tướng hay không
+        // 2. Carried pets are battle-progressed; joining always prioritizes the player
+        // and then fills any remaining side slots with as many eligible pets as fit.
         val charId = joiner.roleId.toLong()
-        val hasNpc = (petSystem.getCache(charId)?.fightNpcId ?: 0) > 0
+        val battlePets = petSystem.getBattleDeployableFollowPets(charId)
+        val hasBattlePets = battlePets.isNotEmpty()
 
-        // 3. Tìm chỗ trống (có tướng cần 2 ô: tướng hàng trước, bản thân hàng sau)
-        if (hasNpc) {
-            val npcSlot = battle.grid.findEmptySlot(frontCol, backCol)
-            val playerSlot = battle.grid.findEmptySlot(frontCol, backCol)
-            // Thực tế cần xác nhận cả hai ô đều trống
-            val occupied = battle.grid.countOccupied(frontCol, backCol)
-            if (occupied + 2 > BattleConstants.MAX_ROW * 2) {
-                logger.info { "joinBattle: trận ${battle.battleId} đội đã đầy (${occupied}/10), không thể tham gia" }
-                return false
-            }
-        } else {
-            val occupied = battle.grid.countOccupied(frontCol, backCol)
-            if (occupied >= BattleConstants.MAX_ROW * 2) {
-                logger.info { "joinBattle: trận ${battle.battleId} đội đã đầy (${occupied}/10), không thể tham gia" }
-                return false
-            }
+        // 3. At least one grid cell is required for the joining player.
+        val occupied = battle.grid.countOccupied(frontCol, backCol)
+        if (occupied >= BattleConstants.MAX_ROW * 2) {
+            logger.info { "joinBattle: trận ${battle.battleId} đội đã đầy (${occupied}/10), không thể tham gia" }
+            return false
         }
 
         // 4. Đặt bản thân người chơi
         val kind = if (targetOnRight) EHuman.PLAYER else EHuman.PLAYERS
-        val playerCol = if (hasNpc) backCol else frontCol
+        val playerCol = if (hasBattlePets) backCol else frontCol
         val playerSlot = battle.grid.findEmptySlot(
-            if (hasNpc) backCol else frontCol,
-            if (hasNpc) frontCol else backCol
+            if (hasBattlePets) backCol else frontCol,
+            if (hasBattlePets) frontCol else backCol
         )
         if (playerSlot == null) {
             logger.info { "joinBattle: trận ${battle.battleId} không tìm thấy ô trống" }
@@ -420,12 +440,9 @@ class BattleManager(
         battle.addFighter(joinerFighter)
         battle.playerSessions[joiner.playerId] = joiner
 
-        // 5. Đặt tướng
-        if (hasNpc) {
-            val npcSlot = battle.grid.findEmptySlot(frontCol, backCol)
-            if (npcSlot != null) {
-                addFollowNpcIfDeployed(joiner, battle, col = npcSlot.first, row = npcSlot.second)
-            }
+        // 5. Fill remaining cells with this player's battle-eligible followers.
+        if (hasBattlePets) {
+            addBattleFollowNpcs(joiner, battle, frontCol, backCol, battlePets)
         }
 
         // 6. Đăng ký
@@ -798,22 +815,16 @@ class BattleManager(
             responseSender.sendSetAttribute(session, EAttribute.HP, playerFighter.hp.toInt(), true)
             responseSender.sendSetAttribute(session, EAttribute.SP, playerFighter.sp.toInt(), true)
 
-            // Keep the deployed pet's persistent/current SP authoritative after every round.
-            // FightField deducts SP locally during animation, while BattleSkillResolver deducts
-            // it server-side; S:008-002 prevents the out-of-battle pet object from retaining
-            // stale/full SP and being restored as if skills were free.
-            val petFighter = battle.getAllFighters().firstOrNull {
-                it.kind == EHuman.FOLLOW_NPC && it.masterId == playerId
+            // Keep every deployed pet's persistent HP/SP authoritative after each round.
+            // followSlot is server-only metadata, so duplicate NPC IDs remain unambiguous.
+            val petFighters = battle.getAllFighters().filter {
+                it.kind == EHuman.FOLLOW_NPC && it.masterId == playerId && it.followSlot > 0
             }
-            if (petFighter != null) {
-                val slot = petSystem.getFollowPets(charId).entries
-                    .firstOrNull { it.value.npcId == petFighter.npcId }
-                    ?.key
-                petSystem.updateFightNpcHpSp(charId, petFighter.hp, petFighter.sp.toInt())
-                if (slot != null) {
-                    responseSender.sendFollowNpcAttribute(session, slot, EAttribute.HP, petFighter.hp.toInt())
-                    responseSender.sendFollowNpcAttribute(session, slot, EAttribute.SP, petFighter.sp.toInt())
-                }
+            for (petFighter in petFighters) {
+                val slot = petFighter.followSlot
+                petSystem.updateFollowNpcHpSp(charId, slot, petFighter.hp, petFighter.sp.toInt())
+                responseSender.sendFollowNpcAttribute(session, slot, EAttribute.HP, petFighter.hp.toInt())
+                responseSender.sendFollowNpcAttribute(session, slot, EAttribute.SP, petFighter.sp.toInt())
             }
         }
     }
@@ -867,52 +878,49 @@ class BattleManager(
                     responseSender.sendSystemMessage(session, "Nhận được ${reward.exp} điểm kinh nghiệm.")
                 }
 
-                // Võ tướng đang xuất chiến và còn sống nhận EXP riêng theo cấp của chính nó.
-                // DVT UIStatus/NpcData đọc EAttribute.Exp dạng cumulative lifetime EXP.
-                val activePetFighter = battle.getAllFighters().firstOrNull {
-                    it.kind == EHuman.FOLLOW_NPC && it.masterId == playerId
+                // Every deployed living follower receives its own DVT-style cumulative EXP.
+                val activePetFighters = battle.getAllFighters().filter {
+                    it.kind == EHuman.FOLLOW_NPC &&
+                        it.masterId == playerId &&
+                        it.followSlot > 0 &&
+                        it.isAlive
                 }
-                if (activePetFighter != null && activePetFighter.isAlive) {
-                    val petEntry = petSystem.getFollowPets(charId).entries
-                        .firstOrNull { it.value.npcId == activePetFighter.npcId }
-                    if (petEntry != null) {
-                        val petExp = BattleRewardCalc.calculateExp(
-                            battle.involvedNpcDefs,
-                            petEntry.value.level
+                for (activePetFighter in activePetFighters) {
+                    val petEntry = petSystem.getFollowPets(charId)[activePetFighter.followSlot] ?: continue
+                    val petExp = BattleRewardCalc.calculateExp(
+                        battle.involvedNpcDefs,
+                        petEntry.level
+                    )
+                    val gain = petSystem.gainBattleExp(charId, activePetFighter.followSlot, petExp)
+                    if (gain != null) {
+                        responseSender.sendFollowNpcAttribute(
+                            session, gain.slotIndex, EAttribute.EXP,
+                            gain.after.exp.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
                         )
-                        val gain = petSystem.gainBattleExp(charId, petEntry.key, petExp)
-                        if (gain != null) {
-                            responseSender.sendFollowNpcAttribute(
-                                session, gain.slotIndex, EAttribute.EXP,
-                                gain.after.exp.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
-                            )
-                            val petName = gain.after.name.ifEmpty { npcDefs[gain.after.npcId]?.name ?: "Pet" }
+                        val petName = gain.after.name.ifEmpty { npcDefs[gain.after.npcId]?.name ?: "Pet" }
+                        responseSender.sendSystemMessage(
+                            session, "$petName nhận được $petExp điểm kinh nghiệm."
+                        )
+                        if (gain.levelGained > 0) {
                             responseSender.sendSystemMessage(
-                                session, "$petName nhận được $petExp điểm kinh nghiệm."
+                                session, "$petName đã lên cấp ${gain.after.level}."
                             )
-                            if (gain.levelGained > 0) {
-                                responseSender.sendSystemMessage(
-                                    session, "$petName đã lên cấp ${gain.after.level}."
-                                )
-                                responseSender.sendFollowNpcAttribute(
-                                    session, gain.slotIndex, EAttribute.LV, gain.after.level
-                                )
-                                responseSender.sendFollowNpcAttribute(
-                                    session, gain.slotIndex, EAttribute.SKILL_POINT, gain.after.skillPoint
-                                )
-                                // PC TSPet.levelUp restores HP/SP; client recomputes
-                                // MaxHP/MaxSP from the new level and these absolute values.
-                                responseSender.sendFollowNpcAttribute(
-                                    session, gain.slotIndex, EAttribute.HP, gain.after.hp.toInt()
-                                )
-                                responseSender.sendFollowNpcAttribute(
-                                    session, gain.slotIndex, EAttribute.SP, gain.after.sp
-                                )
-                            }
-                            logger.info {
-                                "Trận ${battle.battleId}: tướng npcId=${gain.after.npcId} " +
-                                    "nhận exp=$petExp lv=${gain.before.level}->${gain.after.level}"
-                            }
+                            responseSender.sendFollowNpcAttribute(
+                                session, gain.slotIndex, EAttribute.LV, gain.after.level
+                            )
+                            responseSender.sendFollowNpcAttribute(
+                                session, gain.slotIndex, EAttribute.SKILL_POINT, gain.after.skillPoint
+                            )
+                            responseSender.sendFollowNpcAttribute(
+                                session, gain.slotIndex, EAttribute.HP, gain.after.hp.toInt()
+                            )
+                            responseSender.sendFollowNpcAttribute(
+                                session, gain.slotIndex, EAttribute.SP, gain.after.sp
+                            )
+                        }
+                        logger.info {
+                            "Trận ${battle.battleId}: tướng slot=${gain.slotIndex} npcId=${gain.after.npcId} " +
+                                "nhận exp=$petExp lv=${gain.before.level}->${gain.after.level}"
                         }
                     }
                 }
@@ -1048,12 +1056,18 @@ class BattleManager(
             }
         }
 
-        // Trì hoãn rồi gửi gói rời đi
+        // S:011-001 drives per-fighter exit animation. The local player's own
+        // fighter must be the last exit packet seen by that client.
         delay(500)
-
-        for (fighter in battle.getAllFighters()) {
-            for (session in battle.playerSessions.values) {
+        val allExitFighters = battle.getAllFighters()
+        for (session in battle.playerSessions.values) {
+            val localPlayerId = session.playerId
+            val exitOrder = allExitFighters.sortedBy { fighter ->
+                if (fighter.isHumanPlayer && fighter.roleId == localPlayerId) 1 else 0
+            }
+            for (fighter in exitOrder) {
                 responseSender.sendBattleExitFight(session, fighter.col, fighter.row)
+                delay(100)
             }
         }
 
@@ -1407,32 +1421,46 @@ class BattleManager(
     }
 
     /**
-     * Nếu người chơi có tướng xuất chiến, thêm tướng đó vào bàn cờ chiến đấu
+     * Add battle-eligible carried followers to the existing DVT grid.
      *
-     * @param session session người chơi
-     * @param battle instance trận đấu
-     * @param col cột đặt tướng (mặc định PLAYER_BACK_COL=3, phe thủ trong PVP dùng ENEMY_BACK_COL=0)
+     * No new wire format is introduced: each pet is serialized as the normal
+     * FOLLOW_NPC BattleRoleData with the same masterId, which FightField.FindMasterID
+     * already iterates for command control.
      */
-    private fun addFollowNpcIfDeployed(
+    private fun addBattleFollowNpcs(
         session: GameSession,
         battle: BattleInstance,
-        col: Int = BattleConstants.PLAYER_BACK_COL,
-        row: Int = BattleConstants.CENTER_ROW
-    ) {
-        val charId = session.roleId.toLong()
-        val fightNpcId = petSystem.getCache(charId)?.fightNpcId ?: 0
-        if (fightNpcId <= 0) return
+        frontCol: Int,
+        backCol: Int,
+        pets: List<Pair<Int, FollowNpcData>> = petSystem.getBattleDeployableFollowPets(session.roleId.toLong())
+    ): Int {
+        var added = 0
+        for ((followSlot, petData) in pets) {
+            val position = battle.grid.findEmptySlot(frontCol, backCol) ?: break
+            val npcDef = npcDefs[petData.npcId]
+            if (npcDef == null) {
+                logger.warn { "Battle follower slot=$followSlot npcId=${petData.npcId} has no NPC definition" }
+                continue
+            }
 
-        val npcDef = npcDefs[fightNpcId]
-        val petData = petSystem.getFollowPets(charId).values.find { it.npcId == fightNpcId }
-        if (npcDef == null || petData == null) {
-            logger.warn { "Tướng xuất chiến npcId=$fightNpcId nhưng không tìm thấy định nghĩa hoặc dữ liệu" }
-            return
+            val followFighter = createFollowNpcFighter(
+                npcDef = npcDef,
+                petData = petData,
+                masterId = session.playerId,
+                npcDataId = petData.npcId,
+                followSlot = followSlot,
+                col = position.first,
+                row = position.second
+            )
+            battle.addFighter(followFighter)
+            added++
+            logger.info {
+                "Trận ${battle.battleId}: tướng slot=$followSlot ${npcDef.name} " +
+                    "(npcId=${petData.npcId}) vào phe ${session.characterName} " +
+                    "col=${position.first} row=${position.second}"
+            }
         }
-
-        val followFighter = createFollowNpcFighter(npcDef, petData, session.playerId, fightNpcId, col, row)
-        battle.addFighter(followFighter)
-        logger.info { "Trận ${battle.battleId}: tướng ${npcDef.name} (npcId=$fightNpcId) vào phe người chơi ${session.characterName} col=$col row=$row" }
+        return added
     }
 
     /**
@@ -1451,6 +1479,7 @@ class BattleManager(
         petData: FollowNpcData,
         masterId: Long,
         npcDataId: Int,
+        followSlot: Int = 0,
         col: Int = BattleConstants.PLAYER_BACK_COL,
         row: Int = BattleConstants.CENTER_ROW
     ): BattleFighter {
@@ -1500,6 +1529,7 @@ class BattleManager(
             kind = EHuman.FOLLOW_NPC,
             masterId = masterId,
             npcId = npcDataId,
+            followSlot = followSlot,
             name = petData.name.ifEmpty { npcDef.name },
             col = col,
             row = row,

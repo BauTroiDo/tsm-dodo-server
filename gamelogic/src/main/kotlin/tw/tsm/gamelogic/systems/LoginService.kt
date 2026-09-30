@@ -259,10 +259,24 @@ class LoginService(
         if (petCache.cart.isNotEmpty()) {
             responseSender.sendCartData(session, petCache.cart.values.toList())
         }
-        // S:019-001 Khôi phục võ tướng xuất chiến (Xác nhận võ tướng đó vẫn đang được mang theo)
-        if (record.fightNpcId > 0 && petCache.follow.values.any { it.npcId == record.fightNpcId }) {
-            petCache.fightNpcId = record.fightNpcId
-            responseSender.sendFollowNpcDeployInit(session, record.fightNpcId)
+        // Multi-pet deployment restore. Existing databases only have characters.fight_npc_id;
+        // migrate that legacy single selection once if no per-pet flag exists yet.
+        if (petSystem.getDeployedFollowSlots(record.id).isEmpty() &&
+            record.fightNpcId > 0 &&
+            petCache.follow.values.any { it.npcId == record.fightNpcId }
+        ) {
+            petSystem.deployFollowNpc(record.id, record.fightNpcId)
+            petSystem.save(record.id)
+        }
+
+        val deployedSlots = petSystem.getDeployedFollowSlots(record.id)
+        val primaryDeployed = deployedSlots.firstOrNull()?.let { petCache.follow[it] }
+        if (primaryDeployed != null) {
+            // Legacy field/view remains populated for unchanged DVT logic.
+            responseSender.sendFollowNpcDeployInit(session, primaryDeployed.npcId)
+        }
+        for (slot in deployedSlots) {
+            responseSender.sendFollowNpcDeployState(session, slot, true)
         }
 
         // S:081-002 Khởi tạo cờ vĩnh viễn (Cờ hoàn thành hướng dẫn, v.v.) — Bắt buộc phải trước dữ liệu thú cưỡi,

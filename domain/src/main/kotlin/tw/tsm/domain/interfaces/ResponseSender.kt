@@ -1136,6 +1136,9 @@ interface ResponseSender {
      */
     fun sendFollowNpcRecall(session: SessionSender)
 
+    /** S:019-008 custom 9-pet deployment state: +slot(1) +enabled(1). */
+    fun sendFollowNpcDeployState(session: SessionSender, slotIndex: Int, enabled: Boolean)
+
     // ── Sửa thuộc tính (mainKind=8) ──
 
     /**

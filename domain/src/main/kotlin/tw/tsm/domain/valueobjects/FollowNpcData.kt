@@ -78,6 +78,8 @@ data class FollowNpcData(
      * Pet mới mặc định true; record cũ sau khi thêm cột DB sẽ mặc định false.
      */
     val seedFixed: Boolean = true,
+    /** Multi-pet extension: this carried pet is selected for battle deployment. */
+    val isDeployed: Boolean = false,
     /**
      * Trang bị tướng (fitType 1 mũ/2 áo/3 vũ khí/4 hộ uyển/5 giày/6 đặc biệt → ThingData)
      *

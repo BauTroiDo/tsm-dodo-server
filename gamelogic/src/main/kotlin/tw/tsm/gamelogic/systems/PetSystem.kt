@@ -68,25 +68,24 @@ class PetSystem(
         var dirty: Boolean = false
     )
 
+    data class DeploymentToggleResult(
+        val success: Boolean,
+        val slot: Int,
+        val enabled: Boolean,
+        val npcId: Int = 0,
+        val selectedCount: Int = 0,
+        val capacity: Int = 0,
+        val nextUnlockLevel: Int? = null,
+    )
+
     private val cache = ConcurrentHashMap<Long, PetCache>()
 
     /** Hard carried-roster ceiling supported by the connected extension mode. */
     fun getFollowCapacity(characterId: Long): Int = rosterPolicy.supportedCapacity()
 
-    /**
-     * Slots currently unlocked for NEW placement.
-     *
-     * Runtime state exists for all in-game mutation paths. Before it exists
-     * (early login), fail closed to the legacy four when progression is active.
-     */
-    fun getUnlockedFollowCapacity(characterId: Long): Int {
-        val state = playerStateManager?.getState(characterId)
-        return if (state != null) {
-            rosterPolicy.unlockedCapacity(state.level, state.turn)
-        } else {
-            rosterPolicy.unlockedCapacity(level = 0, turn = 0)
-        }
-    }
+    /** All supported carried slots are available for ownership/storage. */
+    fun getUnlockedFollowCapacity(@Suppress("UNUSED_PARAMETER") characterId: Long): Int =
+        rosterPolicy.supportedCapacity()
 
     /** First empty slot that is currently unlocked for NEW placement. */
     fun getFirstEmptyUnlockedFollowSlot(characterId: Long, additionallyFreeSlot: Int? = null): Int? {
@@ -102,13 +101,16 @@ class PetSystem(
     fun hasFreeUnlockedFollowSlot(characterId: Long, additionallyFreeSlot: Int? = null): Boolean =
         getFirstEmptyUnlockedFollowSlot(characterId, additionallyFreeSlot) != null
 
-    /** Next level milestone for a locked extension slot; null when progression is not blocking. */
-    fun getNextFollowUnlockLevel(characterId: Long): Int? {
+    /** Carried roster is not progression-gated. */
+    fun getNextFollowUnlockLevel(@Suppress("UNUSED_PARAMETER") characterId: Long): Int? = null
+
+    /** Number of carried followers allowed to enter battle simultaneously. */
+    fun getBattleDeploymentCapacity(characterId: Long): Int {
         val state = playerStateManager?.getState(characterId)
         return if (state != null) {
-            rosterPolicy.nextUnlockLevel(state.level, state.turn)
+            rosterPolicy.battleDeploymentCapacity(state.level, state.turn)
         } else {
-            rosterPolicy.nextUnlockLevel(level = 0, turn = 0)
+            rosterPolicy.battleDeploymentCapacity(level = 0, turn = 0)
         }
     }
 
@@ -169,6 +171,7 @@ class PetSystem(
                 STORAGE_WAREHOUSE -> pc.warehouse.add(pet)
             }
         }
+        refreshLegacyFightNpcId(pc)
         cache[characterId] = pc
         logger.info { "Tải võ tướng: charId=$characterId Mang theo=${pc.follow.size} Xe ngựa=${pc.cart.size} Khách sạn=${pc.inn.size} Kho=${pc.warehouse.size}" }
         return pc
@@ -184,6 +187,109 @@ class PetSystem(
      */
     fun getFollowPets(characterId: Long): Map<Int, FollowNpcData> =
         cache[characterId]?.follow ?: emptyMap()
+
+    /**
+     * Only pets explicitly selected by the player enter battle.
+     * Progression caps the NUMBER selected, never which logical slots may be chosen.
+     */
+    fun getBattleDeployableFollowPets(characterId: Long): List<Pair<Int, FollowNpcData>> {
+        val pc = cache[characterId] ?: return emptyList()
+        val capacity = getBattleDeploymentCapacity(characterId)
+        synchronized(pc) {
+            return pc.follow.entries
+                .asSequence()
+                .filter { (_, pet) -> pet.isDeployed && pet.hp > 0 }
+                .sortedBy { it.key }
+                .take(capacity)
+                .map { it.key to it.value }
+                .toList()
+        }
+    }
+
+    fun getDeployedFollowSlots(characterId: Long): List<Int> {
+        val pc = cache[characterId] ?: return emptyList()
+        synchronized(pc) {
+            return pc.follow.entries
+                .filter { it.value.isDeployed }
+                .map { it.key }
+                .sorted()
+        }
+    }
+
+    fun getNextBattleDeployUnlockLevel(characterId: Long): Int? {
+        val state = playerStateManager?.getState(characterId)
+        return if (state != null) {
+            rosterPolicy.nextBattleUnlockLevel(state.level, state.turn)
+        } else {
+            rosterPolicy.nextBattleUnlockLevel(level = 0, turn = 0)
+        }
+    }
+
+    private fun refreshLegacyFightNpcId(pc: PetCache) {
+        pc.fightNpcId = pc.follow.entries
+            .filter { it.value.isDeployed }
+            .minByOrNull { it.key }
+            ?.value
+            ?.npcId
+            ?: 0
+    }
+
+    fun setFollowNpcDeployment(
+        characterId: Long,
+        slot: Int,
+        enabled: Boolean,
+    ): DeploymentToggleResult {
+        val pc = cache[characterId]
+            ?: return DeploymentToggleResult(false, slot, enabled)
+        synchronized(pc) {
+            val pet = pc.follow[slot]
+                ?: return DeploymentToggleResult(false, slot, enabled)
+            val capacity = getBattleDeploymentCapacity(characterId)
+            val selectedCount = pc.follow.values.count { it.isDeployed }
+
+            if (enabled) {
+                if (pet.canGrow <= 0) {
+                    return DeploymentToggleResult(
+                        false, slot, true, pet.npcId, selectedCount, capacity,
+                        getNextBattleDeployUnlockLevel(characterId)
+                    )
+                }
+                if (pet.isDeployed) {
+                    return DeploymentToggleResult(
+                        true, slot, true, pet.npcId, selectedCount, capacity,
+                        getNextBattleDeployUnlockLevel(characterId)
+                    )
+                }
+                if (selectedCount >= capacity) {
+                    return DeploymentToggleResult(
+                        false, slot, true, pet.npcId, selectedCount, capacity,
+                        getNextBattleDeployUnlockLevel(characterId)
+                    )
+                }
+                pc.follow[slot] = pet.copy(isDeployed = true)
+            } else {
+                if (!pet.isDeployed) {
+                    return DeploymentToggleResult(
+                        true, slot, false, pet.npcId, selectedCount, capacity,
+                        getNextBattleDeployUnlockLevel(characterId)
+                    )
+                }
+                pc.follow[slot] = pet.copy(isDeployed = false)
+            }
+
+            refreshLegacyFightNpcId(pc)
+            pc.dirty = true
+            val afterCount = pc.follow.values.count { it.isDeployed }
+            logger.info {
+                "Multi-deploy: charId=$characterId slot=$slot npc=${pet.npcId} enabled=$enabled " +
+                    "selected=$afterCount/$capacity"
+            }
+            return DeploymentToggleResult(
+                true, slot, enabled, pet.npcId, afterCount, capacity,
+                getNextBattleDeployUnlockLevel(characterId)
+            )
+        }
+    }
 
     /** DVT NpcData:GetTurn(): static NPC turn==2 uses pet turn=1, everything else uses turn=0. */
     private fun petExpTurn(pet: FollowNpcData): Int {
@@ -435,10 +541,7 @@ class PetSystem(
             val entry = pc.follow.entries.find { it.value.npcId == npcId } ?: return -1
             val slotIndex = entry.key
             pc.follow.remove(slotIndex)
-            // Nếu võ tướng xuất chiến bị xóa, xóa trạng thái xuất chiến
-            if (pc.fightNpcId == npcId) {
-                pc.fightNpcId = 0
-            }
+            refreshLegacyFightNpcId(pc)
             pc.dirty = true
             logger.info { "Sự kiện xóa võ tướng: charId=$characterId npcId=$npcId slot=$slotIndex" }
             return slotIndex
@@ -457,7 +560,7 @@ class PetSystem(
         val pc = cache[characterId] ?: return null
         synchronized(pc) {
             val slot = getFirstEmptyUnlockedFollowSlot(characterId) ?: return null
-            val placed = pet.copy(slotIndex = slot, storageType = STORAGE_FOLLOW)
+            val placed = pet.copy(slotIndex = slot, storageType = STORAGE_FOLLOW, isDeployed = false)
             pc.follow[slot] = placed
             pc.dirty = true
             logger.info { "Võ tướng gia nhập đội (Dữ liệu đã có sẵn): charId=$characterId npcId=${pet.npcId} → slot=$slot" }
@@ -474,10 +577,7 @@ class PetSystem(
         val pc = cache[characterId] ?: return null
         synchronized(pc) {
             val pet = pc.follow.remove(slotIndex) ?: return null
-            // Nếu võ tướng xuất chiến bị trục xuất, xóa trạng thái xuất chiến
-            if (pc.fightNpcId == pet.npcId) {
-                pc.fightNpcId = 0
-            }
+            refreshLegacyFightNpcId(pc)
             pc.dirty = true
             logger.info { "Trục xuất võ tướng: charId=$characterId slot=$slotIndex npc=${pet.npcId}" }
             return pet
@@ -491,13 +591,23 @@ class PetSystem(
      */
     fun deployFollowNpc(characterId: Long, npcId: Int): Int {
         val pc = cache[characterId] ?: return 0
-        // Xác nhận NPC có trong danh sách mang theo
-        val pet = pc.follow.values.find { it.npcId == npcId } ?: return 0
-        // NPC nhiệm vụ (canGrow=0) không thể xuất chiến
-        if (pet.canGrow <= 0) return 0
-        pc.fightNpcId = npcId
-        logger.info { "Võ tướng xuất chiến: charId=$characterId npc=$npcId" }
-        return npcId
+        synchronized(pc) {
+            val entry = pc.follow.entries.firstOrNull { it.value.npcId == npcId } ?: return 0
+            val pet = entry.value
+            if (pet.canGrow <= 0) return 0
+
+            // Legacy DVT C:019-001 remains exclusive for unmodified clients.
+            for ((slot, existing) in pc.follow.toMap()) {
+                if (existing.isDeployed) {
+                    pc.follow[slot] = existing.copy(isDeployed = false)
+                }
+            }
+            pc.follow[entry.key] = pet.copy(isDeployed = true)
+            refreshLegacyFightNpcId(pc)
+            pc.dirty = true
+            logger.info { "Võ tướng xuất chiến legacy: charId=$characterId slot=${entry.key} npc=$npcId" }
+            return npcId
+        }
     }
 
     /**
@@ -507,10 +617,19 @@ class PetSystem(
      */
     fun recallFightNpc(characterId: Long): Boolean {
         val pc = cache[characterId] ?: return false
-        if (pc.fightNpcId == 0) return false
-        logger.info { "Thu hồi võ tướng: charId=$characterId npc=${pc.fightNpcId}" }
-        pc.fightNpcId = 0
-        return true
+        synchronized(pc) {
+            val hadAny = pc.follow.values.any { it.isDeployed } || pc.fightNpcId != 0
+            if (!hadAny) return false
+            for ((slot, pet) in pc.follow.toMap()) {
+                if (pet.isDeployed) {
+                    pc.follow[slot] = pet.copy(isDeployed = false)
+                }
+            }
+            pc.fightNpcId = 0
+            pc.dirty = true
+            logger.info { "Thu hồi toàn bộ võ tướng xuất chiến legacy: charId=$characterId" }
+            return true
+        }
     }
 
     /**
@@ -518,17 +637,27 @@ class PetSystem(
      *
      * Ghi lại HP/SP cuối cùng của BattleFighter vào bộ nhớ tạm (cache) khi trận chiến kết thúc.
      */
+    fun updateFollowNpcHpSp(characterId: Long, followSlot: Int, hp: Long, sp: Int) {
+        val pc = cache[characterId] ?: return
+        synchronized(pc) {
+            val pet = pc.follow[followSlot] ?: return
+            pc.follow[followSlot] = pet.copy(hp = hp, sp = sp)
+            pc.dirty = true
+            logger.debug {
+                "Tổng kết trận chiến - Cập nhật HP/SP võ tướng: charId=$characterId slot=$followSlot npc=${pet.npcId} hp=$hp sp=$sp"
+            }
+        }
+    }
+
+    /** Backward-compatible single-deploy helper. */
     fun updateFightNpcHpSp(characterId: Long, hp: Long, sp: Int) {
         val pc = cache[characterId] ?: return
         val npcId = pc.fightNpcId
         if (npcId == 0) return
-        synchronized(pc) {
-            val slot = pc.follow.entries.firstOrNull { it.value.npcId == npcId }?.key ?: return
-            val pet = pc.follow[slot] ?: return
-            pc.follow[slot] = pet.copy(hp = hp, sp = sp)
-            pc.dirty = true
-            logger.debug { "Tổng kết trận chiến - Cập nhật HP/SP võ tướng: charId=$characterId npc=$npcId hp=$hp sp=$sp" }
-        }
+        val slot = synchronized(pc) {
+            pc.follow.entries.firstOrNull { it.value.npcId == npcId }?.key
+        } ?: return
+        updateFollowNpcHpSp(characterId, slot, hp, sp)
     }
 
     /**
@@ -542,14 +671,14 @@ class PetSystem(
             val pet = pc.follow[followSlot] ?: return -1
 
             // Đang xuất chiến thì không thể cất
-            if (pc.fightNpcId == pet.npcId) return -1
+            if (pet.isDeployed) return -1
 
             // Tìm vị trí trống trong xe ngựa
             val cartSlot = (1..capacity.coerceIn(0, MAX_CART)).firstOrNull { !pc.cart.containsKey(it) } ?: return -1
 
             // Di chuyển
             pc.follow.remove(followSlot)
-            pc.cart[cartSlot] = pet.copy(storageType = STORAGE_CART, slotIndex = cartSlot)
+            pc.cart[cartSlot] = pet.copy(storageType = STORAGE_CART, slotIndex = cartSlot, isDeployed = false)
             pc.dirty = true
             logger.info { "Cất vào xe ngựa: charId=$characterId follow=$followSlot → cart=$cartSlot" }
             return cartSlot
@@ -590,10 +719,10 @@ class PetSystem(
             val cartPet = pc.cart[cartSlot] ?: return false
 
             // Đang xuất chiến thì không thể tráo đổi
-            if (pc.fightNpcId == followPet.npcId) return false
+            if (followPet.isDeployed) return false
 
             pc.follow[followSlot] = cartPet.copy(storageType = STORAGE_FOLLOW, slotIndex = followSlot)
-            pc.cart[cartSlot] = followPet.copy(storageType = STORAGE_CART, slotIndex = cartSlot)
+            pc.cart[cartSlot] = followPet.copy(storageType = STORAGE_CART, slotIndex = cartSlot, isDeployed = false)
             pc.dirty = true
             logger.info { "Tráo đổi võ tướng: charId=$characterId follow=$followSlot ↔ cart=$cartSlot" }
             return true
@@ -808,7 +937,7 @@ class PetSystem(
             val pet = pc.follow[followSlot] ?: return -1
 
             // Đang xuất chiến thì không thể cất
-            if (pc.fightNpcId == pet.npcId) return -1
+            if (pet.isDeployed) return -1
 
             // Võ tướng không thể trưởng thành thì không được cất vào khách sạn (canGrow=0 hoặc canGrow=2 Võ tướng nhiệm vụ)
             if (pet.canGrow != 1) return -1
@@ -818,7 +947,7 @@ class PetSystem(
 
             // Di chuyển
             pc.follow.remove(followSlot)
-            pc.inn[innSlot] = pet.copy(storageType = STORAGE_INN, slotIndex = innSlot)
+            pc.inn[innSlot] = pet.copy(storageType = STORAGE_INN, slotIndex = innSlot, isDeployed = false)
             pc.dirty = true
             logger.info { "Cất vào khách sạn: charId=$characterId follow=$followSlot → inn=$innSlot" }
             return innSlot
@@ -859,13 +988,13 @@ class PetSystem(
             val followPet = pc.follow[followSlot] ?: return false
 
             // Đang xuất chiến thì không thể tráo đổi
-            if (pc.fightNpcId == followPet.npcId) return false
+            if (followPet.isDeployed) return false
 
             // Võ tướng không thể trưởng thành thì không được cất vào khách sạn
             if (followPet.canGrow != 1) return false
 
             pc.follow[followSlot] = innPet.copy(storageType = STORAGE_FOLLOW, slotIndex = followSlot)
-            pc.inn[innSlot] = followPet.copy(storageType = STORAGE_INN, slotIndex = innSlot)
+            pc.inn[innSlot] = followPet.copy(storageType = STORAGE_INN, slotIndex = innSlot, isDeployed = false)
             pc.dirty = true
             logger.info { "Tráo đổi Khách sạn ↔ Mang theo: charId=$characterId inn=$innSlot ↔ follow=$followSlot" }
             return true

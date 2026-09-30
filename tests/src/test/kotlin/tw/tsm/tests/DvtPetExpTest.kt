@@ -216,20 +216,36 @@ class DvtPetExpTest {
                 storageType = PetSystem.STORAGE_FOLLOW,
                 level = 1,
                 exp = 6,
+                hp = 100,
                 seedFixed = true,
             )
         }
         progressive.load(42)
 
         assertEquals(9, progressive.getFollowCapacity(42))
-        assertEquals(5, progressive.getUnlockedFollowCapacity(42))
+        assertEquals(9, progressive.getUnlockedFollowCapacity(42))
         assertTrue(progressive.isValidFollowSlot(42, 9))
-        assertNull(progressive.addFollowNpc(42, 100, npc, canGrow = 1))
+        assertEquals(5, progressive.getBattleDeploymentCapacity(42))
+        assertTrue(progressive.getBattleDeployableFollowPets(42).isEmpty())
 
-        states.getState(42)!!.level = 80
+        // Any five carried slots may be selected at Lv79.
+        for (slot in listOf(2, 5, 1, 4, 3)) {
+            assertTrue(progressive.setFollowNpcDeployment(42, slot, true).success)
+        }
+        assertEquals(listOf(1, 2, 3, 4, 5), progressive.getBattleDeployableFollowPets(42).map { it.first })
+
         val added = progressive.addFollowNpc(42, 100, npc, canGrow = 1)
         assertNotNull(added)
         assertEquals(6, added!!.first)
+        val blocked = progressive.setFollowNpcDeployment(42, 6, true)
+        assertFalse(blocked.success)
+        assertEquals(80, blocked.nextUnlockLevel)
+        assertEquals(listOf(1, 2, 3, 4, 5), progressive.getBattleDeployableFollowPets(42).map { it.first })
+
+        states.getState(42)!!.level = 80
+        assertEquals(6, progressive.getBattleDeploymentCapacity(42))
+        assertTrue(progressive.setFollowNpcDeployment(42, 6, true).success)
+        assertEquals(listOf(1, 2, 3, 4, 5, 6), progressive.getBattleDeployableFollowPets(42).map { it.first })
     }
 
     @Test
@@ -259,20 +275,33 @@ class DvtPetExpTest {
                 storageType = PetSystem.STORAGE_FOLLOW,
                 level = 1,
                 exp = 6,
+                hp = 100,
                 seedFixed = true,
             )
         }
         progressive.load(43)
 
-        assertEquals(4, progressive.getUnlockedFollowCapacity(43))
+        assertEquals(9, progressive.getUnlockedFollowCapacity(43))
         assertEquals(4, progressive.getFirstEmptyUnlockedFollowSlot(43))
         assertTrue(progressive.hasFreeUnlockedFollowSlot(43))
-        assertEquals(40, progressive.getNextFollowUnlockLevel(43))
+        assertEquals(null, progressive.getNextFollowUnlockLevel(43))
+        assertEquals(4, progressive.getBattleDeploymentCapacity(43))
+        assertTrue(progressive.getBattleDeployableFollowPets(43).isEmpty())
+
+        // Slot identity does not matter: choose 5,1,3,2 as the four deployed pets.
+        for (slot in listOf(5, 1, 3, 2)) {
+            assertTrue(progressive.setFollowNpcDeployment(43, slot, true).success)
+        }
+        assertEquals(listOf(1, 2, 3, 5), progressive.getBattleDeployableFollowPets(43).map { it.first })
 
         val added = progressive.addFollowNpc(43, 100, npc, canGrow = 1)
         assertNotNull(added)
         assertEquals(4, added!!.first)
-        assertFalse(progressive.hasFreeUnlockedFollowSlot(43))
+        assertTrue(progressive.hasFreeUnlockedFollowSlot(43))
+        val blocked = progressive.setFollowNpcDeployment(43, 4, true)
+        assertFalse(blocked.success)
+        assertEquals(40, blocked.nextUnlockLevel)
+        assertEquals(listOf(1, 2, 3, 5), progressive.getBattleDeployableFollowPets(43).map { it.first })
     }
 
 }

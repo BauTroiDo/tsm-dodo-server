@@ -77,6 +77,8 @@ object CharacterPets : Table("character_pets") {
     val lvUpTime = double("lv_up_time").default(0.0)
     /** Đã migrate seed pet legacy sang LV1 chuẩn DVT. Record cũ mặc định false. */
     val seedFixed = bool("seed_fixed").default(false)
+    /** Được người chơi chọn để cùng xuất chiến. */
+    val isDeployed = bool("is_deployed").default(false)
 
     override val primaryKey = PrimaryKey(id)
 }
