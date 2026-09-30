@@ -110,7 +110,7 @@ class EveStateBuilderTest : DescribeSpec({
             every { petSystem.getFollowPets(charId) } returns emptyMap()
             every { petSystem.getInnPets(charId) } returns emptyMap()
             every { petSystem.getCartPets(charId) } returns emptyMap()
-            every { petSystem.getFollowCapacity(charId) } returns 4
+            every { petSystem.getUnlockedFollowCapacity(charId) } returns 4
 
             val session = mockk<GameSession>()
             every { session.sex } returns 2
@@ -202,7 +202,7 @@ class EveStateBuilderTest : DescribeSpec({
             )
             every { petSystem.getInnPets(charId) } returns emptyMap()
             every { petSystem.getCartPets(charId) } returns emptyMap()
-            every { petSystem.getFollowCapacity(charId) } returns 4
+            every { petSystem.getUnlockedFollowCapacity(charId) } returns 4
 
             val builder = EveStateBuilder(
                 questSystem = QuestSystem(questRepository, emptyMap()),

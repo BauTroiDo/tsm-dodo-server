@@ -10,6 +10,7 @@ import tw.tsm.domain.valueobjects.FollowNpcData
 import tw.tsm.gamelogic.battle.BattleRewardCalc
 import tw.tsm.gamelogic.systems.PetSystem
 import tw.tsm.gamelogic.systems.PetRosterPolicy
+import tw.tsm.gamelogic.systems.PlayerStateManager
 import tw.tsm.gamelogic.systems.StatSystem
 
 class DvtPetExpTest {
@@ -176,4 +177,59 @@ class DvtPetExpTest {
         }
         assertEquals(210L, BattleRewardCalc.calculateExp(listOf(900 to enemy), actorLevel = 21))
     }
+
+    @Test
+    fun progressionAllocatorUsesUnlockedCapacityButPreservesSupportedSlots() = runTest {
+        val states = PlayerStateManager().also {
+            it.initPlayer(
+                characterId = 42,
+                hp = 100,
+                sp = 50,
+                maxHp = 100,
+                maxSp = 50,
+                level = 79,
+                atk = 1,
+                def = 1,
+                agi = 1,
+                intelligence = 1,
+                hpx = 1,
+                spx = 1,
+                element = 1,
+                turn = 0,
+            )
+        }
+        val progressive = PetSystem(
+            petRepository = repo,
+            statCalculator = stat,
+            npcDefs = mapOf(100 to npc),
+            rosterPolicy = PetRosterPolicy(
+                ninePetEnabled = true,
+                extensionMaxCarried = 9,
+                progressionEnabled = true,
+            ),
+            playerStateManager = states,
+        )
+        coEvery { repo.findByCharacterId(42) } returns (1..5).map { slot ->
+            FollowNpcData(
+                slotIndex = slot,
+                npcId = 200 + slot,
+                storageType = PetSystem.STORAGE_FOLLOW,
+                level = 1,
+                exp = 6,
+                seedFixed = true,
+            )
+        }
+        progressive.load(42)
+
+        assertEquals(9, progressive.getFollowCapacity(42))
+        assertEquals(5, progressive.getUnlockedFollowCapacity(42))
+        assertTrue(progressive.isValidFollowSlot(42, 9))
+        assertNull(progressive.addFollowNpc(42, 100, npc, canGrow = 1))
+
+        states.getState(42)!!.level = 80
+        val added = progressive.addFollowNpc(42, 100, npc, canGrow = 1)
+        assertNotNull(added)
+        assertEquals(6, added!!.first)
+    }
+
 }

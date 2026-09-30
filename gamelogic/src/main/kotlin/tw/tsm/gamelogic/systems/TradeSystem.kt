@@ -724,7 +724,7 @@ class TradeSystem(
 
         // Dung lượng tùy tùng (40081): Con mình giao ra sẽ làm trống một vị trí
         val followCount = petSystem.getFollowPets(charId).size - (if (giving != null) 1 else 0)
-        if (followCount >= petSystem.getFollowCapacity(charId)) return REASON_PET_FOLLOW_FULL
+        if (followCount >= petSystem.getUnlockedFollowCapacity(charId)) return REASON_PET_FOLLOW_FULL
 
         val npcId = receiving.npcId
 

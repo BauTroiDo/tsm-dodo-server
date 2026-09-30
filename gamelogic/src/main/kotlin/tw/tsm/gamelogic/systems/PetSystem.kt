@@ -23,6 +23,7 @@ class PetSystem(
     private val itemDefs: Map<Int, ItemDef> = emptyMap(),
     private val roleCountSystem: RoleCountSystem? = null,
     private val rosterPolicy: PetRosterPolicy = PetRosterPolicy(),
+    private val playerStateManager: PlayerStateManager? = null,
 ) {
 
     companion object {
@@ -69,12 +70,25 @@ class PetSystem(
 
     private val cache = ConcurrentHashMap<Long, PetCache>()
 
-    /**
-     * Authoritative carried-roster capacity for the current server/client mode.
-     * Phase 1 is global feature-gating only; level/quest/rebirth unlock comes later.
-     */
-    fun getFollowCapacity(characterId: Long): Int = rosterPolicy.carriedCapacity()
+    /** Hard carried-roster ceiling supported by the connected extension mode. */
+    fun getFollowCapacity(characterId: Long): Int = rosterPolicy.supportedCapacity()
 
+    /**
+     * Slots currently unlocked for NEW placement.
+     *
+     * Runtime state exists for all in-game mutation paths. Before it exists
+     * (early login), fail closed to the legacy four when progression is active.
+     */
+    fun getUnlockedFollowCapacity(characterId: Long): Int {
+        val state = playerStateManager?.getState(characterId)
+        return if (state != null) {
+            rosterPolicy.unlockedCapacity(state.level, state.turn)
+        } else {
+            rosterPolicy.unlockedCapacity(level = 0, turn = 0)
+        }
+    }
+
+    /** Existing supported slots remain manageable even if progression later tightens. */
     fun isValidFollowSlot(characterId: Long, slot: Int): Boolean =
         slot in 1..getFollowCapacity(characterId)
 
@@ -346,7 +360,7 @@ class PetSystem(
             }
 
             // Tìm vị trí trống trong danh sách mang theo
-            val slot = (1..getFollowCapacity(characterId)).firstOrNull { !pc.follow.containsKey(it) } ?: return null
+            val slot = (1..getUnlockedFollowCapacity(characterId)).firstOrNull { !pc.follow.containsKey(it) } ?: return null
 
             // DVT Role.FollowNpcAppear and PC TSPet.initPet both create a newly
             // captured/awarded pet at LV1. NpcDef.level is the encounter/spawn level,
@@ -418,7 +432,7 @@ class PetSystem(
     fun addExistingFollowNpc(characterId: Long, pet: FollowNpcData): Pair<Int, FollowNpcData>? {
         val pc = cache[characterId] ?: return null
         synchronized(pc) {
-            val slot = (1..getFollowCapacity(characterId)).firstOrNull { !pc.follow.containsKey(it) } ?: return null
+            val slot = (1..getUnlockedFollowCapacity(characterId)).firstOrNull { !pc.follow.containsKey(it) } ?: return null
             val placed = pet.copy(slotIndex = slot, storageType = STORAGE_FOLLOW)
             pc.follow[slot] = placed
             pc.dirty = true
@@ -529,7 +543,7 @@ class PetSystem(
             val pet = pc.cart[cartSlot] ?: return -1
 
             // Tìm vị trí trống trong danh sách mang theo
-            val followSlot = (1..getFollowCapacity(characterId)).firstOrNull { !pc.follow.containsKey(it) } ?: return -1
+            val followSlot = (1..getUnlockedFollowCapacity(characterId)).firstOrNull { !pc.follow.containsKey(it) } ?: return -1
 
             // Di chuyển
             pc.cart.remove(cartSlot)
@@ -798,7 +812,7 @@ class PetSystem(
             val pet = pc.inn[innSlot] ?: return -1
 
             // Tìm vị trí trống mang theo
-            val followSlot = (1..getFollowCapacity(characterId)).firstOrNull { !pc.follow.containsKey(it) } ?: return -1
+            val followSlot = (1..getUnlockedFollowCapacity(characterId)).firstOrNull { !pc.follow.containsKey(it) } ?: return -1
 
             // Di chuyển
             pc.inn.remove(innSlot)
@@ -888,7 +902,7 @@ class PetSystem(
             val pet = pc.warehouse.find { it.npcId == npcId } ?: return -1
 
             // Tìm vị trí trống mang theo
-            val followSlot = (1..getFollowCapacity(characterId)).firstOrNull { !pc.follow.containsKey(it) } ?: return -1
+            val followSlot = (1..getUnlockedFollowCapacity(characterId)).firstOrNull { !pc.follow.containsKey(it) } ?: return -1
 
             // Di chuyển
             pc.warehouse.remove(pet)

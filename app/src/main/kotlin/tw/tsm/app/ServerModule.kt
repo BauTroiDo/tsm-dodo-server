@@ -277,6 +277,9 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
         PetRosterPolicy(
             ninePetEnabled = config.getBoolean("features.ninePet.enabled"),
             extensionMaxCarried = config.getInt("features.ninePet.maxCarried"),
+            progressionEnabled = config.getBoolean("features.ninePet.progression.enabled"),
+            unlockLevels = config.getIntList("features.ninePet.progression.unlockLevels").map { it.toInt() },
+            rebirthUnlockAll = config.getBoolean("features.ninePet.progression.rebirthUnlockAll"),
         )
     }
     single {
@@ -287,6 +290,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<GameDataManager>().itemDefs,
             get<RoleCountSystem>(),
             get<PetRosterPolicy>(),
+            get<PlayerStateManager>(),
         )
     }
     single {
