@@ -9,6 +9,7 @@ import tw.tsm.domain.interfaces.repositories.PetRepository
 import tw.tsm.domain.valueobjects.FollowNpcData
 import tw.tsm.gamelogic.battle.BattleRewardCalc
 import tw.tsm.gamelogic.systems.PetSystem
+import tw.tsm.gamelogic.systems.PetRosterPolicy
 import tw.tsm.gamelogic.systems.StatSystem
 
 class DvtPetExpTest {
@@ -141,6 +142,32 @@ class DvtPetExpTest {
         assertEquals(1, captured!!.first)
         assertEquals(100, captured.second.npcId)
         assertEquals(1, captured.second.level)
+    }
+
+    @Test fun `nine pet extension allocates the ninth carried slot only when enabled`() = runTest {
+        val extended = PetSystem(
+            petRepository = repo,
+            statCalculator = stat,
+            npcDefs = mapOf(100 to npc),
+            rosterPolicy = PetRosterPolicy(ninePetEnabled = true, extensionMaxCarried = 9),
+        )
+        coEvery { repo.findByCharacterId(42) } returns (1..8).map { slot ->
+            FollowNpcData(
+                slotIndex = slot,
+                npcId = 200 + slot,
+                storageType = PetSystem.STORAGE_FOLLOW,
+                level = 1,
+                exp = 6,
+                seedFixed = true,
+            )
+        }
+        extended.load(42)
+
+        val added = extended.addFollowNpc(42, 100, npc, canGrow = 1)
+
+        assertNotNull(added)
+        assertEquals(9, added!!.first)
+        assertEquals(100, extended.getFollowPets(42).getValue(9).npcId)
     }
 
     @Test fun `pet exp uses same pure battle reward curve without rerolling drops`() {
