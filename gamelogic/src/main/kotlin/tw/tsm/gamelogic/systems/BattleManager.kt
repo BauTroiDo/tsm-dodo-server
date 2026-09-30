@@ -891,6 +891,9 @@ class BattleManager(
                                 session, "$petName nhận được $petExp điểm kinh nghiệm."
                             )
                             if (gain.levelGained > 0) {
+                                responseSender.sendSystemMessage(
+                                    session, "$petName đã lên cấp ${gain.after.level}."
+                                )
                                 responseSender.sendFollowNpcAttribute(
                                     session, gain.slotIndex, EAttribute.LV, gain.after.level
                                 )
