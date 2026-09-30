@@ -300,35 +300,41 @@ class GameDataManager(
             }
         }
 
-        // Ground.mmg (dữ liệu địa chất bản đồ, đọc từ thư mục CompreseData/)
-        val groundFile = basePath.resolve("CompreseData").resolve("Ground.mmg")
-        if (Files.exists(groundFile)) {
+        // Ground.mmg (dữ liệu địa chất bản đồ, ưu tiên CompreseData của runtime;
+        // staging có thể chỉ mount Data/Data-ios nên cho phép fallback sang server data).
+        val groundFile = resolvePackedResource("Ground.mmg")
+        if (groundFile != null) {
             try {
                 val bytes = Files.readAllBytes(groundFile)
                 mapTerrains = GroundMmgLoader.load(bytes)
-                logger.info { "Nạp Ground xong: ${mapTerrains.size} dữ liệu địa hình bản đồ" }
+                logger.info { "Nạp Ground xong: ${mapTerrains.size} dữ liệu địa hình bản đồ source=$groundFile" }
             } catch (e: Exception) {
-                logger.error(e) { "Nạp Ground.mmg thất bại" }
+                logger.error(e) { "Nạp Ground.mmg thất bại: $groundFile" }
             }
         } else {
-            logger.warn { "Ground.mmg không tồn tại: $groundFile — bỏ qua" }
+            logger.warn { "Ground.mmg không tồn tại trong runtime/server data — bỏ qua" }
         }
 
-        // Eve.emg (đọc từ thư mục CompreseData/)
-        val eveFile = basePath.resolve("CompreseData").resolve("Eve.emg")
-        if (Files.exists(eveFile)) {
-            try {
-                val bytes = Files.readAllBytes(eveFile)
-                eveData = EveDataLoader.load(bytes)
-                val npcCount = eveData.values.sumOf { it.npcs.size }
-                val eventCount = eveData.values.sumOf { it.npcEvents.size }
-                val sceneInfoCount = eveData.values.sumOf { it.sceneInfos.size }
-                logger.info { "Nạp Eve xong: ${eveData.size} cảnh, $npcCount NPC bố trí, $eventCount định nghĩa sự kiện, $sceneInfoCount thông tin cảnh" }
-            } catch (e: Exception) {
-                logger.error(e) { "Nạp Eve.emg thất bại" }
+        // Eve.emg là contract cốt lõi cho NPC/door/event. Không được im lặng chạy khi thiếu:
+        // ưu tiên runtime CompreseData, sau đó fallback SERVER_DATA_PATH để staging không mất toàn bộ EVE.
+        val eveFile = resolvePackedResource("Eve.emg")
+            ?: throw IllegalStateException(
+                "Thiếu Eve.emg: cần có ở ${basePath.resolve("CompreseData").resolve("Eve.emg")} " +
+                    "hoặc SERVER_DATA_PATH=$gamedataPath"
+            )
+        try {
+            val bytes = Files.readAllBytes(eveFile)
+            eveData = EveDataLoader.load(bytes)
+            if (eveData.isEmpty()) {
+                throw IllegalStateException("Eve.emg đã đọc nhưng không có scene/event: $eveFile")
             }
-        } else {
-            logger.warn { "Eve.emg không tồn tại: $eveFile — bỏ qua" }
+            val npcCount = eveData.values.sumOf { it.npcs.size }
+            val eventCount = eveData.values.sumOf { it.npcEvents.size }
+            val sceneInfoCount = eveData.values.sumOf { it.sceneInfos.size }
+            logger.info { "Nạp Eve xong: ${eveData.size} cảnh, $npcCount NPC bố trí, $eventCount định nghĩa sự kiện, $sceneInfoCount thông tin cảnh source=$eveFile" }
+        } catch (e: Exception) {
+            logger.error(e) { "Nạp Eve.emg thất bại: $eveFile" }
+            throw IllegalStateException("Không thể nạp Eve.emg bắt buộc: $eveFile", e)
         }
 
         // Mounts / MountsGrow phải bám đúng Mobile DVT Lua DataManager:
@@ -427,6 +433,19 @@ class GameDataManager(
 
         val elapsed = System.currentTimeMillis() - startTime
         logger.info { "Nạp toàn bộ .dat xong (${elapsed}ms)" }
+    }
+
+    private fun resolvePackedResource(fileName: String): Path? {
+        val candidates = listOf(
+            basePath.resolve("CompreseData").resolve(fileName),
+            gamedataPath.resolve(fileName),
+            gamedataPath.resolve("CompreseData").resolve(fileName),
+        ).distinct()
+        val resolved = candidates.firstOrNull { Files.isRegularFile(it) }
+        if (resolved != null && resolved != candidates.first()) {
+            logger.warn { "$fileName fallback resource: $resolved" }
+        }
+        return resolved
     }
 
     /**
