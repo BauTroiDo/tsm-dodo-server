@@ -232,4 +232,47 @@ class DvtPetExpTest {
         assertEquals(6, added!!.first)
     }
 
+    @Test
+    fun progressionCapacityScansUnlockedSlotsInsteadOfCountingPreservedHighSlots() = runTest {
+        val states = PlayerStateManager().also {
+            it.initPlayer(
+                characterId = 43, hp = 100, sp = 50, maxHp = 100, maxSp = 50,
+                level = 39, atk = 1, def = 1, agi = 1, intelligence = 1,
+                hpx = 1, spx = 1, element = 1, turn = 0,
+            )
+        }
+        val progressive = PetSystem(
+            petRepository = repo,
+            statCalculator = stat,
+            npcDefs = mapOf(100 to npc),
+            rosterPolicy = PetRosterPolicy(
+                ninePetEnabled = true,
+                extensionMaxCarried = 9,
+                progressionEnabled = true,
+            ),
+            playerStateManager = states,
+        )
+        coEvery { repo.findByCharacterId(43) } returns listOf(1, 2, 3, 5).map { slot ->
+            FollowNpcData(
+                slotIndex = slot,
+                npcId = 300 + slot,
+                storageType = PetSystem.STORAGE_FOLLOW,
+                level = 1,
+                exp = 6,
+                seedFixed = true,
+            )
+        }
+        progressive.load(43)
+
+        assertEquals(4, progressive.getUnlockedFollowCapacity(43))
+        assertEquals(4, progressive.getFirstEmptyUnlockedFollowSlot(43))
+        assertTrue(progressive.hasFreeUnlockedFollowSlot(43))
+        assertEquals(40, progressive.getNextFollowUnlockLevel(43))
+
+        val added = progressive.addFollowNpc(43, 100, npc, canGrow = 1)
+        assertNotNull(added)
+        assertEquals(4, added!!.first)
+        assertFalse(progressive.hasFreeUnlockedFollowSlot(43))
+    }
+
 }

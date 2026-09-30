@@ -634,6 +634,11 @@ class ItemHandler(
             canGrow = 1,
             allowDuplicateInCart = true,
         ) ?: run {
+            if (!pets.hasFreeUnlockedFollowSlot(characterId)) {
+                pets.getNextFollowUnlockLevel(characterId)?.let { level ->
+                    responseSender.sendSystemMessage(session, "Ô võ tướng tiếp theo mở ở Lv$level.")
+                }
+            }
             logger.debug {
                 "NpcPicture từ chối (trùng hoặc đầy): charId=$characterId itemId=${bagItem.itemId} npcId=$npcId"
             }

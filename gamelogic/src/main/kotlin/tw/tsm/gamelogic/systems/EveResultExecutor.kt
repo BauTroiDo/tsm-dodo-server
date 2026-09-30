@@ -102,7 +102,15 @@ class EveResultExecutor(
                 logger.warn { "autoCaptureFromEvent: npcDefs[$npcId] không tồn tại, không thể tự động bắt" }
                 continue
             }
-            val added = petSystem.addFollowNpc(charId, npcId, npcDef, canGrow = 1) ?: continue
+            val added = petSystem.addFollowNpc(charId, npcId, npcDef, canGrow = 1)
+            if (added == null) {
+                if (!petSystem.hasFreeUnlockedFollowSlot(charId)) {
+                    petSystem.getNextFollowUnlockLevel(charId)?.let { level ->
+                        responseSender.sendSystemMessage(session, "Ô võ tướng tiếp theo mở ở Lv$level.")
+                    }
+                }
+                continue
+            }
             val (slotIndex, pet) = added
             responseSender.sendFollowNpcAdd(session, session.playerId, slotIndex, npcId, pet.canGrow, showMsg = true)
             logger.info { "${session.characterName} Trận chiến sự kiện bắt được: npcId=$npcId → slot=$slotIndex" }
@@ -584,6 +592,11 @@ class EveResultExecutor(
                     responseSender.sendFollowNpcFullData(session, petSystem.getFollowPets(charId).values.toList())
                     logger.info { "${session.characterName} Sự kiện NPC tham gia: npcId=$npcId (${npcDef.name}) canGrow=$canGrow → slot=$slotIndex" }
                 } else {
+                    if (!petSystem.hasFreeUnlockedFollowSlot(charId)) {
+                        petSystem.getNextFollowUnlockLevel(charId)?.let { level ->
+                            responseSender.sendSystemMessage(session, "Ô võ tướng tiếp theo mở ở Lv$level.")
+                        }
+                    }
                     logger.warn { "${session.characterName} Võ tướng đã đầy, không thể thêm npcId=$npcId" }
                 }
             }
@@ -612,6 +625,11 @@ class EveResultExecutor(
                     responseSender.sendFollowNpcFullData(session, petSystem.getFollowPets(charId).values.toList())
                     logger.info { "${session.characterName} Võ tướng thưởng tham gia: npcId=$npcId (${npcDef.name}) → slot=$slotIndex" }
                 } else {
+                    if (!petSystem.hasFreeUnlockedFollowSlot(charId)) {
+                        petSystem.getNextFollowUnlockLevel(charId)?.let { level ->
+                            responseSender.sendSystemMessage(session, "Ô võ tướng tiếp theo mở ở Lv$level.")
+                        }
+                    }
                     logger.warn { "${session.characterName} Võ tướng đã đầy, không thể thêm võ tướng thưởng npcId=$npcId" }
                 }
             }

@@ -143,6 +143,8 @@ class DvtItemWireTest {
                 allowDuplicateInCart = true,
             )
         } returns null
+        // Null may mean duplicate or capacity. This fixture models the duplicate path.
+        every { petSystem.hasFreeUnlockedFollowSlot(42) } returns true
 
         val npcPictureHandler = ItemHandler(
             inventorySystem = inventory,

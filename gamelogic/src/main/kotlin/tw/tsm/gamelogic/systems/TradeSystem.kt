@@ -623,10 +623,20 @@ class TradeSystem(
 
         // Xác thực bên nhận: Dung lượng tùy tùng + võ tướng trùng lặp (trừ đi con mình giao ra trước rồi mới tính)
         validatePetReceivable(charIdA, receiving = petB, giving = petA)?.let { reason ->
+            if (reason == REASON_PET_FOLLOW_FULL) {
+                petSystem.getNextFollowUnlockLevel(charIdA)?.let { level ->
+                    responseSender.sendSystemMessage(sessionA, "Ô võ tướng tiếp theo mở ở Lv$level.")
+                }
+            }
             cancelTradeInternal(trade, trade.playerA, reason, notifyInitiator = true)
             return
         }
         validatePetReceivable(charIdB, receiving = petA, giving = petB)?.let { reason ->
+            if (reason == REASON_PET_FOLLOW_FULL) {
+                petSystem.getNextFollowUnlockLevel(charIdB)?.let { level ->
+                    responseSender.sendSystemMessage(sessionB, "Ô võ tướng tiếp theo mở ở Lv$level.")
+                }
+            }
             cancelTradeInternal(trade, trade.playerB, reason, notifyInitiator = true)
             return
         }
@@ -722,9 +732,9 @@ class TradeSystem(
     private fun validatePetReceivable(charId: Long, receiving: FollowNpcData?, giving: FollowNpcData?): Int? {
         if (receiving == null) return null
 
-        // Dung lượng tùy tùng (40081): Con mình giao ra sẽ làm trống một vị trí
-        val followCount = petSystem.getFollowPets(charId).size - (if (giving != null) 1 else 0)
-        if (followCount >= petSystem.getUnlockedFollowCapacity(charId)) return REASON_PET_FOLLOW_FULL
+        // Dung lượng tùy tùng (40081): chỉ slot đã mở mới nhận pet mới.
+        // Nếu mình cũng giao một pet, slot đó chỉ được tính là chỗ trống khi chính nó đang nằm trong vùng đã mở.
+        if (!petSystem.hasFreeUnlockedFollowSlot(charId, giving?.slotIndex)) return REASON_PET_FOLLOW_FULL
 
         val npcId = receiving.npcId
 

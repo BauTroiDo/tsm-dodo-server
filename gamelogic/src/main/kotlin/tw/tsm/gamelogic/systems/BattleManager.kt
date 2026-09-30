@@ -84,7 +84,7 @@ class BattleManager(
             // SceneManager.CheckLimit(sceneId, ESceneLimit.NoCatch): NoCatch=7,
             // stored in SceneData.limits[1] as bit 64.
             if ((sceneSetDefs[session.mapId]?.limit1 ?: 0) and SCENE_LIMIT_NO_CATCH_BIT != 0) return@validator false
-            if (pc.follow.size >= petSystem.getUnlockedFollowCapacity(session.roleId.toLong())) return@validator false
+            if (!petSystem.hasFreeUnlockedFollowSlot(session.roleId.toLong())) return@validator false
             val npcDef = npcDefs[npcId] ?: return@validator false
             // DVT ENpc.Elephant=22 requires learned riding skill 14034.
             if (npcDef.kind == NPC_KIND_ELEPHANT &&
@@ -952,6 +952,11 @@ class BattleManager(
                         )
                         logger.info { "Trận ${battle.battleId}: người chơi $playerId bắt được tướng npcId=$npcId → slot=$slotIndex" }
                     } else {
+                        if (!petSystem.hasFreeUnlockedFollowSlot(charId)) {
+                            petSystem.getNextFollowUnlockLevel(charId)?.let { level ->
+                                responseSender.sendSystemMessage(session, "Ô võ tướng tiếp theo mở ở Lv$level.")
+                            }
+                        }
                         logger.warn { "Trận ${battle.battleId}: thêm tướng npcId=$npcId thất bại (trùng hoặc đội đầy)" }
                     }
                 }

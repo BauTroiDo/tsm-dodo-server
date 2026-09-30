@@ -118,6 +118,11 @@ class FollowNpcHandler(
 
         val followSlot = petSystem.retrieveFromCart(characterId, cartSlot)
         if (followSlot < 0) {
+            if (!petSystem.hasFreeUnlockedFollowSlot(characterId)) {
+                petSystem.getNextFollowUnlockLevel(characterId)?.let { level ->
+                    responseSender.sendSystemMessage(session, "Ô võ tướng tiếp theo mở ở Lv$level.")
+                }
+            }
             logger.debug { "Láº¥y Ä‘á»“ tá»« xe ngá»±a tháº¥t báº¡i: charId=$characterId cartSlot=$cartSlot" }
             return
         }

@@ -96,6 +96,11 @@ class InnHandler(
 
         val followSlot = petSystem.retrieveFromInn(charId, innSlot)
         if (followSlot < 0) {
+            if (!petSystem.hasFreeUnlockedFollowSlot(charId)) {
+                petSystem.getNextFollowUnlockLevel(charId)?.let { level ->
+                    responseSender.sendSystemMessage(session, "Ô võ tướng tiếp theo mở ở Lv$level.")
+                }
+            }
             logger.warn { "${session.characterName} nhận tướng từ quán trọ thất bại: innSlot=$innSlot" }
             return
         }

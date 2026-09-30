@@ -99,6 +99,11 @@ class WarriorRepositoryHandler(
 
         val followSlot = petSystem.retrieveFromWarehouse(charId, npcId)
         if (followSlot < 0) {
+            if (!petSystem.hasFreeUnlockedFollowSlot(charId)) {
+                petSystem.getNextFollowUnlockLevel(charId)?.let { level ->
+                    responseSender.sendSystemMessage(session, "Ô võ tướng tiếp theo mở ở Lv$level.")
+                }
+            }
             innResponseSender.sendWarehouseRetrieveResult(session, 255)  // thất bại
             return
         }

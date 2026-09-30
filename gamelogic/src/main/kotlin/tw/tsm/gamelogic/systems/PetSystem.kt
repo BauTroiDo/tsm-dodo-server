@@ -88,6 +88,30 @@ class PetSystem(
         }
     }
 
+    /** First empty slot that is currently unlocked for NEW placement. */
+    fun getFirstEmptyUnlockedFollowSlot(characterId: Long, additionallyFreeSlot: Int? = null): Int? {
+        val pc = cache[characterId] ?: return null
+        val unlocked = getUnlockedFollowCapacity(characterId)
+        synchronized(pc) {
+            return (1..unlocked).firstOrNull { slot ->
+                slot == additionallyFreeSlot || !pc.follow.containsKey(slot)
+            }
+        }
+    }
+
+    fun hasFreeUnlockedFollowSlot(characterId: Long, additionallyFreeSlot: Int? = null): Boolean =
+        getFirstEmptyUnlockedFollowSlot(characterId, additionallyFreeSlot) != null
+
+    /** Next level milestone for a locked extension slot; null when progression is not blocking. */
+    fun getNextFollowUnlockLevel(characterId: Long): Int? {
+        val state = playerStateManager?.getState(characterId)
+        return if (state != null) {
+            rosterPolicy.nextUnlockLevel(state.level, state.turn)
+        } else {
+            rosterPolicy.nextUnlockLevel(level = 0, turn = 0)
+        }
+    }
+
     /** Existing supported slots remain manageable even if progression later tightens. */
     fun isValidFollowSlot(characterId: Long, slot: Int): Boolean =
         slot in 1..getFollowCapacity(characterId)
@@ -360,7 +384,7 @@ class PetSystem(
             }
 
             // Tìm vị trí trống trong danh sách mang theo
-            val slot = (1..getUnlockedFollowCapacity(characterId)).firstOrNull { !pc.follow.containsKey(it) } ?: return null
+            val slot = getFirstEmptyUnlockedFollowSlot(characterId) ?: return null
 
             // DVT Role.FollowNpcAppear and PC TSPet.initPet both create a newly
             // captured/awarded pet at LV1. NpcDef.level is the encounter/spawn level,
@@ -432,7 +456,7 @@ class PetSystem(
     fun addExistingFollowNpc(characterId: Long, pet: FollowNpcData): Pair<Int, FollowNpcData>? {
         val pc = cache[characterId] ?: return null
         synchronized(pc) {
-            val slot = (1..getUnlockedFollowCapacity(characterId)).firstOrNull { !pc.follow.containsKey(it) } ?: return null
+            val slot = getFirstEmptyUnlockedFollowSlot(characterId) ?: return null
             val placed = pet.copy(slotIndex = slot, storageType = STORAGE_FOLLOW)
             pc.follow[slot] = placed
             pc.dirty = true
@@ -543,7 +567,7 @@ class PetSystem(
             val pet = pc.cart[cartSlot] ?: return -1
 
             // Tìm vị trí trống trong danh sách mang theo
-            val followSlot = (1..getUnlockedFollowCapacity(characterId)).firstOrNull { !pc.follow.containsKey(it) } ?: return -1
+            val followSlot = getFirstEmptyUnlockedFollowSlot(characterId) ?: return -1
 
             // Di chuyển
             pc.cart.remove(cartSlot)
@@ -812,7 +836,7 @@ class PetSystem(
             val pet = pc.inn[innSlot] ?: return -1
 
             // Tìm vị trí trống mang theo
-            val followSlot = (1..getUnlockedFollowCapacity(characterId)).firstOrNull { !pc.follow.containsKey(it) } ?: return -1
+            val followSlot = getFirstEmptyUnlockedFollowSlot(characterId) ?: return -1
 
             // Di chuyển
             pc.inn.remove(innSlot)
@@ -902,7 +926,7 @@ class PetSystem(
             val pet = pc.warehouse.find { it.npcId == npcId } ?: return -1
 
             // Tìm vị trí trống mang theo
-            val followSlot = (1..getUnlockedFollowCapacity(characterId)).firstOrNull { !pc.follow.containsKey(it) } ?: return -1
+            val followSlot = getFirstEmptyUnlockedFollowSlot(characterId) ?: return -1
 
             // Di chuyển
             pc.warehouse.remove(pet)

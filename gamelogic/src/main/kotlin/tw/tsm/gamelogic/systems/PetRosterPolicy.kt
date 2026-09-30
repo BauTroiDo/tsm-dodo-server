@@ -57,6 +57,18 @@ data class PetRosterPolicy(
             .coerceIn(LEGACY_CARRIED, supported)
     }
 
+    /** Next level milestone that unlocks one more carried slot, or null if none is gated. */
+    fun nextUnlockLevel(level: Int, turn: Int): Int? {
+        val supported = supportedCapacity()
+        if (!ninePetEnabled || !progressionEnabled) return null
+        if (rebirthUnlockAll && turn > 0) return null
+
+        val unlocked = unlockedCapacity(level, turn)
+        if (unlocked >= supported) return null
+
+        return unlockLevels.getOrNull(unlocked - LEGACY_CARRIED)
+    }
+
     /** Backward-compatible alias used by older tests/reference code. */
     fun carriedCapacity(): Int = supportedCapacity()
 
