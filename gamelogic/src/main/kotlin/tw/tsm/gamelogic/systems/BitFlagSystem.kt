@@ -64,6 +64,12 @@ class BitFlagSystem(
         logger.debug { "Thiết lập cờ vĩnh viễn: charId=$charId flagId=$flagId" }
     }
 
+    /** Xoá một cờ vĩnh viễn. DVT NFT collection dùng thao tác này khi lấy card/mount ra. */
+    suspend fun clearFlag(charId: Long, flagId: Int) {
+        repo.clearFlag(charId, flagId)
+        logger.debug { "Xoá cờ vĩnh viễn: charId=$charId flagId=$flagId" }
+    }
+
     /**
      * Xử lý hoàn thành hướng dẫn (C:005-008)
      *

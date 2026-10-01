@@ -8,9 +8,13 @@ import tw.tsm.domain.data.DispatchSaveData
 import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.PacketHandler
+import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.gamelogic.systems.DispatchSystem
+import tw.tsm.gamelogic.systems.MoneySystem
+import tw.tsm.gamelogic.systems.PointSystem
 import tw.tsm.protocol.PacketReader
 import tw.tsm.protocol.PacketWriter
+import tw.tsm.domain.util.OleDate
 
 private val logger = KotlinLogging.logger {}
 
@@ -25,7 +29,11 @@ private val logger = KotlinLogging.logger {}
  * - subKind 5 (hoàn thành phái cử): +chỉ số thanh tiến độ(1)
  */
 class DispatchHandler(
-    private val dispatchSystem: DispatchSystem
+    private val dispatchSystem: DispatchSystem,
+    private val innResponseSender: tw.tsm.app.response.InnResponseSender? = null,
+    private val responseSender: ResponseSender? = null,
+    private val moneySystem: MoneySystem? = null,
+    private val pointSystem: PointSystem? = null,
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.DISPATCH
@@ -34,7 +42,7 @@ class DispatchHandler(
         if (session.state != SessionState.IN_GAME) return
 
         when (subKind) {
-            1 -> handleQuery(session)
+            1 -> if (data.isEmpty()) handleQuery(session)
             2 -> handleStart(session, data)
             5 -> handleComplete(session, data)
             else -> logger.warn { "Sub-protocol phái đi chưa xử lý: subKind=$subKind" }
@@ -50,17 +58,23 @@ class DispatchHandler(
         val charId = session.roleId.toLong()
         logger.trace { "${session.characterName} tra cứu dữ liệu phái đi" }
 
+        // Đồng bộ quota ngày trước khi UI đọc RoleCount.Dispatch/BuyDispatch.
+        dispatchSystem.syncDailyUsage(charId)
+        responseSender?.sendRoleCountUpdate(
+            session,
+            dispatchSystem.getDispatchRoleCountSnapshot(charId),
+        )
+
         // Tải các phái cử đang tiến hành
         val dispatches = dispatchSystem.queryDispatches(charId)
 
         // S:086-003 cập nhật dữ liệu phái cử
-        if (dispatches.isNotEmpty()) {
-            sendDispatchData(session, dispatches)
-        }
+        sendDispatchData(session, dispatches)
+        innResponseSender?.sendInnNpcData(session, dispatchSystem.getInnPets(charId), dispatches.map { it.innPetIndex }.toSet())
 
         // S:086-004 cập nhật hiệu quả phái cử (sinh ngẫu nhiên)
-        val (effect1, effect2) = dispatchSystem.randomEffectIndices()
-        sendDispatchEffect(session, 0, effect1, effect2)
+        val offer = dispatchSystem.queryOffer(charId)
+        sendDispatchEffect(session, offer.dispatchKind, offer.effectIndex1, offer.effectIndex2)
 
         // S:086-006 cập nhật số lượng phái cử tối đa
         sendBarCount(session, DispatchSystem.MAX_SLIDER_COUNT)
@@ -75,7 +89,7 @@ class DispatchHandler(
      * Định dạng: +chỉ số tướng lữ quán(1)
      */
     private suspend fun handleStart(session: GameSession, data: ByteArray) {
-        if (data.isEmpty()) return
+        if (data.size != 1) return
         val reader = PacketReader(data)
         val innPetIndex = reader.readUByte()
         val charId = session.roleId.toLong()
@@ -85,24 +99,39 @@ class DispatchHandler(
         // Lấy thời gian server hiện tại (OLE Automation Date)
         val currentTime = getCurrentOaDate()
 
-        // Hiệu quả ngẫu nhiên
-        val (effect1, effect2) = dispatchSystem.randomEffectIndices()
-
         val (resultCode, saveData) = dispatchSystem.startDispatch(
             characterId = charId,
             innPetIndex = innPetIndex,
-            currentTime = currentTime,
-            effectIndex1 = effect1,
-            effectIndex2 = effect2
+            currentTime = currentTime
         )
 
-        // S:086-002 kết quả phái cử
-        sendDispatchResult(session, resultCode)
+        // C86-2 có thể là điểm reset ngày đầu tiên, nên luôn sync RoleCount về UI.
+        responseSender?.sendRoleCountUpdate(
+            session,
+            dispatchSystem.getDispatchRoleCountSnapshot(charId),
+        )
 
-        // Khi thành công cập nhật dữ liệu phái cử
+        // Lua refreshes the UI on success, so update its data first.
         if (resultCode == DispatchStartResult.SUCCESS && saveData != null) {
-            sendDispatchData(session, listOf(saveData))
+            val dispatches = dispatchSystem.queryDispatches(charId)
+            sendDispatchData(session, dispatches)
+            innResponseSender?.sendInnNpcData(
+                session,
+                dispatchSystem.getInnPets(charId),
+                dispatches.map { it.innPetIndex }.toSet(),
+            )
+            val offer = dispatchSystem.queryOffer(charId)
+            sendDispatchEffect(session, offer.dispatchKind, offer.effectIndex1, offer.effectIndex2)
+
+            // Đồng bộ số dư sau khi phí đã được trừ thành công.
+            moneySystem?.getMoney(charId)?.let { (gold, auctionGold) ->
+                responseSender?.sendInitMoney(session, gold, auctionGold)
+            }
+            pointSystem?.getPoints(charId)?.let { (realPoint, virtualPoint) ->
+                responseSender?.sendPointBalance(session, realPoint, virtualPoint)
+            }
         }
+        sendDispatchResult(session, resultCode)
     }
 
     /**
@@ -111,7 +140,7 @@ class DispatchHandler(
      * Định dạng: +chỉ số thanh tiến độ(1)
      */
     private suspend fun handleComplete(session: GameSession, data: ByteArray) {
-        if (data.isEmpty()) return
+        if (data.size != 1) return
         val reader = PacketReader(data)
         val slotIndex = reader.readUByte()
         val charId = session.roleId.toLong()
@@ -120,19 +149,27 @@ class DispatchHandler(
 
         val currentTime = getCurrentOaDate()
 
-        val (resultCode, _) = dispatchSystem.completeDispatch(
+        val outcome = dispatchSystem.completeDispatchWithRewards(
             characterId = charId,
             slotIndex = slotIndex,
-            currentTime = currentTime
+            currentTime = currentTime,
         )
 
         // S:086-005 kết quả nhận thưởng
-        sendCompleteResult(session, resultCode)
+        sendCompleteResult(session, outcome.resultCode)
 
-        // Sau khi thành công gửi lại dữ liệu (xoá slot đã hoàn thành)
-        if (resultCode == DispatchCompleteResult.SUCCESS) {
+        // Sau khi thành công đồng bộ item, EXP/lữ quán và xoá slot trên UI.
+        if (outcome.resultCode == DispatchCompleteResult.SUCCESS) {
+            for ((bagSlot, thing) in outcome.addedItems) {
+                responseSender?.sendSetBagItem(session, bagSlot, thing, showMsg = true)
+            }
             val remaining = dispatchSystem.queryDispatches(charId)
             sendDispatchData(session, remaining)
+            innResponseSender?.sendInnNpcData(
+                session,
+                dispatchSystem.getInnPets(charId),
+                remaining.map { it.innPetIndex }.toSet(),
+            )
         }
     }
 
@@ -161,12 +198,17 @@ class DispatchHandler(
      * Định dạng: +số lượng(1) + N×[chỉ số thanh tiến độ(1) + thời gian bắt đầu(8) + thời gian kết thúc(8) + loại phái cử(1) + chỉ số tướng lữ quán(1) + chỉ số hiệu quả 1(1) + chỉ số hiệu quả 2(1)]
      */
     private fun sendDispatchData(session: GameSession, dispatches: List<DispatchSaveData>) {
-        val packetSize = 3 + 1 + dispatches.size * 21 // header(3) + count(1) + N * 21
+        // Lua merges records rather than clearing the table. Explicitly clear empty slots.
+        val snapshot = (1..DispatchSystem.MAX_SLIDER_COUNT).map { slot ->
+            dispatches.firstOrNull { it.slotIndex == slot }
+                ?: DispatchSaveData(slot, 0.0, 0.0, 0, 0)
+        }
+        val packetSize = 3 + 1 + snapshot.size * 21 // header(3) + count(1) + N * 21
         val writer = PacketWriter(packetSize)
             .writeByte(Opcodes.DISPATCH).writeByte(3).writeByte(0)
-            .writeByte(dispatches.size)
+            .writeByte(snapshot.size)
 
-        for (d in dispatches) {
+        for (d in snapshot) {
             writer.writeByte(d.slotIndex)
             writer.writeDoubleLE(d.startTime)
             writer.writeDoubleLE(d.endTime)
@@ -208,11 +250,11 @@ class DispatchHandler(
         session.send(packet)
     }
 
-    /** Lấy thời gian server hiện tại (OLE Automation Date)*/
-    private fun getCurrentOaDate(): Double {
-        // OLE Automation Date：1899-12-30 00:00:00 = 0.0
-        // Java epoch (1970-01-01) = 25569.0 in OA
-        val javaMillis = System.currentTimeMillis()
-        return (javaMillis / 86_400_000.0) + 25569.0
-    }
+    /**
+     * Lấy thời gian server theo đúng wall-clock OLE Automation Date mà DVT dùng.
+     *
+     * Client đọc bằng DateTime.FromOADate() rồi so với CGTimer.serverTime;
+     * phải cùng chuẩn với S:001-016, không được dùng UTC epoch OADate.
+     */
+    private fun getCurrentOaDate(): Double = OleDate.nowLocal()
 }

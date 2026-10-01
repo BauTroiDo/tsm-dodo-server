@@ -44,6 +44,17 @@ class BattleSkillResolver(
     }
 
     /**
+     * PC makeExecutionPacket chia damage theo nb_target (mapping với DVT fightArea):
+     * 2/3/4 -> /2, 5/6/7 -> /3, 8 -> /4. Area 1 và 255 không có chia ở baseline PC.
+     */
+    private fun getDamageDivisor(fightArea: Int): Int = when (fightArea) {
+        2, 3, 4 -> 2
+        5, 6, 7 -> 3
+        8 -> 4
+        else -> 1
+    }
+
+    /**
      * Tra cứu định nghĩa kỹ năng (để NPC AI phán định loại kỹ năng)
      */
     fun getSkillDef(skillId: Int): SkillDef? = skillDefs[skillId]
@@ -72,6 +83,7 @@ class BattleSkillResolver(
         val skill = if (skillId == BattleConstants.HAND_FIGHT_SKILL_ID) null else skillDefs[skillId]
         val skillLv = if (skill == null) 1 else (attacker.skillLevels[skillId] ?: 1).coerceIn(1, 10)
         val fightArea = skill?.let { getFightArea(it, skillLv) } ?: 1
+        val damageDivisor = getDamageDivisor(fightArea)
         val isHeal = skill != null && BattleDamageCalc.isHealSkill(skill)
         val targetsFriendlySide = skill != null && skill.fightWay in FRIENDLY_ONLY_FIGHT_WAYS
         val targetsDeadFriendly = skill?.fightWay == 8
@@ -190,7 +202,9 @@ class BattleSkillResolver(
                 val rawCalcResult = when {
                     isHeal -> BattleDamageCalc.calculateHeal(attacker, target, skill!!)
                     enemyStatusOnly -> BattleDamageCalc.calculateStatusOnly(attacker, target, skill!!, skillId)
-                    else -> BattleDamageCalc.calculateAttack(attacker, target, skill, terrain, skillId)
+                    else -> BattleDamageCalc.calculateAttack(
+                        attacker, target, skill, terrain, skillId, skillLv, damageDivisor
+                    )
                 }
 
                 // Áp hệ số Combo: chỉ có hiệu lực với sát thương tấn công vật lý (Combo không ảnh hưởng kỹ năng hồi phục)

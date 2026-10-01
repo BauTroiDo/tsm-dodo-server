@@ -15,10 +15,16 @@ import tw.tsm.domain.valueobjects.FollowNpcData
 import tw.tsm.domain.valueobjects.ThingData
 import tw.tsm.gamelogic.systems.PetSystem
 import tw.tsm.gamelogic.systems.PlayerStateManager
+import tw.tsm.gamelogic.systems.StatSystem
 
 class DvtCartTransitionTest {
     private val repo = mockk<PetRepository>(relaxed = true)
-    private val pets = PetSystem(repo, mockk(relaxed = true))
+    private val stat = mockk<StatSystem>(relaxed = true) {
+        every { calculateNeedTotalExp(any(), any()) } returns 0L
+        every { calculateMaxHp(any(), any(), any(), any(), any(), any(), any()) } returns 50_000L
+        every { calculateMaxSp(any(), any(), any(), any(), any(), any(), any()) } returns 5_000
+    }
+    private val pets = PetSystem(repo, stat)
     private val response = mockk<ResponseSender>(relaxed = true)
     private val session = mockk<GameSession>(relaxed = true) {
         every { roleId } returns 42

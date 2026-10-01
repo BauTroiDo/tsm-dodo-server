@@ -93,7 +93,8 @@ class EveTriggerRouter(
                 npcClickId = mineId,
                 eventData = eventData,
                 state = state,
-                triggerKind = 7
+                triggerKind = 7,
+                onlyIfIdle = true
             )
             if (result != null) {
                 logger.info {
@@ -142,7 +143,10 @@ class EveTriggerRouter(
         }
 
         for (eventData in candidates) {
-            val result = resolveActivateAndAdvance(charId, mapId, npcClickId, eventData, state, triggerKind = 3)
+            val result = resolveActivateAndAdvance(
+                charId, mapId, npcClickId, eventData, state,
+                triggerKind = 3, onlyIfIdle = true
+            )
             if (result != null) {
                 logger.info { "${session.characterName} ServerBump kích hoạt: eveNo=${eventData.eveNo} clickId=$npcClickId mapId=$mapId" }
                 flowController.startEvent(session, result)
@@ -325,16 +329,22 @@ class EveTriggerRouter(
         charId: Long, mapId: Int, npcClickId: Int,
         eventData: NpcEventData,
         state: PlayerEventState,
-        triggerKind: Int = 0, chainDepth: Int = 0
+        triggerKind: Int = 0, chainDepth: Int = 0,
+        onlyIfIdle: Boolean = false
     ): EveResult? {
         val resolved = conditionResolver.resolveEvent(eventData, state, mapId) ?: return null
 
-        stateMachine.activate(charId, EventSession(
+        val eventSession = EventSession(
             mapId = mapId, eveNo = eventData.eveNo, npcClickId = npcClickId,
             triggerKind = triggerKind, chainDepth = chainDepth,
             results = resolved.results,
             matchedConditionNo = resolved.matchedConditionNo
-        ))
+        )
+        if (onlyIfIdle) {
+            if (!stateMachine.tryActivateIfIdle(charId, eventSession)) return null
+        } else {
+            stateMachine.activate(charId, eventSession)
+        }
 
         logger.debug { "Kích hoạt sự kiện: charId=$charId mapId=$mapId clickId=$npcClickId eveNo=${eventData.eveNo} → ${resolved.results.size} result" }
         return stateMachine.advance(charId)

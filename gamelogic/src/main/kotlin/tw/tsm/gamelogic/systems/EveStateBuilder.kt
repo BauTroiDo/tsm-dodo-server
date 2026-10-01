@@ -2,12 +2,15 @@ package tw.tsm.gamelogic.systems
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import tw.tsm.domain.constants.ItemConstants
+import tw.tsm.domain.data.ActivityTimeDef
 import tw.tsm.domain.data.EveResult
 import tw.tsm.domain.data.MarkDef
 import tw.tsm.domain.data.SceneEveData
+import tw.tsm.domain.data.SceneSetDef
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.repositories.QuestRepository
 import tw.tsm.domain.valueobjects.FollowNpcData
+import java.time.LocalDateTime
 
 private val logger = KotlinLogging.logger {}
 
@@ -33,7 +36,10 @@ class EveStateBuilder(
     private val skillSystem: SkillSystem,
     private val moneySystem: MoneySystem,
     private val questRepository: QuestRepository,
-    private val pointSystem: PointSystem? = null
+    private val pointSystem: PointSystem? = null,
+    private val partySystem: PartySystem? = null,
+    private val sceneSetDefs: Map<Int, SceneSetDef> = emptyMap(),
+    private val activityTimeDefs: Map<Int, ActivityTimeDef> = emptyMap(),
 ) {
 
     /**
@@ -79,6 +85,16 @@ class EveStateBuilder(
 
         val followPets = petSystem.getFollowPets(charId)
         val followNpcIds = followPets.values.map { it.npcId }.toSet()
+        val followNpcLevels = followPets.values
+            .groupBy { it.npcId }
+            .mapValues { (_, pets) -> pets.maxOf { it.level } }
+        val followNpcLoyalties = followPets.values
+            .groupBy { it.npcId }
+            .mapValues { (_, pets) -> pets.maxOf { it.loyalty } }
+        val deployedNpcIds = followPets.values
+            .filter { it.isDeployed }
+            .map { it.npcId }
+            .toSet()
         val innNpcIds = petSystem.getInnPets(charId)
             .values.map { it.npcId }.toSet()
         val cartNpcIds = petSystem.getCartPets(charId)
@@ -92,6 +108,27 @@ class EveStateBuilder(
         val realPoint = pointSystem?.getRealPoint(charId) ?: -1
 
         val eventSession = stateMachine.getSession(charId)
+        val moral = playerStateManager.getMoral(charId)
+        val killNum = playerStateManager.getKillNum(charId)
+        val runtimeState = playerStateManager.getState(charId)
+        val activityOpen = resolveActivityOpen(mapId)
+        val leaderId = partySystem?.getLeaderId(charId) ?: 0L
+        val teamMembers = if (leaderId == 0L) {
+            listOf(charId)
+        } else {
+            partySystem?.getTeamMembers(leaderId).orEmpty().ifEmpty { listOf(charId) }
+        }
+        val teamSize = teamMembers.size.coerceAtLeast(1)
+        val teamState = partySystem?.getTeamState(charId)?.code ?: 0
+        val romancePairValid = if (teamMembers.size == 2) {
+            val sexes = teamMembers.map { memberId ->
+                if (memberId == charId && session != null) session.sex
+                else playerStateManager.getSex(memberId)
+            }
+            sexes.all { it in 1..2 } && sexes.toSet().size == 2
+        } else {
+            false
+        }
 
         return PlayerEventState(
             missionSteps = missionSteps,
@@ -102,16 +139,34 @@ class EveStateBuilder(
             bagCapacity = bagCapacity,
             equipItems = equipItems,
             sex = session?.sex ?: 0,
-            level = session?.level ?: 0,
+            // Offline fallback: schema hiện chưa có persistence phe cốt truyện.
+            // DVT Eve/Talk xác nhận value=2 là nhánh Khăn Vàng/Hắc Sơn;
+            // nhân vật bình thường dùng 1 cho đến khi tìm được nguồn server gốc.
+            storyFaction = DEFAULT_STORY_FACTION,
+            moral = moral,
+            killNum = killNum,
+            activityOpen = activityOpen,
+            teamSize = teamSize,
+            teamState = teamState,
+            romancePairValid = romancePairValid,
+            element = runtimeState?.element ?: 0,
+            transformNpcId = runtimeState?.transformNpcId ?: 0,
+            career = runtimeState?.career ?: 0,
+            level = session?.level ?: runtimeState?.level ?: 0,
             serverId = session?.serverId?.takeIf { it > 0 } ?: -1,
             realPoint = realPoint,
             rebornCount = playerStateManager.getState(charId)?.turn ?: 0,
+            activeTurn2Balls = skillSystem.getCache(charId)?.activeTurn2Balls?.toSet().orEmpty(),
             isMounted = (session?.mountNpcId ?: 0) != 0,
             lastSurfaceId = eventSession?.lastSurfaceId ?: -1,
             lastChoiceCode = eventSession?.lastChoiceCode ?: -1,
             battleResult = eventSession?.battleResult ?: 0,
+            fightDataKey = eventSession?.fightDataKey ?: 0,
             completedEveCounts = stateMachine.getCompletedEveCounts(charId, mapId),
             followNpcIds = followNpcIds,
+            followNpcLevels = followNpcLevels,
+            followNpcLoyalties = followNpcLoyalties,
+            deployedNpcIds = deployedNpcIds,
             followPetCount = followPets.size,
             maxFollowPets = petSystem.getUnlockedFollowCapacity(charId),
             innNpcIds = innNpcIds,
@@ -156,6 +211,7 @@ class EveStateBuilder(
         private const val ROLE_COUNT_BAG_3 = 124
         private const val NPC_SECOND_REINCARNATION_MIN_LEVEL = 60
         private const val NPC_SECOND_REINCARNATION_MIN_LOYALTY = 100
+        private const val DEFAULT_STORY_FACTION = 1
 
         private fun calculateBagCapacity(roleCountValues: Map<Int, Int>): Int {
             val expandCount = (roleCountValues[ROLE_COUNT_BAG_1] ?: 0) +
@@ -166,6 +222,17 @@ class EveStateBuilder(
         }
     }
 
+    /**
+     * class14 = trạng thái mở hoạt động của scene.
+     *
+     * DVT client data không có liên kết tĩnh scene -> ActivityTime trong SceneSet.
+     * SceneSet.limit1 là cờ hạn chế thao tác của map, KHÔNG phải activityId.
+     *
+     * Với server offline, policy mặc định là mở nội dung activity để tránh hard-block
+     * vĩnh viễn các cửa/NPC/Mine chỉ vì thiếu scheduler server gốc. Khi sau này tìm được
+     * nguồn schedule authoritative, chỉ cần thay implementation này.
+     */
+    private fun resolveActivityOpen(mapId: Int): Boolean = true
     private fun calculateNpcSecondReincarnationStatus(
         charId: Long,
         followPets: Collection<FollowNpcData>

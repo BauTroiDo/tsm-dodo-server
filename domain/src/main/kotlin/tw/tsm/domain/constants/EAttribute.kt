@@ -34,6 +34,7 @@ object EAttribute {
     const val KILL_NUM = 63     // Điểm diệt địch
     const val FAITH = 64        // Lòng trung thành
     const val BATTLE_HONOR = 66 // Quan huân chiến dịch
+    const val ASTROLABE_POINT = 68 // Điểm Mệnh Bàn (DVT Astrolabe.natalPoint)
 
     // ── Liên quan chuyển sinh ──
     const val TURN = 70         // Trạng thái chuyển sinh
@@ -58,6 +59,7 @@ object EAttribute {
     const val UPGRADE_LV = 87   // Cấp cường hoá
     const val STEAL_HP = 88     // Hồi HP khi tấn công
     const val STEAL_SP = 89     // Hồi SP khi tấn công
+    const val RESISTANCE_PERCENT = 90 // Tỷ lệ kháng trạng thái bất thường (%)
 
     // ── Thuộc tính phần trăm (RoleController.lua L77-86) ──
     const val ATK_PERCENT = 101     // Tấn công(%)
@@ -69,6 +71,15 @@ object EAttribute {
     const val HP_PERCENT = 107      // HP tối đa(%)
     const val SP_PERCENT = 108      // SP tối đa(%)
     const val INT_PERCENT = 109     // Trí lực(%)
+    const val REPLY_VOLUME = 110    // Lượng hồi phục(%)
+    const val REPLIES = 111         // Lượng được hồi phục(%)
+    const val CONTINUOUS_DAMAGE_REDUCTION = 112 // Giảm sát thương liên tục(%)
+    const val INCREASE_TOTAL_DAMAGE = 113       // Tăng tổng sát thương gây ra(%)
+    const val DAMAGE_REDUCTION = 114            // Giảm sát thương nhận(%)
+    const val REDUCE_AMOUNT_REPLY = 115         // Giảm lượng hồi phục(%)
+    const val REDUCE_AMOUNT_REPLIES = 116       // Giảm lượng được hồi phục(%)
+    const val REDUCE_TOTAL_DAMAGE = 117         // Giảm tổng sát thương bản thân gây ra(%)
+    const val INCREASE_DAMAGE_TAKEN_SELF = 118  // Tăng tổng sát thương bản thân nhận(%)
 
     // ── Kỹ năng ──
     const val SKILL = 201           // Kỹ năng

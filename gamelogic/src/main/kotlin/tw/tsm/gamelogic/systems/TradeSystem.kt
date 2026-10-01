@@ -2,12 +2,14 @@ package tw.tsm.gamelogic.systems
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import tw.tsm.domain.data.ItemDef
+import tw.tsm.domain.data.SacredEquipPrimaryDef
 import tw.tsm.domain.enums.TradePlayerState
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.StatCalculator
 import tw.tsm.domain.valueobjects.FollowNpcData
 import tw.tsm.domain.valueobjects.ThingData
+import tw.tsm.domain.util.DvtPercentMath
 import java.util.concurrent.ConcurrentHashMap
 
 private val logger = KotlinLogging.logger {}
@@ -37,13 +39,21 @@ class TradeSystem(
     private val itemDefs: Map<Int, ItemDef>,
     private val petSystem: PetSystem,
     private val battleManager: BattleManager,
-    private val statCalculator: StatCalculator
+    private val statCalculator: StatCalculator,
+    private val sacredEquipPrimaryDefs: Map<Int, SacredEquipPrimaryDef> = emptyMap(),
 ) {
     /** Nội dung giá đưa ra trong giao dịch (Chế độ vật phẩm dùng bagIndices; chế độ võ tướng dùng petSlot, 0 = chỉ đưa tiền) */
     data class TradeOffer(
         val money: Int,
         val bagIndices: List<Int> = emptyList(),
         val petSlot: Int = 0
+    )
+
+    /** Võ tướng vừa được một nhân vật sở hữu sau khi giao dịch hoàn tất. */
+    data class PetOwnershipGrant(
+        val characterId: Long,
+        val npcId: Int,
+        val session: GameSession,
     )
 
     /** Phiên giao dịch */
@@ -296,14 +306,20 @@ class TradeSystem(
      * @param result 1=xác nhận, 2=hủy
      * @param expectedMode Chế độ tương ứng với sub protocol gốc (ngăn chặn giả mạo xác nhận chéo chế độ)
      */
-    fun confirmOrCancel(playerId: Long, result: Int, expectedMode: Int = MODE_ITEM) {
-        val trade = activeTrades[playerId] ?: return
+    fun confirmOrCancel(
+        playerId: Long,
+        result: Int,
+        expectedMode: Int = MODE_ITEM,
+    ): List<PetOwnershipGrant> {
+        val trade = activeTrades[playerId] ?: return emptyList()
+        var ownershipGrants: List<PetOwnershipGrant> = emptyList()
+
         synchronized(trade) {
-            if (trade.mode != expectedMode) return
+            if (trade.mode != expectedMode) return emptyList()
             if (result == 2) {
                 // Hủy: Chỉ cần thông báo cho đối phương (UI của mình đã đóng)
                 cancelTradeInternal(trade, playerId, REASON_PARTNER_CANCELLED, notifyInitiator = false)
-                return
+                return emptyList()
             }
 
             // result == 1: Xác nhận
@@ -311,7 +327,7 @@ class TradeSystem(
             val myState = if (isA) trade.stateA else trade.stateB
 
             // Chỉ có thể xác nhận ở trạng thái Uploaded
-            if (myState !is TradePlayerState.Uploaded) return
+            if (myState !is TradePlayerState.Uploaded) return emptyList()
 
             if (isA) {
                 trade.stateA = TradePlayerState.Confirmed
@@ -324,12 +340,14 @@ class TradeSystem(
             // Cả hai bên đều xác nhận → Thực hiện trao đổi
             if (trade.stateA is TradePlayerState.Confirmed && trade.stateB is TradePlayerState.Confirmed) {
                 if (trade.mode == MODE_PET) {
-                    executePetTrade(trade)
+                    executePetTrade(trade) { ownershipGrants = it }
                 } else {
                     executeTrade(trade)
                 }
             }
         }
+
+        return ownershipGrants
     }
 
     // ── Ngắt kết nối/Hủy từ bên ngoài ──
@@ -431,11 +449,17 @@ class TradeSystem(
     private fun sendOnePetOffer(receiver: GameSession, giverCharId: Long, offer: TradeOffer) {
         val pet = if (offer.petSlot > 0) petSystem.getFollowNpc(giverCharId, offer.petSlot) else null
         if (pet != null) {
-            val bonus = EquipBonusCalculator.calculateTotalBonus(pet.equips, itemDefs)
-            val maxHp = statCalculator.calculateMaxHp(
+            val bonus = EquipBonusCalculator.calculateTotalBonus(
+                pet.equips, itemDefs, sacredEquipPrimaryDefs
+            )
+            val baseMaxHp = statCalculator.calculateMaxHp(
                 level = pet.level, hpx = pet.hpx + bonus.equipHpx,
                 equipMaxHp = bonus.equipMaxHp, turn = pet.turnKind
-            ).toInt()
+            )
+            val maxHp = DvtPercentMath.applyFinalPercentFloor(baseMaxHp, bonus.hpPercent)
+                .coerceAtLeast(1L)
+                .coerceAtMost(Int.MAX_VALUE.toLong())
+                .toInt()
             val maxSp = statCalculator.calculateMaxSp(
                 level = pet.level, spx = pet.spx + bonus.equipSpx,
                 equipMaxSp = bonus.equipMaxSp, turn = pet.turnKind
@@ -574,7 +598,10 @@ class TradeSystem(
      *
      * Xác thực lại võ tướng/tiền/sức chứa bên nhận và tính trùng lặp, trao đổi nguyên tử.
      */
-    private fun executePetTrade(trade: TradeSession) {
+    private fun executePetTrade(
+        trade: TradeSession,
+        onSuccess: (List<PetOwnershipGrant>) -> Unit = {},
+    ) {
         val charIdA = getCharacterId(trade.playerA)
         val charIdB = getCharacterId(trade.playerB)
         val sessionA = worldManager.getPlayerById(trade.playerA)
@@ -691,6 +718,17 @@ class TradeSystem(
         val (goldB, auctionB) = moneySystem.getMoney(charIdB)
         responseSender.sendInitMoney(sessionA, goldA, auctionA)
         responseSender.sendInitMoney(sessionB, goldB, auctionB)
+
+        onSuccess(
+            buildList {
+                placedAtA?.let { (_, pet) ->
+                    add(PetOwnershipGrant(charIdA, pet.npcId, sessionA))
+                }
+                placedAtB?.let { (_, pet) ->
+                    add(PetOwnershipGrant(charIdB, pet.npcId, sessionB))
+                }
+            }
+        )
 
         logger.info {
             "Giao dịch võ tướng hoàn tất: A=${trade.playerA}(đưa npc=${petA?.npcId ?: 0}+${offerA.money} vàng) " +

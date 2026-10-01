@@ -79,4 +79,52 @@ object EveChainResolver {
         }
         return ChainResolveResult(head.results, head.conditionNo, bestStepScore)
     }
+
+    /**
+     * Tìm Door continuation hậu chiến đi kèm một nhánh thắng cụ thể.
+     *
+     * DVT scene 12421/eve2 có hai chain cùng hợp lệ sau khi thắng:
+     * - chain nhiều điều kiện: cập nhật tài nguyên + mission 10044;
+     * - chain class8 đơn lẻ phía sau: resultType=2/resultClass=7 để đi qua cổng.
+     *
+     * Không thay đổi quy tắc resolve chung. Chỉ nối continuation khi shape đủ chặt:
+     * nhánh đã chọn là chain nhiều điều kiện có class8, bản thân chưa warp, và có
+     * một chain class8 đơn lẻ khác khớp với đúng một Door result.
+     */
+    fun findPostBattleDoorContinuation(
+        conditions: List<EveCondition>,
+        evaluator: (EveCondition) -> Boolean,
+        matchedConditionNo: Int
+    ): List<EveResult> {
+        val chains = buildChains(conditions)
+        val matchedChain = chains.firstOrNull { it.firstOrNull()?.conditionNo == matchedConditionNo }
+            ?: return emptyList()
+
+        if (matchedChain.size <= 1 || matchedChain.none { it.conditionClass == 8 }) {
+            return emptyList()
+        }
+        if (matchedChain.first().results.any { it.resultType == 2 && it.resultClass == 7 }) {
+            return emptyList()
+        }
+
+        val continuation = chains.asSequence()
+            .filter { it.size == 1 }
+            .map { it.first() }
+            .filter { it.conditionNo != matchedConditionNo }
+            .filter { it.conditionClass == 8 }
+            .filter { evaluator(it) }
+            .mapNotNull { head ->
+                head.results.singleOrNull()?.takeIf {
+                    it.resultType == 2 && it.resultClass == 7
+                }
+            }
+            .firstOrNull()
+            ?: return emptyList()
+
+        logger.debug {
+            "Nối Door continuation hậu chiến: matchedCond=$matchedConditionNo " +
+                "→ sceneInfo=${continuation.parameter}"
+        }
+        return listOf(continuation)
+    }
 }

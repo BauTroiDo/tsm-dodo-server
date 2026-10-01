@@ -65,6 +65,21 @@ class QuestRepositoryImpl : QuestRepository {
             Unit
         }
 
+    override suspend fun finishMission(charId: Long, missionId: Int, bitId: Int) =
+        suspendTransaction {
+            CharacterMissions.deleteWhere {
+                (CharacterMissions.charId eq charId) and (CharacterMissions.missionId eq missionId)
+            }
+            if (bitId > 0) {
+                CharacterMissionFlags.upsert {
+                    it[CharacterMissionFlags.charId] = charId
+                    it[CharacterMissionFlags.bitIndex] = bitId
+                    it[CharacterMissionFlags.bitValue] = 1
+                }
+            }
+            Unit
+        }
+
     // ── Theo dõi hoàn thành sự kiện ──
 
     override suspend fun getCompletedEventCounts(charId: Long, mapId: Int): Map<Int, Int> =

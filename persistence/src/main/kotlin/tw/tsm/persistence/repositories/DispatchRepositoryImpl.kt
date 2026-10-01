@@ -6,8 +6,11 @@ import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
+import org.jetbrains.exposed.v1.jdbc.upsert
+import tw.tsm.domain.data.DispatchDailyUsage
 import tw.tsm.domain.data.DispatchSaveData
 import tw.tsm.domain.interfaces.repositories.DispatchRepository
+import tw.tsm.persistence.tables.CharacterDispatchDaily
 import tw.tsm.persistence.tables.CharacterDispatches
 
 /**
@@ -52,6 +55,31 @@ class DispatchRepositoryImpl : DispatchRepository {
             CharacterDispatches.deleteWhere {
                 (CharacterDispatches.characterId eq characterId) and
                     (CharacterDispatches.slotIndex eq slotIndex)
+            }
+        }
+    }
+
+    override suspend fun getDailyUsage(characterId: Long): DispatchDailyUsage? =
+        suspendTransaction {
+            CharacterDispatchDaily.selectAll()
+                .where { CharacterDispatchDaily.characterId eq characterId }
+                .singleOrNull()
+                ?.let { row ->
+                    DispatchDailyUsage(
+                        dayKey = row[CharacterDispatchDaily.dayKey],
+                        freeUsed = row[CharacterDispatchDaily.freeUsed],
+                        paidUsed = row[CharacterDispatchDaily.paidUsed],
+                    )
+                }
+        }
+
+    override suspend fun saveDailyUsage(characterId: Long, usage: DispatchDailyUsage) {
+        suspendTransaction {
+            CharacterDispatchDaily.upsert {
+                it[CharacterDispatchDaily.characterId] = characterId
+                it[dayKey] = usage.dayKey
+                it[freeUsed] = usage.freeUsed
+                it[paidUsed] = usage.paidUsed
             }
         }
     }

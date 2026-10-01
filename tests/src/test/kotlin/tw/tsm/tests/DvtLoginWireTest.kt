@@ -3,6 +3,7 @@ package tw.tsm.tests
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import tw.tsm.app.response.AchievementResponseSender
+import tw.tsm.app.response.BattleResponseSender
 import tw.tsm.app.response.LoginResponseSender
 import tw.tsm.app.response.SceneResponseSender
 import tw.tsm.domain.interfaces.SessionSender
@@ -123,6 +124,58 @@ class DvtLoginWireTest {
         repeat(6) { r.short } // int/atk/def/agi/hpx/spx
         assertEquals(21, r.get().toInt() and 0xFF)
         assertEquals(123456, r.int)
+    }
+
+    @Test fun `player data carries five persisted Moral values in DVT order`() {
+        val moral = intArrayOf(111, 222, 333, 444, 555)
+        val record = CharacterRecord(
+            id = 31,
+            accountId = 1,
+            name = "MoralTest",
+            moral = moral
+        )
+        val stat = object : StatCalculator {
+            override fun calculateMaxHp(
+                level: Int, hpx: Int, equipMaxHp: Int, extraHp: Int,
+                turn: Int, career: Int, turn3Lv: Int
+            ): Long = 100L
+            override fun calculateMaxSp(
+                level: Int, spx: Int, equipMaxSp: Int, extraSp: Int,
+                turn: Int, career: Int, turn3Lv: Int
+            ): Int = 50
+        }
+
+        val dto = PlayerDataDto.fromCharacterRecord(record, stat)
+        assertArrayEquals(moral, dto.moral)
+
+        val session = Capture()
+        LoginResponseSender().sendPlayerData(session, dto)
+        val r = session.reader()
+        // Packet header 3 bytes + 75 payload bytes before five UInt16 Moral values.
+        r.position(3 + 75)
+        assertEquals(111, r.short.toInt() and 0xFFFF)
+        assertEquals(222, r.short.toInt() and 0xFFFF)
+        assertEquals(333, r.short.toInt() and 0xFFFF)
+        assertEquals(444, r.short.toInt() and 0xFFFF)
+        assertEquals(555, r.short.toInt() and 0xFFFF)
+    }
+
+    @Test fun `S008-014 world attribute matches DVT Moral realtime wire`() {
+        val session = Capture()
+        BattleResponseSender().sendWorldAttribute(
+            session = session,
+            attrKind = 50,
+            value = 4321L,
+            isPositive = true,
+            arg = 3
+        )
+        val r = session.reader()
+        assertEquals(listOf(8, 14, 0), List(3) { r.get().toInt() and 0xFF })
+        assertEquals(50, r.get().toInt() and 0xFF)
+        assertEquals(1, r.get().toInt() and 0xFF)
+        assertEquals(4321L, r.long)
+        assertEquals(3, r.int)
+        assertFalse(r.hasRemaining())
     }
 
     @Test fun `DVT special RoleCount 190 through 195 use high 16 bits on login wire`() {

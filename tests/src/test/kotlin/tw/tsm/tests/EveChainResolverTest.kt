@@ -203,9 +203,60 @@ class EveChainResolverTest : DescribeSpec({
     }
 
     // ══════════════════════════════════════════════
-    //  chainFilter — lọc đánh giá lại
+    //  post-battle Door continuation
     // ══════════════════════════════════════════════
 
+    describe("post-battle Door continuation") {
+        it("12421 eve2: sau nhánh cập nhật mission phải nối tiếp Door warp") {
+            val updateGold = EveResult(0, 1, 0, 7, 2, 2, -200, 0)
+            val updateMission = EveResult(0, 2, 0, 2, 10044, 1, 1, 0)
+            val doorWarp = EveResult(0, 1, 2, 7, 2, 0, 0, 0)
+            val conditions = listOf(
+                cond(
+                    no = 2, cls = 8, param = 0, pStyle = 1, andNum = 2,
+                    results = listOf(updateGold, updateMission)
+                ),
+                cond(
+                    no = 3, cls = 2, param = 10044, pStyle = 3,
+                    ops = 5, value = 0, andNum = 0
+                ),
+                cond(
+                    no = 6, cls = 8, param = 0, pStyle = 1, andNum = 1,
+                    results = listOf(doorWarp)
+                )
+            )
+            val state = PlayerEventState(
+                missionSteps = mapOf(10044 to 6),
+                battleResult = 1
+            )
+            val evaluator = { c: EveCondition -> EveConditionEvaluator.evaluate(c, state) }
+
+            val resolved = EveChainResolver.resolve(
+                conditions, evaluator, chainFilter = { chain -> chain.any { it.conditionClass == 8 } }
+            )
+            resolved.shouldNotBeNull()
+            resolved.matchedConditionNo shouldBe 2
+            resolved.results shouldBe listOf(updateGold, updateMission)
+
+            EveChainResolver.findPostBattleDoorContinuation(
+                conditions, evaluator, resolved.matchedConditionNo
+            ) shouldBe listOf(doorWarp)
+        }
+
+        it("không nối Door nếu nhánh đã chọn là class8 đơn lẻ") {
+            val doorWarp = EveResult(0, 1, 2, 7, 2, 0, 0, 0)
+            val conditions = listOf(
+                cond(no = 1, cls = 8, pStyle = 1, results = listOf(doorWarp))
+            )
+            EveChainResolver.findPostBattleDoorContinuation(
+                conditions, evaluator = { true }, matchedConditionNo = 1
+            ) shouldBe emptyList()
+        }
+    }
+
+    // ══════════════════════════════════════════════
+    //  chainFilter — lọc đánh giá lại
+    // ══════════════════════════════════════════════
     describe("chainFilter") {
         it("lọc ra chuỗi chứa class=10") {
             val conditions = listOf(

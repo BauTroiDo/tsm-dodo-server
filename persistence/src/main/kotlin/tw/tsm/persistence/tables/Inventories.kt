@@ -61,5 +61,20 @@ object Inventories : Table("inventories") {
     /** Cấp cường hoá thời trang*/
     val styleLevel = integer("style_level").default(0)
 
+    // ── DVT NFT/Myth extension: mythLv + 4 x (kind,value,extra) ──
+    val mythLevel = integer("myth_level").default(0)
+    val myth1Kind = integer("myth1_kind").default(0)
+    val myth1Value = integer("myth1_value").default(0)
+    val myth1Extra = integer("myth1_extra").default(0)
+    val myth2Kind = integer("myth2_kind").default(0)
+    val myth2Value = integer("myth2_value").default(0)
+    val myth2Extra = integer("myth2_extra").default(0)
+    val myth3Kind = integer("myth3_kind").default(0)
+    val myth3Value = integer("myth3_value").default(0)
+    val myth3Extra = integer("myth3_extra").default(0)
+    val myth4Kind = integer("myth4_kind").default(0)
+    val myth4Value = integer("myth4_value").default(0)
+    val myth4Extra = integer("myth4_extra").default(0)
+
     override val primaryKey = PrimaryKey(characterId, storageType, slot)
 }

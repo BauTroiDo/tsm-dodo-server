@@ -9,6 +9,7 @@ package tw.tsm.domain.constants
 object EItemUseKind {
     const val RETURN_SAVE_POINT = 2         // Về điểm lưu
     const val NO_ENCOUNTER = 4              // Không gặp quái 20 giây
+    const val TRANSFORM_DOLL = 5            // Búp bê biến hình (EItemKind.Transform=48)
     const val HP_FULL = 25                  // Hồi đầy thể lực
     const val EXP_EQUIP_150 = 40            // Kinh nghiệm x1.5
     const val GIFT_BOX = 48                 // Quà có thể mở (túi phúc)
@@ -24,7 +25,9 @@ object EItemUseKind {
     const val LOCK_BLISS_BAG = 228          // Túi phúc rương báu cần chìa khoá
     const val BLISS_BAG_KEY = 229           // Chìa khoá rương báu
     const val CAREER_CHANGE = 208           // Phù chuyển nghề
+    const val ASTROLABE = 211              // Vật phẩm tăng điểm Thất Tinh Mệnh Bàn
     const val ROLE_COUNT = 218              // Mã RoleCount
     const val BATTLE_ATTR_PILL = 200        // BUFF chiến đấu
     const val MOUNTS = 217                  // Tuyển tập tranh vật cưỡi (spare3 = NPC ID)
+    const val GODSKIN_STONE = 246           // Đá nâng cấp Thần Trang/Myth
 }

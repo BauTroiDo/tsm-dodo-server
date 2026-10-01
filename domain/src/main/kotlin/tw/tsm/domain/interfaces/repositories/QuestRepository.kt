@@ -70,6 +70,12 @@ interface QuestRepository {
      */
     suspend fun upsertFlag(charId: Long, bitIndex: Int, bitValue: Int)
 
+    /** Remove active progress and persist its completion flag as one operation. */
+    suspend fun finishMission(charId: Long, missionId: Int, bitId: Int) {
+        removeMission(charId, missionId)
+        if (bitId > 0) upsertFlag(charId, bitId, 1)
+    }
+
     // ── Theo dõi hoàn thành sự kiện (lưu bền completedEvents DB)──
 
     /**

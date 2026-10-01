@@ -5,9 +5,11 @@ package tw.tsm.domain.valueobjects
  *
  * Nguồn: protocal.lua protocolTable[5][3] → Role.ReceivePlayerData(data)
  */
+import tw.tsm.domain.constants.EAttribute
 import tw.tsm.domain.interfaces.repositories.CharacterRecord
 import tw.tsm.domain.interfaces.repositories.Turn3State
 import tw.tsm.domain.interfaces.StatCalculator
+import tw.tsm.domain.util.DvtPercentMath
 
 data class PlayerDataDto(
     // ── Thuộc tính cơ bản ──
@@ -84,7 +86,9 @@ data class PlayerDataDto(
             record: CharacterRecord,
             statCalc: StatCalculator,
             equipBonus: EquipBonusData = EquipBonusData.EMPTY,
-            turn3: Turn3State = Turn3State()
+            turn3: Turn3State = Turn3State(),
+            astrolabePoint: Int = 0,
+            astrolabeBonus: AstrolabeBonusData = AstrolabeBonusData.EMPTY
         ): PlayerDataDto {
             // Ánh xạ sáu chỉ số → thuộc tính chiến đấu
             val intelligence = record.int_
@@ -99,14 +103,18 @@ data class PlayerDataDto(
             val turn3Lv = if (record.turn >= 3) (record.level - 200).coerceAtLeast(0) else 0
             val calcLevel = if (record.turn >= 3) 200 else record.level
             val totalHpx = hpx + equipBonus.equipHpx +
-                (if (record.turn >= 3) turn3Lv.coerceAtMost(70) + turn3.hpx else 0)
-            val maxHp = statCalc.calculateMaxHp(
+                (if (record.turn >= 3) turn3Lv.coerceAtMost(70) + turn3.hpx else 0) +
+                astrolabeBonus.hpx
+            val baseMaxHp = statCalc.calculateMaxHp(
                 level = calcLevel, hpx = totalHpx,
                 equipMaxHp = equipBonus.equipMaxHp, extraHp = 0,
                 turn = record.turn, career = record.career, turn3Lv = turn3Lv
             )
+            val maxHp = DvtPercentMath.applyFinalPercentFloor(baseMaxHp, equipBonus.hpPercent)
+                .coerceAtLeast(1L)
             val totalSpx = spx + equipBonus.equipSpx +
-                (if (record.turn >= 3) turn3Lv + turn3.spx else 0)
+                (if (record.turn >= 3) turn3Lv + turn3.spx else 0) +
+                astrolabeBonus.spx
             val maxSp = statCalc.calculateMaxSp(
                 level = calcLevel, spx = totalSpx,
                 equipMaxSp = equipBonus.equipMaxSp, extraSp = 0,
@@ -130,6 +138,8 @@ data class PlayerDataDto(
                 exp = record.exp.coerceIn(0L, Int.MAX_VALUE.toLong()).toInt(),
                 skillPoint = record.skillPoint,
                 attrPoint = record.attrPoint,
+                killNum = record.killNum,
+                astrolabePoint = astrolabePoint.coerceIn(0, 65_535),
                 maxHp = maxHp,
                 maxSp = maxSp,
                 equipAtk = equipBonus.equipAtk,
@@ -140,6 +150,7 @@ data class PlayerDataDto(
                 equipMaxSp = equipBonus.equipMaxSp,
                 equipHpx = equipBonus.equipHpx,
                 equipSpx = equipBonus.equipSpx,
+                moral = record.moral.copyOf(5),
                 turn3Element = turn3.element,
                 turn3Exp = turn3.exp,
                 turn3Int = turn3.intelligence,
@@ -148,7 +159,22 @@ data class PlayerDataDto(
                 turn3Agi = turn3.agi,
                 turn3Hpx = turn3.hpx,
                 turn3Spx = turn3.spx,
-                turn3Skills = turn3.skills.toList()
+                turn3Skills = turn3.skills.toList(),
+                // DVT Role.ReceivePlayerData đọc các thuộc tính Mobile mở rộng ở cuối S:005-003.
+                newAttrs = listOf(
+                    EAttribute.ATK_PERCENT to equipBonus.atkPercent,
+                    EAttribute.DEF_PERCENT to equipBonus.defPercent,
+                    EAttribute.HP_PERCENT to equipBonus.hpPercent,
+                    EAttribute.INT_PERCENT to equipBonus.intPercent,
+                    EAttribute.CRITICAL to equipBonus.crit,
+                    EAttribute.CRIT_DAMAGE to equipBonus.critDamage,
+                    EAttribute.DODGE to equipBonus.dodge,
+                    EAttribute.HIT to equipBonus.hit,
+                    EAttribute.INCREASE_TOTAL_DAMAGE to equipBonus.increaseTotalDamage,
+                    EAttribute.DAMAGE_REDUCTION to equipBonus.damageReduction,
+                    EAttribute.REDUCE_TOTAL_DAMAGE to equipBonus.reduceTotalDamage,
+                    EAttribute.INCREASE_DAMAGE_TAKEN_SELF to equipBonus.increaseDamageTakenSelf
+                )
             )
         }
     }

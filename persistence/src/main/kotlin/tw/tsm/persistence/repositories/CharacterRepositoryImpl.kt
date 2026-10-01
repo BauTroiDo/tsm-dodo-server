@@ -250,6 +250,32 @@ class CharacterRepositoryImpl : CharacterRepository {
         }
     }
 
+    /** Lưu điểm diệt địch DVT. */
+    override suspend fun updateKillNum(characterId: Long, value: Int) {
+        suspendTransaction {
+            Characters.update({ Characters.id eq characterId }) {
+                it[Characters.killNum] = value
+            }
+        }
+    }
+
+    /** Lưu giá trị tuyệt đối độ thân thiện một phe DVT. */
+    override suspend fun updateMoral(characterId: Long, faction: Int, value: Int) {
+        val column = when (faction) {
+            1 -> Characters.moralWei
+            2 -> Characters.moralShu
+            3 -> Characters.moralWu
+            4 -> Characters.moralYellow
+            5 -> Characters.moralRanger
+            else -> error("Phe Moral không hợp lệ: $faction")
+        }
+        suspendTransaction {
+            Characters.update({ Characters.id eq characterId }) {
+                it[column] = value
+            }
+        }
+    }
+
     /** Truy vấn điểm nguyên bảo (điểm thực, điểm ảo)*/
     override suspend fun loadPoints(characterId: Long): Pair<Int, Int> =
         suspendTransaction {
@@ -298,7 +324,15 @@ class CharacterRepositoryImpl : CharacterRepository {
         turn = this[Characters.turn],
         career = this[Characters.career],
         fightNpcId = this[Characters.fightNpcId],
-        titleId = this[Characters.titleId]
+        titleId = this[Characters.titleId],
+        killNum = this[Characters.killNum],
+        moral = intArrayOf(
+            this[Characters.moralWei],
+            this[Characters.moralShu],
+            this[Characters.moralWu],
+            this[Characters.moralYellow],
+            this[Characters.moralRanger]
+        )
     )
 
     companion object {

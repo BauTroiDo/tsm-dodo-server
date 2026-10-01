@@ -36,6 +36,11 @@ class EveDoorWarpService(
      * @param onComplete  callback sau khi dịch chuyển hoàn tất (thường là completeAndEnd)
      */
     suspend fun execute(session: GameSession, result: EveResult, onComplete: suspend () -> Unit) {
+        val charId = session.roleId.toLong()
+        // EventHandler[2] bật ConductGate ngay khi nhận S:020-001 và có thể gửi
+        // C:020-006 ở frame kế tiếp, trước khi S:020-007/UILoading kịp có hiệu lực.
+        // Khóa phase trước packet đầu tiên để gói next đến sớm không complete event.
+        stateMachine.enterAwaitingWarp(charId)
         responseSender.sendCommonEvent(session, result)
 
         val sceneInfoKey = result.parameter
@@ -75,7 +80,6 @@ class EveDoorWarpService(
         worldManager.leaveMap(session)
         worldManager.enterMap(session, targetScene, targetX, targetY)
 
-        val charId = session.roleId.toLong()
         if (charId > 0) {
             characterRepository.updatePosition(charId, targetScene, targetX, targetY)
         }

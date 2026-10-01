@@ -9,11 +9,13 @@ import kotlinx.coroutines.launch
 import org.koin.dsl.module
 import tw.tsm.app.gm.GmCommandProcessor
 import tw.tsm.app.handlers.*
+import tw.tsm.app.response.GodskinResponseSender
 import tw.tsm.app.response.InnResponseSender
 import tw.tsm.data.GameDataManager
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.StatCalculator
 import tw.tsm.domain.interfaces.repositories.AccountRepository
+import tw.tsm.domain.interfaces.repositories.AstrolabeRepository
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
 import tw.tsm.domain.interfaces.repositories.InventoryRepository
 import tw.tsm.domain.interfaces.repositories.BitFlagRepository
@@ -23,6 +25,7 @@ import tw.tsm.network.NettyGameServer
 import tw.tsm.network.PacketDispatcher
 import tw.tsm.network.SessionManager
 import tw.tsm.persistence.repositories.AccountRepositoryImpl
+import tw.tsm.persistence.repositories.AstrolabeRepositoryImpl
 import tw.tsm.persistence.repositories.CharacterRepositoryImpl
 import tw.tsm.persistence.repositories.InventoryRepositoryImpl
 import tw.tsm.persistence.repositories.BitFlagRepositoryImpl
@@ -34,16 +37,20 @@ import tw.tsm.domain.interfaces.repositories.RoleCountRepository
 import tw.tsm.domain.interfaces.repositories.DispatchRepository
 import tw.tsm.domain.interfaces.repositories.FriendRepository
 import tw.tsm.domain.interfaces.repositories.MailRepository
+import tw.tsm.domain.interfaces.repositories.MessageBoardRepository
 import tw.tsm.domain.interfaces.repositories.SkillRepository
 import tw.tsm.domain.interfaces.repositories.UiSellCountRepository
 import tw.tsm.domain.interfaces.repositories.CharacterCurrencyRepository
+import tw.tsm.domain.interfaces.repositories.CollectionBookRepository
 import tw.tsm.domain.interfaces.repositories.SlotMachineRepository
 import tw.tsm.persistence.repositories.UiSellCountRepositoryImpl
 import tw.tsm.persistence.repositories.CharacterCurrencyRepositoryImpl
+import tw.tsm.persistence.repositories.CollectionBookRepositoryImpl
 import tw.tsm.persistence.repositories.SlotMachineRepositoryImpl
 import tw.tsm.persistence.repositories.DispatchRepositoryImpl
 import tw.tsm.persistence.repositories.FriendRepositoryImpl
 import tw.tsm.persistence.repositories.MailRepositoryImpl
+import tw.tsm.persistence.repositories.MessageBoardRepositoryImpl
 import tw.tsm.persistence.repositories.HotkeyRepositoryImpl
 import tw.tsm.persistence.repositories.MountRepositoryImpl
 import tw.tsm.persistence.repositories.FlyPointRepositoryImpl
@@ -92,6 +99,8 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             register(get<FollowNpcDeployHandler>())
             register(get<PkSettingHandler>())
             register(get<StatHandler>())
+            register(get<AstrolabeHandler>())
+            register(get<GodskinHandler>())
             register(get<MountHandler>())
             register(get<HotkeyHandler>())
             register(get<InnHandler>())
@@ -103,7 +112,9 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             register(get<DispatchHandler>())
             register(get<MailHandler>())
             register(get<LeaderboardHandler>())
+            register(get<MessageBoardHandler>())
             register(get<FriendHandler>())
+            register(get<CollectionHandler>())
             register(get<UISellHandler>())
             register(get<PetUpgradeHandler>())
             register(get<PetRebornHandler>())
@@ -129,6 +140,8 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
         val eveStateMachine = get<EveEventStateMachine>()
         val macroBoxSystem = get<MacroBoxSystem>()
         val roleCountSystem = get<RoleCountSystem>()
+        val collectionSystem = get<CollectionSystem>()
+        val astrolabeSystem = get<AstrolabeSystem>()
         val friendSystem = get<FriendSystem>()
         val scope = get<CoroutineScope>()
         NettyGameServer(get(), get(), get()) { session ->
@@ -166,6 +179,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
                         }
                     }
                 }
+                collectionSystem.unload(roleId)
                 playerStateManager.removePlayer(roleId)
             }
 
@@ -205,6 +219,9 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
 
                     try { roleCountSystem.saveAndUnload(roleId) }
                     catch (e: Exception) { serverLogger.error(e) { "Lưu ngắt kết nối thất bại (bộ đếm): roleId=$roleId" } }
+
+                    try { astrolabeSystem.unload(roleId) }
+                    catch (e: Exception) { serverLogger.error(e) { "Gỡ cache Mệnh Bàn thất bại: roleId=$roleId" } }
                 }
             }
         }
@@ -212,6 +229,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
 
     // Repository (interface domain → triển khai persistence)
     single<AccountRepository> { AccountRepositoryImpl() }
+    single<AstrolabeRepository> { AstrolabeRepositoryImpl() }
     single<CharacterRepository> { CharacterRepositoryImpl() }
     single<InventoryRepository> { InventoryRepositoryImpl() }
     single<QuestRepository> { QuestRepositoryImpl() }
@@ -224,9 +242,11 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single<FlyPointRepository> { FlyPointRepositoryImpl() }
     single<UiSellCountRepository> { UiSellCountRepositoryImpl() }
     single<CharacterCurrencyRepository> { CharacterCurrencyRepositoryImpl() }
+    single<CollectionBookRepository> { CollectionBookRepositoryImpl() }
     single<SlotMachineRepository> { SlotMachineRepositoryImpl() }
     single<DispatchRepository> { DispatchRepositoryImpl() }
     single<MailRepository> { MailRepositoryImpl() }
+    single<MessageBoardRepository> { MessageBoardRepositoryImpl() }
     single<FriendRepository> { FriendRepositoryImpl() }
 
     // Dữ liệu game
@@ -253,6 +273,8 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { MoneySystem(get()) }
     single { PointSystem(get()) }
     single { PlayerCurrencySystem(get<CharacterCurrencyRepository>()) }
+    single { MythEnchantSystem(get<InventorySystem>(), get<PlayerCurrencySystem>(), get<GameDataManager>().itemDefs) }
+    single { MythUpgradeSystem(get<InventorySystem>(), get<GameDataManager>().itemDefs) }
     single { DoroSystem(get<GameDataManager>().goodsSaleDefs, get<GameDataManager>().doroBlissBagDefs) }
     single {
         SlotMachineSystem(
@@ -264,12 +286,39 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<GameDataManager>().itemDefs
         )
     }
-    single { GroundItemManager() }
+    single { GroundItemManager(get<GameDataManager>().eveData) }
     single { PlayerStateManager() }
+    single {
+        AstrolabeSystem(
+            repository = get<AstrolabeRepository>(),
+            defs = get<GameDataManager>().astrolabeDefs,
+            moneySystem = get<MoneySystem>(),
+            playerStateManager = get<PlayerStateManager>(),
+            statSystem = get<StatSystem>()
+        )
+    }
     single { ItemUseProcessor(get(), get<PetSystem>(), get<GameDataManager>().itemDefs, get<GameDataManager>().blissBagDefs) }
     single { EveEventStateMachine() }
     single { QuestSystem(get(), get<GameDataManager>().markDefs) }
     single { BitFlagSystem(get(), get<GameDataManager>().guideLastBitFlagId) }
+    single {
+        CollectionSystem(
+            get<BitFlagSystem>(),
+            get<GameDataManager>().collectWarriorDefs,
+            get<GameDataManager>().collectStyleDefs,
+            get<GameDataManager>().collectStyleValueDefs,
+            get<GameDataManager>().collectCardDefs,
+            get<GameDataManager>().collectCardSortDefs,
+            get<GameDataManager>().collectNftDefs,
+            get<GameDataManager>().mountDefs,
+            get<InventorySystem>(),
+            get<RoleCountSystem>(),
+            get<PlayerStateManager>(),
+            get<StatSystem>(),
+            get<CollectionBookRepository>(),
+            get<ResponseSender>(),
+        )
+    }
     single { SkillSystem(get(), get(), get<GameDataManager>().skillDefs) }
     single { PetSkillSystem(get(), get<GameDataManager>().npcDefs, get<GameDataManager>().skillDefs) }
     single { PartySystem() }
@@ -291,6 +340,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<RoleCountSystem>(),
             get<PetRosterPolicy>(),
             get<PlayerStateManager>(),
+            get<GameDataManager>().sacredEquipPrimaryDefs,
         )
     }
     single {
@@ -313,8 +363,21 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<GameDataManager>().achievementDefs,
         )
     }
-    single { TradeSystem(get(), get(), get(), get(), get<GameDataManager>().itemDefs, get(), get(), get<StatSystem>()) }
-    single { DispatchSystem(get(), get(), get<GameDataManager>().dispatchDefs, get<GameDataManager>().dispatchBonusDefs) }
+    single { TradeSystem(get(), get(), get(), get(), get<GameDataManager>().itemDefs, get(), get(), get<StatSystem>(), get<GameDataManager>().sacredEquipPrimaryDefs) }
+    single {
+        DispatchSystem(
+            get(),
+            get(),
+            get<GameDataManager>().dispatchDefs,
+            get<GameDataManager>().dispatchBonusDefs,
+            get<GameDataManager>().commonAwardDefs,
+            get<GameDataManager>().luckyBagDefs,
+            get<InventorySystem>(),
+            get<MoneySystem>(),
+            get<PointSystem>(),
+            get<RoleCountSystem>(),
+        )
+    }
     single { MailSystem(get(), get(), get()) }
     single { FriendSystem(get(), get(), get(), get(), get<RoleCountSystem>()) }
     single {
@@ -335,8 +398,9 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
         )
     }
     single {
-        BattleManager(get(), get<GameDataManager>().skillDefs, get<GameDataManager>().npcDefs, get(), get(), get<PetSystem>(), get<MoneySystem>(), get<StatSystem>(), get(), get<GameDataManager>().npcDropTable, get<SkillSystem>(), get<MacroBoxSystem>(), get<GameDataManager>().itemDefs, get<SkillRepository>(), get<CharacterRepository>(), get<GameDataManager>().npcUpgradeDefs, get<GameDataManager>().sceneSetDefs, get<DailyProgressSystem>()).also { bm ->
+        BattleManager(get(), get<GameDataManager>().skillDefs, get<GameDataManager>().npcDefs, get(), get(), get<PetSystem>(), get<MoneySystem>(), get<StatSystem>(), get(), get<GameDataManager>().npcDropTable, get<SkillSystem>(), get<MacroBoxSystem>(), get<GameDataManager>().itemDefs, get<SkillRepository>(), get<CharacterRepository>(), get<GameDataManager>().npcUpgradeDefs, get<GameDataManager>().sceneSetDefs, get<DailyProgressSystem>(), get<CollectionSystem>(), get<GameDataManager>().sacredEquipPrimaryDefs).also { bm ->
             // Callback kết thúc chiến đấu → EveFlowController khôi phục luồng sự kiện
+            bm.onBattleAbortCallback = { session -> get<EveFlowController>().abortAfterBattle(session) }
             bm.onBattleEndCallback = { session, playerId, playerWin ->
                 // Mine cooldown phải bắt đầu từ lúc trận gặp ngẫu nhiên kết thúc,
                 // trước khi EveFlowController có thể complete/remove EventSession.
@@ -345,7 +409,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             }
         }
     }
-    single { LoginService(get(), get(), get(), get(), get(), get<PointSystem>(), get<PlayerCurrencySystem>(), get(), get(), get<EveEventStateMachine>(), get(), get(), get(), get(), get(), get(), get<SkillRepository>(), get<RoleCountSystem>(), get<FlyPointSystem>(), get<MailSystem>(), get<FriendSystem>(), get<GameDataManager>().eveData, get<GameDataManager>().itemDefs, get<JiugonggeSystem>(), get<DailyProgressSystem>()) }
+    single { LoginService(get(), get(), get(), get(), get(), get<PointSystem>(), get<PlayerCurrencySystem>(), get(), get(), get<EveEventStateMachine>(), get(), get(), get(), get(), get(), get<AstrolabeSystem>(), get(), get<SkillRepository>(), get<RoleCountSystem>(), get<FlyPointSystem>(), get<MailSystem>(), get<FriendSystem>(), get<GameDataManager>().eveData, get<GameDataManager>().itemDefs, get<JiugonggeSystem>(), get<DailyProgressSystem>(), get<CollectionSystem>(), get<GameDataManager>().sacredEquipPrimaryDefs, get<MessageBoardRepository>()) }
 
     // Hệ thống sự kiện Eve (9 dịch vụ con sau khi tách)
     single {
@@ -360,12 +424,15 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             skillSystem = get(),
             moneySystem = get(),
             questRepository = get(),
-            pointSystem = get<PointSystem>()
+            pointSystem = get<PointSystem>(),
+            partySystem = get<PartySystem>(),
+            sceneSetDefs = get<GameDataManager>().sceneSetDefs,
+            activityTimeDefs = get<GameDataManager>().activityTimeDefs,
         )
     }
     single { EveConditionResolver(get<GameDataManager>().eveData) }
     single { EveAutoChainEngine(get<EveEventStateMachine>(), get(), get(), get<GameDataManager>().eveData) }
-    single { EveResultExecutor(get(), get(), get(), get(), get(), get(), get<GameDataManager>().npcDefs, get<GameDataManager>().markDefs, get<GameDataManager>().markFlagToGuideId, get<GameDataManager>().eveData, get<MountSystem>(), get<AchievementSystem>(), get<BitFlagSystem>(), get<RoleCountSystem>(), get<DailyProgressSystem>(), get<PointSystem>()) }
+    single { EveResultExecutor(get(), get(), get(), get(), get(), get(), get<GameDataManager>().npcDefs, get<GameDataManager>().markDefs, get<GameDataManager>().markFlagToGuideId, get<GameDataManager>().eveData, get<MountSystem>(), get<AchievementSystem>(), get<BitFlagSystem>(), get<RoleCountSystem>(), get<DailyProgressSystem>(), get<PointSystem>(), get<CollectionSystem>(), get<PlayerStateManager>(), get<CharacterRepository>()) }
     single { EveDoorWarpService(get(), get(), get(), get<EveEventStateMachine>(), get<GameDataManager>().eveData) }
     single { EveBattleService(get(), get<EveEventStateMachine>(), get(), get<GameDataManager>().mapTerrains, get<GameDataManager>().eveData) }
     single { NpcShopManager() }
@@ -389,7 +456,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get(), get(), get(), get(), get<PointSystem>(), get(), get(), get(), get(),
             get<GameDataManager>().itemDefs, get<GameDataManager>().eveData,
             get(), get<GameDataManager>().npcDefs, get(), get(), get(), get(), get(),
-            get<GameDataManager>().warpDefs, get<GameDataManager>().markDefs
+            get<GameDataManager>().warpDefs, get<GameDataManager>().markDefs, get<CollectionSystem>()
         )
     }
 
@@ -402,13 +469,13 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { MoveHandler(get(), get(), get(), get<MineEncounterSystem>()) }
     single { ChatHandler(get(), get(), get()) }
     single { SceneHandler(get(), get()) }
-    single { RelocateHandler(get(), get()) }
+    single { RelocateHandler(get(), get(), get()) }
     single { NpcEventHandler(get<EveTriggerRouter>(), get<EveFlowController>()) }
-    single { ItemHandler(get(), get(), get(), get(), get(), get<GameDataManager>().itemDefs, get(), get<PlayerStateManager>(), get<StatSystem>(), get(), get<FlyPointSystem>(), get<CharacterRepository>(), get<PetEquipSystem>(), get<QuestSystem>(), get<SkillSystem>(), get<DailyProgressSystem>(), get<PetSystem>(), get<GameDataManager>().npcDefs) }
+    single { ItemHandler(get(), get(), get(), get(), get(), get<GameDataManager>().itemDefs, get(), get<PlayerStateManager>(), get<StatSystem>(), get(), get<FlyPointSystem>(), get<CharacterRepository>(), get<PetEquipSystem>(), get<QuestSystem>(), get<SkillSystem>(), get<DailyProgressSystem>(), get<PetSystem>(), get<GameDataManager>().npcDefs, get<RoleCountSystem>(), get<CollectionSystem>(), get<AstrolabeSystem>(), get<GameDataManager>().sacredEquipPrimaryDefs) }
     single { NpcTradeHandler(get(), get(), get(), get<GameDataManager>().itemDefs, get()) }
     single { BankHandler(get(), get(), get<GameDataManager>().itemDefs, get()) }
     single { StorageHandler(get(), get(), get<GameDataManager>().itemDefs, get()) }
-    single { TradeHandler(get()) }
+    single { TradeHandler(get(), get<CollectionSystem>()) }
     single { BattleManageHandler(get(), get(), get()) }
     single { BattleCommandHandler(get()) }
     single { PlayerStatusHandler(get(), get(), get(), get()) }
@@ -418,10 +485,13 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { FollowNpcDeployHandler(get(), get(), get<CharacterRepository>(), get<DailyProgressSystem>()) }
     single { PkSettingHandler(get()) }
     single { StatHandler(get(), get(), get(), get<StatSystem>(), get(), get<SkillRepository>(), get<DailyProgressSystem>()) }
+    single { AstrolabeHandler(get<AstrolabeSystem>(), get<ResponseSender>()) }
+    single { GodskinResponseSender() }
+    single { GodskinHandler(get<MythEnchantSystem>(), get<MythUpgradeSystem>(), get<GodskinResponseSender>(), get<ResponseSender>()) }
     single { MountHandler(get(), get(), get()) }
     single { HotkeyHandler(get(), get()) }
     single { InnResponseSender() }
-    single { InnHandler(get(), get(), get(), get(), get()) }
+    single { InnHandler(get(), get(), get(), get(), get(), get()) }
     single { WarriorRepositoryHandler(get(), get(), get()) }
     single { MacroBoxHandler(get(), get(), get(), get()) }
     single {
@@ -433,11 +503,39 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     }
     single { AchievementHandler(get(), get(), get()) }
     single { EmoteHandler(get(), get()) }
-    single { DispatchHandler(get()) }
+    single {
+        DispatchHandler(
+            get(),
+            get(),
+            get<ResponseSender>(),
+            get<MoneySystem>(),
+            get<PointSystem>(),
+        )
+    }
     single { MailHandler(get()) }
     single { LeaderboardHandler(get()) }
+    single { MessageBoardHandler(get<RoleCountSystem>(), get<ResponseSender>(), get<MessageBoardRepository>(), get<SessionManager>()) }
     single { FriendHandler(get()) }
-    single { UISellHandler(get(), get(), get(), get(), get(), get(), get(), get(), get(), get<SkillRepository>(), get<PlayerStateManager>(), get<SkillSystem>(), get<SlotMachineSystem>()) }
+    single { CollectionHandler(get<CollectionSystem>(), get<ResponseSender>(), get<MountSystem>()) }
+    single {
+        UISellHandler(
+            get(),
+            get(),
+            get<PointSystem>(),
+            get<InventorySystem>(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get<RoleCountSystem>(),
+            get<SkillRepository>(),
+            get<PlayerStateManager>(),
+            get<SkillSystem>(),
+            get<SlotMachineSystem>(),
+            get<MoneySystem>(),
+            get<DispatchSystem>(),
+        )
+    }
     single { PetUpgradeHandler(get(), get()) }
     single { PetRebornHandler(get(), get(), get()) }
     single { JiugonggeHandler(get()) }

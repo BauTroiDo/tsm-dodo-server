@@ -3,7 +3,9 @@ package tw.tsm.gamelogic.systems
 import io.github.oshai.kotlinlogging.KotlinLogging
 import tw.tsm.domain.constants.EAttribute
 import tw.tsm.domain.interfaces.StatCalculator
+import tw.tsm.domain.valueobjects.AstrolabeBonusData
 import tw.tsm.domain.valueobjects.EquipBonusData
+import tw.tsm.domain.util.DvtPercentMath
 import java.util.concurrent.ConcurrentHashMap
 
 private val logger = KotlinLogging.logger {}
@@ -43,12 +45,16 @@ class PlayerStateManager {
         attrPoint: Int = 0,
         skillPoint: Int = 0,
         equipBonus: EquipBonusData = EquipBonusData.EMPTY,
+        astrolabeBonus: AstrolabeBonusData = AstrolabeBonusData.EMPTY,
         turn3Int: Int = 0,
         turn3Atk: Int = 0,
         turn3Def: Int = 0,
         turn3Agi: Int = 0,
         turn3Hpx: Int = 0,
-        turn3Spx: Int = 0
+        turn3Spx: Int = 0,
+        killNum: Int = 0,
+        moral: IntArray = intArrayOf(0, 0, 0, 0, 0),
+        sex: Int = 0
     ) {
         states[characterId] = PlayerState(
             hp = hp, sp = sp, maxHp = maxHp, maxSp = maxSp,
@@ -60,8 +66,25 @@ class PlayerStateManager {
             equipAtk = equipBonus.equipAtk, equipDef = equipBonus.equipDef,
             equipInt = equipBonus.equipInt, equipAgi = equipBonus.equipAgi,
             equipHpx = equipBonus.equipHpx, equipSpx = equipBonus.equipSpx,
+            astrolabeHpx = astrolabeBonus.hpx,
+            astrolabeDef = astrolabeBonus.def,
+            astrolabeInt = astrolabeBonus.intelligence,
+            astrolabeSpx = astrolabeBonus.spx,
+            astrolabeAgi = astrolabeBonus.agi,
+            astrolabeAtk = astrolabeBonus.atk,
+            atkPercent = equipBonus.atkPercent, defPercent = equipBonus.defPercent,
+            hpPercent = equipBonus.hpPercent, intPercent = equipBonus.intPercent,
+            crit = equipBonus.crit, critDamage = equipBonus.critDamage,
+            dodge = equipBonus.dodge, hit = equipBonus.hit,
+            increaseTotalDamage = equipBonus.increaseTotalDamage,
+            damageReduction = equipBonus.damageReduction,
+            reduceTotalDamage = equipBonus.reduceTotalDamage,
+            increaseDamageTakenSelf = equipBonus.increaseDamageTakenSelf,
             turn3Int = turn3Int, turn3Atk = turn3Atk, turn3Def = turn3Def,
-            turn3Agi = turn3Agi, turn3Hpx = turn3Hpx, turn3Spx = turn3Spx
+            turn3Agi = turn3Agi, turn3Hpx = turn3Hpx, turn3Spx = turn3Spx,
+            killNum = killNum,
+            moral = moral.copyOf(5),
+            sex = sex
         )
         logger.debug { "Khởi tạo trạng thái người chơi: characterId=$characterId hp=$hp/$maxHp sp=$sp/$maxSp lv=$level equipBonus=$equipBonus" }
     }
@@ -72,6 +95,50 @@ class PlayerStateManager {
     /** Xóa trạng thái người chơi (được gọi khi đăng xuất/ngắt kết nối) */
     fun removePlayer(characterId: Long) {
         states.remove(characterId)
+    }
+
+    /** Giới tính runtime, dùng cho điều kiện tổ đội/cặp đôi Eve. */
+    fun getSex(characterId: Long): Int =
+        states[characterId]?.let { state -> synchronized(state) { state.sex } } ?: 0
+
+    /** Điểm diệt địch DVT; Honor hiện được client tính 1:1 từ giá trị này. */
+    fun getKillNum(characterId: Long): Int =
+        states[characterId]?.let { state -> synchronized(state) { state.killNum } } ?: 0
+
+    /** Đặt KillNum tuyệt đối sau khi persistence thành công. */
+    fun setKillNum(characterId: Long, value: Int): Boolean {
+        if (value < 0) return false
+        val state = states[characterId] ?: return false
+        synchronized(state) {
+            state.killNum = value
+        }
+        return true
+    }
+
+    /** Tăng KillNum runtime và trả giá trị mới; -1 nếu player chưa khởi tạo. */
+    fun addKillNum(characterId: Long, delta: Int): Int {
+        if (delta <= 0) return getKillNum(characterId)
+        val state = states[characterId] ?: return -1
+        synchronized(state) {
+            state.killNum = (state.killNum.toLong() + delta.toLong())
+                .coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+            return state.killNum
+        }
+    }
+
+    /** Snapshot 5 điểm phe DVT, tránh lộ mảng mutable trong PlayerState. */
+    fun getMoral(characterId: Long): IntArray =
+        states[characterId]?.let { state -> synchronized(state) { state.moral.copyOf(5) } }
+            ?: intArrayOf(0, 0, 0, 0, 0)
+
+    /** Đặt giá trị tuyệt đối một phe sau khi DB đã ghi thành công. */
+    fun setMoral(characterId: Long, faction: Int, value: Int): Boolean {
+        if (faction !in 1..5 || value < 0) return false
+        val state = states[characterId] ?: return false
+        synchronized(state) {
+            state.moral[faction - 1] = value
+        }
+        return true
     }
 
     /**
@@ -148,6 +215,19 @@ class PlayerStateManager {
             state.sp = state.maxSp
             return recovered
         }
+    }
+
+    /**
+     * Collection DVT chỉ đổi MaxHP/MaxSP, không tự hồi HP/SP hiện tại.
+     * Dùng riêng cho bonus Sưu Tập để khớp RoleController:SetAttribute(MaxHp/MaxSp).
+     */
+    fun setMaxPreserveCurrent(characterId: Long, newMaxHp: Long, newMaxSp: Int): Boolean {
+        val state = states[characterId] ?: return false
+        synchronized(state) {
+            state.maxHp = newMaxHp.coerceAtLeast(1L)
+            state.maxSp = newMaxSp.coerceAtLeast(1)
+        }
+        return true
     }
 
     /**
@@ -246,7 +326,9 @@ class PlayerStateManager {
     fun updateEquipBonus(
         characterId: Long,
         bonus: EquipBonusData,
-        statCalc: StatCalculator
+        statCalc: StatCalculator,
+        collectionHpx: Int = 0,
+        collectionSpx: Int = 0
     ): EquipBonusUpdateResult? {
         val state = states[characterId] ?: return null
         synchronized(state) {
@@ -259,24 +341,45 @@ class PlayerStateManager {
             state.equipAgi = bonus.equipAgi
             state.equipHpx = bonus.equipHpx
             state.equipSpx = bonus.equipSpx
+            state.atkPercent = bonus.atkPercent
+            state.defPercent = bonus.defPercent
+            state.hpPercent = bonus.hpPercent
+            state.intPercent = bonus.intPercent
+            state.crit = bonus.crit
+            state.critDamage = bonus.critDamage
+            state.dodge = bonus.dodge
+            state.hit = bonus.hit
+            state.increaseTotalDamage = bonus.increaseTotalDamage
+            state.damageReduction = bonus.damageReduction
+            state.reduceTotalDamage = bonus.reduceTotalDamage
+            state.increaseDamageTakenSelf = bonus.increaseDamageTakenSelf
 
-            // Tính toán lại MaxHP (hpx đã bao gồm gia tăng từ trang bị)
-            val totalHpx = state.hpx + state.equipHpx
-            val newMaxHp = statCalc.calculateMaxHp(
-                level = state.level, hpx = totalHpx,
+            val turn3Lv = if (state.turn >= 3) (state.level - 200).coerceAtLeast(0) else 0
+            val calcLevel = if (state.turn >= 3) 200 else state.level
+
+            // Lua Calc.GetMaxHp: base/equip/turn3/collection/astrolabe first, HP% last.
+            val totalHpx = state.hpx + state.equipHpx +
+                (if (state.turn >= 3) turn3Lv.coerceAtMost(70) + state.turn3Hpx else 0) +
+                collectionHpx + state.astrolabeHpx
+            val baseMaxHp = statCalc.calculateMaxHp(
+                level = calcLevel, hpx = totalHpx,
                 equipMaxHp = state.equipMaxHp, extraHp = 0,
-                turn = state.turn, career = state.career, turn3Lv = 0
+                turn = state.turn, career = state.career, turn3Lv = turn3Lv
             )
+            val newMaxHp = DvtPercentMath.applyFinalPercentFloor(baseMaxHp, state.hpPercent)
+                .coerceAtLeast(1L)
             val oldMaxHp = state.maxHp
             state.maxHp = newMaxHp
             state.hp = (state.hp + (newMaxHp - oldMaxHp)).coerceIn(0, newMaxHp)
 
-            // Tính toán lại MaxSP
-            val totalSpx = state.spx + state.equipSpx
+            // Giữ cùng nguồn cộng dồn cho MaxSP để equip refresh không làm rơi bonus hiện có.
+            val totalSpx = state.spx + state.equipSpx +
+                (if (state.turn >= 3) turn3Lv + state.turn3Spx else 0) +
+                collectionSpx + state.astrolabeSpx
             val newMaxSp = statCalc.calculateMaxSp(
-                level = state.level, spx = totalSpx,
+                level = calcLevel, spx = totalSpx,
                 equipMaxSp = state.equipMaxSp, extraSp = 0,
-                turn = state.turn, career = state.career, turn3Lv = 0
+                turn = state.turn, career = state.career, turn3Lv = turn3Lv
             )
             val oldMaxSp = state.maxSp
             state.maxSp = newMaxSp
@@ -289,6 +392,16 @@ class PlayerStateManager {
             )
         }
     }
+
+    /** DVT transform/disguise is session runtime state; login packet has no npcId field. */
+    fun setTransformNpcId(characterId: Long, npcId: Int): Boolean {
+        val state = states[characterId] ?: return false
+        state.transformNpcId = npcId.coerceAtLeast(0)
+        return true
+    }
+
+    fun getTransformNpcId(characterId: Long): Int =
+        states[characterId]?.transformNpcId ?: 0
 
     companion object {
         /** Giới hạn một thuộc tính đơn lẻ (Status.lua dòng 6) */
@@ -341,6 +454,14 @@ data class PlayerState(
     var turn3Agi: Int = 0,
     var turn3Hpx: Int = 0,
     var turn3Spx: Int = 0,
+    /** Điểm diệt địch; DVT Calc.GetHonor hiện trả nguyên giá trị KillNum. */
+    var killNum: Int = 0,
+    /** Giới tính nhân vật: 1 nam, 2 nữ. */
+    var sex: Int = 0,
+    /** 5 điểm phe: Ngụy, Thục, Ngô, Khăn Vàng, Du Hiệp. */
+    var moral: IntArray = intArrayOf(0, 0, 0, 0, 0),
+    /** NPC ID biến hình hiện tại; DVT S:005-005, runtime-only và reset khi relog. */
+    var transformNpcId: Int = 0,
 
     // ── Gia tăng từ trang bị (Tham khảo tskero TSCharacter.atk2/def2/mag2/agi2/hp2/sp2) ──
     /** Max HP được nâng cao bởi trang bị */
@@ -358,7 +479,38 @@ data class PlayerState(
     /** Gia tăng HPX từ trang bị */
     var equipHpx: Int = 0,
     /** Gia tăng SPX từ trang bị */
-    var equipSpx: Int = 0
+    var equipSpx: Int = 0,
+    /** DVT Astrolabe otherAdd — không tham gia vào %base. */
+    var astrolabeHpx: Int = 0,
+    var astrolabeDef: Int = 0,
+    var astrolabeInt: Int = 0,
+    var astrolabeSpx: Int = 0,
+    var astrolabeAgi: Int = 0,
+    var astrolabeAtk: Int = 0,
+    /** DVT EAttribute.AtkPercent=101, phần trăm ATK trên base ATK */
+    var atkPercent: Int = 0,
+    /** DVT EAttribute.DefPercent=102, phần trăm DEF trên base DEF */
+    var defPercent: Int = 0,
+    /** DVT EAttribute.HpPercent=107, nhân vào MaxHP cuối cùng. */
+    var hpPercent: Int = 0,
+    /** DVT EAttribute.IntPercent=109, phần trăm INT trên base INT. */
+    var intPercent: Int = 0,
+    /** DVT EAttribute.Crit=103, phần trăm chí mạng */
+    var crit: Int = 0,
+    /** DVT EAttribute.CritDamage=104, phần trăm cộng thêm trên base crit 50% */
+    var critDamage: Int = 0,
+    /** DVT EAttribute.Dodge=105, phần trăm né tránh */
+    var dodge: Int = 0,
+    /** DVT EAttribute.Hit=106, phần trăm mệnh trung */
+    var hit: Int = 0,
+    /** DVT EAttribute.IncreaseTotalDamage=113 */
+    var increaseTotalDamage: Int = 0,
+    /** DVT EAttribute.DamageReduction=114 */
+    var damageReduction: Int = 0,
+    /** DVT EAttribute.ReduceTotalDamage=117 */
+    var reduceTotalDamage: Int = 0,
+    /** DVT EAttribute.IncreaseDamageTakenSelf=118 */
+    var increaseDamageTakenSelf: Int = 0
 )
 
 /**

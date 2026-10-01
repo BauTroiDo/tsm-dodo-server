@@ -10,6 +10,7 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.jdbc.upsert
 import tw.tsm.domain.interfaces.repositories.InventoryRepository
+import tw.tsm.domain.valueobjects.MythAttribute
 import tw.tsm.domain.valueobjects.ThingData
 import tw.tsm.persistence.tables.CharacterMoney
 import tw.tsm.persistence.tables.Inventories
@@ -50,6 +51,30 @@ class InventoryRepositoryImpl : InventoryRepository {
             Unit
         }
 
+    override suspend fun saveItemsAtomic(
+        characterId: Long,
+        storageType: Int,
+        changes: Map<Int, ThingData?>
+    ) = suspendTransaction {
+        for ((slot, thing) in changes) {
+            if (thing == null || thing.isEmpty) {
+                Inventories.deleteWhere {
+                    (Inventories.characterId eq characterId) and
+                    (Inventories.storageType eq storageType) and
+                    (Inventories.slot eq slot)
+                }
+            } else {
+                Inventories.upsert {
+                    it[Inventories.characterId] = characterId
+                    it[Inventories.storageType] = storageType
+                    it[Inventories.slot] = slot
+                    it.setThingData(thing)
+                }
+            }
+        }
+        Unit
+    }
+
     override suspend fun saveAllItems(characterId: Long, storageType: Int, items: Map<Int, ThingData>) =
         suspendTransaction {
             // Xoá sạch toàn bộ dữ liệu loại đó trước
@@ -64,26 +89,7 @@ class InventoryRepositoryImpl : InventoryRepository {
                     this[Inventories.characterId] = characterId
                     this[Inventories.storageType] = storageType
                     this[Inventories.slot] = slot
-                    this[Inventories.itemId] = thing.itemId
-                    this[Inventories.quantity] = thing.quantity
-                    this[Inventories.damage] = thing.damage
-                    this[Inventories.element] = thing.element
-                    this[Inventories.elementValue] = thing.elementValue
-                    this[Inventories.proofKind] = thing.proofKind
-                    this[Inventories.growLevel] = thing.growLevel
-                    this[Inventories.growExp] = thing.growExp
-                    this[Inventories.specialKind] = thing.specialKind
-                    this[Inventories.stoneAttr] = thing.stoneAttr
-                    this[Inventories.stoneLevel] = thing.stoneLevel
-                    this[Inventories.enhanceLevel] = thing.enhanceLevel
-                    this[Inventories.deleteTime] = thing.deleteTime
-                    this[Inventories.damagedItemId] = thing.damagedItemId
-                    this[Inventories.isLocked] = thing.isLocked
-                    this[Inventories.reinforced] = thing.reinforced
-                    this[Inventories.affix1] = thing.affix1
-                    this[Inventories.affix2] = thing.affix2
-                    this[Inventories.affix3] = thing.affix3
-                    this[Inventories.styleLevel] = thing.styleLevel
+                    this.setThingData(thing)
                 }
             }
             Unit
@@ -133,7 +139,14 @@ class InventoryRepositoryImpl : InventoryRepository {
         affix1 = this[Inventories.affix1],
         affix2 = this[Inventories.affix2],
         affix3 = this[Inventories.affix3],
-        styleLevel = this[Inventories.styleLevel]
+        styleLevel = this[Inventories.styleLevel],
+        mythLevel = this[Inventories.mythLevel],
+        myth = listOf(
+            MythAttribute(this[Inventories.myth1Kind], this[Inventories.myth1Value], this[Inventories.myth1Extra]),
+            MythAttribute(this[Inventories.myth2Kind], this[Inventories.myth2Value], this[Inventories.myth2Extra]),
+            MythAttribute(this[Inventories.myth3Kind], this[Inventories.myth3Value], this[Inventories.myth3Extra]),
+            MythAttribute(this[Inventories.myth4Kind], this[Inventories.myth4Value], this[Inventories.myth4Extra])
+        )
     )
 
     /**
@@ -160,5 +173,18 @@ class InventoryRepositoryImpl : InventoryRepository {
         this[Inventories.affix2] = thing.affix2
         this[Inventories.affix3] = thing.affix3
         this[Inventories.styleLevel] = thing.styleLevel
+        this[Inventories.mythLevel] = thing.mythLevel
+        this[Inventories.myth1Kind] = thing.myth[0].kind
+        this[Inventories.myth1Value] = thing.myth[0].value
+        this[Inventories.myth1Extra] = thing.myth[0].extra
+        this[Inventories.myth2Kind] = thing.myth[1].kind
+        this[Inventories.myth2Value] = thing.myth[1].value
+        this[Inventories.myth2Extra] = thing.myth[1].extra
+        this[Inventories.myth3Kind] = thing.myth[2].kind
+        this[Inventories.myth3Value] = thing.myth[2].value
+        this[Inventories.myth3Extra] = thing.myth[2].extra
+        this[Inventories.myth4Kind] = thing.myth[3].kind
+        this[Inventories.myth4Value] = thing.myth[3].value
+        this[Inventories.myth4Extra] = thing.myth[3].extra
     }
 }

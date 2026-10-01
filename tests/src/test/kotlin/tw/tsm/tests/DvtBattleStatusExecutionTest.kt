@@ -49,6 +49,9 @@ class DvtBattleStatusExecutionTest {
         every { howMuchTimes } returns 1
         every { numerical } returns 100
         every { element } returns elementValue
+        every { level } returns 1
+        every { atkKind } returns if (attributeKind == EAttribute.ATK) 1 else 0
+        every { learnLimit } returns 1
     }
 
     @Test

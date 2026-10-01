@@ -7,15 +7,19 @@ import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import tw.tsm.persistence.tables.Accounts
+import tw.tsm.persistence.tables.CharacterAstrolabes
 import tw.tsm.persistence.tables.CharacterBitFlags
 import tw.tsm.persistence.tables.CharacterMissionFlags
 import tw.tsm.persistence.tables.CharacterMissions
 import tw.tsm.persistence.tables.CharacterCompletedEvents
+import tw.tsm.persistence.tables.CharacterCollectionCards
+import tw.tsm.persistence.tables.CharacterCollectionStyles
 import tw.tsm.persistence.tables.CharacterMoney
 import tw.tsm.persistence.tables.CharacterCurrencies
 import tw.tsm.persistence.tables.Characters
 import tw.tsm.persistence.tables.CharacterMountEquips
 import tw.tsm.persistence.tables.CharacterMounts
+import tw.tsm.persistence.tables.CharacterDispatchDaily
 import tw.tsm.persistence.tables.CharacterDispatches
 import tw.tsm.persistence.tables.CharacterPetEquips
 import tw.tsm.persistence.tables.CharacterPets
@@ -34,6 +38,7 @@ import tw.tsm.persistence.tables.Friends
 import tw.tsm.persistence.tables.Inventories
 import tw.tsm.persistence.tables.MailAttachments
 import tw.tsm.persistence.tables.Mails
+import tw.tsm.persistence.tables.MessageBoardMessages
 
 private val logger = KotlinLogging.logger {}
 
@@ -66,6 +71,7 @@ object DatabaseFactory {
         transaction {
             SchemaUtils.createMissingTablesAndColumns(
                 Accounts, Characters, Inventories, CharacterMoney, CharacterCurrencies,
+                CharacterAstrolabes,
                 CharacterMissions, CharacterMissionFlags, CharacterCompletedEvents, CharacterBitFlags,
                 CharacterSkills, CharacterTurn2Skills, CharacterTurn3States, CharacterTurn3Skills,
                 CharacterPets,
@@ -77,9 +83,11 @@ object DatabaseFactory {
                 CharacterFlyPoints,
                 CharacterUiSellCounts,
                 CharacterSlotMachines, CharacterSlotMachineAwards,
-                CharacterDispatches,
+                CharacterCollectionStyles, CharacterCollectionCards,
+                CharacterDispatches, CharacterDispatchDaily,
                 Friends, FriendInvites,
-                Mails, MailAttachments
+                Mails, MailAttachments,
+                MessageBoardMessages
             )
         }
 

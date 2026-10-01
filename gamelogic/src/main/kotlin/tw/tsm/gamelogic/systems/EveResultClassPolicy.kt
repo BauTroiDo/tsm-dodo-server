@@ -36,6 +36,7 @@ enum class EvePlayerResultKind {
     OPEN_INN,
     INN_REST_CONFIRM,
     ADD_MONEY,
+    OPEN_MESSAGE_BOARD,
     OPEN_GALAXY_LEADERBOARD,
     OPEN_PLAYER_REINCARNATION,
     OPEN_KILL_POINT_SHOP,
@@ -67,6 +68,12 @@ data class EvePointPurchase(
     val itemId: Int,
     val quantity: Int,
     val price: Int
+)
+
+data class EveMoralDelta(
+    /** 1 Ngụy, 2 Thục, 3 Ngô, 4 Khăn Vàng, 5 Du Hiệp. */
+    val faction: Int,
+    val delta: Int
 )
 
 object EveResultClassPolicy {
@@ -113,6 +120,21 @@ object EveResultClassPolicy {
         return EvePointPurchase(itemId = itemId, quantity = quantity, price = resultMeanNo)
     }
 
+    /**
+     * DVT Eve resultType=0/resultClass=7/parameter=2 thay đổi Moral.
+     * pStyle dùng mapping đảo: 5 Ngụy, 4 Thục, 3 Ngô, 2 Khăn Vàng, 1 Du Hiệp.
+     * resultValue là delta có dấu. Shape class7 khác không được diễn giải ở đây.
+     */
+    fun moralDelta(
+        resultType: Int,
+        parameter: Int,
+        parameterStyle: Int,
+        resultValue: Int
+    ): EveMoralDelta? {
+        if (resultType != 0 || parameter != 2 || parameterStyle !in 1..5 || resultValue == 0) return null
+        return EveMoralDelta(faction = 6 - parameterStyle, delta = resultValue)
+    }
+
     fun itemDelta(parameterStyle: Int, resultValue: Int): Int? =
         when (parameterStyle) {
             0 -> resultValue
@@ -149,6 +171,7 @@ object EveResultClassPolicy {
             parameterStyle == 3 -> EvePlayerResultOperation(EvePlayerResultKind.OPEN_NPC_STORE)
             parameterStyle == 4 -> EvePlayerResultOperation(EvePlayerResultKind.OPEN_INN)
             parameterStyle == 5 -> EvePlayerResultOperation(EvePlayerResultKind.INN_REST_CONFIRM)
+            parameterStyle in setOf(7, 8) -> EvePlayerResultOperation(EvePlayerResultKind.OPEN_MESSAGE_BOARD)
             parameterStyle == 10 -> EvePlayerResultOperation(EvePlayerResultKind.OPEN_GALAXY_LEADERBOARD)
             parameterStyle == 12 -> EvePlayerResultOperation(EvePlayerResultKind.OPEN_PLAYER_REINCARNATION)
             parameterStyle == 13 -> EvePlayerResultOperation(EvePlayerResultKind.OPEN_KILL_POINT_SHOP)

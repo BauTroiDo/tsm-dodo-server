@@ -1,11 +1,18 @@
 package tw.tsm.domain.valueobjects
 
+/** DVT NFT/Myth sub-attribute: kind(U8) + value(U16) + extra(U16). */
+data class MythAttribute(
+    val kind: Int = 0,
+    val value: Int = 0,
+    val extra: Int = 0
+)
+
 /**
  * Object giá trị thực thể vật phẩm — tương ứng `Item.lua ThingData.New(data)` dòng 81-100
  *
  * Định dạng truyền mạng khi build DVT NFT: 56 bytes (little-endian).
  * ThingData cơ sở dài 35 bytes; Lua Item.lua đọc thêm 21 bytes Myth/NFT khi bật NFT define.
- * Model này hiện chỉ lưu phần base; codec sẽ gửi phần NFT bằng 0 cho đến khi server hỗ trợ Myth.
+ * D7 giữ nguyên toàn bộ Myth state: mythLv(1) + 4 x [kind(1)+value(2)+extra(2)].
  */
 data class ThingData(
     /** Số hiệu vật phẩm (UInt16)*/
@@ -47,8 +54,16 @@ data class ThingData(
     /** Cấp tẩy luyện 3 (Byte)*/
     val affix3: Int = 0,
     /** Cấp tăng cường thời trang (Byte)*/
-    val styleLevel: Int = 0
+    val styleLevel: Int = 0,
+    /** Cấp Myth (Byte) — DVT itemSave.mythLv */
+    val mythLevel: Int = 0,
+    /** Bốn thuộc tính Myth — DVT itemSave.myth[1..4] */
+    val myth: List<MythAttribute> = List(4) { MythAttribute() }
 ) {
+    init {
+        require(myth.size == 4) { "ThingData.myth must contain exactly 4 attributes" }
+    }
+
     /** Ô này có trống hay không*/
     val isEmpty: Boolean get() = itemId == 0
 }

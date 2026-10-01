@@ -104,6 +104,19 @@ interface CharacterRepository {
     suspend fun updateTitleId(characterId: Long, titleId: Int)
 
     /**
+     * Lưu độ thân thiện một phe DVT.
+     * @param faction 1=Ngụy, 2=Thục, 3=Ngô, 4=Khăn Vàng, 5=Du Hiệp
+     * @param value giá trị tuyệt đối mới
+     */
+    suspend fun updateMoral(characterId: Long, faction: Int, value: Int)
+
+    /**
+     * Lưu điểm diệt địch DVT (EAttribute.KillNum).
+     * Client tự suy ra Honor = Calc.GetHonor(KillNum); hiện tại công thức DVT là 1:1.
+     */
+    suspend fun updateKillNum(characterId: Long, value: Int)
+
+    /**
      * Truy vấn dữ liệu nền tảng xếp hạng của mọi nhân vật
      *
      * Dùng cho việc làm mới cache định kỳ của bảng xếp hạng, chỉ lấy các field cần thiết.
@@ -154,7 +167,11 @@ data class CharacterRecord(
     val turn: Int = 0,
     val career: Int = 0,
     val fightNpcId: Int = 0,
-    val titleId: Int = 0
+    val titleId: Int = 0,
+    /** Điểm diệt địch; Mobile DVT tính Honor = Calc.GetHonor(killNum), hiện là 1:1. */
+    val killNum: Int = 0,
+    /** 1 Ngụy, 2 Thục, 3 Ngô, 4 Khăn Vàng, 5 Du Hiệp. */
+    val moral: IntArray = intArrayOf(0, 0, 0, 0, 0)
 )
 
 /**

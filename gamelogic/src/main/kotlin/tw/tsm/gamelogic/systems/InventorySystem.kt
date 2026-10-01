@@ -100,6 +100,47 @@ class InventorySystem(
     fun getBagItem(characterId: Long, slot: Int): ThingData? =
         bags[characterId]?.get(slot)
 
+    /** Validate an ordered quest exchange on a copy before consuming any real items. */
+    fun canApplyQuestItemChanges(characterId: Long, changes: List<Pair<Int, Int>>): Boolean {
+        val simulated = bags[characterId]?.toMutableMap() ?: return false
+        val capacity = roleCountSystem.getBagCapacity(characterId)
+        for ((itemId, delta) in changes) {
+            if (itemId <= 0) return false
+            if (delta < 0) {
+                var remaining = -delta.toLong()
+                for ((slot, thing) in simulated.toSortedMap()) {
+                    if (thing.itemId != itemId) continue
+                    val take = minOf(thing.quantity.toLong(), remaining).toInt()
+                    if (take == thing.quantity) simulated.remove(slot)
+                    else simulated[slot] = thing.copy(quantity = thing.quantity - take)
+                    remaining -= take
+                    if (remaining == 0L) break
+                }
+                if (remaining != 0L) return false
+            } else if (delta > 0) {
+                val def = itemDefs[itemId] ?: return false
+                val stackLimit = if (def.fitType == 0) ItemConstants.MAX_STACK else 1
+                var remaining = delta.toLong()
+                for ((slot, thing) in simulated.toSortedMap()) {
+                    if (slot !in 0 until capacity || thing.itemId != itemId || thing.quantity >= stackLimit) continue
+                    val add = minOf((stackLimit - thing.quantity).toLong(), remaining).toInt()
+                    simulated[slot] = thing.copy(quantity = thing.quantity + add)
+                    remaining -= add
+                    if (remaining == 0L) break
+                }
+                for (slot in 0 until capacity) {
+                    if (remaining == 0L) break
+                    if (slot in simulated) continue
+                    val add = minOf(stackLimit.toLong(), remaining).toInt()
+                    simulated[slot] = ThingData(itemId = itemId, quantity = add)
+                    remaining -= add
+                }
+                if (remaining != 0L) return false
+            }
+        }
+        return true
+    }
+
     /**
      * Kiểm tra toàn bộ số lượng vật phẩm có thể được thêm vào túi mà không bị thêm một phần.
      *
@@ -160,6 +201,84 @@ class InventorySystem(
             "Hoàn tác addItemsToBagExact: characterId=$characterId itemId=$itemId qty=$totalQty"
         }
         return null
+    }
+
+    /**
+     * Thêm nhiều loại vật phẩm vào túi theo một giao dịch all-or-nothing.
+     *
+     * Dùng cho phần thưởng Sưu Tập: một võ tướng có thể thưởng 1/3/5 loại vật phẩm,
+     * và C:095-011 còn có thể nhận nhiều võ tướng cùng lúc. Phải mô phỏng toàn bộ
+     * bundle trước khi ghi để không xảy ra trạng thái nhận một phần nhưng đã đánh dấu thưởng.
+     *
+     * @return các slot cuối cùng cần đồng bộ về client; null nếu bundle không thể thêm trọn vẹn.
+     */
+    suspend fun addItemBundleToBagExact(
+        characterId: Long,
+        rewards: List<Pair<Int, Int>>,
+    ): List<Pair<Int, ThingData>>? {
+        val bag = bags[characterId] ?: return null
+        val normalized = rewards
+            .filter { (itemId, qty) -> itemId > 0 && qty > 0 }
+            .groupBy({ it.first }, { it.second })
+            .mapValues { (_, qtys) -> qtys.sum() }
+        if (normalized.isEmpty()) return emptyList()
+
+        val capacity = roleCountSystem.getBagCapacity(characterId)
+        val before = bag.toMap()
+        val simulated = before.toMutableMap()
+
+        for ((itemId, totalQty) in normalized) {
+            val def = itemDefs[itemId] ?: return null
+            val stackLimit = if (def.fitType == 0) ItemConstants.MAX_STACK else 1
+            var remaining = totalQty
+
+            if (stackLimit > 1) {
+                for ((slot, thing) in simulated.toSortedMap()) {
+                    if (remaining <= 0) break
+                    if (thing.itemId == itemId && thing.quantity < stackLimit) {
+                        val add = minOf(remaining, stackLimit - thing.quantity)
+                        simulated[slot] = thing.copy(quantity = thing.quantity + add)
+                        remaining -= add
+                    }
+                }
+            }
+
+            while (remaining > 0) {
+                val emptySlot = (0 until capacity).firstOrNull { !simulated.containsKey(it) }
+                    ?: return null
+                val qty = minOf(remaining, stackLimit)
+                simulated[emptySlot] = ThingData(itemId = itemId, quantity = qty)
+                remaining -= qty
+            }
+        }
+
+        val changedSlots = (before.keys union simulated.keys)
+            .filter { before[it] != simulated[it] }
+            .sorted()
+
+        try {
+            for (slot in changedSlots) {
+                val next = simulated[slot]
+                if (next == null) bag.remove(slot) else bag[slot] = next
+                inventoryRepo.saveItem(characterId, EThings.BAG, slot, next)
+            }
+        } catch (e: Exception) {
+            logger.error(e) { "addItemBundleToBagExact lỗi, rollback characterId=$characterId slots=$changedSlots" }
+            for (slot in changedSlots) {
+                val original = before[slot]
+                if (original == null) bag.remove(slot) else bag[slot] = original
+                try {
+                    inventoryRepo.saveItem(characterId, EThings.BAG, slot, original)
+                } catch (rollbackError: Exception) {
+                    logger.error(rollbackError) {
+                        "Rollback bundle thưởng thất bại: characterId=$characterId slot=$slot"
+                    }
+                }
+            }
+            return null
+        }
+
+        return changedSlots.mapNotNull { slot -> simulated[slot]?.let { slot to it } }
     }
 
     /**
@@ -471,6 +590,22 @@ class InventorySystem(
             bag[slot] = thing
         }
         inventoryRepo.saveItem(characterId, EThings.BAG, slot, thing)
+    }
+
+    /**
+     * Persist nhiều ô túi đồ atomically ở repository trước, chỉ cập nhật cache khi DB đã commit.
+     * Dùng cho Myth Enchant để tránh trạng thái nửa cập nhật giữa trang bị và rune.
+     */
+    suspend fun setBagItemsAtomic(characterId: Long, changes: Map<Int, ThingData?>) {
+        val bag = bags[characterId] ?: throw IllegalStateException("Bag chưa được load: $characterId")
+        inventoryRepo.saveItemsAtomic(characterId, EThings.BAG, changes)
+        for ((slot, thing) in changes) {
+            if (thing == null || thing.isEmpty) {
+                bag.remove(slot)
+            } else {
+                bag[slot] = thing
+            }
+        }
     }
 
     // ── Thao tác trang bị ──

@@ -1,6 +1,9 @@
 package tw.tsm.gamelogic.systems
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import java.util.concurrent.ConcurrentHashMap
 import tw.tsm.domain.data.DecMissionResult
 import tw.tsm.domain.data.MarkDef
 import tw.tsm.domain.interfaces.repositories.MissionFlagRecord
@@ -28,6 +31,10 @@ class QuestSystem(
     private val markDefs: Map<Int, MarkDef>
 ) {
 
+    // Keep lock identity stable while suspended mutations may still be waiting.
+    private val mutationLocks = ConcurrentHashMap<Long, Mutex>()
+    private fun mutationLock(charId: Long) = mutationLocks.computeIfAbsent(charId) { Mutex() }
+
     /**
      * Thêm bước nhiệm vụ (hoặc tạo nhiệm vụ mới)
      *
@@ -37,14 +44,20 @@ class QuestSystem(
      * @param charId    ID nhân vật
      * @param missionId ID nhiệm vụ
      * @param delta     Lượng bước tăng thêm
-     * @return Giá trị bước trước khi thay đổi (0 nghĩa là nhiệm vụ mới)
+     * @return Giá trị bước trước khi thay đổi (0 nghĩa là nhiệm vụ mới), null nếu vượt giới hạn byte
      */
-    suspend fun addMissionStep(charId: Long, missionId: Int, delta: Int): Int {
-        val current = repo.getMissions(charId).firstOrNull { it.missionId == missionId }?.step ?: 0
-        val newStep = current + delta
-        repo.upsertMission(charId, missionId, newStep)
-        logger.info { "Thêm bước nhiệm vụ: charId=$charId missionId=$missionId step: $current → $newStep" }
-        return current
+    suspend fun addMissionStep(charId: Long, missionId: Int, delta: Int): Int? {
+        return mutationLock(charId).withLock {
+            val current = repo.getMissions(charId).firstOrNull { it.missionId == missionId }?.step ?: 0
+            if (missionId !in 1..65535 || delta !in 0..255 || current !in 0..255 || current.toLong() + delta > 255) {
+                logger.warn { "Từ chối bước nhiệm vụ ngoài byte: charId=$charId missionId=$missionId current=$current delta=$delta" }
+                return@withLock null
+            }
+            val newStep = current + delta
+            repo.upsertMission(charId, missionId, newStep)
+            logger.info { "Thêm bước nhiệm vụ: charId=$charId missionId=$missionId step: $current → $newStep" }
+            return@withLock current
+        }
     }
 
     /**
@@ -59,29 +72,29 @@ class QuestSystem(
      * @return Kết quả giảm (bao gồm việc đã hoàn thành chưa, bitId)
      */
     suspend fun decMissionStep(charId: Long, missionId: Int, delta: Int): DecMissionResult {
-        val current = repo.getMissions(charId).firstOrNull { it.missionId == missionId }?.step ?: 0
+        return mutationLock(charId).withLock {
+            require(delta in 0..255) { "Mission delta must fit DVT byte" }
+            val current = repo.getMissions(charId).firstOrNull { it.missionId == missionId }?.step ?: 0
 
-        // Nhiệm vụ không tồn tại (current == 0) → Không kích hoạt hoàn thành
-        if (current == 0) {
-            logger.warn { "Giảm bước của nhiệm vụ không tồn tại: charId=$charId missionId=$missionId" }
-            return DecMissionResult(completed = false, bitId = 0)
-        }
-
-        val newStep = maxOf(0, current - delta)
-
-        if (newStep == 0) {
-            // Bước về 0 → Hoàn thành nhiệm vụ (đối chiếu MarkManager.DecMissionStep dòng 225-227)
-            repo.removeMission(charId, missionId)
-            val bitId = markDefs[missionId]?.bitId ?: 0
-            if (bitId != 0) {
-                repo.upsertFlag(charId, bitId, 1)
+            // Nhiệm vụ không tồn tại (current == 0) → Không kích hoạt hoàn thành
+            if (current == 0) {
+                logger.warn { "Giảm bước của nhiệm vụ không tồn tại: charId=$charId missionId=$missionId" }
+                return@withLock DecMissionResult(completed = false, bitId = 0)
             }
-            logger.info { "Hoàn thành nhiệm vụ: charId=$charId missionId=$missionId (step: $current → 0) bitId=$bitId" }
-            return DecMissionResult(completed = true, bitId = bitId)
-        } else {
-            repo.upsertMission(charId, missionId, newStep)
-            logger.info { "Giảm bước nhiệm vụ: charId=$charId missionId=$missionId step: $current → $newStep" }
-            return DecMissionResult(completed = false, bitId = 0)
+
+            val newStep = maxOf(0, current - delta)
+
+            if (newStep == 0) {
+                // Bước về 0 → Hoàn thành nhiệm vụ (đối chiếu MarkManager.DecMissionStep dòng 225-227)
+                val bitId = markDefs[missionId]?.bitId ?: 0
+                repo.finishMission(charId, missionId, bitId)
+                logger.info { "Hoàn thành nhiệm vụ: charId=$charId missionId=$missionId (step: $current → 0) bitId=$bitId" }
+                return@withLock DecMissionResult(completed = true, bitId = bitId)
+            } else {
+                repo.upsertMission(charId, missionId, newStep)
+                logger.info { "Giảm bước nhiệm vụ: charId=$charId missionId=$missionId step: $current → $newStep" }
+                return@withLock DecMissionResult(completed = false, bitId = 0)
+            }
         }
     }
 
@@ -96,13 +109,12 @@ class QuestSystem(
      * @return Kết quả hoàn thành (gồm bitId, dùng để gửi S:024-005)
      */
     suspend fun completeMission(charId: Long, missionId: Int): DecMissionResult {
-        repo.removeMission(charId, missionId)
-        val bitId = markDefs[missionId]?.bitId ?: 0
-        if (bitId != 0) {
-            repo.upsertFlag(charId, bitId, 1)
+        return mutationLock(charId).withLock {
+            val bitId = markDefs[missionId]?.bitId ?: 0
+            repo.finishMission(charId, missionId, bitId)
+            logger.info { "Hoàn thành nhiệm vụ (pStyle=3): charId=$charId missionId=$missionId bitId=$bitId" }
+            return@withLock DecMissionResult(completed = true, bitId = bitId)
         }
-        logger.info { "Hoàn thành nhiệm vụ (pStyle=3): charId=$charId missionId=$missionId bitId=$bitId" }
-        return DecMissionResult(completed = true, bitId = bitId)
     }
 
     /**
@@ -112,8 +124,10 @@ class QuestSystem(
      * @param missionId ID nhiệm vụ
      */
     suspend fun removeMission(charId: Long, missionId: Int) {
-        repo.removeMission(charId, missionId)
-        logger.info { "Xóa nhiệm vụ: charId=$charId missionId=$missionId" }
+        return mutationLock(charId).withLock {
+            repo.removeMission(charId, missionId)
+            logger.info { "Xóa nhiệm vụ: charId=$charId missionId=$missionId" }
+        }
     }
 
     /**
@@ -127,12 +141,15 @@ class QuestSystem(
      * @param step      Giá trị bước mục tiêu
      */
     suspend fun setMissionStep(charId: Long, missionId: Int, step: Int) {
-        if (step <= 0) {
-            repo.removeMission(charId, missionId)
-            logger.info { "Xóa bước nhiệm vụ (GM): charId=$charId missionId=$missionId" }
-        } else {
-            repo.upsertMission(charId, missionId, step)
-            logger.info { "Thiết lập bước nhiệm vụ (GM): charId=$charId missionId=$missionId step=$step" }
+        return mutationLock(charId).withLock {
+            require(step in 0..255 && missionId in 1..65535) { "Mission ID/step must fit DVT packet" }
+            if (step <= 0) {
+                repo.removeMission(charId, missionId)
+                logger.info { "Xóa bước nhiệm vụ (GM): charId=$charId missionId=$missionId" }
+            } else {
+                repo.upsertMission(charId, missionId, step)
+                logger.info { "Thiết lập bước nhiệm vụ (GM): charId=$charId missionId=$missionId step=$step" }
+            }
         }
     }
 
@@ -144,8 +161,10 @@ class QuestSystem(
      * @param bitValue  Giá trị đánh dấu (thường là 1)
      */
     suspend fun setFlag(charId: Long, bitIndex: Int, bitValue: Int) {
-        repo.upsertFlag(charId, bitIndex, bitValue)
-        logger.debug { "Thiết lập đánh dấu nhiệm vụ: charId=$charId bitIndex=$bitIndex bitValue=$bitValue" }
+        return mutationLock(charId).withLock {
+            repo.upsertFlag(charId, bitIndex, bitValue)
+            logger.debug { "Thiết lập đánh dấu nhiệm vụ: charId=$charId bitIndex=$bitIndex bitValue=$bitValue" }
+        }
     }
 
     /** Kiểm tra nhiệm vụ đã hoàn thành theo missionId, giống MarkManager.GetMissionFlag(). */

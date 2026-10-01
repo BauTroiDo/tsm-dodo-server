@@ -103,12 +103,36 @@ class GameDataManager(
     var mountGrowDefs: Map<Int, MountGrowDef> = emptyMap()
         private set
 
+    /** DVT Thất Tinh Mệnh Bàn (key = sao 1..7, mỗi sao 10 cấp). */
+    var astrolabeDefs: Map<Int, AstrolabeDef> = emptyMap()
+        private set
+
+    /** DVT Myth/Sacred main attribute (key = SacredEquip primary no). */
+    var sacredEquipPrimaryDefs: Map<Int, SacredEquipPrimaryDef> = emptyMap()
+        private set
+
+    /** DVT Myth/Sacred upgrade table (key = target Myth level 1..15). */
+    var sacredEquipUpgradeDefs: Map<Int, SacredEquipUpgradeDef> = emptyMap()
+        private set
+
+    /** DVT Myth/Sacred sub-attribute random table (key = SacredEquip sub no). */
+    var sacredEquipSubDefs: Map<Int, SacredEquipSubDef> = emptyMap()
+        private set
+
+    /** DVT Myth/Sacred allowed sub-attributes grouped by threshold 1..6. */
+    var sacredEquipSubDomainDefs: List<SacredEquipSubDomainDef> = emptyList()
+        private set
+
     /** Định nghĩa thành tựu (key = ID thành tựu)*/
     var achievementDefs: Map<Int, AchievementDef> = emptyMap()
         private set
 
     /** Định nghĩa nhiệm vụ phái cử (key = mainKind → subKind → DispatchDef)*/
-    var dispatchDefs: Map<Int, Map<Int, DispatchDef>> = emptyMap()
+    var dispatchDefs: Map<Int, Map<Int, List<DispatchDef>>> = emptyMap()
+
+    var commonAwardDefs: Map<Int, List<CommonAwardEntry>> = emptyMap()
+        private set
+    var luckyBagDefs: Map<Int, LuckyBagDef> = emptyMap()
         private set
 
     /** Hiệu ứng cộng thưởng phái cử (key = ID hiệu ứng)*/
@@ -141,6 +165,30 @@ class GameDataManager(
 
     /** Định nghĩa thời gian hoạt động (key = activity ID)*/
     var activityTimeDefs: Map<Int, ActivityTimeDef> = emptyMap()
+        private set
+
+    /** DVT Sưu Tập võ tướng (key = NPC ID). */
+    var collectWarriorDefs: Map<Int, CollectWarriorDef> = emptyMap()
+        private set
+
+    /** DVT Sưu Tập tạo hình (key = collect style ID). */
+    var collectStyleDefs: Map<Int, CollectStyleDef> = emptyMap()
+        private set
+
+    /** DVT mốc điểm tạo hình. */
+    var collectStyleValueDefs: List<CollectStyleValueDef> = emptyList()
+        private set
+
+    /** DVT tổ hợp thẻ (key = combination ID). */
+    var collectCardDefs: Map<Int, CollectCardDef> = emptyMap()
+        private set
+
+    /** DVT thẻ thành phần (key = card-sort ID). */
+    var collectCardSortDefs: Map<Int, CollectCardSortDef> = emptyMap()
+        private set
+
+    /** DVT NFT collection (key = warrior/display ID). */
+    var collectNftDefs: Map<Int, CollectNftDef> = emptyMap()
         private set
 
     /**
@@ -199,7 +247,10 @@ class GameDataManager(
         }
 
         // Mark (Định nghĩa cờ đánh dấu nhiệm vụ)
-        loadFile(dataDir, "Mark_C.dat") { bytes ->
+        val markSource = dataIosDir.resolve("IOS_Mark_C.dat")
+        val markDir = if (Files.exists(markSource)) dataIosDir else dataDir
+        val markFile = if (Files.exists(markSource)) "IOS_Mark_C.dat" else "Mark_C.dat"
+        loadFile(markDir, markFile) { bytes ->
             val (marks, bitMap) = MarkDatLoader.load(bytes)
             markDefs = marks
             bitToMissionId = bitMap
@@ -212,22 +263,38 @@ class GameDataManager(
             }
         }
 
-        // TeachInfo (dữ liệu hướng dẫn)
-        loadFile(dataDir, "TeachInfo_C.dat") { bytes ->
-            val teachResult = TeachInfoDatLoader.load(bytes)
-            guideLastBitFlagId = teachResult.guideLastBitFlagId
-            guideMarkFlagIds = teachResult.guideMarkFlagIds
-            // Tạo ánh xạ ngược: markFlagId → guideId
-            markFlagToGuideId = teachResult.guideMarkFlagIds.entries
-                .associate { (guideId, markFlagId) -> markFlagId to guideId }
-            logger.info { "Nạp TeachInfo xong: ${guideLastBitFlagId.size} bitFlagId, ${guideMarkFlagIds.size} markFlagId" }
-            // ── Chẩn đoán: đối chiếu chéo markFlagId của guide với bitId trong Mark_C.dat ──
-            for ((guideId, markFlagId) in guideMarkFlagIds) {
-                val missionId = bitToMissionId[markFlagId]
-                logger.debug { "教學交叉：guide=$guideId markFlagId=$markFlagId → ${
-                    missionId?.let { "mission=$it (${markDefs[it]?.name})" } ?: "Không có nhiệm vụ tương ứng (cần chủ động kích hoạt)"
-                }" }
+        // TeachInfo — DVT client hiện tại đọc IOS_TeachInfo_C.dat.
+        // Bản Data/TeachInfo_C.dat cũ thiếu các guide NFT 24..27 nên client sẽ lặp hướng dẫn mãi.
+        val iosTeachInfo = dataIosDir.resolve("IOS_TeachInfo_C.dat")
+        val teachInfoFile = if (Files.isRegularFile(iosTeachInfo)) {
+            iosTeachInfo
+        } else {
+            dataDir.resolve("TeachInfo_C.dat")
+        }
+        if (Files.isRegularFile(teachInfoFile)) {
+            try {
+                val teachResult = TeachInfoDatLoader.load(Files.readAllBytes(teachInfoFile))
+                guideLastBitFlagId = teachResult.guideLastBitFlagId
+                guideMarkFlagIds = teachResult.guideMarkFlagIds
+                // Tạo ánh xạ ngược: markFlagId → guideId
+                markFlagToGuideId = teachResult.guideMarkFlagIds.entries
+                    .associate { (guideId, markFlagId) -> markFlagId to guideId }
+                logger.info {
+                    "Nạp TeachInfo xong: ${guideLastBitFlagId.size} bitFlagId, " +
+                        "${guideMarkFlagIds.size} markFlagId source=$teachInfoFile"
+                }
+                // ── Chẩn đoán: đối chiếu chéo markFlagId của guide với bitId trong Mark_C.dat ──
+                for ((guideId, markFlagId) in guideMarkFlagIds) {
+                    val missionId = bitToMissionId[markFlagId]
+                    logger.debug { "教學交叉：guide=$guideId markFlagId=$markFlagId → ${
+                        missionId?.let { "mission=$it (${markDefs[it]?.name})" } ?: "Không có nhiệm vụ tương ứng (cần chủ động kích hoạt)"
+                    }" }
+                }
+            } catch (e: Exception) {
+                logger.error(e) { "Nạp TeachInfo thất bại: $teachInfoFile" }
             }
+        } else {
+            logger.warn { "Không tìm thấy TeachInfo: $teachInfoFile" }
         }
 
         // BlissBag (logic mở túi thông thường tái sử dụng server data hiện tại)
@@ -368,16 +435,80 @@ class GameDataManager(
             }
         }
 
+        // SacredEquipPrimary — DVT DataManager:
+        // ReadData("Data/IOS_SacredEquipPrimaryStatus_C.dat", OnLoadSacredEquipPrimaryData).
+        val iosSacredEquipPrimary = dataIosDir.resolve("IOS_SacredEquipPrimaryStatus_C.dat")
+        if (Files.isRegularFile(iosSacredEquipPrimary)) {
+            sacredEquipPrimaryDefs = SacredEquipPrimaryDatLoader.load(Files.readAllBytes(iosSacredEquipPrimary))
+            logger.info {
+                "Nạp IOS_SacredEquipPrimaryStatus xong: ${sacredEquipPrimaryDefs.size} bản ghi source=$iosSacredEquipPrimary"
+            }
+        } else {
+            logger.warn { "Không tìm thấy IOS_SacredEquipPrimaryStatus_C.dat: $iosSacredEquipPrimary" }
+        }
+
+        // SacredEquipSub — server-side remake/random source.
+        val iosSacredEquipSub = dataIosDir.resolve("IOS_SacredEquipSubStatus_C.dat")
+        if (Files.isRegularFile(iosSacredEquipSub)) {
+            sacredEquipSubDefs = SacredEquipSubDatLoader.load(Files.readAllBytes(iosSacredEquipSub))
+            logger.info { "Nạp IOS_SacredEquipSubStatus xong: ${sacredEquipSubDefs.size} bản ghi" }
+        }
+
+        val iosSacredEquipSubDomain = dataIosDir.resolve("IOS_SacredEquipSubStatusDomain_C.dat")
+        if (Files.isRegularFile(iosSacredEquipSubDomain)) {
+            sacredEquipSubDomainDefs =
+                SacredEquipSubDomainDatLoader.load(Files.readAllBytes(iosSacredEquipSubDomain))
+            logger.info {
+                "Nạp IOS_SacredEquipSubStatusDomain xong: ${sacredEquipSubDomainDefs.size} bản ghi"
+            }
+        }
+
+        // SacredEquipUpgrade — DVT DataManager:
+        // ReadData("Data/IOS_SacredEquipUpgrade_C.dat", OnLoadSacredEquipUpgradeData).
+        val iosSacredEquipUpgrade = dataIosDir.resolve("IOS_SacredEquipUpgrade_C.dat")
+        if (Files.isRegularFile(iosSacredEquipUpgrade)) {
+            sacredEquipUpgradeDefs = SacredEquipUpgradeDatLoader.load(Files.readAllBytes(iosSacredEquipUpgrade))
+            logger.info {
+                "Nạp IOS_SacredEquipUpgrade xong: ${sacredEquipUpgradeDefs.size} cấp source=$iosSacredEquipUpgrade"
+            }
+        } else {
+            logger.warn { "Không tìm thấy IOS_SacredEquipUpgrade_C.dat: $iosSacredEquipUpgrade" }
+        }
+
+        // Astrolabe — DVT DataManager.ReadData("Data/IOS_Astrolabe.dat").
+        val iosAstrolabe = dataIosDir.resolve("IOS_Astrolabe.dat")
+        if (Files.isRegularFile(iosAstrolabe)) {
+            astrolabeDefs = AstrolabeDatLoader.load(Files.readAllBytes(iosAstrolabe))
+            logger.info { "Nạp IOS_Astrolabe xong: ${astrolabeDefs.size} sao source=$iosAstrolabe" }
+        } else {
+            logger.warn { "Không tìm thấy IOS_Astrolabe.dat: $iosAstrolabe" }
+        }
+
         // Achievement (Định nghĩa thành tựu)
         loadFile(dataDir, "AchievementData_C.dat") { bytes ->
             achievementDefs = AchievementDatLoader.load(bytes)
             logger.info { "Nạp Achievement xong: ${achievementDefs.size} bản ghi" }
         }
 
-        // ActivityTime — client UIActivity/UIJiugongge relies on serverStartTime/serverCloseTime.
-        loadFile(dataDir, "ActivityTime_C.dat") { bytes ->
-            activityTimeDefs = JiugonggeDatLoader.loadActivityTimes(bytes)
-            logger.info { "Nạp ActivityTime xong: ${activityTimeDefs.size} bản ghi" }
+        // ActivityTime — Lua DVT DataManager đọc Data/IOS_ActivityTime_C.dat.
+        // Ưu tiên đúng nguồn IOS; chỉ fallback bản Data cũ nếu IOS không tồn tại.
+        val iosActivityTime = dataIosDir.resolve("IOS_ActivityTime_C.dat")
+        val activityTimeFile = if (Files.isRegularFile(iosActivityTime)) {
+            iosActivityTime
+        } else {
+            dataDir.resolve("ActivityTime_C.dat")
+        }
+        if (Files.isRegularFile(activityTimeFile)) {
+            try {
+                activityTimeDefs = JiugonggeDatLoader.loadActivityTimes(Files.readAllBytes(activityTimeFile))
+                logger.info {
+                    "Nạp ActivityTime xong: ${activityTimeDefs.size} bản ghi source=$activityTimeFile"
+                }
+            } catch (e: Exception) {
+                logger.error(e) { "Nạp ActivityTime thất bại: $activityTimeFile" }
+            }
+        } else {
+            logger.warn { "Không tìm thấy ActivityTime: $activityTimeFile" }
         }
 
         // Jiugongge static data. DVT DataManager.lua explicitly reads the IOS_ files.
@@ -390,15 +521,81 @@ class GameDataManager(
             logger.info { "Nạp JiugonggeMission xong: ${jiugonggeMissionDefs.size} bản ghi" }
         }
 
+        // CollectWarrior — DVT client UICollectBook reads IOS_CollectWarrior_C.dat.
+        val iosCollectWarrior = dataIosDir.resolve("IOS_CollectWarrior_C.dat")
+        if (Files.exists(iosCollectWarrior)) {
+            try {
+                collectWarriorDefs = CollectWarriorDatLoader.load(Files.readAllBytes(iosCollectWarrior))
+                logger.info {
+                    "Nạp CollectWarrior xong: ${collectWarriorDefs.size} võ tướng source=$iosCollectWarrior"
+                }
+            } catch (e: Exception) {
+                logger.error(e) { "Nạp IOS_CollectWarrior_C.dat thất bại: $iosCollectWarrior" }
+            }
+        } else {
+            loadFile(dataDir, "CollectWarrior_C.dat") { bytes ->
+                collectWarriorDefs = CollectWarriorDatLoader.load(bytes)
+                logger.warn {
+                    "IOS_CollectWarrior_C.dat không tồn tại, dùng CollectWarrior_C.dat: ${collectWarriorDefs.size} bản ghi"
+                }
+            }
+        }
+
+        // Remaining Collection Book static data — same IOS tables used by DVT client.
+        fun loadIosCollection(name: String, fallback: String, consumer: (ByteArray) -> Unit) {
+            val ios = dataIosDir.resolve(name)
+            if (Files.exists(ios)) {
+                consumer(Files.readAllBytes(ios))
+            } else {
+                loadFile(dataDir, fallback, consumer)
+            }
+        }
+
+        loadIosCollection("IOS_CollectStyle_C.dat", "CollectStyle_C.dat") { bytes ->
+            collectStyleDefs = CollectionBookDatLoader.loadStyles(bytes)
+            logger.info { "Nạp CollectStyle xong: ${collectStyleDefs.size} bộ" }
+        }
+        loadIosCollection("IOS_CollectStyleValue_C.dat", "CollectStyleValue_C.dat") { bytes ->
+            collectStyleValueDefs = CollectionBookDatLoader.loadStyleValues(bytes)
+            logger.info { "Nạp CollectStyleValue xong: ${collectStyleValueDefs.size} mốc" }
+        }
+        loadIosCollection("IOS_CollectNFT_C.dat", "CollectNFT_C.dat") { bytes ->
+            collectNftDefs = CollectionBookDatLoader.loadNfts(bytes)
+            logger.info { "Nạp CollectNFT xong: ${collectNftDefs.size} bản ghi" }
+        }
+        loadIosCollection("IOS_CollectCard_C.dat", "CollectCard_C.dat") { bytes ->
+            collectCardDefs = CollectionBookDatLoader.loadCards(bytes)
+            logger.info { "Nạp CollectCard xong: ${collectCardDefs.size} tổ hợp" }
+        }
+        loadIosCollection("IOS_CollectCardSort_C.dat", "CollectCardSort_C.dat") { bytes ->
+            collectCardSortDefs = CollectionBookDatLoader.loadCardSorts(bytes)
+            logger.info { "Nạp CollectCardSort xong: ${collectCardSortDefs.size} thẻ" }
+        }
+
+        loadFile(dataIosDir, "IOS_CommonAward_C.dat") { bytes ->
+            commonAwardDefs = CommonAwardDatLoader.load(bytes)
+        }
+        loadFile(dataIosDir, "IOS_LuckyBag2_C.dat") { bytes ->
+            luckyBagDefs = CommonAwardDatLoader.loadLuckyBags(bytes)
+        }
+
         // Dispatch (Định nghĩa nhiệm vụ phái cử)
-        loadFile(dataDir, "Dispatch_C.dat") { bytes ->
+        val dispatchSource = dataIosDir.resolve("IOS_Dispatch_C.dat")
+        loadFile(
+            if (Files.exists(dispatchSource)) dataIosDir else dataDir,
+            if (Files.exists(dispatchSource)) "IOS_Dispatch_C.dat" else "Dispatch_C.dat"
+        ) { bytes ->
             dispatchDefs = DispatchDatLoader.loadDispatch(bytes)
-            val total = dispatchDefs.values.sumOf { it.size }
+            val total = dispatchDefs.values.sumOf { kinds -> kinds.values.sumOf { it.size } }
             logger.info { "Nạp Dispatch xong: $total bản ghi" }
         }
 
         // DispatchBonus (Hiệu ứng cộng thưởng phái cử)
-        loadFile(dataDir, "DispatchBonus_C.dat") { bytes ->
+        val dispatchBonusSource = dataIosDir.resolve("IOS_DispatchBonus_C.dat")
+        loadFile(
+            if (Files.exists(dispatchBonusSource)) dataIosDir else dataDir,
+            if (Files.exists(dispatchBonusSource)) "IOS_DispatchBonus_C.dat" else "DispatchBonus_C.dat"
+        ) { bytes ->
             dispatchBonusDefs = DispatchDatLoader.loadBonus(bytes)
             logger.info { "Nạp DispatchBonus xong: ${dispatchBonusDefs.size} bản ghi" }
         }

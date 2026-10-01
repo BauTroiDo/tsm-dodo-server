@@ -39,7 +39,8 @@ class GmCommandProcessor(
     private val questSystem: QuestSystem,
     private val bitFlagSystem: BitFlagSystem,
     private val warpDefs: Map<Int, WarpDef>,
-    private val markDefs: Map<Int, MarkDef>
+    private val markDefs: Map<Int, MarkDef>,
+    private val collectionSystem: CollectionSystem? = null,
 ) {
 
     /**
@@ -509,7 +510,7 @@ class GmCommandProcessor(
     }
 
     /** /addpet <npcId> — thêm tướng vào túi mang theo*/
-    private fun cmdAddPet(session: GameSession, args: List<String>) {
+    private suspend fun cmdAddPet(session: GameSession, args: List<String>) {
         if (args.isEmpty()) {
             reply(session, "Cách dùng: /加武將 <NPC ID>")
             return
@@ -527,6 +528,7 @@ class GmCommandProcessor(
         }
         val (slot, _) = result
         responseSender.sendFollowNpcAdd(session, session.playerId, slot, npcId, 1, showMsg = true)
+        collectionSystem?.markWarriorOwned(session.roleId.toLong(), npcId, session)
         reply(session, "Đã thêm tướng ${def.name} (ID=$npcId) → ô $slot")
     }
 
@@ -740,6 +742,10 @@ class GmCommandProcessor(
                 }
                 val missionId = args[1].toInt()
                 val step = args[2].toInt()
+                if (missionId !in 1..65535 || step !in 0..255) {
+                    reply(session, "ID nhiệm vụ phải từ 1 đến 65535, bước phải từ 0 đến 255.")
+                    return
+                }
                 questSystem.setMissionStep(charId, missionId, step)
                 if (step <= 0) {
                     reply(session, "Đã xóa nhiệm vụ $missionId")

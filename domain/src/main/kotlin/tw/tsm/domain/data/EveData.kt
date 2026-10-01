@@ -305,5 +305,9 @@ data class SceneEveData(
     val fightDatas: Map<Int, EveFightData> = emptyMap(),
     val surfaceDatas: Map<Int, EveSurfaceData> = emptyMap(),
     val groupDatas: Map<Int, EveGroupData> = emptyMap(),
-    val mines: Map<Int, EveMinePlacement> = emptyMap()
+    val mines: Map<Int, EveMinePlacement> = emptyMap(),
+    val goods: Map<Int, EveGoodsPlacement> = emptyMap()
 )
+
+/** DVT Eve_GoodsData.lua: NO, DBID, PosX, PosY, HideTime. */
+data class EveGoodsPlacement(val id: Int, val itemId: Int, val x: Int, val y: Int, val hideTime: Int)

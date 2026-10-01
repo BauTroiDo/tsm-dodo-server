@@ -65,7 +65,7 @@ class InnResponseSender {
      * Định dạng: <<innSlot(1B) + npcId(2B LE) + level(1B) + exp(4B LE) + hp(4B LE) + nameLen(1B) + name(Big5) + status(1B)>>
      * Nguồn: Inn.lua:29-35 Inn.SaveNpc()
      */
-    fun sendInnNpcData(session: SessionSender, innPets: Map<Int, FollowNpcData>) {
+    fun sendInnNpcData(session: SessionSender, innPets: Map<Int, FollowNpcData>, dispatchSlots: Set<Int> = emptySet()) {
         val writer = PacketWriter(3 + innPets.size * 20)
             .writeByte(31).writeByte(6).writeByte(0)
         for ((slot, pet) in innPets) {
@@ -75,8 +75,8 @@ class InnResponseSender {
             writer.writeIntLE(pet.exp.toInt())
             writer.writeIntLE(pet.hp.toInt())
             writer.writeBig5WithByteLen(pet.name)
-            // status: 0=bình thường, 1=tử trận
-            writer.writeByte(pet.surplus)
+            // DVT ENpcInnStatus: 0=Common, 1=Dispatch
+            writer.writeByte(if (slot in dispatchSlots) 1 else 0)
         }
         session.send(writer.toByteArray())
     }

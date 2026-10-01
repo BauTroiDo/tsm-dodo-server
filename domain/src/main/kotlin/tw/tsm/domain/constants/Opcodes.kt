@@ -94,6 +94,9 @@ object Opcodes {
     /** Hệ thống bảng xếp hạng (protocolTable[88])*/
     const val LEADERBOARD = 88
 
+    /** Hệ thống Sưu Tập (protocolTable[95])*/
+    const val COLLECTION = 95
+
     /** Hệ thống tiền (tăng/giảm/khởi tạo)*/
     const val MONEY = 26
 
@@ -131,6 +134,9 @@ object Opcodes {
 
     /** Nhiệm vụ (tuyến chính/tuyến phụ)*/
     const val MISSION = 47
+
+    /** Thất Tinh Mệnh Bàn (protocolTable[78])*/
+    const val ASTROLABE = 78
 
     /** Hệ thống vật cưỡi (protocolTable[79])*/
     const val MOUNT = 79
@@ -179,6 +185,9 @@ object Opcodes {
 
     /** Hệ thống tinh linh (DVT UIElf.lua / protocolTable[107])*/
     const val ELF = 107
+
+    /** Hệ thống Thần Thoại/Godskin (DVT UIGodskin.lua / protocolTable[108]) */
+    const val GODSKIN = 108
 
     /** Gỡ lỗi/thử nghiệm*/
     const val DEBUG = 199

@@ -45,6 +45,26 @@ class BattleFighter(
     var def: Int,
     var agi: Int,
     var intelligence: Int,
+    /** DVT EAttribute.AtkPercent=101 (% trên base ATK). */
+    var atkPercent: Int = 0,
+    /** DVT EAttribute.DefPercent=102 (% trên base DEF). */
+    var defPercent: Int = 0,
+    /** DVT EAttribute.Crit=103 (%). */
+    var crit: Int = 0,
+    /** DVT EAttribute.CritDamage=104 (% cộng thêm; base crit damage client = 50%). */
+    var critDamage: Int = 0,
+    /** DVT EAttribute.Dodge=105 (%). */
+    var dodge: Int = 0,
+    /** DVT EAttribute.Hit=106 (%). */
+    var hit: Int = 0,
+    /** DVT EAttribute.IncreaseTotalDamage=113 (%). */
+    var increaseTotalDamage: Int = 0,
+    /** DVT EAttribute.DamageReduction=114 (%). */
+    var damageReduction: Int = 0,
+    /** DVT EAttribute.ReduceTotalDamage=117 (%). */
+    var reduceTotalDamage: Int = 0,
+    /** DVT EAttribute.IncreaseDamageTakenSelf=118 (%). */
+    var increaseDamageTakenSelf: Int = 0,
 
     // ── Kỹ năng (tối đa 3) ──
     val skills: IntArray = intArrayOf(),

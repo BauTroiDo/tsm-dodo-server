@@ -55,6 +55,14 @@ class EveFlowController(
         val charId = session.roleId.toLong()
         val eventSession = stateMachine.getSession(charId)
 
+        // EventHandler[2] phía DVT bật ConductGate và có thể gửi C:020-006 ngay
+        // trước khi S:020-007 làm UILoading hiện lên. Trong lúc Door warp đang chạy,
+        // tuyệt đối không advance/complete event từ gói next đến sớm.
+        if (eventSession?.phase is EventPhase.AwaitingWarp) {
+            logger.debug { "Nhận 020-006 nhưng đang chuyển cảnh Door, bỏ qua" }
+            return
+        }
+
         // Cổng rời map tân thủ: client chỉ gửi 020-006 sau hội thoại, không
         // gửi gói cửa chuẩn. Eve.emg định nghĩa cổng này phải thêm mission
         // 11804 ("Vào Trác Quận") trước khi truyền tống. Cờ hoàn thành của
@@ -150,12 +158,8 @@ class EveFlowController(
         val charId = session.roleId.toLong()
         logger.info { "${session.characterName} chọn sự kiện: code=$code" }
 
-        stateMachine.setChoiceCode(charId, code)
-
-        val eventSession = stateMachine.getSession(charId)
-        if (eventSession == null) {
-            logger.warn { "handleChoice: charId=$charId không có sự kiện đang chạy" }
-            responseSender.sendEventEnd(session)
+        val eventSession = stateMachine.claimChoice(charId, code) ?: run {
+            logger.debug { "Bỏ qua lựa chọn lặp/sai trạng thái: charId=$charId code=$code" }
             return
         }
 
@@ -200,14 +204,8 @@ class EveFlowController(
         val battlePStyle = if (playerWin) 1 else 2
         val charId = session.roleId.toLong()
 
-        stateMachine.setBattleResult(charId, battlePStyle)
-        // ★ Sửa lỗi: khôi phục về Executing trước, đảm bảo advance() của nhánh fallback hoạt động bình thường
-        stateMachine.resumeFromBattle(charId)
-
-        val eventSession = stateMachine.getSession(charId)
-        if (eventSession == null) {
-            logger.warn { "resumeAfterBattle: charId=$charId không có sự kiện đang chạy" }
-            responseSender.sendEventEnd(session)
+        val eventSession = stateMachine.claimBattleResult(charId, battlePStyle) ?: run {
+            logger.debug { "Bỏ qua kết quả trận lặp/sai trạng thái: charId=$charId" }
             return
         }
 
@@ -226,10 +224,24 @@ class EveFlowController(
         )
 
         if (resolved != null) {
-            stateMachine.replaceResultsAndResume(charId, resolved.results)
+            // Một shape DVT duy nhất (scene 12421/eve2) có nhánh thắng cụ thể
+            // cập nhật mission, rồi một class8-win đơn lẻ phía sau mới thực hiện Door warp.
+            // Resolver chung cố ý chỉ chọn một best chain, nên nối riêng continuation
+            // có shape type=2/class7 để không thay đổi semantics các event khác.
+            val doorContinuation = EveChainResolver.findPostBattleDoorContinuation(
+                conditions = eventData.conditions,
+                evaluator = { cond -> EveConditionEvaluator.evaluate(cond, state) },
+                matchedConditionNo = resolved.matchedConditionNo
+            )
+            val postBattleResults = resolved.results + doorContinuation
+
+            stateMachine.replaceResultsAndResume(charId, postBattleResults)
             val first = stateMachine.advance(charId)
             if (first != null) {
-                logger.info { "${session.characterName} khớp sau trận: pStyle=$battlePStyle → ${resolved.results.size} result" }
+                logger.info {
+                    "${session.characterName} khớp sau trận: pStyle=$battlePStyle → " +
+                        "${postBattleResults.size} result (doorContinuation=${doorContinuation.size})"
+                }
                 dispatchResult(session, first)
             } else {
                 completeCurrentEvent(session, charId)
@@ -239,8 +251,8 @@ class EveFlowController(
                 resultExecutor.autoCaptureFromEvent(session, charId, eventData)
                 advanceEvent(session)
             } else {
-                finalCompleteAndEnd(session, charId)
-                logger.info { "${session.characterName} thua trận, kết thúc sự kiện" }
+                cancelAndEnd(session, charId)
+                logger.info { "${session.characterName} thua trận, hủy sự kiện để có thể thử lại" }
             }
         }
     }
@@ -262,7 +274,27 @@ class EveFlowController(
      * type=6: giao diện chọn Surface
      * type=8/9/10: bỏ qua lặng lẽ (client không có EventHandler, không xử lý)
      */
+    private suspend fun executeResultOrAbort(session: GameSession, result: EveResult): Boolean {
+        if (resultExecutor.executeResultClass(session, result)) return true
+        // Do not advance to a mission completion or count this event as completed
+        // when the required inventory mutation could not be performed in full.
+        stateMachine.clear(session.roleId.toLong())
+        responseSender.sendEventEnd(session)
+        return false
+    }
+
     private suspend fun dispatchResult(session: GameSession, result: EveResult) {
+        val charId = session.roleId.toLong()
+        val pendingSession = stateMachine.getSession(charId)
+        val pending = pendingSession?.let {
+            it.results.drop((it.currentIndex - 1).coerceAtLeast(0))
+        }.orEmpty()
+        val remaining = if (pending.firstOrNull() == result) pending else listOf(result) + pending
+        if (!resultExecutor.canExecuteResults(session, remaining)) {
+            stateMachine.clear(charId)
+            responseSender.sendEventEnd(session)
+            return
+        }
         logger.info { "${session.characterName} dispatch: type=${result.resultType} cls=${result.resultClass} pStyle=${result.parameterStyle} param=${result.parameter} val=${result.resultValue} group=${result.resultGroupNo} no=${result.resultNo}" }
 
         // ═══ Lọc thống nhất: bỏ qua thao tác UI NPC phục vụ trong chuỗi nhiệm vụ ═══
@@ -291,11 +323,11 @@ class EveFlowController(
                     if (isInnServiceNpc(session.mapId, npcClickId)) {
                         saveRecordPoint(session, charId0)
                     } else {
-                        resultExecutor.executeResultClass(session, result)
+                        if (!executeResultOrAbort(session, result)) return
                     }
                     serviceAdvanceOrEnd(session)
                 } else if (result.resultClass != 0) {
-                    resultExecutor.executeResultClass(session, result)
+                    if (!executeResultOrAbort(session, result)) return
                     if (result.resultClass == 3) {
                         // Thao tác hình ảnh NPC (tàng hình/hiện ra/biến hình/truy kích) → gửi client
                         responseSender.sendCommonEvent(session, result)
@@ -375,7 +407,7 @@ class EveFlowController(
                         if (isInnServiceNpc(session.mapId, eventSession.npcClickId)) {
                             saveRecordPoint(session, charId7)
                         } else {
-                            resultExecutor.executeResultClass(session, result)
+                            if (!executeResultOrAbort(session, result)) return
                         }
                         serviceAdvanceOrEnd(session)
                     } else {
@@ -385,7 +417,7 @@ class EveFlowController(
                 } else {
                     // pStyle khác: thực hiện trực tiếp (UI phục vụ cls=7 hoạt động độc lập với hệ thống sự kiện)
                     if (result.resultClass != 0) {
-                        resultExecutor.executeResultClass(session, result)
+                        if (!executeResultOrAbort(session, result)) return
                     }
                     // NPC phục vụ dùng được nhiều lần — không ghi nhận hoàn thành
                     serviceAdvanceOrEnd(session)
@@ -508,6 +540,11 @@ class EveFlowController(
      * Dùng cho các tình huống người chơi chủ động hủy như Surface (code=40).
      * Khác với finalCompleteAndEnd: không ghi condNo, không lưu bền DB.
      */
+    /** Release a failed battle continuation without awarding/completing its event. */
+    fun abortAfterBattle(session: GameSession) {
+        cancelAndEnd(session, session.roleId.toLong())
+    }
+
     private fun cancelAndEnd(session: GameSession, charId: Long) {
         npcShopManager.clearShop(charId)
         stateMachine.clear(charId)

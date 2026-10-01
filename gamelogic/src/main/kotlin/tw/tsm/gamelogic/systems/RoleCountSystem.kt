@@ -178,6 +178,15 @@ class RoleCountSystem(
 
     companion object {
         // DVT RoleCount.lua marks 190..195 as special counters (wire value >> 16).
+        /** DVT RoleCount.lua: lượt Điều phái miễn phí đã dùng trong ngày. */
+        const val DISPATCH = 8
+        /** DVT RoleCount.lua: lượt Điều phái mua thêm đã dùng trong ngày. */
+        const val BUY_DISPATCH = 9
+        /** DVT RoleCount.lua: tổng số lần Điều phái tích lũy. */
+        const val TOTAL_DISPATCH = 165
+
+        /** DVT CollectCard: số tổ hợp thẻ tối đa được trang bị. */
+        const val COLLECTION_CARD_EQUIP_MAX = 127
         const val SKILL_POINT = 190
         const val ATTRIBUTE_POINT = 191
         const val FRIEND_COUNT = 192

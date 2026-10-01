@@ -44,7 +44,7 @@ class EveBattleService(
             responseSender.sendCommonEvent(session, result)
 
             // Ngăn chặn 020-006 tiến hành/hoàn thành sự kiện trong thời gian diễn ra chiến đấu
-            stateMachine.enterAwaitingBattle(charId)
+            stateMachine.enterAwaitingBattle(charId, fightDataKey)
 
             val terrain = mapTerrains[session.mapId] ?: 101
             battleManager.createPveBattle(session, fightData, terrain)

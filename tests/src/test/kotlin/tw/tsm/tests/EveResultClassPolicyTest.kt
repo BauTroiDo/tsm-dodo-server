@@ -103,6 +103,22 @@ class EveResultClassPolicyTest : DescribeSpec({
             EveResultClassPolicy.directPointPurchase(2, 0, 131171, 10) shouldBe null
         }
 
+        it("resultClass=7 type=0 parameter=2 pStyle=1..5 giải mã đúng Moral delta") {
+            EveResultClassPolicy.moralDelta(0, 2, 5, 20)?.faction shouldBe 1
+            EveResultClassPolicy.moralDelta(0, 2, 4, 60)?.faction shouldBe 2
+            EveResultClassPolicy.moralDelta(0, 2, 3, 120)?.faction shouldBe 3
+            EveResultClassPolicy.moralDelta(0, 2, 2, 300)?.faction shouldBe 4
+            EveResultClassPolicy.moralDelta(0, 2, 1, 10)?.faction shouldBe 5
+            EveResultClassPolicy.moralDelta(0, 2, 3, -200)?.delta shouldBe -200
+        }
+
+        it("Moral delta chỉ nhận đúng shape type0 parameter2 và delta khác 0") {
+            EveResultClassPolicy.moralDelta(7, 2, 3, 20) shouldBe null
+            EveResultClassPolicy.moralDelta(0, 0, 3, 20) shouldBe null
+            EveResultClassPolicy.moralDelta(0, 2, 6, 20) shouldBe null
+            EveResultClassPolicy.moralDelta(0, 2, 3, 0) shouldBe null
+        }
+
         it("resultClass=7 type=0 pStyle=1..5 không nên nhầm kích hoạt UI đặc biệt") {
             EveResultClassPolicy.playerOperation(0, 1) shouldBe null
             EveResultClassPolicy.playerOperation(0, 2) shouldBe null

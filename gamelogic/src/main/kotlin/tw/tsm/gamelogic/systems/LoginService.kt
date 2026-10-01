@@ -1,13 +1,16 @@
 package tw.tsm.gamelogic.systems
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import tw.tsm.domain.constants.EAttribute
 import tw.tsm.domain.data.ItemDef
 import tw.tsm.domain.data.SceneEveData
+import tw.tsm.domain.data.SacredEquipPrimaryDef
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.SessionSender
 import tw.tsm.domain.interfaces.repositories.CharacterRecord
 import tw.tsm.domain.interfaces.repositories.HotkeyRepository
+import tw.tsm.domain.interfaces.repositories.MessageBoardRepository
 import tw.tsm.domain.interfaces.repositories.SkillRepository
 import tw.tsm.domain.valueobjects.PlayerDataDto
 import tw.tsm.domain.valueobjects.ThingData
@@ -39,6 +42,7 @@ class LoginService(
     private val skillSystem: SkillSystem,
     private val petSystem: PetSystem,
     private val mountSystem: MountSystem,
+    private val astrolabeSystem: AstrolabeSystem,
     private val hotkeyRepository: HotkeyRepository,
     private val skillRepository: SkillRepository,
     private val roleCountSystem: RoleCountSystem,
@@ -49,6 +53,9 @@ class LoginService(
     private val itemDefs: Map<Int, ItemDef> = emptyMap(),
     private val jiugonggeSystem: JiugonggeSystem? = null,
     private val dailyProgressSystem: DailyProgressSystem? = null,
+    private val collectionSystem: CollectionSystem? = null,
+    private val sacredEquipPrimaryDefs: Map<Int, SacredEquipPrimaryDef> = emptyMap(),
+    private val messageBoardRepository: MessageBoardRepository? = null,
 ) {
 
     /**
@@ -130,18 +137,25 @@ class LoginService(
         moneySystem.loadMoney(record.id)
         pointSystem.loadPoints(record.id)
         val specialCurrencies = playerCurrencySystem.load(record.id)
+        val astrolabeData = astrolabeSystem.load(record.id)
+        val astrolabeBonus = astrolabeSystem.bonuses(record.id)
 
         // 2.5 Tính toán chỉ số cộng thêm từ trang bị (Tham khảo tskero loadEquipmentJson → addEquipBonus)
         val equips = inventorySystem.getEquipment(record.id)
-        val equipBonus = EquipBonusCalculator.calculateTotalBonus(equips, itemDefs)
+        val equipBonus = EquipBonusCalculator.calculateTotalBonus(equips, itemDefs, sacredEquipPrimaryDefs)
 
         // S:005-003 Gói dữ liệu lớn của người chơi (Bao gồm chỉ số cộng thêm từ trang bị)
         val turn3State = skillRepository.findTurn3State(record.id)
         session.turn = record.turn
         session.career = record.career
         session.turn3Element = turn3State.element
-        val playerData = PlayerDataDto.fromCharacterRecord(record, statSystem, equipBonus, turn3State)
+        val playerData = PlayerDataDto.fromCharacterRecord(
+            record, statSystem, equipBonus, turn3State,
+            astrolabePoint = astrolabeData.natalPoint,
+            astrolabeBonus = astrolabeBonus
+        )
         responseSender.sendPlayerData(session, playerData)
+        responseSender.sendAstrolabeLevels(session, isLevelUp = false, astrolabeData.starLevels)
 
         // S:085-001 Đếm số lượng của nhân vật — Bắt buộc gửi trước vật phẩm trong túi đồ
         // DVT Item.lua: currentThingGrid = 250 + (Bag_1+Bag_2+Bag_3)×5.
@@ -153,6 +167,7 @@ class LoginService(
         // Lưu giá trị mặc định cho Private server: Khi không có bản ghi trong DB thì ghi vào RoleCountSystem (thay vì chỉ gộp vào gói tin),
         // để đảm bảo việc tính toán dung lượng ở server/số lần mua tiêu hao khớp với hiển thị ở client
         val defaultRoleCounts = mapOf(
+            RoleCountSystem.COLLECTION_CARD_EQUIP_MAX to 1, // DVT CollectCard mặc định cho trang bị 1 tổ hợp
             RoleCountSystem.BANK_1 to 0,              // Mở rộng tiền trang 1 (Tiêu hao sellId=1)
             RoleCountSystem.INN to 0,                 // Mở rộng thêm khách sạn (Tiêu hao sellId=2)
             RoleCountSystem.BAG_1 to 0,               // Mở rộng túi đồ 1 (Tiêu hao sellId=3)
@@ -178,6 +193,15 @@ class LoginService(
         val mergedCounts = roleCountSystem.getAllCounts(record.id)
             .mapValues { (_, valuePair) -> valuePair.first }  // value (Không phải maxValue)
         responseSender.sendRoleCountData(session, mergedCounts)
+
+        // DVT Chat.Clear() xóa leaveMessages khi reset phiên; nạp snapshot đúng một lần khi đăng nhập.
+        val messageBoardSnapshot = try {
+            messageBoardRepository?.findRecent(500).orEmpty()
+        } catch (t: Throwable) {
+            logger.error(t) { "Không thể nạp snapshot bảng nhắn cho characterId=${record.id}" }
+            emptyList()
+        }
+        responseSender.sendMessageBoardSnapshot(session, messageBoardSnapshot)
 
         // S:023-005 Tất cả vật phẩm trong túi đồ
         responseSender.sendAllBagItems(session, inventorySystem.getBag(record.id), refresh = false)
@@ -279,11 +303,31 @@ class LoginService(
             responseSender.sendFollowNpcDeployState(session, slot, true)
         }
 
-        // S:081-002 Khởi tạo cờ vĩnh viễn (Cờ hoàn thành hướng dẫn, v.v.) — Bắt buộc phải trước dữ liệu thú cưỡi,
-        // Client BitFlag.Init() sẽ gọi Mounts.UpdateCollection() để tính toán số lượng thu thập
+        // Load persistent Collection Book state and reconcile permanent ownership flags
+        // before S:081-002 so CardView/Warrior tabs see authoritative flags immediately.
+        val collectionSnapshot = collectionSystem?.loadCharacter(record.id)
+        collectionSystem?.syncOwnedWarriors(record.id, petSystem.getAllOwnedNpcIds(record.id))
+
+        // S:081-002 Khởi tạo cờ vĩnh viễn (Cờ hoàn thành hướng dẫn, Sưu Tập, v.v.).
         val bitFlagIds = bitFlagSystem.getSetFlagIds(record.id)
         val packedFlags = bitFlagSystem.packFlags(bitFlagIds)
         responseSender.sendInitBitFlags(session, packedFlags)
+
+        // S:095-004/009/010 persistent Collection Book state.
+        if (collectionSnapshot != null && collectionSystem != null) {
+            responseSender.sendCollectionStyleData(
+                session,
+                collectionSnapshot.styleFlags,
+                collectionSystem.getStyleDataCount(),
+            )
+            responseSender.sendCollectionCardEquipData(
+                session,
+                collectionSnapshot.maxEquipCards,
+                collectionSnapshot.equippedCards,
+            )
+            responseSender.sendCollectionCardData(session, collectionSnapshot.cardLevels)
+            responseSender.sendCollectionNftShine(session, collectionSystem.getNftShine(record.id))
+        }
 
         // S:077 thời gian hoạt động runtime + S:091-001 bảng cửu cung daily.
         // UIJiugongge opens later from the Hằng ngày button and expects this state to exist.
@@ -355,13 +399,28 @@ class LoginService(
             attrPoint = playerData.attrPoint,
             skillPoint = playerData.skillPoint,
             equipBonus = equipBonus,
+            astrolabeBonus = astrolabeBonus,
             turn3Int = turn3State.intelligence,
             turn3Atk = turn3State.atk,
             turn3Def = turn3State.def,
             turn3Agi = turn3State.agi,
             turn3Hpx = turn3State.hpx,
-            turn3Spx = turn3State.spx
+            turn3Spx = turn3State.spx,
+            killNum = playerData.killNum,
+            moral = playerData.moral,
+            sex = record.sex
         )
+        // Collection state is loaded earlier, before PlayerState exists. Apply its
+        // authoritative max-HP/SP delta now that runtime state has been initialized,
+        // then synchronize absolute values to the client before login completes.
+        collectionSystem?.refreshRuntimeMax(record.id)
+        playerStateManager.getState(record.id)?.let { runtime ->
+            responseSender.sendSetAttribute(session, EAttribute.MAX_HP, runtime.maxHp.toInt(), true)
+            responseSender.sendSetAttribute(session, EAttribute.HP, runtime.hp.toInt(), true)
+            responseSender.sendSetAttribute(session, EAttribute.MAX_SP, runtime.maxSp, true)
+            responseSender.sendSetAttribute(session, EAttribute.SP, runtime.sp, true)
+        }
+
         // Tải điểm kinh nghiệm (EXP) từ DB
         playerStateManager.getState(record.id)?.exp = record.exp
 

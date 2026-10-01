@@ -60,6 +60,9 @@ interface ResponseSender {
      */
     fun sendPlayerData(session: SessionSender, data: PlayerDataDto)
 
+    /** DVT S:005-005 người chơi biến hình: roleId(Int64) + npcId(UInt16). */
+    fun sendPlayerTransform(session: SessionSender, roleId: Long, npcId: Int)
+
     /**
      * Gửi số lần dùng đan dược (S:005-011)
      */
@@ -327,6 +330,21 @@ interface ResponseSender {
      * Được kích hoạt bởi Eve resultType=7/resultClass=7/pStyle=29.
      */
     fun sendBadoStartMessage(session: SessionSender)
+
+    /** Mở bảng nhắn (S:036-003). */
+    fun sendOpenMessageBoard(session: SessionSender)
+
+    /** Gửi snapshot bảng nhắn (S:036-004), record theo thứ tự cũ -> mới. */
+    fun sendMessageBoardSnapshot(
+        session: SessionSender,
+        messages: List<tw.tsm.domain.interfaces.repositories.MessageBoardRecord>
+    )
+
+    /** Broadcast một lời nhắn mới (S:036-005). */
+    fun sendMessageBoardAdded(
+        session: SessionSender,
+        message: tw.tsm.domain.interfaces.repositories.MessageBoardRecord
+    )
 
     /**
      * Mở bảng xếp hạng Vô Giới (S:036-010)
@@ -1154,6 +1172,13 @@ interface ResponseSender {
      */
     fun sendSetAttribute(session: SessionSender, attrKind: Int, value: Int, isPositive: Boolean, arg: Int = 0)
 
+    /**
+     * Gửi thuộc tính thế giới nhân vật chính (S:008-014).
+     * DVT protocal.lua đọc attrKind(1) + sign(1) + value(Int64) + arg(Int32).
+     * Dùng cho Moral vì client SetAttribute(EAttribute.Moral, value, faction).
+     */
+    fun sendWorldAttribute(session: SessionSender, attrKind: Int, value: Long, isPositive: Boolean = true, arg: Int = 0)
+
     /** S:008-002: FollowNpc(4), index UInt16, attribute Byte, sign Byte, value/arg Int32. */
     fun sendFollowNpcAttribute(session: SessionSender, slot: Int, attrKind: Int, value: Int, arg: Int = 0)
 
@@ -1350,6 +1375,11 @@ interface ResponseSender {
      */
     fun sendBattleDrop(session: SessionSender, itemId: Int, fromCol: Int, fromRow: Int, toCol: Int, toRow: Int)
 
+    // ── Thất Tinh Mệnh Bàn (mainKind=78) ──
+
+    /** S:078-001 +isLevelUp(1) +level(1)*7. */
+    fun sendAstrolabeLevels(session: SessionSender, isLevelUp: Boolean, levels: IntArray)
+
     // ── Hệ thống vật cưỡi (mainKind=79) ──
 
     /**
@@ -1527,6 +1557,15 @@ interface ResponseSender {
      * Kết quả: 0=thành công, 1=thất bại
      */
     fun sendAchievementReward(session: SessionSender, result: Int, achievementId: Int)
+
+    // ── Sưu Tập (mainKind=95) ──
+    fun sendCollectionStyleData(session: SessionSender, flags: Map<Int, Int>, count: Int)
+    fun sendCollectionStyleUpdate(session: SessionSender, styleId: Int, flag: Int)
+    fun sendCollectionCardEquipData(session: SessionSender, maxEquip: Int, equippedCardIds: List<Int>)
+    fun sendCollectionCardData(session: SessionSender, levels: Map<Int, Int>)
+    fun sendCollectionNftCardResult(session: SessionSender, subKind: Int, success: Boolean, collectionId: Int)
+    fun sendCollectionNftMountResult(session: SessionSender, subKind: Int, success: Boolean, npcId: Int)
+    fun sendCollectionNftShine(session: SessionSender, shine: Int)
 
     // ── Hệ thống thư (mainKind=83) ──
 

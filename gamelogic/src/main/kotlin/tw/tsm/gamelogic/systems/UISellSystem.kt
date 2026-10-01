@@ -107,14 +107,23 @@ class UISellSystem(
             return queryWarriorRepositoryExpansion(charId)
         }
 
+        // UIDispatch gọi UISell.Launch(6) sau khi dùng hết quota miễn phí.
+        // DVT không mang bảng giá server gốc trong Lua/data client; đây là rule offline
+        // đã được chủ server chốt: 4 lượt trả vàng, sau đó trả KNB.
+        if (sellId == SELL_DISPATCH_EXTRA) {
+            return queryDispatchExtra(charId)
+        }
+
         val formula = formulaDefs[sellId] ?: return UiSellQuote.Fail(REASON_NO_DATA)
 
         return when (sellId) {
             SELL_FLY_TELEPORT -> queryFlyTeleport(charId, formula)
             SELL_FLY_EXTEND -> queryFlyExtend(charId, formula)
-            SELL_TURN3_UNLOCK_SKILL, SELL_TURN3_CHANGE_ELEMENT -> queryFormulaPrice(formula)
+            SELL_DISPATCH_QUICK,
+            SELL_TURN3_UNLOCK_SKILL,
+            SELL_TURN3_CHANGE_ELEMENT -> queryFormulaPrice(formula)
             in expansions -> queryExpansion(charId, sellId, formula)
-            // TODO: Các sellId còn lại (Tăng tốc phái đi, Vòng quay may mắn, Đặt lại thuộc tính...) chờ các hệ thống thực thi xong sẽ bổ sung dần
+            // TODO: Các sellId còn lại (Vòng quay may mắn, Đặt lại thuộc tính...) chờ các hệ thống thực thi xong sẽ bổ sung dần
             else -> UiSellQuote.Fail(REASON_NOT_USABLE)
         }
     }
@@ -139,6 +148,15 @@ class UISellSystem(
             return UiSellQuote.Fail(REASON_LIMIT_REACHED)
         }
         return UiSellQuote.Money(CURRENCY_GOLD, WARRIOR_REPOSITORY_SLOT_PRICE)
+    }
+
+    private fun queryDispatchExtra(charId: Long): UiSellQuote {
+        val paidUsed = roleCountSystem.getValue(charId, RoleCountSystem.BUY_DISPATCH)
+        return if (paidUsed < DispatchSystem.GOLD_EXTRA_USES) {
+            UiSellQuote.Money(CURRENCY_GAME_GOLD, DispatchSystem.GOLD_EXTRA_COST.toLong())
+        } else {
+            UiSellQuote.Money(CURRENCY_GOLD, DispatchSystem.POINT_EXTRA_COST.toLong())
+        }
     }
 
     /**
@@ -231,6 +249,15 @@ class UISellSystem(
         /** TextData gốc 24906: mỗi ô kho võ tướng cần 150 nguyên bảo. */
         const val WARRIOR_REPOSITORY_SLOT_PRICE = 150L
 
+        /** UIDispatch: mua lượt Điều phái sau khi hết quota miễn phí. */
+        const val SELL_DISPATCH_EXTRA = 6
+
+        /**
+         * UIDispatch.OnClick_Start: hoàn thành nhanh lượt đang chạy.
+         * IOS_UISell_Formula_C.dat: sellId=9, kind=1, value=50 => 50 KNB.
+         */
+        const val SELL_DISPATCH_QUICK = 9
+
         /** Tiêu phí UI 7: Sử dụng dịch chuyển ghi nhớ (UITeleport.OnClick_Teleport → Launch(7, _, 1, index)) */
         const val SELL_FLY_TELEPORT = 7
 
@@ -268,6 +295,8 @@ class UISellSystem(
 
         /** KNB */
         const val CURRENCY_GOLD = 1
+        /** Tiền game (gold thường). */
+        const val CURRENCY_GAME_GOLD = 3
 
         // ── Mã nguyên nhân thất bại (Đối chiếu string.GetUiSellFail) ──
 

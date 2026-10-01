@@ -39,6 +39,20 @@ class BattleResponseSender {
     }
 
     /**
+     * S:008-014 thuộc tính thế giới nhân vật chính.
+     * DVT: attrKind Byte + sign Byte + value Int64 + arg Int32.
+     */
+    fun sendWorldAttribute(session: SessionSender, attrKind: Int, value: Long, isPositive: Boolean, arg: Int) {
+        val writer = PacketWriter(17)
+            .writeByte(8).writeByte(14).writeByte(0)
+            .writeByte(attrKind)
+            .writeByte(if (isPositive) 1 else 2)
+            .writeLongLE(value)
+            .writeIntLE(arg)
+        session.send(writer.toByteArray())
+    }
+
+    /**
      * Gửi cập nhật chỉ số cộng thêm của trang bị (8 gói S:008-001 + MaxHP/HP/MaxSP/SP)
      *
      * tham khảo tskero `TSCharacter.refreshBonus()` — sau khi mặc/tháo trang bị gửi từng giá trị thuộc tính trang bị,
@@ -61,6 +75,20 @@ class BattleResponseSender {
         sendSetAttribute(session, EAttribute.EQUIP_AGI, bonus.equipAgi, true, 0)
         sendSetAttribute(session, EAttribute.EQUIP_HPX, bonus.equipHpx, true, 0)
         sendSetAttribute(session, EAttribute.EQUIP_SPX, bonus.equipSpx, true, 0)
+
+        // DVT Mobile advanced attributes are direct percentages (not Equip* shadow attrs).
+        sendSetAttribute(session, EAttribute.ATK_PERCENT, bonus.atkPercent, true, 0)
+        sendSetAttribute(session, EAttribute.DEF_PERCENT, bonus.defPercent, true, 0)
+        sendSetAttribute(session, EAttribute.HP_PERCENT, bonus.hpPercent, true, 0)
+        sendSetAttribute(session, EAttribute.INT_PERCENT, bonus.intPercent, true, 0)
+        sendSetAttribute(session, EAttribute.CRITICAL, bonus.crit, true, 0)
+        sendSetAttribute(session, EAttribute.CRIT_DAMAGE, bonus.critDamage, true, 0)
+        sendSetAttribute(session, EAttribute.DODGE, bonus.dodge, true, 0)
+        sendSetAttribute(session, EAttribute.HIT, bonus.hit, true, 0)
+        sendSetAttribute(session, EAttribute.INCREASE_TOTAL_DAMAGE, bonus.increaseTotalDamage, true, 0)
+        sendSetAttribute(session, EAttribute.DAMAGE_REDUCTION, bonus.damageReduction, true, 0)
+        sendSetAttribute(session, EAttribute.REDUCE_TOTAL_DAMAGE, bonus.reduceTotalDamage, true, 0)
+        sendSetAttribute(session, EAttribute.INCREASE_DAMAGE_TAKEN_SELF, bonus.increaseDamageTakenSelf, true, 0)
 
         // gửi bổ sung giá trị tuyệt đối HP/SP, đảm bảo đồng bộ với server (tham khảo tskero refreshBonus cuối cùng cũng gửi HP/SP)
         sendSetAttribute(session, EAttribute.MAX_HP, maxHp.toInt(), true, 0)

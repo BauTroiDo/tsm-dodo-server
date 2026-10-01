@@ -9,8 +9,10 @@ import tw.tsm.domain.interfaces.PacketHandler
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
 import tw.tsm.domain.interfaces.repositories.SkillRepository
+import tw.tsm.gamelogic.systems.DispatchSystem
 import tw.tsm.gamelogic.systems.FlyPointSystem
 import tw.tsm.gamelogic.systems.InventorySystem
+import tw.tsm.gamelogic.systems.MoneySystem
 import tw.tsm.gamelogic.systems.PartySystem
 import tw.tsm.gamelogic.systems.PointSystem
 import tw.tsm.gamelogic.systems.RoleCountSystem
@@ -21,6 +23,9 @@ import tw.tsm.gamelogic.systems.UiSellQuote
 import tw.tsm.gamelogic.systems.WorldManager
 import tw.tsm.gamelogic.systems.PlayerStateManager
 import tw.tsm.protocol.PacketReader
+import tw.tsm.protocol.PacketWriter
+import tw.tsm.domain.data.DispatchSaveData
+import tw.tsm.domain.util.OleDate
 
 private val logger = KotlinLogging.logger {}
 
@@ -53,7 +58,9 @@ class UISellHandler(
     private val skillRepository: SkillRepository,
     private val playerStateManager: PlayerStateManager,
     private val skillSystem: SkillSystem,
-    private val slotMachineSystem: SlotMachineSystem
+    private val slotMachineSystem: SlotMachineSystem,
+    private val moneySystem: MoneySystem? = null,
+    private val dispatchSystem: DispatchSystem? = null,
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.UI_SELL
@@ -137,6 +144,20 @@ class UISellHandler(
             return
         }
 
+        // sellId=6 chỉ là bước xác nhận giá của UIDispatch. Không trừ tại đây:
+        // callback client sẽ gửi C86-2 và DispatchSystem chỉ trừ phí sau khi start hợp lệ.
+        if (sellId == UISellSystem.SELL_DISPATCH_EXTRA) {
+            handleDispatchExtraUse(session, useKind, quote)
+            return
+        }
+
+        // sellId=9: hoàn thành nhanh Điều phái. DispatchSystem giữ lock slot và tự trừ KNB
+        // để double-click không thể trừ hai lần cho cùng một lượt.
+        if (sellId == UISellSystem.SELL_DISPATCH_QUICK) {
+            handleDispatchQuickUse(session, useKind, quote, args)
+            return
+        }
+
         // kiểm tra hợp lệ hiệu ứng trước (kiểm tra trước rồi khấu trừ, tránh khấu trừ xong hiệu ứng thất bại)
         when (sellId) {
             UISellSystem.SELL_TURN3_UNLOCK_SKILL -> {
@@ -178,6 +199,132 @@ class UISellHandler(
                 }
             }
         }
+    }
+
+    /**
+     * Xác nhận mua lượt Điều phái.
+     *
+     * Không trừ phí ở C84-2. Client chỉ dùng kết quả thành công để callback
+     * UIDispatch.StartDispatch() -> C86-2; phía DispatchSystem mới thực hiện
+     * check-and-debit nguyên tử sau khi mọi điều kiện start đã hợp lệ.
+     */
+    private fun handleDispatchExtraUse(
+        session: GameSession,
+        useKind: Int,
+        quote: UiSellQuote,
+    ) {
+        val sellId = UISellSystem.SELL_DISPATCH_EXTRA
+        if (useKind != USE_KIND_POINT || quote !is UiSellQuote.Money) {
+            responseSender.sendUiSellFail(
+                session, 2, sellId, UISellSystem.REASON_PRICE_ERROR
+            )
+            return
+        }
+
+        val charId = session.roleId.toLong()
+        val cost = quote.cost.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+        val enough = when (quote.currencyKind) {
+            UISellSystem.CURRENCY_GAME_GOLD -> (moneySystem?.getGold(charId) ?: 0) >= cost
+            UISellSystem.CURRENCY_GOLD -> pointSystem.getRealPoint(charId) >= cost
+            else -> false
+        }
+        if (!enough) {
+            responseSender.sendUiSellFail(
+                session, 2, sellId, UISellSystem.REASON_GOLD_NOT_ENOUGH
+            )
+            return
+        }
+
+        responseSender.sendUiSellSuccess(session, sellId)
+    }
+
+    /**
+     * Hoàn thành nhanh Điều phái (UISell sellId=9).
+     *
+     * Lua truyền processData.index trong args. Data DVT quy định giá 50 KNB.
+     * S86-3 phải được gửi trước S84-2 success để callback UpdateUI của client
+     * nhìn thấy endTime mới ngay lập tức.
+     */
+    private suspend fun handleDispatchQuickUse(
+        session: GameSession,
+        useKind: Int,
+        quote: UiSellQuote,
+        args: List<Int>,
+    ) {
+        val sellId = UISellSystem.SELL_DISPATCH_QUICK
+        if (useKind != USE_KIND_POINT ||
+            quote !is UiSellQuote.Money ||
+            quote.currencyKind != UISellSystem.CURRENCY_GOLD ||
+            quote.cost <= 0 ||
+            quote.cost > Int.MAX_VALUE ||
+            args.size != 1
+        ) {
+            responseSender.sendUiSellFail(
+                session, 2, sellId, UISellSystem.REASON_PRICE_ERROR
+            )
+            return
+        }
+
+        val system = dispatchSystem
+        if (system == null) {
+            responseSender.sendUiSellFail(
+                session, 2, sellId, UISellSystem.REASON_NOT_USABLE
+            )
+            return
+        }
+
+        val slotIndex = args[0]
+        val charId = session.roleId.toLong()
+        val (result, updated) = system.quickCompleteDispatch(
+            characterId = charId,
+            slotIndex = slotIndex,
+            currentTime = OleDate.nowLocal(),
+            pointCost = quote.cost.toInt(),
+        )
+
+        when (result) {
+            DispatchSystem.QUICK_COMPLETE_SUCCESS -> {
+                if (updated == null) {
+                    responseSender.sendUiSellFail(
+                        session, 2, sellId, UISellSystem.REASON_NOT_USABLE
+                    )
+                    return
+                }
+                sendSingleDispatchUpdate(session, updated)
+                val (real, virtual) = pointSystem.getPoints(charId)
+                responseSender.sendPointBalance(session, real, virtual)
+                responseSender.sendUiSellSuccess(session, sellId)
+            }
+            DispatchSystem.QUICK_COMPLETE_NOT_ENOUGH_POINT ->
+                responseSender.sendUiSellFail(
+                    session, 2, sellId, UISellSystem.REASON_GOLD_NOT_ENOUGH
+                )
+            else ->
+                responseSender.sendUiSellFail(
+                    session, 2, sellId, UISellSystem.REASON_NOT_USABLE
+                )
+        }
+    }
+
+    /** S:086-003 cập nhật đúng một slot Điều phái. */
+    private fun sendSingleDispatchUpdate(
+        session: GameSession,
+        data: DispatchSaveData,
+    ) {
+        val packet = PacketWriter(25)
+            .writeByte(Opcodes.DISPATCH)
+            .writeByte(3)
+            .writeByte(0)
+            .writeByte(1)
+            .writeByte(data.slotIndex)
+            .writeDoubleLE(data.startTime)
+            .writeDoubleLE(data.endTime)
+            .writeByte(data.dispatchKind)
+            .writeByte(data.innPetIndex)
+            .writeByte(data.effectIndex1)
+            .writeByte(data.effectIndex2)
+            .toByteArray()
+        session.send(packet)
     }
 
     /**

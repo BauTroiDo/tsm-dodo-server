@@ -16,6 +16,7 @@ import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.SessionSender
 import tw.tsm.domain.interfaces.repositories.CharacterRecord
 import tw.tsm.domain.interfaces.repositories.MailRecord
+import tw.tsm.domain.interfaces.repositories.MessageBoardRecord
 import tw.tsm.domain.interfaces.repositories.MissionFlagRecord
 import tw.tsm.domain.interfaces.repositories.FlyPointRecord
 import tw.tsm.domain.interfaces.repositories.FriendRecord
@@ -53,10 +54,12 @@ class ResponseSenderImpl(worldManager: WorldManager) : ResponseSender {
     private val inventory = InventoryResponseSender()
     private val battle = BattleResponseSender()
     private val partyPet = PartyPetResponseSender()
+    private val astrolabe = AstrolabeResponseSender()
     private val mount = MountResponseSender()
     private val inn = InnResponseSender()
     private val macroBox = MacroBoxResponseSender()
     private val achievement = AchievementResponseSender()
+    private val collection = CollectionResponseSender()
     private val uiSell = UISellResponseSender()
     private val mall = MallResponseSender()
     private val slotMachine = SlotMachineResponseSender()
@@ -76,6 +79,9 @@ class ResponseSenderImpl(worldManager: WorldManager) : ResponseSender {
 
     override fun sendPlayerData(session: SessionSender, data: PlayerDataDto) =
         login.sendPlayerData(session, data)
+
+    override fun sendPlayerTransform(session: SessionSender, roleId: Long, npcId: Int) =
+        login.sendPlayerTransform(session, roleId, npcId)
 
     override fun sendPillCounts(session: SessionSender, attrPill: Int, hpPill: Int, spPill: Int, skillPill: Int) =
         login.sendPillCounts(session, attrPill, hpPill, spPill, skillPill)
@@ -198,6 +204,15 @@ class ResponseSenderImpl(worldManager: WorldManager) : ResponseSender {
 
     override fun sendBadoStartMessage(session: SessionSender) =
         npcEvent.sendBadoStartMessage(session)
+
+    override fun sendOpenMessageBoard(session: SessionSender) =
+        npcEvent.sendOpenMessageBoard(session)
+
+    override fun sendMessageBoardSnapshot(session: SessionSender, messages: List<MessageBoardRecord>) =
+        npcEvent.sendMessageBoardSnapshot(session, messages)
+
+    override fun sendMessageBoardAdded(session: SessionSender, message: MessageBoardRecord) =
+        npcEvent.sendMessageBoardAdded(session, message)
 
     override fun sendOpenGalaxyLeaderboard(session: SessionSender) =
         npcEvent.sendOpenGalaxyLeaderboard(session)
@@ -429,6 +444,9 @@ class ResponseSenderImpl(worldManager: WorldManager) : ResponseSender {
     override fun sendSetAttribute(session: SessionSender, attrKind: Int, value: Int, isPositive: Boolean, arg: Int) =
         battle.sendSetAttribute(session, attrKind, value, isPositive, arg)
 
+    override fun sendWorldAttribute(session: SessionSender, attrKind: Int, value: Long, isPositive: Boolean, arg: Int) =
+        battle.sendWorldAttribute(session, attrKind, value, isPositive, arg)
+
     override fun sendFollowNpcAttribute(session: SessionSender, slot: Int, attrKind: Int, value: Int, arg: Int) =
         battle.sendFollowNpcAttribute(session, slot, attrKind, value, arg)
 
@@ -572,6 +590,11 @@ class ResponseSenderImpl(worldManager: WorldManager) : ResponseSender {
     override fun sendPetUpgradeResult(session: SessionSender, success: Boolean) =
         partyPet.sendPetUpgradeResult(session, success)
 
+    // ── Thất Tinh Mệnh Bàn (AstrolabeResponseSender) ──
+
+    override fun sendAstrolabeLevels(session: SessionSender, isLevelUp: Boolean, levels: IntArray) =
+        astrolabe.sendLevels(session, isLevelUp, levels)
+
     // ── Thú cưỡi (MountResponseSender) ──
 
     override fun sendMountData(session: SessionSender, data: MountData) =
@@ -652,6 +675,27 @@ class ResponseSenderImpl(worldManager: WorldManager) : ResponseSender {
 
     override fun sendRoleCountUpdate(session: SessionSender, counts: Map<Int, Pair<Int, Int>>) =
         achievement.sendRoleCountUpdate(session, counts)
+
+    override fun sendCollectionStyleData(session: SessionSender, flags: Map<Int, Int>, count: Int) =
+        collection.sendStyleData(session, flags, count)
+
+    override fun sendCollectionStyleUpdate(session: SessionSender, styleId: Int, flag: Int) =
+        collection.sendStyleUpdate(session, styleId, flag)
+
+    override fun sendCollectionCardEquipData(session: SessionSender, maxEquip: Int, equippedCardIds: List<Int>) =
+        collection.sendCardEquipData(session, maxEquip, equippedCardIds)
+
+    override fun sendCollectionCardData(session: SessionSender, levels: Map<Int, Int>) =
+        collection.sendCardData(session, levels)
+
+    override fun sendCollectionNftCardResult(session: SessionSender, subKind: Int, success: Boolean, collectionId: Int) =
+        collection.sendNftCardResult(session, subKind, success, collectionId)
+
+    override fun sendCollectionNftMountResult(session: SessionSender, subKind: Int, success: Boolean, npcId: Int) =
+        collection.sendNftMountResult(session, subKind, success, npcId)
+
+    override fun sendCollectionNftShine(session: SessionSender, shine: Int) =
+        collection.sendNftShine(session, shine)
 
     // ── Hệ thống thư tín (MailResponseSender) ──
 

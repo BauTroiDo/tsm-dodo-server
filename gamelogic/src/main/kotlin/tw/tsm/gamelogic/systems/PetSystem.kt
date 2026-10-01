@@ -3,9 +3,11 @@ package tw.tsm.gamelogic.systems
 import io.github.oshai.kotlinlogging.KotlinLogging
 import tw.tsm.domain.data.ItemDef
 import tw.tsm.domain.data.NpcDef
+import tw.tsm.domain.data.SacredEquipPrimaryDef
 import tw.tsm.domain.interfaces.repositories.PetRepository
 import tw.tsm.domain.valueobjects.FollowNpcData
 import tw.tsm.domain.valueobjects.ThingData
+import tw.tsm.domain.util.DvtPercentMath
 import java.util.concurrent.ConcurrentHashMap
 
 private val logger = KotlinLogging.logger {}
@@ -24,6 +26,7 @@ class PetSystem(
     private val roleCountSystem: RoleCountSystem? = null,
     private val rosterPolicy: PetRosterPolicy = PetRosterPolicy(),
     private val playerStateManager: PlayerStateManager? = null,
+    private val sacredEquipPrimaryDefs: Map<Int, SacredEquipPrimaryDef> = emptyMap(),
 ) {
 
     companion object {
@@ -187,6 +190,19 @@ class PetSystem(
      */
     fun getFollowPets(characterId: Long): Map<Int, FollowNpcData> =
         cache[characterId]?.follow ?: emptyMap()
+
+    /** All NPC IDs currently owned across carried/cart/inn/warehouse storage. */
+    fun getAllOwnedNpcIds(characterId: Long): List<Int> {
+        val pc = cache[characterId] ?: return emptyList()
+        synchronized(pc) {
+            return buildList {
+                addAll(pc.follow.values.map { it.npcId })
+                addAll(pc.cart.values.map { it.npcId })
+                addAll(pc.inn.values.map { it.npcId })
+                addAll(pc.warehouse.map { it.npcId })
+            }
+        }
+    }
 
     /**
      * Only pets explicitly selected by the player enter battle.
@@ -369,15 +385,19 @@ class PetSystem(
      * The static NpcData hpBase/spBase are spawn defaults, not a captured pet's max.
      */
     private fun petMaxHpSp(pet: FollowNpcData): Pair<Long, Int> {
-        val bonus = EquipBonusCalculator.calculateTotalBonus(pet.equips, itemDefs)
+        val bonus = EquipBonusCalculator.calculateTotalBonus(
+            pet.equips, itemDefs, sacredEquipPrimaryDefs
+        )
         val turn = petExpTurn(pet)
-        val maxHp = statCalculator.calculateMaxHp(
+        val baseMaxHp = statCalculator.calculateMaxHp(
             level = pet.level.coerceAtLeast(1),
             hpx = pet.hpx + bonus.equipHpx,
             equipMaxHp = bonus.equipMaxHp,
             extraHp = pet.hpPillCount * 20,
             turn = turn
         )
+        val maxHp = DvtPercentMath.applyFinalPercentFloor(baseMaxHp, bonus.hpPercent)
+            .coerceAtLeast(1L)
         val maxSp = statCalculator.calculateMaxSp(
             level = pet.level.coerceAtLeast(1),
             spx = pet.spx + bonus.equipSpx,
@@ -919,6 +939,69 @@ class PetSystem(
     }
 
     // ── Thao tác khách sạn ──
+
+    /**
+     * Cộng EXP Điều phái cho võ tướng đang ở lữ quán.
+     *
+     * Dispatch.lua GetAwardExp:
+     * - expKind=1: exp là phần nghìn (100 = 10% thanh EXP cấp hiện tại).
+     * - các kind khác: exp là giá trị EXP cố định.
+     */
+    fun gainInnDispatchExp(
+        characterId: Long,
+        innSlot: Int,
+        expKind: Int,
+        expValue: Long,
+    ): PetExpGain? {
+        if (expValue <= 0) return null
+        val pc = cache[characterId] ?: return null
+        synchronized(pc) {
+            val before = pc.inn[innSlot] ?: return null
+            if (before.canGrow != 1 || before.level >= PET_MAX_LEVEL) return null
+
+            val turn = petExpTurn(before)
+            val level = before.level.coerceAtLeast(1)
+            val amount = if (expKind == 1) {
+                val currentFloor = statCalculator.calculateNeedTotalExp(level, turn)
+                val nextFloor = statCalculator.calculateNeedTotalExp(level + 1, turn)
+                val need = (nextFloor - currentFloor).coerceAtLeast(0L)
+                (need * expValue / 1000L).coerceAtLeast(0L)
+            } else {
+                expValue
+            }
+            if (amount <= 0) return null
+
+            val floorExp = statCalculator.calculateNeedTotalExp(level, turn)
+            var totalExp = maxOf(before.exp, floorExp)
+            totalExp = (totalExp + amount).coerceAtMost(Int.MAX_VALUE.toLong())
+
+            var nextLevel = level
+            var gainedLevels = 0
+            while (nextLevel < PET_MAX_LEVEL) {
+                val nextFloor = statCalculator.calculateNeedTotalExp(nextLevel + 1, turn)
+                if (totalExp < nextFloor) break
+                nextLevel++
+                gainedLevels++
+            }
+
+            var after = before.copy(
+                level = nextLevel,
+                exp = totalExp,
+                skillPoint = before.skillPoint + gainedLevels,
+            )
+            if (gainedLevels > 0) {
+                val (maxHp, maxSp) = petMaxHpSp(after)
+                after = after.copy(hp = maxHp, sp = maxSp)
+            }
+            pc.inn[innSlot] = after
+            pc.dirty = true
+            logger.info {
+                "EXP Điều phái: charId=$characterId inn=$innSlot npcId=${before.npcId} " +
+                    "exp=${before.exp}+$amount->$totalExp lv=${before.level}->$nextLevel"
+            }
+            return PetExpGain(innSlot, before, after)
+        }
+    }
 
     /**
      * Lấy danh sách võ tướng trong khách sạn

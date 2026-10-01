@@ -12,13 +12,13 @@ enum class BattleStatus(val id: Int) {
     SPELL(3),           // Phù chú
     BOUNDARY(4),        // Kết giới
     WHIRL_WIND(5),      // Xoáy (không thể hành động)
-    ICE_BOUND(6),       // Băng phong (không thể hành động + sát thương khi bị đánh ×1.5)
+    ICE_BOUND(6),       // Băng phong (không thể hành động)
     CLUMP(7),           // Thụ yêu (biến thành cây, không thể hành động)
-    TRANCE(8),          // Mê ngủ (không thể hành động, bị đánh sẽ giải trừ)
+    TRANCE(8),          // Mê ngủ (không thể hành động)
     DIZZY_ATK(9),       // Choáng (không thể hành động 1 hiệp)
     GOLD_SHIELD(10),    // Kim chung tráo
     SHRINK(11),         // Thu nhỏ
-    POISON(12),         // Nhiễm độc (mất HP mỗi hiệp)
+    POISON(12),         // Nhiễm độc
     CHAOS(13),          // Hỗn loạn (ngẫu nhiên tấn công phe mình)
     TARDY(14),          // Trì trệ (nhạy bén giảm một nửa)
     LANDSLIP(15),

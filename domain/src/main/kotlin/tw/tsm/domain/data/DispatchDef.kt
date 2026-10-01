@@ -52,3 +52,16 @@ data class DispatchSaveData(
     val effectIndex1: Int = 0,
     val effectIndex2: Int = 0
 )
+
+/**
+ * Bộ đếm Điều phái theo ngày của server offline.
+ *
+ * Lua DVT dùng ERoleCount.Dispatch=8 và BuyDispatch=9 để hiển thị quota,
+ * nhưng không mang theo ngày reset trong packet. Record này chỉ dùng phía server
+ * để reset bền vững qua restart/relog.
+ */
+data class DispatchDailyUsage(
+    val dayKey: Int,
+    val freeUsed: Int,
+    val paidUsed: Int,
+)

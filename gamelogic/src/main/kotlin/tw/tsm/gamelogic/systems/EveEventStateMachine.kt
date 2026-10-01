@@ -20,6 +20,8 @@ sealed class EventPhase {
     data object AwaitingChoice : EventPhase()
     /** Đang chờ kết thúc chiến đấu */
     data object AwaitingBattle : EventPhase()
+    /** Đang thực hiện chuyển cảnh Door; bỏ qua C:020-006 đến sớm từ EventHandler[2]. */
+    data object AwaitingWarp : EventPhase()
     /** Sự kiện đã hoàn thành (trạng thái kết thúc) */
     data object Completed : EventPhase()
 }
@@ -30,7 +32,7 @@ sealed class EventPhase {
  * Tất cả các thay đổi trạng thái được cập nhật nguyên tử (atomic update) thông qua copy() + CAS, tránh điều kiện tương tranh.
  *
  * Trường phase cung cấp sự đảm bảo loại trừ lẫn nhau cho các giai đoạn vòng đời:
- * - 4 trạng thái Executing / AwaitingChoice / AwaitingBattle / Completed loại trừ lẫn nhau.
+ * - 5 trạng thái Executing / AwaitingChoice / AwaitingBattle / AwaitingWarp / Completed loại trừ lẫn nhau.
  * - Các trường ngữ cảnh (lastSurfaceId, lastChoiceCode, battleResult) giữ lại lịch sử xuyên suốt các phase,
  *   dùng để đánh giá conditionClass=8/10 và bảo vệ chống lại auto-chain.
  *
@@ -45,6 +47,7 @@ sealed class EventPhase {
  * @property lastSurfaceId      Surface ID được hiển thị cuối cùng (dùng để đối chiếu conditionClass=10)
  * @property lastChoiceCode     Mã lựa chọn cuối cùng (dùng để đối chiếu conditionClass=10, bảo vệ auto-chain #2)
  * @property battleResult       Kết quả chiến đấu (0=Không có, 1=Thắng, 2=Thua, 3=Bỏ chạy, dùng để đối chiếu conditionClass=8, bảo vệ auto-chain #3)
+ * @property fightDataKey       FightData key của trận sự kiện vừa kích hoạt; class8 parameter=0 là wildcard, khác 0 phải khớp key này.
  * @property matchedConditionNo conditionNo đầu tiên của chuỗi AND khớp (dùng để phát hiện vòng lặp auto-chain, 0=chưa thiết lập)
  */
 data class EventSession(
@@ -59,6 +62,7 @@ data class EventSession(
     val lastSurfaceId: Int = -1,
     val lastChoiceCode: Int = -1,
     val battleResult: Int = 0,
+    val fightDataKey: Int = 0,
     val matchedConditionNo: Int = 0
 ) {
     /** Có chứa kết quả dạng thay đổi trạng thái hay không, dùng để quyết định xem có ghi lại log hoàn thành để chống trùng lặp hay không */
@@ -133,6 +137,21 @@ class EveEventStateMachine {
         logger.debug { "Khởi động sự kiện: charId=$charId eveNo=${session.eveNo} mapId=${session.mapId} results=${session.results.size}" }
     }
 
+    /** Chỉ khởi động event nền khi người chơi thật sự idle. */
+    fun tryActivateIfIdle(charId: Long, session: EventSession): Boolean {
+        val inserted = sessions.putIfAbsent(charId, AtomicReference(session)) == null
+        if (inserted) {
+            logger.debug { "Khởi động sự kiện nền: charId=$charId eveNo=${session.eveNo} mapId=${session.mapId} results=${session.results.size}" }
+        } else {
+            val current = sessions[charId]?.get()
+            logger.debug {
+                "Bỏ qua sự kiện nền vì đang có event: charId=$charId " +
+                    "currentEve=${current?.eveNo} currentPhase=${current?.phase?.let { it::class.simpleName }}"
+            }
+        }
+        return inserted
+    }
+
     /**
      * Lấy result hiện tại theo cách nguyên tử (atomic) và tăng index
      *
@@ -185,16 +204,34 @@ class EveEventStateMachine {
      *
      * Chỉ hợp lệ khi chuyển từ trạng thái Executing.
      */
-    fun enterAwaitingBattle(charId: Long) {
+    fun enterAwaitingBattle(charId: Long, fightDataKey: Int = 0) {
         val prev = updateSession(charId) {
             if (it.phase !is EventPhase.Executing) {
                 logger.warn { "enterAwaitingBattle: charId=$charId không phải Executing (${it.phase::class.simpleName})" }
                 return@updateSession it
             }
-            it.copy(phase = EventPhase.AwaitingBattle)
+            it.copy(phase = EventPhase.AwaitingBattle, fightDataKey = fightDataKey)
         }
         if (prev != null) {
-            logger.debug { "Chuyển trạng thái: charId=$charId Executing → AwaitingBattle" }
+            logger.debug { "Chuyển trạng thái: charId=$charId Executing → AwaitingBattle(fightDataKey=$fightDataKey)" }
+        }
+    }
+
+    /**
+     * Chuyển sang AwaitingWarp trước khi gửi resultType=2 cho client.
+     * EventHandler[2] bật ConductGate và có thể gửi C:020-006 ngay frame kế tiếp;
+     * phase này ngăn gói next đến sớm hoàn thành event trước S:020-007/scene load.
+     */
+    fun enterAwaitingWarp(charId: Long) {
+        val prev = updateSession(charId) {
+            if (it.phase !is EventPhase.Executing) {
+                logger.warn { "enterAwaitingWarp: charId=$charId không phải Executing (${it.phase::class.simpleName})" }
+                return@updateSession it
+            }
+            it.copy(phase = EventPhase.AwaitingWarp)
+        }
+        if (prev != null) {
+            logger.debug { "Chuyển trạng thái: charId=$charId Executing → AwaitingWarp" }
         }
     }
 
@@ -234,6 +271,26 @@ class EveEventStateMachine {
             logger.debug { "Chuyển trạng thái: charId=$charId AwaitingChoice → Executing" }
         }
     }
+
+    /** Claim an awaited input once, recording its value in the same CAS. */
+    private fun claimInput(charId: Long, choice: Int? = null, battle: Int? = null): EventSession? {
+        val ref = sessions[charId] ?: return null
+        while (true) {
+            val current = ref.get() ?: return null
+            val awaiting = if (choice != null) current.phase is EventPhase.AwaitingChoice
+                else current.phase is EventPhase.AwaitingBattle
+            if (!awaiting) return null
+            val updated = current.copy(
+                phase = EventPhase.Executing,
+                lastChoiceCode = choice ?: current.lastChoiceCode,
+                battleResult = battle ?: current.battleResult,
+            )
+            if (ref.compareAndSet(current, updated)) return updated
+        }
+    }
+
+    fun claimChoice(charId: Long, code: Int): EventSession? = claimInput(charId, choice = code)
+    fun claimBattleResult(charId: Long, result: Int): EventSession? = claimInput(charId, battle = result)
 
     /**
      * Ghi lại mã lựa chọn (Được gọi trong trạng thái AwaitingChoice)

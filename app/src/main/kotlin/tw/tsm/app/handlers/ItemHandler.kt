@@ -1,18 +1,22 @@
 package tw.tsm.app.handlers
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import tw.tsm.domain.constants.EAttribute
 import tw.tsm.domain.constants.EGdThing
+import tw.tsm.domain.constants.EItemKind
 import tw.tsm.domain.constants.EItemUseKind
 import tw.tsm.domain.constants.ItemConstants
 import tw.tsm.domain.constants.Opcodes
 import tw.tsm.domain.data.ItemDef
 import tw.tsm.domain.data.NpcDef
+import tw.tsm.domain.data.SacredEquipPrimaryDef
 import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.PacketHandler
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.StatCalculator
 import tw.tsm.domain.valueobjects.ThingData
+import tw.tsm.gamelogic.systems.AstrolabeSystem
 import tw.tsm.gamelogic.systems.DailyProgressSystem
 import tw.tsm.gamelogic.systems.EquipBonusCalculator
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
@@ -27,6 +31,8 @@ import tw.tsm.gamelogic.systems.PetSystem
 import tw.tsm.gamelogic.systems.PlayerStateManager
 import tw.tsm.gamelogic.systems.QuestSystem
 import tw.tsm.gamelogic.systems.SkillSystem
+import tw.tsm.gamelogic.systems.RoleCountSystem
+import tw.tsm.gamelogic.systems.CollectionSystem
 import tw.tsm.gamelogic.systems.WorldManager
 import tw.tsm.protocol.PacketReader
 
@@ -57,6 +63,10 @@ class ItemHandler(
     private val dailyProgressSystem: DailyProgressSystem? = null,
     private val petSystem: PetSystem? = null,
     private val npcDefs: Map<Int, NpcDef> = emptyMap(),
+    private val roleCountSystem: RoleCountSystem? = null,
+    private val collectionSystem: CollectionSystem? = null,
+    private val astrolabeSystem: AstrolabeSystem? = null,
+    private val sacredEquipPrimaryDefs: Map<Int, SacredEquipPrimaryDef> = emptyMap(),
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.SHOP  // 23
@@ -184,6 +194,7 @@ class ItemHandler(
      * Nguồn: GdThing.lua:82-89
      */
     private suspend fun handlePickup(session: GameSession, data: ByteArray) {
+        if (data.size != 10) { responseSender.sendPickupResult(session, 1); return }
         val reader = PacketReader(data)
         val index = reader.readUShortLE()
         val kind = reader.readUShortLE()
@@ -192,6 +203,12 @@ class ItemHandler(
         val y = reader.readUShortLE()
 
         val characterId = session.roleId.toLong()
+
+        val expected = groundItemManager.getItem(session.mapId, index)
+        if (expected == null || expected.kind != kind || expected.value != value || expected.x != x || expected.y != y) {
+            responseSender.sendPickupResult(session, 1)
+            return
+        }
 
         // xóa vật phẩm trên mặt đất
         val groundItem = groundItemManager.removeItem(session.mapId, index)
@@ -204,7 +221,7 @@ class ItemHandler(
             // nhặt tiền
             if (!moneySystem.addGold(characterId, value)) {
                 // tiền đã đầy, đặt trả về mặt đất
-                groundItemManager.addItem(session.mapId, kind, value, x, y, characterId)
+                groundItemManager.restoreItem(session.mapId, groundItem)
                 responseSender.sendMoneyFull(session, 1)
                 return
             }
@@ -214,7 +231,7 @@ class ItemHandler(
             val result = inventorySystem.addItemToBag(characterId, value, 1)
             if (result == null) {
                 // túi đồ đầy, đặt trả về mặt đất
-                groundItemManager.addItem(session.mapId, kind, value, x, y, characterId)
+                groundItemManager.restoreItem(session.mapId, groundItem)
                 responseSender.sendPickupResult(session, 1)
                 return
             }
@@ -495,12 +512,32 @@ class ItemHandler(
 
         // Các direct-use đặc biệt cần mutation server + packet riêng.
         val itemDef = itemDefs[bagItem.itemId]
+        if (collectionSystem?.findNftByGetId(bagItem.itemId, 1) != null) {
+            handleNftCardItem(session, characterId, bagIndex, bagItem)
+            return
+        }
+        if (
+            itemDef != null &&
+            itemDef.kind == EItemKind.TRANSFORM &&
+            itemDef.specialAbility == EItemUseKind.TRANSFORM_DOLL
+        ) {
+            handleTransformDoll(session, characterId, bagIndex, bagItem, itemDef, followIndex)
+            return
+        }
         if (itemDef != null && itemDef.specialAbility == EItemUseKind.NPC_PICTURE) {
             handleNpcPictureItem(session, characterId, bagIndex, bagItem, itemDef)
             return
         }
         if (itemDef != null && itemDef.specialAbility == EItemUseKind.MOUNTS) {
             handleMountCollectionItem(session, characterId, bagIndex, bagItem, itemDef)
+            return
+        }
+        if (itemDef != null && itemDef.specialAbility == EItemUseKind.ROLE_COUNT) {
+            handleRoleCountItem(session, characterId, bagIndex, bagItem, itemDef, quantity)
+            return
+        }
+        if (itemDef != null && itemDef.specialAbility == EItemUseKind.ASTROLABE) {
+            handleAstrolabePointItem(session, characterId, bagIndex, bagItem, itemDef, quantity)
             return
         }
 
@@ -564,6 +601,100 @@ class ItemHandler(
     }
 
     /**
+     * DVT EItemKind.Transform=48 + EItemUseKind.TransformDoll=5.
+     * Item_C.dat: malePicId chính là NPC ID đích; Lua GetMaxUseCount mặc định 1.
+     * Trạng thái biến hình chỉ tồn tại trong runtime vì login PlayerData không mang npcId.
+     */
+    private suspend fun handleTransformDoll(
+        session: GameSession,
+        characterId: Long,
+        bagIndex: Int,
+        bagItem: ThingData,
+        itemDef: ItemDef,
+        followIndex: Int,
+    ) {
+        if (followIndex != 0) return
+
+        val targetNpcId = itemDef.malePicId
+        if (targetNpcId <= 0 || npcDefs[targetNpcId] == null) {
+            logger.warn {
+                "TransformDoll dữ liệu không hợp lệ: itemId=${bagItem.itemId} malePicId=$targetNpcId"
+            }
+            return
+        }
+
+        val runtimeState = playerStateManager.getState(characterId) ?: return
+        if (!inventorySystem.removeFromBag(characterId, bagIndex, 1)) return
+        runtimeState.transformNpcId = targetNpcId
+
+        responseSender.sendReduceBagItem(session, bagIndex, 1)
+        responseSender.sendUseItemSuccess(session, bagItem.itemId, 1, showMsg = true)
+
+        responseSender.sendPlayerTransform(session, session.playerId, targetNpcId)
+        worldManager.getPlayersInMap(session.mapId)
+            .filter { it !== session && it.loginFinished }
+            .forEach { target ->
+                responseSender.sendPlayerTransform(target, session.playerId, targetNpcId)
+            }
+
+        logger.info {
+            "${session.characterName} dùng TransformDoll itemId=${bagItem.itemId} -> npcId=$targetNpcId"
+        }
+    }
+
+    /**
+     * DVT EItemUseKind.Astrolabe=211.
+     * Item.lua giới hạn số lượng theo floor((65535-currentPoint) / itemData.elementValue).
+     */
+    private suspend fun handleAstrolabePointItem(
+        session: GameSession,
+        characterId: Long,
+        bagIndex: Int,
+        bagItem: ThingData,
+        itemDef: ItemDef,
+        requestedQuantity: Int
+    ) {
+        val system = astrolabeSystem ?: return
+        if (itemDef.elementValue <= 0 || requestedQuantity <= 0) return
+
+        val maxUsable = system.maxUsableItemQuantity(characterId, itemDef.elementValue)
+        val useQty = minOf(requestedQuantity, bagItem.quantity, maxUsable)
+        if (useQty <= 0) return
+
+        val amount = itemDef.elementValue * useQty
+        val before = system.snapshot(characterId)
+        val result = system.addNatalPoint(characterId, amount)
+        if (!result.success) return
+
+        val remaining = if (bagItem.quantity <= useQty) null
+        else bagItem.copy(quantity = bagItem.quantity - useQty)
+        try {
+            // Repository commit trước rồi cache mới đổi; tránh cache túi bị mutate khi DB fail.
+            inventorySystem.setBagItemsAtomic(
+                characterId,
+                mapOf(bagIndex to remaining)
+            )
+        } catch (t: Throwable) {
+            runCatching { system.restore(characterId, before) }
+                .onFailure { rollbackError ->
+                    logger.error(rollbackError) {
+                        "Rollback Astrolabe thất bại: characterId=$characterId item=${bagItem.itemId}"
+                    }
+                }
+            throw t
+        }
+
+        responseSender.sendReduceBagItem(session, bagIndex, useQty)
+        responseSender.sendUseItemSuccess(session, bagItem.itemId, useQty, showMsg = true)
+        responseSender.sendSetAttribute(
+            session,
+            EAttribute.ASTROLABE_POINT,
+            result.state.natalPoint,
+            true
+        )
+    }
+
+    /**
      * C:023-016 Vứt tiền ra cảnh
      *
      * Định dạng: +amount(4)
@@ -586,6 +717,110 @@ class ItemHandler(
             // phát rộng cho những người khác
             val broadcastData = buildDropMoneyPacket(amount, session.x, session.y, false)
             worldManager.broadcastToMap(session.mapId, broadcastData, exclude = session)
+        }
+    }
+
+    /** DVT NFT card insertion via normal item use (C:023-015). */
+    private suspend fun handleNftCardItem(
+        session: GameSession,
+        characterId: Long,
+        bagIndex: Int,
+        bagItem: ThingData,
+    ) {
+        val collections = collectionSystem ?: return
+        val result = collections.putNftCard(characterId, bagItem.itemId)
+        if (!result.success) {
+            responseSender.sendCollectionNftCardResult(session, 12, false, 0)
+            return
+        }
+        responseSender.sendReduceBagItem(session, bagIndex, 1)
+        responseSender.sendUseItemSuccess(session, bagItem.itemId, 1, showMsg = true)
+        responseSender.sendBitFlagChanges(session, listOf(result.flagId to true))
+        responseSender.sendCollectionNftCardResult(session, 12, true, result.collectionId)
+        responseSender.sendCollectionNftShine(session, result.shine)
+        logger.info {
+            "NFT card cất vào collection: charId=$characterId itemId=${bagItem.itemId} " +
+                "collectionId=${result.collectionId} shine=${result.shine}"
+        }
+    }
+
+    /**
+     * DVT EItemUseKind.RoleCount = 218.
+     *
+     * Item_C.dat carries roleCountIndex + roleCountValue directly. This is also
+     * how collection-card items 505xx grant counters 401..559.
+     */
+    private suspend fun handleRoleCountItem(
+        session: GameSession,
+        characterId: Long,
+        bagIndex: Int,
+        bagItem: ThingData,
+        itemDef: ItemDef,
+        requestedQuantity: Int,
+    ) {
+        val roleCounts = roleCountSystem ?: run {
+            logger.error { "RoleCount item chưa nối RoleCountSystem: itemId=${bagItem.itemId}" }
+            return
+        }
+        val index = itemDef.roleCountIndex
+        val deltaPerItem = itemDef.roleCountValue
+        if (index <= 0 || deltaPerItem == 0 || requestedQuantity <= 0) {
+            logger.warn {
+                "RoleCount item không hợp lệ: itemId=${bagItem.itemId} index=$index delta=$deltaPerItem qty=$requestedQuantity"
+            }
+            return
+        }
+
+        val useQty = minOf(requestedQuantity, bagItem.quantity)
+        if (useQty <= 0) return
+
+        val oldValue = roleCounts.getValue(characterId, index)
+        val maxValue = roleCounts.getMaxValue(characterId, index)
+        val deltaLong = deltaPerItem.toLong() * useQty.toLong()
+        val nextLong = oldValue.toLong() + deltaLong
+        if (nextLong !in Int.MIN_VALUE.toLong()..Int.MAX_VALUE.toLong()) {
+            logger.warn {
+                "RoleCount item tràn số: charId=$characterId itemId=${bagItem.itemId} index=$index old=$oldValue delta=$deltaLong"
+            }
+            return
+        }
+
+        val nextValue = nextLong.toInt()
+        roleCounts.setValue(characterId, index, nextValue, maxValue)
+        try {
+            roleCounts.saveCounts(characterId)
+        } catch (e: Exception) {
+            roleCounts.setValue(characterId, index, oldValue, maxValue)
+            logger.error(e) {
+                "Lưu RoleCount item thất bại, rollback: charId=$characterId itemId=${bagItem.itemId} index=$index"
+            }
+            return
+        }
+
+        if (!inventorySystem.removeFromBag(characterId, bagIndex, useQty)) {
+            roleCounts.setValue(characterId, index, oldValue, maxValue)
+            try {
+                roleCounts.saveCounts(characterId)
+            } catch (rollbackError: Exception) {
+                logger.error(rollbackError) {
+                    "Rollback RoleCount sau lỗi trừ item thất bại: charId=$characterId index=$index"
+                }
+            }
+            return
+        }
+
+        responseSender.sendReduceBagItem(session, bagIndex, useQty)
+        responseSender.sendUseItemSuccess(session, bagItem.itemId, useQty, showMsg = true)
+        responseSender.sendRoleCountUpdate(session, mapOf(index to (nextValue to maxValue)))
+
+        val newFlags = collectionSystem?.syncOwnedCardFlags(characterId).orEmpty()
+        if (newFlags.isNotEmpty()) {
+            responseSender.sendBitFlagChanges(session, newFlags.map { it to true })
+        }
+
+        logger.info {
+            "Dùng RoleCount item: charId=$characterId itemId=${bagItem.itemId} " +
+                "index=$index $oldValue->$nextValue qty=$useQty newCardFlags=$newFlags"
         }
     }
 
@@ -665,6 +900,7 @@ class ItemHandler(
             session,
             pets.getFollowPets(characterId).values.sortedBy { it.slotIndex }
         )
+        collectionSystem?.markWarriorOwned(characterId, npcId, session)
 
         logger.info {
             "${session.characterName} dùng NpcPicture: itemId=${bagItem.itemId} npcId=$npcId → followSlot=$slotIndex"
@@ -694,6 +930,17 @@ class ItemHandler(
 
         // S:081-001 cập nhật cờ vĩnh viễn → kích hoạt client Mounts.OnGetCollection
         responseSender.sendBitFlagChanges(session, listOf(flagId to true))
+
+        // DVT NFT mount uses the same physical mount ticket / permanent mount flag.
+        val nft = collectionSystem?.findNftByGetId(bagItem.itemId, 2)
+        if (nft != null) {
+            val nftResult = collectionSystem.onNftMountPut(characterId, npcId)
+            if (nftResult.success) {
+                responseSender.sendCollectionNftMountResult(session, 14, true, npcId)
+                responseSender.sendCollectionNftShine(session, nftResult.shine)
+            }
+        }
+
         dailyProgressSystem?.incrementRoleCount(
             session,
             DailyProgressSystem.MOUNTS,
@@ -716,8 +963,12 @@ class ItemHandler(
      */
     private fun recalcAndSendEquipBonus(session: GameSession, characterId: Long) {
         val allEquips = inventorySystem.getEquipment(characterId)
-        val bonus = EquipBonusCalculator.calculateTotalBonus(allEquips, itemDefs)
-        val result = playerStateManager.updateEquipBonus(characterId, bonus, statCalc) ?: return
+        val bonus = EquipBonusCalculator.calculateTotalBonus(allEquips, itemDefs, sacredEquipPrimaryDefs)
+        val collectionHpx = collectionSystem?.getPlayerCollectionAttribute(characterId, EAttribute.HPX) ?: 0
+        val collectionSpx = collectionSystem?.getPlayerCollectionAttribute(characterId, EAttribute.SPX) ?: 0
+        val result = playerStateManager.updateEquipBonus(
+            characterId, bonus, statCalc, collectionHpx, collectionSpx
+        ) ?: return
 
         responseSender.sendEquipBonusUpdate(
             session, bonus,

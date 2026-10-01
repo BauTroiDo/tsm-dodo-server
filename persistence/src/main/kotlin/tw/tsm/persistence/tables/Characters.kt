@@ -100,6 +100,17 @@ object Characters : Table("characters") {
     /** ID danh hiệu đang đeo (0 = không đeo)*/
     val titleId = integer("title_id").default(0)
 
+    /** Điểm diệt địch DVT; S:005-003 truyền Int32 và client suy ra Honor 1:1. */
+    val killNum = integer("kill_num").default(0)
+
+    // ── Độ thân thiện 5 phe DVT (S:005-003 EAttribute.Moral) ──
+    // Lua Role.ReceivePlayerData đọc theo thứ tự: 1 Ngụy, 2 Thục, 3 Ngô, 4 Khăn Vàng, 5 Du Hiệp.
+    val moralWei = integer("moral_wei").default(0)
+    val moralShu = integer("moral_shu").default(0)
+    val moralWu = integer("moral_wu").default(0)
+    val moralYellow = integer("moral_yellow").default(0)
+    val moralRanger = integer("moral_ranger").default(0)
+
     // ── Điểm nguyên bảo (S:035-005 điểm thực/điểm ảo) ──
 
     /** Điểm nguyên bảo thực (nhận khi nạp tiền, TODO: bản gốc share ở cấp tài khoản, private server đơn giản hoá thành cấp nhân vật)*/

@@ -22,6 +22,17 @@ interface InventoryRepository {
     suspend fun saveItem(characterId: Long, storageType: Int, slot: Int, thing: ThingData?)
 
     /**
+     * Lưu nhiều ô trong cùng một giao dịch logic.
+     * Implement mặc định giữ tương thích các fake repository trong test; persistence thật override
+     * bằng một DB transaction duy nhất.
+     */
+    suspend fun saveItemsAtomic(characterId: Long, storageType: Int, changes: Map<Int, ThingData?>) {
+        for ((slot, thing) in changes) {
+            saveItem(characterId, storageType, slot, thing)
+        }
+    }
+
+    /**
      * Lưu hàng loạt toàn bộ vật phẩm của loại lưu trữ chỉ định (xóa sạch rồi ghi vào)
      */
     suspend fun saveAllItems(characterId: Long, storageType: Int, items: Map<Int, ThingData>)

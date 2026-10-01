@@ -28,7 +28,8 @@ class InnHandler(
     private val moneySystem: MoneySystem,
     private val responseSender: ResponseSender,
     private val innResponseSender: InnResponseSender,
-    private val characterRepository: CharacterRepository
+    private val characterRepository: CharacterRepository,
+    private val dispatchSystem: tw.tsm.gamelogic.systems.DispatchSystem? = null,
 ) : PacketHandler {
     override val mainKind: Int = Opcodes.INN
 
@@ -88,13 +89,20 @@ class InnHandler(
      *
      * Định dạng: innSlot(1B)
      */
-    private fun handleRetrieve(session: GameSession, data: ByteArray) {
+    private suspend fun handleRetrieve(session: GameSession, data: ByteArray) {
         if (data.size < 1) return
         val reader = PacketReader(data)
         val innSlot = reader.readUByte()
         val charId = session.roleId.toLong()
 
-        val followSlot = petSystem.retrieveFromInn(charId, innSlot)
+        val followSlot = if (dispatchSystem != null) {
+            dispatchSystem.withAvailableInnPet(charId, innSlot) { petSystem.retrieveFromInn(charId, innSlot) }
+                ?: run {
+                    responseSender.sendSystemMessage(session, "Võ tướng đang Điều phái, chưa thể lấy khỏi lữ quán.")
+                    innResponseSender.sendInnRetrieveAnimStop(session)
+                    return
+                }
+        } else petSystem.retrieveFromInn(charId, innSlot)
         if (followSlot < 0) {
             if (!petSystem.hasFreeUnlockedFollowSlot(charId)) {
                 petSystem.getNextFollowUnlockLevel(charId)?.let { level ->
@@ -123,7 +131,7 @@ class InnHandler(
      *
      * Định dạng: followSlot(1B)
      */
-    private fun handleStore(session: GameSession, data: ByteArray) {
+    private suspend fun handleStore(session: GameSession, data: ByteArray) {
         if (data.size < 1) return
         val reader = PacketReader(data)
         val followSlot = reader.readUByte()
@@ -143,7 +151,7 @@ class InnHandler(
         responseSender.sendFollowNpcRemove(session, session.playerId, followSlot, false)
         // Gửi bổ sung danh sách tướng lữ quán đầy đủ, đảm bảo UI đồng bộ
         val innPets = petSystem.getInnPets(charId)
-        innResponseSender.sendInnNpcData(session, innPets)
+        innResponseSender.sendInnNpcData(session, innPets, dispatchSystem?.queryDispatches(charId)?.map { it.innPetIndex }?.toSet().orEmpty())
 
         logger.info { "${session.characterName} gửi tướng vào quán trọ: follow=$followSlot → inn=$innSlot" }
     }
@@ -153,14 +161,22 @@ class InnHandler(
      *
      * Định dạng: innSlot(1B) + followSlot(1B)
      */
-    private fun handleSwap(session: GameSession, data: ByteArray) {
+    private suspend fun handleSwap(session: GameSession, data: ByteArray) {
         if (data.size < 2) return
         val reader = PacketReader(data)
         val innSlot = reader.readUByte()
         val followSlot = reader.readUByte()
         val charId = session.roleId.toLong()
 
-        if (!petSystem.swapInnAndFollow(charId, innSlot, followSlot)) {
+        val swapped = if (dispatchSystem != null) {
+            dispatchSystem.withAvailableInnPet(charId, innSlot) { petSystem.swapInnAndFollow(charId, innSlot, followSlot) }
+                ?: run {
+                    responseSender.sendSystemMessage(session, "Võ tướng đang Điều phái, chưa thể đổi tướng.")
+                    innResponseSender.sendInnSwapAnimStop(session)
+                    return
+                }
+        } else petSystem.swapInnAndFollow(charId, innSlot, followSlot)
+        if (!swapped) {
             logger.warn { "${session.characterName} trao đổi với quán trọ thất bại: inn=$innSlot follow=$followSlot" }
             return
         }
@@ -170,7 +186,7 @@ class InnHandler(
 
         // Cập nhật phía lữ quán
         val innPets = petSystem.getInnPets(charId)
-        innResponseSender.sendInnNpcData(session, innPets)
+        innResponseSender.sendInnNpcData(session, innPets, dispatchSystem?.queryDispatches(charId)?.map { it.innPetIndex }?.toSet().orEmpty())
 
         // Cập nhật phía theo người
         val pet = petSystem.getFollowNpc(charId, followSlot)
@@ -186,13 +202,13 @@ class InnHandler(
      *
      * Gửi dữ liệu tướng lữ quán + cấp lữ quán cho client.
      */
-    fun openInn(session: GameSession) {
+    suspend fun openInn(session: GameSession) {
         val charId = session.roleId.toLong()
         val innPets = petSystem.getInnPets(charId)
 
         // Cấp lữ quán (tạm dùng 1, sau này có thể đọc từ dữ liệu nhân vật)
         innResponseSender.sendInnLevel(session, 1)
         // Gửi xuống tất cả tướng lữ quán
-        innResponseSender.sendInnNpcData(session, innPets)
+        innResponseSender.sendInnNpcData(session, innPets, dispatchSystem?.queryDispatches(charId)?.map { it.innPetIndex }?.toSet().orEmpty())
     }
 }

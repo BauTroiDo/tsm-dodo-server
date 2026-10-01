@@ -145,12 +145,271 @@ class EveConditionEvaluatorTest : DescribeSpec({
         it("param=0 kiểm tra cấp") {
             val state = PlayerEventState(level = 10)
             EveConditionEvaluator.evaluate(
-                cond(cls = 7, param = 0, ops = 5, value = 5), state
+                cond(cls = 7, param = 0, pStyle = 1, ops = 5, value = 5), state
             ) shouldBe true
             EveConditionEvaluator.evaluate(
-                cond(cls = 7, param = 0, ops = 5, value = 15), state
+                cond(cls = 7, param = 0, pStyle = 1, ops = 5, value = 15), state
             ) shouldBe false
         }
+
+        it("param=0 dùng comparator level của Eve cho nhánh Hương Dũng") {
+            val lv39 = PlayerEventState(level = 39)
+
+            // scene 12705: event 6 catch-up branch requires level > 14
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 0, pStyle = 1, ops = 2, value = 14), lv39
+            ) shouldBe true
+
+            // lower-level branch uses level < 15 and must not steal Lv39
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 0, pStyle = 1, ops = 1, value = 15), lv39
+            ) shouldBe false
+        }
+
+        it("param=0 pStyle2 là hệ nhân vật, không phải level") {
+            val earth = PlayerEventState(level = 99, element = 1)
+            val water = PlayerEventState(level = 99, element = 2)
+
+            // DVT scene11525/12064 dùng ops5 + value1..4 làm bốn nhánh hệ riêng.
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 0, pStyle = 2, ops = 5, value = 1), earth
+            ) shouldBe true
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 0, pStyle = 2, ops = 5, value = 2), earth
+            ) shouldBe false
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 0, pStyle = 2, ops = 5, value = 2), water
+            ) shouldBe true
+        }
+
+        it("param=0 pStyle3 là NPC ID biến hình hiện tại") {
+            val transformed = PlayerEventState(level = 999, transformNpcId = 11050)
+            val normal = PlayerEventState(level = 11050, transformNpcId = 0)
+
+            // DVT S:005-005 đặt Role.player.npcId; Eve scene12093 kiểm tra Hứa Chử 11050.
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 0, pStyle = 3, ops = 5, value = 11050), transformed
+            ) shouldBe true
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 0, pStyle = 3, ops = 6, value = 11050), transformed
+            ) shouldBe false
+
+            // Level có trùng NPC ID cũng không được làm điều kiện biến hình pass.
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 0, pStyle = 3, ops = 5, value = 11050), normal
+            ) shouldBe false
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 0, pStyle = 3, ops = 6, value = 11050), normal
+            ) shouldBe true
+        }
+        it("param=7 pStyle=1/2 phân nhánh giới tính nam nữ") {
+            val male = PlayerEventState(sex = 1)
+            val female = PlayerEventState(sex = 2)
+
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 7, pStyle = 1, ops = 0, value = 0), male
+            ) shouldBe true
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 7, pStyle = 2, ops = 0, value = 0), male
+            ) shouldBe false
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 7, pStyle = 2, ops = 0, value = 0), female
+            ) shouldBe true
+        }
+
+        it("param=4 pStyle3 kiểm tra item không nằm trong Tiền Trang/Bảo Khố") {
+            val absent = PlayerEventState(storedItems = emptyMap())
+            val stored = PlayerEventState(storedItems = mapOf(23177 to 1))
+            val c = cond(cls = 7, param = 4, pStyle = 3, ops = 6, value = 0)
+                .copy(conditionSubItem = 23177)
+
+            EveConditionEvaluator.evaluate(c, absent) shouldBe true
+            EveConditionEvaluator.evaluate(c, stored) shouldBe false
+        }
+
+        it("param=9 pStyle1..4 phân nhánh mốc chuyển sinh DVT") {
+            val turn0 = PlayerEventState(rebornCount = 0)
+            val turn1 = PlayerEventState(rebornCount = 1)
+            val turn2 = PlayerEventState(rebornCount = 2)
+            val turn3 = PlayerEventState(rebornCount = 3)
+
+            // pStyle1/2: đã/chưa Nhất Chuyển
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 9, pStyle = 1, ops = 0, value = 0), turn0
+            ) shouldBe false
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 9, pStyle = 2, ops = 0, value = 0), turn0
+            ) shouldBe true
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 9, pStyle = 1, ops = 0, value = 0), turn1
+            ) shouldBe true
+
+            // pStyle3/4: đã/chưa Nhị Chuyển. Turn3 vẫn đã qua Nhị Chuyển.
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 9, pStyle = 3, ops = 0, value = 0), turn1
+            ) shouldBe false
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 9, pStyle = 4, ops = 0, value = 0), turn1
+            ) shouldBe true
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 9, pStyle = 3, ops = 0, value = 0), turn2
+            ) shouldBe true
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 9, pStyle = 4, ops = 0, value = 0), turn2
+            ) shouldBe false
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 9, pStyle = 3, ops = 0, value = 0), turn3
+            ) shouldBe true
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 9, pStyle = 4, ops = 0, value = 0), turn3
+            ) shouldBe false
+        }
+
+        it("param=11 pStyle1 2 phân nhánh đủ 12 Thiên Châu Nhị Chuyển") {
+            val eleven = PlayerEventState(activeTurn2Balls = (1..11).toSet())
+            val complete = PlayerEventState(activeTurn2Balls = (1..12).toSet())
+            val noisy = PlayerEventState(activeTurn2Balls = (1..11).toSet() + 99)
+
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 11, pStyle = 1, ops = 0, value = 0), eleven
+            ) shouldBe false
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 11, pStyle = 2, ops = 0, value = 0), eleven
+            ) shouldBe true
+
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 11, pStyle = 1, ops = 0, value = 0), complete
+            ) shouldBe true
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 11, pStyle = 2, ops = 0, value = 0), complete
+            ) shouldBe false
+
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 11, pStyle = 1, ops = 0, value = 0), noisy
+            ) shouldBe false
+        }
+
+        it("param=14 pStyle1..4 phân nhánh nghề chuyển sinh") {
+            val ghost = PlayerEventState(career = 3)
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 14, pStyle = 3, ops = 0, value = 0), ghost
+            ) shouldBe true
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 14, pStyle = 1, ops = 0, value = 0), ghost
+            ) shouldBe false
+        }
+
+        it("param=10 pStyle=1 dùng Honor bằng KillNum với comparator Eve") {
+            val before = PlayerEventState(killNum = 49)
+            val reached = PlayerEventState(killNum = 50)
+
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 10, pStyle = 1, ops = 1, value = 50), before
+            ) shouldBe true
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 10, pStyle = 1, ops = 2, value = 49), before
+            ) shouldBe false
+
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 10, pStyle = 1, ops = 1, value = 50), reached
+            ) shouldBe false
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 10, pStyle = 1, ops = 2, value = 49), reached
+            ) shouldBe true
+        }
+
+        it("param=10 chỉ chấp nhận shape pStyle=1/subItem=0 đã xác minh") {
+            val state = PlayerEventState(killNum = 1000)
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 10, pStyle = 2, ops = 2, value = 49), state
+            ) shouldBe false
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 10, pStyle = 1, ops = 2, value = 49)
+                    .copy(conditionSubItem = 1), state
+            ) shouldBe false
+        }
+
+        it("param=1 pStyle=6 phân nhánh phe thường và Khăn Vàng/Hắc Sơn") {
+            val normal = PlayerEventState(storyFaction = 1)
+            val yellowTurban = PlayerEventState(storyFaction = 2)
+
+            // DVT Eve 12000/eve13: phe thường dùng ops=6, value=2.
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 1, pStyle = 6, ops = 6, value = 2), normal
+            ) shouldBe true
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 1, pStyle = 6, ops = 5, value = 2), normal
+            ) shouldBe false
+
+            // Nhánh Khăn Vàng/Hắc Sơn dùng >= 2.
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 1, pStyle = 6, ops = 5, value = 2), yellowTurban
+            ) shouldBe true
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 1, pStyle = 6, ops = 6, value = 2), yellowTurban
+            ) shouldBe false
+        }
+
+        it("param=1 pStyle=2..5 đọc đúng Moral Khăn Vàng-Ngô-Thục-Ngụy") {
+            val state = PlayerEventState(
+                moral = intArrayOf(
+                    50,   // 1 Ngụy  <- pStyle 5
+                    800,  // 2 Thục  <- pStyle 4
+                    2000, // 3 Ngô   <- pStyle 3
+                    300,  // 4 Khăn Vàng <- pStyle 2
+                    10    // 5 Du Hiệp <- pStyle 1
+                )
+            )
+
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 1, pStyle = 5, ops = 5, value = 50), state
+            ) shouldBe true
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 1, pStyle = 4, ops = 5, value = 800), state
+            ) shouldBe true
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 1, pStyle = 3, ops = 5, value = 2000), state
+            ) shouldBe true
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 1, pStyle = 2, ops = 5, value = 300), state
+            ) shouldBe true
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 1, pStyle = 1, ops = 5, value = 10), state
+            ) shouldBe true
+        }
+
+        it("Moral dùng comparator Eve riêng cho các dải thanh danh") {
+            val wu200 = PlayerEventState(moral = intArrayOf(0, 0, 200, 0, 0))
+
+            // Dải 200..799: >199 và <800.
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 1, pStyle = 3, ops = 2, value = 199), wu200
+            ) shouldBe true
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 1, pStyle = 3, ops = 1, value = 800), wu200
+            ) shouldBe true
+
+            // ops=5 là equality trong họ Moral; ops=6 là !=.
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 1, pStyle = 3, ops = 5, value = 200), wu200
+            ) shouldBe true
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 1, pStyle = 3, ops = 6, value = 201), wu200
+            ) shouldBe true
+        }
+
+        it("param=1 Moral và storyFaction đều từ chối subItem lạ") {
+            val state = PlayerEventState(storyFaction = 1, moral = intArrayOf(50, 0, 0, 0, 0))
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 1, pStyle = 5, ops = 5, value = 50)
+                    .copy(conditionSubItem = 1), state
+            ) shouldBe false
+            EveConditionEvaluator.evaluate(
+                cond(cls = 7, param = 1, pStyle = 6, ops = 6, value = 2)
+                    .copy(conditionSubItem = 1), state
+            ) shouldBe false
+        }
+
         it("param=3 kiểm tra trang bị — có trang bị") {
             val state = PlayerEventState(equipItems = setOf(500))
             EveConditionEvaluator.evaluate(
@@ -310,27 +569,38 @@ class EveConditionEvaluatorTest : DescribeSpec({
                 notMounted
             ) shouldBe false
         }
-        it("param=16 subItem=2 mẫu là điều kiện kết quả trống, tạm không coi là nhánh xuống ngựa") {
+        it("param=16 subItem=2 nghĩa là không cưỡi và cho phép event tiếp tục") {
             val mounted = PlayerEventState(isMounted = true)
+            val notMounted = PlayerEventState(isMounted = false)
+            val c = cond(cls = 7, param = 16, pStyle = 1, ops = 0, value = 0)
+                .copy(conditionSubItem = 2)
 
-            EveConditionEvaluator.evaluate(
-                cond(cls = 7, param = 16, pStyle = 1, ops = 0, value = 0).copy(conditionSubItem = 2),
-                mounted
-            ) shouldBe false
+            EveConditionEvaluator.evaluate(c, mounted) shouldBe false
+            EveConditionEvaluator.evaluate(c, notMounted) shouldBe true
         }
     }
 
     describe("class=8 kết quả chiến đấu") {
-        it("pStyle=1 khớp chiến thắng") {
-            val state = PlayerEventState(battleResult = 1)
+        it("parameter=0 giữ wildcard legacy và pStyle=1 khớp chiến thắng") {
+            val state = PlayerEventState(battleResult = 1, fightDataKey = 174)
             EveConditionEvaluator.evaluate(
-                cond(cls = 8, pStyle = 1), state
+                cond(cls = 8, param = 0, pStyle = 1), state
             ) shouldBe true
         }
         it("pStyle=2 thất bại không khớp chiến thắng") {
-            val state = PlayerEventState(battleResult = 1)
+            val state = PlayerEventState(battleResult = 1, fightDataKey = 174)
             EveConditionEvaluator.evaluate(
-                cond(cls = 8, pStyle = 2), state
+                cond(cls = 8, param = 174, pStyle = 2), state
+            ) shouldBe false
+        }
+        it("parameter khác 0 phải khớp đúng FightData key vừa đánh") {
+            val state = PlayerEventState(battleResult = 1, fightDataKey = 174)
+
+            EveConditionEvaluator.evaluate(
+                cond(cls = 8, param = 174, pStyle = 1), state
+            ) shouldBe true
+            EveConditionEvaluator.evaluate(
+                cond(cls = 8, param = 6, pStyle = 1), state
             ) shouldBe false
         }
     }
@@ -354,6 +624,40 @@ class EveConditionEvaluatorTest : DescribeSpec({
             EveConditionEvaluator.evaluate(
                 cond(cls = 9, param = 15384, pStyle = 2, ops = 1, value = 0), state
             ) shouldBe false
+        }
+    }
+
+    describe("class=9 điều kiện tướng mang theo") {
+        it("pStyle1 ops2 kiểm tra level lớn hơn ngưỡng") {
+            val state = PlayerEventState(
+                followNpcIds = setOf(17367),
+                followNpcLevels = mapOf(17367 to 25)
+            )
+            EveConditionEvaluator.evaluate(
+                cond(cls = 9, param = 17367, pStyle = 1, ops = 2, value = 24), state
+            ) shouldBe true
+        }
+
+        it("pStyle2 ops2 kiểm tra loyalty lớn hơn ngưỡng") {
+            val state = PlayerEventState(
+                followNpcIds = setOf(17367),
+                followNpcLoyalties = mapOf(17367 to 25)
+            )
+            EveConditionEvaluator.evaluate(
+                cond(cls = 9, param = 17367, pStyle = 2, ops = 2, value = 24), state
+            ) shouldBe true
+        }
+
+        it("pStyle3 ops1 value0 chỉ pass khi tướng chưa được xuất chiến") {
+            val resting = PlayerEventState(
+                followNpcIds = setOf(14641),
+                deployedNpcIds = emptySet()
+            )
+            val deployed = resting.copy(deployedNpcIds = setOf(14641))
+            val c = cond(cls = 9, param = 14641, pStyle = 3, ops = 1, value = 0)
+
+            EveConditionEvaluator.evaluate(c, resting) shouldBe true
+            EveConditionEvaluator.evaluate(c, deployed) shouldBe false
         }
     }
 
@@ -543,6 +847,78 @@ class EveConditionEvaluatorTest : DescribeSpec({
             ) shouldBe true
         }
 
+        it("class=12 param1 dùng số người tổ đội, solo vẫn tính là 1") {
+            val solo = PlayerEventState(teamSize = 1)
+            val full = PlayerEventState(teamSize = 5)
+
+            EveConditionEvaluator.evaluate(
+                cond(cls = 12, param = 1, pStyle = 1, ops = 5, value = 1), solo
+            ) shouldBe true
+            EveConditionEvaluator.evaluate(
+                cond(cls = 12, param = 1, pStyle = 1, ops = 5, value = 5), solo
+            ) shouldBe false
+            EveConditionEvaluator.evaluate(
+                cond(cls = 12, param = 1, pStyle = 1, ops = 5, value = 5), full
+            ) shouldBe true
+        }
+
+        it("class=13 offline không quân đoàn đi nhánh không thuộc thành, không mở đặc quyền") {
+            val state = PlayerEventState(
+                organizationId = 0L, organizationCityId = 0, organizationRank = 0
+            )
+
+            EveConditionEvaluator.evaluate(
+                cond(cls = 13, param = 1, pStyle = 1, ops = 6, value = 3), state
+            ) shouldBe true
+            EveConditionEvaluator.evaluate(
+                cond(cls = 13, param = 1, pStyle = 1, ops = 5, value = 3), state
+            ) shouldBe false
+            EveConditionEvaluator.evaluate(
+                cond(cls = 13, param = 2, pStyle = 1, ops = 0, value = 0), state
+            ) shouldBe false
+            EveConditionEvaluator.evaluate(
+                cond(cls = 13, param = 0, pStyle = 1, ops = 1, value = 1), state
+            ) shouldBe true
+        }
+
+        it("class=13 quân đoàn sở hữu thành và chức vụ khớp đúng") {
+            val state = PlayerEventState(
+                organizationId = 123L, organizationCityId = 3, organizationRank = 1
+            )
+
+            EveConditionEvaluator.evaluate(
+                cond(cls = 13, param = 1, pStyle = 1, ops = 5, value = 3), state
+            ) shouldBe true
+            EveConditionEvaluator.evaluate(
+                cond(cls = 13, param = 1, pStyle = 1, ops = 6, value = 3), state
+            ) shouldBe false
+            EveConditionEvaluator.evaluate(
+                cond(cls = 13, param = 2, pStyle = 1, ops = 0, value = 0), state
+            ) shouldBe true
+            EveConditionEvaluator.evaluate(
+                cond(cls = 13, param = 2, pStyle = 2, ops = 0, value = 0), state
+            ) shouldBe false
+        }
+
+        it("class=14 dùng trạng thái activity open/closed đúng nhánh DVT") {
+            val open = PlayerEventState(activityOpen = true)
+            val closed = PlayerEventState(activityOpen = false)
+
+            EveConditionEvaluator.evaluate(
+                cond(cls = 14, param = 0, pStyle = 0, ops = 1, value = 0), open
+            ) shouldBe true
+            EveConditionEvaluator.evaluate(
+                cond(cls = 14, param = 0, pStyle = 0, ops = 2, value = 0), open
+            ) shouldBe false
+
+            EveConditionEvaluator.evaluate(
+                cond(cls = 14, param = 0, pStyle = 0, ops = 1, value = 0), closed
+            ) shouldBe false
+            EveConditionEvaluator.evaluate(
+                cond(cls = 14, param = 0, pStyle = 0, ops = 2, value = 0), closed
+            ) shouldBe true
+        }
+
         it("class=18 tham số nhỏ chưa xác định sẽ không dùng nhầm RoleCount") {
             val state = PlayerEventState(roleCountValues = mapOf(2 to 999))
 
@@ -551,6 +927,38 @@ class EveConditionEvaluatorTest : DescribeSpec({
             ) shouldBe false
         }
 
+        it("class=14 ops=1 chỉ khớp khi hoạt động đang mở") {
+            EveConditionEvaluator.evaluate(
+                cond(cls = 14, param = 0, pStyle = 0, ops = 1, value = 0),
+                PlayerEventState(activityOpen = true)
+            ) shouldBe true
+            EveConditionEvaluator.evaluate(
+                cond(cls = 14, param = 0, pStyle = 0, ops = 1, value = 0),
+                PlayerEventState(activityOpen = false)
+            ) shouldBe false
+        }
+
+        it("class=14 ops=2 là nhánh sự kiện chưa mở") {
+            EveConditionEvaluator.evaluate(
+                cond(cls = 14, param = 0, pStyle = 0, ops = 2, value = 0),
+                PlayerEventState(activityOpen = false)
+            ) shouldBe true
+            EveConditionEvaluator.evaluate(
+                cond(cls = 14, param = 0, pStyle = 0, ops = 2, value = 0),
+                PlayerEventState(activityOpen = true)
+            ) shouldBe false
+        }
+
+        it("class=14 scene không có ActivityTime mapping giữ UNKNOWN và không tự mở") {
+            EveConditionEvaluator.evaluate(
+                cond(cls = 14, param = 0, pStyle = 0, ops = 1, value = 0),
+                PlayerEventState(activityOpen = null)
+            ) shouldBe false
+            EveConditionEvaluator.evaluate(
+                cond(cls = 14, param = 0, pStyle = 0, ops = 2, value = 0),
+                PlayerEventState(activityOpen = null)
+            ) shouldBe false
+        }
         it("class=14 không còn đánh dấu là RoleCount đã xác nhận") {
             val state = PlayerEventState(roleCountValues = mapOf(0 to 999))
 

@@ -195,7 +195,10 @@ class AchievementSystem(
             COND_DEF -> (state?.def ?: 0).toLong()
             COND_HPX -> (state?.hpx ?: 0).toLong()
             COND_SPX -> (state?.spx ?: 0).toLong()
-            COND_HONOR -> 0L // TODO: Hệ thống quan chức (EAttribute.Honor) chưa được thực hiện
+            // DVT CheckCondition.lua: Honor = Role.player:GetAttribute(EAttribute.Honor).
+            // Role.ReceivePlayerData sets Honor = Calc.GetHonor(KillNum), and current DVT
+            // Calc.GetHonor(value) returns value unchanged.
+            COND_HONOR -> (state?.killNum ?: 0).toLong()
             COND_ROLE_COUNT -> {
                 // Bộ đếm nhân vật (kindValue = chỉ mục ERoleCount)
                 roleCountSystem.getValue(charId, kindValue.toInt()).toLong()

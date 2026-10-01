@@ -8,7 +8,6 @@ import tw.tsm.domain.constants.EHuman
 import tw.tsm.domain.data.SkillDef
 import tw.tsm.domain.enums.BattleStatus
 import kotlin.math.max
-import kotlin.math.roundToInt
 import kotlin.random.Random
 
 private val logger = KotlinLogging.logger {}
@@ -42,11 +41,19 @@ object BattleDamageCalc {
         target: BattleFighter,
         skill: SkillDef?,
         terrain: Int = 0,
-        skillId: Int = 0
+        skillId: Int = 0,
+        skillLevel: Int = 1,
+        damageDivisor: Int = 1
     ): AttackCalcResult {
-        // Phán đoán trúng
-        val hitRate = calculateHitRate(attacker.agi, target.agi)
-        if (Random.nextInt(100) >= hitRate) {
+        // Ordinary HP-damage hit/miss: giữ baseline PC theo chênh cấp,
+        // rồi áp DVT Mobile Hit/Dodge như phần trăm bù trừ. Không dùng AGI.
+        val missChance = calculateMissChance(
+            attackerLevel = attacker.level,
+            targetLevel = target.level,
+            hit = attacker.hit,
+            dodge = target.dodge
+        )
+        if (Random.nextDouble() * 100.0 < missChance) {
             return AttackCalcResult(
                 attackResult = EAttackResult.MISS,
                 beHitAction = EBeHitAction.DODGE,
@@ -56,10 +63,22 @@ object BattleDamageCalc {
         }
 
         // Phase 1: sát thương cơ bản (tương đương CalcDmg)
-        val baseDamage = calculateBaseDamage(attacker, skill)
+        val baseDamage = calculateBaseDamage(attacker, skill, skillLevel)
+        // PC makeExecutionPacket chia c.dmg theo nb_target trước khi getSkillEffect
+        // thực hiện trừ level/DEF, element và random. DVT fightArea chính là nb_target shape.
+        val areaScaledBaseDamage = applyMultiTargetDivision(baseDamage, damageDivisor)
+
+        // D6: PC applies classic buff/debuff/defend modifiers to c.dmg BEFORE
+        // target level/DEF and element. Use exact source skillId stored in groupedStatuses;
+        // do not infer a multiplier from a broad status enum such as ICE_BOUND.
+        val statusScaledBaseDamage = applyPreDefenseStatusModifiers(
+            areaScaledBaseDamage,
+            attacker,
+            target
+        )
 
         // Phase 2: giảm sát thương phòng thủ (KERO execute: dmg - dest.getLvl() - dest.getDef())
-        val reducedDmg = (baseDamage - target.level - target.def).toDouble()
+        val reducedDmg = (statusScaledBaseDamage - target.level - target.def).toDouble()
 
         // Phase 3: hệ số hiệu chỉnh nhân
         val skillElement = skill?.element ?: attacker.element
@@ -68,26 +87,31 @@ object BattleDamageCalc {
         val rbDiff = maxOf(0, attacker.turn - target.turn)
         val rebornMultiplier = 1.0 + 0.1 * rbDiff
 
-        val randomFactor = 0.9 + Random.nextDouble() * 0.2
-
-        val thunderRate = calculateThunderRate(attacker.agi)
-        val isThunder = Random.nextInt(100) < thunderRate
-        val thunderMultiplier = if (isThunder) 1.5 else 1.0
-
-        val pvpMultiplier = if (target.isHumanPlayer || target.kind == EHuman.FOLLOW_NPC) 0.5 else 1.0
-
-        val statusMultiplier = if (target.groupedStatuses.values.any { it.status == BattleStatus.ICE_BOUND }) 1.5 else 1.0
-
-        val defendMultiplier = if (target.isDefending) 0.5 else 1.0
-
-        val finalDamage = max(1, (reducedDmg * elementMultiplier * rebornMultiplier * randomFactor *
-            thunderMultiplier * pvpMultiplier * statusMultiplier * defendMultiplier).roundToInt())
+        // PC baseline: sau element + reborn mới ép Int rồi cộng dao động {-2,-1,0,+1}.
+        // Không dùng ±10%; cũng không tự suy crit từ AGI. Crit Mobile thật xử lý ở D4
+        // bằng EAttribute.Crit / CritDamage khi runtime fighter có đủ thuộc tính.
+        val variance = Random.nextInt(-2, 2)
+        val critChance = attacker.crit.coerceIn(0, 100)
+        val isCritical = critChance > 0 && Random.nextInt(100) < critChance
+        val critMultiplier = if (isCritical) calculateCritMultiplier(attacker.critDamage) else 1.0
+        val finalDamage = calculateFinalDamage(
+            reducedDmg = reducedDmg * critMultiplier,
+            elementMultiplier = elementMultiplier,
+            rebornMultiplier = rebornMultiplier,
+            variance = variance,
+            pvpOrPet = target.isHumanPlayer || target.kind == EHuman.FOLLOW_NPC,
+            defending = target.isDefending
+        )
 
         logger.debug { "${attacker.name}(lv=${attacker.level},atk=${attacker.atk},int=${attacker.intelligence}) → " +
-            "${target.name}(lv=${target.level},def=${target.def}): base=$baseDamage reduced=${reducedDmg.toInt()} " +
-            "elem=${"%.2f".format(elementMultiplier)} final=$finalDamage${if (isThunder) " 暴擊!" else ""}" }
+            "${target.name}(lv=${target.level},def=${target.def}): base=$baseDamage areaBase=$areaScaledBaseDamage " +
+            "statusBase=$statusScaledBaseDamage div=$damageDivisor reduced=${reducedDmg.toInt()} " +
+            "elem=${"%.2f".format(elementMultiplier)} " +
+            "miss=${"%.1f".format(missChance)}% hit=${attacker.hit}% dodge=${target.dodge}% " +
+            "crit=$isCritical critRate=${attacker.crit}% critMul=${"%.2f".format(critMultiplier)} " +
+            "variance=$variance final=$finalDamage" }
 
-        val attackResult = if (isThunder) EAttackResult.THUNDER else EAttackResult.HIT
+        val attackResult = if (isCritical) EAttackResult.THUNDER else EAttackResult.HIT
         val beHitAction = EBeHitAction.HIT
 
         // Danh sách biến đổi thuộc tính (HP giảm)
@@ -131,7 +155,7 @@ object BattleDamageCalc {
         skill: SkillDef,
         skillId: Int
     ): AttackCalcResult {
-        val hitRate = calculateHitRate(attacker.agi, target.agi)
+        val hitRate = calculateLegacyStatusHitRate(attacker.agi, target.agi)
         if (Random.nextInt(100) >= hitRate) {
             return AttackCalcResult(
                 attackResult = EAttackResult.MISS,
@@ -172,6 +196,7 @@ object BattleDamageCalc {
         skillId in CLUMP_SKILLS -> BattleStatus.CLUMP
         skillId in TRANCE_SKILLS -> BattleStatus.TRANCE
         skillId in DIZZY_SKILLS -> BattleStatus.DIZZY_ATK
+        skillId in SHRINK_SKILLS -> BattleStatus.SHRINK
         skillId in POISON_SKILLS -> BattleStatus.POISON
         skillId in CHAOS_SKILLS -> BattleStatus.CHAOS
         skillId in TARDY_SKILLS -> BattleStatus.TARDY
@@ -241,47 +266,154 @@ object BattleDamageCalc {
     // ── Hàm tính toán riêng tư ──
 
     /**
-     * Tính sát thương cơ bản (tương đương CalcDmg)
+     * Tính sát thương cơ bản theo CalcDmg của BattleAbstract.cs.
      *
-     * Đối chiếu `BattleAbstract.cs` của tskeropc, CalcDmg dòng 136-170.
-     * Cấp độ là nguồn sát thương chủ yếu (giá trị ATK trong .dat của NPC thấp, thiết kế phụ thuộc vào cộng cấp độ).
-     *
-     * Đánh thường: (atk × 1.6 + level) + level × 2
-     * Kỹ năng vật lý: (atk × 1.6 + int × 0.4 + level) × numerical/100 + level × 2
-     * Kỹ năng phép thuật: (int × 2.0 + level) × numerical/100 + level × 2
+     * Mapping nhị phân SkillData PC -> Skill_C Mobile đã đối chiếu:
+     * grade -> level, unk17 -> atkKind, unk20 -> learnLimit.
+     * numerical là giá trị thuộc tính của skill, không phải hệ số damage chung.
      */
-    private fun calculateBaseDamage(attacker: BattleFighter, skill: SkillDef?): Int {
-        val levelDmg = attacker.level * 2
+    private fun calculateBaseDamage(attacker: BattleFighter, skill: SkillDef?, skillLevel: Int): Int {
+        val lv = skillLevel.coerceIn(1, 10)
+        val skillGrade = skill?.level ?: 1
+        val skillRb = skill?.learnLimit ?: 0
 
-        val baseDmg = if (skill == null) {
-            // Đánh thường (PC BattleAbstract.cs: skill == 10000 -> initAtk * 1.6)
-            val dmgBase = (attacker.atk * 1.6 + attacker.level).toInt()
-            dmgBase + levelDmg
-        } else if (skill.attribute == EAttribute.INT) {
-            // Kỹ năng phép thuật (PC BattleAbstract.cs: nhánh else -> initMag * 2.0)
-            val dmgBase = (attacker.intelligence * 2.0 + attacker.level).toInt()
-            (dmgBase * skill.numerical / 100).toInt() + levelDmg
-        } else {
-            // Kỹ năng vật lý (PC BattleAbstract.cs: unk17 == 1 -> initAtk * 1.6 + initMag * 0.4)
-            val dmgBase = (attacker.atk * 1.6 + attacker.intelligence * 0.4 + attacker.level).toInt()
-            (dmgBase * skill.numerical / 100).toInt() + levelDmg
+        val dmgBase = when {
+            skill == null -> (attacker.atk * 1.6).toInt()
+            skill.atkKind == 1 -> (attacker.atk * 1.6 + attacker.intelligence * 0.4).toInt()
+            else -> (attacker.intelligence * 2.0).toInt()
         }
 
-        return baseDmg.coerceAtMost(MAX_BASE_DAMAGE)
+        val skillBaseDamage = if (skill == null) {
+            attacker.level * 2
+        } else {
+            (skillGrade * 15.0 * skillRb * (1.0 + 0.2 * lv)).toInt()
+        }
+
+        val growthMultiplier = 1.0 + (skillGrade * 0.1 * skillRb) + (lv * 0.02)
+        val baseDamage = ((dmgBase + attacker.level) * growthMultiplier).toInt() + skillBaseDamage
+
+        return baseDamage.coerceAtMost(MAX_BASE_DAMAGE)
     }
 
     /**
-     * Tỷ lệ trúng: cơ bản 90% + chênh lệch nhanh nhẹn/2
+     * Chia base damage theo phạm vi trước DEF/element, đúng vị trí PC makeExecutionPacket.
      */
-    private fun calculateHitRate(atkAgi: Int, defAgi: Int): Int {
+    private fun applyMultiTargetDivision(baseDamage: Int, damageDivisor: Int): Int {
+        return baseDamage / damageDivisor.coerceAtLeast(1)
+    }
+
+    /**
+     * Modifier cổ điển có bằng chứng DVT + PC, áp theo đúng thứ tự PC calculateHit.
+     * Mỗi phép nhân ép Int ngay sau bước đó để giữ semantics cast ushort/int của source gốc.
+     *
+     * Không áp theo BattleStatus chung: cùng ICE_BOUND nhưng chỉ skill 20026 có ×0.75
+     * trong source PC; 11014 Băng Phong thường không có multiplier damage.
+     */
+    private fun applyPreDefenseStatusModifiers(
+        baseDamage: Int,
+        attacker: BattleFighter,
+        target: BattleFighter
+    ): Int {
+        var damage = baseDamage
+        val attackerSkillIds = attacker.groupedStatuses.values.map { it.skillId }.toSet()
+        val targetSkillIds = target.groupedStatuses.values.map { it.skillId }.toSet()
+
+        // Target Vary buff: PC uses if/else-if.
+        damage = when {
+            11002 in targetSkillIds -> (damage * 0.75).toInt() // Băng tường
+            10031 in targetSkillIds -> (damage * 0.50).toInt() // Chung Trạo
+            else -> damage
+        }
+
+        // Tam Nhân Băng Phong is a special defensive freeze in PC.
+        if (20026 in targetSkillIds) {
+            damage = (damage * 0.75).toInt()
+        }
+
+        // Enlarge and Shrink are mutually prioritized in PC (buff before debuff).
+        damage = when {
+            13012 in attackerSkillIds -> (damage * 1.25).toInt()
+            13011 in attackerSkillIds -> (damage * 0.75).toInt()
+            else -> damage
+        }
+
+        // Strong/aura group: Cuồng Nộ vs Bá Ý.
+        damage = when {
+            12025 in attackerSkillIds -> (damage * 1.25).toInt()
+            14040 in attackerSkillIds -> (damage * 1.50).toInt()
+            else -> damage
+        }
+
+        // PC defend has a pre-DEF ×0.75 stage; final /2 remains in calculateFinalDamage.
+        if (target.isDefending) {
+            damage = (damage * 0.75).toInt()
+        }
+
+        return damage.coerceAtLeast(0)
+    }
+
+    /**
+     * Áp dụng phần hậu phòng thủ theo baseline PC gốc.
+     *
+     * Thứ tự quan trọng: element/reborn -> Int -> random {-2,-1,0,+1} -> PvP/pet /2
+     * -> clamp -> defend /2. Các buff/debuff gây damage đã được xử lý ở
+     * applyPreDefenseStatusModifiers trước khi trừ DEF.
+     */
+    private fun calculateFinalDamage(
+        reducedDmg: Double,
+        elementMultiplier: Double,
+        rebornMultiplier: Double,
+        variance: Int,
+        pvpOrPet: Boolean,
+        defending: Boolean
+    ): Int {
+        var damage = (reducedDmg * elementMultiplier * rebornMultiplier).toInt() + variance
+
+        if (pvpOrPet) {
+            damage /= 2
+        }
+        if (damage <= 0) {
+            damage = 1
+        }
+
+        if (defending) {
+            damage = if (elementMultiplier == 0.8) 1 else max(1, damage / 2)
+        }
+
+        return max(1, damage)
+    }
+
+    /**
+     * Ordinary hit/miss: PC baseline plus DVT Mobile percentage-point Hit/Dodge.
+     * PC BattleAbstract.calculateHit uses miss threshold:
+     *   (targetLv - attackerLv + 5) * 0.2
+     * DVT exposes Hit/Dodge as independent 0..30% stats; when both are zero
+     * this therefore collapses exactly to the PC baseline.
+     */
+    private fun calculateMissChance(
+        attackerLevel: Int,
+        targetLevel: Int,
+        hit: Int,
+        dodge: Int
+    ): Double {
+        val pcBaseline = (targetLevel - attackerLevel + 5) * 0.2
+        val hitPct = hit.coerceIn(0, 30)
+        val dodgePct = dodge.coerceIn(0, 30)
+        return (pcBaseline + dodgePct - hitPct).coerceIn(0.0, 100.0)
+    }
+
+    /** DVT UIStatusDetail: CritDamage has a fixed 50% base plus this attribute. */
+    private fun calculateCritMultiplier(critDamage: Int): Double {
+        val extraPct = critDamage.coerceAtLeast(0)
+        return 1.0 + (50 + extraPct) / 100.0
+    }
+
+    /**
+     * Legacy status-only gate retained temporarily. Control-skill hit mechanics
+     * are a separate INT/level contract and are not rewritten by ordinary Hit/Dodge D4.
+     */
+    private fun calculateLegacyStatusHitRate(atkAgi: Int, defAgi: Int): Int {
         return (90 + (atkAgi - defAgi) / 2).coerceIn(5, 99)
-    }
-
-    /**
-     * Tỷ lệ chí mạng: cơ bản 5% + nhanh nhẹn/10
-     */
-    private fun calculateThunderRate(agi: Int): Int {
-        return (5 + agi / 10).coerceIn(1, 50)
     }
 
     /**
@@ -295,6 +427,7 @@ object BattleDamageCalc {
     private val CLUMP_SKILLS = setOf(10004, 20025, 20049, 10033)
     private val TRANCE_SKILLS = setOf(14008, 23028, 23039)
     private val DIZZY_SKILLS = setOf(13007, 20016, 20020, 13029, 23015, 23027, 13041, 21033, 13044, 22041, 22043, 22052, 10044)
+    private val SHRINK_SKILLS = setOf(13011)
     private val POISON_SKILLS = setOf(14015, 20023, 21008, 20047, 23006, 23011, 23012, 23013, 23014, 21032, 21039, 22042)
     private val CHAOS_SKILLS = setOf(11046, 14021, 20014, 20020, 20055, 23009, 23007, 23022, 20051, 14065, 21041, 20058, 41002)
     private val TARDY_SKILLS = setOf(10016, 10017, 10018, 10019, 11045, 14097, 21001, 21028, 23027)

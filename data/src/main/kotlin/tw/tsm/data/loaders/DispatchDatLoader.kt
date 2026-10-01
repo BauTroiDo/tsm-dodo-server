@@ -19,10 +19,10 @@ object DispatchDatLoader {
      *
      * @return Map<mainKind, Map<subKind, DispatchDef>>
      */
-    fun loadDispatch(data: ByteArray): Map<Int, Map<Int, DispatchDef>> {
+    fun loadDispatch(data: ByteArray): Map<Int, Map<Int, List<DispatchDef>>> {
         val reader = DatReader(data)
         val count = reader.readInt32()
-        val result = LinkedHashMap<Int, MutableMap<Int, DispatchDef>>()
+        val result = LinkedHashMap<Int, MutableMap<Int, MutableList<DispatchDef>>>()
 
         for (i in 0 until count) {
             val mainKind = reader.readByte()
@@ -32,12 +32,12 @@ object DispatchDatLoader {
             val expKind = reader.readByte()
             val exp = reader.readUInt32().toLong()
 
-            result.getOrPut(mainKind) { LinkedHashMap() }[subKind] = DispatchDef(
+            result.getOrPut(mainKind) { LinkedHashMap() }.getOrPut(subKind) { mutableListOf() }.add(DispatchDef(
                 minLv = minLv,
                 awardId = awardId,
                 expKind = expKind,
                 exp = exp
-            )
+            ))
         }
 
         return result

@@ -27,7 +27,31 @@ data class EquipBonusData(
     /** HPX của trang bị (EAttribute 218)*/
     val equipHpx: Int = 0,
     /** SPX của trang bị (EAttribute 219)*/
-    val equipSpx: Int = 0
+    val equipSpx: Int = 0,
+    /** Tấn công phần trăm — DVT EAttribute.AtkPercent=101 */
+    val atkPercent: Int = 0,
+    /** Phòng thủ phần trăm — DVT EAttribute.DefPercent=102 */
+    val defPercent: Int = 0,
+    /** HP tối đa phần trăm — DVT EAttribute.HpPercent=107 */
+    val hpPercent: Int = 0,
+    /** Trí lực phần trăm — DVT EAttribute.IntPercent=109 */
+    val intPercent: Int = 0,
+    /** Tỷ lệ chí mạng cộng thêm (%) — DVT EAttribute.Crit=103 */
+    val crit: Int = 0,
+    /** Sát thương chí mạng cộng thêm (%) — DVT EAttribute.CritDamage=104 */
+    val critDamage: Int = 0,
+    /** Tỷ lệ né tránh (%) — DVT EAttribute.Dodge=105 */
+    val dodge: Int = 0,
+    /** Tỷ lệ mệnh trung (%) — DVT EAttribute.Hit=106 */
+    val hit: Int = 0,
+    /** Tăng tổng sát thương gây ra (%) — DVT EAttribute.IncreaseTotalDamage=113 */
+    val increaseTotalDamage: Int = 0,
+    /** Giảm sát thương nhận (%) — DVT EAttribute.DamageReduction=114 */
+    val damageReduction: Int = 0,
+    /** Giảm tổng sát thương bản thân gây ra (%) — DVT EAttribute.ReduceTotalDamage=117 */
+    val reduceTotalDamage: Int = 0,
+    /** Tăng tổng sát thương bản thân nhận (%) — DVT EAttribute.IncreaseDamageTakenSelf=118 */
+    val increaseDamageTakenSelf: Int = 0
 ) {
     companion object {
         val EMPTY = EquipBonusData()

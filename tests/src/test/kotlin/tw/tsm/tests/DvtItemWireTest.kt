@@ -67,6 +67,7 @@ class DvtItemWireTest {
         val itemId = 31000
         val npcId = 9001
         val itemDef = mockk<ItemDef> {
+            every { kind } returns 0 // không phải Transform Doll
             every { specialAbility } returns EItemUseKind.NPC_PICTURE
             every { spare3 } returns npcId
         }
@@ -127,6 +128,7 @@ class DvtItemWireTest {
         val itemId = 31000
         val npcId = 9001
         val itemDef = mockk<ItemDef> {
+            every { kind } returns 0 // không phải Transform Doll
             every { specialAbility } returns EItemUseKind.NPC_PICTURE
             every { spare3 } returns npcId
         }

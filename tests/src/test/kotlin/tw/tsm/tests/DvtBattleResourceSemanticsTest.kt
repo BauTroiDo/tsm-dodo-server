@@ -29,6 +29,9 @@ class DvtBattleResourceSemanticsTest {
         every { howMuchTimes } returns 1
         every { numerical } returns 100
         every { element } returns 1
+        every { level } returns 1
+        every { atkKind } returns 0
+        every { learnLimit } returns 1
     }
 
     @Test

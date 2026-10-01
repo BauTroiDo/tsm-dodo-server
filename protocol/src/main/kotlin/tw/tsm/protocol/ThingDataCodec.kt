@@ -1,5 +1,6 @@
 package tw.tsm.protocol
 
+import tw.tsm.domain.valueobjects.MythAttribute
 import tw.tsm.domain.valueobjects.ThingData
 
 /**
@@ -10,8 +11,7 @@ import tw.tsm.domain.valueobjects.ThingData
  * mythLv(1) + 4 x [kind(1) + value(2) + extra(2)].
  *
  * Client DVT hiện tại chạy với NFT bật, vì vậy wire size thực tế là 56 bytes.
- * Server chưa mô hình hóa thuộc tính NFT/Myth; phần mở rộng được gửi bằng 0 để giữ
- * đúng ranh giới record và không tạo thuộc tính giả.
+ * D7 round-trip đầy đủ phần Myth/NFT thay vì zero/drop metadata.
  */
 object ThingDataWire {
     const val BASE_SIZE = 35
@@ -42,51 +42,49 @@ fun PacketWriter.writeThingData(thing: ThingData): PacketWriter {
     writeByte(thing.affix3)            // affix3(1)
     writeByte(thing.styleLevel)        // styleLv(1)
 
-    // DVT NFT extension. Server chưa quản lý Myth/NFT item attributes nên gửi 0.
-    writeByte(0)                       // mythLv
-    repeat(4) {
-        writeByte(0)                   // myth[i].kind
-        writeShortLE(0)                // myth[i].value
-        writeShortLE(0)                // myth[i].extra
+    // DVT NFT extension.
+    writeByte(thing.mythLevel)          // mythLv
+    repeat(4) { index ->
+        val attr = thing.myth[index]
+        writeByte(attr.kind)            // myth[i].kind
+        writeShortLE(attr.value)        // myth[i].value
+        writeShortLE(attr.extra)        // myth[i].extra
     }
     return this
 }
 
-/**
- * Đọc ThingData theo wire DVT NFT (56 bytes).
- *
- * Hiện model [ThingData] chưa có trường Myth/NFT nên 21 bytes mở rộng được tiêu thụ
- * nhưng không lưu lại. Điều này vẫn giữ đúng alignment cho record kế tiếp.
- */
+/** Read DVT NFT ThingData (56 bytes) and preserve all Myth metadata. */
 fun PacketReader.readThingData(): ThingData {
-    val thing = ThingData(
-        itemId = readUShortLE(),           // Id(2)
-        quantity = readIntLE(),            // quant(4)
-        damage = readUByte(),              // damage(1)
-        element = readUByte(),             // element(1)
-        elementValue = readUByte(),        // elementValue(1)
-        proofKind = readUByte(),           // proofKind(1)
-        growLevel = readUByte(),           // growLv(1)
-        growExp = readIntLE(),             // growExp(4)
-        specialKind = readUByte(),         // specialKind(1)
-        stoneAttr = readUByte(),           // stoneAttr(1)
-        stoneLevel = readUByte(),           // stoneLv(1)
-        enhanceLevel = readUByte(),         // enhanceLv(1)
-        deleteTime = readDoubleLE(),        // delTime(8)
-        damagedItemId = readUShortLE(),     // damagedItemId(2)
-        isLocked = readBoolean(),           // isLock(1)
-        reinforced = readUByte(),           // Reinforced(1)
-        affix1 = readUByte(),               // affix1(1)
-        affix2 = readUByte(),               // affix2(1)
-        affix3 = readUByte(),               // affix3(1)
-        styleLevel = readUByte()             // styleLv(1)
+    val base = ThingData(
+        itemId = readUShortLE(),
+        quantity = readIntLE(),
+        damage = readUByte(),
+        element = readUByte(),
+        elementValue = readUByte(),
+        proofKind = readUByte(),
+        growLevel = readUByte(),
+        growExp = readIntLE(),
+        specialKind = readUByte(),
+        stoneAttr = readUByte(),
+        stoneLevel = readUByte(),
+        enhanceLevel = readUByte(),
+        deleteTime = readDoubleLE(),
+        damagedItemId = readUShortLE(),
+        isLocked = readBoolean(),
+        reinforced = readUByte(),
+        affix1 = readUByte(),
+        affix2 = readUByte(),
+        affix3 = readUByte(),
+        styleLevel = readUByte()
     )
 
-    readUByte() // mythLv
-    repeat(4) {
-        readUByte()    // kind
-        readUShortLE() // value
-        readUShortLE() // extra
+    val mythLevel = readUByte()
+    val myth = List(4) {
+        MythAttribute(
+            kind = readUByte(),
+            value = readUShortLE(),
+            extra = readUShortLE()
+        )
     }
-    return thing
+    return base.copy(mythLevel = mythLevel, myth = myth)
 }

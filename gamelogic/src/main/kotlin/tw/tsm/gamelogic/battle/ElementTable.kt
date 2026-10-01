@@ -12,11 +12,11 @@ import tw.tsm.domain.enums.Element
  */
 object ElementTable {
 
-    /** Tỷ lệ khắc chế (lợi thế) */
-    private const val ADVANTAGE = 1.5
+    /** Tỷ lệ khắc chế (PC BattleAbstract.cs getSkillEffect) */
+    private const val ADVANTAGE = 1.2
 
-    /** Tỷ lệ bị khắc (bất lợi) */
-    private const val DISADVANTAGE = 0.75
+    /** Tỷ lệ bị khắc (PC BattleAbstract.cs getSkillEffect) */
+    private const val DISADVANTAGE = 0.8
 
     /** Tỷ lệ trung tính */
     private const val NEUTRAL = 1.0

@@ -19,7 +19,8 @@ private val logger = KotlinLogging.logger {}
  */
 class RelocateHandler(
     private val worldManager: WorldManager,
-    private val responseSender: ResponseSender
+    private val responseSender: ResponseSender,
+    private val groundItemManager: tw.tsm.gamelogic.systems.GroundItemManager? = null,
 ) : PacketHandler {
 
     /** mainKind = 12 (0x0C) */
@@ -50,6 +51,17 @@ class RelocateHandler(
 
         // S:022-004 danh sách trống — kích hoạt ContinueNavigation() của client (dự phòng)
         responseSender.sendMapNpcInit(session, emptyList())
+
+        // DVT S:023-004 includes explicit indices, including static Eve Goods.
+        groundItemManager?.let { ground ->
+            val writer = tw.tsm.protocol.PacketWriter()
+                .writeByte(Opcodes.SHOP).writeByte(4).writeByte(0)
+            for (item in ground.getItems(session.mapId)) {
+                writer.writeByte(item.kind).writeShortLE(item.index).writeIntLE(item.value)
+                    .writeShortLE(item.x).writeShortLE(item.y)
+            }
+            session.send(writer.toByteArray())
+        }
 
         // Gửi gói tin xuất hiện của người chơi khác cùng bản đồ
         val otherPlayers = worldManager.getPlayersInMap(session.mapId)

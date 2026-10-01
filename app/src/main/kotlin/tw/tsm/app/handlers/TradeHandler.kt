@@ -5,6 +5,7 @@ import tw.tsm.domain.constants.Opcodes
 import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.PacketHandler
+import tw.tsm.gamelogic.systems.CollectionSystem
 import tw.tsm.gamelogic.systems.TradeSystem
 import tw.tsm.protocol.PacketReader
 
@@ -20,7 +21,8 @@ private val logger = KotlinLogging.logger {}
  * Hệ thống chuyển phát nhanh: C:025-020~021 (TODO: subsystem độc lập)
  */
 class TradeHandler(
-    private val tradeSystem: TradeSystem
+    private val tradeSystem: TradeSystem,
+    private val collectionSystem: CollectionSystem,
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.TRADE  // 25
@@ -119,11 +121,22 @@ class TradeHandler(
      *
      * Định dạng: +result(1) [1=xác nhận, 2=hủy]
      */
-    private fun handleConfirmPetTrade(session: GameSession, data: ByteArray) {
+    private suspend fun handleConfirmPetTrade(session: GameSession, data: ByteArray) {
         val reader = PacketReader(data)
         val result = reader.readUByte()
 
         logger.info { "${session.characterName} thao tác giao dịch tướng: result=$result (${if (result == 1) "確認" else "取消"})" }
-        tradeSystem.confirmOrCancel(session.playerId, result, TradeSystem.MODE_PET)
+        val ownershipGrants = tradeSystem.confirmOrCancel(
+            session.playerId,
+            result,
+            TradeSystem.MODE_PET,
+        )
+        for (grant in ownershipGrants) {
+            collectionSystem.markWarriorOwned(
+                grant.characterId,
+                grant.npcId,
+                grant.session,
+            )
+        }
     }
 }

@@ -250,6 +250,17 @@ class LoginResponseSender {
         session.send(writer.toByteArray())
     }
 
+    /** S:005-005 Người chơi biến hình: roleId(8) + npcId(2). */
+    fun sendPlayerTransform(session: SessionSender, roleId: Long, npcId: Int) {
+        session.send(
+            PacketWriter(13)
+                .writeByte(Opcodes.PLAYER_STATUS).writeByte(5).writeByte(0)
+                .writeLongLE(roleId)
+                .writeShortLE(npcId)
+                .toByteArray()
+        )
+    }
+
     /**
      * S:005-012 Người chơi đổi danh hiệu
      *

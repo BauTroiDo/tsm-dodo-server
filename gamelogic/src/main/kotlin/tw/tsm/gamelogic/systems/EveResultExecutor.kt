@@ -8,7 +8,9 @@ import tw.tsm.domain.data.NpcEventData
 import tw.tsm.domain.data.SceneEveData
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.ResponseSender
+import tw.tsm.domain.constants.EAttribute
 import tw.tsm.domain.constants.MountConstants
+import tw.tsm.domain.interfaces.repositories.CharacterRepository
 import tw.tsm.domain.interfaces.repositories.MissionFlagRecord
 
 private val logger = KotlinLogging.logger {}
@@ -45,6 +47,9 @@ class EveResultExecutor(
     private val roleCountSystem: RoleCountSystem,
     private val dailyProgressSystem: DailyProgressSystem? = null,
     private val pointSystem: PointSystem? = null,
+    private val collectionSystem: CollectionSystem? = null,
+    private val playerStateManager: PlayerStateManager? = null,
+    private val characterRepository: CharacterRepository? = null,
 ) {
     private companion object {
         val FUNCTION_UNLOCK_MARKER_MISSION_IDS = setOf(11804, 12283, 12285, 12396)
@@ -55,15 +60,89 @@ class EveResultExecutor(
      *
      * Chỉ gọi khi resultType=0.
      */
-    suspend fun executeResultClass(session: GameSession, result: EveResult) {
+    /** Check the selected chain before any exchanges or quest mutations occur. */
+    suspend fun canExecuteResults(session: GameSession, results: List<EveResult>): Boolean {
+        val unsupported = results.firstOrNull { r ->
+            r.resultType in setOf(0, 7) && (
+                r.resultClass in setOf(11, 13, 15) ||
+                    (r.resultClass == 1 && EveResultClassPolicy.itemDelta(r.parameterStyle, r.resultValue) == null) ||
+                    (r.resultClass == 2 && EveResultClassPolicy.missionOperation(r.parameterStyle, r.resultValue) == null) ||
+                    (r.resultClass == 2 && r.parameterStyle in setOf(1, 2) &&
+                        (r.resultValue !in 0..255 || r.parameter <= 0))
+                )
+        }
+        if (unsupported == null) {
+            val missionResults = results.filter { it.resultType in setOf(0, 7) && it.resultClass == 2 }
+            if (missionResults.any { it.parameterStyle == 1 }) {
+                val steps = questSystem.getMissions(session.roleId.toLong()).associate { it.missionId to it.step }.toMutableMap()
+                for (r in missionResults) {
+                    val current = steps[r.parameter] ?: 0
+                    when (r.parameterStyle) {
+                        1 -> {
+                            val next = current.toLong() + r.resultValue
+                            if (current !in 0..255 || next !in 0L..255L) {
+                                responseSender.sendSystemMessage(session, "Tiến độ nhiệm vụ vượt giới hạn 255 bước. Đã dừng xử lý để tránh sai dữ liệu.")
+                                return false
+                            }
+                            steps[r.parameter] = next.toInt()
+                        }
+                        2 -> steps[r.parameter] = (current - r.resultValue).coerceAtLeast(0)
+                        3, 5 -> steps.remove(r.parameter)
+                    }
+                }
+            }
+            // Combat and choices may supply/change items; validate the current segment only.
+            val itemChanges = results.takeWhile { it.resultType !in setOf(3, 6) }
+                .filter { it.resultType in setOf(0, 7) && it.resultClass == 1 }
+                .map { it.parameter to EveResultClassPolicy.itemDelta(it.parameterStyle, it.resultValue)!! }
+            if (itemChanges.size > 1 && !inventorySystem.canApplyQuestItemChanges(session.roleId.toLong(), itemChanges)) {
+                responseSender.sendSystemMessage(session, "Chưa đủ đồ nộp hoặc chỗ trống để nhận toàn bộ thưởng nhiệm vụ. Đã dừng trước khi đổi đồ.")
+                return false
+            }
+            val npcResults = results.filter { it.resultType in setOf(0, 7) &&
+                (it.resultClass == 8 || (it.resultClass == 3 && it.parameterStyle == 1)) }
+            if (npcResults.any { it.parameterStyle == 1 }) {
+                val charId = session.roleId.toLong()
+                val ids = petSystem.getFollowPets(charId).values.map { it.npcId }.toMutableList()
+                val capacity = petSystem.getUnlockedFollowCapacity(charId)
+                val storedIds = (petSystem.getCartPets(charId).values + petSystem.getInnPets(charId).values +
+                    petSystem.getWarehousePets(charId)).map { it.npcId }.toSet()
+                for (r in npcResults) {
+                    if (r.resultClass == 8 && r.parameterStyle == 2) {
+                        ids.remove(r.parameter)
+                    } else if (r.parameterStyle == 1) {
+                        val npcId = if (r.resultClass == 3) eveData[session.mapId]?.npcs?.get(r.parameter)?.npcId else r.parameter
+                        // DVT EventHandler[0]/class3 keeps an escort already in the team.
+                        if (r.resultClass == 3 && npcId != null && npcId in ids) continue
+                        if (npcId == null || npcId !in npcDefs || npcId in ids || npcId in storedIds || ids.size >= capacity) {
+                            responseSender.sendSystemMessage(session, "Chưa thể nhận võ tướng nhiệm vụ. Hãy kiểm tra ô võ tướng trống rồi thử lại.")
+                            return false
+                        }
+                        ids.add(npcId)
+                    }
+                }
+            }
+            return true
+        }
+        logger.warn {
+            "Dừng nhánh nhiệm vụ chưa hỗ trợ: map=${session.mapId} " +
+                "class=${unsupported.resultClass} param=${unsupported.parameter} " +
+                "style=${unsupported.parameterStyle} value=${unsupported.resultValue}"
+        }
+        responseSender.sendSystemMessage(session, "Nhánh nhiệm vụ này chưa có cấu hình xử lý đầy đủ. Đã dừng xử lý; vui lòng chọn nhiệm vụ khác.")
+        return false
+    }
+
+    suspend fun executeResultClass(session: GameSession, result: EveResult): Boolean {
+        if (!canExecuteResults(session, listOf(result))) return false
         when (result.resultClass) {
-            1 -> handleItemResult(session, result)
-            2 -> handleMissionResult(session, result)
-            3 -> handleNpcResult(session, result)
-            4 -> handleSkillResult(session, result)
-            5 -> handleMoneyResult(session, result)
-            7 -> handlePlayerResult(session, result)
-            8 -> handleRewardNpcResult(session, result)
+            1 -> return handleItemResult(session, result)
+            2 -> return handleMissionResult(session, result)
+            3 -> return handleNpcResult(session, result)
+            4 -> return handleSkillResult(session, result)
+            5 -> return handleMoneyResult(session, result)
+            7 -> return handlePlayerResult(session, result)
+            8 -> return handleRewardNpcResult(session, result)
             14 -> handleRoleCountResult(session, result)
             10 -> {
                 if (EveResultClassPolicy.isExplicitNoOp(result.resultClass, result.parameterStyle)) {
@@ -77,6 +156,7 @@ class EveResultExecutor(
                     "type=${result.resultType} param=${result.parameter} pStyle=${result.parameterStyle} " +
                     "val=${result.resultValue} meanNo=${result.resultMeanNo}" }
         }
+        return true
     }
 
     /**
@@ -85,9 +165,10 @@ class EveResultExecutor(
      * Dành cho các trận chiến sự kiện không có chuỗi tiếp theo conditionClass=8 (ví dụ: hướng dẫn bắt Ba Đậu Yêu),
      * quét các điều kiện cls=9 trong sự kiện, tự động thêm NPC được tham chiếu vào đội ngũ võ tướng.
      */
-    fun autoCaptureFromEvent(session: GameSession, charId: Long, eventData: NpcEventData) {
+    suspend fun autoCaptureFromEvent(session: GameSession, charId: Long, eventData: NpcEventData) {
         val expectedNpcIds = eventData.conditions
-            .filter { it.conditionClass == 9 }
+            // param != 0 compares attributes of a named NPC; value is not an NPC ID.
+            .filter { it.conditionClass == 9 && it.conditionParameter == 0 && it.conditionParameterStyle == 1 }
             .map { it.conditionValue }
             .distinct()
 
@@ -113,6 +194,7 @@ class EveResultExecutor(
             }
             val (slotIndex, pet) = added
             responseSender.sendFollowNpcAdd(session, session.playerId, slotIndex, npcId, pet.canGrow, showMsg = true)
+            collectionSystem?.markWarriorOwned(charId, npcId, session)
             logger.info { "${session.characterName} Trận chiến sự kiện bắt được: npcId=$npcId → slot=$slotIndex" }
         }
 
@@ -129,30 +211,24 @@ class EveResultExecutor(
      *
      * Trong các mẫu Eve.emg, parameter cố định là 0, pStyle=1 là thêm, pStyle=2 là trừ.
      */
-    private fun handleMoneyResult(session: GameSession, result: EveResult) {
+    private fun handleMoneyResult(session: GameSession, result: EveResult): Boolean {
         val charId = session.roleId.toLong()
         val operation = EveResultClassPolicy.moneyOperation(result.parameterStyle, result.resultValue)
-        when (operation?.kind) {
-            EveMoneyResultKind.ADD -> {
-                if (moneySystem.addGold(charId, operation.amount)) {
-                    responseSender.sendAddMoney(session, operation.amount)
-                    logger.info { "${session.characterName} Sự kiện thưởng tiền: ${operation.amount} Vàng" }
-                } else {
-                    logger.warn { "${session.characterName} resultClass=5 Thưởng tiền thất bại: amount=${operation.amount}" }
-                }
-            }
-            EveMoneyResultKind.SUBTRACT -> {
-                if (moneySystem.subtractGold(charId, operation.amount)) {
-                    responseSender.sendSubtractMoney(session, operation.amount)
-                    logger.info { "${session.characterName} Sự kiện trừ tiền: ${operation.amount} Vàng" }
-                } else {
-                    logger.warn { "${session.characterName} resultClass=5 Trừ tiền thất bại: amount=${operation.amount}" }
-                }
-            }
-            null -> logger.warn {
-                "${session.characterName} resultClass=5 Không rõ pStyle=${result.parameterStyle} value=${result.resultValue}"
-            }
+            ?: return false
+        val success = when (operation.kind) {
+            EveMoneyResultKind.ADD -> moneySystem.addGold(charId, operation.amount)
+            EveMoneyResultKind.SUBTRACT -> moneySystem.subtractGold(charId, operation.amount)
         }
+        if (!success) {
+            logger.warn { "${session.characterName} Giao dịch tiền nhiệm vụ thất bại: kind=${operation.kind} amount=${operation.amount}" }
+            responseSender.sendSystemMessage(session, "Không thể thực hiện giao dịch tiền của nhiệm vụ. Hãy kiểm tra số vàng rồi thử lại.")
+            return false
+        }
+        when (operation.kind) {
+            EveMoneyResultKind.ADD -> responseSender.sendAddMoney(session, operation.amount)
+            EveMoneyResultKind.SUBTRACT -> responseSender.sendSubtractMoney(session, operation.amount)
+        }
+        return true
     }
 
     /**
@@ -200,11 +276,11 @@ class EveResultExecutor(
     private suspend fun handleDirectPointPurchase(
         session: GameSession,
         purchase: EvePointPurchase
-    ) {
+    ): Boolean {
         val points = pointSystem
         if (points == null) {
             logger.warn { "${session.characterName} Direct Point purchase: PointSystem chưa được nối" }
-            return
+            return false
         }
 
         val charId = session.roleId.toLong()
@@ -214,7 +290,7 @@ class EveResultExecutor(
                 "${session.characterName} Direct Point purchase không đủ Point: " +
                     "có=$currentPoint cần=${purchase.price} item=${purchase.itemId} x${purchase.quantity}"
             }
-            return
+            return false
         }
 
         if (!inventorySystem.canAddItemToBag(charId, purchase.itemId, purchase.quantity)) {
@@ -222,12 +298,12 @@ class EveResultExecutor(
                 "${session.characterName} Direct Point purchase thất bại: túi không đủ chỗ " +
                     "item=${purchase.itemId} x${purchase.quantity}"
             }
-            return
+            return false
         }
 
         if (!points.subtractRealPoint(charId, purchase.price)) {
             logger.warn { "${session.characterName} Direct Point purchase: khấu trừ Point thất bại" }
-            return
+            return false
         }
 
         val added = try {
@@ -237,7 +313,7 @@ class EveResultExecutor(
             logger.error(e) {
                 "${session.characterName} Direct Point purchase lỗi khi thêm vật phẩm; đã hoàn Point"
             }
-            return
+            return false
         }
 
         if (added == null) {
@@ -245,7 +321,7 @@ class EveResultExecutor(
             logger.warn {
                 "${session.characterName} Direct Point purchase bị race/túi thay đổi; đã hoàn ${purchase.price} Point"
             }
-            return
+            return false
         }
 
         // Vật phẩm đã được InventorySystem ghi DB; lưu Point ngay để giảm cửa sổ lệch trạng thái khi server dừng đột ngột.
@@ -266,6 +342,57 @@ class EveResultExecutor(
             "${session.characterName} Direct Point purchase: -${purchase.price} Point, " +
                 "item=${purchase.itemId} x${purchase.quantity}, còn=$real"
         }
+        return true
+    }
+
+    /**
+     * Áp dụng resultType=0/resultClass=7/parameter=2 Moral delta.
+     * DB là nguồn bền vững; chỉ cập nhật cache/runtime sau khi ghi DB thành công.
+     */
+    private suspend fun handleMoralDelta(session: GameSession, change: EveMoralDelta): Boolean {
+        val states = playerStateManager ?: run {
+            logger.warn { "Moral delta: PlayerStateManager chưa được nối" }
+            return false
+        }
+        val repository = characterRepository ?: run {
+            logger.warn { "Moral delta: CharacterRepository chưa được nối" }
+            return false
+        }
+        val charId = session.roleId.toLong()
+        if (states.getState(charId) == null) {
+            logger.warn { session.characterName + " Moral delta: runtime player chưa khởi tạo" }
+            return false
+        }
+
+        val current = states.getMoral(charId)[change.faction - 1]
+        // S:005-003 truyền Moral bằng UInt16; không tự áp trần gameplay 5000 khi chưa có bằng chứng server DVT.
+        val next = (current.toLong() + change.delta.toLong()).coerceIn(0L, 0xFFFFL).toInt()
+
+        try {
+            repository.updateMoral(charId, change.faction, next)
+        } catch (e: Exception) {
+            logger.error(e) {
+                session.characterName + " Moral delta lưu DB thất bại: faction=" +
+                    change.faction + " current=" + current + " delta=" + change.delta
+            }
+            return false
+        }
+
+        if (!states.setMoral(charId, change.faction, next)) {
+            logger.error {
+                session.characterName + " Moral delta: DB đã lưu nhưng runtime update thất bại, faction=" +
+                    change.faction + " value=" + next
+            }
+            return false
+        }
+
+        // DVT protocal.lua S:008-014 gọi SetAttribute(Moral, absoluteValue, faction).
+        responseSender.sendWorldAttribute(session, EAttribute.MORAL, next.toLong(), true, change.faction)
+        logger.info {
+            session.characterName + " Moral[" + change.faction + "] " + current + " -> " + next +
+                " (delta=" + change.delta + ")"
+        }
+        return true
     }
 
     /**
@@ -286,7 +413,7 @@ class EveResultExecutor(
      * - pStyle=27/29 (Mỗi cái 11 lần type=7): Thông báo hoạt động tìm Ba Đậu Yêu ác quỷ → S:020-027 / S:020-029
      * - pStyle=30/32/35/39: Thông báo hoạt động không có payload → S:020-030/032/035/039
      */
-    private suspend fun handlePlayerResult(session: GameSession, result: EveResult) {
+    private suspend fun handlePlayerResult(session: GameSession, result: EveResult): Boolean {
         val charId = session.roleId.toLong()
 
         val pointPurchase = EveResultClassPolicy.directPointPurchase(
@@ -296,8 +423,17 @@ class EveResultExecutor(
             resultMeanNo = result.resultMeanNo,
         )
         if (pointPurchase != null) {
-            handleDirectPointPurchase(session, pointPurchase)
-            return
+            return handleDirectPointPurchase(session, pointPurchase)
+        }
+
+        val moralDelta = EveResultClassPolicy.moralDelta(
+            resultType = result.resultType,
+            parameter = result.parameter,
+            parameterStyle = result.parameterStyle,
+            resultValue = result.resultValue,
+        )
+        if (moralDelta != null) {
+            return handleMoralDelta(session, moralDelta)
         }
 
         // Phòng ngừa lỗi các biến thể có mang giá trị (docs/eve-gap-analysis.md):
@@ -308,7 +444,7 @@ class EveResultExecutor(
                 "${session.characterName} resultClass=7 pStyle=${result.parameterStyle} biến thể mang giá trị chưa được hiện thực: " +
                         "val=${result.resultValue} meanNo=${result.resultMeanNo} (Truyền tống lôi đài/Mua trực tiếp bằng Nguyên Bảo), bỏ qua"
             }
-            return
+            return false
         }
 
         when (EveResultClassPolicy.playerOperation(result.resultType, result.parameterStyle)?.kind) {
@@ -361,10 +497,17 @@ class EveResultExecutor(
             EvePlayerResultKind.ADD_MONEY -> {
                 val amount = result.resultValue
                 if (amount > 0) {
-                    moneySystem.addGold(charId, amount)
+                    if (!moneySystem.addGold(charId, amount)) {
+                        responseSender.sendSystemMessage(session, "Chưa thể nhận vàng thưởng; đã dừng nhiệm vụ để tránh mất thưởng.")
+                        return false
+                    }
                     responseSender.sendAddMoney(session, amount)
                     logger.info { "${session.characterName} Sự kiện thưởng tiền: $amount Vàng" }
                 }
+            }
+            EvePlayerResultKind.OPEN_MESSAGE_BOARD -> {
+                responseSender.sendOpenMessageBoard(session)
+                logger.info { "Mở bảng nhắn từ Eve" }
             }
             EvePlayerResultKind.OPEN_GALAXY_LEADERBOARD -> {
                 responseSender.sendOpenGalaxyLeaderboard(session)
@@ -414,6 +557,7 @@ class EveResultExecutor(
                 "${session.characterName} resultClass=7 type=${result.resultType} pStyle=${result.parameterStyle} (Chưa được hiện thực)"
             }
         }
+        return true
     }
 
     /**
@@ -421,7 +565,7 @@ class EveResultExecutor(
      *
      * - parameterStyle=1 (Thêm) / 2 (Giảm) / 3 (Hoàn thành: Xóa + Thiết lập cờ)
      */
-    private suspend fun handleMissionResult(session: GameSession, result: EveResult) {
+    private suspend fun handleMissionResult(session: GameSession, result: EveResult): Boolean {
         val charId    = session.roleId.toLong()
         val missionId = result.parameter
         val operation = EveResultClassPolicy.missionOperation(result.parameterStyle, result.resultValue)
@@ -430,6 +574,10 @@ class EveResultExecutor(
             EveMissionResultKind.ADD_STEP -> {
                 val delta = operation.value
                 val prevStep = questSystem.addMissionStep(charId, missionId, delta)
+                    ?: run {
+                        responseSender.sendSystemMessage(session, "Không thể tăng bước nhiệm vụ; đã dừng để tránh sai tiến độ.")
+                        return false
+                    }
                 responseSender.sendAddMissionStep(session, missionId, delta)
                 if (prevStep == 0) {
                     // DVT AddMissionStep normally only starts/advances a mission. These four
@@ -522,50 +670,56 @@ class EveResultExecutor(
                 responseSender.sendAchievementComplete(session, 0, achievementId)
             }
         }
+        return true
     }
 
     /**
      * resultClass=1 (Vật phẩm) Trao/Thu hồi
      */
-    private suspend fun handleItemResult(session: GameSession, result: EveResult) {
+    private suspend fun handleItemResult(session: GameSession, result: EveResult): Boolean {
         val charId = session.roleId.toLong()
         val itemId = result.parameter
         val delta = EveResultClassPolicy.itemDelta(result.parameterStyle, result.resultValue)
+            ?: return false
         when {
-            delta == null -> logger.warn { "Sự kiện vật phẩm có parameterStyle không rõ ràng=${result.parameterStyle}" }
             delta > 0 -> {
-                val added = inventorySystem.addItemToBag(charId, itemId, delta)
-                if (added != null) {
-                    val (slot, thing) = added
-                    // showMsg=true: Server điều khiển thông báo phần thưởng (Thông báo giữa màn hình + tin nhắn hệ thống chat)
-                    // dispatchResult đã bỏ qua sendCommonEvent, sẽ không thông báo trùng lặp
-                    responseSender.sendSetBagItem(session, slot, thing, showMsg = true)
-                    logger.info { "${session.characterName} Sự kiện trao vật phẩm: itemId=$itemId x$delta → slot=$slot" }
-                } else {
-                    logger.warn { "${session.characterName} Túi đồ đã đầy, không thể trao itemId=$itemId x$delta" }
+                val added = inventorySystem.addItemsToBagExact(charId, itemId, delta)
+                if (added == null) {
+                    responseSender.sendSystemMessage(session, "Không thể nhận đủ vật phẩm nhiệm vụ. Hãy chừa chỗ trong túi rồi thử lại.")
+                    logger.warn { "Dừng sự kiện: không trao đủ itemId=$itemId x$delta charId=$charId" }
+                    return false
                 }
+                for ((slot, thing) in added) {
+                    responseSender.sendSetBagItem(session, slot, thing, showMsg = true)
+                }
+                logger.info { "${session.characterName} Sự kiện trao vật phẩm: itemId=$itemId x$delta slots=${added.map { it.first }}" }
             }
             delta < 0 -> {
-                val quantity = -delta
-                val bag = inventorySystem.getBag(charId)
-                val entry = bag.entries.find { it.value.itemId == itemId }
-                if (entry != null) {
-                    val removeQty = minOf(quantity, entry.value.quantity)
-                    inventorySystem.removeFromBag(charId, entry.key, removeQty)
-                    responseSender.sendReduceBagItem(session, entry.key, removeQty)
-                    logger.info { "${session.characterName} Sự kiện thu hồi vật phẩm: itemId=$itemId x$removeQty từ slot=${entry.key}" }
-                } else {
-                    logger.warn { "${session.characterName} Trong túi không có itemId=$itemId để thu hồi" }
+                var remaining = -delta
+                val consumptions = mutableListOf<Pair<Int, Int>>()
+                for ((slot, thing) in inventorySystem.getBag(charId).toSortedMap()) {
+                    if (thing.itemId != itemId || thing.quantity <= 0 || remaining <= 0) continue
+                    val qty = minOf(remaining, thing.quantity)
+                    consumptions += slot to qty
+                    remaining -= qty
                 }
+                if (remaining > 0 || !inventorySystem.removeBagItemsExact(charId, consumptions)) {
+                    responseSender.sendSystemMessage(session, "Chưa đủ vật phẩm cần nộp cho nhiệm vụ.")
+                    return false
+                }
+                for ((slot, qty) in consumptions) {
+                    responseSender.sendReduceBagItem(session, slot, qty)
+                }
+                logger.info { "${session.characterName} Sự kiện thu hồi vật phẩm: itemId=$itemId x${-delta}" }
             }
-            else -> logger.debug { "${session.characterName} Sự kiện vật phẩm delta=0: itemId=$itemId pStyle=${result.parameterStyle}" }
         }
+        return true
     }
 
     /**
      * Xử lý resultClass=3 (Thao tác đội ngũ NPC)
      */
-    private fun handleNpcResult(session: GameSession, result: EveResult) {
+    private suspend fun handleNpcResult(session: GameSession, result: EveResult): Boolean {
         when (result.parameterStyle) {
             1 -> {
                 val charId = session.roleId.toLong()
@@ -573,13 +727,16 @@ class EveResultExecutor(
                 val npcPlacement = eveData[session.mapId]?.npcs?.get(npcClickId)
                 if (npcPlacement == null) {
                     logger.warn { "${session.characterName} resultClass=3 pStyle=1: Không tìm thấy dữ liệu sắp xếp NPC của clickId=$npcClickId" }
-                    return
+                    return false
                 }
                 val npcId = npcPlacement.npcId
+                if (petSystem.getFollowPets(charId).values.any { it.npcId == npcId }) {
+                    return true
+                }
                 val npcDef = npcDefs[npcId]
                 if (npcDef == null) {
                     logger.warn { "${session.characterName} resultClass=3 pStyle=1: Không tìm thấy định nghĩa NPC của npcId=$npcId" }
-                    return
+                    return false
                 }
                 // canGrow được đọc từ roleStatus của việc bố trí NPC
                 // canGrow=0: NPC đi cùng (Tên màu cam, không thể xuất chiến/cất giữ thủ công)
@@ -590,6 +747,7 @@ class EveResultExecutor(
                     val (slotIndex, pet) = added
                     responseSender.sendFollowNpcAdd(session, session.playerId, slotIndex, npcId, pet.canGrow, showMsg = true)
                     responseSender.sendFollowNpcFullData(session, petSystem.getFollowPets(charId).values.toList())
+                    if (canGrow > 0) collectionSystem?.markWarriorOwned(charId, npcId, session)
                     logger.info { "${session.characterName} Sự kiện NPC tham gia: npcId=$npcId (${npcDef.name}) canGrow=$canGrow → slot=$slotIndex" }
                 } else {
                     if (!petSystem.hasFreeUnlockedFollowSlot(charId)) {
@@ -598,17 +756,19 @@ class EveResultExecutor(
                         }
                     }
                     logger.warn { "${session.characterName} Võ tướng đã đầy, không thể thêm npcId=$npcId" }
+                    return false
                 }
             }
             3, 4, 5 -> logger.debug { "${session.characterName} resultClass=3 pStyle=${result.parameterStyle} (Client xử lý)" }
             else -> logger.debug { "${session.characterName} resultClass=3 Không rõ pStyle=${result.parameterStyle}" }
         }
+        return true
     }
 
     /**
      * Xử lý resultClass=8 (Võ tướng thưởng thêm vào/rời đi)
      */
-    private fun handleRewardNpcResult(session: GameSession, result: EveResult) {
+    private suspend fun handleRewardNpcResult(session: GameSession, result: EveResult): Boolean {
         val charId = session.roleId.toLong()
         val npcId = result.parameter
         when (result.parameterStyle) {
@@ -616,13 +776,14 @@ class EveResultExecutor(
                 val npcDef = npcDefs[npcId]
                 if (npcDef == null) {
                     logger.warn { "${session.characterName} resultClass=8 pStyle=1: Không tìm thấy npcId=$npcId" }
-                    return
+                    return false
                 }
                 val added = petSystem.addFollowNpc(charId, npcId, npcDef, canGrow = 1)
                 if (added != null) {
                     val (slotIndex, pet) = added
                     responseSender.sendFollowNpcAdd(session, session.playerId, slotIndex, npcId, pet.canGrow, showMsg = true)
                     responseSender.sendFollowNpcFullData(session, petSystem.getFollowPets(charId).values.toList())
+                    collectionSystem?.markWarriorOwned(charId, npcId, session)
                     logger.info { "${session.characterName} Võ tướng thưởng tham gia: npcId=$npcId (${npcDef.name}) → slot=$slotIndex" }
                 } else {
                     if (!petSystem.hasFreeUnlockedFollowSlot(charId)) {
@@ -631,6 +792,7 @@ class EveResultExecutor(
                         }
                     }
                     logger.warn { "${session.characterName} Võ tướng đã đầy, không thể thêm võ tướng thưởng npcId=$npcId" }
+                    return false
                 }
             }
             2 -> {
@@ -644,12 +806,13 @@ class EveResultExecutor(
             }
             else -> logger.debug { "${session.characterName} resultClass=8 Không rõ pStyle=${result.parameterStyle}" }
         }
+        return true
     }
 
     /**
      * Xử lý resultClass=4 (Tặng kỹ năng)
      */
-    private fun handleSkillResult(session: GameSession, result: EveResult) {
+    private fun handleSkillResult(session: GameSession, result: EveResult): Boolean {
         val charId = session.roleId.toLong()
         val skillId = result.parameter
         val level = result.resultValue.coerceAtLeast(1)
@@ -657,7 +820,7 @@ class EveResultExecutor(
         val sc = skillSystem.getCache(charId)
         if (sc == null) {
             logger.warn { "${session.characterName} Tặng kỹ năng thất bại: SkillCache không tồn tại" }
-            return
+            return false
         }
 
         val currentLevel = sc.skills[skillId] ?: 0
@@ -669,5 +832,6 @@ class EveResultExecutor(
         } else {
             logger.debug { "${session.characterName} Đã có kỹ năng này: skillId=$skillId current=$currentLevel ≥ target=$level" }
         }
+        return true
     }
 }

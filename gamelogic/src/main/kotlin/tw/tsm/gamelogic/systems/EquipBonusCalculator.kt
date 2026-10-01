@@ -1,7 +1,9 @@
 package tw.tsm.gamelogic.systems
 
 import tw.tsm.domain.constants.EAttribute
+import tw.tsm.domain.constants.EItemKind
 import tw.tsm.domain.data.ItemDef
+import tw.tsm.domain.data.SacredEquipPrimaryDef
 import tw.tsm.domain.valueobjects.EquipBonusData
 import tw.tsm.domain.valueobjects.ThingData
 
@@ -32,7 +34,8 @@ object EquipBonusCalculator {
      */
     fun calculateTotalBonus(
         equips: Map<Int, ThingData>,
-        itemDefs: Map<Int, ItemDef>
+        itemDefs: Map<Int, ItemDef>,
+        sacredEquipPrimaryDefs: Map<Int, SacredEquipPrimaryDef> = emptyMap()
     ): EquipBonusData {
         var maxHp = 0
         var maxSp = 0
@@ -42,18 +45,32 @@ object EquipBonusCalculator {
         var agi = 0
         var hpx = 0
         var spx = 0
+        var atkPercent = 0
+        var defPercent = 0
+        var hpPercent = 0
+        var intPercent = 0
+        var crit = 0
+        var critDamage = 0
+        var dodge = 0
+        var hit = 0
+        var increaseTotalDamage = 0
+        var damageReduction = 0
+        var reduceTotalDamage = 0
+        var increaseDamageTakenSelf = 0
 
         for ((_, thing) in equips) {
             if (thing.itemId == 0) continue
             val itemDef = itemDefs[thing.itemId] ?: continue
 
-            // Giá trị thuộc tính trang bị sử dụng mã hóa hệ cơ số 100 (100-based) (Item.lua:3049 effectValue = attribute.value - 100)
-            // raw=0 nghĩa là chưa thiết lập → giữ nguyên là 0; raw!=0 → trừ đi 100 để lấy giá trị cộng thêm thực tế
-            val eff1 = if (itemDef.attr1Value != 0) itemDef.attr1Value - 100 else 0
-            val eff2 = if (itemDef.attr2Value != 0) itemDef.attr2Value - 100 else 0
+            // 8 stat trang bị cổ điển dùng mã hóa 100-based. DVT stat Mobile 103..106
+            // lại lưu trực tiếp phần trăm (IOS_Item_C: Dodge/Hit rune raw=1..4 => 1..4%).
+            val eff1 = decodeAttributeValue(itemDef.attr1Kind, itemDef.attr1Value)
+            val eff2 = decodeAttributeValue(itemDef.attr2Kind, itemDef.attr2Value)
 
-            // Cộng thêm từ attr1 (Tương ứng với prop1/prop1_val trong tskero)
-            accumulateBonus(itemDef.attr1Kind, eff1) { kind, value ->
+            // Myth attr1Kind là key SacredEquipPrimaryDatas, không phải EAttribute trực tiếp.
+            // Lua ItemData:GetGodMainAttrText lấy attNo + upgradeLv[mythLv] từ bảng này.
+            if (itemDef.kind != EItemKind.MYTH) {
+                accumulateBonus(itemDef.attr1Kind, eff1) { kind, value ->
                 when (kind) {
                     EAttribute.EQUIP_MAX_HP -> maxHp += value
                     EAttribute.EQUIP_MAX_SP -> maxSp += value
@@ -63,6 +80,19 @@ object EquipBonusCalculator {
                     EAttribute.EQUIP_AGI -> agi += value
                     EAttribute.EQUIP_HPX -> hpx += value
                     EAttribute.EQUIP_SPX -> spx += value
+                    EAttribute.ATK_PERCENT -> atkPercent += value
+                    EAttribute.DEF_PERCENT -> defPercent += value
+                    EAttribute.HP_PERCENT -> hpPercent += value
+                    EAttribute.INT_PERCENT -> intPercent += value
+                    EAttribute.CRITICAL -> crit += value
+                    EAttribute.CRIT_DAMAGE -> critDamage += value
+                    EAttribute.DODGE -> dodge += value
+                    EAttribute.HIT -> hit += value
+                    EAttribute.INCREASE_TOTAL_DAMAGE -> increaseTotalDamage += value
+                    EAttribute.DAMAGE_REDUCTION -> damageReduction += value
+                    EAttribute.REDUCE_TOTAL_DAMAGE -> reduceTotalDamage += value
+                        EAttribute.INCREASE_DAMAGE_TAKEN_SELF -> increaseDamageTakenSelf += value
+                    }
                 }
             }
 
@@ -77,6 +107,80 @@ object EquipBonusCalculator {
                     EAttribute.EQUIP_AGI -> agi += value
                     EAttribute.EQUIP_HPX -> hpx += value
                     EAttribute.EQUIP_SPX -> spx += value
+                    EAttribute.ATK_PERCENT -> atkPercent += value
+                    EAttribute.DEF_PERCENT -> defPercent += value
+                    EAttribute.HP_PERCENT -> hpPercent += value
+                    EAttribute.INT_PERCENT -> intPercent += value
+                    EAttribute.CRITICAL -> crit += value
+                    EAttribute.CRIT_DAMAGE -> critDamage += value
+                    EAttribute.DODGE -> dodge += value
+                    EAttribute.HIT -> hit += value
+                    EAttribute.INCREASE_TOTAL_DAMAGE -> increaseTotalDamage += value
+                    EAttribute.DAMAGE_REDUCTION -> damageReduction += value
+                    EAttribute.REDUCE_TOTAL_DAMAGE -> reduceTotalDamage += value
+                    EAttribute.INCREASE_DAMAGE_TAKEN_SELF -> increaseDamageTakenSelf += value
+                }
+            }
+
+            // DVT Myth/Godskin sub-attributes are already real values:
+            // ItemData:GetGodSubAttrText displays myth[i].value + myth[i].extra directly.
+            // Do not apply legacy raw-100 decoding here.
+            if (itemDef.kind == EItemKind.MYTH) {
+                val primary = sacredEquipPrimaryDefs[itemDef.attr1Kind]
+                val mainValue = primary?.valueAt(thing.mythLevel)
+                if (primary != null && mainValue != null) {
+                    accumulateBonus(primary.attributeKind, mainValue) { kind, value ->
+                        when (kind) {
+                            EAttribute.EQUIP_MAX_HP -> maxHp += value
+                            EAttribute.EQUIP_MAX_SP -> maxSp += value
+                            EAttribute.EQUIP_ATK -> atk += value
+                            EAttribute.EQUIP_DEF -> def += value
+                            EAttribute.EQUIP_INT -> int_ += value
+                            EAttribute.EQUIP_AGI -> agi += value
+                            EAttribute.EQUIP_HPX -> hpx += value
+                            EAttribute.EQUIP_SPX -> spx += value
+                            EAttribute.ATK_PERCENT -> atkPercent += value
+                            EAttribute.DEF_PERCENT -> defPercent += value
+                            EAttribute.HP_PERCENT -> hpPercent += value
+                            EAttribute.INT_PERCENT -> intPercent += value
+                            EAttribute.CRITICAL -> crit += value
+                            EAttribute.CRIT_DAMAGE -> critDamage += value
+                            EAttribute.DODGE -> dodge += value
+                            EAttribute.HIT -> hit += value
+                            EAttribute.INCREASE_TOTAL_DAMAGE -> increaseTotalDamage += value
+                            EAttribute.DAMAGE_REDUCTION -> damageReduction += value
+                            EAttribute.REDUCE_TOTAL_DAMAGE -> reduceTotalDamage += value
+                            EAttribute.INCREASE_DAMAGE_TAKEN_SELF -> increaseDamageTakenSelf += value
+                        }
+                    }
+                }
+
+                for (mythAttr in thing.myth) {
+                    val mythValue = mythAttr.value + mythAttr.extra
+                    accumulateBonus(mythAttr.kind, mythValue) { kind, value ->
+                        when (kind) {
+                            EAttribute.EQUIP_MAX_HP -> maxHp += value
+                            EAttribute.EQUIP_MAX_SP -> maxSp += value
+                            EAttribute.EQUIP_ATK -> atk += value
+                            EAttribute.EQUIP_DEF -> def += value
+                            EAttribute.EQUIP_INT -> int_ += value
+                            EAttribute.EQUIP_AGI -> agi += value
+                            EAttribute.EQUIP_HPX -> hpx += value
+                            EAttribute.EQUIP_SPX -> spx += value
+                            EAttribute.ATK_PERCENT -> atkPercent += value
+                            EAttribute.DEF_PERCENT -> defPercent += value
+                            EAttribute.HP_PERCENT -> hpPercent += value
+                            EAttribute.INT_PERCENT -> intPercent += value
+                            EAttribute.CRITICAL -> crit += value
+                            EAttribute.CRIT_DAMAGE -> critDamage += value
+                            EAttribute.DODGE -> dodge += value
+                            EAttribute.HIT -> hit += value
+                            EAttribute.INCREASE_TOTAL_DAMAGE -> increaseTotalDamage += value
+                            EAttribute.DAMAGE_REDUCTION -> damageReduction += value
+                            EAttribute.REDUCE_TOTAL_DAMAGE -> reduceTotalDamage += value
+                            EAttribute.INCREASE_DAMAGE_TAKEN_SELF -> increaseDamageTakenSelf += value
+                        }
+                    }
                 }
             }
         }
@@ -85,8 +189,30 @@ object EquipBonusCalculator {
             equipMaxHp = maxHp, equipMaxSp = maxSp,
             equipAtk = atk, equipDef = def,
             equipInt = int_, equipAgi = agi,
-            equipHpx = hpx, equipSpx = spx
+            equipHpx = hpx, equipSpx = spx,
+            atkPercent = atkPercent, defPercent = defPercent,
+            hpPercent = hpPercent, intPercent = intPercent,
+            crit = crit, critDamage = critDamage,
+            dodge = dodge, hit = hit,
+            increaseTotalDamage = increaseTotalDamage,
+            damageReduction = damageReduction,
+            reduceTotalDamage = reduceTotalDamage,
+            increaseDamageTakenSelf = increaseDamageTakenSelf
         )
+    }
+
+    /**
+     * Giải mã ItemData attr value theo contract DVT.
+     * Nhóm Mobile percentage 101..118 lưu trực tiếp giá trị phần trăm; nhóm equip legacy 2xx dùng offset 100.
+     * IOS_Item_C xác nhận ATK%/DEF% rune raw=1..5 và Crit/Dodge/Hit rune raw trực tiếp.
+     */
+    private fun decodeAttributeValue(attrKind: Int, rawValue: Int): Int {
+        if (rawValue == 0) return 0
+        return when (attrKind) {
+            EAttribute.RESISTANCE_PERCENT -> rawValue
+            in EAttribute.ATK_PERCENT..EAttribute.INCREASE_DAMAGE_TAKEN_SELF -> rawValue
+            else -> rawValue - 100
+        }
     }
 
     /**

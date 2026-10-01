@@ -4,6 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import tw.tsm.domain.constants.Opcodes
 import tw.tsm.domain.data.EveResult
 import tw.tsm.domain.interfaces.SessionSender
+import tw.tsm.domain.interfaces.repositories.MessageBoardRecord
 import tw.tsm.domain.interfaces.repositories.MissionFlagRecord
 import tw.tsm.domain.interfaces.repositories.MissionRecord
 import tw.tsm.protocol.PacketWriter
@@ -148,6 +149,46 @@ class NpcEventResponseSender {
                 .writeByte(Opcodes.NPC_EVENT).writeByte(29).writeByte(0)
                 .toByteArray()
         )
+    }
+
+    /** S:036-003 Mở bảng nhắn */
+    fun sendOpenMessageBoard(session: SessionSender) {
+        session.send(
+            PacketWriter(3)
+                .writeByte(Opcodes.CHALLENGE).writeByte(3).writeByte(0)
+                .toByteArray()
+        )
+    }
+
+    /** S:036-004 Snapshot bảng nhắn. */
+    fun sendMessageBoardSnapshot(session: SessionSender, messages: List<MessageBoardRecord>) {
+        val writer = PacketWriter()
+            .writeByte(Opcodes.CHALLENGE).writeByte(4).writeByte(0)
+        for (message in messages) {
+            writeMessageBoardHeader(writer, message)
+            writer.writeBig5WithByteLen(message.message)
+        }
+        session.send(writer.toByteArray())
+    }
+
+    /** S:036-005 Broadcast một lời nhắn mới. */
+    fun sendMessageBoardAdded(session: SessionSender, message: MessageBoardRecord) {
+        val writer = PacketWriter()
+            .writeByte(Opcodes.CHALLENGE).writeByte(5).writeByte(0)
+        writeMessageBoardHeader(writer, message)
+        val raw = PacketWriter().writeBig5WithByteLen(message.message).toByteArray()
+        writer.writeBytes(raw.copyOfRange(1, raw.size))
+        session.send(writer.toByteArray())
+    }
+
+    private fun writeMessageBoardHeader(writer: PacketWriter, message: MessageBoardRecord) {
+        writer.writeLongLE(message.playerId)
+            .writeBig5WithByteLen(message.name)
+            .writeByte(message.sex)
+            .writeByte(message.headStyle)
+            .writeIntLE(message.color1)
+            .writeIntLE(message.color2)
+            .writeDoubleLE(message.oaDate)
     }
 
     /** S:036-010 Mở bảng xếp hạng Vô Giới*/

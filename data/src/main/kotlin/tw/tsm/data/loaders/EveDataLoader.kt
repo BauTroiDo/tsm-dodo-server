@@ -24,7 +24,7 @@ private val logger = KotlinLogging.logger {}
  * Định dạng dữ liệu mỗi cảnh (EventData.lua):
  * ```
  * [Int32]  số lượng NpcData  + NpcData[]
- * [UInt16] số lượng GoodsData + GoodsData[]   ← bỏ qua
+ * [UInt16] số lượng GoodsData + GoodsData[]   ← phân tích
  * [UInt16] số lượng DoorData  + DoorData[]    ← bỏ qua
  * [UInt16] số lượng MineData  + MineData[]    ← bỏ qua
  * [UInt16] số lượng SurfaceData + SurfaceData[] ← bỏ qua
@@ -76,7 +76,7 @@ object EveDataLoader {
                 // 103 bytes đầu của block cảnh là phần header, EventData.New đọc từ +103
                 reader.seek(entry.position + 103)
                 val sceneData = parseSceneData(reader)
-                if (sceneData.npcs.isNotEmpty() || sceneData.doors.isNotEmpty() || sceneData.npcEvents.isNotEmpty()) {
+                if (sceneData.npcs.isNotEmpty() || sceneData.doors.isNotEmpty() || sceneData.npcEvents.isNotEmpty() || sceneData.goods.isNotEmpty()) {
                     result[entry.sceneId] = sceneData
                 }
             } catch (e: Exception) {
@@ -104,7 +104,7 @@ object EveDataLoader {
         val npcs = parseNpcDataSection(reader)
 
         // [2] GoodsData (UInt16 count, cố định 13B/record)
-        skipGoodsSection(reader)
+        val goods = parseGoodsSection(reader)
 
         // [3] DoorData (UInt16 count, độ dài biến thiên)
         val doors = parseDoorSection(reader)
@@ -127,7 +127,7 @@ object EveDataLoader {
         // [9] FightData (UInt16 count) ← parse (cấu hình phe địch trong chiến đấu sự kiện)
         val fightDatas = parseFightDataSection(reader)
 
-        return SceneEveData(npcs, doors, npcEvents, sceneInfos, fightDatas, surfaceDatas, groupDatas, mines)
+        return SceneEveData(npcs, doors, npcEvents, sceneInfos, fightDatas, surfaceDatas, groupDatas, mines, goods)
     }
 
     // ────────────────────────────────────────────
@@ -238,9 +238,18 @@ object EveDataLoader {
      *
      * Cố định 13B/record: NO(1)+DBID(2)+PosX(4)+PosY(4)+HideTime(2)
      */
-    private fun skipGoodsSection(reader: DatReader) {
+    private fun parseGoodsSection(reader: DatReader): Map<Int, EveGoodsPlacement> {
         val count = reader.readUInt16()
-        repeat(count) { reader.readBytes(13) }
+        return buildMap {
+            repeat(count) {
+                val id = reader.readByte()
+                val itemId = reader.readUInt16()
+                val x = reader.readInt32()
+                val y = reader.readInt32()
+                val hideTime = reader.readUInt16()
+                put(id, EveGoodsPlacement(id, itemId, x, y, hideTime))
+            }
+        }
     }
 
     /**

@@ -14,11 +14,13 @@ import tw.tsm.domain.data.NpcDropDef
 import tw.tsm.domain.data.NpcUpgradeDef
 import tw.tsm.domain.data.SkillDef
 import tw.tsm.domain.data.SceneSetDef
+import tw.tsm.domain.data.SacredEquipPrimaryDef
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.repositories.SkillRepository
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
 import tw.tsm.domain.valueobjects.FollowNpcData
+import tw.tsm.domain.util.DvtPercentMath
 import tw.tsm.gamelogic.battle.*
 import tw.tsm.protocol.BattleRoleData
 import tw.tsm.protocol.BattleRoleSerializer
@@ -53,6 +55,8 @@ class BattleManager(
     private val npcUpgradeDefs: Map<Int, NpcUpgradeDef> = emptyMap(),
     private val sceneSetDefs: Map<Int, SceneSetDef> = emptyMap(),
     private val dailyProgressSystem: DailyProgressSystem? = null,
+    private val collectionSystem: CollectionSystem? = null,
+    private val sacredEquipPrimaryDefs: Map<Int, SacredEquipPrimaryDef> = emptyMap(),
 ) {
     /** Trình phân tích vật phẩm chiến đấu (stateless, dùng chung cho toàn trận)*/
     private val battleItemResolver = BattleItemResolver(inventorySystem, itemDefs)
@@ -62,6 +66,7 @@ class BattleManager(
      *
      * Tham số: (session, playerId, playerWin)
      */
+    var onBattleAbortCallback: ((GameSession) -> Unit)? = null
     var onBattleEndCallback: (suspend (GameSession, Long, Boolean) -> Unit)? = null
     /** Mọi trận đấu đang diễn ra (battleId → BattleInstance)*/
     private val battles = ConcurrentHashMap<Long, BattleInstance>()
@@ -683,6 +688,10 @@ class BattleManager(
             logger.debug { "Trận ${battle.battleId} coroutine bị hủy" }
         } catch (e: Exception) {
             logger.error(e) { "Trận ${battle.battleId} vòng lặp lượt gặp lỗi" }
+            abortFailedBattle(battle)
+        } catch (e: LinkageError) {
+            logger.error(e) { "Trận ${battle.battleId} thư viện runtime lỗi" }
+            abortFailedBattle(battle)
         } finally {
             cleanupBattle(battle)
         }
@@ -836,9 +845,29 @@ class BattleManager(
         battle.state = BattleInstance.State.FINISHED
         logger.info { "Trận ${battle.battleId} kết thúc: người chơi${if (endResult.playerWin) "勝利" else "失敗"}" }
 
+        // Mobile DVT: Honor = Calc.GetHonor(KillNum), hiện công thức 1:1.
+        // Chỉ tính NPC địch thực sự đã chết; PVP player không tạo KillNum PvE.
+        val defeatedEnemyNpcCount = if (
+            endResult.playerWin &&
+            battle.warType != EWar.PK_PLAYERS
+        ) {
+            battle.getAllFighters().count {
+                it.isEnemySide &&
+                    !it.isHumanPlayer &&
+                    it.npcId > 0 &&
+                    it.isDead
+            }
+        } else {
+            0
+        }
+
         for ((playerId, session) in battle.playerSessions) {
             // Thưởng (chỉ khi thắng)
             if (endResult.playerWin) {
+                if (defeatedEnemyNpcCount > 0) {
+                    grantKillNum(session, battle.battleId, defeatedEnemyNpcCount)
+                }
+
                 val reward = battle.calculateRewards(session.level, npcDropTable)
                 logger.info { "Trận ${battle.battleId}: người chơi $playerId nhận exp=${reward.exp} gold=${reward.gold} drops=${reward.drops.size}" }
 
@@ -849,19 +878,19 @@ class BattleManager(
                     val deadEnemy = battle.getAllFighters().firstOrNull { it.isEnemySide && it.isDead }
                     val playerFighter = battle.getAllFighters().firstOrNull { it.roleId == playerId }
                     for (drop in reward.drops) {
-                        // S:053-004 hoạt ảnh rơi đồ
+                        // Grant in full before displaying success or advancing quest battles.
+                        val added = inventorySystem.addItemsToBagExact(charId, drop.itemId, drop.quantity)
+                        if (added == null) {
+                            responseSender.sendSystemMessage(session, "Túi không đủ chỗ nhận vật phẩm rơi. Hãy chừa chỗ trước trận tiếp theo.")
+                            logger.warn { "Trận ${battle.battleId}: không nhận được itemId=${drop.itemId} x${drop.quantity} charId=$charId" }
+                            continue
+                        }
                         responseSender.sendBattleDrop(
-                            session,
-                            drop.itemId,
-                            fromCol = deadEnemy?.col ?: 0,
-                            fromRow = deadEnemy?.row ?: 2,
-                            toCol = playerFighter?.col ?: 2,
-                            toRow = playerFighter?.row ?: 0
+                            session, drop.itemId,
+                            fromCol = deadEnemy?.col ?: 0, fromRow = deadEnemy?.row ?: 2,
+                            toCol = playerFighter?.col ?: 2, toRow = playerFighter?.row ?: 0,
                         )
-                        // Thực sự thêm vào túi đồ
-                        val addResult = inventorySystem.addItemToBag(charId, drop.itemId, drop.quantity)
-                        if (addResult != null) {
-                            val (slot, thing) = addResult
+                        for ((slot, thing) in added) {
                             responseSender.sendSetBagItem(session, slot, thing, showMsg = true)
                         }
                         logger.info { "Trận ${battle.battleId}: người chơi $playerId nhận vật phẩm itemId=${drop.itemId} x${drop.quantity}" }
@@ -954,6 +983,7 @@ class BattleManager(
                     if (added != null) {
                         val (slotIndex, pet) = added
                         responseSender.sendFollowNpcAdd(session, playerId, slotIndex, npcId, pet.canGrow, showMsg = true)
+                        collectionSystem?.markWarriorOwned(charId, npcId, session)
                         dailyProgressSystem?.incrementRoleCount(
                             session,
                             DailyProgressSystem.CATCH_SUCCESS,
@@ -1071,6 +1101,9 @@ class BattleManager(
             }
         }
 
+        // Release battle ownership before an event callback can warp or start another fight.
+        cleanupBattle(battle)
+
         // Trận PVP và PK với NPC trên bản đồ không đi qua callback sự kiện
         if (battle.warType == EWar.PK_PLAYERS || battle.warType == EWar.PK_MAP_NPC) {
             logger.info { "Trận ${battle.battleId} không thuộc sự kiện đã kết thúc, không gọi callback sự kiện" }
@@ -1082,17 +1115,61 @@ class BattleManager(
         val callback = onBattleEndCallback
         if (callback != null) {
             for ((playerId, session) in battle.playerSessions) {
-                try {
-                    callback(session, playerId, endResult.playerWin)
-                } catch (e: Exception) {
-                    logger.error(e) { "Trận ${battle.battleId}: callback phục hồi sự kiện lỗi playerId=$playerId" }
-                }
+                BattleEventContinuation.run(
+                    resume = { callback(session, playerId, endResult.playerWin) },
+                    abort = {
+                        onBattleAbortCallback?.invoke(session) ?: responseSender.sendEventEnd(session)
+                    }
+                )
             }
         } else {
             // Không có callback (môi trường thử nghiệm v.v.), kết thúc sự kiện trực tiếp
             for (session in battle.playerSessions.values) {
                 responseSender.sendEventEnd(session)
             }
+        }
+    }
+
+    /**
+     * Cộng điểm diệt địch sau một trận PvE thắng.
+     *
+     * DB được ghi trước runtime/client để relog không làm mất tiến độ.
+     * Client tự tính Honor từ KillNum khi login, nhưng cập nhật realtime cần gửi
+     * cả KILL_NUM và HONOR để CheckCondition(Honor) được kích hoạt ngay.
+     */
+    private suspend fun grantKillNum(
+        session: GameSession,
+        battleId: Long,
+        defeatedEnemyNpcCount: Int,
+    ) {
+        if (defeatedEnemyNpcCount <= 0) return
+        val repository = characterRepository ?: return
+        val charId = session.roleId.toLong()
+        val current = playerStateManager.getKillNum(charId)
+        val next = (current.toLong() + defeatedEnemyNpcCount.toLong())
+            .coerceAtMost(Int.MAX_VALUE.toLong())
+            .toInt()
+
+        try {
+            repository.updateKillNum(charId, next)
+        } catch (e: Exception) {
+            logger.error(e) {
+                "Trận $battleId: lưu KillNum thất bại charId=$charId current=$current add=$defeatedEnemyNpcCount"
+            }
+            return
+        }
+
+        if (!playerStateManager.setKillNum(charId, next)) {
+            logger.error {
+                "Trận $battleId: DB KillNum=$next đã lưu nhưng runtime player không tồn tại charId=$charId"
+            }
+            return
+        }
+
+        responseSender.sendWorldAttribute(session, EAttribute.KILL_NUM, next.toLong(), true, 0)
+        responseSender.sendWorldAttribute(session, EAttribute.HONOR, next.toLong(), true, 0)
+        logger.info {
+            "Trận $battleId: KillNum charId=$charId $current -> $next (+$defeatedEnemyNpcCount)"
         }
     }
 
@@ -1131,15 +1208,19 @@ class BattleManager(
                 // Recalculate immediately on level-up so runtime/client do not stay stale
                 // until the next login.
                 val turn3Lv = (level - PLAYER_MAX_LEVEL).coerceAtLeast(0)
-                val newMaxHp = statSystem.calculateMaxHp(
+                val collectHpx = collectionSystem?.getPlayerCollectionAttribute(charId, EAttribute.HPX) ?: 0
+                val baseMaxHp = statSystem.calculateMaxHp(
                     level = PLAYER_MAX_LEVEL,
-                    hpx = state.hpx + state.equipHpx + turn3Lv.coerceAtMost(70) + state.turn3Hpx,
+                    hpx = state.hpx + state.equipHpx + turn3Lv.coerceAtMost(70) + state.turn3Hpx +
+                        collectHpx + state.astrolabeHpx,
                     equipMaxHp = state.equipMaxHp,
                     extraHp = 0,
                     turn = state.turn,
                     career = state.career,
                     turn3Lv = turn3Lv
                 )
+                val newMaxHp = DvtPercentMath.applyFinalPercentFloor(baseMaxHp, state.hpPercent)
+                    .coerceAtLeast(1L)
                 val newMaxSp = statSystem.calculateMaxSp(
                     level = PLAYER_MAX_LEVEL,
                     spx = state.spx + state.equipSpx + turn3Lv + state.turn3Spx,
@@ -1200,12 +1281,16 @@ class BattleManager(
                 state.attrPoint += attrPointGain
                 skillSystem?.adjustSkillPoint(charId, skillPointGain)
 
-                // Tính lại maxHP/maxSP (bao gồm cộng dồn trang bị)
-                val newMaxHp = statSystem.calculateMaxHp(
-                    level = state.level, hpx = state.hpx,
+                // Tính lại MaxHP theo cùng contract DVT với login/battle.
+                val collectHpx = collectionSystem?.getPlayerCollectionAttribute(charId, EAttribute.HPX) ?: 0
+                val baseMaxHp = statSystem.calculateMaxHp(
+                    level = state.level,
+                    hpx = state.hpx + state.equipHpx + collectHpx + state.astrolabeHpx,
                     equipMaxHp = state.equipMaxHp, extraHp = 0,
                     turn = state.turn, career = state.career, turn3Lv = 0
                 )
+                val newMaxHp = DvtPercentMath.applyFinalPercentFloor(baseMaxHp, state.hpPercent)
+                    .coerceAtLeast(1L)
                 val newMaxSp = statSystem.calculateMaxSp(
                     level = state.level, spx = state.spx,
                     equipMaxSp = state.equipMaxSp, extraSp = 0,
@@ -1250,12 +1335,27 @@ class BattleManager(
     /**
      * Dọn dẹp tài nguyên trận đấu
      */
+    /** Fail closed: release battle and event locks without granting a win. */
+    private fun abortFailedBattle(battle: BattleInstance) {
+        battle.state = BattleInstance.State.FINISHED
+        cleanupBattle(battle)
+        for ((playerId, session) in battle.playerSessions) {
+            responseSender.sendBattleEnd(session, playerId, 0)
+            val exitOrder = battle.getAllFighters().sortedBy {
+                if (it.isHumanPlayer && it.roleId == playerId) 1 else 0
+            }
+            for (fighter in exitOrder) responseSender.sendBattleExitFight(session, fighter.col, fighter.row)
+            onBattleAbortCallback?.invoke(session) ?: responseSender.sendEventEnd(session)
+            responseSender.sendSystemMessage(session, "Trận bị gián đoạn. Đã mở lại thao tác; bạn có thể di chuyển hoặc thử lại.")
+        }
+    }
+
     private fun cleanupBattle(battle: BattleInstance) {
         battles.remove(battle.battleId)
         for (playerId in battle.playerSessions.keys) {
-            playerBattleMap.remove(playerId)
+            playerBattleMap.remove(playerId, battle.battleId)
             battle.playerSessions[playerId]?.let { session ->
-                session.battleId = 0
+                if (session.battleId == battle.battleId) session.battleId = 0
             }
         }
         logger.debug { "Trận ${battle.battleId} đã dọn tài nguyên" }
@@ -1386,22 +1486,71 @@ class BattleManager(
         val learnedSkillLevels = normalSkillLevels + turn3SkillLevels
         val learnedSkills = learnedSkillLevels.keys.toIntArray()
 
+        // DVT Collection Book bonuses are account-wide and apply to both Player/FollowNpc.
+        // EAttribute: Int=27 Atk=28 Def=29 Agi=30 Hpx=31 Spx=32.
+        val collectInt = collectionSystem?.getPlayerCollectionAttribute(charId, 27) ?: 0
+        val collectAtk = collectionSystem?.getPlayerCollectionAttribute(charId, 28) ?: 0
+        val collectDef = collectionSystem?.getPlayerCollectionAttribute(charId, 29) ?: 0
+        val collectAgi = collectionSystem?.getPlayerCollectionAttribute(charId, 30) ?: 0
+        val collectHpx = collectionSystem?.getPlayerCollectionAttribute(charId, 31) ?: 0
+        val collectSpx = collectionSystem?.getPlayerCollectionAttribute(charId, 32) ?: 0
+
+        val turn3Lv = if (state.turn >= 3) (state.level - 200).coerceAtLeast(0) else 0
+        val calcLevel = if (state.turn >= 3) 200 else state.level
+        val battleBaseMaxHp = statSystem.calculateMaxHp(
+            level = calcLevel,
+            hpx = state.hpx + state.equipHpx +
+                (if (state.turn >= 3) turn3Lv.coerceAtMost(70) + state.turn3Hpx else 0) +
+                collectHpx + state.astrolabeHpx,
+            equipMaxHp = state.equipMaxHp,
+            extraHp = 0,
+            turn = state.turn,
+            career = state.career,
+            turn3Lv = turn3Lv,
+        )
+        val battleMaxHp = DvtPercentMath.applyFinalPercentFloor(battleBaseMaxHp, state.hpPercent)
+            .coerceAtLeast(1L)
+        val battleMaxSp = statSystem.calculateMaxSp(
+            level = calcLevel,
+            spx = state.spx + state.equipSpx +
+                (if (state.turn >= 3) turn3Lv + state.turn3Spx else 0) +
+                collectSpx + state.astrolabeSpx,
+            equipMaxSp = state.equipMaxSp,
+            extraSp = 0,
+            turn = state.turn,
+            career = state.career,
+            turn3Lv = turn3Lv,
+        )
+
         return BattleFighter(
             roleId = session.playerId,
             kind = kind,
             name = session.characterName,
             col = col,
             row = BattleConstants.CENTER_ROW,
-            maxHp = state.maxHp,
-            maxSp = state.maxSp.toLong(),
-            hp = state.hp,
-            sp = state.sp.toLong(),
+            maxHp = battleMaxHp,
+            maxSp = battleMaxSp.toLong(),
+            hp = state.hp.coerceIn(0L, battleMaxHp),
+            sp = state.sp.toLong().coerceIn(0L, battleMaxSp.toLong()),
             level = state.level,
             element = state.element,
-            atk = state.atk + state.equipAtk + state.turn3Atk,
-            def = state.def + state.equipDef + state.turn3Def,
-            agi = state.agi + state.equipAgi + state.turn3Agi,
-            intelligence = state.intelligence + state.equipInt + state.turn3Int,
+            atk = BattlePercentStatCalc.addBasePercent(state.atk, state.atkPercent) +
+                state.equipAtk + state.turn3Atk + collectAtk + state.astrolabeAtk,
+            def = BattlePercentStatCalc.addBasePercent(state.def, state.defPercent) +
+                state.equipDef + state.turn3Def + collectDef + state.astrolabeDef,
+            agi = state.agi + state.equipAgi + state.turn3Agi + collectAgi + state.astrolabeAgi,
+            intelligence = DvtPercentMath.addBasePercentRound(state.intelligence, state.intPercent) +
+                state.equipInt + state.turn3Int + collectInt + state.astrolabeInt,
+            atkPercent = state.atkPercent,
+            defPercent = state.defPercent,
+            crit = state.crit,
+            critDamage = state.critDamage,
+            dodge = state.dodge,
+            hit = state.hit,
+            increaseTotalDamage = state.increaseTotalDamage,
+            damageReduction = state.damageReduction,
+            reduceTotalDamage = state.reduceTotalDamage,
+            increaseDamageTakenSelf = state.increaseDamageTakenSelf,
             skills = learnedSkills,
             skillLevels = learnedSkillLevels,
             turn = state.turn,
@@ -1447,6 +1596,7 @@ class BattleManager(
                 npcDef = npcDef,
                 petData = petData,
                 masterId = session.playerId,
+                ownerCharacterId = session.roleId.toLong(),
                 npcDataId = petData.npcId,
                 followSlot = followSlot,
                 col = position.first,
@@ -1478,28 +1628,39 @@ class BattleManager(
         npcDef: NpcDef,
         petData: FollowNpcData,
         masterId: Long,
+        ownerCharacterId: Long,
         npcDataId: Int,
         followSlot: Int = 0,
         col: Int = BattleConstants.PLAYER_BACK_COL,
         row: Int = BattleConstants.CENTER_ROW
     ): BattleFighter {
         // Cộng dồn trang bị của tướng (Calc.GetMaxHp: hpx và EquipHpx cùng bậc được tính, EquipMaxHp cộng trực tiếp)
-        val equipBonus = EquipBonusCalculator.calculateTotalBonus(petData.equips, itemDefs)
+        val equipBonus = EquipBonusCalculator.calculateTotalBonus(
+            petData.equips, itemDefs, sacredEquipPrimaryDefs
+        )
 
-        // DVT Calculator.lua handles FollowNpc with the normal stat formula;
-        // do not approximate max HP/SP as base + level*stat. That old shortcut
-        // inflated SP heavily and made pets look effectively unlimited.
+        // DVT Calculator.lua handles FollowNpc with the normal stat formula.
+        // Collection Style/Card bonuses are account-wide and also apply to followers.
+        val collectInt = collectionSystem?.getFollowerCollectionAttribute(ownerCharacterId, 27) ?: 0
+        val collectAtk = collectionSystem?.getFollowerCollectionAttribute(ownerCharacterId, 28) ?: 0
+        val collectDef = collectionSystem?.getFollowerCollectionAttribute(ownerCharacterId, 29) ?: 0
+        val collectAgi = collectionSystem?.getFollowerCollectionAttribute(ownerCharacterId, 30) ?: 0
+        val collectHpx = collectionSystem?.getFollowerCollectionAttribute(ownerCharacterId, 31) ?: 0
+        val collectSpx = collectionSystem?.getFollowerCollectionAttribute(ownerCharacterId, 32) ?: 0
+
         val petTurn = if (npcDef.turn == 2) 1 else 0
-        val maxHp = statSystem.calculateMaxHp(
+        val baseMaxHp = statSystem.calculateMaxHp(
             level = petData.level,
-            hpx = petData.hpx + equipBonus.equipHpx,
+            hpx = petData.hpx + equipBonus.equipHpx + collectHpx,
             equipMaxHp = equipBonus.equipMaxHp,
             extraHp = petData.hpPillCount * 20,
             turn = petTurn
         )
+        val maxHp = DvtPercentMath.applyFinalPercentFloor(baseMaxHp, equipBonus.hpPercent)
+            .coerceAtLeast(1L)
         val maxSp = statSystem.calculateMaxSp(
             level = petData.level,
-            spx = petData.spx + equipBonus.equipSpx,
+            spx = petData.spx + equipBonus.equipSpx + collectSpx,
             equipMaxSp = equipBonus.equipMaxSp,
             extraSp = petData.spPillCount * 5,
             turn = petTurn
@@ -1539,10 +1700,24 @@ class BattleManager(
             sp = sp,
             level = petData.level,
             element = npcDef.element,
-            atk = petData.atk + equipBonus.equipAtk,
-            def = petData.def + equipBonus.equipDef,
-            agi = petData.agi + equipBonus.equipAgi,
-            intelligence = petData.intelligence + equipBonus.equipInt,
+            atk = BattlePercentStatCalc.addBasePercent(petData.atk, equipBonus.atkPercent) +
+                equipBonus.equipAtk + collectAtk,
+            def = BattlePercentStatCalc.addBasePercent(petData.def, equipBonus.defPercent) +
+                equipBonus.equipDef + collectDef,
+            agi = petData.agi + equipBonus.equipAgi + collectAgi,
+            intelligence = DvtPercentMath.addBasePercentRound(
+                petData.intelligence, equipBonus.intPercent
+            ) + equipBonus.equipInt + collectInt,
+            atkPercent = equipBonus.atkPercent,
+            defPercent = equipBonus.defPercent,
+            crit = equipBonus.crit,
+            critDamage = equipBonus.critDamage,
+            dodge = equipBonus.dodge,
+            hit = equipBonus.hit,
+            increaseTotalDamage = equipBonus.increaseTotalDamage,
+            damageReduction = equipBonus.damageReduction,
+            reduceTotalDamage = equipBonus.reduceTotalDamage,
+            increaseDamageTakenSelf = equipBonus.increaseDamageTakenSelf,
             skills = normalSkills.keys.toIntArray(),
             skillLevels = normalSkills
         )
