@@ -1220,3 +1220,21 @@ Continuation from checkpoint 149ef88.
   - WinRM by IP is blocked by TrustedHosts/authentication requirements; do not change TrustedHosts or guess credentials automatically.
 - Therefore production has not yet fast-forwarded/pulled a5cbad3 and has not been restarted for this Furnace batch.
 - Do not ask the user to gameplay-test Furnace until .69 is actually updated and restarted.
+
+### 2026-10-03 — UIFurnace production deploy — PASS
+- Production SSH access restored and deployment completed.
+- Production repo C:\Server-Game\tsm_dodo fast-forwarded from 5aab227 to db73656 without touching local application.conf or untracked production files.
+- Production full gradlew test build --rerun-tasks: PASS, BUILD SUCCESSFUL, 21/21 tasks executed.
+- Runtime restarted successfully.
+- Production runtime state:
+  - HEAD db73656
+  - 192.168.1.69:6613 LISTEN
+  - runtime PID 13048
+  - IOS_FurnaceSlot loaded 2036 records
+  - IOS_FurnaceSelect loaded 42 samples, kinds 1..6
+  - UISell loaded 70 records
+  - UISellFormula loaded 58 records
+  - server reached ready state
+  - no ERROR / Exception / FATAL / Koin creation error in startup log.
+- Furnace is now ready for user runtime gameplay test.
+- sellId60 refresh remains intentionally evidence-blocked because no DVT/CDN formula exists; all other Furnace flows are deployed.
