@@ -944,4 +944,37 @@ After each patch: targeted regression -> full `gradlew test build --rerun-tasks`
 - Full `gradlew test build --rerun-tasks`: PASS 21/21.
 - `git diff --check`: PASS.
 
-\n
+## 2026-10-02 — Teleport/Memory audit T1 — PASS (code)
+User moved to the Dịch Chuyển UI, screenshot shows UITeleport tab Memory / Điểm lưu trữ. Continue this subsystem from here in later chats.
+
+### DVT UI contract
+- `EUITeleportTag`: 1 Skypoint/Chủ thành, 2 Memory/Điểm lưu trữ, 3 FightArea/Khu luyện công, 4 LimitFightArea, 5 Turn/Chuyển sinh, 6 Mining.
+- Memory has 5 base slots + max 5 extension slots.
+- `Lưu trữ` sends `C:023-073` payload `kind=2,index`.
+- Memory data is received by `S:023-118`: extendCount + recordCount + repeated index/sceneId/x/y.
+- `Dịch Chuyển` uses `UISell.Launch(7, ..., 1, index)`; slot expansion uses sellId=8.
+- Skypoint/Chủ thành uses `C:068-001 sceneId(U16)+warpNo(U8)`.
+- FightArea and Turn are client navigation through `sceneFightDatas`, not a direct teleport packet.
+- LimitFightArea sends `C:097-001 dungeonId(U8)`; no mainKind97 handler exists yet.
+- Mining sends `C:170-002 mineKind(U8)`; no mainKind170 handler exists yet.
+
+### T1 bug found and fixed
+- Lua `UITeleport.OnClick_Memory()` directly reads `flyPoints[index].sceneId` for an unlocked slot.
+- `UITeleport.Clear()` empties `flyPoints`; only `S:023-118` creates entries.
+- Previous server `sendFlyPointData()` sent only persisted/saved points. Therefore a brand-new unlocked empty slot could remain nil and clicking Lưu trữ could dereference nil client-side.
+- Fix: `S:023-118` now always emits one record for every unlocked slot:
+  - indexes 1..5 by default;
+  - plus purchased extension slots up to 10;
+  - empty slot => sceneId=0,x=0,y=0;
+  - persisted point keeps real scene/x/y;
+  - extension count clamped to Lua MaxFlyScrollExtend=5.
+- No Lua modification.
+- Regression added: `DvtTeleportMemoryTest`
+  - five default records including empty slots;
+  - real saved record preserved;
+  - extension count clamped to 5 / total 10 slots;
+  - out-of-range persisted row is not emitted.
+- Targeted `DvtTeleportMemoryTest`: PASS.
+- Full `gradlew test build --rerun-tasks`: PASS 21/21.
+- `git diff --check`: PASS.
+- Next: deploy T1 to production `.69`, runtime test Lưu trữ -> S23-118 refresh -> Dịch Chuyển; then audit/fix T2 Skypoint and missing T3 mainKind97 / T4 mainKind170.

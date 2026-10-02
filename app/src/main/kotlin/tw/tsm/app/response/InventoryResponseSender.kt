@@ -436,17 +436,26 @@ class InventoryResponseSender {
 
     // ── Dịch chuyển đã ghi nhớ (mainKind=23) ──
 
-    /** S:023-118 dữ liệu phù dịch chuyển ký ức*/
+    /** S:023-118 dữ liệu phù dịch chuyển ký ức.
+     *
+     * Lua UITeleport.OnClick_Memory() truy cập trực tiếp flyPoints[index].sceneId ngay cả khi ô
+     * chưa ghi nhớ. Vì vậy packet phải tạo record sceneId=0 cho mọi ô ĐÃ MỞ, không chỉ các điểm
+     * đã lưu thật sự; nếu không bấm "Lưu trữ" trên ô trống sẽ dereference nil phía client.
+     */
     fun sendFlyPointData(session: SessionSender, flyPointCount: Int, points: Map<Int, FlyPointRecord>) {
-        val writer = PacketWriter(5 + points.size * 7)
+        val extendCount = flyPointCount.coerceIn(0, 5)
+        val openSlots = 5 + extendCount
+        val writer = PacketWriter(5 + openSlots * 7)
             .writeByte(Opcodes.SHOP).writeByte(118).writeByte(0)
-            .writeByte(flyPointCount)          // Số lượng mở thêm đã mở
-            .writeByte(points.size)            // Số điểm dịch chuyển đã ghi nhớ
-        for ((index, record) in points) {
-            writer.writeByte(index)            // Chỉ số (1-based)
-            writer.writeShortLE(record.sceneId) // ID cảnh
-            writer.writeShortLE(record.x)      // Toạ độ X
-            writer.writeShortLE(record.y)      // Toạ độ Y
+            .writeByte(extendCount)            // Số ô mở rộng thêm đã mở
+            .writeByte(openSlots)              // Gửi đủ record cho mọi ô đã mở
+
+        for (index in 1..openSlots) {
+            val record = points[index]
+            writer.writeByte(index)
+            writer.writeShortLE(record?.sceneId ?: 0)
+            writer.writeShortLE(record?.x ?: 0)
+            writer.writeShortLE(record?.y ?: 0)
         }
         session.send(writer.toByteArray())
     }
