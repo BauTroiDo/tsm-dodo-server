@@ -1503,3 +1503,20 @@ Continuation from checkpoint 149ef88.
 - Full `gradlew test build --rerun-tasks`: PASS, 21/21 tasks executed.
 - `git diff --check`: PASS (only existing CRLF normalization warning on GameDataManager).
 - Still evidence-blocked for activation: 14080 revive unit/once-per-battle rule; 40001 exact hit-counter direction; 40000/45000 Resistance scaling and damage-reduction stacking/order; 14085/14094/14095 BOSS formulas.
+
+### 2026-10-03 — Monster Passive/BOSS P3A production deploy — PASS
+- Commit `62fc3c7 feat: load DVT exclusive skill effects` pushed to `origin/main`.
+- Production `C:\Server-Game\tsm_dodo` fast-forwarded from `0049404` to `62fc3c7` using a verified Git bundle over Git Bash SSH.
+- Production local `app/src/main/resources/application.conf` and operational/untracked files were preserved.
+- Production full `gradlew test build --rerun-tasks`: PASS, 21/21 tasks executed.
+- Runtime restarted detached with `logs\restart-monster-passive-p3a-62fc3c7.log`.
+- Runtime loader evidence:
+  - `IOS_ExclusiveSkill_C.dat` loaded successfully.
+  - 574 records, 123 distinct skill IDs.
+  - source: `File.dat\Data-ios\IOS_ExclusiveSkill_C.dat`.
+- Runtime ready:
+  - game PID `12984`
+  - port `6613` LISTEN on IPv4 and IPv6
+  - Netty reached ready state and local health-check connections succeeded.
+- Startup scan found no real `ERROR`, exception, fatal, or Koin failure; only Gradle task names containing `ConfigurationErrors` matched the text scan.
+- P3A is loader-only: no new passive effect is activated, so P2 gameplay behavior is unchanged.
