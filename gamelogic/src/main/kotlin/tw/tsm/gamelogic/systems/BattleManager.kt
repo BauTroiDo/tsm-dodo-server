@@ -1729,13 +1729,14 @@ class BattleManager(
      * @param npcDataId số hiệu NPC (key của Npc_C.dat, client dùng npcDatas[roleId] tra sprite)
      */
     private fun createNpcFighter(npcDef: NpcDef, col: Int, row: Int, battleId: Long, npcDataId: Int): BattleFighter {
-        // NPC HP = hpBase + level * hpx
-        val hp = (npcDef.hpBase + npcDef.level * npcDef.hpx).toLong()
-        val sp = (npcDef.spBase + npcDef.level * npcDef.spx).toLong()
+        val profile = NpcBattleProfileCalc.from(npcDef, skillDefs)
 
-        logger.info { "Trận $battleId: NPC ${npcDef.name} (id=$npcDataId) lv=${npcDef.level} " +
-            "hp=$hp atk=${npcDef.atk} def=${npcDef.def} agi=${npcDef.agi} int=${npcDef.intelligence} " +
-            "element=${npcDef.element} skills=${npcDef.skills.filter { it > 0 }}" }
+        logger.info {
+            "Trận $battleId: NPC ${npcDef.name} (id=$npcDataId) lv=${profile.level} " +
+                "hp=${profile.maxHp} sp=${profile.maxSp} atk=${profile.atk} def=${profile.def} " +
+                "agi=${profile.agi} int=${profile.intelligence} turn=${profile.turn} " +
+                "element=${profile.element} skills=${profile.skillLevels}"
+        }
 
         return BattleFighter(
             roleId = npcDataId.toLong(),  // Số hiệu NPC → client dùng npcDatas[roleId] tra sprite
@@ -1744,17 +1745,19 @@ class BattleManager(
             name = npcDef.name,
             col = col,
             row = row,
-            maxHp = hp,
-            maxSp = sp,
-            hp = hp,
-            sp = sp,
-            level = npcDef.level,
-            element = npcDef.element,
-            atk = npcDef.atk,
-            def = npcDef.def,
-            agi = npcDef.agi,
-            intelligence = npcDef.intelligence,
-            skills = npcDef.skills.filter { it > 0 }.toIntArray()
+            maxHp = profile.maxHp,
+            maxSp = profile.maxSp,
+            hp = profile.maxHp,
+            sp = profile.maxSp,
+            level = profile.level,
+            element = profile.element,
+            atk = profile.atk,
+            def = profile.def,
+            agi = profile.agi,
+            intelligence = profile.intelligence,
+            turn = profile.turn,
+            skills = profile.skills,
+            skillLevels = profile.skillLevels
         )
     }
 }

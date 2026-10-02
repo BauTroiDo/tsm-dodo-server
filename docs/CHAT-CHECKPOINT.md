@@ -1251,3 +1251,75 @@ Continuation from checkpoint 149ef88.
   - refresh flow through UISell for supported DVT formulas
   - stable per-character shop state across reopen/relog unless refreshed.
 - Known evidence boundary remains unchanged: sellId60 has no formula in checked DVT/CDN data, so it stays intentionally blocked rather than guessed.
+
+## 2026-10-03 — Monster stats / damage audit — CORE FIXED, passive evidence-blocked
+
+### Scope
+- User requested audit of monster stats and attack/damage correctness.
+- Re-audited DVT Npc_C.dat -> NpcDef -> BattleFighter path and BattleDamageCalc D1-D6.
+- Sources: Lua DVT/Data, tracked Mobile Npc_C/Skill_C, Kotlin server, PC source only as numeric fallback where Mobile server semantics are absent.
+
+### Confirmed bug 1 — wild/event NPC HP/SP were overinflated
+- Old BattleManager.createNpcFighter used:
+  - HP = hpBase + level * hpx
+  - SP = spBase + level * spx.
+- PC fallback BattleNpcAI uses npcinfo.hpmax/spmax directly, no level-growth addition.
+- Cross-data audit Mobile vs PC:
+  - Mobile comparison file: 8407 NPC; PC: 5676; common IDs: 5393.
+  - 5236 common NPCs matched exactly across Lv/HP/SP/HPX/SPX/INT/ATK/DEF/AGI/element.
+  - Example ID10001 Lv120: DVT/PC HP=1299, old Kotlin=4899.
+  - Example ID10004 Lv53: DVT/PC HP=335, old Kotlin=1342.
+- Tracked production Npc_C.dat has 8427/8427 NPC with hpBase>0, so direct HP cannot create zero-HP NPC.
+- BattleRoleSerializer uses UInt32 HP/SP, so large NPC HP is not truncated.
+- Fix: wild/event NPC now uses hpBase/spBase directly. HPX/SPX remain growth fields for pet/player progression, not wild battle spawn.
+
+### Confirmed bug 2 — enemy skills were effectively Lv1
+- BattleSkillResolver resolves skillLv from attacker.skillLevels[skillId] ?: 1.
+- Old wild NPC fighter populated skills but left skillLevels empty.
+- PC BattleParticipant.getSkillLvl() returns SkillData.max_lvl for NPC type3.
+- Fix: every wild/event NPC battle skill now receives SkillDef.maxLv (minimum 1).
+- This fixes damage, grow-type fightArea/target count, and other skill-level-dependent behavior.
+
+### Confirmed bug 3 — NPC reborn/turn was dropped
+- Old wild NPC BattleFighter kept default turn=0.
+- PC BattleNpcAI copies npcinfo.reborn.
+- Cross-data turn matched Mobile vs PC for 5389/5393 common IDs.
+- Fix: BattleFighter.turn = npcDef.turn.
+- This restores the existing damage reborn multiplier (10% per positive attacker turn difference), already matched to PC D1/D2 logic.
+
+### Confirmed bug 4 — fourth NPC skill was dropped
+- Mobile NpcData.specialSkill occupies the old PC skill4 position.
+- Cross-data specialSkill Mobile == PC skill4 for 5380/5393 common IDs; 223 common NPCs actually have specialSkill > 0.
+- Existing NPC AI already supports skills[3] with its skill4 probability branch.
+- Fix: wild/event NPC skill list now includes specialSkill as the fourth skill, de-duplicated.
+
+### Core damage formula re-check
+- BattleDamageCalc.calculateBaseDamage still matches PC BattleAbstract.CalcDmg:
+  - normal: ATK*1.6, skillBase=level*2
+  - physical skill: ATK*1.6 + INT*0.4
+  - magic skill: INT*2
+  - skill base/growth, cap50000 match PC source order.
+- Existing D1-D6 regressions were rerun together with the monster regression and PASS.
+
+### Passive-skill boundary
+- Tracked Npc_C.dat currently has 478 NPC with passiveSkill (48 passive skill/level pairs).
+- Lua FightRoleController maps many passive effects, e.g. passive INT/ATK/DEF/HPX/SPX/AGI, elemental damage, shields, counter, boss passives.
+- However Skill_C for these passives commonly has numerical=0 and attribute=0; descriptions are qualitative, not a numeric server formula.
+- Examples: 14067 says increase ATK, 14068 increase DEF, 14057 halve physical damage, 21045 increase crit/crit damage, but no exact amount/probability is encoded in Lua/Skill_C.
+- Therefore passive numeric effects are NOT invented in this batch. They remain evidence-blocked server-side.
+
+### Implementation
+- Added gamelogic/battle/NpcBattleProfileCalc.kt to isolate authoritative wild-NPC battle snapshot semantics.
+- BattleManager.createNpcFighter now uses this profile:
+  - direct HP/SP
+  - direct ATK/DEF/INT/AGI/element/level
+  - turn/reborn
+  - 3 normal skills + specialSkill
+  - maxLv skillLevels.
+- Added DvtNpcBattleStatsTest using tracked DVT Npc_C.dat + Skill_C.dat.
+
+### Validation
+- Targeted DvtNpcBattleStatsTest + BattleDamageD* regressions: PASS.
+- Full gradlew test build --rerun-tasks: PASS, 21/21 tasks executed.
+- git diff --check: PASS (only CRLF normalization warning).
+- Runtime production validation pending after deploy.
