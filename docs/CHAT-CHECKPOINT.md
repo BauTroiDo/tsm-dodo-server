@@ -1111,3 +1111,12 @@ Continuation from checkpoint 149ef88.
   2. Turn tab navigation to the 18 DVT destinations.
   3. Mining button -> scene49996 -> UIMine info/refill/state.
 - Important: entry coordinates 49942=(360,300) and 49996=(440,400) remain explicitly offline Eve-geometry fallbacks, not recovered original DVT spawn coordinates. If client runtime shows blocked/invalid spawn, adjust only SpecialSceneTeleportService entry policy from real map evidence; do not alter Lua/data.
+
+### 2026-10-03 — UITeleport T2/T3/T4 — USER RUNTIME PASS
+- User runtime-tested and confirmed PASS for all 3 remaining UITeleport tabs after production deploy commit 5aab227:
+  - T2 Giới hạn Khu luyện công / protocol 97.
+  - T3 Chuyển sinh navigation / SceneFight groups 101-103.
+  - T4 Mỏ thôn thực / protocol 170.
+- Treat these three tabs as closed/PASS unless a future regression is reported.
+- Production runtime used for validation: 192.168.1.69:6613.
+- Keep the special-scene entry coordinates documented as offline Eve-geometry fallbacks, but no runtime issue was reported during this PASS.
