@@ -17,9 +17,35 @@ class QuestEventInputGuardTest {
         val first = state.claimChoice(31, 30)
         assertEquals(30, first?.lastChoiceCode); assertEquals(7, first?.lastSurfaceId)
         assertEquals(EventPhase.Executing, first?.phase)
+        assertTrue(first?.choiceResolutionInProgress == true)
         assertNull(state.claimChoice(31, 40))
         assertEquals(30, state.getSession(31)?.lastChoiceCode)
     }
+
+    @Test fun nextPacketDuringChoiceResolutionDoesNotCompleteEvent() = runTest {
+        val state = EveEventStateMachine()
+        state.activate(31, event(EventPhase.AwaitingChoice))
+        assertNotNull(state.claimChoice(31, 32))
+        assertTrue(state.getSession(31)?.choiceResolutionInProgress == true)
+
+        val response = mockk<ResponseSender>(relaxed = true)
+        val session = mockk<GameSession>(relaxed = true) { every { roleId } returns 31 }
+        val flow = EveFlowController(
+            response, state, mockk(relaxed = true), mockk(relaxed = true), mockk(relaxed = true),
+            mockk(relaxed = true), mockk(relaxed = true), mockk(relaxed = true), mockk(relaxed = true),
+            mockk(relaxed = true), emptyMap(), mockk(relaxed = true)
+        )
+
+        flow.advanceEvent(session)
+
+        assertNotNull(state.getSession(31))
+        assertTrue(state.getSession(31)?.choiceResolutionInProgress == true)
+        verify(exactly = 0) { response.sendEventEnd(any()) }
+
+        state.finishChoiceResolution(31)
+        assertFalse(state.getSession(31)?.choiceResolutionInProgress == true)
+    }
+
     @Test fun simultaneousChoicePacketsHaveOnlyOneWinner() = runTest {
         val state = EveEventStateMachine(); state.activate(31, event(EventPhase.AwaitingChoice))
         val claims = coroutineScope { (1..20).map { async(Dispatchers.Default) { state.claimChoice(31, it) } }.awaitAll() }

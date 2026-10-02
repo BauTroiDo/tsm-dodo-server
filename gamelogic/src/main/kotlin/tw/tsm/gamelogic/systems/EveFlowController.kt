@@ -55,6 +55,14 @@ class EveFlowController(
         val charId = session.roleId.toLong()
         val eventSession = stateMachine.getSession(charId)
 
+        // Surface phía DVT có thể phát C:020-006 gần như đồng thời với C:020-009.
+        // Sau khi choice đã được claim nhưng chưa dispatch xong result đầu tiên, tuyệt đối
+        // không cho gói next đến sớm complete/clear session đang được resolve.
+        if (eventSession?.choiceResolutionInProgress == true) {
+            logger.debug { "Nhận 020-006 trong lúc đang resolve lựa chọn Surface, bỏ qua" }
+            return
+        }
+
         // EventHandler[2] phía DVT bật ConductGate và có thể gửi C:020-006 ngay
         // trước khi S:020-007 làm UILoading hiện lên. Trong lúc Door warp đang chạy,
         // tuyệt đối không advance/complete event từ gói next đến sớm.
@@ -189,8 +197,13 @@ class EveFlowController(
             val first = stateMachine.advance(charId)
             if (first != null) {
                 logger.info { "${session.characterName} khớp lựa chọn: code=$code → ${resolved.results.size} result" }
-                dispatchResult(session, first)
+                try {
+                    dispatchResult(session, first)
+                } finally {
+                    stateMachine.finishChoiceResolution(charId)
+                }
             } else {
+                stateMachine.finishChoiceResolution(charId)
                 completeCurrentEvent(session, charId)
             }
         } else {

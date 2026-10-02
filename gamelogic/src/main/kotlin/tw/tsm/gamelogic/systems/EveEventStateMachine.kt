@@ -61,6 +61,8 @@ data class EventSession(
     val phase: EventPhase = EventPhase.Executing,
     val lastSurfaceId: Int = -1,
     val lastChoiceCode: Int = -1,
+    /** Đã claim C:020-009 nhưng chưa dispatch xong result đầu tiên; chặn C:020-006 đến sớm. */
+    val choiceResolutionInProgress: Boolean = false,
     val battleResult: Int = 0,
     val fightDataKey: Int = 0,
     val matchedConditionNo: Int = 0
@@ -283,6 +285,7 @@ class EveEventStateMachine {
             val updated = current.copy(
                 phase = EventPhase.Executing,
                 lastChoiceCode = choice ?: current.lastChoiceCode,
+                choiceResolutionInProgress = if (choice != null) true else current.choiceResolutionInProgress,
                 battleResult = battle ?: current.battleResult,
             )
             if (ref.compareAndSet(current, updated)) return updated
@@ -291,6 +294,14 @@ class EveEventStateMachine {
 
     fun claimChoice(charId: Long, code: Int): EventSession? = claimInput(charId, choice = code)
     fun claimBattleResult(charId: Long, result: Int): EventSession? = claimInput(charId, battle = result)
+
+    /** Hạ guard sau khi result đầu tiên của lựa chọn đã được dispatch an toàn. */
+    fun finishChoiceResolution(charId: Long) {
+        updateSession(charId) { current ->
+            if (!current.choiceResolutionInProgress) current
+            else current.copy(choiceResolutionInProgress = false)
+        }
+    }
 
     /**
      * Ghi lại mã lựa chọn (Được gọi trong trạng thái AwaitingChoice)
