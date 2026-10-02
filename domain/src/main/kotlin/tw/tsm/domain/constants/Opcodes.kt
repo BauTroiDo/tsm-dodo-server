@@ -94,6 +94,9 @@ object Opcodes {
     /** Hệ thống bảng xếp hạng (protocolTable[88])*/
     const val LEADERBOARD = 88
 
+    /** Lò / Furnace (UIFurnace, protocolTable[89]) */
+    const val FURNACE = 89
+
     /** Hệ thống Sưu Tập (protocolTable[95])*/
     const val COLLECTION = 95
 

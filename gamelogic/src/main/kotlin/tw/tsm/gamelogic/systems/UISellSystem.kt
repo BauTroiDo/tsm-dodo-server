@@ -121,7 +121,8 @@ class UISellSystem(
             SELL_FLY_EXTEND -> queryFlyExtend(charId, formula)
             SELL_DISPATCH_QUICK,
             SELL_TURN3_UNLOCK_SKILL,
-            SELL_TURN3_CHANGE_ELEMENT -> queryFormulaPrice(formula)
+            SELL_TURN3_CHANGE_ELEMENT,
+            in FURNACE_REFRESH_SELL_IDS -> queryFormulaPrice(formula)
             in expansions -> queryExpansion(charId, sellId, formula)
             // TODO: Các sellId còn lại (Vòng quay may mắn, Đặt lại thuộc tính...) chờ các hệ thống thực thi xong sẽ bổ sung dần
             else -> UiSellQuote.Fail(REASON_NOT_USABLE)
@@ -281,6 +282,9 @@ class UISellSystem(
 
         /** Tam chuyển: đổi Quang <-> Ám sau lần chọn đầu. */
         const val SELL_TURN3_CHANGE_ELEMENT = 58
+
+        /** UIFurnace.OnClick_Refresh: mỗi category dùng một UISell riêng. */
+        val FURNACE_REFRESH_SELL_IDS = setOf(24, 25, 33, 34, 59, 60)
 
         /** Công thức kind=6: Bảng giá lũy tiến (value=Giá lần đầu, params=Giá các lần sau) */
         const val FORMULA_KIND_PRICE_TABLE = 6

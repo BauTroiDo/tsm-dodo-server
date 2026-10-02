@@ -87,6 +87,14 @@ class GameDataManager(
     var sceneFightDefs: List<SceneFightDef> = emptyList()
         private set
 
+    /** Lò DVT: pool item theo loại/bậc từ IOS_FurnaceSlot_C.dat. */
+    var furnaceSlotDefs: List<FurnaceSlotDef> = emptyList()
+        private set
+
+    /** Lò DVT: mẫu phân bố 8 ô theo shop kind từ IOS_FurnaceSelect_C.dat. */
+    var furnaceSelectDefs: List<FurnaceSelectDef> = emptyList()
+        private set
+
     /** Dữ liệu địa chất bản đồ (key = mapId, value = geolBaseAtt) — dùng cho nền chiến đấu*/
     var mapTerrains: Map<Int, Int> = emptyMap()
         private set
@@ -402,6 +410,19 @@ class GameDataManager(
             logger.info {
                 "Nạp IOS_SceneFight xong: ${sceneFightDefs.size} bản ghi, " +
                     "turn=${sceneFightDefs.count { it.group > 100 }}"
+            }
+        }
+
+        // Lò (UIFurnace / protocol 89).
+        loadFile(dataIosDir, "IOS_FurnaceSlot_C.dat") { bytes ->
+            furnaceSlotDefs = FurnaceSlotDatLoader.load(bytes)
+            logger.info { "Nạp IOS_FurnaceSlot xong: ${furnaceSlotDefs.size} bản ghi" }
+        }
+        loadFile(dataIosDir, "IOS_FurnaceSelect_C.dat") { bytes ->
+            furnaceSelectDefs = FurnaceSelectDatLoader.load(bytes)
+            logger.info {
+                "Nạp IOS_FurnaceSelect xong: ${furnaceSelectDefs.size} mẫu, " +
+                    "kinds=${furnaceSelectDefs.map { it.kind }.distinct().sorted()}"
             }
         }
 

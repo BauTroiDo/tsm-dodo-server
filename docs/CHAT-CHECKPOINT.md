@@ -1120,3 +1120,88 @@ Continuation from checkpoint 149ef88.
 - Treat these three tabs as closed/PASS unless a future regression is reported.
 - Production runtime used for validation: 192.168.1.69:6613.
 - Keep the special-scene entry coordinates documented as offline Eve-geometry fallbacks, but no runtime issue was reported during this PASS.
+
+
+## 2026-10-03 — UIFurnace / “Lò” backend — CODE PASS, runtime verification pending
+
+### Root cause
+- Icon “Lò” is `UIFurnace`.
+- Client opens it by sending `C:089-001` with no payload.
+- Server had no mainKind 89 handler, so the client waited for `S:089-001` and appeared to do nothing.
+
+### Authoritative DVT contract
+- Lua: `UI/UIFurnace.lua`, `Common/protocal.lua`.
+- Data:
+  - `IOS_FurnaceSlot_C.dat`: 2036 rows.
+    - kind1 NPC = 430
+    - kind2 Equip = 771
+    - kind3 TurnItem = 835
+  - `IOS_FurnaceSelect_C.dat`: 42 weighted shop layouts.
+    - select kind counts = 1:6, 2:6, 3:8, 4:8, 5:6, 6:8
+    - each kind has sample sum 10000
+    - every layout contains exactly 8 store slots.
+- S89-1:
+  - result
+  - baseRate(Double)
+  - activeRate(Double)
+  - bOpen(Byte)
+  - category count
+  - each category: kind, isCrit, item count, repeated itemId(U16)+qty(I32).
+- Client converts `isCrit=1` into price multiplier 0.5, otherwise 1.0.
+- Purchase flags confirmed:
+  - Npc 1518..1525
+  - Equip 1526..1533
+  - GoldNpc 7067..7074
+  - GoldEquip 7075..7082
+  - TurnItem 7257..7264
+  - GoldTurnItem 7265..7272.
+- Buy currency/debris:
+  - Npc/GoldNpc/TurnItem/GoldTurnItem use RoleCount.NpcDebris=110.
+  - Equip/GoldEquip use RoleCount.EquipDebris=111.
+  - Gold categories use `goldStoreRate=2`.
+- Dismantle:
+  - NPC -> NpcDebris=110
+  - Equip -> EquipDebris=111
+  - ExclusiveWeapon -> SWeaponDebris=654
+  - Godskin/Myth -> item 55403.
+- Item filter mirrors Lua: reject locked, styleLv>0, WeaponRecipe specialAbility234, RandomWeaponRecipe235, invalid furnaceKind.
+
+### Implemented
+- Added `Opcodes.FURNACE=89`.
+- Added Furnace data models/loaders and GameDataManager wiring.
+- Added `FurnaceSystem`, `FurnaceHandler`, `FurnaceResponseSender`.
+- Implemented:
+  - query/open shop
+  - six categories x eight slots
+  - deterministic per-character shop state derived from persisted UISell refresh count
+  - purchase validation, debris deduction, bag award, purchased BitFlag
+  - dismantle validation, bag deduction, debris/item reward
+  - category refresh through UISell 24/25/33/34/59/60
+  - refresh clears only that category’s 8 purchased flags.
+- Shop composition follows DVT FurnaceSelect/FurnaceSlot tables.
+- Exact original server RNG seed and crit probability are not present in Lua/data:
+  - offline deterministic seed is used to prevent free reroll on reopen/relog
+  - crit is held at false/1.0; do not invent probability.
+
+### UISell data audit
+- Working-copy `File.dat/Data/UISell_C.dat` and `UISell_Formula_C.dat` synchronized from DVT CDN 2.4.76.
+- DVT/CDN refresh formulas:
+  - 24: kind1 value100
+  - 25: kind1 value5
+  - 33: kind2 value80000
+  - 34: kind2 value69
+  - 59: kind14 value50 params[0]=10
+  - 60: NO formula in every checked DVT/CDN copy (2.4.69, 2.4.76, 2.7, 9pet_resources).
+- Therefore sellId60 remains evidence-blocked and returns NO_DATA; do not invent a price.
+
+### Validation
+- Targeted `DvtFurnaceTest`: PASS 6/6.
+  - exact 42/2036 data invariants
+  - stable 6x8 shop
+  - buy/debris/BitFlag
+  - dismantle/debris
+  - byte-level S89-1/S89-2/S89-3
+  - UISell refresh data + sell60 evidence-block.
+- Full `gradlew test build --rerun-tasks`: PASS, 21/21 tasks executed.
+- `git diff --check`: PASS (only existing CRLF normalization warnings).
+- Runtime gameplay test on production `192.168.1.69:6613` still required after deploy.

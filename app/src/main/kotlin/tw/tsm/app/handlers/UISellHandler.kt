@@ -1,6 +1,7 @@
 package tw.tsm.app.handlers
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import tw.tsm.app.response.FurnaceResponseSender
 import tw.tsm.domain.constants.Opcodes
 import tw.tsm.domain.constants.EAttribute
 import tw.tsm.domain.enums.SessionState
@@ -10,6 +11,7 @@ import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
 import tw.tsm.domain.interfaces.repositories.SkillRepository
 import tw.tsm.gamelogic.systems.DispatchSystem
+import tw.tsm.gamelogic.systems.FurnaceSystem
 import tw.tsm.gamelogic.systems.FlyPointSystem
 import tw.tsm.gamelogic.systems.InventorySystem
 import tw.tsm.gamelogic.systems.MoneySystem
@@ -61,6 +63,8 @@ class UISellHandler(
     private val slotMachineSystem: SlotMachineSystem,
     private val moneySystem: MoneySystem? = null,
     private val dispatchSystem: DispatchSystem? = null,
+    private val furnaceSystem: FurnaceSystem? = null,
+    private val furnaceResponse: FurnaceResponseSender? = null,
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.UI_SELL
@@ -183,8 +187,23 @@ class UISellHandler(
             }
         }
 
+        val furnaceRefreshCategory = FurnaceSystem.categoryFromRefreshSellId(sellId)
+        if (furnaceRefreshCategory != null &&
+            (furnaceSystem == null || furnaceResponse == null)
+        ) {
+            responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_NOT_USABLE)
+            return
+        }
+
         // khấu trừ tiền
         if (!processPayment(session, sellId, useKind, bagIndex, quote)) return
+
+        // Refresh Lò: payment thành công mới tăng version persisted, xóa cờ đã mua,
+        // gửi shop mới trước S84-2 để callback UpdateStore() đọc đúng shops[] vừa cập nhật.
+        if (furnaceRefreshCategory != null) {
+            executeFurnaceRefresh(session, sellId, furnaceRefreshCategory)
+            return
+        }
 
         // thực hiện hiệu ứng
         when (sellId) {
@@ -507,6 +526,39 @@ class UISellHandler(
         }
 
         responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_PRICE_ERROR)
+    }
+
+    /** Refresh một category của UIFurnace sau khi UISell đã trừ phí thành công. */
+    private suspend fun executeFurnaceRefresh(
+        session: GameSession,
+        sellId: Int,
+        category: Int,
+    ) {
+        val system = furnaceSystem
+        val sender = furnaceResponse
+        if (system == null || sender == null) {
+            responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_NOT_USABLE)
+            return
+        }
+
+        val charId = session.roleId.toLong()
+        try {
+            uiSellSystem.incrementPurchaseCount(charId, sellId)
+            val flagChanges = system.clearPurchasedFlags(charId, category)
+            if (flagChanges.isNotEmpty()) {
+                responseSender.sendBitFlagChanges(session, flagChanges)
+            }
+            sender.sendShopData(session, system.snapshot(charId), openUi = false)
+            responseSender.sendUiSellSuccess(session, sellId)
+            logger.info {
+                "${session.characterName} refresh Lò: category=$category sellId=$sellId"
+            }
+        } catch (e: Exception) {
+            logger.error(e) {
+                "Refresh Lò thất bại sau payment: charId=$charId category=$category sellId=$sellId"
+            }
+            responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_NOT_USABLE)
+        }
     }
 
     /**

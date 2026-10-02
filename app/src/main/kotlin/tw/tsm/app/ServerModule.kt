@@ -9,6 +9,7 @@ import kotlinx.coroutines.launch
 import org.koin.dsl.module
 import tw.tsm.app.gm.GmCommandProcessor
 import tw.tsm.app.handlers.*
+import tw.tsm.app.response.FurnaceResponseSender
 import tw.tsm.app.response.GodskinResponseSender
 import tw.tsm.app.response.InnResponseSender
 import tw.tsm.data.GameDataManager
@@ -115,6 +116,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             register(get<DispatchHandler>())
             register(get<MailHandler>())
             register(get<LeaderboardHandler>())
+            register(get<FurnaceHandler>())
             register(get<MessageBoardHandler>())
             register(get<FriendHandler>())
             register(get<CollectionHandler>())
@@ -388,6 +390,17 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { DailyProgressSystem(get<RoleCountSystem>(), get<BitFlagSystem>(), get<ResponseSender>()) }
     single { FlyPointSystem(get(), get()) }
     single { UISellSystem(get<GameDataManager>().uiSellDefs, get<GameDataManager>().uiSellFormulaDefs, get(), get(), get()) }
+    single {
+        FurnaceSystem(
+            get<GameDataManager>().furnaceSlotDefs,
+            get<GameDataManager>().furnaceSelectDefs,
+            get<GameDataManager>().itemDefs,
+            get<InventorySystem>(),
+            get<RoleCountSystem>(),
+            get<BitFlagSystem>(),
+            get<UISellSystem>(),
+        )
+    }
     single { PetUpgradeSystem(get(), get(), get(), get(), get<GameDataManager>().npcDefs, get<GameDataManager>().npcUpgradeDefs) }
     single { PetRebornSystem(get(), get(), get(), get<GameDataManager>().npcDefs, get<GameDataManager>().itemDefs) }
     single { PetEquipSystem(get(), get(), get<GameDataManager>().itemDefs) }
@@ -520,6 +533,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { PkSettingHandler(get()) }
     single { StatHandler(get(), get(), get(), get<StatSystem>(), get(), get<SkillRepository>(), get<DailyProgressSystem>()) }
     single { AstrolabeHandler(get<AstrolabeSystem>(), get<ResponseSender>()) }
+    single { FurnaceResponseSender() }
     single { GodskinResponseSender() }
     single { GodskinHandler(get<MythEnchantSystem>(), get<MythUpgradeSystem>(), get<GodskinResponseSender>(), get<ResponseSender>()) }
     single { MountHandler(get(), get(), get()) }
@@ -554,6 +568,14 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     }
     single { MailHandler(get()) }
     single { LeaderboardHandler(get()) }
+    single {
+        FurnaceHandler(
+            get<FurnaceSystem>(),
+            get<FurnaceResponseSender>(),
+            get<ResponseSender>(),
+            get<InventorySystem>(),
+        )
+    }
     single { MessageBoardHandler(get<RoleCountSystem>(), get<ResponseSender>(), get<MessageBoardRepository>(), get<SessionManager>()) }
     single { FriendHandler(get()) }
     single { CollectionHandler(get<CollectionSystem>(), get<ResponseSender>(), get<MountSystem>()) }
@@ -574,6 +596,8 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<SlotMachineSystem>(),
             get<MoneySystem>(),
             get<DispatchSystem>(),
+            get<FurnaceSystem>(),
+            get<FurnaceResponseSender>(),
         )
     }
     single { PetUpgradeHandler(get(), get()) }

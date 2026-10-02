@@ -236,7 +236,13 @@ class RoleCountSystem(
         const val WARRIOR_REPOSITORY_MAX_EXPANSIONS =
             WARRIOR_REPOSITORY_MAX_SLOTS - WARRIOR_REPOSITORY_BASE_SLOTS
 
-        /** Mảnh võ tướng (Tiêu hao để cường hóa) */
+        /** DVT RoleCount.lua: mảnh võ tướng / Lò. */
         const val NPC_DEBRIS = 110
+
+        /** DVT RoleCount.lua: mảnh trang bị / Lò. */
+        const val EQUIP_DEBRIS = 111
+
+        /** DVT RoleCount.lua: mảnh vũ khí chuyên dụng / Lò. */
+        const val SWEAPON_DEBRIS = 654
     }
 }
