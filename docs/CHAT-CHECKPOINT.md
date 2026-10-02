@@ -978,3 +978,67 @@ User moved to the Dịch Chuyển UI, screenshot shows UITeleport tab Memory / �
 - Full `gradlew test build --rerun-tasks`: PASS 21/21.
 - `git diff --check`: PASS.
 - Next: deploy T1 to production `.69`, runtime test Lưu trữ -> S23-118 refresh -> Dịch Chuyển; then audit/fix T2 Skypoint and missing T3 mainKind97 / T4 mainKind170.
+
+## 2026-10-02 — UITeleport remaining tabs audit T2/T3/T4 — IN PROGRESS
+User pointed out the 3 remaining UITeleport tabs visible below Memory: LimitFightArea / Chuyển sinh / Mỏ thôn thực. Do not forget these after T1 Memory.
+
+### T2 — Giới hạn Khu luyện công / LimitFightArea
+- Client contract from Lua:
+  - click sends C:097-001 + dungeonId(U8).
+  - S:097-001 result codes: 0 success; 1 level too low; 2 time exhausted; 3 battle; 4 event; 5 team; 6 already in scene.
+- DVT data source: AssetBundles/Data/IOS_LimitTimeDungeon_C.dat.
+- Exact file shape: count(Int32) + record[15 bytes]:
+  index U8, msg U32, sceneId U16, limitIndex U16, limitTime U16, limitLv U16, missionId U16.
+- Current DVT file has exactly 1 record:
+  - index=1
+  - msg=21770
+  - sceneId=49942
+  - limitIndex=27
+  - limitTime=120
+  - limitLv=0
+  - missionId=13137
+- SceneSet_C.dat contains scene 49942 (nameId=21770).
+- Eve.emg contains scene 49942:
+  - exit door 1 at (280,220)
+  - sceneInfo 1 exits to scene12003 at (25,25), direction5
+  - mines/events exist inside.
+- No ordinary inbound Eve sceneInfo targets 49942; entry coordinate is special-server semantics and has not yet been proven. Do NOT guess coordinates.
+- Current Kotlin server has no mainKind97 handler and does not load IOS_LimitTimeDungeon_C.dat yet.
+
+### T3 — Chuyển sinh
+- No direct teleport protocol. UITeleport uses the same IOS_SceneFight_C.dat navigation table and calls MarkManager.StartNavigation().
+- Exact SceneFight record shape = 25 bytes:
+  group U8, groupName U32, sceneId U16, x U16, y U16, npcLow U16, npcHigh U16, element U8, infoStr U32, mark U16, open U8, areaId U8, info U8.
+- Current DVT IOS_SceneFight_C.dat: 381 rows.
+- Turn groups are group >100 and contain 18 rows total:
+  - group101: 9 rows
+  - group102: 7 rows
+  - group103: 2 rows
+- Therefore this tab is primarily client-side navigation/data; server work should focus only on any destination door/Eve blockers found at runtime, not invent a separate teleport handler.
+
+### T4 — Mỏ thôn thực / Mining
+- UITeleport click sends C:170-002 + mineType(U8), currently hardcoded type=1.
+- Full protocol family from Lua:
+  - C170-001 mine info
+  - C170-002 enter mine
+  - C170-010 refill machine durability
+  - C170-011 set mining state
+  - corresponding S170 responses drive UIMine.
+- UIMine.MaxMine = 600000000.
+- Four fixed machine/fuel slots:
+  - items 55431..55434
+  - skins 22120..22123
+  - durability cap 65535
+  - client consumes durability over 360-second mining ticks.
+- Critical scene evidence: UIMain.UpdateMining() only displays mining UI when SceneManager.sceneId == 49996.
+- Eve.emg scene49996 exists:
+  - NPC22111 placements x6
+  - door1 at (2480,960), door2 at (900,60)
+  - sceneInfo1 exits to scene12003 at (25,25), direction5
+- No ordinary inbound Eve sceneInfo targets 49996; C170-002 must therefore implement special entry semantics. Entry coordinate is not yet proven; do NOT guess.
+- Current Kotlin server has no mainKind170 handler.
+
+### Cleanup
+- Temporary TeleportScratchTest and scratch output files used only to inspect Eve.emg were deleted after audit.
+- No Lua files modified.
+- Next implementation order: T2 mainKind97 only after authoritative entry-coordinate evidence; T3 runtime navigation/door verification; T4 mainKind170 after authoritative entry-coordinate + persistence/timer semantics are recovered.
