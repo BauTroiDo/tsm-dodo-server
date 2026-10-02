@@ -1453,3 +1453,53 @@ Continuation from checkpoint 149ef88.
   1. monster with passive 14057: physical incoming damage should be halved; magic/non-physical unchanged;
   2. ordinary critical hits should still receive crit damage but serialize as normal HIT, not Tian-Lei THUNDER;
   3. 14061 remains trigger-ready only: no random Tian-Lei self-hit probability is fabricated until authoritative evidence is found.
+
+## 2026-10-03 — Monster Passive/BOSS P2 gameplay validation — PASS
+- User runtime-tested the P2 monster passive changes in client and confirmed PASS.
+- P2 remains production baseline: 14057 half physical damage, 14061 THUNDER immunity contract, critical HIT/THUNDER correction, combo zero-damage preservation.
+
+## 2026-10-03 — Monster Passive/BOSS P3A — IOS_ExclusiveSkill raw contract
+### DVT passive inventory
+- Direct parse of `File.dat/Data-ios/IOS_Npc_C.dat`: 478 NPC records have `passiveSkill > 0`, with 21 distinct IDs:
+  `10022, 11020, 12020, 14038, 14039, 14043, 14045, 14051, 14052, 14057, 14058, 14059, 14061, 14080, 14085, 14094, 14095, 23031, 40000, 40001, 45000`.
+- Therefore 14066..14076 are not current `Npc_C.passiveSkill` entries. They exist in ExclusiveWeapon/ExclusiveSkill progression and must not be treated as wild/event NPC passive rows without separate evidence.
+
+### IOS_ExclusiveSkill_C.dat contract recovered
+- Tracked DVT file: `File.dat/Data-ios/IOS_ExclusiveSkill_C.dat`.
+- File size 15502 bytes; Int32 count=574; all 574 `(skillId, level)` keys are unique.
+- Fixed record size is 27 bytes:
+  - `skillId UInt16`
+  - `level UInt8`
+  - 6-byte raw header whose semantics are still unknown and are preserved byte-for-byte
+  - 2 effect blocks x 9 bytes
+- Each 9-byte effect block is safely decoded at byte level as:
+  - `kind UInt8`
+  - `arg1 UInt8`
+  - `arg2 UInt8`
+  - `parameter UInt16`
+  - `value UInt32`
+- P3A deliberately keeps these fields generic; it does not assign gameplay meaning where the consumer has not been proven.
+
+### Evidence-bearing records
+- 14080 level3 raw effect0: `kind=4 arg1=1 arg2=1 parameter=0 value=70`.
+- 40001 level1 raw effect0: `kind=2 ... value=10`.
+- 40000 and 45000 level1 have identical two raw effect blocks:
+  - `kind=59 parameter=90 value=1400`
+  - `kind=59 parameter=114 value=20`
+- DVT `EAttribute` maps 90 to `ResistancePercent` and 114 to `DamageReduction`.
+- Other kind59 records correlate with EAttribute directly (e.g. 103 Crit, 104 CritDamage, 113 IncreaseTotalDamage, 117 ReduceTotalDamage), so kind59 is clearly attribute-oriented.
+- However Resistance values in this table are 800..1800 while UI runtime displays ResistancePercent directly. The missing effect-consumer scaling is not present in Lua, so P3A does NOT assume 1400 means 14%.
+- 14080 values 50/70/100 and 40001 value 10 are preserved but NOT interpreted as revive percent or hit count yet; once-per-battle/counter semantics remain unproven.
+
+### Implementation
+- Added `ExclusiveSkillDef` / `ExclusiveSkillEffectDef` raw domain models.
+- Added `ExclusiveSkillDatLoader`.
+- Added `GameDataManager.exclusiveSkillDefs` and loads `IOS_ExclusiveSkill_C.dat` from DVT Data-ios.
+- Added `DvtExclusiveSkillDataTest` locking 574 records and known raw payloads.
+- No battle/combat consumer was added in P3A; gameplay remains identical to P2.
+
+### Validation
+- Targeted `DvtExclusiveSkillDataTest + NpcPassiveCombatRulesTest + DvtNpcBattleStatsTest`: PASS, 18/18 tasks executed.
+- Full `gradlew test build --rerun-tasks`: PASS, 21/21 tasks executed.
+- `git diff --check`: PASS (only existing CRLF normalization warning on GameDataManager).
+- Still evidence-blocked for activation: 14080 revive unit/once-per-battle rule; 40001 exact hit-counter direction; 40000/45000 Resistance scaling and damage-reduction stacking/order; 14085/14094/14095 BOSS formulas.

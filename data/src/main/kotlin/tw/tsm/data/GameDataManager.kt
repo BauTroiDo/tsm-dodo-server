@@ -43,6 +43,10 @@ class GameDataManager(
     var skillDefs: Map<Int, SkillDef> = emptyMap()
         private set
 
+    /** DVT IOS_ExclusiveSkill_C.dat: skillId -> level -> raw effect record. */
+    var exclusiveSkillDefs: Map<Int, Map<Int, ExclusiveSkillDef>> = emptyMap()
+        private set
+
     /** Định nghĩa vật phẩm (key = ID vật phẩm)*/
     var itemDefs: Map<Int, ItemDef> = emptyMap()
         private set
@@ -258,6 +262,19 @@ class GameDataManager(
         loadFile(dataDir, "Skill_C.dat") { bytes ->
             skillDefs = SkillDatLoader.load(bytes)
             logger.info { "Nạp Skill xong: ${skillDefs.size} bản ghi" }
+        }
+
+        // DVT passive/exclusive server-effect table. Preserve raw semantics only;
+        // gameplay consumers are added separately once each effect kind is proven.
+        val exclusiveSkillSource = dataIosDir.resolve("IOS_ExclusiveSkill_C.dat")
+        if (Files.isRegularFile(exclusiveSkillSource)) {
+            try {
+                exclusiveSkillDefs = ExclusiveSkillDatLoader.load(Files.readAllBytes(exclusiveSkillSource))
+                val total = exclusiveSkillDefs.values.sumOf { it.size }
+                logger.info { "Nạp IOS_ExclusiveSkill xong: $total bản ghi, ${exclusiveSkillDefs.size} skill source=$exclusiveSkillSource" }
+            } catch (e: Exception) {
+                logger.error(e) { "Nạp IOS_ExclusiveSkill_C.dat thất bại: $exclusiveSkillSource" }
+            }
         }
 
         // Warp
