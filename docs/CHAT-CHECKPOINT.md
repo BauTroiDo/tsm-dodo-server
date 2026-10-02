@@ -1238,3 +1238,16 @@ Continuation from checkpoint 149ef88.
   - no ERROR / Exception / FATAL / Koin creation error in startup log.
 - Furnace is now ready for user runtime gameplay test.
 - sellId60 refresh remains intentionally evidence-blocked because no DVT/CDN formula exists; all other Furnace flows are deployed.
+
+### 2026-10-03 — UIFurnace / Lò — USER RUNTIME PASS
+- User runtime-tested Furnace on production after deploy and confirmed PASS.
+- Treat UIFurnace / protocol 89 as closed/PASS unless a future regression is reported.
+- Production validation target: 192.168.1.69:6613, deployed code db73656.
+- Implemented and now runtime-validated:
+  - open/query shop (C/S 089-001)
+  - six shop categories x eight slots
+  - purchase (089-002), debris deduction, purchased BitFlags
+  - dismantle (089-003), debris/item rewards
+  - refresh flow through UISell for supported DVT formulas
+  - stable per-character shop state across reopen/relog unless refreshed.
+- Known evidence boundary remains unchanged: sellId60 has no formula in checked DVT/CDN data, so it stays intentionally blocked rather than guessed.
