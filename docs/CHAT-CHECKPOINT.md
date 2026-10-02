@@ -1682,3 +1682,48 @@ Continuation from checkpoint 149ef88.
   - NPC revive AI targets a dead friendly deterministically.
 - Full local `gradlew test build --rerun-tasks`: PASS, 21/21 tasks executed.
 - `git diff --check`: PASS; only normal line-ending warnings where applicable.
+
+### 2026-10-03 — Monster AI-A production deploy — PASS
+- Production Git is at `0ff3289 fix: preserve DVT revive targets for NPC AI`.
+- Production full `gradlew test build --rerun-tasks`: PASS, 21/21 tasks executed.
+- Runtime launcher was revalidated with WMI `Win32_Process.Create`, not PowerShell Start-Process.
+- After closing the original SSH session and reconnecting:
+  - runtime Java PID `12728`
+  - port `0.0.0.0:6613` and `[::]:6613` LISTEN
+  - local health-check connections continued every few seconds
+  - production HEAD remained `0ff3289`.
+- This confirms the WMI-launched runtime is independent of the SSH job.
+
+## 2026-10-03 — Monster AI-B — NPC target pools by fightWay
+### Evidence
+- Live DVT Lua `FightField.UpdateSelectFrame` groups fightWay 4/5/6/7/14/18/19 on the caster-side selection frame;
+  fightWay 8 explicitly selects dead friendlies.
+- Exact PC fallback `bboycs/tsonline-server-tl/TS_Server/Server/TSBattleNPC.cs::seekTarget`:
+  - 4/6/7/14/19 => NPC side (rows 0..1)
+  - 5/18 => any living battlefield position (all four rows)
+  - 8 => dead NPC-side target
+  - otherwise => opposing side.
+- DVT Skill_C descriptions support the classification:
+  - fightWay 4 = shields/stealth/protection
+  - fightWay 19 = buffs/protection centered on own side
+  - fightWay 5 = status dispels
+  - fightWay 18 includes wide/mixed dispel effects such as 22045.
+
+### Implementation
+- Added `NpcAiTargetRules` so NPC target-pool semantics are isolated and testable.
+- NPC fightWay 4/6/7/14/19 now choose living fighters on their own side.
+- NPC fightWay 5/18 use all living fighters on the battlefield, matching PC server AI fallback.
+- fightWay 8 keeps AI-A semantics: dead friendly first; living friendly fallback preserves no-op behavior when no corpse exists.
+- Other fightWay values continue targeting the opposing living side.
+- Player/manual command legality is intentionally unchanged; AI-B only changes server-side NPC target selection.
+
+### Validation
+- Added `NpcAiTargetRulesTest`:
+  - 4/19 candidate pool is NPC side only
+  - 5/18 candidate pool includes both sides and excludes dead fighters
+  - ordinary hostile target pool remains opponent side only.
+- Targeted AI-B + battle command/status/revive suite: PASS, 18/18 tasks executed.
+- Full local `gradlew test build --rerun-tasks`: PASS, 21/21 tasks executed.
+- `git diff --check`: PASS.
+- Next Monster AI target: audit PC special summon remap
+  `10016/11016/12016/13015 -> +3` against DVT summon semantics before enabling it.

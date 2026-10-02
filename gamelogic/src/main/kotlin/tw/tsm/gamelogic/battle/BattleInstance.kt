@@ -286,7 +286,7 @@ class BattleInstance(
     /**
      * Phân bổ hành động AI cho NPC
      *
-     * Chọn mục tiêu theo loại kỹ năng: kỹ năng hồi phục→phe mình, kỹ năng tấn công→phe địch.
+     * Chọn mục tiêu NPC theo fightWay DVT và fallback PC TSBattleNPC.seekTarget.
      */
     fun resolveNpcActions(skillSelector: (IntArray) -> Int = ::selectNpcSkill) {
         val npcs = allFighters.filter {
@@ -298,8 +298,6 @@ class BattleInstance(
 
             val skillId = skillSelector(npc.skills)
             val skillDef = skillResolver.getSkillDef(skillId)
-            val isFriendlyUtility = skillDef != null && skillDef.fightWay in FRIENDLY_ONLY_FIGHT_WAYS
-            val isRevive = skillDef?.fightWay == 8
 
             // Never queue a skill the NPC cannot currently pay for.
             // requireSp==1 is the Lua consume-all-SP sentinel and still requires SP >= 1.
@@ -319,23 +317,9 @@ class BattleInstance(
                 continue
             }
 
-            // DVT fightWay=8 explicitly targets dead friendlies. PC TSBattleNPC.seekTarget
-            // does the same. If nobody is dead, preserve the historical no-op behavior by
-            // letting the revive skill point at a living friendly instead of inventing a basic attack.
-            val targets = if (isRevive) {
-                val deadFriendlies = if (npc.isPlayerSide) grid.getDeadPlayerSide() else grid.getDeadEnemySide()
-                if (deadFriendlies.isNotEmpty()) {
-                    deadFriendlies
-                } else if (npc.isPlayerSide) {
-                    grid.getAlivePlayerSide()
-                } else {
-                    grid.getAliveEnemySide()
-                }
-            } else if (isFriendlyUtility) {
-                if (npc.isPlayerSide) grid.getAlivePlayerSide() else grid.getAliveEnemySide()
-            } else {
-                if (npc.isPlayerSide) grid.getAliveEnemySide() else grid.getAlivePlayerSide()
-            }
+            // DVT exposes target-side semantics for player selection; NPC AI itself is
+            // server-side, so unresolved cases follow PC TSBattleNPC.seekTarget exactly.
+            val targets = NpcAiTargetRules.candidates(npc, grid, skillDef?.fightWay)
             if (targets.isEmpty()) continue
 
             val target = targets.random()
@@ -347,7 +331,7 @@ class BattleInstance(
                 targetRow = target.row
             )
             npc.hasActed = true
-            logger.debug { "Trận $battleId: AI NPC ${npc.name} → skill=$skillId friendly=$isFriendlyUtility target=(${target.col},${target.row})" }
+            logger.debug { "Trận $battleId: AI NPC ${npc.name} → skill=$skillId fightWay=${skillDef?.fightWay ?: 1} target=(${target.col},${target.row})" }
         }
     }
 
