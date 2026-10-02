@@ -1586,3 +1586,33 @@ Continuation from checkpoint 149ef88.
   - npcId `45368`, name `Khảo thí 8`
   - passiveSkillLv `3`
   - therefore DVT P3B expected runtime restore is 70% HP, once per battle, unless fly-out.
+
+### 2026-10-03 — Production runtime launch hardening
+- The first P3B detached launch via PowerShell Start-Process was still attached to the Windows OpenSSH job: it reached ready state but terminated silently after the SSH session ended.
+- This was an operational launch issue, not an application crash; the log contained no shutdown exception/fatal stack.
+- Production runtime is now launched through WMI Win32_Process.Create using `_start_prod_detached.cmd`, which runs outside the SSH job.
+- Verified by closing SSH completely, reconnecting, and checking again:
+  - production HEAD `7455ac7`
+  - `java.exe` PID `5032` in Services session 0
+  - port `6613` still LISTEN on IPv4/IPv6
+  - stable runtime log: `logs\runtime-production.log`.
+
+## 2026-10-03 — Monster Passive/BOSS P3C audit — 14085 / 14094 / 14095
+- DVT Skill_C:
+  - 14085 `BOSS Linh Quang Kính`: "Linh kính dành riêng cho BOSS".
+  - 14094 `BOSS Miễn Dịch Thuẫn`: "BOSS Sử dụng lá chắn và hồi ma".
+  - 14095 `BOSS Tự Kỷ Suy Nhược`: "Boss tự suy yếu + hồi ma pháp".
+- IOS_ExclusiveSkill_C raw level-1 payloads:
+  - 14085: effect0 `kind=5 arg1=1 arg2=200 parameter=4 value=110`.
+  - 14094: effect0 `kind=5 arg1=1 arg2=250 parameter=0 value=117`; effect1 `kind=63 arg1=0 arg2=250 parameter=0 value=25`.
+  - 14095: effect0 `kind=184 arg1=0 arg2=250 parameter=5 value=0`; effect1 identical kind63 block with value=25.
+- Current IOS_Npc_C usage:
+  - 14085: 109 NPC rows, all passiveSkillLv=1.
+  - 14094: 35 NPC rows, all passiveSkillLv=1.
+  - 14095: 24 NPC rows, all passiveSkillLv=1.
+- Cross-record evidence:
+  - kind5 also appears on 14081/14083/22023 and other exclusive-skill effects with different semantics.
+  - kind184 appears on many debuff/status enhancement records.
+  - kind63 appears only on 14094/14095 in the tracked table, so its `value=25` unit cannot be proven by cross-record comparison.
+- No direct Lua/native consumer was found for these boss IDs, and web/source searches did not produce an authoritative TS rule that resolves the exact meaning/scaling/order of these fields.
+- Decision: P3C is evidence-blocked; no combat behavior was activated for 14085/14094/14095. Continue searching or move to another passive with an explicit quantitative contract.
