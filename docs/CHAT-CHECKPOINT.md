@@ -1386,3 +1386,15 @@ Continuation from checkpoint 149ef88.
 - Targeted DvtNpcBattleStatsTest + BattleDamageD* regression: PASS, 18 tasks executed.
 - Full `gradlew test build --rerun-tasks`: PASS, 21/21 tasks executed.
 - Next passive step: recover exact server ordering/trigger formulas for a small evidence-backed subset before activating any passive effect.
+
+### 2026-10-03 — Monster Passive/BOSS P1 production deploy — PASS
+- P1 implementation commit a2616f6 deployed to production C:\Server-Game\tsm_dodo.
+- Production full `gradlew test build --rerun-tasks`: PASS, 21/21 tasks executed.
+- Runtime restarted successfully.
+- Production state:
+  - HEAD a2616f6
+  - 192.168.1.69:6613 LISTEN
+  - runtime PID 8556
+  - no ERROR / Exception / FATAL / Koin creation error found in startup log.
+- P1 is metadata-only by design: no passive damage/probability effect was activated.
+- Next P2 target: recover authoritative ordering/trigger formulas for exact passive subset (especially 14057/14061) before enabling effects.
