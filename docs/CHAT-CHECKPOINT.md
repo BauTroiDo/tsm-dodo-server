@@ -1616,3 +1616,41 @@ Continuation from checkpoint 149ef88.
   - kind63 appears only on 14094/14095 in the tracked table, so its `value=25` unit cannot be proven by cross-record comparison.
 - No direct Lua/native consumer was found for these boss IDs, and web/source searches did not produce an authoritative TS rule that resolves the exact meaning/scaling/order of these fields.
 - Decision: P3C is evidence-blocked; no combat behavior was activated for 14085/14094/14095. Continue searching or move to another passive with an explicit quantitative contract.
+
+## 2026-10-03 — DVT runtime provenance lock from LDPlayer
+- Authoritative emulator install is LDPlayer9 at `F:\LDPlayer\LDPlayer9`.
+- Confirmed foreground DVT package: `net.chinesegamer.tsn`, versionName `1.15`, versionCode `26`.
+- `com.vtcmobile.gz06` is VTC 1.3 and must NOT be used as DVT authority.
+- Pulled the exact DVT base APK from LDPlayer:
+  - APK SHA256 `93912a278ba270582ecf8d8030d50690c2fa2913c4b01f751cdd76a8d985a22b`
+  - global-metadata SHA256 `960418f46cd4749bccf4509168795148e8b798d6eb42b0b568c72e3028c003e9`
+  - arm64 libil2cpp SHA256 `125bc0d6ec5f49c2cfc3dcbe75c90958a2c21ba9d235af7dd13651fa0e52dce8`
+- Created a separate DVT 1.15 native dump under `_native_dump_dvt115`.
+- Old `_native_dump_vtc13` is VTC-only reference and must never decide DVT gameplay semantics.
+- Runtime Lua files were pulled directly from:
+  `/sdcard/Android/data/net.chinesegamer.tsn/files/Lua`.
+- Runtime Lua is AES-128-CBC encrypted. After decrypting with the existing project key/IV and NFC normalization,
+  all 5 audited files match repo `lua/` exactly in logic and line structure:
+  `FightManager.lua`, `FightRoleController.lua`, `ExclusiveWeapon.lua`, `SkillData.lua`, `Logic/Fight/Skill.lua`.
+
+### DVT runtime data cross-check
+- Pulled runtime `IOS_ExclusiveSkill_C.dat`, `IOS_Npc_C.dat`, and `IOS_Skill_C.dat` directly from the DVT package storage.
+- `IOS_ExclusiveSkill_C.dat` is byte-identical to repo Data-ios:
+  SHA256 `d5ed08ef5bf07e886f40b52a687338ccc22c65a1bd2f7ddd3b49bb4be683b3da`.
+- Runtime `Npc_C` and `Skill_C` have different raw hashes/sizes because localized strings differ,
+  but numeric semantics are identical:
+  - 8427/8427 NPC records, semantic diffs = 0.
+  - 548/548 skill records, semantic diffs = 0.
+- Therefore existing P1/P2/P3 numeric passive audits are validated against the live DVT 1.15 client data.
+
+## 2026-10-03 — Monster Passive/BOSS P3D audit
+- 40001 `Ngự Ảnh Linh Thuẫn` remains evidence-blocked:
+  - effect kind=2 only appears on 14078 and 40001.
+  - 14078 encodes its 1/2/3 counter in `arg2` with value=0.
+  - 40001 encodes `arg2=0`, `value=10`.
+  - No third record or authoritative consumer proves how the 40001 mode interprets `value=10`, so no 10-hit rule is invented.
+- 14045 `Tâm Nhãn` remains evidence-blocked:
+  - DVT packet contract proves `EAttackResult.HeartEye=3`.
+  - client displays `EFightBeh.MagicalEye` when this result arrives.
+  - neither DVT Lua nor PC fallback exposes the server trigger/probability that should emit HeartEye.
+- Decision: no P3D gameplay patch for 40001/14045. Move to the next monster-combat subsystem rather than guess.

@@ -104,7 +104,9 @@ class DvtPassiveReviveTest {
 
     @Test
     fun resolverEmitsReviveAfterLethalHitAndConsumesPassive() {
-        val attacker = fighter(roleId = 1, col = 2, atk = 1200, def = 100)
+        val attacker = fighter(roleId = 1, col = 2, atk = 1200, def = 100).also {
+            it.hit = 30 // force 0% miss chance so the regression is deterministic
+        }
         val target = fighter(
             roleId = -3,
             col = 0,

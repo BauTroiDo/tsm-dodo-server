@@ -62,4 +62,16 @@ class DvtExclusiveSkillDataTest {
  assertEquals(114, fengshen.effects[1].parameter)
  assertEquals(20L, fengshen.effects[1].value)
  }
+
+ @Test
+ fun phoenixRebirthLevelsMapToDvtHpPercentValues() {
+ val defs = ExclusiveSkillDatLoader.load(data())
+ val expected = mapOf(1 to 50L, 2 to 50L, 3 to 70L, 4 to 70L, 5 to 100L, 6 to 100L)
+
+ for ((level, value) in expected) {
+ val record = requireNotNull(defs[14080]?.get(level))
+ assertEquals(4, record.effects[0].kind)
+ assertEquals(value, record.effects[0].value)
+ }
+ }
 }
