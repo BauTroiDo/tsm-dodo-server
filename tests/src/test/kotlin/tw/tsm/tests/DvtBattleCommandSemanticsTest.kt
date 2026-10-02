@@ -137,6 +137,35 @@ class DvtBattleCommandSemanticsTest {
     }
 
     @Test
+    fun `npc elemental summon is normalized to large variant before target selection`() {
+        val baseSummon = 11016
+        val largeSummon = 11019
+        val npc = BattleFighter(
+            roleId = -20, kind = EHuman.MINE_NPC, name = "water-summoner", col = 0, row = 0,
+            maxHp = 1000, maxSp = 500, hp = 1000, sp = 500, level = 1, element = 2,
+            atk = 100, def = 10, agi = 100, intelligence = 100, skills = intArrayOf(baseSummon)
+        )
+        val ally = BattleFighter(
+            roleId = -21, kind = EHuman.MINE_NPC, name = "ally", col = 1, row = 1,
+            maxHp = 1000, maxSp = 500, hp = 1000, sp = 500, level = 1, element = 2,
+            atk = 100, def = 10, agi = 100, intelligence = 100
+        )
+        val enemy = fighter(22, 2, 0)
+        val battle = BattleInstance(
+            battleId = 3, warType = 0, terrain = 0, eventNo = 0, grid = BattleGrid(),
+            skillResolver = BattleSkillResolver(mapOf(largeSummon to skill(2))),
+            itemResolver = mockk<BattleItemResolver>(relaxed = true), involvedNpcDefs = emptyList()
+        )
+        listOf(npc, ally, enemy).forEach(battle::addFighter)
+
+        battle.resolveNpcActions { _ -> baseSummon }
+
+        assertEquals(largeSummon, npc.pendingAction?.id)
+        assertEquals(enemy.col, npc.pendingAction?.targetCol)
+        assertEquals(enemy.row, npc.pendingAction?.targetRow)
+    }
+
+    @Test
     fun `fightWay eight rejects living friendly target`() {
         val reviveId = 11011
         val actor = fighter(1, 2, 0)

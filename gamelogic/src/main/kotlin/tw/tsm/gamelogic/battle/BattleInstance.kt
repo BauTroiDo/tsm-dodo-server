@@ -296,7 +296,8 @@ class BattleInstance(
         for (npc in npcs) {
             if (npc.pendingAction != null) continue
 
-            val skillId = skillSelector(npc.skills)
+            val selectedSkillId = skillSelector(npc.skills)
+            val skillId = NpcAiSkillRules.normalizeSelectedSkill(selectedSkillId)
             val skillDef = skillResolver.getSkillDef(skillId)
 
             // Never queue a skill the NPC cannot currently pay for.

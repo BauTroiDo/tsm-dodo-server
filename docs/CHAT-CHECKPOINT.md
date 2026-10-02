@@ -1727,3 +1727,44 @@ Continuation from checkpoint 149ef88.
 - `git diff --check`: PASS.
 - Next Monster AI target: audit PC special summon remap
   `10016/11016/12016/13015 -> +3` against DVT summon semantics before enabling it.
+
+### 2026-10-03 — Monster AI-B production deploy — PASS
+- Commit `18d4bc6 fix: align DVT NPC AI target pools` pushed to `origin/main`.
+- Production fast-forwarded from `0ff3289` to `18d4bc6`; local config/operational files preserved.
+- Production full `gradlew test build --rerun-tasks`: PASS, 21/21 tasks executed.
+- Runtime restarted through WMI and verified after closing/reconnecting SSH:
+  - production HEAD `18d4bc6`
+  - Java PID `8940`
+  - port 6613 LISTEN on IPv4/IPv6
+  - health-check connections continued after reconnect.
+- AI-B is therefore live on production.
+
+## 2026-10-03 — Monster AI-C — elemental NPC summon normalization
+### Evidence
+- Live DVT Npc_C uses base summon IDs heavily:
+  - 10016 on 87 NPC rows
+  - 11016 on 43 NPC rows
+  - 12016 on 61 NPC rows
+  - 13015 on 113 NPC rows.
+- Their +3 variants 10019/11019/12019/13018 occur on 0 Npc_C rows.
+- DVT Skill.lua/Attack.lua explicitly distinguishes each pair as small summon vs large summon:
+  Rocky3/Rocky1, WaterGod3/WaterGod1, Phoenix3/Phoenix1, Dragon3/Dragon1.
+
+- DVT Skill_C confirms the +3 variants are maxLv1 large forms with fightArea=8.
+- Exact PC fallback `bboycs/tsonline-server-tl/TS_Server/Server/TSBattleNPC.cs::seekTarget`
+  remaps only the four standard elemental base summons by `skill += 3` before queuing NPC commands.
+- No PC/DVT evidence extends this remap to light/dark summons 22011/23011, so they are left unchanged.
+- This also fixes a concrete targeting error: raw 11016 has fightWay=18, while 11019 is the large hostile summon.
+
+### Implementation
+- Added `NpcAiSkillRules.normalizeSelectedSkill`.
+- NPC AI remaps 10016->10019, 11016->11019, 12016->12019, 13015->13018.
+- Remap happens immediately after NPC skill selection, before SkillDef lookup, SP validation and target selection.
+- Player/manual skill selection and light/dark summon IDs are unchanged.
+
+### Validation
+- Added `NpcAiSkillRulesTest` for all four remaps and non-remapped controls.
+- Added integration regression proving an NPC selecting 11016 queues 11019 and targets the enemy side.
+- Targeted AI-C + AI-B + battle semantics suite: PASS, 18/18 tasks executed.
+- Full local `gradlew test build --rerun-tasks`: PASS, 21/21 tasks executed.
+- `git diff --check`: PASS.
