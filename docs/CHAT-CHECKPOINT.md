@@ -1569,3 +1569,20 @@ Continuation from checkpoint 149ef88.
 - 40000/45000: kind59 exposes ResistancePercent=1400 and DamageReduction=20,
   but Resistance scaling and D5b damage-modifier order remain unresolved.
 - 14085/14094/14095 remain formula/trigger blocked.
+
+### 2026-10-03 — Monster Passive/BOSS P3B production deploy — PASS
+- Commit `4f4910a feat: implement DVT phoenix rebirth passive` pushed to `origin/main`.
+- Production `C:\Server-Game\tsm_dodo` fast-forwarded from `3a56597` to `4f4910a` via verified Git bundle.
+- Production local `application.conf` and operational untracked files were preserved.
+- Production full `gradlew test build --rerun-tasks`: PASS, 21/21 tasks executed.
+- Runtime restarted detached with `logs\restart-monster-passive-p3b-4f4910a.log`.
+- Runtime validation:
+  - PID `10080`
+  - port `6613` LISTEN on IPv4/IPv6
+  - `IOS_ExclusiveSkill_C.dat`: 574 records / 123 skill IDs loaded
+  - Netty reached ready state
+  - no real ERROR/Exception/FATAL/Koin startup failure.
+- Direct `IOS_Npc_C.dat` lookup finds one current NPC row using passive 14080:
+  - npcId `45368`, name `Khảo thí 8`
+  - passiveSkillLv `3`
+  - therefore DVT P3B expected runtime restore is 70% HP, once per battle, unless fly-out.
