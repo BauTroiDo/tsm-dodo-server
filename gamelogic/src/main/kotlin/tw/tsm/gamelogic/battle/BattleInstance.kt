@@ -288,7 +288,7 @@ class BattleInstance(
      *
      * Chọn mục tiêu theo loại kỹ năng: kỹ năng hồi phục→phe mình, kỹ năng tấn công→phe địch.
      */
-    fun resolveNpcActions() {
+    fun resolveNpcActions(skillSelector: (IntArray) -> Int = ::selectNpcSkill) {
         val npcs = allFighters.filter {
             !it.isPlayerControlled && it.isAlive && !it.isStunned
         }
@@ -296,9 +296,10 @@ class BattleInstance(
         for (npc in npcs) {
             if (npc.pendingAction != null) continue
 
-            val skillId = selectNpcSkill(npc.skills)
+            val skillId = skillSelector(npc.skills)
             val skillDef = skillResolver.getSkillDef(skillId)
             val isFriendlyUtility = skillDef != null && skillDef.fightWay in FRIENDLY_ONLY_FIGHT_WAYS
+            val isRevive = skillDef?.fightWay == 8
 
             // Never queue a skill the NPC cannot currently pay for.
             // requireSp==1 is the Lua consume-all-SP sentinel and still requires SP >= 1.
@@ -318,10 +319,19 @@ class BattleInstance(
                 continue
             }
 
-            // Xác định mục tiêu theo phe đảng của NPC:
-            // NPC địch (col 0-1) tấn công→phe người chơi, hồi phục→phe địch
-            // Tướng phe người chơi (col 2-3) tấn công→phe địch, hồi phục→phe người chơi
-            val targets = if (isFriendlyUtility) {
+            // DVT fightWay=8 explicitly targets dead friendlies. PC TSBattleNPC.seekTarget
+            // does the same. If nobody is dead, preserve the historical no-op behavior by
+            // letting the revive skill point at a living friendly instead of inventing a basic attack.
+            val targets = if (isRevive) {
+                val deadFriendlies = if (npc.isPlayerSide) grid.getDeadPlayerSide() else grid.getDeadEnemySide()
+                if (deadFriendlies.isNotEmpty()) {
+                    deadFriendlies
+                } else if (npc.isPlayerSide) {
+                    grid.getAlivePlayerSide()
+                } else {
+                    grid.getAliveEnemySide()
+                }
+            } else if (isFriendlyUtility) {
                 if (npc.isPlayerSide) grid.getAlivePlayerSide() else grid.getAliveEnemySide()
             } else {
                 if (npc.isPlayerSide) grid.getAliveEnemySide() else grid.getAlivePlayerSide()
@@ -516,6 +526,9 @@ class BattleInstance(
                         if (success) {
                             target.hp = 0
                             target.isDead = true
+                            // A captured NPC leaves the battlefield; unlike an ordinary corpse,
+                            // it must not remain targetable by fightWay=8 revive skills.
+                            grid.remove(target.col, target.row)
                             capturedNpcs.add(ownerPlayerId to target.npcId)
                         }
                     }
@@ -589,10 +602,11 @@ class BattleInstance(
             grid.remove(escape.fighter.col, escape.fighter.row)
         }
 
-        // Xoá nhân vật đã chết (phòng thủ: isDead hoặc hp<=0 đều coi là chết)
+        // DVT keeps ordinary corpses on their battlefield cells so fightWay=8 can
+        // select/revive them in later rounds. Only fly-out units leave the grid here.
         for (fighter in allFighters) {
-            if (fighter.isDead || fighter.hp <= 0) {
-                fighter.isDead = true
+            if (fighter.hp <= 0) fighter.isDead = true
+            if (fighter.isFlyOut) {
                 grid.remove(fighter.col, fighter.row)
             }
         }
@@ -621,10 +635,10 @@ class BattleInstance(
     }
 
     /**
-     * Chọn kỹ năng AI của NPC — tham khảo hệ thống xác suất KERO TSBattleNPC.seekTarget
-     *
-     * Kỹ năng có số thứ tự càng cao càng mạnh, xác suất dùng càng thấp:
-     * - skill4: 20% | skill3: 25% | skill2: 33% | skill1: 50% | đánh thường: phần còn lại
+     * Chọn kỹ năng AI NPC theo fallback PC TSBattleNPC.seekTarget.
+     * DVT IOS_NpcSkillProb_C.dat thật chỉ có 4 byte `02 00 00 00`, không có bảng xác suất.
+     * PC dùng đúng một roll 0..99 rồi ưu tiên modulo %5 -> %4 -> %3 -> %2; đây không phải
+     * bốn lần roll độc lập. Khi đủ cả 4 skill, phân bố thực là 20/20/20/14%, basic 26%.
      */
     private fun selectNpcSkill(skills: IntArray): Int {
         val rand = Random.nextInt(100)

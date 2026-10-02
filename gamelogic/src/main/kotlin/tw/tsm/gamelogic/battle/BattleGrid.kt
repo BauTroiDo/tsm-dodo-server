@@ -68,6 +68,23 @@ class BattleGrid {
         return result
     }
 
+    /** Xác chết phe người chơi vẫn nằm trên ô để fightWay=8 có thể hồi sinh. */
+    fun getDeadPlayerSide(): List<BattleFighter> = getDeadSide(2..3)
+
+    /** Xác chết phe địch vẫn nằm trên ô để NPC fightWay=8 có thể hồi sinh. */
+    fun getDeadEnemySide(): List<BattleFighter> = getDeadSide(0..1)
+
+    private fun getDeadSide(cols: IntRange): List<BattleFighter> {
+        val result = mutableListOf<BattleFighter>()
+        for (col in cols) {
+            for (row in 0 until BattleConstants.MAX_ROW) {
+                val f = grid[col][row]
+                if (f != null && !f.isAlive && !f.isFlyOut) result.add(f)
+            }
+        }
+        return result
+    }
+
     /** Lấy tất cả nhân vật trên bàn cờ (bao gồm nhân vật đã chết nhưng chưa FlyOut).*/
     fun getAll(): List<BattleFighter> {
         val result = mutableListOf<BattleFighter>()

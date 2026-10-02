@@ -84,6 +84,59 @@ class DvtBattleCommandSemanticsTest {
     }
 
     @Test
+    fun `ordinary corpse remains on grid across round boundary for later revive`() = runBlocking {
+        val alive = fighter(1, 2, 0)
+        val dead = fighter(2, 0, 0).also { it.hp = 0; it.isDead = true }
+        val battle = fixture(alive, dead)
+
+        battle.resolveRound()
+
+        assertEquals(dead, battle.grid.getAt(dead.col, dead.row))
+        assertEquals(listOf(dead), battle.grid.getDeadEnemySide())
+    }
+
+    @Test
+    fun `fly out corpse leaves grid and cannot be revived`() = runBlocking {
+        val alive = fighter(1, 2, 0)
+        val flyOut = fighter(2, 0, 0).also { it.hp = 0; it.isDead = true; it.isFlyOut = true }
+        val battle = fixture(alive, flyOut)
+
+        battle.resolveRound()
+
+        assertEquals(null, battle.grid.getAt(flyOut.col, flyOut.row))
+        assertTrue(battle.grid.getDeadEnemySide().isEmpty())
+    }
+
+    @Test
+    fun `npc revive AI targets dead friendly when one is present`() {
+        val reviveId = 11011
+        val npc = BattleFighter(
+            roleId = -10, kind = EHuman.MINE_NPC, name = "reviver", col = 0, row = 0,
+            maxHp = 1000, maxSp = 500, hp = 1000, sp = 500, level = 1, element = 2,
+            atk = 100, def = 10, agi = 100, intelligence = 100, skills = intArrayOf(reviveId)
+        )
+        val deadAlly = BattleFighter(
+            roleId = -11, kind = EHuman.MINE_NPC, name = "dead", col = 1, row = 1,
+            maxHp = 1000, maxSp = 500, hp = 0, sp = 500, level = 1, element = 2,
+            atk = 100, def = 10, agi = 100, intelligence = 100
+        ).also { it.isDead = true }
+        val enemy = fighter(12, 2, 0)
+        val grid = BattleGrid()
+        val battle = BattleInstance(
+            battleId = 2, warType = 0, terrain = 0, eventNo = 0, grid = grid,
+            skillResolver = BattleSkillResolver(mapOf(reviveId to skill(8))),
+            itemResolver = mockk<BattleItemResolver>(relaxed = true), involvedNpcDefs = emptyList()
+        )
+        listOf(npc, deadAlly, enemy).forEach(battle::addFighter)
+
+        battle.resolveNpcActions { _ -> reviveId }
+
+        assertEquals(reviveId, npc.pendingAction?.id)
+        assertEquals(deadAlly.col, npc.pendingAction?.targetCol)
+        assertEquals(deadAlly.row, npc.pendingAction?.targetRow)
+    }
+
+    @Test
     fun `fightWay eight rejects living friendly target`() {
         val reviveId = 11011
         val actor = fighter(1, 2, 0)

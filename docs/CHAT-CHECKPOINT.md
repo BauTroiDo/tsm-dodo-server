@@ -1654,3 +1654,31 @@ Continuation from checkpoint 149ef88.
   - client displays `EFightBeh.MagicalEye` when this result arrives.
   - neither DVT Lua nor PC fallback exposes the server trigger/probability that should emit HeartEye.
 - Decision: no P3D gameplay patch for 40001/14045. Move to the next monster-combat subsystem rather than guess.
+
+## 2026-10-03 — Monster AI-A — corpse persistence + NPC revive targeting
+### Evidence
+- Live DVT 1.15 runtime `IOS_NpcSkillProb_C.dat` pulled from LDPlayer is exactly 4 bytes: `02 00 00 00`; byte-identical to repo. It contains no per-NPC probability payload.
+- Therefore NPC skill selection probability remains PC fallback only.
+- PC reference `TSBattleNPC.seekTarget` uses one `Random.Next(0,100)` roll, then priority modulo gates `%5 -> %4 -> %3 -> %2`; Kotlin already matches this structure and range.
+- With all four NPC skills present, the actual unconditional distribution over 0..99 is skill4=20%, skill3=20%, skill2=20%, skill1=14%, basic=26%; the old comment's 20/25/33/50 wording described conditional gates, not independent rolls.
+- DVT `FightField.UpdateSelectFrame` explicitly exposes dead friendly targets for `fightWay=8`.
+- DVT `FightManager.RevChangeAttrib` revives a role by coordinates after HP rises from <=0 to >0, which requires a normal corpse to remain addressable on its battlefield cell.
+- PC `TSBattleNPC.seekTarget` likewise scans dead friendly positions for skill type/fightWay 8.
+
+### Implementation
+- `BattleGrid` now exposes dead friendlies separately for each side; fly-out units are excluded.
+- `BattleInstance.resolveRound` no longer removes ordinary dead fighters from the grid at round end.
+- Fly-out and successful escape still remove the fighter from the grid.
+- Successful capture now removes the captured NPC immediately so it cannot be revived as a corpse.
+- NPC `fightWay=8` AI now prefers a dead friendly target when one exists; when none exists it preserves the historical no-op behavior instead of inventing a different attack.
+- `resolveNpcActions` accepts an optional skill selector for deterministic regression tests; production default remains the existing PC-fallback selector.
+- No changes were made yet to ambiguous AI targeting for fightWay 4/5/18/19.
+
+### Validation
+- Targeted battle command/status/geometry/passive-revive suite: PASS, 18/18 tasks executed.
+- Added regressions proving:
+  - ordinary corpse remains on its grid cell across a round boundary;
+  - fly-out corpse leaves the grid and cannot be revived;
+  - NPC revive AI targets a dead friendly deterministically.
+- Full local `gradlew test build --rerun-tasks`: PASS, 21/21 tasks executed.
+- `git diff --check`: PASS; only normal line-ending warnings where applicable.
