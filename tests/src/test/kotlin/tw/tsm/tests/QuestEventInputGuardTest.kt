@@ -26,6 +26,44 @@ class QuestEventInputGuardTest {
         assertEquals(1, claims.count { it != null })
         assertEquals(claims.first { it != null }?.lastChoiceCode, state.getSession(31)?.lastChoiceCode)
     }
+
+    @Test fun flowUsesClaimedChoiceContextEvenIfBuilderSnapshotIsStale() = runTest {
+        val stateMachine = EveEventStateMachine()
+        stateMachine.activate(31, event(EventPhase.AwaitingChoice).copy(lastSurfaceId = 2, eveNo = 1))
+
+        val response = mockk<ResponseSender>(relaxed = true)
+        val builder = mockk<EveStateBuilder>()
+        coEvery { builder.buildPlayerState(31, 12001, any()) } returns PlayerEventState(
+            lastSurfaceId = -1,
+            lastChoiceCode = -1,
+        )
+
+        val capturedState = slot<PlayerEventState>()
+        val resolver = mockk<EveConditionResolver>()
+        every {
+            resolver.resolveEvent(any(), capture(capturedState), 12001, any())
+        } returns null
+
+        val scene = mockk<tw.tsm.domain.data.SceneEveData>()
+        every { scene.npcEvents } returns mapOf(
+            1 to tw.tsm.domain.data.NpcEventData(1, emptyList(), emptyList())
+        )
+
+        val session = mockk<GameSession>(relaxed = true) {
+            every { roleId } returns 31
+            every { characterName } returns "choice-race"
+        }
+        val flow = EveFlowController(
+            response, stateMachine, builder, resolver, mockk(relaxed = true),
+            mockk(relaxed = true), mockk(relaxed = true), mockk(relaxed = true), mockk(relaxed = true),
+            mockk(relaxed = true), mapOf(12001 to scene), mockk(relaxed = true)
+        )
+
+        flow.chooseEvent(session, 32)
+
+        assertEquals(2, capturedState.captured.lastSurfaceId)
+        assertEquals(32, capturedState.captured.lastChoiceCode)
+    }
     @Test fun battleCallbackIsClaimedOnceWithoutOverwritingWinningResult() {
         val state = EveEventStateMachine(); state.activate(31, event(EventPhase.AwaitingBattle).copy(fightDataKey = 174))
         val claimed = state.claimBattleResult(31, 1)

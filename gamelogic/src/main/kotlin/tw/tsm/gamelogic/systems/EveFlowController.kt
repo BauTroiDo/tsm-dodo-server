@@ -171,7 +171,14 @@ class EveFlowController(
         }
 
         val state = stateBuilder.buildPlayerState(charId, eventSession.mapId, session)
-            .copy(currentEveNo = eventSession.eveNo)
+            .copy(
+                currentEveNo = eventSession.eveNo,
+                // claimChoice() trả về snapshot nguyên tử của đúng Surface + lựa chọn vừa nhận.
+                // Không đọc lại ngữ cảnh lựa chọn từ state machine sau các suspend/DB read:
+                // session có thể đã bị một luồng Eve khác thay/clear, làm class10 chập chờn -1/-1.
+                lastSurfaceId = eventSession.lastSurfaceId,
+                lastChoiceCode = eventSession.lastChoiceCode,
+            )
         val resolved = conditionResolver.resolveEvent(
             eventData, state, eventSession.mapId,
             chainFilter = { chain -> chain.any { it.conditionClass == 10 } }
