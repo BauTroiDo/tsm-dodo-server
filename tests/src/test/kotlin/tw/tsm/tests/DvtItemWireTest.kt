@@ -13,6 +13,7 @@ import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.SessionSender
+import tw.tsm.domain.valueobjects.CompoundResultEntry
 import tw.tsm.domain.valueobjects.FollowNpcData
 import tw.tsm.domain.valueobjects.ThingData
 import tw.tsm.gamelogic.systems.InventorySystem
@@ -195,6 +196,26 @@ class DvtItemWireTest {
         coVerify(exactly = 0) { pet.unequip(any(), any(), any()) }
         handler.handle(session, 18, byteArrayOf(2,3,0x34,0x12))
         coVerify(exactly = 1) { pet.unequip(42, 2, 3) }
+    }
+
+    @Test fun `compound result packet matches DVT 23-13 wire`() {
+        val sender = InventoryResponseSender()
+        val s = Capture()
+        sender.sendCompoundResult(
+            s,
+            listOf(
+                CompoundResultEntry(itemId = 0x1234, quantity = 258, bagIndex = 0x5678),
+                CompoundResultEntry(itemId = 0x2222, quantity = 3, bagIndex = 9),
+            )
+        )
+        assertArrayEquals(
+            byteArrayOf(
+                23, 13, 0,
+                0x34, 0x12, 2, 1, 0, 0, 0x78, 0x56,
+                0x22, 0x22, 3, 0, 0, 0, 9, 0,
+            ),
+            s.packet,
+        )
     }
 
     @Test fun `bag and bank response index fields follow DVT UInt16 reads`() {

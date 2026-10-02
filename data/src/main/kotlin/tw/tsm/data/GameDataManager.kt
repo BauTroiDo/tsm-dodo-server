@@ -75,6 +75,10 @@ class GameDataManager(
     var slotMachinePools: SlotMachinePools? = null
         private set
 
+    /** Bảng recipe Chế tạo Mobile DVT từ IOS_Compound.dat. */
+    var compoundRecipes: List<CompoundRecipeDef> = emptyList()
+        private set
+
     /** Dữ liệu địa chất bản đồ (key = mapId, value = geolBaseAtt) — dùng cho nền chiến đấu*/
     var mapTerrains: Map<Int, Int> = emptyMap()
         private set
@@ -365,6 +369,19 @@ class GameDataManager(
                     logger.error(e) { "Nạp Slot.dat fallback thất bại: $slot" }
                 }
             }
+        }
+
+        // Chế tạo Mobile DVT: recipe kind/material/ratio từ IOS_Compound.dat.
+        val iosCompound = dataIosDir.resolve("IOS_Compound.dat")
+        if (Files.exists(iosCompound)) {
+            try {
+                compoundRecipes = CompoundDatLoader.load(Files.readAllBytes(iosCompound))
+                logger.info { "Nạp IOS_Compound xong: ${compoundRecipes.size} recipe source=$iosCompound" }
+            } catch (e: Exception) {
+                logger.error(e) { "Nạp IOS_Compound.dat thất bại: $iosCompound" }
+            }
+        } else {
+            logger.warn { "IOS_Compound.dat không tồn tại — Chế tạo generic sẽ bị evidence-block" }
         }
 
         // Ground.mmg (dữ liệu địa chất bản đồ, ưu tiên CompreseData của runtime;

@@ -11,6 +11,7 @@ import tw.tsm.domain.interfaces.repositories.MissionFlagRecord
 import tw.tsm.domain.interfaces.repositories.FlyPointRecord
 import tw.tsm.domain.interfaces.repositories.FriendRecord
 import tw.tsm.domain.interfaces.repositories.MissionRecord
+import tw.tsm.domain.valueobjects.CompoundResultEntry
 import tw.tsm.domain.valueobjects.EquipBonusData
 import tw.tsm.domain.valueobjects.FollowNpcData
 import tw.tsm.domain.valueobjects.PlayerDataDto
@@ -498,6 +499,12 @@ interface ResponseSender {
      * Định dạng: +slot(1) +amount(4)
      */
     fun sendReduceBagItem(session: SessionSender, slot: Int, amount: Int)
+
+    /**
+     * Gửi kết quả Chế tạo (S:023-013).
+     * Mỗi entry: itemId(U16) + quantity(I32) + bagIndex(U16).
+     */
+    fun sendCompoundResult(session: SessionSender, results: List<CompoundResultEntry>)
 
     /**
      * Gửi di chuyển vật phẩm túi đồ (S:023-010)

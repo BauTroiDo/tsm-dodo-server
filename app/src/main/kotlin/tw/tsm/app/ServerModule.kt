@@ -351,6 +351,15 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     }
     single { MacroBoxSystem() }
     single { RoleCountSystem(get()) }
+    single {
+        CompoundSystem(
+            get<InventorySystem>(),
+            get<GameDataManager>().itemDefs,
+            get<GameDataManager>().compoundRecipes,
+            get<RoleCountSystem>(),
+            get<SkillSystem>(),
+        )
+    }
     single { DailyProgressSystem(get<RoleCountSystem>(), get<BitFlagSystem>(), get<ResponseSender>()) }
     single { FlyPointSystem(get(), get()) }
     single { UISellSystem(get<GameDataManager>().uiSellDefs, get<GameDataManager>().uiSellFormulaDefs, get(), get(), get()) }
@@ -471,7 +480,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { SceneHandler(get(), get()) }
     single { RelocateHandler(get(), get(), get()) }
     single { NpcEventHandler(get<EveTriggerRouter>(), get<EveFlowController>()) }
-    single { ItemHandler(get(), get(), get(), get(), get(), get<GameDataManager>().itemDefs, get(), get<PlayerStateManager>(), get<StatSystem>(), get(), get<FlyPointSystem>(), get<CharacterRepository>(), get<PetEquipSystem>(), get<QuestSystem>(), get<SkillSystem>(), get<DailyProgressSystem>(), get<PetSystem>(), get<GameDataManager>().npcDefs, get<RoleCountSystem>(), get<CollectionSystem>(), get<AstrolabeSystem>(), get<GameDataManager>().sacredEquipPrimaryDefs) }
+    single { ItemHandler(get(), get(), get(), get(), get(), get<GameDataManager>().itemDefs, get(), get<PlayerStateManager>(), get<StatSystem>(), get(), get<FlyPointSystem>(), get<CharacterRepository>(), get<PetEquipSystem>(), get<QuestSystem>(), get<SkillSystem>(), get<DailyProgressSystem>(), get<PetSystem>(), get<GameDataManager>().npcDefs, get<RoleCountSystem>(), get<CollectionSystem>(), get<AstrolabeSystem>(), get<GameDataManager>().sacredEquipPrimaryDefs, get<CompoundSystem>()) }
     single { NpcTradeHandler(get(), get(), get(), get<GameDataManager>().itemDefs, get()) }
     single { BankHandler(get(), get(), get<GameDataManager>().itemDefs, get()) }
     single { StorageHandler(get(), get(), get<GameDataManager>().itemDefs, get()) }

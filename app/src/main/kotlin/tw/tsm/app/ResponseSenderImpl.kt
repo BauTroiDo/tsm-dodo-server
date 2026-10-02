@@ -21,6 +21,7 @@ import tw.tsm.domain.interfaces.repositories.MissionFlagRecord
 import tw.tsm.domain.interfaces.repositories.FlyPointRecord
 import tw.tsm.domain.interfaces.repositories.FriendRecord
 import tw.tsm.domain.interfaces.repositories.MissionRecord
+import tw.tsm.domain.valueobjects.CompoundResultEntry
 import tw.tsm.domain.valueobjects.EquipBonusData
 import tw.tsm.domain.valueobjects.FollowNpcData
 import tw.tsm.domain.valueobjects.MountData
@@ -263,6 +264,9 @@ class ResponseSenderImpl(worldManager: WorldManager) : ResponseSender {
 
     override fun sendReduceBagItem(session: SessionSender, slot: Int, amount: Int) =
         inventory.sendReduceBagItem(session, slot, amount)
+
+    override fun sendCompoundResult(session: SessionSender, results: List<CompoundResultEntry>) =
+        inventory.sendCompoundResult(session, results)
 
     override fun sendMoveBagItem(session: SessionSender, fromSlot: Int, amount: Int, toSlot: Int) =
         inventory.sendMoveBagItem(session, fromSlot, amount, toSlot)

@@ -3,6 +3,7 @@ package tw.tsm.app.response
 import tw.tsm.domain.constants.Opcodes
 import tw.tsm.domain.interfaces.SessionSender
 import tw.tsm.domain.interfaces.repositories.FlyPointRecord
+import tw.tsm.domain.valueobjects.CompoundResultEntry
 import tw.tsm.domain.valueobjects.FollowNpcData
 import tw.tsm.domain.valueobjects.ThingData
 import tw.tsm.protocol.PacketWriter
@@ -52,6 +53,19 @@ class InventoryResponseSender {
                 .writeIntLE(amount)
                 .toByteArray()
         )
+    }
+
+    /** S:023-013 kết quả Chế tạo: lặp itemId(U16)+quantity(I32)+bagIndex(U16). */
+    fun sendCompoundResult(session: SessionSender, results: List<CompoundResultEntry>) {
+        if (results.isEmpty()) return
+        val writer = PacketWriter(3 + results.size * 8)
+            .writeByte(Opcodes.SHOP).writeByte(13).writeByte(0)
+        for (result in results) {
+            writer.writeShortLE(result.itemId)
+                .writeIntLE(result.quantity)
+                .writeShortLE(result.bagIndex)
+        }
+        session.send(writer.toByteArray())
     }
 
     /** S:023-010 di chuyển vật phẩm túi đồ*/

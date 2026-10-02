@@ -15,6 +15,7 @@ import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.PacketHandler
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.StatCalculator
+import tw.tsm.domain.valueobjects.CompoundResultEntry
 import tw.tsm.domain.valueobjects.ThingData
 import tw.tsm.gamelogic.systems.AstrolabeSystem
 import tw.tsm.gamelogic.systems.DailyProgressSystem
@@ -33,6 +34,9 @@ import tw.tsm.gamelogic.systems.QuestSystem
 import tw.tsm.gamelogic.systems.SkillSystem
 import tw.tsm.gamelogic.systems.RoleCountSystem
 import tw.tsm.gamelogic.systems.CollectionSystem
+import tw.tsm.gamelogic.systems.CompoundInput
+import tw.tsm.gamelogic.systems.CompoundResult
+import tw.tsm.gamelogic.systems.CompoundSystem
 import tw.tsm.gamelogic.systems.WorldManager
 import tw.tsm.protocol.PacketReader
 
@@ -67,6 +71,7 @@ class ItemHandler(
     private val collectionSystem: CollectionSystem? = null,
     private val astrolabeSystem: AstrolabeSystem? = null,
     private val sacredEquipPrimaryDefs: Map<Int, SacredEquipPrimaryDef> = emptyMap(),
+    private val compoundSystem: CompoundSystem? = null,
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.SHOP  // 23
@@ -81,6 +86,7 @@ class ItemHandler(
             11 -> handleEquip(session, data)
             12 -> handleUnequip(session, data)
             13 -> handleDropEquip(session, data)
+            14 -> handleCompound(session, data)
             15 -> handleUseItem(session, data)
             16 -> handleDropMoney(session, data)
             17 -> handlePetEquip(session, data)
@@ -92,6 +98,53 @@ class ItemHandler(
             73 -> handleFlyPoint(session, data)
             76 -> handleCareerChange(session, data)
             else -> logger.warn { "Sub-protocol vật phẩm chưa xử lý: subKind=$subKind" }
+        }
+    }
+
+    /**
+     * C:023-014 Chế tạo.
+     * Lua UICompound.SendCompound(): 3 × [bagIndex(UInt16 LE) + quantity(Int32 LE)] + kind(Byte).
+     * Ô trống luôn được gửi dưới dạng 0/0; tab Chế tạo dùng kind=1.
+     */
+    private suspend fun handleCompound(session: GameSession, data: ByteArray) {
+        if (data.size != 19) return
+        val system = compoundSystem ?: return
+        val reader = PacketReader(data)
+        val inputs = ArrayList<CompoundInput>(3)
+        repeat(3) {
+            val bagIndex = reader.readUShortLE()
+            val quantity = reader.readIntLE()
+            if (bagIndex == 0 && quantity == 0) return@repeat
+            if (bagIndex <= 0 || quantity <= 0) return
+            inputs += CompoundInput(bagIndex, quantity)
+        }
+        val kind = reader.readUByte()
+        if (inputs.isEmpty()) return
+
+        when (val result = system.compound(session.roleId.toLong(), kind, inputs)) {
+            is CompoundResult.Success -> {
+                for ((slot, qty) in result.consumedBySlot) {
+                    responseSender.sendReduceBagItem(session, slot, qty)
+                }
+                responseSender.sendSetBagItem(session, result.resultSlot, result.result, showMsg = false)
+                responseSender.sendCompoundResult(
+                    session,
+                    listOf(
+                        CompoundResultEntry(
+                            itemId = result.result.itemId,
+                            quantity = result.result.quantity,
+                            bagIndex = result.resultSlot,
+                        )
+                    )
+                )
+                logger.info {
+                    "${session.characterName} compound success: kind=$kind inputs=$inputs " +
+                        "result=${result.result.itemId}x${result.result.quantity} slot=${result.resultSlot}"
+                }
+            }
+            CompoundResult.InvalidRequest,
+            CompoundResult.BagFull,
+            CompoundResult.UnsupportedKind -> Unit
         }
     }
 
