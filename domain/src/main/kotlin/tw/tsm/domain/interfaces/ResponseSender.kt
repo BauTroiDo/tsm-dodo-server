@@ -1264,6 +1264,12 @@ interface ResponseSender {
     fun sendBattleAttrChange(session: SessionSender, data: ByteArray)
 
     /**
+     * Gửi hồi sinh thụ động trong chiến đấu qua S:051-001.
+     * DVT FightManager.RevChangeAttrib: isRevive=1 + col + row + HP + giá trị tuyệt đối.
+     */
+    fun sendBattleRevive(session: SessionSender, col: Int, row: Int, hp: Int)
+
+    /**
      * Gửi kết thúc chiến đấu (S:011-000)
      *
      * Nguồn: protocal.lua protocolTable[11][0]

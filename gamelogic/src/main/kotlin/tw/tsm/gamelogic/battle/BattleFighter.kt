@@ -95,6 +95,8 @@ class BattleFighter(
     var isDead: Boolean = false,
     /** Có bị đánh bay không (chết do siêu sát, không thể hồi sinh trên chiến trường)*/
     var isFlyOut: Boolean = false,
+    /** 14080 Phượng Sồ Chuyển Sinh đã kích hoạt trong trận này chưa. */
+    var passiveReviveUsed: Boolean = false,
     /** Hiệp này có ở trạng thái phòng thủ không (KERO: dest.def → sát thương giảm một nửa)*/
     var isDefending: Boolean = false,
     var statusEffect: BattleStatus = BattleStatus.NONE,

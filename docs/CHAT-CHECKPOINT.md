@@ -1520,3 +1520,52 @@ Continuation from checkpoint 149ef88.
   - Netty reached ready state and local health-check connections succeeded.
 - Startup scan found no real `ERROR`, exception, fatal, or Koin failure; only Gradle task names containing `ConfigurationErrors` matched the text scan.
 - P3A is loader-only: no new passive effect is activated, so P2 gameplay behavior is unchanged.
+
+## 2026-10-03 — Monster Passive/BOSS P3B — 14080 Phượng Sồ Chuyển Sinh
+### Evidence lock
+- DVT Skill_C 14080 description: chết sẽ tự động hồi sinh và hồi một lượng HP.
+- IOS_ExclusiveSkill_C.dat effect kind=4 contains exact per-level values:
+  - lv1-2 = 50
+  - lv3-4 = 70
+  - lv5-6 = 100
+- The same effect kind=4 appears on 42003 Thuần Dương Liên Tâm, whose DVT description also explicitly says revive.
+- DVT client FightManager.RevChangeAttrib handles S:051-001 as:
+  - isRevive byte
+  - repeated col,row,attrKind,value
+  - if HP rises from <=0 to >0, clear dead state; isRevive=1 triggers revive visual.
+- A 2019-12-18 maintenance announcement repost records the exact 14080 rule:
+  one automatic revive per battle, restoring 50%-100% HP depending on exclusive-weapon level.
+  Source: https://forum.gamer.com.tw/Co.php?bPage=0&bsn=34184&sn=9098&subbsn=8
+- IOS_SkillTrigger_C.dat was fully checked (25 records x 11 bytes) and contains none of
+  14080/40001/40000/45000/42003, so it is not evidence for these passive counters.
+
+### Implementation
+- Added BattleFighter.passiveReviveUsed as per-battle one-shot state.
+- NpcPassiveCombatRules now consumes DVT ExclusiveSkill 14080 values instead of hard-coding a guessed percentage.
+- On lethal non-fly-out damage, 14080 revives immediately in authoritative server state;
+  the lethal multi-hit chain stops at that hit.
+- Fly-out remains non-revivable, preserving existing battlefield semantics.
+- TargetResult carries passiveReviveHp so packet emission stays separate from damage calculation.
+- BattleManager splits combo packet groups at a passive revive boundary.
+- After lethal S:050-001, BattleManager sends S:051-001 isRevive=1 with absolute restored HP.
+- Added ResponseSender.sendBattleRevive and byte-stable BattleResponseSender implementation.
+- BattleManager now injects GameDataManager.exclusiveSkillDefs into BattleSkillResolver.
+
+### Validation
+- Targeted P3B suite (DvtPassiveReviveTest + DvtExclusiveSkillDataTest + NpcPassiveCombatRulesTest):
+  PASS, 18/18 tasks executed.
+- DvtPassiveReviveTest covers:
+  - configured 70% restore
+  - only once per battle
+  - fly-out suppression
+  - lethal resolver integration at 50%
+  - exact S:051-001 wire bytes.
+- Full local `gradlew test build --rerun-tasks`: PASS, 21/21 tasks executed.
+- `git diff --check`: PASS except normal CRLF normalization warnings.
+
+### Still evidence-blocked
+- 40001 Ngự Ảnh Linh Thuẫn: description says damage only after a certain number of times,
+  but no authoritative source was found for exact counter direction/threshold semantics.
+- 40000/45000: kind59 exposes ResistancePercent=1400 and DamageReduction=20,
+  but Resistance scaling and D5b damage-modifier order remain unresolved.
+- 14085/14094/14095 remain formula/trigger blocked.

@@ -9,6 +9,7 @@ import tw.tsm.domain.constants.EWar
 import tw.tsm.domain.constants.EWarStyle
 import tw.tsm.domain.data.EveFightData
 import tw.tsm.domain.data.EveFightEnemy
+import tw.tsm.domain.data.ExclusiveSkillDef
 import tw.tsm.domain.data.NpcDef
 import tw.tsm.domain.data.NpcDropDef
 import tw.tsm.domain.data.NpcUpgradeDef
@@ -57,6 +58,7 @@ class BattleManager(
     private val dailyProgressSystem: DailyProgressSystem? = null,
     private val collectionSystem: CollectionSystem? = null,
     private val sacredEquipPrimaryDefs: Map<Int, SacredEquipPrimaryDef> = emptyMap(),
+    private val exclusiveSkillDefs: Map<Int, Map<Int, ExclusiveSkillDef>> = emptyMap(),
 ) {
     /** Trình phân tích vật phẩm chiến đấu (stateless, dùng chung cho toàn trận)*/
     private val battleItemResolver = BattleItemResolver(inventorySystem, itemDefs)
@@ -126,7 +128,7 @@ class BattleManager(
         val effectiveTerrain = if (terrain == 0) 101 else terrain
 
         val battleId = nextBattleId.getAndIncrement()
-        val skillResolver = BattleSkillResolver(skillDefs)
+        val skillResolver = BattleSkillResolver(skillDefs, exclusiveSkillDefs)
         val grid = BattleGrid()
 
         // Thu thập định nghĩa NPC liên quan (npcId + NpcDef)
@@ -217,7 +219,7 @@ class BattleManager(
 
         val effectiveTerrain = 101
         val battleId = nextBattleId.getAndIncrement()
-        val skillResolver = BattleSkillResolver(skillDefs)
+        val skillResolver = BattleSkillResolver(skillDefs, exclusiveSkillDefs)
         val grid = BattleGrid()
 
         val involvedNpcs = mutableListOf<Pair<Int, NpcDef>>()
@@ -289,7 +291,7 @@ class BattleManager(
         }
 
         val battleId = nextBattleId.getAndIncrement()
-        val skillResolver = BattleSkillResolver(skillDefs)
+        val skillResolver = BattleSkillResolver(skillDefs, exclusiveSkillDefs)
         val grid = BattleGrid()
 
         val battle = BattleInstance(
@@ -772,7 +774,9 @@ class BattleManager(
         // is serialized into the SAME packet so DVT starts those combo animations together.
         val actionGroups = mutableListOf<MutableList<ActionResult>>()
         for (actionResult in roundResult.actionResults) {
-            if (actionResult.comboWithPrevious && actionGroups.isNotEmpty()) {
+            val previousGroupEndsWithRevive = actionGroups.lastOrNull()?.lastOrNull()
+                ?.targets?.any { it.passiveReviveHp > 0 } == true
+            if (actionResult.comboWithPrevious && actionGroups.isNotEmpty() && !previousGroupEndsWithRevive) {
                 actionGroups.last().add(actionResult)
             } else {
                 actionGroups.add(mutableListOf(actionResult))
@@ -783,6 +787,16 @@ class BattleManager(
             for (session in battle.playerSessions.values) {
                 responseSender.sendBattleSkillResult(session, skillData)
             }
+
+            // 14080 auto-revive is an S:051-001 absolute HP update after the lethal hit.
+            for (target in group.flatMap { it.targets }) {
+                if (target.passiveReviveHp <= 0) continue
+                val hp = target.passiveReviveHp.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+                for (session in battle.playerSessions.values) {
+                    responseSender.sendBattleRevive(session, target.targetCol, target.targetRow, hp)
+                }
+            }
+
             if (index < actionGroups.lastIndex) {
                 delay(actionPlaybackDelayMs(group.last()))
             }

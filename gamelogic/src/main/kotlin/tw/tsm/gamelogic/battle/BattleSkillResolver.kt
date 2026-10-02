@@ -5,6 +5,7 @@ import tw.tsm.domain.constants.BattleConstants
 import tw.tsm.domain.constants.EAttackResult
 import tw.tsm.domain.constants.EAttribute
 import tw.tsm.domain.constants.EBeHitAction
+import tw.tsm.domain.data.ExclusiveSkillDef
 import tw.tsm.domain.data.SkillDef
 import kotlin.math.max
 
@@ -17,7 +18,8 @@ private val logger = KotlinLogging.logger {}
  * và tạo toàn bộ dữ liệu kết quả tấn công S:050-001.
  */
 class BattleSkillResolver(
-    private val skillDefs: Map<Int, SkillDef>
+    private val skillDefs: Map<Int, SkillDef>,
+    private val exclusiveSkillDefs: Map<Int, Map<Int, ExclusiveSkillDef>> = emptyMap()
 ) {
     private val FRIENDLY_ONLY_FIGHT_WAYS = setOf(6, 7, 8, 14)
 
@@ -194,6 +196,7 @@ class BattleSkillResolver(
 
             var totalDamage = 0
             var lastRawDamage = 0  // Sát thương gốc của đòn gây tử vong (dùng cho phán định đánh bay)
+            var passiveReviveHp = 0L
             var finalAttackResult = EAttackResult.HIT
             var finalBeHitAction = EBeHitAction.HIT
             val allAttrChanges = dispelAttrChanges.toMutableList()
@@ -291,7 +294,17 @@ class BattleSkillResolver(
                     if (lastRawDamage >= (target.maxHp * BattleConstants.FLY_OUT_DAMAGE_RATIO).toLong()) {
                         target.isFlyOut = true
                     }
-                    break  // Đã chết thì không đánh tiếp
+                    // 14080 hồi sinh xảy ra sau hit gây chết nhưng trước hành động kế tiếp.
+                    // Fly-out không thể hồi sinh trên chiến trường.
+                    if (!target.isFlyOut) {
+                        passiveReviveHp = NpcPassiveCombatRules.tryAutoRevive(target, exclusiveSkillDefs)
+                        if (passiveReviveHp > 0) {
+                            logger.info {
+                                "${target.name} kích hoạt passive 14080: hồi sinh ${passiveReviveHp}/${target.maxHp} HP"
+                            }
+                        }
+                    }
+                    break  // Hit gây chết kết thúc chuỗi multi-hit hiện tại
                 }
             }
 
@@ -303,7 +316,8 @@ class BattleSkillResolver(
                     beHitAction = finalBeHitAction,
                     attrChanges = allAttrChanges,
                     targetDied = target.isDead,
-                    targetFlyOut = target.isFlyOut
+                    targetFlyOut = target.isFlyOut,
+                    passiveReviveHp = passiveReviveHp
                 )
             )
         }
@@ -425,5 +439,7 @@ data class TargetResult(
     val attrChanges: List<BattleAttrChange>,
     val targetDied: Boolean = false,
     /** Có bị đánh bay hay không (chết kiểu overkill)*/
-    val targetFlyOut: Boolean = false
+    val targetFlyOut: Boolean = false,
+    /** 14080: HP tuyệt đối sau hồi sinh; 0 nếu passive không kích hoạt. */
+    val passiveReviveHp: Long = 0
 )

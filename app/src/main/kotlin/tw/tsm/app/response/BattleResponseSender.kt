@@ -251,6 +251,19 @@ class BattleResponseSender {
         session.send(writer.toByteArray() + data)
     }
 
+    /** 14080 passive revive: isRevive=1 and absolute HP after revival. */
+    fun sendBattleRevive(session: SessionSender, col: Int, row: Int, hp: Int) {
+        session.send(
+            PacketWriter(11)
+                .writeByte(51).writeByte(1).writeByte(0)
+                .writeByte(1)
+                .writeByte(col).writeByte(row)
+                .writeByte(EAttribute.HP)
+                .writeIntLE(hp)
+                .toByteArray()
+        )
+    }
+
     // ── Đếm ngược (mainKind=52) ──
 
     /** S:052-001 đếm ngược bắt đầu chiến đấu*/

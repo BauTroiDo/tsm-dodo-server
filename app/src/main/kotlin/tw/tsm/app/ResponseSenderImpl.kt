@@ -487,6 +487,9 @@ class ResponseSenderImpl(worldManager: WorldManager) : ResponseSender {
     override fun sendBattleAttrChange(session: SessionSender, data: ByteArray) =
         battle.sendBattleAttrChange(session, data)
 
+    override fun sendBattleRevive(session: SessionSender, col: Int, row: Int, hp: Int) =
+        battle.sendBattleRevive(session, col, row, hp)
+
     override fun sendBattleEnd(session: SessionSender, playerId: Long, npcIndex: Int) =
         battle.sendBattleEnd(session, playerId, npcIndex)
 

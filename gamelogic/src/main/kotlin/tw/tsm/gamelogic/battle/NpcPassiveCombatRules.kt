@@ -1,6 +1,7 @@
 package tw.tsm.gamelogic.battle
 
 import tw.tsm.domain.constants.EAttackResult
+import tw.tsm.domain.data.ExclusiveSkillDef
 import tw.tsm.domain.data.SkillDef
 import kotlin.math.max
 
@@ -12,6 +13,7 @@ import kotlin.math.max
 object NpcPassiveCombatRules {
     const val HALF_PHYSICAL_DAMAGE = 14057
     const val THUNDER_SHIELD = 14061
+    const val PHOENIX_REBIRTH = 14080
 
     /**
      * 14057 - "Giảm một nửa sát thương vật lý".
@@ -43,6 +45,33 @@ object NpcPassiveCombatRules {
         }
 
         return damage
+    }
+
+    /**
+     * 14080 - Phượng Sồ Chuyển Sinh.
+     * DVT ExclusiveSkill effect kind=4 stores 50/70/100 by passive level;
+     * official update notes confirm one automatic revive per battle at that HP percentage.
+     */
+    fun tryAutoRevive(
+        target: BattleFighter,
+        exclusiveSkillDefs: Map<Int, Map<Int, ExclusiveSkillDef>>
+    ): Long {
+        if (target.passiveSkillId != PHOENIX_REBIRTH) return 0
+        if (target.passiveReviveUsed || target.isFlyOut || target.maxHp <= 0) return 0
+        if (target.hp > 0 || !target.isDead) return 0
+
+        val level = target.passiveSkillLevel
+        val record = exclusiveSkillDefs[PHOENIX_REBIRTH]?.get(level) ?: return 0
+        val effect = record.effects.firstOrNull { it.kind == 4 } ?: return 0
+        val percent = effect.value.toInt()
+        if (percent !in 1..100) return 0
+
+        val restoredHp = ((target.maxHp * percent) / 100L).coerceIn(1L, target.maxHp)
+        target.hp = restoredHp
+        target.isDead = false
+        target.isFlyOut = false
+        target.passiveReviveUsed = true
+        return restoredHp
     }
 
     fun isPhysicalAttack(skill: SkillDef?): Boolean =
