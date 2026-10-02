@@ -1398,3 +1398,40 @@ Continuation from checkpoint 149ef88.
   - no ERROR / Exception / FATAL / Koin creation error found in startup log.
 - P1 is metadata-only by design: no passive damage/probability effect was activated.
 - Next P2 target: recover authoritative ordering/trigger formulas for exact passive subset (especially 14057/14061) before enabling effects.
+
+
+## 2026-10-03 — Monster Passive/BOSS P2 — 14057 + Tian-Lei contract
+
+### Evidence recovered after P1
+- DVT `FightManager.lua` defines packet `Attack_Result=2` explicitly as `Thounder / 天雷`; it is not documented as a generic critical-hit marker.
+- DVT `TaiChiLightning.lua` (skill 14054, Càn Khôn Thiên Lôi) and `SKILL14060.lua` (Thiên Lôi Toàn Thể) branch on `EAttackResult.Thounder` and move the lightning/hit presentation onto the caster. This is the concrete client-side Tian-Lei self-hit channel.
+- Therefore the previous D4 mapping `critical -> EAttackResult.THUNDER` was incorrect. Crit keeps its DVT Crit/CritDamage numerical multiplier but serializes as normal `HIT`.
+- 14061 `Thiên Lôi Thuẫn` description says a Tian-Lei skill that hits self cannot cause damage. The safe server contract is now locked as: an incoming hit already marked `THUNDER` against a 14061 holder has HP damage 0.
+- No authoritative source found for the probability/trigger that makes 14054/14060 turn into a self-hit. P2 does NOT invent or emit THUNDER randomly; 14061 remains trigger-ready but does not fabricate the missing proc.
+- 14057 `Giảm nửa vật lý` has an explicit DVT magnitude of one half. P2 applies it to the final incoming HP damage for physical attacks only, using the already-audited damage classification: hand attack (`skill=null`) or `SkillDef.atkKind == 1`. Magic/non-physical skills are unchanged.
+
+### Implementation
+- Added `NpcPassiveCombatRules` as the evidence-gated passive layer.
+- 14057: final physical incoming damage is halved; positive damage remains at least 1.
+- 14061: `THUNDER` incoming damage is forced to 0; no proc rate is invented.
+- `BattleDamageCalc` no longer emits THUNDER for critical hits. Crit multiplier remains unchanged.
+- `BattleSkillResolver` combo scaling now preserves zero-damage immunity instead of clamping 0 back to 1.
+- `BattleFighter` passive comments updated: metadata is consumed only by evidence-backed rules.
+- Added `NpcPassiveCombatRulesTest`; updated D4 regression so 100% crit must remain `HIT`.
+
+### Still evidence-blocked
+- Exact Tian-Lei self-hit probability/trigger generation for 14054/14060.
+- 14058/14059 HP thresholds + probabilities/counter formula.
+- 14052 absorption formula.
+- 14066..14076 stat/element magnitudes.
+- 14080 revive HP amount.
+- 14085/14094/14095/21045/40000/40001/45000 numerical formulas.
+- No percentages or thresholds are guessed for these.
+
+### Validation
+- Targeted: `NpcPassiveCombatRulesTest` + D4 + D6 + `DvtNpcBattleStatsTest`: PASS, 18 tasks executed.
+- Full `gradlew test build --rerun-tasks`: PASS, 21/21 tasks executed before final combo guard; targeted suite re-run after combo guard: PASS, 18/18 tasks executed.
+- Final full `gradlew test build --rerun-tasks` after combo zero-damage guard: PASS, 21/21 tasks executed.
+- `git diff --check`: PASS (checkpoint file only has the existing CRLF normalization warning).
+- Production deploy/runtime verification follows after the P2 commit is pushed.
+- SSH note: production access is stable through Git Bash OpenSSH (`C:\Program Files\Git\bin\bash.exe`, `/usr/bin/ssh`) to `Administrator@192.168.1.69`; prefer this path over PowerShell/CMD SSH wrappers.

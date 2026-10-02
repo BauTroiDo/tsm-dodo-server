@@ -110,13 +110,13 @@ class BattleDamageD4RegressionTest {
     }
 
     @Test
-    fun `one hundred percent crit uses DVT thunder result channel`() {
+    fun `one hundred percent crit remains normal hit because DVT thunder is Tian Lei channel`() {
         val attacker = fighter(1, 2, crit = 100, hit = 30)
         val target = fighter(2, 0)
 
         val result = BattleDamageCalc.calculateAttack(attacker, target, null)
 
-        assertEquals(EAttackResult.THUNDER, result.attackResult)
+        assertEquals(EAttackResult.HIT, result.attackResult)
         assertTrue(result.damage > 0)
     }
 

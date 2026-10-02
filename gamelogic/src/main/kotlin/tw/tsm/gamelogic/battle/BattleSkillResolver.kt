@@ -211,8 +211,13 @@ class BattleSkillResolver(
                 val calcResult = if (!isHeal && comboMultiplier != 1.0) {
                     val scaledChanges = rawCalcResult.attrChanges.map { change ->
                         if (!change.isPositive) {
-                            // Giá trị sát thương × comboMultiplier, tối thiểu 1
-                            val scaled = maxOf(1, (change.value * comboMultiplier).toInt())
+                            // Giữ nguyên zero-damage immunity (ví dụ Thiên Lôi Thuẫn);
+                            // chỉ các hit đã có damage dương mới bị combo scale và clamp tối thiểu 1.
+                            val scaled = if (change.value <= 0) {
+                                0
+                            } else {
+                                maxOf(1, (change.value * comboMultiplier).toInt())
+                            }
                             change.copy(value = scaled)
                         } else change
                     }

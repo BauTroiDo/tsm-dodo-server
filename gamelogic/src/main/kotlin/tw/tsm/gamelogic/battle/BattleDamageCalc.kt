@@ -94,7 +94,7 @@ object BattleDamageCalc {
         val critChance = attacker.crit.coerceIn(0, 100)
         val isCritical = critChance > 0 && Random.nextInt(100) < critChance
         val critMultiplier = if (isCritical) calculateCritMultiplier(attacker.critDamage) else 1.0
-        val finalDamage = calculateFinalDamage(
+        val rawFinalDamage = calculateFinalDamage(
             reducedDmg = reducedDmg * critMultiplier,
             elementMultiplier = elementMultiplier,
             rebornMultiplier = rebornMultiplier,
@@ -103,15 +103,25 @@ object BattleDamageCalc {
             defending = target.isDefending
         )
 
+        // DVT FightManager: EAttackResult.Thounder=2 is the Tian-Lei result channel,
+        // not the generic critical-hit marker. Critical damage stays a normal HIT.
+        // A future evidence-backed Tian-Lei self-hit producer may emit THUNDER explicitly.
+        val attackResult = EAttackResult.HIT
+        val finalDamage = NpcPassiveCombatRules.applyFinalIncomingDamage(
+            damage = rawFinalDamage,
+            target = target,
+            skill = skill,
+            attackResult = attackResult
+        )
+
         logger.debug { "${attacker.name}(lv=${attacker.level},atk=${attacker.atk},int=${attacker.intelligence}) → " +
             "${target.name}(lv=${target.level},def=${target.def}): base=$baseDamage areaBase=$areaScaledBaseDamage " +
             "statusBase=$statusScaledBaseDamage div=$damageDivisor reduced=${reducedDmg.toInt()} " +
             "elem=${"%.2f".format(elementMultiplier)} " +
             "miss=${"%.1f".format(missChance)}% hit=${attacker.hit}% dodge=${target.dodge}% " +
             "crit=$isCritical critRate=${attacker.crit}% critMul=${"%.2f".format(critMultiplier)} " +
-            "variance=$variance final=$finalDamage" }
+            "variance=$variance rawFinal=$rawFinalDamage final=$finalDamage passive=${target.passiveSkillId}" }
 
-        val attackResult = if (isCritical) EAttackResult.THUNDER else EAttackResult.HIT
         val beHitAction = EBeHitAction.HIT
 
         // Danh sách biến đổi thuộc tính (HP giảm)

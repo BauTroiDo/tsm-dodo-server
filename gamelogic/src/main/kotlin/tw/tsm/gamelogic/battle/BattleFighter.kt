@@ -70,9 +70,9 @@ class BattleFighter(
     val skills: IntArray = intArrayOf(),
     /** Skill level snapshot; needed by SkillData:GetFightArea(skillLv). */
     val skillLevels: Map<Int, Int> = emptyMap(),
-    /** DVT NpcData.passiveSkill; metadata only until an exact server formula is evidenced. */
+    /** DVT NpcData.passiveSkill; chỉ các rule đủ bằng chứng mới được NpcPassiveCombatRules tiêu thụ. */
     val passiveSkillId: Int = 0,
-    /** DVT NpcData.passiveSkillLv; keep exact data level even when behavior is evidence-blocked. */
+    /** DVT NpcData.passiveSkillLv; giữ nguyên level kể cả khi semantics level còn evidence-blocked. */
     val passiveSkillLevel: Int = 0,
 
     // ── Dữ liệu ngoại hình riêng của người chơi (dùng khi kind=Player) ──
