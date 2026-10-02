@@ -1323,3 +1323,20 @@ Continuation from checkpoint 149ef88.
 - Full gradlew test build --rerun-tasks: PASS, 21/21 tasks executed.
 - git diff --check: PASS (only CRLF normalization warning).
 - Runtime production validation pending after deploy.
+
+### 2026-10-03 — Monster stats production deploy — PASS, user runtime test pending
+- Monster-stat fix commit 4187f28 deployed to production C:\Server-Game\tsm_dodo.
+- Production full gradlew test build --rerun-tasks: PASS, 21/21 tasks executed.
+- Runtime restarted successfully.
+- Production runtime state:
+  - HEAD 4187f28
+  - 192.168.1.69:6613 LISTEN
+  - runtime PID 8696
+  - server reached ready state
+  - no ERROR / Exception / FATAL / Koin creation error in startup log.
+- Runtime gameplay validation still needed by user:
+  1. fight ordinary wild monsters and confirm HP is no longer inflated;
+  2. observe enemy skills using proper max-level damage/fight-area;
+  3. observe reborn/turn monsters for expected stronger damage;
+  4. verify no regression in normal player/pet damage.
+- PassiveSkill numeric effects remain evidence-blocked and were intentionally not fabricated.
