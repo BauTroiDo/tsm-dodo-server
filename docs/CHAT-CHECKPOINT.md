@@ -841,3 +841,80 @@ Start D10-A immediately:
 - Targeted DvtItemWireTest PASS.
 - Full gradlew test build --rerun-tasks PASS.
 - git diff --check PASS except existing CRLF normalization warnings.
+
+
+# CHECKPOINT 2026-10-02 — PRODUCTION SERVER CONSOLIDATED
+
+## Authoritative runtime topology
+- Development/work machine: `192.168.1.99`.
+- Production game server: `192.168.1.69:6613`.
+- Production server source path: `C:\Server-Game\tsm_dodo`.
+- MySQL used by production: `192.168.1.69:3307`, database `tsm_dodo`.
+- Client staging `ServerList.json` has been corrected to point to `192.168.1.69:6613`.
+- The old staging/test runtime on `192.168.1.99:6713` has been STOPPED.
+- Going forward, use `192.168.1.69:6613` as the only runtime test server unless the user explicitly asks for an isolated staging runtime.
+
+## Synchronization state
+Canonical commit deployed today before this checkpoint:
+`e50ec724d92c289e061569619b13d66391c704c5`
+
+Verified synchronized at that commit:
+- LOCAL dev branch `feature/9-pet`
+- GitHub `feature/9-pet`
+- GitHub `main`
+- Production server source `C:\Server-Game\tsm_dodo` on `192.168.1.69`
+
+Production runtime was restarted after the source update and successfully reached:
+- DB connection established to `192.168.1.69:3307`
+- game data loaded
+- Netty bound to `0.0.0.0:6613`
+- server ready / waiting for connections
+
+No startup `ERROR`, `Exception`, or `WARN` was found in the checked runtime log window.
+
+IMPORTANT: Source deployment is complete, but gameplay features still require runtime verification feature-by-feature. Do not confuse successful startup with gameplay PASS.
+
+## What e50ec724 contains
+This deployment includes the accumulated D7-D10 backend work and previously committed 9-pet/server fixes, including:
+- D7 Astrolabe backend and Myth Enchant backend
+- D8 Sacred/Myth support completed where DVT evidence exists
+- D9 Achievement/Message Board work and other evidenced fixes
+- D10 Eve semantics work through D10-B5
+- 9-pet server-side fixes that had already been committed
+- Eve/quest/runtime fixes accumulated before this checkpoint
+
+The older D10 notes above that say `Not pushed to GitHub` are historical snapshots and are superseded by this checkpoint: the committed D7-D10 batch is now pushed and deployed.
+
+## Production-only local differences / cleanup
+- Production `app/src/main/resources/application.conf` currently differs from Git because the production machine retains its local DB runtime configuration. Do not overwrite it casually during cleanup or pulls.
+- Production has one untracked local file named `ProgramDatasshadministrators_authorized_keys.txt`. Leave it untouched unless explicitly investigating SSH setup.
+- Server cleanup was performed conservatively: disposable Gradle/build/cache/restart-log artifacts were removed where safe; tracked files accidentally identified as cache/report were restored immediately.
+- Critical data directories were preserved: `cdn`, `gamedata`, `File.dat`, `SQL`, `backups`, source trees, runtime config, and current logs.
+
+## Runtime rule from now on
+1. Build/edit/audit source on `192.168.1.99` working copy.
+2. Commit + push to GitHub.
+3. Fast-forward production source on `192.168.1.69`.
+4. Restart production runtime on `192.168.1.69:6613`.
+5. Test gameplay only against `192.168.1.69:6613`.
+6. Do not launch a `.99:6713` staging runtime unless the user explicitly asks for it.
+
+## D10 current semantic state
+Confirmed PASS before deployment:
+- D10-A production Eve inventory
+- D10-B1 class7/param9 reincarnation
+- D10-B2 class7/param11 Turn2Ball completion
+- D10-B4 class7/param16 mount-state
+- D10-B5 class7/param0 overload: level / element / transformNpcId
+
+Evidence-blocked, do not guess:
+- resultClass15 novice tutorial mutation
+- conditionClass17 child/foster subsystem
+- class7/param12 WaterWar warship storage predicate
+
+## NEXT CHAT FIRST ACTION
+Read this entire checkpoint first, then continue from this section as the newest source of truth.
+Do NOT recreate or use the old `.99:6713` staging runtime.
+Use production runtime `192.168.1.69:6613` for gameplay verification.
+Continue D10 from the next high-frequency unsupported/fallback result-policy shape with authoritative DVT evidence (candidate D10-B6: global resultClass11 or resultClass13). Audit Lua DVT/EventHandler and production Eve inventory first; patch only when evidence is sufficient.
+After each patch: targeted regression -> full `gradlew test build --rerun-tasks` -> `git diff --check` -> commit/push -> fast-forward `.69` -> restart -> runtime test -> mark PASS/FAIL.
