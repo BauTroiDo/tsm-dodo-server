@@ -1093,3 +1093,21 @@ Continuation from checkpoint 149ef88.
 - Full `gradlew test build --rerun-tasks`: PASS 21/21.
 - `git diff --check`: PASS.
 - Production deploy/runtime validation pending immediately after this checkpoint.
+
+### Production validation for commit 5aab227 — PASS
+- Commit deployed to production `192.168.1.69` at `C:\Server-Game\tsm_dodo`.
+- Production full `gradlew test build --rerun-tasks`: PASS 21/21.
+- Runtime restart PASS; port 6613 LISTEN, PID 4548.
+- Runtime log confirms:
+  - `IOS_LimitTimeDungeon` loaded: 1 record.
+  - `IOS_SceneFight` loaded: 381 records, turn=18.
+  - Eve/Ground and all prior DVT data load normally.
+  - Koin resolved LimitTimeDungeonHandler + MiningHandler (no NoBeanDefFound / InstanceCreation errors).
+  - Server reached ready state on 0.0.0.0:6613.
+  - no ERROR / Exception / FATAL in startup log.
+- Production machine has no mysql.exe CLI, so direct SHOW TABLES check was unavailable; DatabaseFactory startup completed without schema error after adding CharacterMining.
+- Runtime client verification still required for:
+  1. LimitFightArea button -> scene49942 -> RoleCount27 timer/exit.
+  2. Turn tab navigation to the 18 DVT destinations.
+  3. Mining button -> scene49996 -> UIMine info/refill/state.
+- Important: entry coordinates 49942=(360,300) and 49996=(440,400) remain explicitly offline Eve-geometry fallbacks, not recovered original DVT spawn coordinates. If client runtime shows blocked/invalid spawn, adjust only SpecialSceneTeleportService entry policy from real map evidence; do not alter Lua/data.
