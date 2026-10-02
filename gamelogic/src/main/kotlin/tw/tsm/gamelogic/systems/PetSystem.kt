@@ -1019,8 +1019,8 @@ class PetSystem(
         synchronized(pc) {
             val pet = pc.follow[followSlot] ?: return -1
 
-            // Đang xuất chiến thì không thể cất
-            if (pet.isDeployed) return -1
+            // Client DVT không chặn cất võ tướng đang xuất chiến. Khi chuyển storage,
+            // trạng thái xuất chiến phải được gỡ atomically thay vì từ chối thao tác.
 
             // Võ tướng không thể trưởng thành thì không được cất vào khách sạn (canGrow=0 hoặc canGrow=2 Võ tướng nhiệm vụ)
             if (pet.canGrow != 1) return -1
@@ -1031,6 +1031,7 @@ class PetSystem(
             // Di chuyển
             pc.follow.remove(followSlot)
             pc.inn[innSlot] = pet.copy(storageType = STORAGE_INN, slotIndex = innSlot, isDeployed = false)
+            refreshLegacyFightNpcId(pc)
             pc.dirty = true
             logger.info { "Cất vào khách sạn: charId=$characterId follow=$followSlot → inn=$innSlot" }
             return innSlot
@@ -1052,7 +1053,8 @@ class PetSystem(
 
             // Di chuyển
             pc.inn.remove(innSlot)
-            pc.follow[followSlot] = pet.copy(storageType = STORAGE_FOLLOW, slotIndex = followSlot)
+            pc.follow[followSlot] = pet.copy(storageType = STORAGE_FOLLOW, slotIndex = followSlot, isDeployed = false)
+            refreshLegacyFightNpcId(pc)
             pc.dirty = true
             logger.info { "Lấy ra từ khách sạn: charId=$characterId inn=$innSlot → follow=$followSlot" }
             return followSlot
@@ -1070,14 +1072,14 @@ class PetSystem(
             val innPet = pc.inn[innSlot] ?: return false
             val followPet = pc.follow[followSlot] ?: return false
 
-            // Đang xuất chiến thì không thể tráo đổi
-            if (followPet.isDeployed) return false
+            // Client DVT cho phép tráo pet đang xuất chiến; pet bị cất phải tự undeploy.
 
             // Võ tướng không thể trưởng thành thì không được cất vào khách sạn
             if (followPet.canGrow != 1) return false
 
-            pc.follow[followSlot] = innPet.copy(storageType = STORAGE_FOLLOW, slotIndex = followSlot)
+            pc.follow[followSlot] = innPet.copy(storageType = STORAGE_FOLLOW, slotIndex = followSlot, isDeployed = false)
             pc.inn[innSlot] = followPet.copy(storageType = STORAGE_INN, slotIndex = innSlot, isDeployed = false)
+            refreshLegacyFightNpcId(pc)
             pc.dirty = true
             logger.info { "Tráo đổi Khách sạn ↔ Mang theo: charId=$characterId inn=$innSlot ↔ follow=$followSlot" }
             return true
@@ -1108,8 +1110,7 @@ class PetSystem(
         synchronized(pc) {
             val pet = pc.follow[followSlot] ?: return false
 
-            // Đang xuất chiến thì không thể cất
-            if (pc.fightNpcId == pet.npcId) return false
+            // Client DVT không chặn cất võ tướng đang xuất chiến; chuyển storage sẽ tự undeploy.
 
             // DVT: 5 ô mặc định + RoleCount[822], tối đa 150.
             // Không chỉ dựa vào UI client; server cũng phải chặn vượt dung lượng đã mua.
@@ -1120,7 +1121,8 @@ class PetSystem(
 
             // Di chuyển (Kho dùng list, slotIndex dùng list index)
             pc.follow.remove(followSlot)
-            pc.warehouse.add(pet.copy(storageType = STORAGE_WAREHOUSE, slotIndex = pc.warehouse.size))
+            pc.warehouse.add(pet.copy(storageType = STORAGE_WAREHOUSE, slotIndex = pc.warehouse.size, isDeployed = false))
+            refreshLegacyFightNpcId(pc)
             pc.dirty = true
             logger.info { "Cất vào kho võ tướng: charId=$characterId follow=$followSlot" }
             return true
@@ -1142,7 +1144,8 @@ class PetSystem(
 
             // Di chuyển
             pc.warehouse.remove(pet)
-            pc.follow[followSlot] = pet.copy(storageType = STORAGE_FOLLOW, slotIndex = followSlot)
+            pc.follow[followSlot] = pet.copy(storageType = STORAGE_FOLLOW, slotIndex = followSlot, isDeployed = false)
+            refreshLegacyFightNpcId(pc)
             pc.dirty = true
             logger.info { "Lấy ra từ kho võ tướng: charId=$characterId npcId=$npcId → follow=$followSlot" }
             return followSlot
