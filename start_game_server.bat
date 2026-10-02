@@ -71,6 +71,11 @@ if exist "launcher_config.json" (
 
 set "DB_URL=jdbc:mysql://%DB_HOST%:%DB_PORT%/%DB_NAME%?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Taipei&characterEncoding=UTF-8"
 
+rem 9-pet production profile: match the staging runtime that passed gameplay testing
+set "NINE_PET_ENABLED=true"
+set "NINE_PET_MAX_CARRIED=9"
+set "NINE_PET_PROGRESSION_ENABLED=true"
+
 echo [%date% %time%] Starting Game Server...
 echo JAVA_HOME=%JAVA_HOME%
 echo GAMEDATA_PATH=%GAMEDATA_PATH%
