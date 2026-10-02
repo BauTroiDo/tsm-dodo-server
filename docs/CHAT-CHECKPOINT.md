@@ -1435,3 +1435,21 @@ Continuation from checkpoint 149ef88.
 - `git diff --check`: PASS (checkpoint file only has the existing CRLF normalization warning).
 - Production deploy/runtime verification follows after the P2 commit is pushed.
 - SSH note: production access is stable through Git Bash OpenSSH (`C:\Program Files\Git\bin\bash.exe`, `/usr/bin/ssh`) to `Administrator@192.168.1.69`; prefer this path over PowerShell/CMD SSH wrappers.
+
+### 2026-10-03 — Monster Passive/BOSS P2 production deploy — PASS
+- P2 implementation commit `f93740f` pushed to `origin/main`.
+- Production `C:\Server-Game\tsm_dodo` fast-forwarded from `a2616f6` to `f93740f` via a verified Git bundle transferred over Git Bash SSH, because production GitHub HTTPS fetch cannot prompt for credentials.
+- Production local `app/src/main/resources/application.conf` was preserved unchanged; local operational/bundle files were not cleaned or overwritten.
+- Production full `gradlew test build --rerun-tasks`: PASS, 21/21 tasks executed.
+- Runtime restarted with a detached Windows process and log `logs\restart-monster-passive-p2-f93740f.log`.
+- Runtime state after restart:
+  - commit: `f93740f`
+  - server PID: `10104`
+  - `[::]:6613` LISTEN
+  - startup reached Netty ready state and accepted local health-check connections
+  - no startup `ERROR`, `Exception`, `FATAL`, or Koin creation failure found.
+- SSH operational note: Git Bash OpenSSH is stable for `Administrator@192.168.1.69`; prefer `C:\Program Files\Git\bin\bash.exe` + `/usr/bin/ssh` for future production work.
+- Gameplay validation to do in client:
+  1. monster with passive 14057: physical incoming damage should be halved; magic/non-physical unchanged;
+  2. ordinary critical hits should still receive crit damage but serialize as normal HIT, not Tian-Lei THUNDER;
+  3. 14061 remains trigger-ready only: no random Tian-Lei self-hit probability is fabricated until authoritative evidence is found.
