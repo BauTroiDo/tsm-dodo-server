@@ -78,6 +78,18 @@ class DvtNpcBattleStatsTest {
     }
 
     @Test
+    fun `npc passive metadata is preserved for battle runtime without inventing behavior`() {
+        val npcs = NpcDatLoader.load(serverData("Npc_C.dat"))
+        val skills = SkillDatLoader.load(serverData("Skill_C.dat"))
+
+        val npc = npcs.values.first { it.passiveSkill > 0 && it.passiveSkillLv > 0 }
+        val profile = NpcBattleProfileCalc.from(npc, skills)
+
+        assertEquals(npc.passiveSkill, profile.passiveSkillId)
+        assertEquals(npc.passiveSkillLv, profile.passiveSkillLevel)
+    }
+
+    @Test
     fun `all profile fields preserve Npc_C direct combat attributes`() {
         val npcs = NpcDatLoader.load(serverData("Npc_C.dat"))
         val skills = SkillDatLoader.load(serverData("Skill_C.dat"))
@@ -97,6 +109,8 @@ class DvtNpcBattleStatsTest {
             assertEquals(npc.agi, profile.agi)
             assertEquals(npc.intelligence, profile.intelligence)
             assertEquals(npc.turn, profile.turn)
+            assertEquals(npc.passiveSkill, profile.passiveSkillId)
+            assertEquals(npc.passiveSkillLv, profile.passiveSkillLevel)
         }
     }
 }

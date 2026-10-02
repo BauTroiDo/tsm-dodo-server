@@ -22,6 +22,8 @@ data class NpcBattleProfile(
     val agi: Int,
     val intelligence: Int,
     val turn: Int,
+    val passiveSkillId: Int,
+    val passiveSkillLevel: Int,
     val skills: IntArray,
     val skillLevels: Map<Int, Int>,
 )
@@ -50,6 +52,8 @@ object NpcBattleProfileCalc {
             agi = npc.agi,
             intelligence = npc.intelligence,
             turn = npc.turn,
+            passiveSkillId = npc.passiveSkill,
+            passiveSkillLevel = npc.passiveSkillLv,
             skills = skills.toIntArray(),
             skillLevels = levels,
         )

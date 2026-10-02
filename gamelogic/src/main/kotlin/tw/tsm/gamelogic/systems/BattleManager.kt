@@ -1757,7 +1757,9 @@ class BattleManager(
             intelligence = profile.intelligence,
             turn = profile.turn,
             skills = profile.skills,
-            skillLevels = profile.skillLevels
+            skillLevels = profile.skillLevels,
+            passiveSkillId = profile.passiveSkillId,
+            passiveSkillLevel = profile.passiveSkillLevel
         )
     }
 }

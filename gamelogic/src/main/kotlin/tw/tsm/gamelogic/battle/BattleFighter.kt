@@ -70,6 +70,10 @@ class BattleFighter(
     val skills: IntArray = intArrayOf(),
     /** Skill level snapshot; needed by SkillData:GetFightArea(skillLv). */
     val skillLevels: Map<Int, Int> = emptyMap(),
+    /** DVT NpcData.passiveSkill; metadata only until an exact server formula is evidenced. */
+    val passiveSkillId: Int = 0,
+    /** DVT NpcData.passiveSkillLv; keep exact data level even when behavior is evidence-blocked. */
+    val passiveSkillLevel: Int = 0,
 
     // ── Dữ liệu ngoại hình riêng của người chơi (dùng khi kind=Player) ──
     var sex: Int = 0,

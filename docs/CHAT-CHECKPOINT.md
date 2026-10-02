@@ -1340,3 +1340,49 @@ Continuation from checkpoint 149ef88.
   3. observe reborn/turn monsters for expected stronger damage;
   4. verify no regression in normal player/pet damage.
 - PassiveSkill numeric effects remain evidence-blocked and were intentionally not fabricated.
+
+## 2026-10-03 — Monster Passive/BOSS P1 audit — metadata READY, formulas evidence-blocked
+
+### Runtime confirmation from user
+- User gameplay-tested commit 4187f28 monster core fixes and confirmed PASS.
+- Treat direct NPC HP/SP, max-level enemy skills, NPC turn/reborn and fourth specialSkill as runtime-validated.
+
+### Passive inventory
+- Tracked DVT Npc_C.dat currently has 478 NPC records with passiveSkill > 0.
+- 21 distinct passive skill IDs are used by those NPCs.
+- passiveSkill/passiveSkillLv are authoritative NpcData fields; Lua RoleController:GetSkillLv also returns npcDatas[npcId].passiveSkillLv for owned NPC roles.
+
+### Exact/partial semantics found in DVT data
+- 14057 `Giảm nửa vật lý`: description says physical damage is reduced by one half.
+  - multiplier amount 0.5 is explicit, but the authoritative server ordering (pre-DEF vs post-DEF/final) is not present in Lua/data/PC source.
+  - NOT activated yet; applying it at the wrong stage materially changes damage.
+- 14061 `Thiên Lôi Thuẫn`: description says Tian-Lei skills hitting self cannot deal damage.
+  - Skill_C contains several Tian-Lei-related skills, but DVT does not provide the authoritative skill-ID membership for this passive.
+  - NOT activated yet.
+- 14080 `Phượng Sồ Chuyển Sinh`: auto-revive is explicit, but restored HP amount is not numerically defined.
+- 14058/14059/14052/14043/14085/14094/14095/40000/40001/45000 and others remain qualitative or probability/threshold dependent.
+- Newer 14066..14076 passive stat/element skills map to INT/ATK/DEF/HPX/SPX/AGI/crit/element effects in FightRoleController, but Skill_C numerical=0/attribute=0 and no exact server magnitude is present.
+
+### Auxiliary DVT table audit
+- IOS_NpcSkillProb_C.dat is only 4 bytes (`02 00 00 00`) and contains no per-NPC record payload; it cannot supply the missing AI/passive probability formula.
+- IOS_NpcFightValue_C.dat:
+  - 53 records, fixed 23 bytes each.
+  - most keys are template IDs 1..24; only 45361..45364 match real Npc_C IDs.
+  - 45361..45364 are `Khảo thí 1..4` and are also referenced by IOS_Festival.dat.
+  - therefore this is special-mode/event fight-value data, not a global wild-monster stat multiplier. Do NOT apply it to ordinary Npc_C battle fighters.
+- IOS_SkillTrigger_C.dat:
+  - 25 records, fixed 11 bytes each.
+  - record IDs are 1..25 rather than passive/skill IDs; field schema/consumer is not exposed in Lua.
+  - no passive behavior is inferred from it yet.
+
+### P1 implementation
+- NpcBattleProfile now preserves passiveSkillId + passiveSkillLevel from NpcDef.
+- BattleFighter now carries passiveSkillId + passiveSkillLevel for wild/event NPC runtime.
+- BattleManager.createNpcFighter wires the passive metadata into the battle fighter.
+- This batch intentionally changes NO damage/trigger behavior; it only prevents passive metadata from being lost before later evidence-backed implementations.
+- DvtNpcBattleStatsTest now locks passive metadata preservation against tracked Npc_C.dat.
+
+### Validation
+- Targeted DvtNpcBattleStatsTest + BattleDamageD* regression: PASS, 18 tasks executed.
+- Full `gradlew test build --rerun-tasks`: PASS, 21/21 tasks executed.
+- Next passive step: recover exact server ordering/trigger formulas for a small evidence-backed subset before activating any passive effect.
