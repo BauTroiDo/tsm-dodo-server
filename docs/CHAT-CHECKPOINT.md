@@ -918,3 +918,14 @@ Do NOT recreate or use the old `.99:6713` staging runtime.
 Use production runtime `192.168.1.69:6613` for gameplay verification.
 Continue D10 from the next high-frequency unsupported/fallback result-policy shape with authoritative DVT evidence (candidate D10-B6: global resultClass11 or resultClass13). Audit Lua DVT/EventHandler and production Eve inventory first; patch only when evidence is sufficient.
 After each patch: targeted regression -> full `gradlew test build --rerun-tasks` -> `git diff --check` -> commit/push -> fast-forward `.69` -> restart -> runtime test -> mark PASS/FAIL.
+
+## 2026-10-02 — IL2CPP research snapshot + tool — PASS
+- Full native research snapshot is persisted under `docs/research/il2cpp/TS-Origin-VTC-1.3/`.
+- Source APK: package `com.vtcmobile.gz06`, app label `TS Origin VTC: Xuất Chiến`, versionName `1.3`, versionCode `8`.
+- Stored artifacts: original APK, ARM64 `libil2cpp.so`, `libunity.so`, and matching `global-metadata.dat`.
+- Verified native pair: `ELFCLASS64 / EM_AARCH64`, metadata sanity `0xFAB11BAF`, metadata version `31`.
+- Exact sizes and SHA256 hashes are documented in `docs/research/il2cpp/TS-Origin-VTC-1.3/README.md`.
+- Wails/Go research tool source and reference executable are stored under `tools/ts-il2cpp-research/`.
+- Tool supports LDPlayer APK pull, APK extraction, pair verification, SHA256, text/U16/U32 search with offsets, ASCII string dump, Markdown report, and optional Il2CppDumper execution.
+- Real DVT tests PASS: pair inspection, binary search, string dump, Wails build, and executable launch.
+- For future crafting/native audits, use this snapshot when Lua DVT/client/data are insufficient. Lua DVT remains the primary source of truth.
