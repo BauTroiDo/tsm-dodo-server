@@ -1205,3 +1205,18 @@ Continuation from checkpoint 149ef88.
 - Full `gradlew test build --rerun-tasks`: PASS, 21/21 tasks executed.
 - `git diff --check`: PASS (only existing CRLF normalization warnings).
 - Runtime gameplay test on production `192.168.1.69:6613` still required after deploy.
+
+### Git / deployment state for Furnace batch
+- Furnace implementation commit: a5cbad34f5aad5ba6c48b0b9f975c0c03ec4423d (feat: implement DVT furnace backend).
+- Pushed successfully to both origin/feature/9-pet and origin/main.
+- Production 192.168.1.69 is online:
+  - TCP 6613 = open (game runtime still running)
+  - TCP 22 = open
+  - TCP 5985 = open.
+- Deployment is NOT complete yet:
+  - Remote Desktop Commander currently exposes only dev machine DESKTOP-Q96IFHO / .99.
+  - SSH qt@192.168.1.69 with current dev key fails authentication.
+  - SMB admin share \\192.168.1.69\C$\Server-Game\tsm_dodo is not accessible with current credentials.
+  - WinRM by IP is blocked by TrustedHosts/authentication requirements; do not change TrustedHosts or guess credentials automatically.
+- Therefore production has not yet fast-forwarded/pulled a5cbad3 and has not been restarted for this Furnace batch.
+- Do not ask the user to gameplay-test Furnace until .69 is actually updated and restarted.
