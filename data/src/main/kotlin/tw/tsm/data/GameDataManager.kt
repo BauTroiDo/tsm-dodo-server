@@ -79,6 +79,14 @@ class GameDataManager(
     var compoundRecipes: List<CompoundRecipeDef> = emptyList()
         private set
 
+    /** Khu luyện công giới hạn DVT từ IOS_LimitTimeDungeon_C.dat, key=index. */
+    var limitTimeDungeonDefs: Map<Int, LimitTimeDungeonDef> = emptyMap()
+        private set
+
+    /** Danh sách điều hướng luyện công/chuyển sinh DVT từ IOS_SceneFight_C.dat. */
+    var sceneFightDefs: List<SceneFightDef> = emptyList()
+        private set
+
     /** Dữ liệu địa chất bản đồ (key = mapId, value = geolBaseAtt) — dùng cho nền chiến đấu*/
     var mapTerrains: Map<Int, Int> = emptyMap()
         private set
@@ -382,6 +390,19 @@ class GameDataManager(
             }
         } else {
             logger.warn { "IOS_Compound.dat không tồn tại — Chế tạo generic sẽ bị evidence-block" }
+        }
+
+        // UITeleport — cùng hai bảng client DVT dùng cho LimitFightArea / Turn navigation.
+        loadFile(dataIosDir, "IOS_LimitTimeDungeon_C.dat") { bytes ->
+            limitTimeDungeonDefs = LimitTimeDungeonDatLoader.load(bytes)
+            logger.info { "Nạp IOS_LimitTimeDungeon xong: ${limitTimeDungeonDefs.size} bản ghi" }
+        }
+        loadFile(dataIosDir, "IOS_SceneFight_C.dat") { bytes ->
+            sceneFightDefs = SceneFightDatLoader.load(bytes)
+            logger.info {
+                "Nạp IOS_SceneFight xong: ${sceneFightDefs.size} bản ghi, " +
+                    "turn=${sceneFightDefs.count { it.group > 100 }}"
+            }
         }
 
         // Ground.mmg (dữ liệu địa chất bản đồ, ưu tiên CompreseData của runtime;

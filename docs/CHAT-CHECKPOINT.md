@@ -1042,3 +1042,54 @@ User pointed out the 3 remaining UITeleport tabs visible below Memory: LimitFigh
 - Temporary TeleportScratchTest and scratch output files used only to inspect Eve.emg were deleted after audit.
 - No Lua files modified.
 - Next implementation order: T2 mainKind97 only after authoritative entry-coordinate evidence; T3 runtime navigation/door verification; T4 mainKind170 after authoritative entry-coordinate + persistence/timer semantics are recovered.
+
+## 2026-10-02 — UITeleport T2/T3/T4 implementation — DEV PASS
+Continuation from checkpoint 149ef88.
+
+### T2 LimitFightArea / protocol 97
+- Added `LimitTimeDungeonDatLoader` and `LimitTimeDungeonDef`; server now loads tracked DVT `File.dat/Data-ios/IOS_LimitTimeDungeon_C.dat`.
+- Added opcode 97 + `LimitTimeDungeonHandler`.
+- C:097-001 validates exact Lua result classes:
+  1 level too low, 2 time exhausted, 3 battle, 4 event, 5 party, 6 already in scene, 0 success.
+- Added `LimitTimeDungeonSystem`:
+  - tracks RoleCount index 27 while in scene49942;
+  - increments once/minute;
+  - persists RoleCount and sends updates;
+  - restores tracking on C:012-001 scene ready after relog/restart;
+  - exits through Eve sceneInfo when 120-minute limit is reached;
+  - stops job on disconnect.
+- Entry to scene49942 has no authoritative inbound spawn in Lua/Eve/data. Current offline fallback is isolated in `SpecialSceneTeleportService`: when no NPC exists, first Eve door + 4 grids, snapped to 20px. For scene49942 this resolves to (360,300). This is NOT claimed as original DVT coordinate.
+
+### T3 Chuyển sinh
+- Added `SceneFightDatLoader` + `SceneFightDef`; server now loads tracked `IOS_SceneFight_C.dat`.
+- Verified exact DVT table: 381 rows, 18 Turn rows in groups 101/102/103 = 9/7/2.
+- No server teleport opcode was invented. UITeleport Turn remains client MarkManager navigation using the DVT table. Runtime issues, if any, must be fixed at destination Eve/door semantics.
+
+### T4 Mỏ thôn thực / protocol 170
+- Added opcode 170 + `MiningHandler` for C170-001/002/010/011.
+- Added `CharacterMining` persistence table, `MiningRepository`, `MiningSystem` and Koin wiring.
+- `DatabaseFactory` creates/migrates `character_mining`.
+- DVT constants locked from Lua:
+  - mine scene 49996;
+  - MaxMine=600000000;
+  - four fuel items 55431..55434;
+  - machine skins 22120..22123;
+  - durability max65535;
+  - one durability point consumed per 360 seconds.
+- Refill validates exact bag slot/item/quantity and removes items atomically through InventorySystem; S170-010 returns wire index + added durability.
+- S170-001 packet shape: result/type/remainingOre/setTime/four machine pairs/dayLimit.
+- S170-002 packet shape: result/type/remainingOre/people/isMining.
+- Scene49996 has no authoritative inbound spawn. Offline fallback uses centroid of six real Eve NPC placements, snapped to 20px => (440,400). This is NOT claimed as original DVT coordinate.
+- Eve sceneInfo is used for exit back to scene12003.
+- Koin runtime wiring bug found during audit and fixed before deploy: MiningRepository, MiningSystem and MiningHandler are now all bound.
+
+### Regression / validation
+- `DvtTeleportRemainingTabsTest` now locks:
+  - exact LimitTimeDungeon row;
+  - exact 18 Turn rows/group counts;
+  - deterministic Eve-derived fallback entries 49942=(360,300), 49996=(440,400);
+  - mining durability settlement/persistence every 360 seconds.
+- Targeted `DvtTeleportRemainingTabsTest`: PASS.
+- Full `gradlew test build --rerun-tasks`: PASS 21/21.
+- `git diff --check`: PASS.
+- Production deploy/runtime validation pending immediately after this checkpoint.

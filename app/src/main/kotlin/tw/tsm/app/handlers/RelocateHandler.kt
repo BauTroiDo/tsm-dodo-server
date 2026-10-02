@@ -7,6 +7,7 @@ import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.PacketHandler
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.gamelogic.systems.WorldManager
+import tw.tsm.gamelogic.systems.LimitTimeDungeonSystem
 
 private val logger = KotlinLogging.logger {}
 
@@ -21,6 +22,7 @@ class RelocateHandler(
     private val worldManager: WorldManager,
     private val responseSender: ResponseSender,
     private val groundItemManager: tw.tsm.gamelogic.systems.GroundItemManager? = null,
+    private val limitTimeDungeonSystem: LimitTimeDungeonSystem? = null,
 ) : PacketHandler {
 
     /** mainKind = 12 (0x0C) */
@@ -48,6 +50,9 @@ class RelocateHandler(
 
         // ★ Thông báo đã tải cảnh xong (đánh dậy deferred.await của EveDoorWarpService)
         worldManager.notifySceneLoadComplete(session.playerId)
+
+        // LimitFightArea: vào mới hoặc relog/restart trong scene giới hạn đều khôi phục timer.
+        limitTimeDungeonSystem?.onSceneReady(session)
 
         // S:022-004 danh sách trống — kích hoạt ContinueNavigation() của client (dự phòng)
         responseSender.sendMapNpcInit(session, emptyList())

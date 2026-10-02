@@ -15,6 +15,7 @@ import tw.tsm.persistence.tables.CharacterCompletedEvents
 import tw.tsm.persistence.tables.CharacterCollectionCards
 import tw.tsm.persistence.tables.CharacterCollectionStyles
 import tw.tsm.persistence.tables.CharacterMoney
+import tw.tsm.persistence.tables.CharacterMining
 import tw.tsm.persistence.tables.CharacterCurrencies
 import tw.tsm.persistence.tables.Characters
 import tw.tsm.persistence.tables.CharacterMountEquips
@@ -81,6 +82,7 @@ object DatabaseFactory {
                 CharacterHotkeys,
                 CharacterRoleCounts,
                 CharacterFlyPoints,
+                CharacterMining,
                 CharacterUiSellCounts,
                 CharacterSlotMachines, CharacterSlotMachineAwards,
                 CharacterCollectionStyles, CharacterCollectionCards,

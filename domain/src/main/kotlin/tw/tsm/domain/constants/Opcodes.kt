@@ -97,6 +97,9 @@ object Opcodes {
     /** Hệ thống Sưu Tập (protocolTable[95])*/
     const val COLLECTION = 95
 
+    /** Khu luyện công giới hạn (protocolTable[97]) */
+    const val LIMIT_TIME_DUNGEON = 97
+
     /** Hệ thống tiền (tăng/giảm/khởi tạo)*/
     const val MONEY = 26
 
@@ -185,6 +188,9 @@ object Opcodes {
 
     /** Hệ thống tinh linh (DVT UIElf.lua / protocolTable[107])*/
     const val ELF = 107
+
+    /** Mỏ Thôn Thực / UIMine (protocolTable[170]) */
+    const val MINING = 170
 
     /** Hệ thống Thần Thoại/Godskin (DVT UIGodskin.lua / protocolTable[108]) */
     const val GODSKIN = 108

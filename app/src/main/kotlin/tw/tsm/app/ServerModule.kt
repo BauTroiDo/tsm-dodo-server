@@ -37,6 +37,7 @@ import tw.tsm.domain.interfaces.repositories.RoleCountRepository
 import tw.tsm.domain.interfaces.repositories.DispatchRepository
 import tw.tsm.domain.interfaces.repositories.FriendRepository
 import tw.tsm.domain.interfaces.repositories.MailRepository
+import tw.tsm.domain.interfaces.repositories.MiningRepository
 import tw.tsm.domain.interfaces.repositories.MessageBoardRepository
 import tw.tsm.domain.interfaces.repositories.SkillRepository
 import tw.tsm.domain.interfaces.repositories.UiSellCountRepository
@@ -50,6 +51,7 @@ import tw.tsm.persistence.repositories.SlotMachineRepositoryImpl
 import tw.tsm.persistence.repositories.DispatchRepositoryImpl
 import tw.tsm.persistence.repositories.FriendRepositoryImpl
 import tw.tsm.persistence.repositories.MailRepositoryImpl
+import tw.tsm.persistence.repositories.MiningRepositoryImpl
 import tw.tsm.persistence.repositories.MessageBoardRepositoryImpl
 import tw.tsm.persistence.repositories.HotkeyRepositoryImpl
 import tw.tsm.persistence.repositories.MountRepositoryImpl
@@ -107,6 +109,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             register(get<WarriorRepositoryHandler>())
             register(get<MacroBoxHandler>())
             register(get<TeleportHandler>())
+            register(get<LimitTimeDungeonHandler>())
             register(get<AchievementHandler>())
             register(get<EmoteHandler>())
             register(get<DispatchHandler>())
@@ -122,6 +125,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             register(get<ActivityModelHandler>())
             register(get<MallHandler>())
             register(get<SlotMachineHandler>())
+            register(get<MiningHandler>())
         }
     }
     single {
@@ -165,6 +169,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             // Khi mất kết nối lưu và xoá trạng thái runtime
             if (session.roleId > 0) {
                 val roleId = session.roleId.toLong()
+                get<LimitTimeDungeonSystem>().stopTracking(roleId)
                 val state = playerStateManager.getState(roleId)
                 if (state != null) {
                     scope.launch {
@@ -248,6 +253,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single<MailRepository> { MailRepositoryImpl() }
     single<MessageBoardRepository> { MessageBoardRepositoryImpl() }
     single<FriendRepository> { FriendRepositoryImpl() }
+    single<MiningRepository> { MiningRepositoryImpl() }
 
     // Dữ liệu game
     single { gameDataManager }
@@ -351,6 +357,25 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     }
     single { MacroBoxSystem() }
     single { RoleCountSystem(get()) }
+    single {
+        SpecialSceneTeleportService(
+            get<ResponseSender>(), get<WorldManager>(), get<CharacterRepository>(),
+            get<GameDataManager>().eveData
+        )
+    }
+    single {
+        LimitTimeDungeonSystem(
+            get<GameDataManager>().limitTimeDungeonDefs,
+            get<RoleCountSystem>(), get<ResponseSender>(), get<SpecialSceneTeleportService>(), get<CoroutineScope>()
+        )
+    }
+    single {
+        MiningSystem(
+            get<MiningRepository>(),
+            get<InventorySystem>(),
+            get<GameDataManager>().itemDefs,
+        )
+    }
     single {
         CompoundSystem(
             get<InventorySystem>(),
@@ -478,7 +503,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { MoveHandler(get(), get(), get(), get<MineEncounterSystem>()) }
     single { ChatHandler(get(), get(), get()) }
     single { SceneHandler(get(), get()) }
-    single { RelocateHandler(get(), get(), get()) }
+    single { RelocateHandler(get(), get(), get(), get<LimitTimeDungeonSystem>()) }
     single { NpcEventHandler(get<EveTriggerRouter>(), get<EveFlowController>()) }
     single { ItemHandler(get(), get(), get(), get(), get(), get<GameDataManager>().itemDefs, get(), get<PlayerStateManager>(), get<StatSystem>(), get(), get<FlyPointSystem>(), get<CharacterRepository>(), get<PetEquipSystem>(), get<QuestSystem>(), get<SkillSystem>(), get<DailyProgressSystem>(), get<PetSystem>(), get<GameDataManager>().npcDefs, get<RoleCountSystem>(), get<CollectionSystem>(), get<AstrolabeSystem>(), get<GameDataManager>().sacredEquipPrimaryDefs, get<CompoundSystem>()) }
     single { NpcTradeHandler(get(), get(), get(), get<GameDataManager>().itemDefs, get()) }
@@ -508,6 +533,12 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get(), get(), get(), get(), get(),
             get<GameDataManager>().warpDefs,
             get<GameDataManager>().markDefs
+        )
+    }
+    single {
+        LimitTimeDungeonHandler(
+            get<LimitTimeDungeonSystem>(), get<RoleCountSystem>(), get<PartySystem>(),
+            get<EveEventStateMachine>(), get<SpecialSceneTeleportService>()
         )
     }
     single { AchievementHandler(get(), get(), get()) }
@@ -551,4 +582,12 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { ActivityModelHandler() }
     single { MallHandler(get(), get(), get<PointSystem>(), get<MoneySystem>(), get<PlayerCurrencySystem>(), get<ResponseSender>()) }
     single { SlotMachineHandler(get<SlotMachineSystem>(), get<ResponseSender>()) }
+    single {
+        MiningHandler(
+            get<MiningSystem>(),
+            get<SpecialSceneTeleportService>(),
+            get<PartySystem>(),
+            get<WorldManager>(),
+        )
+    }
 }
