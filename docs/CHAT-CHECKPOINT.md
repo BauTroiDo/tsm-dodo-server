@@ -929,3 +929,19 @@ After each patch: targeted regression -> full `gradlew test build --rerun-tasks`
 - Tool supports LDPlayer APK pull, APK extraction, pair verification, SHA256, text/U16/U32 search with offsets, ASCII string dump, Markdown report, and optional Il2CppDumper execution.
 - Real DVT tests PASS: pair inspection, binary search, string dump, Wails build, and executable launch.
 - For future crafting/native audits, use this snapshot when Lua DVT/client/data are insufficient. Lua DVT remains the primary source of truth.
+
+## 2026-10-02 — Generic Compound completion audit
+- Re-audited Lua DVT `UICompound.lua` / `CompoundData.lua`, `IOS_Compound.dat`, IL2CPP dump, public PC source, local legacy server sources/binaries and historical/official TS documentation.
+- Confirmed DVT client contract: three input slots; per-slot quantity is sent in C:023-014; generic input filter rejects Pearl/Gem/Remove/Ice/Item_22/Reinforced/ExclusiveWeapon plus `restrict & 4`.
+- `restrict` semantics from DVT ItemData: bit4 = cannot be compound material; bit8 = cannot be compound result.
+- `IOS_Compound.dat`: 1374 rows; effective ratios are 1:1 or 1:1:1. Legacy dirty rows are normalized by material presence: 3 rows materialC>0 with degreeC=0; 12 rows materialC=0 with nonzero degree.
+- Batch semantics: N complete recipe sets consume N of each degree-normalized material and create N results. Feather remains exact 3 same-rank stacks -> next rank, quantity N -> N; mixed element output follows selected input element roll.
+- Grade ceiling is `floor(weighted average material grade) + 2`; output may fall as low as grade 1. This matches TS M documented behavior.
+- Generic crafting quality uses exactly the three official crafting skills: 14005 煉丹術, 14011 鎔鑄術, 14019 鍛造術. 14032 精煉術 is a separate refining skill and is not included in generic compound quality.
+- Exact original server-side probability table could not be recovered from Lua/client/native/PC/public/local legacy sources. Do not describe the fallback percentages as original DVT. Current offline fallback is isolated in `CompoundSystem.rollOutputGrade()`: best-of-rolls over valid grades <= ceiling, with one additional quality-roll step per 5 total generic crafting skill levels and probabilistic partial step. This preserves only evidenced invariants: higher skill improves high-grade chance, never raises ceiling, and low-grade failure remains possible.
+- Removed old incorrect behavior `round(avg) +1 if any skill learned`.
+- Targeted `DvtCompoundTest`: PASS.
+- Full `gradlew test build --rerun-tasks`: PASS 21/21.
+- `git diff --check`: PASS.
+
+\n
