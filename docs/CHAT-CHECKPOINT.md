@@ -2133,3 +2133,22 @@ Continuation from checkpoint 149ef88.
 - Audit damaging skills that also inflict a modeled status. Kotlin still uses a legacy `50 + (attacker INT - target INT)/2` second proc roll after damage; this is not yet established by DVT Lua/data.
 - Inventory the current DVT Skill_C damaging+status rows by fightWay/round/status family, then compare their matching PC server branches. Do not generalize the AI-L 3/15 rule unless the data categories and server fallback actually match.
 - Also verify whether multi-hit damaging status skills roll status once per execution or once per hit before changing behavior.
+
+## 2026-10-03 — Monster AI-M — damaging skill + status proc audit — EVIDENCE BLOCKED / no gameplay change
+### Evidence
+- Inventory of current DVT Skill_C mapped-status rows with encoded duration but outside status-only fightWay 3/15 found 57 rows; the hostile/damaging candidates are concentrated in fightWay 1/2.
+- The audited fightWay 1/2 damage+status subset currently has `howMuchTimes=1` for every row, so there is no current multi-hit ambiguity about rolling status once per hit versus once per execution.
+- DVT `FightRoleController.RunEffect` applies a status only when S:050-001 includes a status Attr_Kind (Seal/Vary/Faint/Spec/Strong/etc.); the client does not calculate the server proc probability.
+- PC `BattleAbstract` has explicit hit/proc branches for status-only skill_type 3 and 15, but ordinary damage skill_type 1/2 only performs damage and provides no generic attached-status probability fallback for DVT's newer combined damage+status skills.
+- Several DVT descriptions prove that attached statuses are intended (for example 21033 says damage with a chance to stun), but neither Lua nor current data exposes the exact server probability formula.
+
+### Existing Kotlin boundary
+- `BattleDamageCalc.calculateAttack` currently uses `50 + (attacker INT - target INT)/2`, clamped 10..90, as a second attached-status proc roll.
+- Git history shows that formula originates in the initial Kotlin server commit `75900f4`; no DVT/PC provenance was recovered for it.
+- Per project rules, AI-M does not replace this legacy fallback with another guessed probability and does not make attached statuses deterministic without stronger evidence.
+- Temporary inventory test/output were deleted after audit; working tree returned to only the intentionally untracked `tools/start-staging-runtime.ps1`.
+
+### START NEXT — Monster AI-N
+- Audit status-group collision/reapplication semantics. PC status-only branches refuse a new disable/debuff when the target already has a status in that category; Kotlin currently can overwrite a grouped status.
+- Compare DVT group storage (`Seal/Vary/Faint/Spec/Strong`), selection behavior and clear/reapply packets first, then use PC fallback only for matching fightWay 3/15 categories.
+- Determine whether an already-statused target should MISS, preserve the old status, refresh duration, or replace it; add deterministic tests before any mutation.
