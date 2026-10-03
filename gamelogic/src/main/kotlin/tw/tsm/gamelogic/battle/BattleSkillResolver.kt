@@ -106,18 +106,43 @@ class BattleSkillResolver(
             allowInsufficientSp -> minOf(attacker.sp, requiredSp.toLong()).toInt()
             else -> requiredSp
         }
+        // PC server re-checks the selected coordinate at AGI execution time. For hostile
+        // HandFight/fightWay 1-2, a dead/removed enemy is retargeted on the same selected side
+        // using row-first front/back order. Higher fightWays and same-side actions are not
+        // pre-retargeted by this rule; their stale-target semantics are audited separately.
+        var effectiveTargetCol = targetCol
+        var effectiveTargetRow = targetRow
+        val selectedTarget = grid.getAt(targetCol, targetRow)
+        val selectedTargetInvalid = selectedTarget == null || !selectedTarget.isAlive
+        val selectedExistingSameSide = selectedTarget != null &&
+            selectedTarget.isPlayerSide == attacker.isPlayerSide
+        val pcCanRetarget = skill == null || skill.fightWay <= 2
+
+        if (selectedTargetInvalid && pcCanRetarget && !selectedExistingSameSide) {
+            val fallback = grid.firstAliveOnSelectedSidePcOrder(targetCol)
+                ?: return SkillResolveResult(emptyList(), spConsumed = 0, fightArea = fightArea)
+            effectiveTargetCol = fallback.col
+            effectiveTargetRow = fallback.row
+        }
+
         // Quyết định danh sách mục tiêu trước khi biến đổi. Mục tiêu cũ/không hợp lệ không được tiêu tốn SP.
         val targets = if (targetsFriendlySide) {
             // Client target legality is driven by fightWay; friendly utility/dispel is not always HP heal.
             grid.resolveTargets(
                 fightArea,
-                targetCol,
-                targetRow,
+                effectiveTargetCol,
+                effectiveTargetRow,
                 !attacker.isPlayerSide,
                 deadTargetsOnly = targetsDeadFriendly
             )
         } else {
-            grid.resolveTargets(fightArea, targetCol, targetRow, attacker.isPlayerSide, isCombo = comboMultiplier > 1.0)
+            grid.resolveTargets(
+                fightArea,
+                effectiveTargetCol,
+                effectiveTargetRow,
+                attacker.isPlayerSide,
+                isCombo = comboMultiplier > 1.0
+            )
         }
 
         if (targets.isEmpty()) {

@@ -73,6 +73,15 @@ class DvtBattleTargetGeometryTest {
 
 
     @Test
+    fun `PC stale-target scan alternates front back by row`() {
+        val grid = fullSide(2 to 2, 3 to 0, 3 to 3)
+        assertEquals(
+            3 to 0,
+            grid.firstAliveOnSelectedSidePcOrder(2)?.let { it.col to it.row }
+        )
+    }
+
+    @Test
     fun `all-field revive keeps only dead occupants`() {
         val grid = BattleGrid()
         val deadLeft = fighter(1, 0, 0).also { it.hp = 0; it.isDead = true }

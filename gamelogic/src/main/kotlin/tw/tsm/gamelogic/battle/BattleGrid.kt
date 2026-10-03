@@ -74,6 +74,23 @@ class BattleGrid {
     /** Xác chết phe địch vẫn nằm trên ô để NPC fightWay=8 có thể hồi sinh. */
     fun getDeadEnemySide(): List<BattleFighter> = getDeadSide(0..1)
 
+    /**
+     * PC BattleAbstract.changeTarget scans the selected target side row-first,
+     * alternating front/back columns: (front,0),(back,0),(front,1),(back,1)...
+     * This differs from getAlive*Side(), whose iteration order is column-first.
+     */
+    fun firstAliveOnSelectedSidePcOrder(targetCol: Int): BattleFighter? {
+        val frontCol = if (targetCol < 2) 0 else 2
+        val backCol = frontCol + 1
+        for (row in 0 until BattleConstants.MAX_ROW) {
+            for (col in intArrayOf(frontCol, backCol)) {
+                val fighter = getAt(col, row)
+                if (fighter != null && fighter.isAlive) return fighter
+            }
+        }
+        return null
+    }
+
     private fun getDeadSide(cols: IntRange): List<BattleFighter> {
         val result = mutableListOf<BattleFighter>()
         for (col in cols) {
