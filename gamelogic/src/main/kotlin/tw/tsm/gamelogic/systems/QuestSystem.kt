@@ -28,8 +28,27 @@ private val logger = KotlinLogging.logger {}
  */
 class QuestSystem(
     private val repo: QuestRepository,
-    private val markDefs: Map<Int, MarkDef>
+    private val markDefs: Map<Int, MarkDef>,
+    dailyDungeonMissionIds: Set<Int> = emptySet(),
+    private val today: () -> Int = DispatchSystem::currentDayKey,
 ) {
+
+    // Only normal kind1/2 dungeon dailyFlag counters proven kind8/bitId0 may be cleared.
+    private val dailyDungeonIds = dailyDungeonMissionIds.filterTo(mutableSetOf()) {
+        markDefs[it]?.let { mark -> mark.kind == 8 && mark.bitId == 0 } == true
+    }
+    private val checkedDays = ConcurrentHashMap<Long, Int>()
+
+    suspend fun refreshDungeonDaily(charId: Long): List<Int> {
+        if (dailyDungeonIds.isEmpty() || charId <= 0) return emptyList()
+        return mutationLock(charId).withLock {
+            val day = today()
+            if ((checkedDays[charId] ?: 0) >= day) return@withLock emptyList()
+            val removed = repo.refreshDungeonDay(charId, day, dailyDungeonIds)
+            checkedDays[charId] = day
+            removed
+        }
+    }
 
     // Keep lock identity stable while suspended mutations may still be waiting.
     private val mutationLocks = ConcurrentHashMap<Long, Mutex>()

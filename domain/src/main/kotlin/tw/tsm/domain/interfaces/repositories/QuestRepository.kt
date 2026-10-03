@@ -28,6 +28,13 @@ data class MissionFlagRecord(val bitIndex: Int, val bitValue: Int)
  */
 interface QuestRepository {
 
+    /** Atomically clear only supplied daily counters and advance their persisted day marker.
+     * First observation preserves existing counters; same/older days never reset them.
+     */
+    suspend fun refreshDungeonDay(charId: Long, dayKey: Int, missionIds: Set<Int>): List<Int> =
+        error("Dungeon day persistence is not implemented by this repository")
+
+
     /**
      * Lấy tất cả nhiệm vụ đang tiến hành của nhân vật
      *

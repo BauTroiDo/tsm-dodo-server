@@ -2448,3 +2448,33 @@ Continuation from checkpoint 149ef88.
 - Determine authoritative dailyFlag consumption point (start vs successful clear/skip) before mutating count.
 - Resolve DungeonCombo kind=1/kind=2 reward selection, then hook active mission completion to S:047-012 result/rewards and timeout failure.
 - Keep weekly/soul all-pass/reset-count in later F4 unless their semantics become necessary to complete F3.
+
+
+## 2026-10-04 — Dungeon F3-B1 — Combo data + durable normal-dungeon daily reset
+
+### Reconciled baseline
+- Read the complete 2450-line checkpoint before code changes. Local feature/9-pet and freshly fetched origin/main were fe3de71; production source/runtime was c6af125, game PID12672, port6613.
+- No saved F3-B selector/source patch was present. The existing untracked DungeonEveContextScratchTest was read/run and preserved, excluded from commits.
+- Do not redo F1/F2-A/F2-B/F2-C/F3-A. Source priority remains Lua DVT > client/data/Eve > Kotlin > PC fallback; no Lua/client files changed.
+
+### Implemented, verified evidence
+- DungeonComboData.New: exact count header + 31-byte rows; 180 real rows. DataManager.OnLoadDungeonComboData appends duplicate IDs in file order. Added DungeonComboDatLoader + GameDataManager loading and immutable models preserving kind/kindValue and unsigned UInt32 values.
+- DungeonComboData:GetReward: choose the current turn slot, fall back through lower nonzero slots, finally slot0. Implemented rewardForTurn; no guessed RNG weights, threshold comparator, or reward grants.
+- MarkData.ReadInfo explicitly defines kind8 as daily clear/hidden. Only dailyFlag IDs referenced by normal dungeon kinds1/2 AND Mark kind8/bitId0 are reset. Active missionFlag kind4/5, completion flags, weekly/soul state and unrelated daily missions remain untouched.
+- Added character_dungeon_days. Reset selected mission rows and advance persisted day marker in one repository transaction under the existing per-character quest mutex. Same/older dates never reset; relog/restart cannot grant another reset. First observation preserves legacy counts because their prior day is unknown.
+- Login resets before S24-006 mission snapshot; dungeon entry validation checks boundary before quota; online autosave refreshes every30s and sends S24-004 for actually removed counters.
+- Calendar policy is the EXISTING offline DispatchSystem.currentDayKey: midnight Asia/Taipei (23:00 previous day Asia/Bangkok). This is explicitly an offline-server policy, NOT recovered original DVT dungeon reset-hour evidence. No new date inferred from host timezone.
+
+### Validation
+- Targeted DungeonF3BDataTest + DungeonDailyResetTest + QuestStepIntegrityTest + DungeonRoomPacketTest: BUILD SUCCESSFUL, 18/18 tasks.
+- New regressions: 4 Combo tests + 4 daily-reset tests; covers real180-row order, unsigned values, rebirth fallback, malformed/trailing data, first-use preservation, restart, day rollover, clock rollback, concurrent single reset, protected noncounter missions.
+- Full local gradlew test build --rerun-tasks: BUILD SUCCESSFUL, 21/21 tasks. git diff --check PASS.
+- Production deployment and runtime verification to be appended after commit/push/build/restart.
+
+### F3-B remaining — evidence blocked, not complete
+- Raw tables: kind1 thresholds include200/400/600 and600/900/1200; kind2 includes10/50/99/100; kind4 extraLoot uses turn1/2/3. Preserve semantics separately; do not call these probability weights.
+- TextData10295 says single BaDauYeu reward depends on enemy damage; 21363/21473 say treasure/search reward depends on remaining time. This proves score category, but not exact damage denominator/aggregation or equality at tier boundaries. No selector from score to row activated.
+- Trusted Eve context: scene62001/eve2 fightDataKey1 win/lose/escape ALL complete mission12322; only win adds12323. Therefore mission disappearance alone is not success. Scene62002/eve13 winning fight4 removes12332 then adds12321; eve14 explicit exit also removes12332. Never grant from generic REMOVE_MISSION.
+- No audited Eve mutation writes dungeon dailyFlag. The exact consume point (entry/start vs terminal result/clear/skip), failure/timeout quota semantics and per-run result/reward transaction still need authoritative evidence; no guessed consumption added.
+- Completion/timeout/S47-012 reward/EXP backend remains outstanding. Neither data-loader PASS nor daily-reset PASS is full F3-B gameplay PASS.
+- Next: lock score formula, tier boundary comparator, daily consumption and EXP reward-item semantics from DVT/native/server evidence or controlled official runtime trace, then implement per-run idempotent settlement with targeted tests. Weekly/soul remain F4.

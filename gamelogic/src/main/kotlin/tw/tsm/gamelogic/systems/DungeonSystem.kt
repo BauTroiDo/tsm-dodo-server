@@ -22,6 +22,7 @@ class DungeonSystem(
     private val questSystem: QuestSystem,
     private val partySystem: PartySystem,
     private val specialTeleport: SpecialSceneTeleportService,
+    private val responseSender: tw.tsm.domain.interfaces.ResponseSender? = null,
 ) {
     private val activeRuns = ConcurrentHashMap<Long, ActiveDungeonRun>()
 
@@ -108,6 +109,9 @@ class DungeonSystem(
 
     private suspend fun validateDailyCount(session: GameSession, def: DungeonDef): Int {
         if (def.dailyFlag == 0 || def.dailyCount <= 0) return RESULT_OK
+        for (missionId in questSystem.refreshDungeonDaily(session.roleId.toLong())) {
+            responseSender?.sendRemoveMission(session, missionId)
+        }
         val used = questSystem.getMissions(session.roleId.toLong())
             .firstOrNull { it.missionId == def.dailyFlag }
             ?.step ?: 0

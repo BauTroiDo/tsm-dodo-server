@@ -310,7 +310,11 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     }
     single { ItemUseProcessor(get(), get<PetSystem>(), get<GameDataManager>().itemDefs, get<GameDataManager>().blissBagDefs) }
     single { EveEventStateMachine() }
-    single { QuestSystem(get(), get<GameDataManager>().markDefs) }
+    single {
+        val data = get<GameDataManager>()
+        QuestSystem(get(), data.markDefs, data.dungeonDefs.values
+            .filter { it.kind in setOf(1, 2) }.map { it.dailyFlag }.toSet())
+    }
     single { BitFlagSystem(get(), get<GameDataManager>().guideLastBitFlagId) }
     single {
         CollectionSystem(
@@ -380,6 +384,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<QuestSystem>(),
             get<PartySystem>(),
             get<SpecialSceneTeleportService>(),
+            get<ResponseSender>(),
         )
     }
     single { DungeonRoomRegistry() }
@@ -507,7 +512,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     }
 
     // Lưu tự động định kỳ (mỗi 3 phút lưu dữ liệu tất cả người chơi trực tuyến)
-    single { AutoSaveService(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    single { AutoSaveService(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get<QuestSystem>(), get<ResponseSender>()) }
 
     // Bộ xử lý lệnh GM
     single {

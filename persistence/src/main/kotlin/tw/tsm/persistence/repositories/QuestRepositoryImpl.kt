@@ -2,6 +2,7 @@ package tw.tsm.persistence.repositories
 
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -11,6 +12,7 @@ import org.jetbrains.exposed.v1.jdbc.upsert
 import tw.tsm.domain.interfaces.repositories.MissionFlagRecord
 import tw.tsm.domain.interfaces.repositories.MissionRecord
 import tw.tsm.domain.interfaces.repositories.QuestRepository
+import tw.tsm.persistence.tables.CharacterDungeonDays
 import tw.tsm.persistence.tables.CharacterCompletedEvents
 import tw.tsm.persistence.tables.CharacterMissionFlags
 import tw.tsm.persistence.tables.CharacterMissions
@@ -21,6 +23,30 @@ import tw.tsm.persistence.tables.CharacterMissions
  * Dùng hai bảng character_missions và character_mission_flags.
  */
 class QuestRepositoryImpl : QuestRepository {
+
+    override suspend fun refreshDungeonDay(charId: Long, dayKey: Int, missionIds: Set<Int>): List<Int> =
+        suspendTransaction {
+            val oldDay = CharacterDungeonDays.selectAll()
+                .where { CharacterDungeonDays.charId eq charId }
+                .singleOrNull()?.get(CharacterDungeonDays.dayKey)
+            if (oldDay != null && oldDay >= dayKey) return@suspendTransaction emptyList()
+            val removed = if (oldDay == null) emptyList() else CharacterMissions.selectAll()
+                .where { (CharacterMissions.charId eq charId) and
+                    (CharacterMissions.missionId inList missionIds.toList()) }
+                .map { it[CharacterMissions.missionId] }
+            if (removed.isNotEmpty()) {
+                CharacterMissions.deleteWhere {
+                    (CharacterMissions.charId eq charId) and
+                        (CharacterMissions.missionId inList removed)
+                }
+            }
+            CharacterDungeonDays.upsert {
+                it[CharacterDungeonDays.charId] = charId
+                it[CharacterDungeonDays.dayKey] = dayKey
+            }
+            removed
+        }
+
 
     override suspend fun getMissions(charId: Long): List<MissionRecord> =
         suspendTransaction {

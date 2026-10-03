@@ -87,6 +87,9 @@ class GameDataManager(
     var dungeonDefs: Map<Int, DungeonDef> = emptyMap()
         private set
 
+    var dungeonComboDefs: Map<Int, List<DungeonComboDef>> = emptyMap()
+        private set
+
     /** Khu luyện công giới hạn DVT từ IOS_LimitTimeDungeon_C.dat, key=index. */
     var limitTimeDungeonDefs: Map<Int, LimitTimeDungeonDef> = emptyMap()
         private set
@@ -425,6 +428,11 @@ class GameDataManager(
         loadFile(dataIosDir, "IOS_Dungeon_C.dat") { bytes ->
             dungeonDefs = DungeonDatLoader.load(bytes)
             logger.info { "Nạp IOS_Dungeon xong: ${dungeonDefs.size} bản ghi" }
+        }
+
+        loadFile(dataIosDir, "IOS_DungeonCombo_C.dat") { bytes ->
+            dungeonComboDefs = DungeonComboDatLoader.load(bytes)
+            logger.info { "Nạp IOS_DungeonCombo xong: ${dungeonComboDefs.values.sumOf { it.size }} bản ghi" }
         }
 
         // UITeleport — cùng hai bảng client DVT dùng cho LimitFightArea / Turn navigation.

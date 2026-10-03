@@ -124,6 +124,7 @@ class LoginService(
         // ⚠️ Bắt buộc phải gửi trước S:003-000!
         // Bởi vì PlayerAppear sẽ kích hoạt Function.UpdateVisible(),
         // cần MarkManager.flags đã được khởi tạo để có thể hiển thị đúng các nút chức năng
+        questSystem.refreshDungeonDaily(record.id)
         val missions = questSystem.getMissions(record.id)
         val flags    = questSystem.getFlags(record.id)
         responseSender.sendInitMissionSteps(session, missions)

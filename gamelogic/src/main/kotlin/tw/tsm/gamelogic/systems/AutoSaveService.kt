@@ -28,7 +28,9 @@ class AutoSaveService(
     private val skillSystem: SkillSystem,
     private val petSystem: PetSystem,
     private val mountSystem: MountSystem,
-    private val roleCountSystem: RoleCountSystem
+    private val roleCountSystem: RoleCountSystem,
+    private val questSystem: QuestSystem? = null,
+    private val responseSender: tw.tsm.domain.interfaces.ResponseSender? = null,
 ) {
     companion object {
         /** Khoảng thời gian tự động lưu. 30 giây để giới hạn mất dữ liệu khi tiến trình/máy chủ bị reset đột ngột. */
@@ -66,6 +68,9 @@ class AutoSaveService(
             if (charId <= 0) continue
 
             try {
+                for (missionId in questSystem?.refreshDungeonDaily(charId).orEmpty()) {
+                    responseSender?.sendRemoveMission(session, missionId)
+                }
                 // Vị trí
                 if (session.mapId > 0) {
                     characterRepository.updatePosition(charId, session.mapId, session.x, session.y)
