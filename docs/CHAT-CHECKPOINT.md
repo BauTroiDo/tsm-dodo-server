@@ -2200,3 +2200,27 @@ Continuation from checkpoint 149ef88.
 - PC `BattleParticipant.updateStatus()` executes poison/tangle effects during the same status tick used for duration decrement; Kotlin currently only decrements/removes grouped statuses.
 - Compare DVT Lua status/skill handlers and current Skill_C first. Do not import PC periodic damage formulas or synthetic skill IDs unless DVT data/client behavior supports them.
 - Verify whether periodic ticks happen before or after duration reaches zero, whether they can kill/fly a fighter, and how S:050/S:053 ordering should be represented before adding gameplay mutation.
+
+## 2026-10-03 — Monster AI-P — legacy periodic Clump/Poison ticks — PASS
+### Evidence / scope
+- DVT client still exposes synthetic server-driven tick animations: skill `20001` = ClumpAtk/Cây tinh hút máu and `20003` = special reflected/periodic damage animation.
+- Current DVT Skill_C keeps both synthetic rows but `numerical=0`, so DVT data does not provide tick magnitude.
+- PC `BattleParticipant.updateStatus()` is the recovered server fallback: while the status remains active after duration decrement, source `10004` executes `20001` for fixed 30 HP and source `14015` executes `20003` for fixed 90 HP.
+- PC does not tick once duration reaches zero. Newer DVT Clump/Poison variants have no recovered server magnitude/periodic contract, so they remain evidence-blocked and are not generalized.
+
+### Implementation / validation
+- Commit `4c12825 fix: restore legacy DVT periodic status ticks`.
+- `BattleInstance` now emits a self-target S:050-compatible `ActionResult` only for exact source mappings `10004 -> 20001/30` and `14015 -> 20003/90` while the status remains active after decrement.
+- Tick damage is fixed direct HP loss, matching PC special-damage behavior; no ATK/DEF calculation, no SP cost, no invented fly-out rule.
+- Added lifecycle regressions for legacy Clump 30, legacy Poison 90, final-expiry no-tick, and explicit non-inheritance by newer variants 20025/20023.
+- Targeted `DvtBattleStatusLifecycleTest`: PASS, 18 tasks executed.
+- Full local `gradlew test build --rerun-tasks`: PASS, 21/21 tasks; `git diff --check` PASS.
+- Production fast-forwarded via verified `monster-ai-p.bundle`; local `application.conf` and operational files preserved.
+- Production full `gradlew test build --rerun-tasks`: PASS, 21/21 tasks on exact HEAD `4c12825`; tracked `.salive` restored afterwards.
+- Runtime restarted through WMI terminate/create and verified from a fresh SSH session: Java PID `4524`, IPv4/IPv6 port `6613` LISTEN, Netty server-ready at 16:41:21, recurring local health checks succeed.
+
+### START NEXT — Monster AI-Q
+- Audit Chaos forced-action semantics. Current AI-J1 suppresses ordinary NPC AI while `BattleStatus.CHAOS`, but PC `TSBattleNPC.start_round()` creates a forced HandFight command against a random living fighter on the same side for Chaos before normal AI.
+- DVT `IsCanControl/CheckCanAct` blocks manual control while Chaos; verify DVT skill descriptions/data plus PC fallback before changing Kotlin from skip-turn to forced same-side action.
+- Audit player/follow-NPC timeout behavior too: timeout auto-command currently only checks stun, so Chaos/Taunt may accidentally receive a normal hostile auto-attack.
+- Keep Taunt separate unless its exact forced-action contract is proven.
