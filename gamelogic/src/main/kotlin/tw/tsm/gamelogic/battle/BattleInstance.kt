@@ -557,15 +557,16 @@ class BattleInstance(
             fighter.hasActed = false
         }
 
-        // DVT SkillData.round is the number of battle rounds occupied by the status.
-        // PC fallback decrements statuses before the next round accepts commands, which is
-        // equivalent here to consuming one round after this round's actions finish. This must
-        // include statuses inflicted during the current round: raw round=1 affects the remainder
-        // of this round, then is cleared before the next countdown/command phase.
+        // DVT SkillData.round is a semantic occupied-round count. A status inflicted in
+        // the current action phase starts its first full affected round on the NEXT command
+        // phase; do not consume a duration unit immediately on application. This mirrors the
+        // PC server's +1 internal counter followed by start-round decrement, while keeping the
+        // Kotlin state as the semantic number of affected rounds still remaining.
         for (fighter in allFighters) {
             if (!fighter.isAlive) continue
             val expiredGroups = mutableListOf<Int>()
             for ((group, status) in fighter.groupedStatuses) {
+                if (status.appliedRound >= currentRound) continue
                 status.rounds--
                 if (status.rounds <= 0) {
                     // DVT RevRestoreStatus -> HandleStatus(group, skillId). Every modeled group
@@ -573,8 +574,6 @@ class BattleInstance(
                     // would map the same status back onto the client instead of removing it.
                     statusRestores.add(StatusRestore(fighter.col, fighter.row, group, 0))
                     expiredGroups.add(group)
-                } else {
-                    periodicStatusTick(fighter, status)?.let(actionResults::add)
                 }
             }
             for (group in expiredGroups) fighter.groupedStatuses.remove(group)
@@ -607,6 +606,26 @@ class BattleInstance(
         state = State.ROUND_END
 
         return RoundResult(actionResults, statusRestores, escapeResults, flyOutTargets, consumedItems)
+    }
+
+    /**
+     * Periodic status phase that runs before the countdown/command phase of each round.
+     * Newly inflicted statuses have appliedRound == previous currentRound and therefore
+     * first tick only after resolveRound advances currentRound, matching PC start_round.
+     */
+    fun resolveRoundStartStatusEffects(): RoundResult {
+        val actionResults = mutableListOf<ActionResult>()
+        if (currentRound <= 0) return RoundResult(actionResults, emptyList())
+
+        for (fighter in allFighters) {
+            if (!fighter.isAlive) continue
+            for (status in fighter.groupedStatuses.values) {
+                if (status.appliedRound >= currentRound || status.rounds <= 0) continue
+                periodicStatusTick(fighter, status)?.let(actionResults::add)
+                if (!fighter.isAlive) break
+            }
+        }
+        return RoundResult(actionResults, emptyList())
     }
 
     /**

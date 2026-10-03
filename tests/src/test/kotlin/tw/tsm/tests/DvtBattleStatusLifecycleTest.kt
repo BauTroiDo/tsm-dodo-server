@@ -52,12 +52,15 @@ class DvtBattleStatusLifecycleTest {
     }
 
     @Test
-    fun `duration one status clears before the next command round`() = runBlocking {
+    fun `duration one status survives one full following command round`() = runBlocking {
         val a = fighter(1, 2, 0)
         val b = fighter(2, 0, 0)
         val battle = battle(a, b)
         a.setGroupedStatus(1, BattleStatus.ICE_BOUND, 1, 11014, battle.currentRound)
 
+        val applied = battle.resolveRound()
+        assertEquals(1, a.groupedStatuses[1]?.rounds)
+        assertTrue(applied.statusRestores.isEmpty())
         val first = battle.resolveRound()
 
         assertFalse(a.groupedStatuses.containsKey(1))
@@ -68,12 +71,14 @@ class DvtBattleStatusLifecycleTest {
     }
 
     @Test
-    fun `duration two status survives exactly one following round`() = runBlocking {
+    fun `duration two status survives exactly two following rounds`() = runBlocking {
         val a = fighter(1, 2, 0)
         val b = fighter(2, 0, 0)
         val battle = battle(a, b)
         a.setGroupedStatus(1, BattleStatus.ICE_BOUND, 2, 11014, battle.currentRound)
 
+        battle.resolveRound()
+        assertEquals(2, a.groupedStatuses[1]?.rounds)
         val first = battle.resolveRound()
         assertEquals(1, a.groupedStatuses[1]?.rounds)
         assertTrue(first.statusRestores.isEmpty())
@@ -111,9 +116,11 @@ class DvtBattleStatusLifecycleTest {
         val battle = battle(a, b)
         a.setGroupedStatus(1, BattleStatus.CLUMP, 2, 10004, battle.currentRound)
 
-        val first = battle.resolveRound()
+        battle.resolveRound()
+        assertEquals(1000, a.hp)
+        val first = battle.resolveRoundStartStatusEffects()
         assertEquals(970, a.hp)
-        assertEquals(1, a.groupedStatuses[1]?.rounds)
+        assertEquals(2, a.groupedStatuses[1]?.rounds)
         val tick = first.actionResults.single()
         assertEquals(20001, tick.skillId)
         val hpChange = tick.targets.single().attrChanges.single()
@@ -121,8 +128,11 @@ class DvtBattleStatusLifecycleTest {
         assertEquals(30, hpChange.value)
         assertFalse(hpChange.isPositive)
 
+        battle.resolveRound()
+        battle.resolveRoundStartStatusEffects()
+        assertEquals(940, a.hp)
         val second = battle.resolveRound()
-        assertEquals(970, a.hp)
+        assertEquals(940, a.hp)
         assertTrue(second.actionResults.isEmpty())
         assertEquals(0, second.statusRestores.single().skillId)
     }
@@ -134,12 +144,18 @@ class DvtBattleStatusLifecycleTest {
         val battle = battle(a, b)
         a.setGroupedStatus(3, BattleStatus.POISON, 3, 14015, battle.currentRound)
 
-        assertEquals(910, battle.resolveRound().let { a.hp })
-        val second = battle.resolveRound()
+        battle.resolveRound()
+        battle.resolveRoundStartStatusEffects()
+        assertEquals(910, a.hp)
+        battle.resolveRound()
+        val second = battle.resolveRoundStartStatusEffects()
         assertEquals(820, a.hp)
         assertEquals(20003, second.actionResults.single().skillId)
+        battle.resolveRound()
+        battle.resolveRoundStartStatusEffects()
+        assertEquals(730, a.hp)
         val third = battle.resolveRound()
-        assertEquals(820, a.hp)
+        assertEquals(730, a.hp)
         assertTrue(third.actionResults.isEmpty())
         assertEquals(3, third.statusRestores.single().statusKind)
     }
@@ -155,7 +171,24 @@ class DvtBattleStatusLifecycleTest {
         val first = battle.resolveRound()
         assertEquals(1000, a.hp)
         assertTrue(first.actionResults.isEmpty())
-        assertEquals(1, a.groupedStatuses[1]?.rounds)
-        assertEquals(2, a.groupedStatuses[3]?.rounds)
+        battle.resolveRoundStartStatusEffects()
+        assertEquals(1000, a.hp)
+        assertEquals(2, a.groupedStatuses[1]?.rounds)
+        assertEquals(3, a.groupedStatuses[3]?.rounds)
+    }
+    @Test
+    fun `periodic damage can kill without flying out and ends battle before commands`() = runBlocking {
+        val a = fighter(1, 2, 0)
+        val b = fighter(2, 0, 0)
+        val battle = battle(a, b)
+        a.hp = 20
+        a.setGroupedStatus(1, BattleStatus.CLUMP, 1, 10004, battle.currentRound)
+        battle.resolveRound()
+        val tick = battle.resolveRoundStartStatusEffects().actionResults.single()
+        assertEquals(0, a.hp)
+        assertTrue(tick.targets.single().targetDied)
+        assertFalse(tick.targets.single().targetFlyOut)
+        assertEquals(20, tick.targets.single().attrChanges.single().value)
+        assertEquals(false, battle.checkBattleEnd()?.playerWin)
     }
 }
