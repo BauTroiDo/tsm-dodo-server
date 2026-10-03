@@ -1,5 +1,7 @@
 package tw.tsm.gamelogic.battle
 
+import tw.tsm.domain.constants.BattleConstants
+
 /**
  * Server-side NPC skill normalization.
  *
@@ -17,4 +19,14 @@ object NpcAiSkillRules {
 
     fun normalizeSelectedSkill(skillId: Int): Int =
         LARGE_SUMMON_BY_BASE[skillId] ?: skillId
+
+    /** Exact PC NPC AI one-roll slot priority: skill4 -> skill3 -> skill2 -> skill1. */
+    fun selectByRoll(skills: IntArray, roll: Int): Int {
+        require(roll in 0..99)
+        if (skills.size > 3 && skills[3] > 0 && roll % 5 == 0) return skills[3]
+        if (skills.size > 2 && skills[2] > 0 && roll % 4 == 0) return skills[2]
+        if (skills.size > 1 && skills[1] > 0 && roll % 3 == 0) return skills[1]
+        if (skills.isNotEmpty() && skills[0] > 0 && roll % 2 == 0) return skills[0]
+        return BattleConstants.HAND_FIGHT_SKILL_ID
+    }
 }

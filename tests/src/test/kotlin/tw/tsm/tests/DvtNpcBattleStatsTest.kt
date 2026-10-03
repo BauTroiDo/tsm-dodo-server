@@ -62,19 +62,34 @@ class DvtNpcBattleStatsTest {
         assertEquals(npc.turn, profile.turn)
         assertTrue(npc.specialSkill in profile.skills)
 
-        val expectedSkills = buildList {
-            npc.skills.filterTo(this) { it > 0 }
-            add(npc.specialSkill)
-        }.distinct()
+        val expectedSkills = listOf(
+            npc.skills.getOrElse(0) { 0 },
+            npc.skills.getOrElse(1) { 0 },
+            npc.skills.getOrElse(2) { 0 },
+            npc.specialSkill,
+        )
 
         assertEquals(expectedSkills, profile.skills.toList())
-        for (skillId in expectedSkills) {
+        for (skillId in expectedSkills.filter { it > 0 }.distinct()) {
             assertEquals(
                 skills[skillId]?.maxLv?.coerceAtLeast(1) ?: 1,
                 profile.skillLevels[skillId],
                 "NPC ${npc.name} skill=$skillId must use SkillData.maxLv",
             )
         }
+    }
+
+    @Test
+    fun `enemy npc AI slots preserve holes and duplicates from DVT Npc_C`() {
+        val npcs = NpcDatLoader.load(serverData("Npc_C.dat"))
+        val skills = SkillDatLoader.load(serverData("Skill_C.dat"))
+
+        val gapProfile = NpcBattleProfileCalc.from(requireNotNull(npcs[45367]), skills)
+        assertEquals(listOf(14080, 0, 0, 21001), gapProfile.skills.toList())
+
+        val duplicateProfile = NpcBattleProfileCalc.from(requireNotNull(npcs[35061]), skills)
+        assertEquals(listOf(20052, 20052, 20052, 0), duplicateProfile.skills.toList())
+        assertEquals(setOf(20052), duplicateProfile.skillLevels.keys)
     }
 
     @Test

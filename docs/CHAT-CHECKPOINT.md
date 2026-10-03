@@ -1768,3 +1768,47 @@ Continuation from checkpoint 149ef88.
 - Targeted AI-C + AI-B + battle semantics suite: PASS, 18/18 tasks executed.
 - Full local `gradlew test build --rerun-tasks`: PASS, 21/21 tasks executed.
 - `git diff --check`: PASS.
+
+### 2026-10-03 — Monster AI-C production deploy — PASS
+- Commit `6e21e3b fix: normalize DVT NPC elemental summons` pushed to `origin/main`.
+- Production fast-forwarded from `18d4bc6` to `6e21e3b`; local config/operational files preserved.
+- Production full `gradlew test build --rerun-tasks`: PASS, 21/21 tasks executed.
+- Runtime restarted through WMI and verified after closing/reconnecting SSH:
+  - production HEAD `6e21e3b`
+  - Java PID `10832`
+  - port `0.0.0.0:6613` and `[::]:6613` LISTEN
+  - local health-check connections continued after reconnect.
+- AI-C is live on production.
+- Next Monster AI audit: verify how Kotlin constructs NPC skill slots versus DVT Npc_C/PC skill1..skill4,
+  especially `specialSkill` / `upgradeSkill` ordering and whether the current one-roll selector sees the intended fourth skill.
+
+## 2026-10-03 — Monster AI-D — preserve NPC skill-slot probabilities
+### Evidence
+- DVT `Role.maxNpcSkill = 3`; NpcData.New reads skill1..skill3 plus field [35] `specialSkill`.
+- Exact PC NPC AI treats these as four probability slots: skill4 -> skill3 -> skill2 -> skill1,
+  using one roll with modulo gates %5 -> %4 -> %3 -> %2.
+- Previous `NpcBattleProfileCalc` filtered zero IDs and applied `distinct()`, which compressed slot positions.
+- Live DVT Npc_C audit found this changes real data:
+  - 3 NPC rows contain a zero gap before a later nonzero slot.
+  - 32 NPC rows contain duplicate skill IDs across slots.
+- Examples locked in regression:
+  - NPC 45367: [14080, 0, 0, 21001]
+  - NPC 35061: [20052, 20052, 20052, 0].
+
+### Implementation
+- `NpcBattleProfileCalc` now preserves exactly four AI slots:
+  [skill1, skill2, skill3, specialSkill], including zeros and duplicates.
+- `skillLevels` still stores only distinct nonzero IDs at SkillData.maxLv.
+- Moved exact one-roll selector into `NpcAiSkillRules.selectByRoll` for deterministic regression.
+- BattleInstance delegates random roll to that pure selector; probability semantics are unchanged.
+
+### Validation
+- `DvtNpcBattleStatsTest` now asserts four-slot preservation and the two live DVT gap/duplicate records.
+- `NpcAiSkillRulesTest` now covers:
+  - elemental summon remaps
+  - non-remapped light/dark/ordinary IDs
+  - zero-gap roll priority
+  - duplicate-slot independent modulo gates.
+- Targeted AI-D + AI-C + AI-B + battle semantics suite: PASS, 18/18 tasks executed.
+- Full local `gradlew test build --rerun-tasks`: PASS, 21/21 tasks executed.
+- `git diff --check`: PASS.

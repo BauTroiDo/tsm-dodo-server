@@ -20,4 +20,20 @@ class NpcAiSkillRulesTest {
         assertEquals(10000, NpcAiSkillRules.normalizeSelectedSkill(10000))
         assertEquals(14057, NpcAiSkillRules.normalizeSelectedSkill(14057))
     }
+
+    @Test
+    fun `slot holes keep PC modulo priority instead of being compressed`() {
+        val slots = intArrayOf(14080, 0, 0, 21001)
+        assertEquals(21001, NpcAiSkillRules.selectByRoll(slots, 10))
+        assertEquals(14080, NpcAiSkillRules.selectByRoll(slots, 2))
+        assertEquals(10000, NpcAiSkillRules.selectByRoll(slots, 3))
+    }
+
+    @Test
+    fun `duplicate slots keep their independent PC gates`() {
+        val slots = intArrayOf(20052, 20052, 20052, 0)
+        assertEquals(20052, NpcAiSkillRules.selectByRoll(slots, 3))
+        assertEquals(20052, NpcAiSkillRules.selectByRoll(slots, 4))
+        assertEquals(10000, NpcAiSkillRules.selectByRoll(slots, 5))
+    }
 }

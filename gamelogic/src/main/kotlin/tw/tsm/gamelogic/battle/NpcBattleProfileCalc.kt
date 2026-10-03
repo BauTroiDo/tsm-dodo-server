@@ -33,14 +33,22 @@ object NpcBattleProfileCalc {
         npc: NpcDef,
         skillDefs: Map<Int, SkillDef>,
     ): NpcBattleProfile {
-        val skills = buildList {
-            npc.skills.filterTo(this) { it > 0 }
-            if (npc.specialSkill > 0) add(npc.specialSkill)
-        }.distinct()
+        // Preserve the four DVT/PC AI slots exactly. Zero holes and duplicate skill IDs
+        // are meaningful because TSBattleNPC.seekTarget applies a different modulo gate
+        // to skill4 -> skill3 -> skill2 -> skill1. Compressing/deduplicating changes odds.
+        val skills = intArrayOf(
+            npc.skills.getOrElse(0) { 0 },
+            npc.skills.getOrElse(1) { 0 },
+            npc.skills.getOrElse(2) { 0 },
+            npc.specialSkill,
+        )
 
-        val levels = skills.associateWith { skillId ->
-            (skillDefs[skillId]?.maxLv ?: 1).coerceAtLeast(1)
-        }
+        val levels = skills.asSequence()
+            .filter { it > 0 }
+            .distinct()
+            .associateWith { skillId ->
+                (skillDefs[skillId]?.maxLv ?: 1).coerceAtLeast(1)
+            }
 
         return NpcBattleProfile(
             level = npc.level,
@@ -54,7 +62,7 @@ object NpcBattleProfileCalc {
             turn = npc.turn,
             passiveSkillId = npc.passiveSkill,
             passiveSkillLevel = npc.passiveSkillLv,
-            skills = skills.toIntArray(),
+            skills = skills,
             skillLevels = levels,
         )
     }

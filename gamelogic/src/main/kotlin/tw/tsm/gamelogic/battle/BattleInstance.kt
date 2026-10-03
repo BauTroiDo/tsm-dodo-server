@@ -625,14 +625,8 @@ class BattleInstance(
      * PC dùng đúng một roll 0..99 rồi ưu tiên modulo %5 -> %4 -> %3 -> %2; đây không phải
      * bốn lần roll độc lập. Khi đủ cả 4 skill, phân bố thực là 20/20/20/14%, basic 26%.
      */
-    private fun selectNpcSkill(skills: IntArray): Int {
-        val rand = Random.nextInt(100)
-        if (skills.size > 3 && skills[3] > 0 && rand % 5 == 0) return skills[3]
-        if (skills.size > 2 && skills[2] > 0 && rand % 4 == 0) return skills[2]
-        if (skills.size > 1 && skills[1] > 0 && rand % 3 == 0) return skills[1]
-        if (skills.isNotEmpty() && skills[0] > 0 && rand % 2 == 0) return skills[0]
-        return BattleConstants.HAND_FIGHT_SKILL_ID
-    }
+    private fun selectNpcSkill(skills: IntArray): Int =
+        NpcAiSkillRules.selectByRoll(skills, Random.nextInt(100))
 
     /**
      * Tính thưởng trận chiến (chỉ khi người chơi thắng)
