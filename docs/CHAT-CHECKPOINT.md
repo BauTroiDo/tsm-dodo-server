@@ -2177,7 +2177,7 @@ Continuation from checkpoint 149ef88.
 - Compare DVT round/status restore handling first, then PC `BattleParticipant` decrement timing as fallback.
 - Verify statuses inflicted mid-round are not decremented too early and statuses expiring at round end restore the correct group/packet state.
 
-## 2026-10-03 — Monster AI-O — status duration lifecycle / restore packet — PASS
+## 2026-10-03 — Monster AI-O — initial lifecycle / restore packet — SUPERSEDED for duration (see correction below)
 ### Evidence
 - Live DVT `SkillData.lua` defines raw `round` as the occupied battle-round count: 1/2/3 exact rounds, 4 = continuous three rounds.
 - PC `TSBattleNPC.start_round()` calls `BattleParticipant.updateStatus()` before the next round accepts commands. Status duration therefore consumes one round before the following command phase.
@@ -2201,7 +2201,7 @@ Continuation from checkpoint 149ef88.
 - Compare DVT Lua status/skill handlers and current Skill_C first. Do not import PC periodic damage formulas or synthetic skill IDs unless DVT data/client behavior supports them.
 - Verify whether periodic ticks happen before or after duration reaches zero, whether they can kill/fly a fighter, and how S:050/S:053 ordering should be represented before adding gameplay mutation.
 
-## 2026-10-03 — Monster AI-P — legacy periodic Clump/Poison ticks — PASS
+## 2026-10-03 — Monster AI-P — initial legacy periodic ticks — SUPERSEDED for timing (see correction below)
 ### Evidence / scope
 - DVT client still exposes synthetic server-driven tick animations: skill `20001` = ClumpAtk/Cây tinh hút máu and `20003` = special reflected/periodic damage animation.
 - Current DVT Skill_C keeps both synthetic rows but `numerical=0`, so DVT data does not provide tick magnitude.
@@ -2224,3 +2224,27 @@ Continuation from checkpoint 149ef88.
 - DVT `IsCanControl/CheckCanAct` blocks manual control while Chaos; verify DVT skill descriptions/data plus PC fallback before changing Kotlin from skip-turn to forced same-side action.
 - Audit player/follow-NPC timeout behavior too: timeout auto-command currently only checks stun, so Chaos/Taunt may accidentally receive a normal hostile auto-attack.
 - Keep Taunt separate unless its exact forced-action contract is proven.
+
+
+## 2026-10-03 — AI-O / AI-P correction — complete PC counter audit
+### Authoritative evidence and corrected interpretation
+- Read checkpoint first. Initial local/origin HEAD was `34b538c`; production source/runtime was `4c12825`, Java PID 4524, IPv4/IPv6 6613 LISTEN. User explicitly authorized taking over the existing uncommitted BattleInstance change.
+- DVT `lua/Data/SkillData.lua:19` documents 1/2/3 occupied rounds and raw 4 continuous three rounds. Lua/data does not establish an application-round decrement, so the initial AI-O claim of an extra round was unsupported.
+- PC fallback must include BOTH application and tick: `BattleAbstract.cs:592,712` initializes disable/debuff to `ceil(skill_lvl/2)+1`; `TSBattleNPC.cs:139` invokes `updateStatus()` before countdown/command registration; `BattleParticipant.cs:203+` decrements first, clears type at zero, then only executes Clump/Poison while source type remains active.
+- Kotlin stores semantic remaining duration without the PC sentinel +1. Therefore a status applied in action round N skips that boundary decrement, remains active for the next duration command rounds, and expires after those rounds. This is the scoped PC fallback consistent with DVT duration encoding, not a claim that DVT Lua exposes server tick code.
+- DVT `FightManager.lua:566-582` forwards S:053-001 group/skill to HandleStatus; generic skillId 0 clears the group. Expiry keeps this corrected clear packet and retains source skill internally only while active.
+- DVT `Fight/Skill.lua:63,105,106,281` exposes Clump 10004, ClumpAtk 20001, MirrorAtk 20003 and Poison 14015. `FightRoleController.lua:2614,2729` maps current status families. DVT synthetic data numerical=0 provides no magnitude; exact legacy PC fallback remains 10004->20001/30 and 14015->20003/90. New variants stay evidence-blocked.
+### Implementation / validation
+- `6dd88f6 fix: align DVT status duration lifecycle` commits only BattleInstance.kt and DvtBattleStatusLifecycleTest.kt, as requested.
+- `da4e08e fix: run periodic status effects before battle commands` separately connects BattleManager to the round-start phase, broadcasts paced S:050 results before countdown, and checks battle end after periodic deaths before accepting commands.
+- Application boundary does not tick. Each subsequent surviving round starts with the legacy tick; expired statuses do not tick. End-of-round S:053 clears expired groups before the next round's S:050 periodic effects/countdown. Direct fixed HP loss can kill, preserves corpse for revive, and does not invent fly-out behavior.
+- Targeted lifecycle tests PASS: 7 tests, 0 failures/errors, 18/18 Gradle tasks. Full local `gradlew.bat test build --rerun-tasks` PASS 21/21 tasks; diff check PASS. Local tracked .salive restored.
+- Tests cover duration 1/2, duration 3 via Poison, independent group clears with skillId=0, delayed legacy tick, final expiry, newer variant non-inheritance and lethal tick before commands.
+- Both commits pushed HEAD:main; local/origin rechecked at `da4e08e9263007d34f5c4470213d8e370dcbbc9b`. Production source fast-forwarded from verified base `4c128254bc5a8b1fba32baf351a7e5313a568ef4` using verified SCP bundle. Production application.conf and operational files preserved.
+- Production full `gradlew.bat test build --rerun-tasks`: PASS 21/21 tasks, 3m45s, exact code HEAD da4e08e. Tracked .salive restored after build and again after app:run startup removed it.
+- Restart: old game PID 4524 terminated successfully through WMI; detached launcher created via `_launch_prod_wmi.cmd` -> `_start_prod_detached.cmd`, WMI return 0. Fresh SSH verification: Java game PID 11520, Session 0; `0.0.0.0:6613` and `[::]:6613` LISTEN; Netty bind and Main server-ready at 17:04:50 on 2026-10-03 Asia/Bangkok; recurring local health-check connections succeed. Startup scan contains no runtime ERROR/Exception/FATAL (only Gradle ConfigurationErrors task labels).
+- Runtime code remains da4e08e; subsequent checkpoint commit is docs-only and requires no restart. `application.conf` local modification and all existing untracked operational files retained. `tools/start-staging-runtime.ps1` is untracked and never committed.
+
+### START NEXT / evidence boundaries
+- AI-O duration and AI-P legacy periodic timing correction is deployed and verified. DVT native/server evidence for newer periodic magnitudes and exact multi-group cleanse contract remains evidence-blocked; do not generalize PC formulas or purge selectors to new DVT skills.
+- Next audit may continue AI-Q Chaos forced-action semantics from the previous checkpoint, keeping Taunt separate and requiring DVT Lua/data first, PC only scoped fallback. No AI-Q gameplay change in this task.
