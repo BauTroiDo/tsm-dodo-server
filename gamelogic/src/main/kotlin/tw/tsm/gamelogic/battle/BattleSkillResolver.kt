@@ -106,24 +106,37 @@ class BattleSkillResolver(
             allowInsufficientSp -> minOf(attacker.sp, requiredSp.toLong()).toInt()
             else -> requiredSp
         }
-        // PC server re-checks the selected coordinate at AGI execution time. For hostile
-        // HandFight/fightWay 1-2, a dead/removed enemy is retargeted on the same selected side
-        // using row-first front/back order. Higher fightWays and same-side actions are not
-        // pre-retargeted by this rule; their stale-target semantics are audited separately.
+        // PC server re-checks the queued coordinate at AGI execution time and distinguishes
+        // an occupied corpse from an empty cell. An empty cell is retargeted on the originally
+        // selected side for every ordinary skill type; an occupied corpse is only retargeted
+        // for hostile HandFight/fightWay 1-2. DVT fightWay 8 is stronger evidence than the PC
+        // fallback: a missing revive corpse stays a zero-target no-op instead of selecting life.
         var effectiveTargetCol = targetCol
         var effectiveTargetRow = targetRow
         val selectedTarget = grid.getAt(targetCol, targetRow)
-        val selectedTargetInvalid = selectedTarget == null || !selectedTarget.isAlive
         val selectedExistingSameSide = selectedTarget != null &&
             selectedTarget.isPlayerSide == attacker.isPlayerSide
-        val pcCanRetarget = skill == null || skill.fightWay <= 2
+        val canRetargetOccupiedCorpse = skill == null || skill.fightWay <= 2
+        val shouldRetarget = when {
+            selectedTarget == null -> !targetsDeadFriendly
+            selectedTarget.isAlive -> false
+            selectedExistingSameSide -> false
+            else -> canRetargetOccupiedCorpse
+        }
 
-        if (selectedTargetInvalid && pcCanRetarget && !selectedExistingSameSide) {
+        if (shouldRetarget) {
             val fallback = grid.firstAliveOnSelectedSidePcOrder(targetCol)
                 ?: return SkillResolveResult(emptyList(), spConsumed = 0, fightArea = fightArea)
             effectiveTargetCol = fallback.col
             effectiveTargetRow = fallback.row
         }
+
+        // If an ordinary non-revive skill keeps an occupied corpse as its queued centre,
+        // PC still serializes that coordinate as a miss/no-effect target. DVT uses the first
+        // S:050-001 target as the animation anchor, so preserving it prevents multi-target
+        // areas (especially 3/5/6) from shifting to the first surviving neighbour.
+        val keptDeadAnchor = selectedTarget != null && !selectedTarget.isAlive &&
+            !shouldRetarget && !targetsDeadFriendly
 
         // Quyết định danh sách mục tiêu trước khi biến đổi. Mục tiêu cũ/không hợp lệ không được tiêu tốn SP.
         val targets = if (targetsFriendlySide) {
@@ -145,7 +158,8 @@ class BattleSkillResolver(
             )
         }
 
-        if (targets.isEmpty()) {
+        val needsDeadAnchorResult = keptDeadAnchor && targets.none { it === selectedTarget }
+        if (targets.isEmpty() && !needsDeadAnchorResult) {
             return SkillResolveResult(emptyList(), spConsumed = 0, fightArea = fightArea)
         }
 
@@ -160,6 +174,17 @@ class BattleSkillResolver(
         val hitTimes = max(1, skill?.howMuchTimes ?: 1)
 
         val targetResults = mutableListOf<TargetResult>()
+        if (needsDeadAnchorResult) {
+            targetResults.add(
+                TargetResult(
+                    targetCol = targetCol,
+                    targetRow = targetRow,
+                    attackResult = EAttackResult.MISS,
+                    beHitAction = EBeHitAction.NONE,
+                    attrChanges = emptyList()
+                )
+            )
+        }
 
         for (target in resolvedTargets) {
             val dispelAttrChanges = clearGroups.mapNotNull { group ->

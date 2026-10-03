@@ -26,10 +26,10 @@ class DvtBattleCommandSemanticsTest {
         atk=100, def=10, agi=100, intelligence=100, skills=learnedSkills, specialEquipItemId=specialEquipId, specialEquipDamage=specialDamage, weaponItemId=weaponId, weaponItemKind=weaponKind
     )
 
-    private fun skill(fightWayValue: Int) = mockk<SkillDef> {
+    private fun skill(fightWayValue: Int, fightAreaValue: Int = 1) = mockk<SkillDef> {
         every { fightWay } returns fightWayValue
         every { requireSp } returns 10
-        every { fightArea } returns 1
+        every { fightArea } returns fightAreaValue
         every { fightWayGrowType } returns 0
         every { attribute } returns EAttribute.HP
         every { round } returns 0
@@ -310,7 +310,12 @@ class DvtBattleCommandSemanticsTest {
             it.attackerCol == npc.col && it.attackerRow == npc.row
         }
 
-        assertTrue(action.targets.isEmpty())
+        assertEquals(1, action.targets.size)
+        assertEquals(stale.col, action.targets.single().targetCol)
+        assertEquals(stale.row, action.targets.single().targetRow)
+        assertTrue(action.targets.single().attrChanges.isEmpty())
+        assertEquals(10, action.spConsumed)
+        assertEquals(490L, npc.sp)
         assertEquals(1000L, otherLiving.hp)
     }
 
@@ -349,6 +354,70 @@ class DvtBattleCommandSemanticsTest {
         assertEquals(replacement.col, action.targets.first().targetCol)
         assertEquals(replacement.row, action.targets.first().targetRow)
         assertEquals(1000L, elsewhere.hp)
+    }
+
+    @Test
+    fun `empty queued cell retargets higher fightWay on the originally selected side`() = runBlocking {
+        val skillId = 14015
+        val npc = BattleFighter(
+            roleId = -59, kind = EHuman.MINE_NPC, name = "empty-cell-retarget", col = 0, row = 0,
+            maxHp = 1000, maxSp = 500, hp = 1000, sp = 500, level = 1, element = 1,
+            atk = 100, def = 10, agi = 100, intelligence = 100, skills = intArrayOf(skillId)
+        )
+        val pcFirst = fighter(60, 3, 0)
+        val later = fighter(61, 2, 4)
+        val battle = BattleInstance(
+            battleId = 11, warType = 0, terrain = 0, eventNo = 0, grid = BattleGrid(),
+            skillResolver = BattleSkillResolver(mapOf(skillId to skill(15))),
+            itemResolver = mockk<BattleItemResolver>(relaxed = true), involvedNpcDefs = emptyList()
+        )
+        listOf(npc, pcFirst, later).forEach(battle::addFighter)
+        npc.pendingAction = BattleAction(BattleAction.KIND_SKILL, skillId, 2, 2)
+        npc.hasActed = true
+
+        val result = battle.resolveRound()
+        val action = result.actionResults.single {
+            it.attackerCol == npc.col && it.attackerRow == npc.row
+        }
+
+        assertTrue(action.targets.isNotEmpty())
+        assertEquals(pcFirst.col, action.targets.first().targetCol)
+        assertEquals(pcFirst.row, action.targets.first().targetRow)
+        assertEquals(10, action.spConsumed)
+    }
+
+    @Test
+    fun `dead centre remains first packet anchor for higher fightWay multi target area`() = runBlocking {
+        val skillId = 14015
+        val npc = BattleFighter(
+            roleId = -62, kind = EHuman.MINE_NPC, name = "dead-centre-area", col = 0, row = 0,
+            maxHp = 1000, maxSp = 500, hp = 1000, sp = 500, level = 1, element = 1,
+            atk = 100, def = 10, agi = 100, intelligence = 100, skills = intArrayOf(skillId)
+        )
+        val deadCentre = fighter(63, 2, 2).also { it.hp = 0; it.isDead = true }
+        val above = fighter(64, 2, 1)
+        val below = fighter(65, 2, 3)
+        val outside = fighter(66, 2, 0)
+        val battle = BattleInstance(
+            battleId = 12, warType = 0, terrain = 0, eventNo = 0, grid = BattleGrid(),
+            skillResolver = BattleSkillResolver(mapOf(skillId to skill(15, 3))),
+            itemResolver = mockk<BattleItemResolver>(relaxed = true), involvedNpcDefs = emptyList()
+        )
+        listOf(npc, deadCentre, above, below, outside).forEach(battle::addFighter)
+        npc.pendingAction = BattleAction(BattleAction.KIND_SKILL, skillId, deadCentre.col, deadCentre.row)
+        npc.hasActed = true
+
+        val result = battle.resolveRound()
+        val action = result.actionResults.single {
+            it.attackerCol == npc.col && it.attackerRow == npc.row
+        }
+        val coords = action.targets.map { it.targetCol to it.targetRow }
+
+        assertEquals(deadCentre.col to deadCentre.row, coords.first())
+        assertEquals(setOf(2 to 1, 2 to 2, 2 to 3), coords.toSet())
+        assertTrue((2 to 0) !in coords)
+        assertTrue(action.targets.first().attrChanges.isEmpty())
+        assertEquals(10, action.spConsumed)
     }
 
     @Test
