@@ -2012,3 +2012,56 @@ Continuation from checkpoint 149ef88.
 - Compare DVT `FightField.GetEnemyIdx`/S:050-001 behavior first, then PC `makeExecutionPacket` as fallback.
 - Verify Kotlin does not incorrectly drop the entire area, switch target side, or include a dead center where DVT/PC would still hit living surrounding targets.
 - Separately identify PC `buff_type 13005/13025` in live DVT Lua before considering their special retarget/untargetable rule; do not implement from PC alone.
+
+## 2026-10-03 — Monster AI-I — stale multi-target anchors — PASS
+### Evidence / behavior
+- DVT `FightField.GetEnemyIdx` expands fightArea 2/3/5/6/7/8 from the queued target coordinates/side; it does not choose a new center itself.
+- PC `BattleAbstract.execute/changeTarget` distinguishes an empty queued cell from an occupied corpse:
+  - empty cell: ordinary skills may retarget on the originally selected side;
+  - occupied corpse: same-side or skill_type >2 keeps that coordinate;
+  - hostile HandFight / skill_type 1-2 may retarget to the first living target in PC row-first front/back order.
+- PC commands store coordinates, not target identity. A replacement occupant in the same cell becomes the effective target.
+- DVT `FightManager.RevAttackSkill` uses the first S:050-001 target as the animation anchor and does not perform client-side retry.
+
+### Implementation
+- Commit `5942cc7 fix: preserve DVT stale target anchors`.
+- Empty queued cells follow the PC retarget path while fightWay=8 revive remains a DVT-proven zero-target no-op when its corpse is gone.
+- An occupied dead center for a higher fightWay is preserved as a MISS/no-effect packet anchor; living surrounding cells in the same fightArea still resolve normally.
+- This prevents area 3/5/6 effects from shifting their visual/geometry center to the first surviving neighbour.
+- Targeted command/geometry regressions PASS; full local build PASS 21/21.
+- Production source/build/runtime validation was completed before AI-J; this behavior is included in the current production baseline.
+
+### 13005 / 13025 evidence boundary
+- Live DVT maps 13005 to `EStatus.Limpid` and 13025 to `EStatus.Invisible` and has their animation/status handlers.
+- No live-DVT target-selection check was found that proves these statuses are globally untargetable or must force server retargeting.
+- Therefore the PC-only `buff_type 13005/13025` special retarget rule is NOT imported into Kotlin. Keep evidence-blocked unless a DVT server/native/data contract is recovered.
+
+## 2026-10-03 — Monster AI-J1 — Chaos NPC command suppression — PASS
+### Evidence
+- DVT `FightField.IsCanControl/CheckCanAct` explicitly treats `EStatus.Chaos` as unable to accept a normal command.
+- PC `TSBattleNPC` explicitly skips enemy NPC AI command generation while `debuff_type == 14021` (Chaos) before `seekTarget`.
+- DVT maps 14021 and the newer Chaos-family skill IDs to the same `EStatus.Chaos`, so the runtime status is the safe abstraction rather than hard-coding one skill ID.
+
+### Implementation
+- `BattleInstance.resolveNpcActions` now excludes enemy NPC fighters carrying `BattleStatus.CHAOS` before skill selection/target selection.
+- This avoids queuing a command that would only be cancelled later and prevents a Chaos NPC from entering the pre-execution action/combo ordering.
+- Taunt is deliberately NOT folded into this filter. DVT proves Taunt removes manual control, but does not expose whether server AI should skip, force HandFight, or force a specific target.
+- Added deterministic regression `chaos enemy npc does not queue an AI command`.
+
+### Validation / production
+- Targeted `DvtBattleCommandSemanticsTest`: PASS, 18 tasks executed.
+- Full local `gradlew test build --rerun-tasks`: PASS, 21/21 tasks; `git diff --check` PASS.
+- Commit `226c465 fix: skip chaos npc ai commands` pushed to `origin/main`.
+- Production fast-forwarded from `5942cc7` to `226c465` by verified Git bundle; local `application.conf` and operational/untracked files preserved.
+- Production full `gradlew test build --rerun-tasks`: PASS, 21/21 tasks on exact HEAD `226c465`.
+- Runtime restarted via WMI launcher and verified from a fresh SSH connection:
+  - production HEAD `226c465`
+  - Java PID `3000`
+  - `0.0.0.0:6613` and `[::]:6613` LISTEN
+  - runtime log reached server-ready state and recurring local health checks succeed.
+- Tracked `.kotlin` session file was restored after build; `tools/start-staging-runtime.ps1` remains untracked locally and is not committed.
+
+### START NEXT — Monster AI-J2 / AI-K
+- J2 Taunt: recover authoritative server-side action semantics for `EStatus.Taunt` (skip turn vs forced basic attack vs forced target). Do not change current behavior without DVT evidence.
+- If Taunt remains blocked, move to AI-K: audit NPC action ordering / AGI / Tardy and other evidenced status effects that can alter enemy AI execution order.
+- Source priority remains live DVT 1.15/Lua > DVT data > Kotlin > PC fallback.
