@@ -73,6 +73,20 @@ class DvtBattleTargetGeometryTest {
 
 
     @Test
+    fun `single-target geometry never silently retargets a stale coordinate`() {
+        val grid = BattleGrid()
+        val stale = fighter(10, 2, 2).also { it.hp = 0; it.isDead = true }
+        val living = fighter(11, 3, 0)
+        grid.place(stale)
+        grid.place(living)
+
+        assertEquals(
+            emptyList<BattleFighter>(),
+            grid.resolveTargets(EFightArea.SINGLE, stale.col, stale.row, false)
+        )
+    }
+
+    @Test
     fun `PC stale-target scan alternates front back by row`() {
         val grid = fullSide(2 to 2, 3 to 0, 3 to 3)
         assertEquals(

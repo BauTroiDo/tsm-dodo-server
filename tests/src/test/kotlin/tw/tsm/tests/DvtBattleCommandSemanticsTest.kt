@@ -287,6 +287,71 @@ class DvtBattleCommandSemanticsTest {
     }
 
     @Test
+    fun `queued higher fightWay single target does not jump to another living unit`() = runBlocking {
+        val skillId = 14015
+        val npc = BattleFighter(
+            roleId = -52, kind = EHuman.MINE_NPC, name = "stale-debuff", col = 0, row = 0,
+            maxHp = 1000, maxSp = 500, hp = 1000, sp = 500, level = 1, element = 1,
+            atk = 100, def = 10, agi = 100, intelligence = 100, skills = intArrayOf(skillId)
+        )
+        val stale = fighter(53, 2, 1).also { it.hp = 0; it.isDead = true }
+        val otherLiving = fighter(54, 3, 0)
+        val battle = BattleInstance(
+            battleId = 9, warType = 0, terrain = 0, eventNo = 0, grid = BattleGrid(),
+            skillResolver = BattleSkillResolver(mapOf(skillId to skill(15))),
+            itemResolver = mockk<BattleItemResolver>(relaxed = true), involvedNpcDefs = emptyList()
+        )
+        listOf(npc, stale, otherLiving).forEach(battle::addFighter)
+        npc.pendingAction = BattleAction(BattleAction.KIND_SKILL, skillId, stale.col, stale.row)
+        npc.hasActed = true
+
+        val result = battle.resolveRound()
+        val action = result.actionResults.single {
+            it.attackerCol == npc.col && it.attackerRow == npc.row
+        }
+
+        assertTrue(action.targets.isEmpty())
+        assertEquals(1000L, otherLiving.hp)
+    }
+
+    @Test
+    fun `queued coordinate attacks replacement occupant at the same cell`() = runBlocking {
+        val npc = BattleFighter(
+            roleId = -55, kind = EHuman.MINE_NPC, name = "coordinate-npc", col = 0, row = 0,
+            maxHp = 1000, maxSp = 500, hp = 1000, sp = 500, level = 1, element = 1,
+            atk = 100, def = 10, agi = 100, intelligence = 100
+        )
+        val original = fighter(56, 2, 1)
+        val elsewhere = fighter(57, 3, 0)
+        val battle = BattleInstance(
+            battleId = 10, warType = 0, terrain = 0, eventNo = 0, grid = BattleGrid(),
+            skillResolver = BattleSkillResolver(emptyMap()),
+            itemResolver = mockk<BattleItemResolver>(relaxed = true), involvedNpcDefs = emptyList()
+        )
+        listOf(npc, original, elsewhere).forEach(battle::addFighter)
+        npc.pendingAction = BattleAction(
+            BattleAction.KIND_SKILL, BattleConstants.HAND_FIGHT_SKILL_ID, original.col, original.row
+        )
+        npc.hasActed = true
+
+        original.hp = 0
+        original.isDead = true
+        battle.grid.remove(original.col, original.row)
+        val replacement = fighter(58, original.col, original.row)
+        battle.addFighter(replacement)
+
+        val result = battle.resolveRound()
+        val action = result.actionResults.single {
+            it.attackerCol == npc.col && it.attackerRow == npc.row
+        }
+
+        assertTrue(action.targets.isNotEmpty())
+        assertEquals(replacement.col, action.targets.first().targetCol)
+        assertEquals(replacement.row, action.targets.first().targetRow)
+        assertEquals(1000L, elsewhere.hp)
+    }
+
+    @Test
     fun `npc revive with no corpse keeps selected skill as ineffective no-op without retry`() = runBlocking {
         val reviveId = 11011
         val npc = BattleFighter(

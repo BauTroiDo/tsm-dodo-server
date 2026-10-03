@@ -169,13 +169,11 @@ class BattleGrid {
                 val target = occupiedAt(targetCol, targetRow)
                 if (target != null && eligible(target)) return listOf(target)
 
-                // Revive selection is explicit in DVT Lua (fightWay 8): never retarget
-                // a dead-target action to a living fighter.
-                if (deadTargetsOnly) return emptyList()
-
-                // Preserve existing server retarget behavior only for a stale normal single target.
-                val fallback = if (attackerIsPlayerSide) getAliveEnemySide().firstOrNull() else getAlivePlayerSide().firstOrNull()
-                return listOfNotNull(fallback)
+                // Retargeting is execution-policy, not geometry. PC BattleAbstract.changeTarget
+                // only redirects stale hostile HandFight/fightWay 1-2 before area resolution.
+                // Support/debuff/revive skills keep the queued coordinate and may resolve to
+                // zero targets. BattleSkillResolver owns the explicit PC retarget step.
+                return emptyList()
             }
             EFightArea.COL_TWO -> {
                 // Lua kind=2: front/back pair on the selected target row.
