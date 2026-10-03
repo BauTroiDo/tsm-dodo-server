@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import tw.tsm.domain.constants.EAttackResult
 import tw.tsm.domain.constants.EAttribute
 import tw.tsm.domain.constants.EHuman
 import tw.tsm.domain.data.SkillDef
@@ -101,6 +102,50 @@ class DvtBattleStatusExecutionTest {
                 assertFalse(target.groupedStatuses.containsKey(3))
             }
         }
+    }
+
+    @Test
+    fun `fightWay three status-only skill does not replace an active seal status`() {
+        val skillId = 13002 // DVT WhirlWind, Seal group
+        val resolver = BattleSkillResolver(
+            mapOf(skillId to skill(EAttribute.NONE, fightWayValue = 3, rounds = 2))
+        )
+        val attacker = fighter(10, col = 2, row = 0)
+        val target = fighter(11, col = 0, row = 0).also {
+            it.setGroupedStatus(1, BattleStatus.ICE_BOUND, 3, 11014, 4)
+        }
+        val grid = BattleGrid().also { it.place(attacker); it.place(target) }
+
+        val result = resolver.resolveSkill(attacker, grid, skillId, target.col, target.row, 0, currentRound = 7)
+
+        val targetResult = result.targets.single()
+        assertEquals(EAttackResult.MISS, targetResult.attackResult)
+        assertEquals(BattleStatus.ICE_BOUND, target.groupedStatuses[1]?.status)
+        assertEquals(3, target.groupedStatuses[1]?.rounds)
+        assertEquals(11014, target.groupedStatuses[1]?.skillId)
+        assertFalse(targetResult.attrChanges.any { it.attrKind == EAttribute.SEAL })
+    }
+
+    @Test
+    fun `fightWay fifteen status-only skill does not replace an active faint status`() {
+        val skillId = 14021 // DVT Chaos, Faint group
+        val resolver = BattleSkillResolver(
+            mapOf(skillId to skill(EAttribute.NONE, fightWayValue = 15, rounds = 1))
+        )
+        val attacker = fighter(12, col = 2, row = 0)
+        val target = fighter(13, col = 0, row = 0).also {
+            it.setGroupedStatus(3, BattleStatus.POISON, 2, 14015, 5)
+        }
+        val grid = BattleGrid().also { it.place(attacker); it.place(target) }
+
+        val result = resolver.resolveSkill(attacker, grid, skillId, target.col, target.row, 0, currentRound = 7)
+
+        val targetResult = result.targets.single()
+        assertEquals(EAttackResult.MISS, targetResult.attackResult)
+        assertEquals(BattleStatus.POISON, target.groupedStatuses[3]?.status)
+        assertEquals(2, target.groupedStatuses[3]?.rounds)
+        assertEquals(14015, target.groupedStatuses[3]?.skillId)
+        assertFalse(targetResult.attrChanges.any { it.attrKind == EAttribute.FAINT })
     }
 
     @Test
@@ -298,6 +343,23 @@ class DvtBattleStatusExecutionTest {
         assertEquals(30, subset.size)
         assertTrue(subset.values.all { it.attribute == EAttribute.NONE })
         assertTrue(subset.values.all { it.fightWay == 3 || it.fightWay == 15 })
+
+        val sealStatuses = setOf(
+            BattleStatus.ICE_BOUND, BattleStatus.WHIRL_WIND, BattleStatus.CLUMP,
+            BattleStatus.TRANCE, BattleStatus.DIZZY_ATK
+        )
+        val faintStatuses = setOf(
+            BattleStatus.SHRINK, BattleStatus.POISON, BattleStatus.CHAOS, BattleStatus.TARDY,
+            BattleStatus.LANDSLIP, BattleStatus.TAUNT, BattleStatus.TRAITOR, BattleStatus.STOOL,
+            BattleStatus.THUNDER_FIRE, BattleStatus.HEALTH_DRAWER,
+            BattleStatus.EW_COMMON_FAINT, BattleStatus.WEAK_PERCENT
+        )
+        assertTrue(subset.filterValues { it.fightWay == 3 }.keys.all {
+            BattleDamageCalc.statusFromSkillId(it) in sealStatuses
+        })
+        assertTrue(subset.filterValues { it.fightWay == 15 }.keys.all {
+            BattleDamageCalc.statusFromSkillId(it) in faintStatuses
+        })
     }
 
 }

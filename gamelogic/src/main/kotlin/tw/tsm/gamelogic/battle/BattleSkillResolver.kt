@@ -248,6 +248,27 @@ class BattleSkillResolver(
                 BattleDamageCalc.statusDurationFromSkillRound(skill.round) > 0 &&
                 BattleDamageCalc.statusFromSkillId(skillId) != tw.tsm.domain.enums.BattleStatus.NONE
 
+            // PC calculateHit refuses a second disable/debuff while that category is active.
+            // DVT keeps the same one-slot status groups (Seal for fightWay 3, Faint for 15),
+            // so preserve the existing status instead of overwriting/refreshing it.
+            val occupiedStatusOnlyGroup = when (skill?.fightWay) {
+                3 -> 1
+                15 -> 3
+                else -> 0
+            }
+            if (enemyStatusOnly && occupiedStatusOnlyGroup > 0 && target.groupedStatuses.containsKey(occupiedStatusOnlyGroup)) {
+                targetResults.add(
+                    TargetResult(
+                        targetCol = target.col,
+                        targetRow = target.row,
+                        attackResult = EAttackResult.MISS,
+                        beHitAction = EBeHitAction.DODGE,
+                        attrChanges = dispelAttrChanges
+                    )
+                )
+                continue
+            }
+
             var totalDamage = 0
             var lastRawDamage = 0  // Sát thương gốc của đòn gây tử vong (dùng cho phán định đánh bay)
             var passiveReviveHp = 0L
