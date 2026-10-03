@@ -2176,3 +2176,27 @@ Continuation from checkpoint 149ef88.
 - Audit status duration lifecycle: when grouped-status rounds decrement relative to action execution, and whether raw duration 1/2/3 blocks exactly the intended number of turns.
 - Compare DVT round/status restore handling first, then PC `BattleParticipant` decrement timing as fallback.
 - Verify statuses inflicted mid-round are not decremented too early and statuses expiring at round end restore the correct group/packet state.
+
+## 2026-10-03 — Monster AI-O — status duration lifecycle / restore packet — PASS
+### Evidence
+- Live DVT `SkillData.lua` defines raw `round` as the occupied battle-round count: 1/2/3 exact rounds, 4 = continuous three rounds.
+- PC `TSBattleNPC.start_round()` calls `BattleParticipant.updateStatus()` before the next round accepts commands. Status duration therefore consumes one round before the following command phase.
+- The old Kotlin code skipped decrement for `appliedRound >= currentRound`, so a raw round=1 status applied during round N remained active through all of round N+1: one round too long.
+- DVT `FightManager.RevRestoreStatus` calls `HandleStatus(statusKind, skillId)`. Every modeled group maps `skillId=0` to its generic clear state; re-sending the source skill ID would map the same status back onto the client instead of clearing it.
+
+### Implementation / validation
+- Commit `04544c4 fix: align DVT status expiry lifecycle`.
+- Statuses now consume one duration unit after the round's actions, which is equivalent to PC decrementing before the next command phase: round=1 clears before the next countdown; round=2 survives exactly one following round.
+- Expiry S:053-001 now serializes `skillId=0` for generic DVT clear while active grouped status still retains its source skill internally.
+- Added lifecycle regressions for duration 1, duration 2, independent group expiry and generic-clear packet skill 0.
+- Targeted `DvtBattleStatusLifecycleTest`: PASS, 18 tasks executed.
+- Full local `gradlew test build --rerun-tasks`: PASS, 21/21 tasks; `git diff --check` PASS.
+- `04544c4` pushed to `origin/main`; production fast-forwarded via verified `monster-ai-o.bundle`, preserving local `application.conf` and operational files.
+- Production full `gradlew test build --rerun-tasks`: PASS, 21/21 tasks on exact HEAD `04544c4`.
+- Runtime restarted through separate WMI terminate/create steps and verified from a fresh SSH session: Java PID `11052`, port `6613` LISTEN on IPv4/IPv6, Netty server-ready at 16:24:44, recurring health checks succeed.
+
+### START NEXT — Monster AI-P
+- Audit periodic effects attached to active statuses at the round boundary, especially Poison and PC Tangle/Clump behavior.
+- PC `BattleParticipant.updateStatus()` executes poison/tangle effects during the same status tick used for duration decrement; Kotlin currently only decrements/removes grouped statuses.
+- Compare DVT Lua status/skill handlers and current Skill_C first. Do not import PC periodic damage formulas or synthetic skill IDs unless DVT data/client behavior supports them.
+- Verify whether periodic ticks happen before or after duration reaches zero, whether they can kill/fly a fighter, and how S:050/S:053 ordering should be represented before adding gameplay mutation.
