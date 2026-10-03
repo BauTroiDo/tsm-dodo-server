@@ -1926,3 +1926,35 @@ Continuation from checkpoint 149ef88.
 - Keep `tools/start-staging-runtime.ps1` untracked and never commit it.
 - Use Git Bash OpenSSH for production. If GitHub HTTPS fetch cannot authenticate, deploy via Git bundle + SCP.
 - Restart production only via WMI `Win32_Process.Create` + `_start_prod_detached.cmd`, then close/reconnect SSH to prove lifecycle independence.
+
+## 2026-10-03 — Monster AI-F — invalid skill / no-target / NPC skill-level semantics
+### Evidence
+- Live DVT RoleController:GetElementSkill returns ordinary battlefield NPC skills with Lv = 1.
+- Live DVT RoleController:GetSkillLv also returns 1 for enemy NPC base skills; PC fallback uses SkillData.max_lvl, so DVT wins.
+- Live DVT Attack.GetAttackNewFunction maps an unknown/unlisted skill ID to HandFight.
+- Current DVT Npc_C has 17 non-Skill_C values in AI slots: 1306, 12000, 45005, 31001, 31002, 31003, 31004, 31005, 31007, 31008, 31009, 31010, 31011, 31015, 31021, 31022, 31024.
+- 31001/31005 are also used by DVT ArmyHorse/WarElephant as NPC/resource IDs, so they are not ordinary Skill_C definitions.
+- PC TSBattleNPC chooses exactly one slot per roll and does not retry another slot.
+- PC fightWay=8 with no corpse still pushes the selected command; it does not reroll.
+- DVT FightManager.RevAttackSkill calls FightField.AttackSkill only when S:050-001 target count is greater than zero.
+
+### Implementation / validation
+- NpcBattleProfileCalc now uses live-DVT level 1 for enemy NPC normal/effective skills instead of PC maxLv.
+- Unknown/non-Skill_C selected IDs remain unchanged in the packet and use HandFight semantics; no retry/alternate-slot fallback is added.
+- Revive with no corpse remains a zero-target no-op and consumes no SP.
+- Added regressions for DVT Lv1, exact 17-ID non-Skill_C inventory, unknown-ID HandFight fallback, and no-corpse revive/no-retry.
+- Targeted AI-F suite PASS: 31 tests.
+- Full local gradlew test build --rerun-tasks PASS: 21/21 tasks; git diff --check PASS.
+
+### Production deploy — PASS
+- Commit 8da432f fix: align DVT NPC skill level semantics pushed to origin/main.
+- Production fast-forwarded from 04442de to 8da432f via verified Git bundle; application.conf and operational files preserved.
+- Production full gradlew test build --rerun-tasks PASS: 21/21 tasks.
+- Runtime restarted through WMI/Win32_Process.Create and verified from a fresh SSH session.
+- Production HEAD 8da432f; Java PID 11920; 0.0.0.0:6613 and [::]:6613 LISTEN; Netty logged server ready.
+
+### START NEXT — Monster AI-G
+- Audit whether enemy NPC AI should really use NpcData.specialSkill as a fourth probability slot.
+- New DVT evidence: enemy-NPC RoleController:GetElementSkill/GetSkillLv exposes only the three Role.maxNpcSkill base skills, while FollowNpc handles specialSkill separately at level 1; PC TSBattleNPC uses a fourth skill slot.
+- Do not change AI-D until live DVT/client/data evidence resolves this conflict. If DVT proves only three enemy slots, correct selector/probabilities with deterministic tests and deploy; otherwise document why the fourth server-only slot is valid.
+- Continue automatically with DVT > data > Kotlin > PC priority.
