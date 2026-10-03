@@ -1897,3 +1897,32 @@ Continuation from checkpoint 149ef88.
   - AI-E NPC SP execution semantics aligned to DVT/PC.
 - AI-E key rule: enemy NPCs do not fallback to hand attack just because SP < skill cost; the selected skill executes and SP clamps to 0. Player/FollowNpc command input remains strictly SP-gated.
 - Continue the next monster-combat audit from this baseline; read the entire checkpoint first.
+
+### 2026-10-03 — Monster AI-E production deploy — PASS
+- Commit `04442de fix: align DVT NPC SP execution` is on `origin/main` and production `C:\Server-Game\tsm_dodo`.
+- Production full `gradlew test build --rerun-tasks`: PASS, 21/21 tasks executed on exact HEAD `04442de`.
+- Runtime is live from the WMI/Win32_Process.Create launch path and survives SSH reconnect:
+  - production HEAD `04442de`
+  - game Java PID `11868`
+  - `0.0.0.0:6613` and `[::]:6613` LISTEN
+  - runtime log reached Netty ready state
+  - `IOS_ExclusiveSkill_C.dat` loaded 574 records / 123 skill IDs
+  - no real startup ERROR/Exception/FATAL/Koin failure observed.
+- Production local `app/src/main/resources/application.conf` and operational/untracked files remain preserved.
+
+### START NEXT CHAT FROM HERE — Monster AI-F
+- Source of truth: live DVT 1.15 (`net.chinesegamer.tsn` from LDPlayer) / Lua DVT > client data/Eve.emg > Kotlin > PC fallback.
+- Production baseline: `04442de`, Java PID `11868`, port `6613`.
+- AI-A PASS: ordinary corpses persist for revive targeting; fly-out/captured targets leave grid.
+- AI-B PASS: NPC target pools for fightWay 4/5/8/18/19 aligned with DVT/PC evidence.
+- AI-C PASS: elemental summon remap 10016->10019, 11016->11019, 12016->12019, 13015->13018.
+- AI-D PASS: preserve exact four NPC AI skill slots [skill1, skill2, skill3, specialSkill], including zero gaps and duplicate IDs.
+- AI-E PASS: enemy NPC keeps the selected skill even when current SP is below cost, executes it, and SP clamps to 0; player-controlled units still reject insufficient SP.
+- Next audit AI-F:
+  1. invalid/missing selected skill fallback semantics;
+  2. what happens when selected skill has no legal target;
+  3. whether server NPC retries another slot, falls back to hand attack, or performs no-op;
+  4. verify skill-level source for NPC slots against DVT/PC before changing it.
+- Keep `tools/start-staging-runtime.ps1` untracked and never commit it.
+- Use Git Bash OpenSSH for production. If GitHub HTTPS fetch cannot authenticate, deploy via Git bundle + SCP.
+- Restart production only via WMI `Win32_Process.Create` + `_start_prod_detached.cmd`, then close/reconnect SSH to prove lifecycle independence.
