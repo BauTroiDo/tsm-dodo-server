@@ -2478,3 +2478,16 @@ Continuation from checkpoint 149ef88.
 - No audited Eve mutation writes dungeon dailyFlag. The exact consume point (entry/start vs terminal result/clear/skip), failure/timeout quota semantics and per-run result/reward transaction still need authoritative evidence; no guessed consumption added.
 - Completion/timeout/S47-012 reward/EXP backend remains outstanding. Neither data-loader PASS nor daily-reset PASS is full F3-B gameplay PASS.
 - Next: lock score formula, tier boundary comparator, daily consumption and EXP reward-item semantics from DVT/native/server evidence or controlled official runtime trace, then implement per-run idempotent settlement with targeted tests. Weekly/soul remain F4.
+
+
+### 2026-10-04 — F3-B1 production deploy — BUILD/STARTUP PASS
+- Code commit d43e60c73f67a34231fdb4bcd12cc013089de874 pushed to origin/main; production fast-forwarded from verified c6af125 via verified Git bundle + Git Bash SCP/SSH.
+- Full local suite: 594 tests, 0 failures/errors, 3 skipped (includes the pre-existing local scratch audit); full local build21/21. The two new F3-B suites contribute8 passing tests.
+- Production exact code HEAD d43e60c: full gradlew test build --rerun-tasks PASS21/21, 3m13s.
+- Old game PID12672 terminated via WMI only after build PASS. WMI Win32_Process.Create launched the existing _start_prod_detached.cmd with return0.
+- Fresh SSH after the launcher session closed: game java.exe PID7064, Services session0; [::]:6613 LISTEN; TCP127.0.0.1:6613 PASS.
+- Startup logs/runtime-production.log: IOS_Dungeon57 and IOS_DungeonCombo180 loaded; autosave30s started; Netty bound0.0.0.0:6613 and Main ready at05:41:55 on2026-10-04 Asia/Bangkok. Startup scan showed no actual ERROR/Exception/FATAL/Koin failure (Gradle ConfigurationErrors task names excluded).
+- Production application.conf hash stayed25A3A41691F3800F093001F34B98962AE818A0EF098CAA0BBBBD5FADF77F4742; local operational files preserved. Tracked compiler .salive restored after build/startup. Existing dev scratch/bundles/start-staging-runtime.ps1 remain untracked and were not pushed.
+- Subsequent checkpoint commit is docs-only; runtime remains code d43e60c and does not need another restart.
+- Calendar rollover/database mutation has regression coverage; user gameplay and a real midnight rollover are not claimed PASS. Initial day registration deliberately preserves existing counters.
+- F3-B is PARTIAL: loader/turn selector + daily reset deployed. Automatic reward, quota consumption, terminal/timeout settlement remain evidence-blocked as documented above. Continue there, not from F1/F2/F3-A.
