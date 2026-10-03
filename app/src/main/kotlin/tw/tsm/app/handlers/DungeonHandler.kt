@@ -15,6 +15,7 @@ import tw.tsm.gamelogic.systems.DungeonRoomMember
 import tw.tsm.gamelogic.systems.DungeonRoomRegistry
 import tw.tsm.gamelogic.systems.DungeonRoomState
 import tw.tsm.gamelogic.systems.DungeonSystem
+import tw.tsm.gamelogic.systems.WorldManager
 import tw.tsm.protocol.PacketReader
 import tw.tsm.protocol.PacketWriter
 
@@ -30,6 +31,7 @@ private val dungeonHandlerLogger = KotlinLogging.logger {}
 class DungeonHandler(
     private val system: DungeonSystem,
     private val rooms: DungeonRoomRegistry = DungeonRoomRegistry(),
+    private val worldManager: WorldManager? = null,
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
     private val countdownMs: Long = 5_000L,
 ) : PacketHandler {
@@ -43,9 +45,12 @@ class DungeonHandler(
             2 -> createDungeon(session, data)
             3 -> joinRoom(session, data)
             7 -> setRoomName(session, data)
+            8 -> invitePlayer(session, data)
+            9 -> recruitRoom(session, data)
             10 -> leaveRoom(session)
             11 -> togglePrepare(session)
             12 -> startMultiplayer(session)
+            13 -> quickJoin(session, data)
             17 -> kickPlayer(session, data)
             else -> dungeonHandlerLogger.debug {
                 "Dungeon C:047-${subKind.toString().padStart(3, '0')} chưa thuộc F2-A; bỏ qua an toàn"
@@ -149,13 +154,109 @@ class DungeonHandler(
             sendJoinResult(session, RESULT_ROOM_FULL)
             return
         }
-        if (room.isLocked && room.password != password) {
+        if (room.isLocked && room.password != password && !rooms.isInvited(roomId, session.playerId)) {
             sendJoinResult(session, RESULT_PASSWORD_WRONG)
             return
         }
 
         val existing = room.members.values.toList()
         val joined = rooms.join(roomId, session)
+        if (joined == null) {
+            sendJoinResult(session, RESULT_ROOM_FULL)
+            return
+        }
+
+        sendJoinSuccess(session, joined, existing)
+        for (member in existing) {
+            sendPlayerJoined(member.session, session)
+        }
+    }
+
+    private suspend fun invitePlayer(session: GameSession, data: ByteArray) {
+        if (data.size != 8) {
+            sendInviteResult(session, 1)
+            return
+        }
+
+        val targetId = PacketReader(data).readULongLE()
+        val room = rooms.roomOf(session.playerId)
+        val target = worldManager?.getPlayerById(targetId)
+        if (room == null || room.ownerId != session.playerId || target == null) {
+            sendInviteResult(session, 1)
+            return
+        }
+
+        val result = system.validateNormalRoomEntry(
+            target,
+            room.dungeonId,
+            rooms.roomOf(target.playerId) != null,
+        )
+        if (result != DungeonSystem.RESULT_OK || rooms.invite(session.playerId, targetId) == null) {
+            sendInviteResult(session, 1)
+            return
+        }
+
+        sendInviteResult(session, 0)
+        sendDungeonInvitation(target, room, session)
+    }
+
+    private fun recruitRoom(session: GameSession, data: ByteArray) {
+        if (data.size != 1) {
+            sendRecruitResult(session, 1)
+            return
+        }
+
+        val channel = PacketReader(data).readUByte()
+        val room = rooms.roomOf(session.playerId)
+        val world = worldManager
+        if (room == null || room.ownerId != session.playerId || world == null) {
+            sendRecruitResult(session, 1)
+            return
+        }
+
+        // Current offline runtime has no organization-membership routing contract.
+        // World channel 2 is fully evidenced by DVT UI and packet receiver.
+        if (channel != CHANNEL_WORLD) {
+            sendRecruitResult(session, 1)
+            return
+        }
+
+        sendRecruitResult(session, 0)
+        val packet = buildRecruitPacket(room, session, channel)
+        for (target in world.getOnlineSessions()) {
+            target.send(packet)
+        }
+    }
+
+    private suspend fun quickJoin(session: GameSession, data: ByteArray) {
+        if (data.size != 2) {
+            sendJoinResult(session, DungeonSystem.RESULT_NO_SPACE)
+            return
+        }
+
+        val dungeonId = PacketReader(data).readUShortLE()
+        val room = rooms.snapshotRooms()
+            .asSequence()
+            .filter { it.dungeonId == dungeonId && !it.isLocked && it.members.size < it.maxPlayers }
+            .minByOrNull { it.id }
+
+        if (room == null) {
+            sendJoinResult(session, DungeonSystem.RESULT_NO_SPACE)
+            return
+        }
+
+        val result = system.validateNormalRoomEntry(
+            session,
+            dungeonId,
+            rooms.roomOf(session.playerId) != null,
+        )
+        if (result != DungeonSystem.RESULT_OK) {
+            sendJoinResult(session, result)
+            return
+        }
+
+        val existing = room.members.values.toList()
+        val joined = rooms.join(room.id, session)
         if (joined == null) {
             sendJoinResult(session, RESULT_ROOM_FULL)
             return
@@ -272,6 +373,69 @@ class DungeonHandler(
             sendPlayerLeave(recipient, targetId, LEAVE_KICKED)
         }
     }
+
+    private fun sendInviteResult(session: GameSession, result: Int) {
+        session.send(
+            PacketWriter()
+                .writeByte(Opcodes.DUNGEON)
+                .writeByte(8)
+                .writeByte(0)
+                .writeByte(result)
+                .toByteArray()
+        )
+    }
+
+    private fun sendDungeonInvitation(
+        target: GameSession,
+        room: DungeonRoomState,
+        owner: GameSession,
+    ) {
+        target.send(
+            PacketWriter()
+                .writeByte(Opcodes.DUNGEON)
+                .writeByte(15)
+                .writeByte(0)
+                .writeUIntLE(room.id)
+                .writeShortLE(room.dungeonId)
+                .writeLongLE(owner.playerId)
+                .writeBig5WithByteLen(owner.characterName)
+                .writeByte(owner.level)
+                .writeByte(owner.turn)
+                .writeByte(owner.element)
+                .writeByte(owner.turn3Element)
+                .writeByte(owner.career)
+                .writeByte(if (room.isLocked) 1 else 0)
+                .toByteArray()
+        )
+    }
+
+    private fun sendRecruitResult(session: GameSession, result: Int) {
+        session.send(
+            PacketWriter()
+                .writeByte(Opcodes.DUNGEON)
+                .writeByte(9)
+                .writeByte(0)
+                .writeByte(result)
+                .toByteArray()
+        )
+    }
+
+    private fun buildRecruitPacket(
+        room: DungeonRoomState,
+        owner: GameSession,
+        channel: Int,
+    ): ByteArray =
+        PacketWriter()
+            .writeByte(Opcodes.DUNGEON)
+            .writeByte(16)
+            .writeByte(0)
+            .writeUIntLE(room.id)
+            .writeShortLE(room.dungeonId)
+            .writeLongLE(owner.playerId)
+            .writeBig5WithByteLen(owner.characterName)
+            .writeByte(channel)
+            .writeByte(if (room.isLocked) 1 else 0)
+            .toByteArray()
 
     private fun sendStartTime(session: GameSession, startTime: Double) {
         session.send(
@@ -422,6 +586,7 @@ class DungeonHandler(
     companion object {
         private const val RESULT_ROOM_FULL = 6
         private const val RESULT_PASSWORD_WRONG = 9
+        private const val CHANNEL_WORLD = 2
         private const val LEAVE_SELF = 0
         private const val LEAVE_KICKED = 1
         private const val LEAVE_DISCONNECT = 2

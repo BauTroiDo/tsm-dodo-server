@@ -36,6 +36,7 @@ class DungeonRoomRegistry {
     private val nextInstanceId = AtomicInteger(1)
     private val rooms = LinkedHashMap<Long, DungeonRoomState>()
     private val playerRoom = HashMap<Long, Long>()
+    private val invitations = HashMap<Long, MutableSet<Long>>()
 
     @Synchronized
     fun create(owner: GameSession, dungeonId: Int, maxPlayers: Int, password: String): DungeonRoomState {
@@ -77,8 +78,22 @@ class DungeonRoomRegistry {
 
         room.members[session.playerId] = DungeonRoomMember(session)
         playerRoom[session.playerId] = roomId
+        invitations[roomId]?.remove(session.playerId)
         return room
     }
+
+    @Synchronized
+    fun invite(ownerId: Long, targetId: Long): DungeonRoomState? {
+        val room = roomOf(ownerId) ?: return null
+        if (room.ownerId != ownerId || room.starting || room.started) return null
+        if (room.members.containsKey(targetId) || room.members.size >= room.maxPlayers) return null
+        invitations.getOrPut(room.id) { linkedSetOf() }.add(targetId)
+        return room.snapshot()
+    }
+
+    @Synchronized
+    fun isInvited(roomId: Long, targetId: Long): Boolean =
+        invitations[roomId]?.contains(targetId) == true
 
     @Synchronized
     fun togglePrepared(playerId: Long): Pair<DungeonRoomState, Boolean>? {
@@ -131,6 +146,7 @@ class DungeonRoomRegistry {
 
         if (room.members.isEmpty()) {
             rooms.remove(roomId)
+            invitations.remove(roomId)
             disbanded = true
         } else if (room.ownerId == playerId) {
             newOwnerId = room.members.keys.first()
@@ -153,6 +169,7 @@ class DungeonRoomRegistry {
     fun clear() {
         rooms.clear()
         playerRoom.clear()
+        invitations.clear()
         nextRoomId.set(1L)
         nextInstanceId.set(1)
     }

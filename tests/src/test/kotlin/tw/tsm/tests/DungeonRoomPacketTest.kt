@@ -10,6 +10,7 @@ import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.gamelogic.systems.DungeonRoomRegistry
 import tw.tsm.gamelogic.systems.DungeonSystem
+import tw.tsm.gamelogic.systems.WorldManager
 import tw.tsm.protocol.PacketReader
 import tw.tsm.protocol.PacketWriter
 
@@ -139,4 +140,136 @@ class DungeonRoomPacketTest {
         assertEquals(true, password.all(Char::isDigit))
         assertEquals(password, rooms.roomOf(owner.playerId)?.password)
     }
+    @Test
+    fun invitedPlayerBypassesLockedRoomPassword() = runBlocking {
+        val system = mockk<DungeonSystem>()
+        every { system.getDef(1) } returns dungeonDef()
+        coEvery { system.validateNormalRoomEntry(any(), 1, any()) } returns DungeonSystem.RESULT_OK
+        val rooms = DungeonRoomRegistry()
+        val world = mockk<WorldManager>()
+
+        val ownerPackets = mutableListOf<ByteArray>()
+        val targetPackets = mutableListOf<ByteArray>()
+        val owner = session(4101, "Owner", ownerPackets)
+        val target = session(4102, "Target", targetPackets)
+        every { world.getPlayerById(4102L) } returns target
+
+        val handler = DungeonHandler(system, rooms, world)
+        handler.handle(owner, 2, byteArrayOf(1, 0, 1))
+        val room = rooms.roomOf(owner.playerId)!!
+        ownerPackets.clear()
+
+        handler.handle(
+            owner,
+            8,
+            PacketWriter().writeLongLE(target.playerId).toByteArray(),
+        )
+
+        val inviteAck = PacketReader(ownerPackets.single())
+        assertEquals(47, inviteAck.readUByte())
+        assertEquals(8, inviteAck.readUByte())
+        assertEquals(0, inviteAck.readUByte())
+        assertEquals(0, inviteAck.readUByte())
+
+        val invitation = PacketReader(targetPackets.single())
+        assertEquals(47, invitation.readUByte())
+        assertEquals(15, invitation.readUByte())
+        assertEquals(0, invitation.readUByte())
+        assertEquals(room.id, invitation.readUIntLE())
+        assertEquals(1, invitation.readUShortLE())
+        assertEquals(owner.playerId, invitation.readULongLE())
+        assertEquals("Owner", invitation.readBig5WithByteLen())
+        assertEquals(88, invitation.readUByte())
+        assertEquals(2, invitation.readUByte())
+        assertEquals(0, invitation.readUByte())
+        assertEquals(0, invitation.readUByte())
+        assertEquals(0, invitation.readUByte())
+        assertEquals(1, invitation.readUByte())
+        assertEquals(0, invitation.remaining)
+        assertEquals(true, rooms.isInvited(room.id, target.playerId))
+
+        val joinPayload = PacketWriter()
+            .writeUIntLE(room.id)
+            .writeByte(0)
+            .toByteArray()
+        handler.handle(target, 3, joinPayload)
+
+        val joinReply = PacketReader(targetPackets.last())
+        assertEquals(47, joinReply.readUByte())
+        assertEquals(3, joinReply.readUByte())
+        assertEquals(0, joinReply.readUByte())
+        assertEquals(0, joinReply.readUByte())
+        assertEquals(false, rooms.isInvited(room.id, target.playerId))
+    }
+
+    @Test
+    fun quickJoinSelectsUnlockedMatchingRoom() = runBlocking {
+        val system = mockk<DungeonSystem>()
+        every { system.getDef(1) } returns dungeonDef()
+        coEvery { system.validateNormalRoomEntry(any(), 1, any()) } returns DungeonSystem.RESULT_OK
+        val rooms = DungeonRoomRegistry()
+        val handler = DungeonHandler(system, rooms)
+
+        val ownerPackets = mutableListOf<ByteArray>()
+        val joinerPackets = mutableListOf<ByteArray>()
+        val owner = session(4201, "Owner", ownerPackets)
+        val joiner = session(4202, "Joiner", joinerPackets)
+
+        handler.handle(owner, 2, byteArrayOf(1, 0, 0))
+        ownerPackets.clear()
+
+        handler.handle(
+            joiner,
+            13,
+            PacketWriter().writeShortLE(1).toByteArray(),
+        )
+
+        val reply = PacketReader(joinerPackets.single())
+        assertEquals(47, reply.readUByte())
+        assertEquals(3, reply.readUByte())
+        assertEquals(0, reply.readUByte())
+        assertEquals(0, reply.readUByte())
+        assertEquals(1L, rooms.roomOf(joiner.playerId)?.id)
+    }
+
+    @Test
+    fun worldRecruitPacketMatchesDvtReceiverOrder() = runBlocking {
+        val system = mockk<DungeonSystem>()
+        every { system.getDef(1) } returns dungeonDef()
+        coEvery { system.validateNormalRoomEntry(any(), 1, any()) } returns DungeonSystem.RESULT_OK
+        val rooms = DungeonRoomRegistry()
+        val world = mockk<WorldManager>()
+
+        val ownerPackets = mutableListOf<ByteArray>()
+        val watcherPackets = mutableListOf<ByteArray>()
+        val owner = session(4301, "Owner", ownerPackets)
+        val watcher = session(4302, "Watcher", watcherPackets)
+        every { world.getOnlineSessions() } returns listOf(owner, watcher)
+
+        val handler = DungeonHandler(system, rooms, world)
+        handler.handle(owner, 2, byteArrayOf(1, 0, 0))
+        val room = rooms.roomOf(owner.playerId)!!
+        ownerPackets.clear()
+
+        handler.handle(owner, 9, byteArrayOf(2))
+
+        val ack = PacketReader(ownerPackets.first())
+        assertEquals(47, ack.readUByte())
+        assertEquals(9, ack.readUByte())
+        assertEquals(0, ack.readUByte())
+        assertEquals(0, ack.readUByte())
+
+        val recruit = PacketReader(watcherPackets.single())
+        assertEquals(47, recruit.readUByte())
+        assertEquals(16, recruit.readUByte())
+        assertEquals(0, recruit.readUByte())
+        assertEquals(room.id, recruit.readUIntLE())
+        assertEquals(1, recruit.readUShortLE())
+        assertEquals(owner.playerId, recruit.readULongLE())
+        assertEquals("Owner", recruit.readBig5WithByteLen())
+        assertEquals(2, recruit.readUByte())
+        assertEquals(0, recruit.readUByte())
+        assertEquals(0, recruit.remaining)
+    }
+
 }

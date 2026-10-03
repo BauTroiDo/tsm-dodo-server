@@ -567,7 +567,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<EveEventStateMachine>(), get<SpecialSceneTeleportService>()
         )
     }
-    single { DungeonHandler(get<DungeonSystem>(), get<DungeonRoomRegistry>(), get<CoroutineScope>()) }
+    single { DungeonHandler(get<DungeonSystem>(), get<DungeonRoomRegistry>(), get<WorldManager>(), get<CoroutineScope>()) }
     single { AchievementHandler(get(), get(), get()) }
     single { EmoteHandler(get(), get()) }
     single {
