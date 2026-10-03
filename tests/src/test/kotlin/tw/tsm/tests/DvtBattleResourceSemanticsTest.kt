@@ -62,4 +62,41 @@ class DvtBattleResourceSemanticsTest {
         assertEquals(137, attacker.sp)
         assertTrue(result.targets.isEmpty())
     }
+
+    @Test
+    fun `player controlled skill remains blocked when SP is below cost`() {
+        val id = 12001
+        val resolver = BattleSkillResolver(mapOf(id to skill(25)))
+        val attacker = fighter(1, 2, 0).also { it.sp = 7 }
+        val target = fighter(2, 0, 0)
+        val grid = BattleGrid().also { it.place(attacker); it.place(target) }
+
+        val result = resolver.resolveSkill(attacker, grid, id, 0, 0, 0)
+
+        assertEquals(0, result.spConsumed)
+        assertEquals(7, attacker.sp)
+        assertTrue(result.targets.isEmpty())
+    }
+
+    @Test
+    fun `server NPC may cast selected skill below SP cost and clamps SP to zero`() {
+        val id = 12001
+        val resolver = BattleSkillResolver(mapOf(id to skill(25)))
+        val attacker = BattleFighter(
+            roleId = -1, kind = EHuman.MINE_NPC, name = "npc", col = 0, row = 0,
+            maxHp = 1000, maxSp = 7, hp = 1000, sp = 7, level = 1, element = 1,
+            atk = 100, def = 10, agi = 100, intelligence = 100
+        )
+        val target = fighter(2, 2, 0)
+        val grid = BattleGrid().also { it.place(attacker); it.place(target) }
+
+        val result = resolver.resolveSkill(
+            attacker, grid, id, target.col, target.row, 0,
+            allowInsufficientSp = true
+        )
+
+        assertEquals(7, result.spConsumed)
+        assertEquals(0, attacker.sp)
+        assertTrue(result.targets.isNotEmpty())
+    }
 }

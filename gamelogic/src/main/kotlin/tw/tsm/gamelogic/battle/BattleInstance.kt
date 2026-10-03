@@ -300,23 +300,9 @@ class BattleInstance(
             val skillId = NpcAiSkillRules.normalizeSelectedSkill(selectedSkillId)
             val skillDef = skillResolver.getSkillDef(skillId)
 
-            // Never queue a skill the NPC cannot currently pay for.
-            // requireSp==1 is the Lua consume-all-SP sentinel and still requires SP >= 1.
-            if (skillDef != null && npc.sp < skillDef.requireSp) {
-                val basicTargets = if (npc.isPlayerSide) grid.getAliveEnemySide() else grid.getAlivePlayerSide()
-                val target = basicTargets.randomOrNull()
-                if (target != null) {
-                    npc.pendingAction = BattleAction(
-                        actionKind = BattleAction.KIND_SKILL,
-                        id = BattleConstants.HAND_FIGHT_SKILL_ID,
-                        targetCol = target.col,
-                        targetRow = target.row
-                    )
-                    npc.hasActed = true
-                    logger.debug { "Trận $battleId: NPC ${npc.name} thiếu SP, chuyển sang tấn công thường target=(${target.col},${target.row})" }
-                }
-                continue
-            }
+            // DVT client gates SP only for player-controlled Players/FollowNpc command input.
+            // Enemy NPC commands are server-driven: once selected, the client executes the skill,
+            // subtracts requireSp and clamps SP at zero. PC TSBattleNPC follows the same contract.
 
             // DVT exposes target-side semantics for player selection; NPC AI itself is
             // server-side, so unresolved cases follow PC TSBattleNPC.seekTarget exactly.
@@ -412,7 +398,8 @@ class BattleInstance(
                         targetRow = action.targetRow,
                         terrain = terrain,
                         comboMultiplier = fighter.comboMultiplier,
-                        currentRound = currentRound
+                        currentRound = currentRound,
+                        allowInsufficientSp = fighter.kind == EHuman.MINE_NPC
                     )
                     actionResults.add(
                         ActionResult(

@@ -166,6 +166,29 @@ class DvtBattleCommandSemanticsTest {
     }
 
     @Test
+    fun `npc AI keeps selected skill when current SP is below its cost`() {
+        val skillId = 12001
+        val npc = BattleFighter(
+            roleId = -30, kind = EHuman.MINE_NPC, name = "low-sp-npc", col = 0, row = 0,
+            maxHp = 1000, maxSp = 1, hp = 1000, sp = 1, level = 1, element = 3,
+            atk = 100, def = 10, agi = 100, intelligence = 100, skills = intArrayOf(skillId)
+        )
+        val enemy = fighter(31, 2, 0)
+        val battle = BattleInstance(
+            battleId = 4, warType = 0, terrain = 0, eventNo = 0, grid = BattleGrid(),
+            skillResolver = BattleSkillResolver(mapOf(skillId to skill(1))),
+            itemResolver = mockk<BattleItemResolver>(relaxed = true), involvedNpcDefs = emptyList()
+        )
+        listOf(npc, enemy).forEach(battle::addFighter)
+
+        battle.resolveNpcActions { _ -> skillId }
+
+        assertEquals(skillId, npc.pendingAction?.id)
+        assertEquals(enemy.col, npc.pendingAction?.targetCol)
+        assertEquals(enemy.row, npc.pendingAction?.targetRow)
+    }
+
+    @Test
     fun `fightWay eight rejects living friendly target`() {
         val reviveId = 11011
         val actor = fighter(1, 2, 0)

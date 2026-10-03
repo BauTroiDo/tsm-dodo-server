@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import tw.tsm.data.loaders.NpcDatLoader
 import tw.tsm.data.loaders.SkillDatLoader
+import tw.tsm.gamelogic.battle.NpcAiSkillRules
 import tw.tsm.gamelogic.battle.NpcBattleProfileCalc
 import java.nio.file.Files
 import java.nio.file.Path
@@ -90,6 +91,23 @@ class DvtNpcBattleStatsTest {
         val duplicateProfile = NpcBattleProfileCalc.from(requireNotNull(npcs[35061]), skills)
         assertEquals(listOf(20052, 20052, 20052, 0), duplicateProfile.skills.toList())
         assertEquals(setOf(20052), duplicateProfile.skillLevels.keys)
+    }
+
+    @Test
+    fun `live DVT npc data includes AI skills whose SP cost exceeds starting SP`() {
+        val npcs = NpcDatLoader.load(serverData("Npc_C.dat"))
+        val skills = SkillDatLoader.load(serverData("Skill_C.dat"))
+        val npc = requireNotNull(npcs[40456])
+        val profile = NpcBattleProfileCalc.from(npc, skills)
+
+        assertEquals(50L, profile.maxSp)
+        assertEquals(13025, profile.skills[1])
+        assertTrue(requireNotNull(skills[13025]).requireSp > profile.maxSp)
+
+        assertEquals(13015, profile.skills[2])
+        val normalizedSummon = NpcAiSkillRules.normalizeSelectedSkill(profile.skills[2])
+        assertEquals(13018, normalizedSummon)
+        assertTrue(requireNotNull(skills[normalizedSummon]).requireSp > profile.maxSp)
     }
 
     @Test

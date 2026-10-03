@@ -80,7 +80,8 @@ class BattleSkillResolver(
         targetRow: Int,
         terrain: Int,
         comboMultiplier: Double = 1.0,
-        currentRound: Int = 0
+        currentRound: Int = 0,
+        allowInsufficientSp: Boolean = false
     ): SkillResolveResult {
         val skill = if (skillId == BattleConstants.HAND_FIGHT_SKILL_ID) null else skillDefs[skillId]
         val skillLv = if (skill == null) 1 else (attacker.skillLevels[skillId] ?: 1).coerceIn(1, 10)
@@ -94,7 +95,7 @@ class BattleSkillResolver(
 
         // Lua SkillData rule: requireSp == 1 means consume ALL current SP.
         val requiredSp = skill?.requireSp ?: 0
-        if (skill != null && attacker.sp < requiredSp) {
+        if (skill != null && attacker.sp < requiredSp && !allowInsufficientSp) {
             logger.debug { "${attacker.name} thiếu SP: cần $requiredSp, đang có ${attacker.sp}" }
             return SkillResolveResult(emptyList(), spConsumed = 0, fightArea = fightArea)
         }
@@ -102,6 +103,7 @@ class BattleSkillResolver(
         val spConsumed = when {
             skill == null || requiredSp <= 0 -> 0
             requiredSp == 1 -> attacker.sp.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+            allowInsufficientSp -> minOf(attacker.sp, requiredSp.toLong()).toInt()
             else -> requiredSp
         }
         // Quyết định danh sách mục tiêu trước khi biến đổi. Mục tiêu cũ/không hợp lệ không được tiêu tốn SP.

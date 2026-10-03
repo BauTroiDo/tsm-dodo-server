@@ -1839,3 +1839,34 @@ Continuation from checkpoint 149ef88.
 - Keep `tools/start-staging-runtime.ps1` untracked; never commit it.
 - Prefer Git Bash OpenSSH for production. Use Git bundle + SCP when production GitHub HTTPS fetch cannot authenticate.
 - For production restarts, use WMI `Win32_Process.Create` with `_start_prod_detached.cmd`, then close SSH and reconnect to prove the server remains alive.
+
+## 2026-10-03 — Monster AI-E — NPC SP execution semantics
+### Evidence
+- Live DVT Lua:
+  - `FightRoleController.lua` checks insufficient SP only while Players / FollowNpc select their own command.
+  - Enemy NPC commands are server-driven and bypass that input gate.
+  - `FightField.AttackSkill` always subtracts `skillDatas[skillId].requireSp` after the server-selected skill executes.
+  - `FightRoleController:SetAttrEffect` clamps HP/SP to a minimum of 0.
+- PC fallback `TSBattleNPC.seekTarget` selects exactly one skill slot and does not check SP before `pushCommand`.
+- PC execution subtracts `SkillData.sp_cost`; `BattleParticipant.setSp` clamps NPC SP at 0.
+- Live DVT data proves this is not theoretical:
+  - 21 NPC skill slots have starting/max SP below the selected skill's SP cost.
+  - 592 skill slots can deplete NPC SP within <=3 casts.
+  - Example NPC 40456: max SP=50, skill2=13025 costs 52 SP; skill3=13015 normalizes to 13018 costing 120 SP.
+
+### Implementation
+- Removed the Kotlin NPC-AI fallback that changed an already-selected skill into basic attack when current SP was too low.
+- `BattleSkillResolver.resolveSkill` now has an explicit `allowInsufficientSp` flag.
+- Only server-controlled enemy NPCs (`EHuman.MINE_NPC`) enable that flag.
+- For such NPCs, a selected skill executes even when current SP < requireSp and consumes only the SP actually available, clamping to 0.
+- Player-controlled units retain the strict insufficient-SP rejection.
+- Invalid targets still consume 0 SP.
+
+### Validation
+- Added regression proving player-controlled skill remains blocked below cost.
+- Added regression proving server NPC executes selected skill below cost and SP clamps to 0.
+- Added AI command regression proving low-SP NPC keeps the selected skill rather than switching to hand attack.
+- Added live-data regression for NPC 40456 low-SP skill slots.
+- Targeted AI-E/resource/command/NPC-profile suite: PASS, 18/18 tasks executed.
+- Full local `gradlew test build --rerun-tasks`: PASS, 21/21 tasks executed.
+- `git diff --check`: PASS.
