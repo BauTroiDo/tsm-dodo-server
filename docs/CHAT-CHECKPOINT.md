@@ -2372,3 +2372,39 @@ Continuation from checkpoint 149ef88.
 - Audit/implement C:047-006 password toggle/regenerate, C:047-008 invite + S:047-015, C:047-009 recruit + S:047-016, C:047-013 quick join/invite bypass semantics.
 - Keep invite bypass for locked rooms evidence-driven; do not invent trust/authorization state beyond packet contract.
 - After lobby protocol is complete, move to F3: dungeon mission lifecycle/end/result/reward/daily count and timeout, then weekly/soul criteria.
+
+
+## 2026-10-04 — Dungeon F2-C — invite / recruit / quick join — PASS
+
+### Evidence / scope
+- Continued from F2-B checkpoint `198be344`; Lua DVT remains authoritative.
+- C:047-008 invite and S:047-015 invitation layout are implemented from `DungeonInvitation.New` / `protocal.lua`.
+- C:047-009 recruit and S:047-016 public recruit are implemented for World channel=2, which is fully evidenced by DVT UI. Organization routing remains disabled because current offline runtime has no authoritative organization-recipient contract.
+- C:047-013 quick join selects an available unlocked room of the requested dungeon.
+- Invitation state may bypass a locked-room password exactly for the invited target; invitation is consumed on join.
+- C:047-006 exists in `Dungeon.SendSetPassword()`, but `UIDungeon.OnClickTeamPass` has the call commented out in live DVT Lua. Therefore the current client UI does not emit it. Server toggle/regenerate semantics remain evidence-blocked and are intentionally not invented.
+
+### Implementation
+- Code commit: `6ce26a33 feat: complete DVT dungeon lobby joins`.
+- `DungeonRoomRegistry` now tracks per-room invite targets and clears invitation state on successful join/disband.
+- `DungeonHandler` adds C:047-008, C:047-009, C:047-013 plus S:047-008/015/009/016 behavior.
+- Locked-room join accepts exact password or a still-valid explicit invitation.
+- Public recruit broadcasts the DVT S:047-016 wire to online sessions for World channel only.
+- Quick join excludes locked/full/starting/started rooms through lobby snapshot semantics.
+- No weekly/soul/reward/daily-reset semantics are mixed into F2-C.
+
+### Validation / production
+- F2-C tests present in `DungeonRoomPacketTest` cover invitation wire + password bypass, quick join and world recruit packet ordering.
+- Production exact HEAD `6ce26a33f4bcd6d8cda63f156aa6f9d4696f55e8`.
+- Production full `gradlew.bat test build --rerun-tasks`: PASS, 21/21 tasks in 3m17s.
+- Runtime restarted through WMI; Java game PID `12844`.
+- IPv4 `0.0.0.0:6613` and IPv6 `[::]:6613` are LISTENING on PID 12844.
+- Tracked Kotlin `.salive` restored after build.
+- Production `application.conf` and operational/untracked files preserved.
+
+### START NEXT — Dungeon F3
+- Implement server-authoritative dungeon mission lifecycle/end/result/timeout/daily count only after locking reward semantics.
+- DVT client proves timeout UI is display-only: `Dungeon.UpdateTime()` stops timer at zero and contains `--todo Trigger`; server must own timeout/end.
+- `Dungeon.CheckInDungeon()` keys current dungeon state through `dungeonData.missionFlag`, so completion must follow mission lifecycle rather than sceneId alone.
+- `IOS_DungeonCombo_C.dat` = 180 records x 31 bytes. `lootTable` rows have multiple `kind`/threshold semantics; do not apply one generic reward formula until `DungeonCombo.kind` is resolved.
+- Single-player server state must retain active dungeonId/start time because multiple dungeon definitions can share the same scene.
