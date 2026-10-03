@@ -2287,3 +2287,49 @@ Continuation from checkpoint 149ef88.
 - Audit và triển khai room lifecycle protocol 47 cho multiplayer: room list/create/join/password/name/invite/recruit/leave/prepare/start/kick/owner migration.
 - Dùng Lua DVT packet layouts làm contract; chưa gộp reward/end/weekly criteria nếu chưa đủ evidence.
 - Room registry trước hết là runtime/in-memory; persistence chỉ thêm nếu DVT contract chứng minh room sống qua restart/relog.
+
+
+## 2026-10-04 — Dungeon F2-A — normal multiplayer room lifecycle — PASS
+
+### Evidence / boundaries
+- Continued from Dungeon F1 checkpoint `d112597`; Lua DVT remains authoritative.
+- `DungeonPlayerData.New` reads exactly 11 fixed equipment/style UInt16 slots: `Role.maxEquip=6` + `Role.maxStyle=5`. S:047-003/S:047-013 now pad/truncate to exactly 11 so packet alignment cannot drift with session array length.
+- S:047-003 join success contains only players already present in the room; the joining client appends itself locally. Existing members receive the new player separately through S:047-013.
+- Normal multiplayer page is DVT dungeon `kind=1`; weekly `kind=3` and soul `kind=5` criteria remain deliberately disabled in this milestone.
+- Dungeon lobby is distinct from normal PartySystem; being in a normal party returns DVT result 5.
+- Lua proves that create-with-password receives a password string back from server, but does not expose the server generation algorithm. Offline fallback is explicitly custom: stable four decimal digits derived from playerId+dungeonId. No gameplay rule is inferred from this fallback.
+- Room registry is runtime/in-memory only. No persistence across server restart is added because DVT exposes no room persistence contract.
+- Multiplayer start is intentionally NOT enabled yet: current scene-change wire hardcodes `instanceId=0`; teleporting multiple dungeon rooms to the same scene without isolation would mix players across rooms.
+
+### Implementation
+- Code commit: `deff339 feat: add DVT dungeon multiplayer rooms`.
+- Added `DungeonRoomRegistry`: UInt32 room ids, member/prepared state, capacity, lock/password state, rename, kick, leave, disband and owner migration.
+- Extended `DungeonSystem` with shared normal-multiplayer validation using existing DVT level/battle/daily-count/PartySystem checks.
+- Extended `DungeonHandler`:
+  - C:047-001 room list.
+  - C:047-002 create normal multiplayer room (plus existing F1 single path).
+  - C:047-003 join room with capacity/password validation.
+  - C:047-007 rename room by owner.
+  - C:047-010 leave room.
+  - C:047-011 prepare/cancel prepare for non-owner.
+  - C:047-017 owner kick.
+  - S:047-001/002/003/007/010/011/013/014/017 byte layouts implemented to DVT Lua client contract.
+- Explicit owner leave migrates owner to first remaining member and clears the new owner's prepare flag before S:047-014.
+- Password invite-bypass, C:047-006 password regenerate/toggle, C:047-008 invite, C:047-009 recruit, C:047-012 start, C:047-013 quick join, and disconnect cleanup remain next milestones rather than guessed behavior.
+
+### Validation / production
+- Targeted `DungeonRoomRegistryTest + DungeonRoomPacketTest`: PASS, 18/18 Gradle tasks.
+- Byte-level join regression verifies existing-member-only list, fixed 11-slot layout, prepare byte, trailing dungeonId, and S:047-013 new-member notification.
+- Password response regression verifies a four-digit offline fallback and room lock state.
+- Full local `./gradlew test build --rerun-tasks`: PASS, 21/21 tasks; `git diff --check` PASS.
+- `origin/main` code HEAD: `deff339a8ba9eb15e5d5da044f84f13b9f70aa83`.
+- Production fast-forwarded from exact F1 code base `0a00a47` through verified `dungeon-f2.bundle`; local `application.conf` and all operational/untracked files preserved.
+- Production full build: PASS, 21/21 tasks in 2m45s. Tracked Kotlin `.salive` restored after build/startup.
+- Runtime restart: old PID 5840 terminated through WMI, detached launcher returned success; new Java PID `8256`.
+- Production IPv4/IPv6 `6613` LISTEN at PID 8256; `logs/runtime-production.log` confirms `Máy chủ khởi động: 0.0.0.0:6613` at 02:50:27 on 2026-10-04.
+- Runtime scan showed no ERROR/Exception/FATAL entries; Gradle `checkKotlinGradlePluginConfigurationErrors` task names are not runtime errors.
+
+### START NEXT — Dungeon F2-B
+- Add real dungeon instance isolation before C:047-012 start. Current S:012 scene-change serializer writes `instanceId=0`; do not start multiplayer rooms until WorldManager/scene visibility can separate same-scene rooms.
+- Audit and implement owner C:047-012 -> S:047-011 owner countdown (client hardcodes 5 seconds) -> isolated scene entry -> S:047-018 start timestamp/timer.
+- Then add disconnect room cleanup/owner migration and invitation bypass for locked rooms; keep weekly/soul/reward/reset as later F3+ milestones.
