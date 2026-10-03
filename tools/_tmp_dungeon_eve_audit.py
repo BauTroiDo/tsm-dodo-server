@@ -2,7 +2,7 @@
 import struct
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path.cwd()
 DATA = (ROOT / "gamedata" / "Eve.emg").read_bytes()
 TARGET_SCENE = 62001
 TARGET_MISSIONS = {12322, 12324, 12326, 12328, 12336}
