@@ -2065,3 +2065,42 @@ Continuation from checkpoint 149ef88.
 - J2 Taunt: recover authoritative server-side action semantics for `EStatus.Taunt` (skip turn vs forced basic attack vs forced target). Do not change current behavior without DVT evidence.
 - If Taunt remains blocked, move to AI-K: audit NPC action ordering / AGI / Tardy and other evidenced status effects that can alter enemy AI execution order.
 - Source priority remains live DVT 1.15/Lua > DVT data > Kotlin > PC fallback.
+
+## 2026-10-03 — Monster AI-J2 / AI-K — status semantics
+### AI-J2 Taunt — EVIDENCE BLOCKED
+- DVT `FightField.IsCanControl/CheckCanAct` blocks manual control while `EStatus.Taunt` is active.
+- DVT `FaintSkill` maps 10042/10045/22030 to `EStatus.Taunt`.
+- Tracked Skill_C 10042 `Hữu Khách Lai` has `round=0`, fightWay=21 and description `Làm kẻ địch tự đánh chính mình`.
+- Therefore Taunt is not safely equivalent to skip-turn. Exact forced-action/target/duration semantics are absent from Lua/data.
+- No Taunt gameplay mutation was added; keep evidence-blocked rather than inventing a forced self-attack rule.
+
+### AI-K Tardy / ShakeTake boundary
+- DVT maps `EStatus.Tardy`, but no Lua consumer proving an AGI multiplier was found; PC `getAgi()` also uses base AGI. Do NOT invent an AGI penalty.
+- DVT SealSkill maps a large `EStatus.ShakeTake` family, but most current Skill_C rows have round=0 and the server-side proc/duration formula is not exposed.
+- 11041 `Trảm Kỵ` is the only audited ShakeTake row with round=1, but proc probability remains unproven, so ShakeTake activation is still blocked.
+
+### AI-K status round encoding — PASS
+- Live DVT `SkillData.lua` defines raw `round`: 0=none, 1/2/3=exact rounds, 4=continuous three rounds.
+- Kotlin previously persisted raw 4 as four rounds, extending affected statuses by one round.
+- Current tracked Skill_C has exactly six `round=4` rows: 13050, 14015, 20023, 20027, 21042, 46002.
+- All six already map to modeled server statuses (WhirlWind or Poison); no new status/probability behavior was introduced.
+- Added `BattleDamageCalc.statusDurationFromSkillRound`: 1/2/3 stay unchanged, 4->3, other values ->0.
+- Both damage/status-only application and friendly utility status persistence now use the decoded duration.
+- Added permanent regressions for encoding and exact six-row DVT inventory; temporary scratch test deleted before validation.
+- Targeted `DvtBattleStatusExecutionTest`: PASS, 18/18 tasks.
+- Full local `gradlew test build --rerun-tasks`: PASS, 21/21 tasks; `git diff --check` PASS.
+- Code commit `3e741ce fix: decode DVT status round duration` pushed to `origin/main`.
+- Production fast-forwarded to exact HEAD `3e741ce` via verified Git bundle; `application.conf` and operational files preserved.
+- Production full `gradlew test build --rerun-tasks`: PASS, 21/21 tasks.
+- Runtime restarted through the WMI launcher and verified from a fresh SSH session:
+  - production HEAD `3e741ce`
+  - Java PID `9176`
+  - `0.0.0.0:6613` and `[::]:6613` LISTEN
+  - runtime log reached server-ready state and recurring local health checks succeed.
+- Production tracked Kotlin compiler session file restored after build.
+
+### START NEXT — Monster AI-L
+- Audit control/debuff hit/proc probability. Current Kotlin still carries legacy AGI/INT chance logic that is not established by DVT Lua/data.
+- PC fallback has explicit separate hit thresholds for disable skill_type=3 and debuff skill_type=15; compare these only where current DVT fightWay/data semantics match.
+- Do not globally rewrite damaging status skills whose DVT fightWay differs from the old PC status categories without direct evidence.
+- Prioritize a safe evidenced subset first, add deterministic/pure probability regressions, then full build/deploy/checkpoint.
