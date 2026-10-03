@@ -2104,3 +2104,32 @@ Continuation from checkpoint 149ef88.
 - PC fallback has explicit separate hit thresholds for disable skill_type=3 and debuff skill_type=15; compare these only where current DVT fightWay/data semantics match.
 - Do not globally rewrite damaging status skills whose DVT fightWay differs from the old PC status categories without direct evidence.
 - Prioritize a safe evidenced subset first, add deterministic/pure probability regressions, then full build/deploy/checkpoint.
+
+## 2026-10-03 — Monster AI-L — DVT status-only control/debuff execution — PASS
+### Evidence / scope
+- Current DVT Skill_C hostile status-only subset is represented by fightWay 3 or 15 with an encoded duration and a client-proven concrete status mapping; the audited subset contains 30 rows and uses attribute=0, so `SkillData.attribute` is not a valid discriminator for this family.
+- PC fallback preserves the same category split for status-only execution: skill_type/fightWay 3 uses +20 miss threshold and fightWay 15 uses +15, with the ordinary level-difference term. DVT Lua/data does not expose a newer server RNG formula, so this fallback is restricted to the matching 3/15 subset only.
+- A successful status-only hit is the proc gate for this subset. The previous Kotlin second AGI/INT roll was legacy behavior with no DVT evidence and could incorrectly turn an already successful control/debuff hit into no status.
+
+### Implementation
+- Commit `13e89f1 fix: align DVT status-only battle skills`.
+- `BattleSkillResolver` now recognizes hostile status-only skills by fightWay 3/15 + decoded duration + known DVT status mapping instead of modeled status attributes.
+- `BattleDamageCalc.calculateStatusOnly` uses the scoped PC fallback miss threshold; on HIT it applies the mapped DVT status directly with the decoded duration and never fabricates HP damage.
+- Removed the unproven second AGI/INT status proc roll for this evidenced status-only subset.
+- Damaging skills that also carry statuses are intentionally untouched; their proc contract remains a separate audit target.
+- Added regressions for the 3/15 miss threshold, the exact current DVT subset shape, zero HP damage, and status application on successful status-only hits.
+
+### Validation / production
+- Full local validation for the code commit was completed before production deploy; `13e89f1` is on `origin/main`.
+- Production exact HEAD `13e89f18fdc57b8e6a64eafd7c254f114a85a4c7`.
+- Clean production `gradlew test build --rerun-tasks`: PASS, 21/21 tasks.
+- Tracked Kotlin compiler session file restored after the build; production-local `application.conf` and operational/untracked files preserved.
+- Runtime restarted through WMI after the old process was fully stopped; verified from a fresh SSH session:
+  - Java game PID `12232`
+  - `0.0.0.0:6613` and `[::]:6613` LISTEN
+  - runtime log reached Netty server-ready state at 15:39:41 and recurring local health checks succeed.
+
+### START NEXT — Monster AI-M
+- Audit damaging skills that also inflict a modeled status. Kotlin still uses a legacy `50 + (attacker INT - target INT)/2` second proc roll after damage; this is not yet established by DVT Lua/data.
+- Inventory the current DVT Skill_C damaging+status rows by fightWay/round/status family, then compare their matching PC server branches. Do not generalize the AI-L 3/15 rule unless the data categories and server fallback actually match.
+- Also verify whether multi-hit damaging status skills roll status once per execution or once per hit before changing behavior.
