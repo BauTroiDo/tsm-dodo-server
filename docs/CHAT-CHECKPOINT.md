@@ -1972,3 +1972,43 @@ Continuation from checkpoint 149ef88.
 - Audit queued NPC target validity between command selection and execution: if the chosen target dies, flies out, is captured, or leaves its cell earlier in the round, determine whether DVT/PC retargets, keeps coordinates, or no-ops.
 - Verify Kotlin resolveRound/grid lookup does not accidentally hit a new occupant at the same coordinates or silently retarget another fighter.
 - Use DVT packet/client behavior first, PC execution fallback second; add deterministic regression before any behavior change.
+
+## 2026-10-03 — Monster AI-H — queued target validity / coordinate semantics — PASS
+### Evidence
+- PC `BattleAbstract.execute()` re-reads the queued target cell at AGI execution time. If the cell is absent/dead (or PC-only untargetable statuses), `changeTarget()` is invoked.
+- PC `changeTarget()` only redirects ordinary hostile HandFight / skill_type 1-2; same-side actions, items and skill_type >2 keep the queued coordinate. Retarget scan order is row-first, alternating front/back on the originally selected side.
+- PC commands store destination coordinates, not target identity. If another fighter occupies the same queued cell before execution, execution acts on the current occupant at that coordinate.
+- DVT `FightManager.RevAttackSkill` consumes S:050-001 target coordinates and only calls `FightField.AttackSkill` when target count >0, supporting zero-target no-op packets rather than client-side retry.
+
+### AI-H1 — hostile stale-target retarget
+- Commit `d13ba9f fix: retarget stale hostile battle actions`.
+- Added `BattleGrid.firstAliveOnSelectedSidePcOrder()` using PC row-first front/back scan.
+- `BattleSkillResolver` re-checks stale hostile HandFight/fightWay1-2 at execution and retargets on the same selected side.
+- If no replacement exists, action resolves to zero targets and consumes no SP.
+
+### AI-H2 — remove over-broad SINGLE fallback
+- Found Kotlin `BattleGrid.resolveTargets(SINGLE)` was silently retargeting any stale single target, which could make support/debuff/higher-fightWay actions jump to another unit contrary to PC execution semantics.
+- Fixed geometry so SINGLE only resolves the queued cell; retargeting is execution policy owned by `BattleSkillResolver`.
+- Higher-fightWay/support/debuff/revive actions therefore keep their queued coordinate and may become zero-target no-op.
+- If a new fighter occupies the exact queued coordinate before execution, the action affects that current occupant, matching coordinate-based PC commands.
+- Commit: `0141f99 fix: preserve queued target coordinate semantics`.
+
+### Validation / production
+- Targeted `DvtBattleCommandSemanticsTest` + `DvtBattleTargetGeometryTest`: PASS, 18 tasks executed.
+- Full local `gradlew test build --rerun-tasks`: PASS, 21/21 tasks.
+- `git diff --check`: PASS.
+- `0141f99` pushed to `origin/main` and production fast-forwarded by verified Git bundle.
+- Production full `gradlew test build --rerun-tasks`: PASS, 21/21 tasks, exact HEAD `0141f99`.
+- Runtime restarted through WMI `Win32_Process.Create` + `_start_prod_detached.cmd`; verified from a fresh SSH session:
+  - production HEAD `0141f99`
+  - Java PID `11480`, Session 0
+  - `0.0.0.0:6613` and `[::]:6613` LISTEN
+  - Netty reached ready state; recurring local health-check connect/disconnect succeeds
+  - no real runtime ERROR/Exception/FATAL/Koin failure; text scan only matched Gradle task names containing `ConfigurationErrors`.
+- Production `application.conf` and operational/untracked files were preserved. Temporary WMI helper was deleted; tracked `.kotlin` session file restored after build.
+
+### START NEXT — Monster AI-I
+- Audit stale-coordinate behavior for multi-target / higher fightArea actions when the originally selected center is dead/removed but surrounding cells remain valid.
+- Compare DVT `FightField.GetEnemyIdx`/S:050-001 behavior first, then PC `makeExecutionPacket` as fallback.
+- Verify Kotlin does not incorrectly drop the entire area, switch target side, or include a dead center where DVT/PC would still hit living surrounding targets.
+- Separately identify PC `buff_type 13005/13025` in live DVT Lua before considering their special retarget/untargetable rule; do not implement from PC alone.
