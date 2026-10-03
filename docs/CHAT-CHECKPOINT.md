@@ -2152,3 +2152,27 @@ Continuation from checkpoint 149ef88.
 - Audit status-group collision/reapplication semantics. PC status-only branches refuse a new disable/debuff when the target already has a status in that category; Kotlin currently can overwrite a grouped status.
 - Compare DVT group storage (`Seal/Vary/Faint/Spec/Strong`), selection behavior and clear/reapply packets first, then use PC fallback only for matching fightWay 3/15 categories.
 - Determine whether an already-statused target should MISS, preserve the old status, refresh duration, or replace it; add deterministic tests before any mutation.
+
+## 2026-10-03 — Monster AI-N — active status-group collision — PASS
+### Evidence / implementation
+- PC `BattleAbstract.calculateHit` refuses status-only skill_type 3 when `disable_type != 0` and skill_type 15 when `debuff_type != 0`.
+- The current DVT status-only subset remains aligned with client groups: fightWay 3 maps to modeled Seal statuses; fightWay 15 maps to modeled Faint statuses.
+- Commit `d94c30e fix: preserve active DVT status groups` makes a status-only 3/15 hit return MISS for a target whose matching group is already occupied, preserving the existing status identity and remaining duration instead of overwriting/refreshing it.
+- The check is per target, so an area skill can miss an already-statused target while resolving other targets normally. SP remains consumed because the skill was executed and missed.
+- Added regressions for active Seal + fightWay3, active Faint + fightWay15, and a permanent DVT Skill_C group invariant for all 30 current status-only rows.
+
+### Validation / production
+- Targeted `DvtBattleStatusExecutionTest`: PASS.
+- Full local `gradlew test build --rerun-tasks`: PASS, 21/21 tasks; `git diff --check` PASS.
+- `d94c30e` pushed to `origin/main` and production fast-forwarded via verified Git bundle; production-local `application.conf` and operational files preserved.
+- Production full `gradlew test build --rerun-tasks`: PASS, 21/21 tasks on exact HEAD `d94c30e`.
+- Runtime restarted through separate stop and WMI-launch commands to avoid launch race; fresh verification:
+  - production HEAD `d94c30e0809bb0fa35d48b3c34350a2a93ccb2af`
+  - Java game PID `9204`
+  - `0.0.0.0:6613` and `[::]:6613` LISTEN
+  - recurring local health-check connect/disconnect succeeds.
+
+### START NEXT — Monster AI-O
+- Audit status duration lifecycle: when grouped-status rounds decrement relative to action execution, and whether raw duration 1/2/3 blocks exactly the intended number of turns.
+- Compare DVT round/status restore handling first, then PC `BattleParticipant` decrement timing as fallback.
+- Verify statuses inflicted mid-round are not decremented too early and statuses expiring at round end restore the correct group/packet state.
