@@ -1870,3 +1870,30 @@ Continuation from checkpoint 149ef88.
 - Targeted AI-E/resource/command/NPC-profile suite: PASS, 18/18 tasks executed.
 - Full local `gradlew test build --rerun-tasks`: PASS, 21/21 tasks executed.
 - `git diff --check`: PASS.
+
+### 2026-10-03 — Monster AI-E production deploy — PASS
+- Commit `04442de fix: align DVT NPC SP execution` pushed to `origin/main`.
+- Production `C:\Server-Game\tsm_dodo` fast-forwarded from `555a30e` to `04442de` via verified Git bundle over Git Bash SSH.
+- Production full `gradlew test build --rerun-tasks`: PASS, 21/21 tasks executed.
+- Runtime restarted through WMI `Win32_Process.Create` with `_start_prod_detached.cmd`.
+- Verified only after closing SSH and reconnecting:
+  - production HEAD `04442de`
+  - game Java PID `11868`
+  - process runs in Windows Services session 0
+  - `0.0.0.0:6613` and `[::]:6613` LISTEN
+  - Netty logged server ready and recurring local health-check connect/disconnect succeeded
+  - startup loaded `IOS_ExclusiveSkill_C.dat` 574 records / 123 skill IDs
+  - no real ERROR / Exception / FATAL / Koin startup failure.
+- Production local `application.conf` and operational/untracked files were preserved.
+
+### LATEST START NEXT CHAT FROM HERE
+- Production gameplay baseline: `04442de`, runtime PID `11868`, port `6613`.
+- Live DVT source is locked to LDPlayer9 package `net.chinesegamer.tsn` v1.15.
+- Monster AI completed and live:
+  - AI-A corpse/revive target preservation
+  - AI-B target pools for fightWay 4/5/8/18/19
+  - AI-C elemental summon normalization
+  - AI-D exact four-slot NPC skill probability preservation
+  - AI-E NPC SP execution semantics aligned to DVT/PC.
+- AI-E key rule: enemy NPCs do not fallback to hand attack just because SP < skill cost; the selected skill executes and SP clamps to 0. Player/FollowNpc command input remains strictly SP-gated.
+- Continue the next monster-combat audit from this baseline; read the entire checkpoint first.
