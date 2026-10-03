@@ -2333,3 +2333,42 @@ Continuation from checkpoint 149ef88.
 - Add real dungeon instance isolation before C:047-012 start. Current S:012 scene-change serializer writes `instanceId=0`; do not start multiplayer rooms until WorldManager/scene visibility can separate same-scene rooms.
 - Audit and implement owner C:047-012 -> S:047-011 owner countdown (client hardcodes 5 seconds) -> isolated scene entry -> S:047-018 start timestamp/timer.
 - Then add disconnect room cleanup/owner migration and invitation bypass for locked rooms; keep weekly/soul/reward/reset as later F3+ milestones.
+
+
+## 2026-10-04 — Dungeon F2-B — isolated instance start + countdown — PASS
+
+### Evidence / contract
+- Continued from F2-A checkpoint `33155e8`; Lua DVT remains authoritative.
+- DVT S:012-000 explicitly carries `sceneTag UInt16 + instanceId UInt16`; client passes both into `Role.ChangeScene`. Instance isolation is therefore a real protocol field, not a custom hidden flag.
+- `UIDungeon.StartCountdown()` hardcodes 5 seconds. `Dungeon.RecivePlayerPrePare()` starts that countdown when S:047-011 roleId is the room owner.
+- C:047-012 is owner start. Client only sends it after `Dungeon.CheckTeamIsReady()` confirms every non-owner is prepared.
+- S:047-018 carries OADate start time; `Dungeon.ReciveEndTime()` derives end time from `DungeonData.time`.
+- Ordinary world scenes remain instance 0. No weekly/soul/reward semantics were added in this milestone.
+
+### Implementation
+- Code commit: `5ed42ce feat: start isolated DVT dungeon instances`.
+- `GameSession` now carries `instanceId`; `GameSessionImpl` defaults it to 0.
+- `WorldManager` scopes player presence, appearance and map broadcasts by `(mapId, instanceId)`. Normal maps use 0; dungeon rooms use 1..65535.
+- Static NPC patrol remains shared scene data and is broadcast to all active instances of the map; player-specific map lookups/broadcasts are instance-scoped.
+- S:012 scene-change serializer now writes the real instanceId instead of hardcoded 0.
+- `SpecialSceneTeleportService` supports explicit instance entry; existing callers keep default instance 0.
+- `DungeonRoomRegistry` allocates a unique active UInt16 instanceId per room, tracks `starting/started`, hides starting/started rooms from lobby listing, blocks late joins, and cancels countdown state on member leave.
+- C:047-012 owner start validates all non-owner members prepared, sends S:047-011(owner,true) to trigger client 5-second countdown, then commits room start, sends S:047-018 OADate start time and teleports all current room members into the same dungeon scene + instanceId.
+- Runtime `DungeonRoomRegistry` is now a Koin singleton shared with `DungeonHandler`; disconnect callback removes the player from the room and migrates owner when needed.
+- Reconnect/resume persistence and cross-scene dungeon instance propagation are NOT invented here; they remain later evidence work.
+
+### Validation / production
+- Targeted DungeonRoomRegistryTest + DungeonRoomPacketTest + DvtLoginWireTest: PASS, 18/18 Gradle tasks.
+- New regression verifies each active room receives a distinct nonzero UInt16 instance, room cannot start before non-owner ready, started room disappears from lobby, and S:012 carries nonzero instanceId.
+- Full local `./gradlew test build --rerun-tasks`: PASS, 21/21 tasks; `git diff --check` PASS.
+- `origin/main` code HEAD `5ed42cec91c69becdc3c8448a34a41f882b489f3`.
+- Production verified exact base `deff339` before deploy; fast-forwarded through verified `dungeon-f2b.bundle`. Local `application.conf` and all operational/untracked files preserved.
+- Production full `gradlew.bat test build --rerun-tasks`: PASS, 21/21 tasks in 2m49s.
+- Restart: old PID 8256 terminated; `_launch_prod_wmi.cmd` returned WMI success; new Java game PID `8952` owns IPv4/IPv6 port 6613.
+- Runtime log: `Nạp IOS_Dungeon xong: 57 bản ghi`; Netty `Máy chủ khởi động: 0.0.0.0:6613` and Main server-ready at 03:32:02 on 2026-10-04. Health-check connects continue; inspected startup tail contains no ERROR/Exception/FATAL.
+- Tracked Kotlin `.salive` restored after build/startup.
+
+### START NEXT — Dungeon F2-C
+- Audit/implement C:047-006 password toggle/regenerate, C:047-008 invite + S:047-015, C:047-009 recruit + S:047-016, C:047-013 quick join/invite bypass semantics.
+- Keep invite bypass for locked rooms evidence-driven; do not invent trust/authorization state beyond packet contract.
+- After lobby protocol is complete, move to F3: dungeon mission lifecycle/end/result/reward/daily count and timeout, then weekly/soul criteria.
