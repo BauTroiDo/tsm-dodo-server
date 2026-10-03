@@ -2,7 +2,6 @@ package tw.tsm.app.handlers
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import tw.tsm.domain.constants.Opcodes
-import tw.tsm.domain.data.DungeonDef
 import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.PacketHandler
@@ -10,8 +9,6 @@ import tw.tsm.gamelogic.systems.DungeonRoomMember
 import tw.tsm.gamelogic.systems.DungeonRoomRegistry
 import tw.tsm.gamelogic.systems.DungeonRoomState
 import tw.tsm.gamelogic.systems.DungeonSystem
-import tw.tsm.gamelogic.systems.PartySystem
-import tw.tsm.gamelogic.systems.QuestSystem
 import tw.tsm.protocol.PacketReader
 import tw.tsm.protocol.PacketWriter
 
@@ -26,9 +23,7 @@ private val dungeonHandlerLogger = KotlinLogging.logger {}
  */
 class DungeonHandler(
     private val system: DungeonSystem,
-    private val rooms: DungeonRoomRegistry,
-    private val questSystem: QuestSystem,
-    private val partySystem: PartySystem,
+    private val rooms: DungeonRoomRegistry = DungeonRoomRegistry(),
 ) : PacketHandler {
     override val mainKind: Int = Opcodes.DUNGEON
 
@@ -91,7 +86,11 @@ class DungeonHandler(
             return
         }
 
-        val result = validateNormalRoomEntry(session, def)
+        val result = system.validateNormalRoomEntry(
+            session,
+            dungeonId,
+            rooms.roomOf(session.playerId) != null,
+        )
         if (result != DungeonSystem.RESULT_OK) {
             sendCreateResult(session, result)
             return
@@ -128,8 +127,11 @@ class DungeonHandler(
             return
         }
 
-        val def = system.getDef(room.dungeonId)
-        val result = validateNormalRoomEntry(session, def)
+        val result = system.validateNormalRoomEntry(
+            session,
+            room.dungeonId,
+            rooms.roomOf(session.playerId) != null,
+        )
         if (result != DungeonSystem.RESULT_OK) {
             sendJoinResult(session, result)
             return
@@ -222,26 +224,6 @@ class DungeonHandler(
         for (recipient in recipients.distinctBy { it.playerId }) {
             sendPlayerLeave(recipient, targetId, LEAVE_KICKED)
         }
-    }
-
-    private suspend fun validateNormalRoomEntry(session: GameSession, def: DungeonDef?): Int {
-        if (def == null) return DungeonSystem.RESULT_NO_DUNGEON
-        if (def.kind != KIND_NORMAL_MULTIPLAYER || def.maxPlayer <= 1) return DungeonSystem.RESULT_NO_SPACE
-        if (session.level !in def.minLv..def.maxLv) return DungeonSystem.RESULT_LEVEL_MISMATCH
-        if (rooms.roomOf(session.playerId) != null || session.mapId == def.sceneId) {
-            return DungeonSystem.RESULT_ALREADY_IN_ROOM
-        }
-        if (session.battleId != 0L) return DungeonSystem.RESULT_IN_BATTLE
-        if (partySystem.isInParty(session.playerId)) return DungeonSystem.RESULT_CANNOT_TEAM
-
-        if (def.dailyFlag != 0 && def.dailyCount > 0) {
-            val used = questSystem.getMissions(session.roleId.toLong())
-                .firstOrNull { it.missionId == def.dailyFlag }
-                ?.step ?: 0
-            if (used >= def.dailyCount) return DungeonSystem.RESULT_COUNT_EXHAUSTED
-        }
-
-        return DungeonSystem.RESULT_OK
     }
 
     private fun sendCreateResult(session: GameSession, result: Int, password: String? = null) {
@@ -380,7 +362,6 @@ class DungeonHandler(
     }
 
     companion object {
-        private const val KIND_NORMAL_MULTIPLAYER = 1
         private const val RESULT_ROOM_FULL = 6
         private const val RESULT_PASSWORD_WRONG = 9
         private const val LEAVE_SELF = 0
