@@ -639,6 +639,15 @@ class BattleManager(
             battle.state = BattleInstance.State.COUNTDOWN
 
             while (battle.state != BattleInstance.State.FINISHED) {
+                // PC start_round applies surviving periodic statuses before commands/countdown.
+                val statusResult = battle.resolveRoundStartStatusEffects()
+                broadcastRoundResult(battle, statusResult)
+                val statusEnd = battle.checkBattleEnd()
+                if (statusEnd != null) {
+                    handleBattleEnd(battle, statusEnd)
+                    break
+                }
+
                 // 1. Gửi đếm ngược
                 broadcastCountdown(battle)
                 battle.state = BattleInstance.State.WAITING_COMMANDS
