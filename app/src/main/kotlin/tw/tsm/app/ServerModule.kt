@@ -111,6 +111,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             register(get<MacroBoxHandler>())
             register(get<TeleportHandler>())
             register(get<LimitTimeDungeonHandler>())
+            register(get<DungeonHandler>())
             register(get<AchievementHandler>())
             register(get<EmoteHandler>())
             register(get<DispatchHandler>())
@@ -372,6 +373,14 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
         )
     }
     single {
+        DungeonSystem(
+            get<GameDataManager>().dungeonDefs,
+            get<QuestSystem>(),
+            get<PartySystem>(),
+            get<SpecialSceneTeleportService>(),
+        )
+    }
+    single {
         MiningSystem(
             get<MiningRepository>(),
             get<InventorySystem>(),
@@ -555,6 +564,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<EveEventStateMachine>(), get<SpecialSceneTeleportService>()
         )
     }
+    single { DungeonHandler(get<DungeonSystem>()) }
     single { AchievementHandler(get(), get(), get()) }
     single { EmoteHandler(get(), get()) }
     single {

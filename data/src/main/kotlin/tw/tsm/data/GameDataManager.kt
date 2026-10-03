@@ -83,6 +83,10 @@ class GameDataManager(
     var compoundRecipes: List<CompoundRecipeDef> = emptyList()
         private set
 
+    /** Phó bản DVT từ IOS_Dungeon_C.dat, key=dungeonId. */
+    var dungeonDefs: Map<Int, DungeonDef> = emptyMap()
+        private set
+
     /** Khu luyện công giới hạn DVT từ IOS_LimitTimeDungeon_C.dat, key=index. */
     var limitTimeDungeonDefs: Map<Int, LimitTimeDungeonDef> = emptyMap()
         private set
@@ -415,6 +419,12 @@ class GameDataManager(
             }
         } else {
             logger.warn { "IOS_Compound.dat không tồn tại — Chế tạo generic sẽ bị evidence-block" }
+        }
+
+        // Phó bản chính — Lua DVT DungeonData.New / protocol 47.
+        loadFile(dataIosDir, "IOS_Dungeon_C.dat") { bytes ->
+            dungeonDefs = DungeonDatLoader.load(bytes)
+            logger.info { "Nạp IOS_Dungeon xong: ${dungeonDefs.size} bản ghi" }
         }
 
         // UITeleport — cùng hai bảng client DVT dùng cho LimitFightArea / Turn navigation.
