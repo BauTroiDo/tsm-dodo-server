@@ -15,6 +15,7 @@ import tw.tsm.gamelogic.systems.DungeonRoomMember
 import tw.tsm.gamelogic.systems.DungeonRoomRegistry
 import tw.tsm.gamelogic.systems.DungeonRoomState
 import tw.tsm.gamelogic.systems.DungeonSystem
+import tw.tsm.gamelogic.systems.DungeonSettlement
 import tw.tsm.gamelogic.systems.WorldManager
 import tw.tsm.protocol.PacketReader
 import tw.tsm.protocol.PacketWriter
@@ -52,6 +53,7 @@ class DungeonHandler(
             12 -> startMultiplayer(session)
             13 -> quickJoin(session, data)
             17 -> kickPlayer(session, data)
+            22 -> claimWeeklyAllPass(session, data)
             else -> dungeonHandlerLogger.debug {
                 "Dungeon C:047-${subKind.toString().padStart(3, '0')} chưa thuộc F2-A; bỏ qua an toàn"
             }
@@ -94,10 +96,12 @@ class DungeonHandler(
             sendCreateResult(session, result)
             if (result == DungeonSystem.RESULT_OK) {
                 val startTime = OleDate.nowLocal()
+                // Capture return point before teleport; C:013-004 uses this run state.
+                system.markSingleStarted(session, dungeonId, startTime)
                 if (system.enterSingle(session, dungeonId)) {
-                    system.markSingleStarted(session, dungeonId, startTime)
                     sendStartTime(session, startTime)
                 } else {
+                    system.clearActiveRun(session.playerId)
                     dungeonHandlerLogger.error {
                         "Không suy được entry point cho dungeon=$dungeonId scene=${system.getDef(dungeonId)?.sceneId}"
                     }
@@ -381,6 +385,34 @@ class DungeonHandler(
         for (recipient in recipients.distinctBy { it.playerId }) {
             sendPlayerLeave(recipient, targetId, LEAVE_KICKED)
         }
+    }
+
+    private suspend fun claimWeeklyAllPass(session: GameSession, data: ByteArray) {
+        if (data.size != 1) return
+        val page = PacketReader(data).readUByte()
+        if (!system.claimWeeklyAllPass(session, page)) return
+        session.send(
+            PacketWriter()
+                .writeByte(Opcodes.DUNGEON)
+                .writeByte(22)
+                .writeByte(0)
+                .toByteArray()
+        )
+    }
+
+    fun sendDungeonResult(session: GameSession, settlement: DungeonSettlement) {
+        val writer = PacketWriter()
+            .writeByte(Opcodes.DUNGEON)
+            .writeByte(12)
+            .writeByte(0)
+            .writeByte(settlement.result)
+            .writeShortLE(settlement.dungeonId)
+            .writeByte(settlement.rewards.size)
+
+        for ((itemId, quantity) in settlement.rewards) {
+            writer.writeShortLE(itemId).writeIntLE(quantity)
+        }
+        session.send(writer.toByteArray())
     }
 
     private fun sendInviteResult(session: GameSession, result: Int) {

@@ -385,6 +385,8 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<PartySystem>(),
             get<SpecialSceneTeleportService>(),
             get<ResponseSender>(),
+            get<GameDataManager>().dungeonComboDefs,
+            get<InventorySystem>(),
         )
     }
     single { DungeonRoomRegistry() }
@@ -470,6 +472,9 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
                 // trước khi EveFlowController có thể complete/remove EventSession.
                 get<MineEncounterSystem>().onBattleEnd(playerId)
                 get<EveFlowController>().resumeAfterBattle(session, playerId, playerWin)
+                get<DungeonSystem>().settleAfterBattle(session, playerWin)?.let { settlement ->
+                    get<DungeonHandler>().sendDungeonResult(session, settlement)
+                }
             }
         }
     }
@@ -544,7 +549,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { BattleCommandHandler(get()) }
     single { PlayerStatusHandler(get(), get(), get(), get()) }
     single { SkillUpgradeHandler(get(), get(), get(), get(), get<DailyProgressSystem>(), get<PetSystem>()) }
-    single { PartyHandler(get(), get(), get(), get<DailyProgressSystem>()) }
+    single { PartyHandler(get(), get(), get(), get<DailyProgressSystem>(), get<DungeonSystem>(), get<DungeonRoomRegistry>()) }
     single { FollowNpcHandler(get(), get(), get()) }
     single { FollowNpcDeployHandler(get(), get(), get<CharacterRepository>(), get<DailyProgressSystem>()) }
     single { PkSettingHandler(get()) }

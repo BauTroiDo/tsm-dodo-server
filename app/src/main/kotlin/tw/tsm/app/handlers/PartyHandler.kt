@@ -23,6 +23,8 @@ class PartyHandler(
     private val worldManager: WorldManager,
     private val responseSender: ResponseSender,
     private val dailyProgressSystem: DailyProgressSystem? = null,
+    private val dungeonSystem: tw.tsm.gamelogic.systems.DungeonSystem? = null,
+    private val dungeonRooms: tw.tsm.gamelogic.systems.DungeonRoomRegistry? = null,
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.PARTY
@@ -132,7 +134,17 @@ class PartyHandler(
      *
      * Định dạng: +leaderId(8)
      */
-    private fun handleLeave(session: GameSession, playerId: Long, data: ByteArray) {
+    private suspend fun handleLeave(session: GameSession, playerId: Long, data: ByteArray) {
+        // Dungeon UI deliberately overloads C:013-004 as "Leave Dungeon".
+        // Active dungeon semantics must win over ordinary party leave.
+        if (dungeonSystem?.getActiveRun(playerId) != null) {
+            if (dungeonSystem.exitActiveDungeon(session)) {
+                dungeonRooms?.leave(playerId)
+                logger.info { "${session.characterName} left active dungeon via C:013-004" }
+                return
+            }
+        }
+
         val result = partySystem.leaveParty(playerId)
         if (result == null) {
             logger.debug { "$playerId không ở trong tổ đội" }
