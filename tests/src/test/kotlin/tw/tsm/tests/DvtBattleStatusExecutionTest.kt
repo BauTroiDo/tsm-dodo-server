@@ -60,10 +60,10 @@ class DvtBattleStatusExecutionTest {
 
     @Test
     fun `enemy status attribute never fabricates hp damage`() {
-        // 14021 = Chaos in Attack.lua and FightRoleController.FaintSkill.
+        // 14021 = DVT Chaos: live Skill_C has attribute=0, fightWay=15, round=1.
         val skillId = 14021
         val resolver = BattleSkillResolver(
-            mapOf(skillId to skill(EAttribute.FAINT, fightWayValue = 1, rounds = 3))
+            mapOf(skillId to skill(EAttribute.NONE, fightWayValue = 15, rounds = 1))
         )
         val attacker = fighter(1, col = 2, row = 0)
         val target = fighter(2, col = 0, row = 0)
@@ -92,10 +92,13 @@ class DvtBattleStatusExecutionTest {
             val targetResult = result.targets.single()
             assertFalse(targetResult.attrChanges.any { it.attrKind == EAttribute.HP })
 
-            // If the server's existing chance policy applied Chaos this roll,
-            // S:050-001 must expose Faint Attr_Kind so Lua RunEffect can HandleStatus.
-            if (target.groupedStatuses[3]?.status == BattleStatus.CHAOS) {
+            // PC fallback has one hit gate for fightWay 15; a successful hit applies
+            // the mapped DVT status directly, with no second AGI/INT proc roll.
+            if (targetResult.attackResult == 1) {
+                assertEquals(BattleStatus.CHAOS, target.groupedStatuses[3]?.status)
                 assertTrue(targetResult.attrChanges.any { it.attrKind == EAttribute.FAINT })
+            } else {
+                assertFalse(target.groupedStatuses.containsKey(3))
             }
         }
     }
@@ -270,6 +273,31 @@ class DvtBattleStatusExecutionTest {
             roundFour
         )
         assertTrue(roundFour.all { BattleDamageCalc.statusFromSkillId(it) != BattleStatus.NONE })
+    }
+
+    @Test
+    fun `PC fallback miss threshold is scoped to DVT fightWay three and fifteen`() {
+        assertEquals(21.0, BattleDamageCalc.statusOnlyMissChance(50, 50, 3), 0.0001)
+        assertEquals(16.0, BattleDamageCalc.statusOnlyMissChance(50, 50, 15), 0.0001)
+        assertEquals(20.0, BattleDamageCalc.statusOnlyMissChance(60, 50, 3), 0.0001)
+        assertEquals(15.0, BattleDamageCalc.statusOnlyMissChance(60, 50, 15), 0.0001)
+        assertEquals(100.0, BattleDamageCalc.statusOnlyMissChance(50, 50, 1), 0.0001)
+    }
+
+    @Test
+    fun `tracked DVT status-only subset is fightWay three or fifteen with attribute zero`() {
+        val root = generateSequence(Path.of("").toAbsolutePath()) { it.parent }
+            .first { Files.exists(it.resolve("File.dat/Data/Skill_C.dat")) }
+        val skills = SkillDatLoader.load(Files.readAllBytes(root.resolve("File.dat/Data/Skill_C.dat")))
+        val subset = skills.filter { (id, s) ->
+            s.fightWay in setOf(3, 15) &&
+                BattleDamageCalc.statusDurationFromSkillRound(s.round) > 0 &&
+                BattleDamageCalc.statusFromSkillId(id) != BattleStatus.NONE
+        }
+
+        assertEquals(30, subset.size)
+        assertTrue(subset.values.all { it.attribute == EAttribute.NONE })
+        assertTrue(subset.values.all { it.fightWay == 3 || it.fightWay == 15 })
     }
 
 }

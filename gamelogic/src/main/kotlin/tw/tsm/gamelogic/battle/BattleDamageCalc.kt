@@ -167,8 +167,8 @@ object BattleDamageCalc {
         skill: SkillDef,
         skillId: Int
     ): AttackCalcResult {
-        val hitRate = calculateLegacyStatusHitRate(attacker.agi, target.agi)
-        if (Random.nextInt(100) >= hitRate) {
+        val missChance = statusOnlyMissChance(attacker.level, target.level, skill.fightWay)
+        if (Random.nextInt(100).toDouble() < missChance) {
             return AttackCalcResult(
                 attackResult = EAttackResult.MISS,
                 beHitAction = EBeHitAction.DODGE,
@@ -177,25 +177,15 @@ object BattleDamageCalc {
             )
         }
 
-        var inflictedStatus = BattleStatus.NONE
-        var statusRounds = 0
         val concreteStatus = statusFromSkillId(skillId)
         val encodedStatusRounds = statusDurationFromSkillRound(skill.round)
-        if (encodedStatusRounds > 0 && concreteStatus != BattleStatus.NONE) {
-            val statusChance = 50 + (attacker.intelligence - target.intelligence) / 2
-            if (Random.nextInt(100) < statusChance.coerceIn(10, 90)) {
-                inflictedStatus = concreteStatus
-                statusRounds = encodedStatusRounds
-            }
-        }
-
         return AttackCalcResult(
             attackResult = EAttackResult.HIT,
             beHitAction = EBeHitAction.NONE,
             damage = 0,
             attrChanges = emptyList(),
-            inflictedStatus = inflictedStatus,
-            statusRounds = statusRounds
+            inflictedStatus = if (encodedStatusRounds > 0) concreteStatus else BattleStatus.NONE,
+            statusRounds = if (concreteStatus != BattleStatus.NONE) encodedStatusRounds else 0
         )
     }
 
@@ -432,11 +422,19 @@ object BattleDamageCalc {
     }
 
     /**
-     * Legacy status-only gate retained temporarily. Control-skill hit mechanics
-     * are a separate INT/level contract and are not rewritten by ordinary Hit/Dodge D4.
+     * PC fallback for the DVT-aligned hostile status-only families:
+     * skill_type/fightWay 3 (disable) adds 20 miss points; 15 (debuff) adds 15.
+     * DVT Lua/data do not expose the server RNG formula, but current Skill_C preserves
+     * these exact fightWay categories, so keep the fallback strictly scoped to 3/15.
      */
-    private fun calculateLegacyStatusHitRate(atkAgi: Int, defAgi: Int): Int {
-        return (90 + (atkAgi - defAgi) / 2).coerceIn(5, 99)
+    fun statusOnlyMissChance(attackerLevel: Int, targetLevel: Int, fightWay: Int): Double {
+        val levelPart = max((targetLevel - attackerLevel + 5) * 0.2, 0.0)
+        val categoryPenalty = when (fightWay) {
+            3 -> 20.0
+            15 -> 15.0
+            else -> return 100.0
+        }
+        return (levelPart + categoryPenalty).coerceIn(0.0, 100.0)
     }
 
     /**

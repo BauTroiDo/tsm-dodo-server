@@ -239,12 +239,13 @@ class BattleSkillResolver(
                 continue
             }
 
-            // SkillData.attribute is the client-declared attribute kind. If it is itself
-            // a modeled status attribute, this is a status-only enemy skill: do not
-            // fabricate HP damage merely because the target is on the enemy side.
+            // Live DVT Skill_C encodes hostile control/debuff skills by fightWay, not attribute:
+            // current fightWay 3/15 status rows all carry attribute=0. PC fallback uses the same
+            // skill_type 3/15 split for disable/debuff execution. Restrict status-only handling to
+            // this evidenced subset with a real encoded duration and known client status mapping.
             val enemyStatusOnly = !targetsFriendlySide && skill != null &&
-                skill.attribute in MODELED_STATUS_ATTRIBUTES &&
-                skill.round > 0 &&
+                skill.fightWay in setOf(3, 15) &&
+                BattleDamageCalc.statusDurationFromSkillRound(skill.round) > 0 &&
                 BattleDamageCalc.statusFromSkillId(skillId) != tw.tsm.domain.enums.BattleStatus.NONE
 
             var totalDamage = 0
