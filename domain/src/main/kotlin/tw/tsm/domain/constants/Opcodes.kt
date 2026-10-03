@@ -138,8 +138,12 @@ object Opcodes {
     /** Phụ bản/thử thách*/
     const val CHALLENGE = 36
 
-    /** Nhiệm vụ (tuyến chính/tuyến phụ)*/
-    const val MISSION = 47
+    /** Phó bản / Dungeon (DVT protocolTable[47]) */
+    const val DUNGEON = 47
+
+    /** Alias cũ; protocol 47 thực tế là Dungeon trong Lua DVT. */
+    @Deprecated("Use DUNGEON; DVT protocolTable[47] is Dungeon")
+    const val MISSION = DUNGEON
 
     /** Thất Tinh Mệnh Bàn (protocolTable[78])*/
     const val ASTROLABE = 78
