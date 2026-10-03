@@ -143,6 +143,12 @@ object EveResultClassPolicy {
             else -> null
         }
 
+    /** Staged dungeon Eve encodes absolute step2..n as 1000+step (Mark kinds4/5).
+     * Keep ordinary quest direct-bit semantics separate.
+     */
+    fun dungeonStepAssignment(markKind: Int, value: Int): Int? =
+        if (markKind in 4..5 && value in 1001..1255) value - 1000 else null
+
     fun missionOperation(parameterStyle: Int, resultValue: Int): EveMissionResultOperation? =
         when (parameterStyle) {
             1 -> EveMissionResultOperation(EveMissionResultKind.ADD_STEP, resultValue)

@@ -20,7 +20,19 @@ class SpecialSceneTeleportService(
     private val worldManager: WorldManager,
     private val characterRepository: CharacterRepository,
     private val eveData: Map<Int, SceneEveData>,
+    private val walkGrids: Map<Int, tw.tsm.domain.data.MapWalkGrid> = emptyMap(),
 ) {
+    /** Dungeon entry fallback: start beside the first Eve door, on a real walkable Ground cell.
+     * A centroid may be inside a wall or a disconnected room. Never use it for dungeons.
+     * Original backend C47 spawn is not present in the client; this policy is explicit.
+     */
+    fun deriveDungeonEntryPoint(sceneId: Int): Pair<Int, Int>? {
+        val scene = eveData[sceneId] ?: return null
+        val grid = walkGrids[sceneId] ?: return null
+        val door = scene.doors.toSortedMap().values.firstOrNull() ?: return null
+        return grid.nearestWalkable(door.x + DOOR_OFFSET, door.y + DOOR_OFFSET)
+    }
+
     fun deriveEntryPoint(sceneId: Int): Pair<Int, Int>? {
         val scene = eveData[sceneId] ?: return null
         val npcs = scene.npcs.values

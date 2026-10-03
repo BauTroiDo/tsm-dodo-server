@@ -132,6 +132,7 @@ class EveStateBuilder(
 
         return PlayerEventState(
             missionSteps = missionSteps,
+            dungeonMissionIds = markDefs.filterValues { it.kind == 4 || it.kind == 5 }.keys,
             missionFlags = missionFlagValues,
             bagItems = bagItems,
             storedItems = storedItems,

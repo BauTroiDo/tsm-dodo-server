@@ -109,7 +109,9 @@ data class EveNpcPlacement(
     val motionNodes: List<Pair<Int, Int>> = emptyList(),
     val traceRadius: Int = 0,
     /** Khả năng trưởng thành của NPC: 0=không trưởng thành được (tên màu cam), 1=trưởng thành được (tên màu xanh)*/
-    val canGrow: Int = 0
+    val canGrow: Int = 0,
+    val isHide: Boolean = false,
+    val isVisible: Boolean = false,
 )
 
 /**

@@ -107,6 +107,9 @@ class GameDataManager(
         private set
 
     /** Dữ liệu địa chất bản đồ (key = mapId, value = geolBaseAtt) — dùng cho nền chiến đấu*/
+    var mapWalkGrids: Map<Int, tw.tsm.domain.data.MapWalkGrid> = emptyMap()
+        private set
+
     var mapTerrains: Map<Int, Int> = emptyMap()
         private set
 
@@ -468,6 +471,7 @@ class GameDataManager(
             try {
                 val bytes = Files.readAllBytes(groundFile)
                 mapTerrains = GroundMmgLoader.load(bytes)
+                mapWalkGrids = GroundWalkGridLoader.load(bytes)
                 logger.info { "Nạp Ground xong: ${mapTerrains.size} dữ liệu địa hình bản đồ source=$groundFile" }
             } catch (e: Exception) {
                 logger.error(e) { "Nạp Ground.mmg thất bại: $groundFile" }

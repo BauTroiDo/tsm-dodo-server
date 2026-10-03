@@ -369,7 +369,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single {
         SpecialSceneTeleportService(
             get<ResponseSender>(), get<WorldManager>(), get<CharacterRepository>(),
-            get<GameDataManager>().eveData
+            get<GameDataManager>().eveData, get<GameDataManager>().mapWalkGrids
         )
     }
     single {

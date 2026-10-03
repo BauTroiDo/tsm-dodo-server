@@ -42,6 +42,7 @@ private val logger = KotlinLogging.logger {}
  */
 data class PlayerEventState(
     val missionSteps: Map<Int, Int> = emptyMap(),
+    val dungeonMissionIds: Set<Int> = emptySet(),
     val missionFlags: Map<Int, Int> = emptyMap(),
     val bagItems: Map<Int, Int> = emptyMap(),
     val storedItems: Map<Int, Int> = emptyMap(),
@@ -169,7 +170,11 @@ object EveConditionEvaluator {
                     step
                 }
                 val checkType = if (cond.conditionParameterStyle == 3) "step|flag" else "step"
-                val result = compareStep(actual, cond.conditionOps, cond.conditionValue)
+                // Dungeon gates prove ops2 > (BaDauYeu step>0; treasure step>1),
+                // ops5 == (treasure mutually exclusive steps3/4 and staged multiplayer).
+                val result = if (cond.conditionParameter in state.dungeonMissionIds)
+                    compareEveNumeric(actual, cond.conditionOps, cond.conditionValue)
+                else compareStep(actual, cond.conditionOps, cond.conditionValue)
                 logger.debug { "class=2 missionId=${cond.conditionParameter} $checkType=$actual ops=${cond.conditionOps} val=${cond.conditionValue} → $result" }
                 result
             }

@@ -69,6 +69,7 @@ class DungeonSystem(
         if (countResult != RESULT_OK) return countResult
 
         if (session.mapId == def.sceneId) return RESULT_ALREADY_IN_ROOM
+        if (specialTeleport.deriveDungeonEntryPoint(def.sceneId) == null) return RESULT_NO_DUNGEON
         return RESULT_OK
     }
 
@@ -89,13 +90,17 @@ class DungeonSystem(
 
     suspend fun enterSingle(session: GameSession, dungeonId: Int): Boolean {
         val def = defs[dungeonId] ?: return false
-        return specialTeleport.enterSpecialScene(session, def.sceneId)
+        val point = specialTeleport.deriveDungeonEntryPoint(def.sceneId) ?: return false
+        initializeMission(session, def)
+        specialTeleport.teleport(session, def.sceneId, point.first, point.second)
+        return true
     }
 
     suspend fun enterMultiplayer(room: DungeonRoomState): Boolean {
         val def = defs[room.dungeonId] ?: return false
-        val point = specialTeleport.deriveEntryPoint(def.sceneId) ?: return false
+        val point = specialTeleport.deriveDungeonEntryPoint(def.sceneId) ?: return false
         for (member in room.members.values) {
+            initializeMission(member.session, def)
             specialTeleport.teleport(
                 member.session,
                 def.sceneId,
@@ -105,6 +110,15 @@ class DungeonSystem(
             )
         }
         return true
+    }
+
+    private suspend fun initializeMission(session: GameSession, def: DungeonDef) {
+        // Dungeon.CheckInDungeon + real Eve entry gates require this exact mission at step1.
+        // Reset the active marker without granting its completion/skip flag or consuming quota.
+        val charId = session.roleId.toLong()
+        questSystem.setMissionStep(charId, def.missionFlag, 1)
+        responseSender?.sendRemoveMission(session, def.missionFlag)
+        responseSender?.sendAddMissionStep(session, def.missionFlag, 1)
     }
 
     private suspend fun validateDailyCount(session: GameSession, def: DungeonDef): Int {

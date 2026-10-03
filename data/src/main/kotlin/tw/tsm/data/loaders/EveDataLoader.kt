@@ -197,8 +197,8 @@ object EveDataLoader {
             val posY = reader.readInt32()
 
             // roleStatus（6B）：isHide(1) + isVisible(1) + rideNpcId(2) + canGrow(1) + isLie(1)
-            reader.readByte()       // isHide
-            reader.readByte()       // isVisible
+            val isHide = reader.readByte() != 0
+            val isVisible = reader.readByte() != 0
             reader.readUInt16()     // rideNpcId
             val canGrow = reader.readByte()  // canGrow
             reader.readByte()       // isLie
@@ -221,7 +221,7 @@ object EveDataLoader {
                     motionCycleNum = motionCycleNum, direction = direction,
                     motionSuspendMS = motionSuspendMS, motionSpeedLv = motionSpeedLv,
                     motionNodes = motionNodes, traceRadius = traceRadius,
-                    canGrow = canGrow
+                    canGrow = canGrow, isHide = isHide, isVisible = isVisible
                 )
             }
         }

@@ -642,13 +642,18 @@ class EveResultExecutor(
                 }
             }
             EveMissionResultKind.SET_FLAG -> {
-                val bitId = operation.value
-                if (bitId > 0) {
+                val step = EveResultClassPolicy.dungeonStepAssignment(markDefs[missionId]?.kind ?: 0, operation.value)
+                if (step != null) {
+                    questSystem.setMissionStep(charId, missionId, step)
+                    responseSender.sendRemoveMission(session, missionId)
+                    responseSender.sendAddMissionStep(session, missionId, step)
+                } else if (operation.value > 0) {
+                    val bitId = operation.value
                     questSystem.setFlag(charId, bitId, 1)
                     responseSender.sendSetMissionFlags(session, listOf(MissionFlagRecord(bitId, 1)))
                     logger.info { "${session.characterName} Thiết lập cờ nhiệm vụ trực tiếp: missionId=$missionId bitId=$bitId" }
                 } else {
-                    logger.warn { "${session.characterName} resultClass=2 pStyle=4 bitId không hợp lệ: missionId=$missionId value=$bitId" }
+                    logger.warn { "${session.characterName} resultClass=2 pStyle=4 bitId không hợp lệ: missionId=$missionId value=${operation.value}" }
                 }
             }
             EveMissionResultKind.REMOVE_MISSION -> {
