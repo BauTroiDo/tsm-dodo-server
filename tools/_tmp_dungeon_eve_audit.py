@@ -116,5 +116,41 @@ def parse_scene(rr, sid):
     for row in all_mission_rows:
         print(*row)
 
+    print("=== FIGHT DATA ===")
+    fight_count=rr.u16()
+    print("fight_count",fight_count)
+    for _ in range(fight_count):
+        eve_no=rr.u16()
+        fight_type=rr.u8()
+        bkmusic=rr.u8()
+        link_to_result=rr.u8()
+        left_count=rr.u16()
+        left=[]
+        for __ in range(left_count):
+            no=rr.u16(); npc=rr.u16(); loc=rr.u8(); ai=rr.u8()
+            left.append((no,npc,loc,ai))
+        right_count=rr.u16()
+        right=[]
+        for __ in range(right_count):
+            no=rr.u16(); npc=rr.u16(); loc=rr.u8(); ai=rr.u8()
+            right.append((no,npc,loc,ai))
+        event_count=rr.u16()
+        fight_events=[]
+        for __ in range(event_count):
+            event_no=rr.u16()
+            event_name=rr.bytes(9)
+            wc=rr.u8()
+            wins=[]
+            for ___ in range(wc):
+                cno=rr.u8(); cls=rr.u8(); param=rr.u16(); ps=rr.u8(); val=rr.i32(); andnum=rr.u8(); leader=rr.u16(); ops=rr.u8()
+                wins.append((cno,cls,param,ps,val,andnum,leader,ops))
+            fight_events.append((event_no,wins))
+        limit=struct.unpack_from("<I",rr.b,rr.o)[0]; rr.o+=4
+        if eve_no in {1,18,19,20}:
+            print("fight",eve_no,"type",fight_type,"link",link_to_result,"left",left_count,"right",right_count,"limit",limit)
+            print(" leftEnemies",left)
+            print(" rightEnemies",right)
+            print(" fightEvents",fight_events)
+
 pos,size=entries[TARGET_SCENE]
 parse_scene(R(DATA,pos+103),TARGET_SCENE)
