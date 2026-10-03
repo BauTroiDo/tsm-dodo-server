@@ -272,4 +272,48 @@ class DungeonRoomPacketTest {
         assertEquals(0, recruit.remaining)
     }
 
+    @Test
+    fun `single create sends DVT start time packet`() = runBlocking {
+        val singleDef = dungeonDef().copy(
+            id = 2,
+            kind = 2,
+            minLv = 15,
+            maxLv = 80,
+            maxPlayer = 1,
+            missionFlag = 12322,
+            dailyFlag = 12336,
+            timeMinutes = 10,
+            sceneId = 62001,
+        )
+        val system = mockk<DungeonSystem>()
+        every { system.getDef(2) } returns singleDef
+        coEvery { system.validateSingleCreate(any(), 2) } returns DungeonSystem.RESULT_OK
+        coEvery { system.enterSingle(any(), 2) } returns true
+        every { system.markSingleStarted(any(), 2, any()) } just Runs
+
+        val packets = mutableListOf<ByteArray>()
+        val player = session(5101, "Solo", packets)
+        val handler = DungeonHandler(system)
+
+        handler.handle(player, 2, byteArrayOf(2, 0, 0))
+
+        assertEquals(2, packets.size)
+
+        val create = PacketReader(packets[0])
+        assertEquals(47, create.readUByte())
+        assertEquals(2, create.readUByte())
+        assertEquals(0, create.readUByte())
+        assertEquals(0, create.readUByte())
+
+        val start = PacketReader(packets[1])
+        assertEquals(47, start.readUByte())
+        assertEquals(18, start.readUByte())
+        assertEquals(0, start.readUByte())
+        val oaDate = start.readDoubleLE()
+        assertEquals(true, oaDate > 40_000.0)
+        assertEquals(0, start.remaining)
+
+        verify(exactly = 1) { system.markSingleStarted(player, 2, any()) }
+    }
+
 }

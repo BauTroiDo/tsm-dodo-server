@@ -1,7 +1,14 @@
 package tw.tsm.gamelogic.systems
 
+import java.util.concurrent.ConcurrentHashMap
 import tw.tsm.domain.data.DungeonDef
 import tw.tsm.domain.interfaces.GameSession
+
+data class ActiveDungeonRun(
+    val dungeonId: Int,
+    val startTime: Double,
+    val instanceId: Int,
+)
 
 /**
  * DVT Dungeon core (protocol 47).
@@ -16,7 +23,39 @@ class DungeonSystem(
     private val partySystem: PartySystem,
     private val specialTeleport: SpecialSceneTeleportService,
 ) {
+    private val activeRuns = ConcurrentHashMap<Long, ActiveDungeonRun>()
+
     fun getDef(id: Int): DungeonDef? = defs[id]
+
+    fun getActiveRun(playerId: Long): ActiveDungeonRun? = activeRuns[playerId]
+
+    fun markSingleStarted(session: GameSession, dungeonId: Int, startTime: Double) {
+        activeRuns[session.playerId] = ActiveDungeonRun(
+            dungeonId = dungeonId,
+            startTime = startTime,
+            instanceId = 0,
+        )
+    }
+
+    fun markRoomStarted(room: DungeonRoomState, startTime: Double) {
+        for (member in room.members.values) {
+            activeRuns[member.session.playerId] = ActiveDungeonRun(
+                dungeonId = room.dungeonId,
+                startTime = startTime,
+                instanceId = room.instanceId,
+            )
+        }
+    }
+
+    fun clearActiveRun(playerId: Long) {
+        activeRuns.remove(playerId)
+    }
+
+    fun clearRoomRuns(room: DungeonRoomState) {
+        for (member in room.members.values) {
+            activeRuns.remove(member.session.playerId)
+        }
+    }
 
     suspend fun validateSingleCreate(session: GameSession, dungeonId: Int): Int {
         val def = defs[dungeonId] ?: return RESULT_NO_DUNGEON

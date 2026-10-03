@@ -92,9 +92,15 @@ class DungeonHandler(
         if (def?.kind == DungeonSystem.KIND_SINGLE) {
             val result = system.validateSingleCreate(session, dungeonId)
             sendCreateResult(session, result)
-            if (result == DungeonSystem.RESULT_OK && !system.enterSingle(session, dungeonId)) {
-                dungeonHandlerLogger.error {
-                    "Không suy được entry point cho dungeon=$dungeonId scene=${system.getDef(dungeonId)?.sceneId}"
+            if (result == DungeonSystem.RESULT_OK) {
+                val startTime = OleDate.nowLocal()
+                if (system.enterSingle(session, dungeonId)) {
+                    system.markSingleStarted(session, dungeonId, startTime)
+                    sendStartTime(session, startTime)
+                } else {
+                    dungeonHandlerLogger.error {
+                        "Không suy được entry point cho dungeon=$dungeonId scene=${system.getDef(dungeonId)?.sceneId}"
+                    }
                 }
             }
             return
@@ -327,10 +333,12 @@ class DungeonHandler(
             delay(countdownMs)
             val started = rooms.commitStart(room.id, session.playerId) ?: return@launch
             val startTime = OleDate.nowLocal()
+            system.markRoomStarted(started, startTime)
             for (member in started.members.values) {
                 sendStartTime(member.session, startTime)
             }
             if (!system.enterMultiplayer(started)) {
+                system.clearRoomRuns(started)
                 dungeonHandlerLogger.error {
                     "Không suy được entry point khi start dungeon=" + started.dungeonId +
                         " room=" + started.id + " instance=" + started.instanceId
@@ -340,6 +348,7 @@ class DungeonHandler(
     }
 
     fun handleDisconnect(session: GameSession) {
+        system.clearActiveRun(session.playerId)
         val left = rooms.leave(session.playerId) ?: return
         for (member in left.room.members.values) {
             sendPlayerLeave(member.session, session.playerId, LEAVE_DISCONNECT)
