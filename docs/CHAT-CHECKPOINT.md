@@ -1812,3 +1812,30 @@ Continuation from checkpoint 149ef88.
 - Targeted AI-D + AI-C + AI-B + battle semantics suite: PASS, 18/18 tasks executed.
 - Full local `gradlew test build --rerun-tasks`: PASS, 21/21 tasks executed.
 - `git diff --check`: PASS.
+
+### 2026-10-03 — Monster AI-D production deploy — PASS
+- Commit `555a30e fix: preserve DVT NPC AI skill slots` is on `origin/main` and production `C:\Server-Game\tsm_dodo`.
+- Production full `gradlew test build --rerun-tasks`: PASS, 21/21 tasks executed.
+- Runtime restarted through the proven WMI/Win32_Process.Create path using `_start_prod_detached.cmd`.
+- Verified only after closing the SSH session and reconnecting:
+  - production HEAD `555a30e`
+  - game Java PID `6900`
+  - process runs in Windows Services session 0
+  - `0.0.0.0:6613` and `[::]:6613` LISTEN
+  - runtime log loaded `IOS_ExclusiveSkill_C.dat` 574 records / 123 skill IDs
+  - no real startup ERROR/Exception/FATAL/Koin failure.
+- Production local `app/src/main/resources/application.conf` and operational/untracked files were preserved.
+- Deployment bundle/temp compiler session artifacts are not part of source and must not be committed.
+
+### START NEXT CHAT FROM HERE — Monster AI-E
+- Source of truth remains: live DVT 1.15 / Lua DVT > client/data/Eve.emg > Kotlin > PC fallback.
+- DVT live package is `net.chinesegamer.tsn` in `F:\LDPlayer\LDPlayer9`; do NOT use `com.vtcmobile.gz06` or `_native_dump_vtc13` as DVT authority.
+- Production baseline is commit `555a30e`, runtime PID `6900`, port `6613`.
+- AI-A PASS: preserve normal corpses for revive targets; fly-out/capture leave grid.
+- AI-B PASS: DVT/PC target pools for fightWay 4/5/8/18/19.
+- AI-C PASS: elemental NPC summon remap 10016->10019, 11016->11019, 12016->12019, 13015->13018.
+- AI-D PASS: preserve exactly four NPC AI skill slots [skill1, skill2, skill3, specialSkill], including zero gaps and duplicates; selector keeps the PC one-roll modulo priority.
+- Next audit AI-E: verify NPC skill level, SP cost/consumption, invalid-skill fallback, and whether the selected slot should retry/fallback when the chosen skill cannot be cast.
+- Keep `tools/start-staging-runtime.ps1` untracked; never commit it.
+- Prefer Git Bash OpenSSH for production. Use Git bundle + SCP when production GitHub HTTPS fetch cannot authenticate.
+- For production restarts, use WMI `Win32_Process.Create` with `_start_prod_detached.cmd`, then close SSH and reconnect to prove the server remains alive.
