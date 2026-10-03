@@ -1958,3 +1958,17 @@ Continuation from checkpoint 149ef88.
 - New DVT evidence: enemy-NPC RoleController:GetElementSkill/GetSkillLv exposes only the three Role.maxNpcSkill base skills, while FollowNpc handles specialSkill separately at level 1; PC TSBattleNPC uses a fourth skill slot.
 - Do not change AI-D until live DVT/client/data evidence resolves this conflict. If DVT proves only three enemy slots, correct selector/probabilities with deterministic tests and deploy; otherwise document why the fourth server-only slot is valid.
 - Continue automatically with DVT > data > Kotlin > PC priority.
+
+## 2026-10-03 — Monster AI-G — fourth NPC AI slot provenance — PASS / no runtime change
+- DVT NpcData.New reads three base skills as original fields [25-27], then immediately reads specialSkill while retaining the original field number [35]. The iOS compact file omits original drop/unknown fields [28-34].
+- PC NpcInfo has the same original layout: skill1, skill2, skill3, six drop fields, one unknown byte, then skill4, reborn. Thus PC skill4 is positionally the same original field that DVT names specialSkill.
+- PC TSBattleNPC server AI explicitly checks skill4 first, then skill3/2/1 with the one-roll modulo gates.
+- DVT Role.maxNpcSkill=3 is the ordinary base-skill array; FollowNpc exposes specialSkill separately when learned. It does not prove server enemy AI must ignore original field [35].
+- Because DVT has no client-side implementation of enemy server AI selection and PC is the recovered server fallback, keep the fourth AI slot mapping [skill1, skill2, skill3, specialSkill].
+- Updated NpcBattleProfileCalc comments to record this provenance and removed stale wording implying enemy NPCs use PC maxLv.
+- No gameplay behavior changed, so production runtime 8da432f / PID 11920 does not require restart for AI-G.
+
+### START NEXT — Monster AI-H
+- Audit queued NPC target validity between command selection and execution: if the chosen target dies, flies out, is captured, or leaves its cell earlier in the round, determine whether DVT/PC retargets, keeps coordinates, or no-ops.
+- Verify Kotlin resolveRound/grid lookup does not accidentally hit a new occupant at the same coordinates or silently retarget another fighter.
+- Use DVT packet/client behavior first, PC execution fallback second; add deterministic regression before any behavior change.

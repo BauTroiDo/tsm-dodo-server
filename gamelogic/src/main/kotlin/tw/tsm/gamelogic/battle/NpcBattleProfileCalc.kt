@@ -7,9 +7,12 @@ import tw.tsm.domain.data.SkillDef
  * Snapshot chiến đấu cho NPC/quái từ Npc_C.dat.
  *
  * DVT NpcData.lua giữ các trường HP/SP/INT/ATK/DEF/AGI trực tiếp trong record.
- * PC fallback (BattleNpcAI) xác nhận npc hpmax/spmax được dùng nguyên xi khi vào battle,
- * skill1..skill4 của NPC dùng SkillData.max_lvl, và reborn được lấy trực tiếp từ npc data.
+ * PC fallback (BattleNpcAI) xác nhận npc hpmax/spmax được dùng nguyên xi khi vào battle
+ * và reborn được lấy trực tiếp từ npc data. PC gọi field gốc [35] là skill4; DVT Lua
+ * vẫn đánh số field này là [35] nhưng đặt tên specialSkill, sau ba skill [25-27].
+ * DVT iOS đã lược các field drop [28-34], nên [35] nằm liền sau ba skill trong stream.
  *
+ * Mức skill của enemy NPC theo live DVT là Lv1 (không dùng PC SkillData.max_lvl).
  * Không áp công thức pet/player growth vào wild/event NPC ở đây.
  */
 data class NpcBattleProfile(
@@ -33,9 +36,11 @@ object NpcBattleProfileCalc {
         npc: NpcDef,
         skillDefs: Map<Int, SkillDef>,
     ): NpcBattleProfile {
-        // Preserve the four DVT/PC AI slots exactly. Zero holes and duplicate skill IDs
-        // are meaningful because TSBattleNPC.seekTarget applies a different modulo gate
-        // to skill4 -> skill3 -> skill2 -> skill1. Compressing/deduplicating changes odds.
+        // Preserve the four server-AI slots exactly. DVT field [35] specialSkill is
+        // positionally the PC field named skill4; PC TSBattleNPC.seekTarget is the recovered
+        // server-side AI implementation and applies the fourth-slot modulo gate first.
+        // Role.maxNpcSkill=3 describes the ordinary client-visible base-skill array and does
+        // not redefine the separate [35] field. Zero holes/duplicates must not be compressed.
         val skills = intArrayOf(
             npc.skills.getOrElse(0) { 0 },
             npc.skills.getOrElse(1) { 0 },
