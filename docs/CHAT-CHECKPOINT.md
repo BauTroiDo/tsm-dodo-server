@@ -2491,3 +2491,42 @@ Continuation from checkpoint 149ef88.
 - Subsequent checkpoint commit is docs-only; runtime remains code d43e60c and does not need another restart.
 - Calendar rollover/database mutation has regression coverage; user gameplay and a real midnight rollover are not claimed PASS. Initial day registration deliberately preserves existing counters.
 - F3-B is PARTIAL: loader/turn selector + daily reset deployed. Automatic reward, quota consumption, terminal/timeout settlement remain evidence-blocked as documented above. Continue there, not from F1/F2/F3-A.
+
+
+## 2026-10-04 — Dungeon F3-B2 — entry / Eve encounter activation — DEPLOYED
+
+### Root cause and DVT evidence
+- User runtime symptom: normal dungeon scenes (notably 62001/62003) could load without usable monsters and BaDauYeu could place the player on a blocked Ground cell.
+- Lua Dungeon.CheckInDungeon requires DungeonData.missionFlag to exist as an active Mark mission before dungeon Eve logic can be considered active.
+- Real Eve dungeon gates use mission-step comparisons that differ from the legacy ordinary-quest compareStep mapping. Dungeon Mark kinds 4/5 use numeric Eve operators; staged result values 1002/1003 encode absolute dungeon mission steps 2/3.
+- Ground.mmg uses the client MapData column-major block grid; obstacle bits 0x01 and 0x04 are non-walkable. The old 62001 centroid (820,1200) is blocked.
+- Eve roleStatus isHide/isVisible must be retained because dungeon encounter NPCs are initially hidden and revealed through Eve results.
+- IL2CPP dump contains the native Lua/network/reader bridge (NetworkManager, LuaHelper, ReadUInt16/ReadUInt32), but no native DungeonData/DungeonCombo/MapManager/GetStartEmptyBlock/IsObstacle gameplay implementation. Those dungeon semantics are Lua-side.
+
+### Implementation
+- Commit 7050aff012493885da6e1cb82250031671b9b788 — fix: initialize DVT dungeon Eve encounters.
+- Added GroundWalkGridLoader + MapWalkGrid and loaded exact Ground.mmg walkability data.
+- Dungeon entry now derives a walkable point from dungeon scene data and rejects entry before mission mutation if no valid grid point exists.
+- Single and multiplayer dungeon entry initialize the exact DungeonData.missionFlag at step 1 before scene teleport; no dailyFlag or completion flag is granted at entry.
+- EveDataLoader now preserves NPC isHide/isVisible.
+- EveStateBuilder identifies dungeon Mark kinds 4/5.
+- EveConditionEvaluator applies real numeric Eve comparisons only to dungeon missions, leaving ordinary quest step semantics unchanged.
+- EveResultExecutor maps DVT staged values 1001..1255 to absolute dungeon steps only for Mark kinds 4/5; ordinary SET_FLAG behavior remains unchanged.
+- Regression covers walkability for every normal kind 1/2 dungeon, real 62001/62003 hidden-NPC state, mission-before-teleport ordering, treasure step branches, multiplayer 1002/1003 staging, and BaDauYeu win/failure terminal markers.
+
+### Validation / production
+- Targeted DungeonEntryRegressionTest: PASS, 18/18 tasks.
+- Full local test build --rerun-tasks: PASS, 21/21; git diff --check PASS.
+- Pushed to origin/main as 7050aff.
+- Production fast-forwarded from 22dee13 to 7050aff; application.conf and operational files preserved.
+- Production full test build --rerun-tasks: BUILD SUCCESSFUL, 21/21.
+- Runtime restart through existing WMI launcher: old game PID 7064 stopped; new game Java PID 5724 owns port 6613.
+- Startup log: Ground 4469 maps, Eve 3797 scenes / 22076 placements / 25457 events, IOS_Dungeon 57, IOS_DungeonCombo 180; Netty bound 0.0.0.0:6613 and server ready at 06:17:13.
+- Local health-check connections succeeded after startup.
+
+### Reward boundary — do not guess
+- S:047-012 Dungeon End is exact in Lua: result byte + dungeonId UInt16 + reward count byte + repeated itemId UInt16 + quantity UInt32. UIResult displays exactly what the server sends.
+- DungeonComboData.New and GetReward are exact and already loaded: row id/kind/kindValue plus four turn slots; GetReward selects current rebirth slot with lower-slot fallback.
+- UIDungeon proves multiplayer preview tiers use lootTable rows and single preview uses first/last lootTable rows; extraLoot selects the row whose kindValue equals player Turn.
+- However neither Lua DVT nor the IL2CPP client binary contains the authoritative server-side selector that turns runtime score into a lootTable row. Known text only states BaDauYeu depends on enemy damage and other dungeon rewards can depend on remaining time; denominator/aggregation/tier-boundary equality are not present.
+- Therefore automatic base reward settlement remains intentionally disabled rather than inventing a formula. Exact packet/data/rebirth semantics are ready; the missing selector requires authoritative server evidence or controlled official-server trace before activation.
