@@ -10,9 +10,13 @@ import tw.tsm.domain.constants.EAttribute
 import tw.tsm.domain.constants.EHuman
 import tw.tsm.domain.data.SkillDef
 import tw.tsm.domain.enums.BattleStatus
+import tw.tsm.data.loaders.SkillDatLoader
+import tw.tsm.gamelogic.battle.BattleDamageCalc
 import tw.tsm.gamelogic.battle.BattleFighter
 import tw.tsm.gamelogic.battle.BattleGrid
 import tw.tsm.gamelogic.battle.BattleSkillResolver
+import java.nio.file.Files
+import java.nio.file.Path
 
 class DvtBattleStatusExecutionTest {
 
@@ -244,5 +248,28 @@ class DvtBattleStatusExecutionTest {
         assertTrue(result.targets.single().attrChanges.any { it.attrKind == EAttribute.HP && it.isPositive })
     }
 
+    @Test
+    fun `DVT round encoding maps four to three persistent rounds`() {
+        assertEquals(0, BattleDamageCalc.statusDurationFromSkillRound(0))
+        assertEquals(1, BattleDamageCalc.statusDurationFromSkillRound(1))
+        assertEquals(2, BattleDamageCalc.statusDurationFromSkillRound(2))
+        assertEquals(3, BattleDamageCalc.statusDurationFromSkillRound(3))
+        assertEquals(3, BattleDamageCalc.statusDurationFromSkillRound(4))
+        assertEquals(0, BattleDamageCalc.statusDurationFromSkillRound(5))
+    }
+
+    @Test
+    fun `tracked DVT Skill_C has exactly six encoded round-four status skills`() {
+        val root = generateSequence(Path.of("").toAbsolutePath()) { it.parent }
+            .first { Files.exists(it.resolve("File.dat/Data/Skill_C.dat")) }
+        val skills = SkillDatLoader.load(Files.readAllBytes(root.resolve("File.dat/Data/Skill_C.dat")))
+        val roundFour = skills.filterValues { it.round == 4 }.keys.toSortedSet()
+
+        assertEquals(
+            sortedSetOf(13050, 14015, 20023, 20027, 21042, 46002),
+            roundFour
+        )
+        assertTrue(roundFour.all { BattleDamageCalc.statusFromSkillId(it) != BattleStatus.NONE })
+    }
 
 }

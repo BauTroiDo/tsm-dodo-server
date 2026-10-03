@@ -129,16 +129,18 @@ object BattleDamageCalc {
             BattleAttrChange(EAttribute.HP, finalDamage, false)
         )
 
-        // Gây trạng thái bất thường
+        // Gây trạng thái bất thường. DVT SkillData.round is an encoded duration:
+        // 0=none, 1/2/3=fixed rounds, 4=continuous three rounds (not four).
         var inflictedStatus = BattleStatus.NONE
         var statusRounds = 0
-        if (skill != null && skill.round > 0 && statusFromSkillId(skillId) != BattleStatus.NONE) {
+        val encodedStatusRounds = skill?.let { statusDurationFromSkillRound(it.round) } ?: 0
+        if (skill != null && encodedStatusRounds > 0 && statusFromSkillId(skillId) != BattleStatus.NONE) {
             val statusChance = 50 + (attacker.intelligence - target.intelligence) / 2
             if (Random.nextInt(100) < statusChance.coerceIn(10, 90)) {
                 // Client FightRoleController resolves the concrete status from skillId
                 // inside a status group; hitStatus is not a concrete BattleStatus enum.
                 inflictedStatus = statusFromSkillId(skillId)
-                statusRounds = if (inflictedStatus != BattleStatus.NONE) skill.round else 0
+                statusRounds = if (inflictedStatus != BattleStatus.NONE) encodedStatusRounds else 0
             }
         }
 
@@ -178,11 +180,12 @@ object BattleDamageCalc {
         var inflictedStatus = BattleStatus.NONE
         var statusRounds = 0
         val concreteStatus = statusFromSkillId(skillId)
-        if (skill.round > 0 && concreteStatus != BattleStatus.NONE) {
+        val encodedStatusRounds = statusDurationFromSkillRound(skill.round)
+        if (encodedStatusRounds > 0 && concreteStatus != BattleStatus.NONE) {
             val statusChance = 50 + (attacker.intelligence - target.intelligence) / 2
             if (Random.nextInt(100) < statusChance.coerceIn(10, 90)) {
                 inflictedStatus = concreteStatus
-                statusRounds = skill.round
+                statusRounds = encodedStatusRounds
             }
         }
 
@@ -194,6 +197,16 @@ object BattleDamageCalc {
             inflictedStatus = inflictedStatus,
             statusRounds = statusRounds
         )
+    }
+
+    /**
+     * DVT SkillData.round encoding from live Lua:
+     * 0 = no duration, 1/2/3 = exact rounds, 4 = continuous three rounds.
+     */
+    fun statusDurationFromSkillRound(rawRound: Int): Int = when (rawRound) {
+        1, 2, 3 -> rawRound
+        4 -> 3
+        else -> 0
     }
 
     /**

@@ -213,13 +213,14 @@ class BattleSkillResolver(
 
             // Friendly status/buff skills are not HP heals and must not fall through to attack damage.
             // Client FightRoleController derives their concrete status from skillId.
-            val utilityStatus = if (targetsFriendlySide && skill != null && skill.round > 0) {
+            val utilityStatusRounds = skill?.let { BattleDamageCalc.statusDurationFromSkillRound(it.round) } ?: 0
+            val utilityStatus = if (targetsFriendlySide && skill != null && utilityStatusRounds > 0) {
                 BattleDamageCalc.statusFromSkillId(skillId)
             } else tw.tsm.domain.enums.BattleStatus.NONE
             if (utilityStatus != tw.tsm.domain.enums.BattleStatus.NONE) {
                 val group = modeledStatusGroup(utilityStatus)
                 if (group > 0) {
-                    target.setGroupedStatus(group, utilityStatus, skill!!.round, skillId, currentRound)
+                    target.setGroupedStatus(group, utilityStatus, utilityStatusRounds, skillId, currentRound)
                 }
                 val statusAttr = modeledStatusAttribute(utilityStatus)
                 targetResults.add(
