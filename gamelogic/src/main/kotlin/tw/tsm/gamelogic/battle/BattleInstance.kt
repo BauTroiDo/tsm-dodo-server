@@ -554,16 +554,21 @@ class BattleInstance(
             fighter.hasActed = false
         }
 
-        // Statuses that were already present at action-phase start consume one round now.
-        // A status inflicted during this round starts counting from the next round.
+        // DVT SkillData.round is the number of battle rounds occupied by the status.
+        // PC fallback decrements statuses before the next round accepts commands, which is
+        // equivalent here to consuming one round after this round's actions finish. This must
+        // include statuses inflicted during the current round: raw round=1 affects the remainder
+        // of this round, then is cleared before the next countdown/command phase.
         for (fighter in allFighters) {
             if (!fighter.isAlive) continue
             val expiredGroups = mutableListOf<Int>()
             for ((group, status) in fighter.groupedStatuses) {
-                if (status.appliedRound >= currentRound) continue
                 status.rounds--
                 if (status.rounds <= 0) {
-                    statusRestores.add(StatusRestore(fighter.col, fighter.row, group, status.skillId))
+                    // DVT RevRestoreStatus -> HandleStatus(group, skillId). Every modeled group
+                    // uses skillId=0 as the generic clear contract; re-sending the source skill
+                    // would map the same status back onto the client instead of removing it.
+                    statusRestores.add(StatusRestore(fighter.col, fighter.row, group, 0))
                     expiredGroups.add(group)
                 }
             }

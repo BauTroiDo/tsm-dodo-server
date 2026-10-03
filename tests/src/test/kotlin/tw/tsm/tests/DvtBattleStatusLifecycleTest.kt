@@ -51,11 +51,27 @@ class DvtBattleStatusLifecycleTest {
     }
 
     @Test
-    fun `newly applied status does not consume its first round immediately`() = runBlocking {
+    fun `duration one status clears before the next command round`() = runBlocking {
         val a = fighter(1, 2, 0)
         val b = fighter(2, 0, 0)
         val battle = battle(a, b)
         a.setGroupedStatus(1, BattleStatus.ICE_BOUND, 1, 11014, battle.currentRound)
+
+        val first = battle.resolveRound()
+
+        assertFalse(a.groupedStatuses.containsKey(1))
+        assertEquals(1, first.statusRestores.size)
+        val restore = first.statusRestores.single()
+        assertEquals(1, restore.statusKind)
+        assertEquals(0, restore.skillId)
+    }
+
+    @Test
+    fun `duration two status survives exactly one following round`() = runBlocking {
+        val a = fighter(1, 2, 0)
+        val b = fighter(2, 0, 0)
+        val battle = battle(a, b)
+        a.setGroupedStatus(1, BattleStatus.ICE_BOUND, 2, 11014, battle.currentRound)
 
         val first = battle.resolveRound()
         assertEquals(1, a.groupedStatuses[1]?.rounds)
@@ -64,13 +80,11 @@ class DvtBattleStatusLifecycleTest {
         val second = battle.resolveRound()
         assertFalse(a.groupedStatuses.containsKey(1))
         assertEquals(1, second.statusRestores.size)
-        val restore = second.statusRestores.single()
-        assertEquals(1, restore.statusKind)
-        assertEquals(11014, restore.skillId)
+        assertEquals(0, second.statusRestores.single().skillId)
     }
 
     @Test
-    fun `status groups expire independently and preserve source skill`() = runBlocking {
+    fun `status groups expire independently and restore with generic clear skill zero`() = runBlocking {
         val a = fighter(1, 2, 0)
         val b = fighter(2, 0, 0)
         val battle = battle(a, b)
@@ -81,11 +95,11 @@ class DvtBattleStatusLifecycleTest {
         assertFalse(a.groupedStatuses.containsKey(1))
         assertEquals(1, a.groupedStatuses[2]?.rounds)
         assertEquals(listOf(1), first.statusRestores.map { it.statusKind })
-        assertEquals(11014, first.statusRestores.single().skillId)
+        assertEquals(0, first.statusRestores.single().skillId)
 
         val second = battle.resolveRound()
         assertFalse(a.groupedStatuses.containsKey(2))
         assertEquals(listOf(2), second.statusRestores.map { it.statusKind })
-        assertEquals(10010, second.statusRestores.single().skillId)
+        assertEquals(0, second.statusRestores.single().skillId)
     }
 }
