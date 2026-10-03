@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import tw.tsm.domain.constants.EAttribute
 import tw.tsm.domain.constants.EHuman
 import tw.tsm.domain.enums.BattleStatus
 import tw.tsm.gamelogic.battle.BattleFighter
@@ -101,5 +102,60 @@ class DvtBattleStatusLifecycleTest {
         assertFalse(a.groupedStatuses.containsKey(2))
         assertEquals(listOf(2), second.statusRestores.map { it.statusKind })
         assertEquals(0, second.statusRestores.single().skillId)
+    }
+
+    @Test
+    fun `legacy clump ticks 30 once while duration remains active`() = runBlocking {
+        val a = fighter(1, 2, 0)
+        val b = fighter(2, 0, 0)
+        val battle = battle(a, b)
+        a.setGroupedStatus(1, BattleStatus.CLUMP, 2, 10004, battle.currentRound)
+
+        val first = battle.resolveRound()
+        assertEquals(970, a.hp)
+        assertEquals(1, a.groupedStatuses[1]?.rounds)
+        val tick = first.actionResults.single()
+        assertEquals(20001, tick.skillId)
+        val hpChange = tick.targets.single().attrChanges.single()
+        assertEquals(EAttribute.HP, hpChange.attrKind)
+        assertEquals(30, hpChange.value)
+        assertFalse(hpChange.isPositive)
+
+        val second = battle.resolveRound()
+        assertEquals(970, a.hp)
+        assertTrue(second.actionResults.isEmpty())
+        assertEquals(0, second.statusRestores.single().skillId)
+    }
+
+    @Test
+    fun `legacy poison ticks 90 until the final expiry boundary`() = runBlocking {
+        val a = fighter(1, 2, 0)
+        val b = fighter(2, 0, 0)
+        val battle = battle(a, b)
+        a.setGroupedStatus(3, BattleStatus.POISON, 3, 14015, battle.currentRound)
+
+        assertEquals(910, battle.resolveRound().let { a.hp })
+        val second = battle.resolveRound()
+        assertEquals(820, a.hp)
+        assertEquals(20003, second.actionResults.single().skillId)
+        val third = battle.resolveRound()
+        assertEquals(820, a.hp)
+        assertTrue(third.actionResults.isEmpty())
+        assertEquals(3, third.statusRestores.single().statusKind)
+    }
+
+    @Test
+    fun `newer clump and poison variants do not inherit legacy periodic damage`() = runBlocking {
+        val a = fighter(1, 2, 0)
+        val b = fighter(2, 0, 0)
+        val battle = battle(a, b)
+        a.setGroupedStatus(1, BattleStatus.CLUMP, 2, 20025, battle.currentRound)
+        a.setGroupedStatus(3, BattleStatus.POISON, 3, 20023, battle.currentRound)
+
+        val first = battle.resolveRound()
+        assertEquals(1000, a.hp)
+        assertTrue(first.actionResults.isEmpty())
+        assertEquals(1, a.groupedStatuses[1]?.rounds)
+        assertEquals(2, a.groupedStatuses[3]?.rounds)
     }
 }

@@ -2,6 +2,9 @@ package tw.tsm.gamelogic.battle
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import tw.tsm.domain.constants.BattleConstants
+import tw.tsm.domain.constants.EAttackResult
+import tw.tsm.domain.constants.EAttribute
+import tw.tsm.domain.constants.EBeHitAction
 import tw.tsm.domain.constants.EHuman
 import tw.tsm.domain.constants.EWarStyle
 import tw.tsm.domain.data.NpcDef
@@ -570,6 +573,8 @@ class BattleInstance(
                     // would map the same status back onto the client instead of removing it.
                     statusRestores.add(StatusRestore(fighter.col, fighter.row, group, 0))
                     expiredGroups.add(group)
+                } else {
+                    periodicStatusTick(fighter, status)?.let(actionResults::add)
                 }
             }
             for (group in expiredGroups) fighter.groupedStatuses.remove(group)
@@ -602,6 +607,44 @@ class BattleInstance(
         state = State.ROUND_END
 
         return RoundResult(actionResults, statusRestores, escapeResults, flyOutTargets, consumedItems)
+    }
+
+    /**
+     * PC fallback for the two legacy periodic-status ticks that DVT still exposes as
+     * dedicated client animation skill IDs. Keep this exact: newer multi-target/super
+     * Clump/Poison skills are not generalized because DVT data does not expose their
+     * server tick magnitude or prove that they share this legacy periodic behavior.
+     */
+    private fun periodicStatusTick(fighter: BattleFighter, status: GroupedBattleStatus): ActionResult? {
+        if (!fighter.isAlive) return null
+        val (tickSkillId, damage) = when (status.skillId) {
+            10004 -> 20001 to 30 // PC: Clump -> ClumpAtk
+            14015 -> 20003 to 90 // PC: Poison -> special no-animation damage
+            else -> return null
+        }
+
+        val actual = minOf(damage.toLong(), fighter.hp).toInt()
+        fighter.hp = (fighter.hp - actual).coerceAtLeast(0)
+        if (fighter.hp <= 0) fighter.isDead = true
+
+        return ActionResult(
+            attackerCol = fighter.col,
+            attackerRow = fighter.row,
+            skillId = tickSkillId,
+            fightArea = 1,
+            targets = listOf(
+                TargetResult(
+                    targetCol = fighter.col,
+                    targetRow = fighter.row,
+                    attackResult = EAttackResult.HIT,
+                    beHitAction = EBeHitAction.HIT,
+                    attrChanges = if (actual > 0) listOf(BattleAttrChange(EAttribute.HP, actual, false)) else emptyList(),
+                    targetDied = fighter.isDead,
+                    targetFlyOut = false
+                )
+            ),
+            spConsumed = 0
+        )
     }
 
     /**
