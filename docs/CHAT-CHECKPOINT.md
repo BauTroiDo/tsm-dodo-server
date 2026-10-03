@@ -2248,3 +2248,42 @@ Continuation from checkpoint 149ef88.
 ### START NEXT / evidence boundaries
 - AI-O duration and AI-P legacy periodic timing correction is deployed and verified. DVT native/server evidence for newer periodic magnitudes and exact multi-group cleanse contract remains evidence-blocked; do not generalize PC formulas or purge selectors to new DVT skills.
 - Next audit may continue AI-Q Chaos forced-action semantics from the previous checkpoint, keeping Taunt separate and requiring DVT Lua/data first, PC only scoped fallback. No AI-Q gameplay change in this task.
+
+
+## 2026-10-04 — Dungeon F0/F1 — DVT data contract + single-player entry — PASS
+
+### F0 evidence / inventory
+- Lua DVT `lua/Logic/Dungeon.lua`, `lua/UI/UIDungeon.lua` và `lua/Common/protocal.lua` xác nhận mainKind `47` là **Dungeon/Phó bản**. Constant Kotlin cũ đặt `MISSION=47` chỉ là nhãn sai; protocol 47 không phải mission transport.
+- `IOS_Dungeon_C.dat` được giải đúng theo `DungeonData.New`: 57 records, 42 bytes/record; kind distribution = kind1 multiplayer 5, kind2 single 12, kind3 weekly 20, kind5 soul challenge 20.
+- C:047-002 thực tế gửi `dungeonId UInt16 + usePassword Byte`, dù comment protocol cũ chỉ ghi dungeonId.
+- UIDungeon phân loại: kind1/4 multiplayer, kind2 single, kind3 weekly, kind5 soul. Single join gọi `SendCreateDungeon(id,false,kind)`.
+- Client tính lượt đã dùng bằng `MarkManager.missions[dailyFlag].step`.
+- `costPoint` không được suy thành phí vào cửa: weekly UI tái dùng trường này làm all-pass claim mark. F1 không trừ tiền/điểm.
+- Protocol 97 LimitTimeDungeon là hệ thống riêng và giữ nguyên.
+
+### F1 implementation
+- Commit code `0a00a47 feat: add DVT dungeon F1 core`.
+- Thêm `DungeonDef`/`DungeonNeedDef` và `DungeonDatLoader`; GameDataManager nạp `IOS_Dungeon_C.dat`.
+- `Opcodes.DUNGEON=47`; giữ alias deprecated `MISSION=DUNGEON` để không phá source cũ.
+- Thêm `DungeonSystem` và `DungeonHandler`, đăng ký qua Koin/PacketDispatcher.
+- F1 chỉ bật nhánh có bằng chứng chắc chắn: kind=2 + maxPlayer=1.
+- Validation single: dungeon tồn tại, level range, không đang battle, không ở party, dailyFlag chưa hết lượt, chưa ở chính scene đích.
+- C:047-001 hiện trả room list rỗng; multiplayer room registry để F2.
+- C:047-002 trả đúng result code DVT; thành công single dùng `SpecialSceneTeleportService` để phát scene change riêng như client contract.
+- Non-single trong F1 trả result=7 thay vì giả lập room semantics.
+- Chưa kích hoạt skip/reward/reset/weekly/soul criteria hoặc tự suy `missionFlag` mutation.
+
+### Validation / production
+- Targeted `DungeonDatLoaderTest`: PASS, 18/18 Gradle tasks.
+- Full local `gradlew.bat test build --rerun-tasks`: PASS, 21/21 tasks; `git diff --check` PASS.
+- `origin/main` exact code HEAD `0a00a47d508c01f5dc853fc57624ffc51fefd8d2`.
+- Production fast-forward qua verified `dungeon-f1.bundle`; local `application.conf` và operational/untracked files được giữ nguyên.
+- Production full `gradlew.bat test build --rerun-tasks`: PASS, 21/21 tasks.
+- Runtime restart qua WMI: Java game PID `5840`; IPv4/IPv6 port `6613` LISTEN.
+- Startup production xác nhận `Nạp IOS_Dungeon xong: 57 bản ghi` lúc 02:22:10 ngày 2026-10-04.
+- Tracked Kotlin `.salive` được khôi phục sau build/startup.
+
+### START NEXT — Dungeon F2
+- Audit và triển khai room lifecycle protocol 47 cho multiplayer: room list/create/join/password/name/invite/recruit/leave/prepare/start/kick/owner migration.
+- Dùng Lua DVT packet layouts làm contract; chưa gộp reward/end/weekly criteria nếu chưa đủ evidence.
+- Room registry trước hết là runtime/in-memory; persistence chỉ thêm nếu DVT contract chứng minh room sống qua restart/relog.
