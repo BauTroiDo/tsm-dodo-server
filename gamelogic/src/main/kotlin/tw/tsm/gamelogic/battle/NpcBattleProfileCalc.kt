@@ -43,12 +43,20 @@ object NpcBattleProfileCalc {
             npc.specialSkill,
         )
 
-        val levels = skills.asSequence()
-            .filter { it > 0 }
-            .distinct()
-            .associateWith { skillId ->
-                (skillDefs[skillId]?.maxLv ?: 1).coerceAtLeast(1)
-            }
+        // Live DVT RoleController:GetElementSkill/GetSkillLv gives ordinary
+        // battlefield NPC skills level 1. PC uses SkillData.max_lvl, but DVT is authoritative.
+        // Keep both raw and normalized summon IDs at Lv1 so the resolver sees the same level.
+        val levelIds = buildSet {
+            skills.asSequence()
+                .filter { it > 0 }
+                .forEach { rawSkillId ->
+                    add(rawSkillId)
+                    add(NpcAiSkillRules.normalizeSelectedSkill(rawSkillId))
+                }
+        }
+        val levels = levelIds.mapNotNull { skillId ->
+            skillDefs[skillId]?.let { skillId to 1 }
+        }.toMap()
 
         return NpcBattleProfile(
             level = npc.level,

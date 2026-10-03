@@ -49,7 +49,7 @@ class DvtNpcBattleStatsTest {
     }
 
     @Test
-    fun `enemy npc keeps reborn and fourth special skill at max level`() {
+    fun `enemy npc keeps reborn and DVT skill level one semantics`() {
         val npcs = NpcDatLoader.load(serverData("Npc_C.dat"))
         val skills = SkillDatLoader.load(serverData("Skill_C.dat"))
 
@@ -71,12 +71,18 @@ class DvtNpcBattleStatsTest {
         )
 
         assertEquals(expectedSkills, profile.skills.toList())
-        for (skillId in expectedSkills.filter { it > 0 }.distinct()) {
-            assertEquals(
-                skills[skillId]?.maxLv?.coerceAtLeast(1) ?: 1,
-                profile.skillLevels[skillId],
-                "NPC ${npc.name} skill=$skillId must use SkillData.maxLv",
-            )
+        for (rawSkillId in expectedSkills.filter { it > 0 }.distinct()) {
+            val effectiveSkillId = NpcAiSkillRules.normalizeSelectedSkill(rawSkillId)
+            if (skills.containsKey(rawSkillId)) {
+                assertEquals(1, profile.skillLevels[rawSkillId])
+            }
+            if (skills.containsKey(effectiveSkillId)) {
+                assertEquals(
+                    1,
+                    profile.skillLevels[effectiveSkillId],
+                    "NPC ${npc.name} effective skill=$effectiveSkillId must use live DVT Lv1",
+                )
+            }
         }
     }
 
@@ -108,6 +114,39 @@ class DvtNpcBattleStatsTest {
         val normalizedSummon = NpcAiSkillRules.normalizeSelectedSkill(profile.skills[2])
         assertEquals(13018, normalizedSummon)
         assertTrue(requireNotNull(skills[normalizedSummon]).requireSp > profile.maxSp)
+    }
+
+    @Test
+    fun `live DVT npc AI normal skills use level one and special non Skill_C ids stay explicit`() {
+        val npcs = NpcDatLoader.load(serverData("Npc_C.dat"))
+        val skills = SkillDatLoader.load(serverData("Skill_C.dat"))
+        val missing = mutableSetOf<Int>()
+
+        npcs.forEach { (npcId, npc) ->
+            val profile = NpcBattleProfileCalc.from(npc, skills)
+            profile.skills.filter { it > 0 }.forEach { rawSkillId ->
+                val effectiveSkillId = NpcAiSkillRules.normalizeSelectedSkill(rawSkillId)
+                if (skills[effectiveSkillId] == null) {
+                    missing += effectiveSkillId
+                } else {
+                    assertEquals(
+                        1,
+                        profile.skillLevels[effectiveSkillId],
+                        "NPC $npcId effective skill=$effectiveSkillId must use live DVT Lv1",
+                    )
+                }
+            }
+        }
+
+        assertEquals(
+            setOf(
+                1306, 12000, 45005,
+                31001, 31002, 31003, 31004, 31005, 31007, 31008, 31009,
+                31010, 31011, 31015, 31021, 31022, 31024,
+            ),
+            missing,
+            "Lock the live DVT Npc_C non-Skill_C inventory; Lua Attack falls these back to HandFight",
+        )
     }
 
     @Test

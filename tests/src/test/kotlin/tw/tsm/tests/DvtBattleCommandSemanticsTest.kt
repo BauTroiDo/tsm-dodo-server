@@ -189,6 +189,79 @@ class DvtBattleCommandSemanticsTest {
     }
 
     @Test
+    fun `npc AI preserves unknown DVT slot id and uses client HandFight fallback without retry`() = runBlocking {
+        val unknownId = 65534
+        val npc = BattleFighter(
+            roleId = -40, kind = EHuman.MINE_NPC, name = "unknown-slot-npc", col = 0, row = 0,
+            maxHp = 1000, maxSp = 100, hp = 1000, sp = 100, level = 1, element = 1,
+            atk = 100, def = 10, agi = 100, intelligence = 100, skills = intArrayOf(unknownId)
+        )
+        val enemy = fighter(41, 2, 0)
+        val battle = BattleInstance(
+            battleId = 5, warType = 0, terrain = 0, eventNo = 0, grid = BattleGrid(),
+            skillResolver = BattleSkillResolver(emptyMap()),
+            itemResolver = mockk<BattleItemResolver>(relaxed = true), involvedNpcDefs = emptyList()
+        )
+        listOf(npc, enemy).forEach(battle::addFighter)
+        var selections = 0
+
+        battle.resolveNpcActions { _ ->
+            selections++
+            unknownId
+        }
+
+        assertEquals(1, selections)
+        assertEquals(unknownId, npc.pendingAction?.id)
+        assertTrue(npc.pendingAction?.id != BattleConstants.HAND_FIGHT_SKILL_ID)
+        assertEquals(enemy.col, npc.pendingAction?.targetCol)
+        assertEquals(enemy.row, npc.pendingAction?.targetRow)
+
+        val beforeSp = npc.sp
+        val result = battle.resolveRound()
+        assertEquals(beforeSp, npc.sp)
+        assertTrue(
+            result.actionResults.single {
+                it.attackerCol == npc.col && it.attackerRow == npc.row
+            }.targets.isNotEmpty()
+        )
+    }
+
+    @Test
+    fun `npc revive with no corpse keeps selected skill as ineffective no-op without retry`() = runBlocking {
+        val reviveId = 11011
+        val npc = BattleFighter(
+            roleId = -50, kind = EHuman.MINE_NPC, name = "reviver-no-corpse", col = 0, row = 0,
+            maxHp = 1000, maxSp = 500, hp = 1000, sp = 500, level = 1, element = 2,
+            atk = 100, def = 10, agi = 100, intelligence = 100, skills = intArrayOf(reviveId)
+        )
+        val enemy = fighter(51, 2, 0)
+        val battle = BattleInstance(
+            battleId = 6, warType = 0, terrain = 0, eventNo = 0, grid = BattleGrid(),
+            skillResolver = BattleSkillResolver(mapOf(reviveId to skill(8))),
+            itemResolver = mockk<BattleItemResolver>(relaxed = true), involvedNpcDefs = emptyList()
+        )
+        listOf(npc, enemy).forEach(battle::addFighter)
+        var selections = 0
+
+        battle.resolveNpcActions { _ ->
+            selections++
+            reviveId
+        }
+
+        assertEquals(1, selections)
+        assertEquals(reviveId, npc.pendingAction?.id)
+        assertTrue(npc.pendingAction?.id != BattleConstants.HAND_FIGHT_SKILL_ID)
+        val beforeSp = npc.sp
+        val result = battle.resolveRound()
+        assertEquals(beforeSp, npc.sp)
+        assertTrue(
+            result.actionResults.single {
+                it.attackerCol == npc.col && it.attackerRow == npc.row
+            }.targets.isEmpty()
+        )
+    }
+
+    @Test
     fun `fightWay eight rejects living friendly target`() {
         val reviveId = 11011
         val actor = fighter(1, 2, 0)

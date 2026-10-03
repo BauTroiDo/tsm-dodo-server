@@ -300,6 +300,10 @@ class BattleInstance(
             val skillId = NpcAiSkillRules.normalizeSelectedSkill(selectedSkillId)
             val skillDef = skillResolver.getSkillDef(skillId)
 
+            // DVT Attack.GetAttackNewFunction falls back unknown/non-Skill_C IDs to
+            // HandFight while preserving the packet skill ID. Do not reroll another AI slot.
+            // A null skillDef therefore intentionally continues through normal hostile targeting.
+
             // DVT client gates SP only for player-controlled Players/FollowNpc command input.
             // Enemy NPC commands are server-driven: once selected, the client executes the skill,
             // subtracts requireSp and clamps SP at zero. PC TSBattleNPC follows the same contract.
