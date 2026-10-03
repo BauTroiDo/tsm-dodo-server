@@ -2408,3 +2408,43 @@ Continuation from checkpoint 149ef88.
 - `Dungeon.CheckInDungeon()` keys current dungeon state through `dungeonData.missionFlag`, so completion must follow mission lifecycle rather than sceneId alone.
 - `IOS_DungeonCombo_C.dat` = 180 records x 31 bytes. `lootTable` rows have multiple `kind`/threshold semantics; do not apply one generic reward formula until `DungeonCombo.kind` is resolved.
 - Single-player server state must retain active dungeonId/start time because multiple dungeon definitions can share the same scene.
+
+
+## 2026-10-04 — Dungeon F3-A — active run state + single start timer — PASS
+
+### Evidence
+- DVT `Dungeon.SendCreateDungeon()` sets `nowDungeonId/nowDungeonKind` before C:047-002; successful kind=2 closes UI.
+- DVT S:047-018 carries OADate start time; `Dungeon.ReciveEndTime()` computes `nowDungeonEndTime = startTime + DungeonData.time`.
+- Before F3-A the server sent S:047-018 only for multiplayer start, so single-player dungeon had no authoritative timer start packet.
+- Multiple dungeon definitions share scene ids; server cannot infer active dungeon solely from `mapId`. Runtime state must retain exact dungeonId/startTime/instanceId.
+- DVT `Dungeon.UpdateTime()` only stops the display timer at zero and contains `--todo Trigger`; timeout/end remains server-authoritative.
+
+### Implementation
+- Code commit `c6af125 feat: track DVT dungeon active runs`.
+- Added `ActiveDungeonRun(dungeonId,startTime,instanceId)` runtime state keyed by playerId in `DungeonSystem`.
+- Single create success now teleports, records the exact active run, then sends S:047-018 OADate start time.
+- Multiplayer start records the same dungeonId/startTime/instanceId for every current room member; failed scene entry rolls active state back.
+- Disconnect clears active run state for that player.
+- No reward/daily mutation or timeout result is invented in F3-A.
+
+### Validation / production
+- Targeted `DungeonRoomPacketTest + DungeonActiveRunTest`: PASS, 18/18 tasks.
+- Regression verifies single create emits S:047-002 success followed by S:047-018 and records exact dungeon id/start time; multiplayer members share instance/start state.
+- Full local `gradlew test build --rerun-tasks`: PASS, 21/21 tasks; `git diff --check` PASS.
+- Production fast-forwarded by verified `dungeon-f3a.bundle` to exact code HEAD `c6af125935f233713a1d4c6af14ef03588e57e89`.
+- Production full build: PASS, 21/21 tasks in 2m54s.
+- Runtime restarted through WMI; Java game PID `12672`.
+- IPv4 `0.0.0.0:6613` and IPv6 `[::]:6613` LISTEN on PID 12672.
+- `application.conf` and operational/untracked production files preserved; tracked Kotlin `.salive` restored.
+
+### F3-B evidence already locked
+- `IOS_Mark_C.dat`: dungeon `missionFlag` entries are mission kind 4/5; dungeon `dailyFlag` entries are kind 8 counters with bitId=0.
+- Examples: 12336 = daily Ba Đậu Yêu challenge count; 12334 = daily Thiên Sư multiplayer count.
+- Direct EveDataLoader audit shows missionFlag mutations occur inside dungeon scenes via resultClass=2 pStyle 1/3/4/5.
+- No audited Eve result mutates dailyFlag; daily count is therefore dungeon-backend responsibility, not Eve-script responsibility.
+- Reward table `IOS_DungeonCombo_C.dat` = 180 records x 31 bytes. kind=1 uses second-like thresholds displayed by multiplayer UI; kind=2 uses 10/50/99/100-style thresholds. Exact selection semantics must be locked before reward mutation.
+
+### START NEXT — Dungeon F3-B
+- Determine authoritative dailyFlag consumption point (start vs successful clear/skip) before mutating count.
+- Resolve DungeonCombo kind=1/kind=2 reward selection, then hook active mission completion to S:047-012 result/rewards and timeout failure.
+- Keep weekly/soul all-pass/reset-count in later F4 unless their semantics become necessary to complete F3.
