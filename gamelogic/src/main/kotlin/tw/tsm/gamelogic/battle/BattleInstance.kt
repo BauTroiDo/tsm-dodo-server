@@ -289,8 +289,14 @@ class BattleInstance(
      * Chọn mục tiêu NPC theo fightWay DVT và fallback PC TSBattleNPC.seekTarget.
      */
     fun resolveNpcActions(skillSelector: (IntArray) -> Int = ::selectNpcSkill) {
-        val npcs = allFighters.filter {
-            !it.isPlayerControlled && it.isAlive && !it.isStunned
+        val npcs = allFighters.filter { fighter ->
+            // DVT client CheckCanAct blocks Chaos from accepting a player command, and the
+            // recovered PC enemy-AI path explicitly skips debuff 14021 (Chaos) before seekTarget.
+            // Taunt is intentionally not folded into this filter: DVT proves that it removes
+            // manual control, but does not expose whether enemy server AI should skip or be forced
+            // into a particular action/target. Keep that separate until its server contract is found.
+            val hasChaos = fighter.groupedStatuses.values.any { it.status == BattleStatus.CHAOS }
+            !fighter.isPlayerControlled && fighter.isAlive && !fighter.isStunned && !hasChaos
         }
 
         for (npc in npcs) {

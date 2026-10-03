@@ -166,6 +166,34 @@ class DvtBattleCommandSemanticsTest {
     }
 
     @Test
+    fun `chaos enemy npc does not queue an AI command`() {
+        val skillId = 12001
+        val npc = BattleFighter(
+            roleId = -29, kind = EHuman.MINE_NPC, name = "chaos-npc", col = 0, row = 0,
+            maxHp = 1000, maxSp = 500, hp = 1000, sp = 500, level = 1, element = 3,
+            atk = 100, def = 10, agi = 100, intelligence = 100, skills = intArrayOf(skillId)
+        )
+        val enemy = fighter(30, 2, 0)
+        val battle = BattleInstance(
+            battleId = 13, warType = 0, terrain = 0, eventNo = 0, grid = BattleGrid(),
+            skillResolver = BattleSkillResolver(mapOf(skillId to skill(1))),
+            itemResolver = mockk<BattleItemResolver>(relaxed = true), involvedNpcDefs = emptyList()
+        )
+        listOf(npc, enemy).forEach(battle::addFighter)
+        npc.setGroupedStatus(3, BattleStatus.CHAOS, 2, 14021, battle.currentRound)
+        var selections = 0
+
+        battle.resolveNpcActions { _ ->
+            selections++
+            skillId
+        }
+
+        assertEquals(0, selections)
+        assertEquals(null, npc.pendingAction)
+        assertFalse(npc.hasActed)
+    }
+
+    @Test
     fun `npc AI keeps selected skill when current SP is below its cost`() {
         val skillId = 12001
         val npc = BattleFighter(
