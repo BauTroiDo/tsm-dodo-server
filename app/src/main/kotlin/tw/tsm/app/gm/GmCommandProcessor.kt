@@ -649,7 +649,7 @@ class GmCommandProcessor(
             .writeLongLE(session.playerId)
             .writeShortLE(npcId)
             .toByteArray()
-        worldManager.broadcastToMap(session.mapId, packet)
+        worldManager.broadcastToMap(session.mapId, packet, instanceId = session.instanceId)
         val name = npcDefs[npcId]?.name ?: "NPC không xác định"
         reply(session, "Đã biến thân thành $name (ID=$npcId)")
     }
@@ -776,7 +776,7 @@ class GmCommandProcessor(
         val titleId = args[0].toInt()
         session.titleId = titleId
         characterRepository.updateTitleId(session.roleId.toLong(), titleId)
-        val players = worldManager.getPlayersInMap(session.mapId)
+        val players = worldManager.getPlayersInMap(session.mapId, session.instanceId)
         for (player in players) {
             responseSender.sendTitleChange(player, session.playerId, titleId)
         }

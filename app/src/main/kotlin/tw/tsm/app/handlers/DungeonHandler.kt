@@ -1,10 +1,16 @@
 package tw.tsm.app.handlers
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import tw.tsm.domain.constants.Opcodes
 import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.PacketHandler
+import tw.tsm.domain.util.OleDate
 import tw.tsm.gamelogic.systems.DungeonRoomMember
 import tw.tsm.gamelogic.systems.DungeonRoomRegistry
 import tw.tsm.gamelogic.systems.DungeonRoomState
@@ -24,6 +30,8 @@ private val dungeonHandlerLogger = KotlinLogging.logger {}
 class DungeonHandler(
     private val system: DungeonSystem,
     private val rooms: DungeonRoomRegistry = DungeonRoomRegistry(),
+    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+    private val countdownMs: Long = 5_000L,
 ) : PacketHandler {
     override val mainKind: Int = Opcodes.DUNGEON
 
@@ -37,6 +45,7 @@ class DungeonHandler(
             7 -> setRoomName(session, data)
             10 -> leaveRoom(session)
             11 -> togglePrepare(session)
+            12 -> startMultiplayer(session)
             17 -> kickPlayer(session, data)
             else -> dungeonHandlerLogger.debug {
                 "Dungeon C:047-${subKind.toString().padStart(3, '0')} chưa thuộc F2-A; bỏ qua an toàn"
@@ -204,6 +213,44 @@ class DungeonHandler(
         }
     }
 
+    private fun startMultiplayer(session: GameSession) {
+        val room = rooms.beginStart(session.playerId) ?: return
+
+        // Lua UIDungeon.RecivePlayerPrePare starts a fixed five-second countdown
+        // when the packet roleId is the room owner.
+        for (member in room.members.values) {
+            sendPrepared(member.session, session.playerId, true)
+        }
+
+        scope.launch {
+            delay(countdownMs)
+            val started = rooms.commitStart(room.id, session.playerId) ?: return@launch
+            val startTime = OleDate.nowLocal()
+            for (member in started.members.values) {
+                sendStartTime(member.session, startTime)
+            }
+            if (!system.enterMultiplayer(started)) {
+                dungeonHandlerLogger.error {
+                    "Không suy được entry point khi start dungeon=" + started.dungeonId +
+                        " room=" + started.id + " instance=" + started.instanceId
+                }
+            }
+        }
+    }
+
+    fun handleDisconnect(session: GameSession) {
+        val left = rooms.leave(session.playerId) ?: return
+        for (member in left.room.members.values) {
+            sendPlayerLeave(member.session, session.playerId, LEAVE_DISCONNECT)
+        }
+        val newOwnerId = left.newOwnerId
+        if (newOwnerId != null) {
+            for (member in left.room.members.values) {
+                sendOwnerChanged(member.session, newOwnerId)
+            }
+        }
+    }
+
     private fun kickPlayer(session: GameSession, data: ByteArray) {
         if (data.size != 8) {
             sendKickResult(session, 1)
@@ -224,6 +271,17 @@ class DungeonHandler(
         for (recipient in recipients.distinctBy { it.playerId }) {
             sendPlayerLeave(recipient, targetId, LEAVE_KICKED)
         }
+    }
+
+    private fun sendStartTime(session: GameSession, startTime: Double) {
+        session.send(
+            PacketWriter()
+                .writeByte(Opcodes.DUNGEON)
+                .writeByte(18)
+                .writeByte(0)
+                .writeDoubleLE(startTime)
+                .toByteArray()
+        )
     }
 
     private fun sendCreateResult(session: GameSession, result: Int, password: String? = null) {
@@ -366,6 +424,7 @@ class DungeonHandler(
         private const val RESULT_PASSWORD_WRONG = 9
         private const val LEAVE_SELF = 0
         private const val LEAVE_KICKED = 1
+        private const val LEAVE_DISCONNECT = 2
         private const val DUNGEON_EQUIP_STYLE_SLOTS = 11
     }
 }

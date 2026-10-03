@@ -162,8 +162,8 @@ class ResponseSenderImpl(worldManager: WorldManager) : ResponseSender {
     override fun sendPlayerTeleport(session: SessionSender, playerId: Long, sceneId: Int, x: Int, y: Int) =
         scene.sendPlayerTeleport(session, playerId, sceneId, x, y)
 
-    override fun sendSceneChange(session: SessionSender, playerId: Long, sceneId: Int, x: Int, y: Int, equipItemIds: IntArray, titleId: Int) =
-        scene.sendSceneChange(session, playerId, sceneId, x, y, equipItemIds, titleId)
+    override fun sendSceneChange(session: SessionSender, playerId: Long, sceneId: Int, x: Int, y: Int, equipItemIds: IntArray, titleId: Int, instanceId: Int) =
+        scene.sendSceneChange(session, playerId, sceneId, x, y, equipItemIds, titleId, instanceId)
 
     override fun sendMapNpcInit(session: SessionSender, npcs: List<EveNpcPlacement>) =
         scene.sendMapNpcInit(session, npcs)

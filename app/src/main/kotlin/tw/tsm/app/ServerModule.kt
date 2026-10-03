@@ -158,6 +158,8 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             battleManager.handleDisconnect(session.playerId)
             // Khi mất kết nối dọn dẹp tổ đội
             partySystem.handleDisconnect(session.playerId)
+            // Dọn lobby/active dungeon room và chuyển chủ phòng nếu cần.
+            get<DungeonHandler>().handleDisconnect(session)
             // Khi mất kết nối dọn dẹp trạng thái sự kiện
             eveStateMachine.clear(session.roleId.toLong())
             // Khi mất kết nối dọn dẹp trạng thái hộp cơ quan
@@ -380,6 +382,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<SpecialSceneTeleportService>(),
         )
     }
+    single { DungeonRoomRegistry() }
     single {
         MiningSystem(
             get<MiningRepository>(),
@@ -564,7 +567,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<EveEventStateMachine>(), get<SpecialSceneTeleportService>()
         )
     }
-    single { DungeonHandler(get<DungeonSystem>()) }
+    single { DungeonHandler(get<DungeonSystem>(), get<DungeonRoomRegistry>(), get<CoroutineScope>()) }
     single { AchievementHandler(get(), get(), get()) }
     single { EmoteHandler(get(), get()) }
     single {

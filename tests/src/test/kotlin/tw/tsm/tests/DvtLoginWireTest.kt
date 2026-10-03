@@ -227,11 +227,11 @@ class DvtLoginWireTest {
     @Test fun `scene change includes outfit count before title`() {
         val session = Capture()
         SceneResponseSender().sendSceneChange(session, 123L, 10801, 570, 770,
-            intArrayOf(500, 600), 777)
+            intArrayOf(500, 600), 777, 77)
         val r = session.reader()
         assertEquals(listOf(12, 0, 0), List(3) { r.get().toInt() })
         assertEquals(123L, r.long)
-        assertEquals(listOf(10801, 570, 770, 0, 0), List(5) { r.short.toInt() })
+        assertEquals(listOf(10801, 570, 770, 0, 77), List(5) { r.short.toInt() })
         assertEquals(2, r.get().toInt())
         assertEquals(500, r.short.toInt()); assertEquals(600, r.short.toInt())
         assertEquals(0, r.get().toInt())

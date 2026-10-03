@@ -1,5 +1,6 @@
 package tw.tsm.gamelogic.systems
 
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import tw.tsm.domain.interfaces.GameSession
 
@@ -11,11 +12,14 @@ data class DungeonRoomMember(
 data class DungeonRoomState(
     val id: Long,
     val dungeonId: Int,
+    val instanceId: Int,
     var name: String,
     var ownerId: Long,
     var password: String,
     val maxPlayers: Int,
     val members: LinkedHashMap<Long, DungeonRoomMember> = linkedMapOf(),
+    var starting: Boolean = false,
+    var started: Boolean = false,
 ) {
     val isLocked: Boolean get() = password.isNotEmpty()
 }
@@ -27,30 +31,21 @@ data class DungeonRoomLeaveResult(
     val disbanded: Boolean,
 )
 
-/**
- * Runtime-only DVT dungeon room registry.
- *
- * Room persistence across server restarts is intentionally not invented:
- * Lua DVT exposes a live lobby/room protocol but no persistence contract.
- */
 class DungeonRoomRegistry {
     private val nextRoomId = AtomicLong(1L)
+    private val nextInstanceId = AtomicInteger(1)
     private val rooms = LinkedHashMap<Long, DungeonRoomState>()
     private val playerRoom = HashMap<Long, Long>()
 
     @Synchronized
-    fun create(
-        owner: GameSession,
-        dungeonId: Int,
-        maxPlayers: Int,
-        password: String,
-    ): DungeonRoomState {
+    fun create(owner: GameSession, dungeonId: Int, maxPlayers: Int, password: String): DungeonRoomState {
         check(playerRoom[owner.playerId] == null) { "player already in dungeon room" }
 
         val roomId = nextAvailableRoomId()
         val room = DungeonRoomState(
             id = roomId,
             dungeonId = dungeonId,
+            instanceId = nextAvailableInstanceId(),
             name = owner.characterName,
             ownerId = owner.playerId,
             password = password,
@@ -64,7 +59,7 @@ class DungeonRoomRegistry {
 
     @Synchronized
     fun snapshotRooms(): List<DungeonRoomState> =
-        rooms.values.map { it.snapshot() }
+        rooms.values.filter { !it.starting && !it.started }.map { it.snapshot() }
 
     @Synchronized
     fun room(roomId: Long): DungeonRoomState? = rooms[roomId]
@@ -76,6 +71,7 @@ class DungeonRoomRegistry {
     @Synchronized
     fun join(roomId: Long, session: GameSession): DungeonRoomState? {
         val room = rooms[roomId] ?: return null
+        if (room.starting || room.started) return null
         if (playerRoom[session.playerId] != null) return null
         if (room.members.size >= room.maxPlayers) return null
 
@@ -87,7 +83,7 @@ class DungeonRoomRegistry {
     @Synchronized
     fun togglePrepared(playerId: Long): Pair<DungeonRoomState, Boolean>? {
         val room = roomOf(playerId) ?: return null
-        if (room.ownerId == playerId) return null
+        if (room.ownerId == playerId || room.starting || room.started) return null
         val member = room.members[playerId] ?: return null
         member.prepared = !member.prepared
         return room to member.prepared
@@ -96,9 +92,31 @@ class DungeonRoomRegistry {
     @Synchronized
     fun rename(ownerId: Long, name: String): DungeonRoomState? {
         val room = roomOf(ownerId) ?: return null
-        if (room.ownerId != ownerId) return null
+        if (room.ownerId != ownerId || room.starting || room.started) return null
         room.name = name
         return room
+    }
+
+    @Synchronized
+    fun beginStart(ownerId: Long): DungeonRoomState? {
+        val room = roomOf(ownerId) ?: return null
+        if (room.ownerId != ownerId || room.starting || room.started) return null
+        if (room.members.values.any { it.session.playerId != ownerId && !it.prepared }) return null
+        room.starting = true
+        return room.snapshot()
+    }
+
+    @Synchronized
+    fun commitStart(roomId: Long, ownerId: Long): DungeonRoomState? {
+        val room = rooms[roomId] ?: return null
+        if (room.ownerId != ownerId || !room.starting || room.started) return null
+        if (room.members.values.any { it.session.playerId != ownerId && !it.prepared }) {
+            room.starting = false
+            return null
+        }
+        room.starting = false
+        room.started = true
+        return room.snapshot()
     }
 
     @Synchronized
@@ -106,6 +124,7 @@ class DungeonRoomRegistry {
         val roomId = playerRoom.remove(playerId) ?: return null
         val room = rooms[roomId] ?: return null
         val removed = room.members.remove(playerId) ?: return null
+        room.starting = false
 
         var newOwnerId: Long? = null
         var disbanded = false
@@ -119,13 +138,13 @@ class DungeonRoomRegistry {
             room.members[newOwnerId]?.prepared = false
         }
 
-        return DungeonRoomLeaveResult(room, removed, newOwnerId, disbanded)
+        return DungeonRoomLeaveResult(room.snapshot(), removed, newOwnerId, disbanded)
     }
 
     @Synchronized
     fun kick(ownerId: Long, targetId: Long): DungeonRoomLeaveResult? {
         val room = roomOf(ownerId) ?: return null
-        if (room.ownerId != ownerId || targetId == ownerId) return null
+        if (room.ownerId != ownerId || room.starting || room.started || targetId == ownerId) return null
         if (!room.members.containsKey(targetId)) return null
         return leave(targetId)
     }
@@ -135,6 +154,7 @@ class DungeonRoomRegistry {
         rooms.clear()
         playerRoom.clear()
         nextRoomId.set(1L)
+        nextInstanceId.set(1)
     }
 
     private fun nextAvailableRoomId(): Long {
@@ -145,6 +165,16 @@ class DungeonRoomRegistry {
             if (candidate !in rooms && candidate in 1L..0xFFFF_FFFEL) return candidate
         }
         error("No dungeon room id available")
+    }
+
+    private fun nextAvailableInstanceId(): Int {
+        repeat(0xFFFF) {
+            val candidate = nextInstanceId.getAndUpdate { current ->
+                if (current >= 0xFFFF) 1 else current + 1
+            }
+            if (candidate != 0 && rooms.values.none { it.instanceId == candidate }) return candidate
+        }
+        error("No dungeon instance id available")
     }
 
     private fun DungeonRoomState.snapshot(): DungeonRoomState =

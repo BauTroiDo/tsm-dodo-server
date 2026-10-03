@@ -79,7 +79,7 @@ class PlayerStatusHandler(
         characterRepository.updateTitleId(session.roleId.toLong(), titleId)
 
         // Phát rộng S:005-012 cho mọi người chơi cùng bản đồ (gồm cả mình)
-        val players = worldManager.getPlayersInMap(session.mapId)
+        val players = worldManager.getPlayersInMap(session.mapId, session.instanceId)
         for (player in players) {
             responseSender.sendTitleChange(player, session.playerId, titleId)
         }

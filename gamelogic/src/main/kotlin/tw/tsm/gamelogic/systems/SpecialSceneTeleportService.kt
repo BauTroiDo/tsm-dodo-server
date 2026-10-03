@@ -34,9 +34,9 @@ class SpecialSceneTeleportService(
         return snap(door.x + DOOR_OFFSET) to snap(door.y + DOOR_OFFSET)
     }
 
-    suspend fun enterSpecialScene(session: GameSession, sceneId: Int): Boolean {
+    suspend fun enterSpecialScene(session: GameSession, sceneId: Int, instanceId: Int = 0): Boolean {
         val (x, y) = deriveEntryPoint(sceneId) ?: return false
-        teleport(session, sceneId, x, y)
+        teleport(session, sceneId, x, y, instanceId)
         specialSceneLogger.info {
             session.characterName + " vào scene đặc biệt " + sceneId +
                 " tại fallback Eve (" + x + "," + y + ")"
@@ -55,15 +55,15 @@ class SpecialSceneTeleportService(
         return true
     }
 
-    suspend fun teleport(session: GameSession, sceneId: Int, x: Int, y: Int) {
+    suspend fun teleport(session: GameSession, sceneId: Int, x: Int, y: Int, instanceId: Int = 0) {
         val charId = session.roleId.toLong()
         worldManager.leaveMap(session)
-        worldManager.enterMap(session, sceneId, x, y)
+        worldManager.enterMap(session, sceneId, x, y, instanceId)
         characterRepository.updatePosition(charId, sceneId, x, y)
         responseSender.sendPlayerTeleport(session, session.playerId, sceneId, x, y)
         responseSender.sendSceneChange(
             session, session.playerId, sceneId, x, y,
-            session.equipItemIds, session.titleId
+            session.equipItemIds, session.titleId, instanceId
         )
     }
 

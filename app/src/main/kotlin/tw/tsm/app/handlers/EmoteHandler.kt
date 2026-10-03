@@ -68,7 +68,7 @@ class EmoteHandler(
             .writeByte(emojiId)
             .toByteArray()
 
-        worldManager.broadcastToMap(session.mapId, packet)
+        worldManager.broadcastToMap(session.mapId, packet, instanceId = session.instanceId)
     }
 
     /**
@@ -110,7 +110,7 @@ class EmoteHandler(
             .writeByte(poseId)
             .toByteArray()
 
-        worldManager.broadcastToMap(session.mapId, packet)
+        worldManager.broadcastToMap(session.mapId, packet, instanceId = session.instanceId)
     }
 
     /**
@@ -127,6 +127,6 @@ class EmoteHandler(
             .writeByte(ERolePose.STAND)
             .toByteArray()
 
-        worldManager.broadcastToMap(session.mapId, packet)
+        worldManager.broadcastToMap(session.mapId, packet, instanceId = session.instanceId)
     }
 }

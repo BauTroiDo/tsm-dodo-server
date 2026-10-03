@@ -34,6 +34,7 @@ class GameSessionImpl(private val channel: Channel) : GameSession {
 
     // ── SessionWorld ──
     override var mapId: Int = 0
+    override var instanceId: Int = 0
     override var x: Int = 0
     override var y: Int = 0
     override var direction: Int = 0

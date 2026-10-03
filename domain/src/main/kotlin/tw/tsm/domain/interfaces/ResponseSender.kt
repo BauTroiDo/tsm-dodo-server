@@ -215,7 +215,7 @@ interface ResponseSender {
      * Định dạng: +roleId(8) +sceneId(2) +x(2) +y(2) +tag(2) +instanceId(2)
      *       +equipCount(1) +[itemId(2)]... +outfitCount(1) +[outfitId(2)]... +titleId(2)
      */
-    fun sendSceneChange(session: SessionSender, playerId: Long, sceneId: Int, x: Int, y: Int, equipItemIds: IntArray = intArrayOf(), titleId: Int = 0)
+    fun sendSceneChange(session: SessionSender, playerId: Long, sceneId: Int, x: Int, y: Int, equipItemIds: IntArray = intArrayOf(), titleId: Int = 0, instanceId: Int = 0)
 
     /**
      * Gửi người chơi khác xuất hiện (S:003-000)

@@ -60,4 +60,32 @@ class DungeonRoomRegistryTest {
         assertTrue(last.disbanded)
         assertNull(rooms.room(room.id))
     }
+    @Test
+    fun `ready room start allocates isolated instance`() {
+        val rooms = DungeonRoomRegistry()
+        val owner = session(3001, "Owner")
+        val member = session(3002, "Member")
+        val otherOwner = session(3003, "Other")
+
+        val first = rooms.create(owner, dungeonId = 1, maxPlayers = 5, password = "")
+        val second = rooms.create(otherOwner, dungeonId = 1, maxPlayers = 5, password = "")
+        assertTrue(first.instanceId in 1..0xFFFF)
+        assertTrue(second.instanceId in 1..0xFFFF)
+        assertTrue(first.instanceId != second.instanceId)
+
+        rooms.join(first.id, member)
+        assertNull(rooms.beginStart(owner.playerId))
+        assertEquals(true, rooms.togglePrepared(member.playerId)?.second)
+
+        val pending = rooms.beginStart(owner.playerId)!!
+        assertTrue(pending.starting)
+        assertFalse(pending.started)
+        assertTrue(rooms.snapshotRooms().none { it.id == first.id })
+
+        val started = rooms.commitStart(first.id, owner.playerId)!!
+        assertFalse(started.starting)
+        assertTrue(started.started)
+        assertEquals(first.instanceId, started.instanceId)
+    }
+
 }

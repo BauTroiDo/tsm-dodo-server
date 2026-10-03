@@ -54,6 +54,8 @@ interface SessionCharacter {
 interface SessionWorld {
     /** ID bản đồ đang ở hiện tại*/
     var mapId: Int
+    /** Map thường = 0; dungeon instance = 1..65535. */
+    var instanceId: Int
     /** Toạ độ X hiện tại*/
     var x: Int
     /** Toạ độ Y hiện tại*/

@@ -684,7 +684,7 @@ class ItemHandler(
         responseSender.sendUseItemSuccess(session, bagItem.itemId, 1, showMsg = true)
 
         responseSender.sendPlayerTransform(session, session.playerId, targetNpcId)
-        worldManager.getPlayersInMap(session.mapId)
+        worldManager.getPlayersInMap(session.mapId, session.instanceId)
             .filter { it !== session && it.loginFinished }
             .forEach { target ->
                 responseSender.sendPlayerTransform(target, session.playerId, targetNpcId)

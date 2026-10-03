@@ -69,7 +69,7 @@ class RelocateHandler(
         }
 
         // Gửi gói tin xuất hiện của người chơi khác cùng bản đồ
-        val otherPlayers = worldManager.getPlayersInMap(session.mapId)
+        val otherPlayers = worldManager.getPlayersInMap(session.mapId, session.instanceId)
         for (other in otherPlayers) {
             if (other !== session && other.loginFinished) {
                 responseSender.sendOtherPlayerAppear(session, other)

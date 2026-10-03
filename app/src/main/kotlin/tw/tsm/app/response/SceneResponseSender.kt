@@ -62,7 +62,7 @@ class SceneResponseSender {
      * Định dạng: +roleId(8) +sceneId(2) +x(2) +y(2) +tag(2) +instanceId(2)
      *       +equipCount(1) +[itemId(2)]... +outfitCount(1) +[outfitId(2)]... +titleId(2)
      */
-    fun sendSceneChange(session: SessionSender, playerId: Long, sceneId: Int, x: Int, y: Int, equipItemIds: IntArray = intArrayOf(), titleId: Int = 0) {
+    fun sendSceneChange(session: SessionSender, playerId: Long, sceneId: Int, x: Int, y: Int, equipItemIds: IntArray = intArrayOf(), titleId: Int = 0, instanceId: Int = 0) {
         val writer = PacketWriter()
             .writeByte(12).writeByte(0).writeByte(0)
             .writeLongLE(playerId)
@@ -70,7 +70,7 @@ class SceneResponseSender {
             .writeShortLE(x)
             .writeShortLE(y)
             .writeShortLE(0)   // sceneTag
-            .writeShortLE(0)   // instanceId
+            .writeShortLE(instanceId)   // instanceId
         // Ngoại hình trang bị
         writer.writeByte(equipItemIds.size)
         for (itemId in equipItemIds) {

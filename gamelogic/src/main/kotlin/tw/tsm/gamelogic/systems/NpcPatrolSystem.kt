@@ -138,7 +138,7 @@ class NpcPatrolSystem(
         }
 
         for ((mapId, states) in mapNpcStates) {
-            val players = worldManager.getPlayersInMap(mapId)
+            val players = worldManager.getPlayersInAllInstances(mapId)
             if (players.isEmpty()) continue
 
             for ((_, state) in states) {
@@ -339,7 +339,7 @@ class NpcPatrolSystem(
     /** Phát rộng gói tin di chuyển NPC S:022-002*/
     private fun broadcastMove(mapId: Int, npcId: Int, x: Int, y: Int) {
         val packet = responseSender.buildMapNpcMovePacket(npcId, x, y)
-        worldManager.broadcastToMap(mapId, packet)
+        worldManager.broadcastToAllInstancesOfMap(mapId, packet)
     }
 
     companion object {

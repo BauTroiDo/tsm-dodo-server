@@ -52,6 +52,21 @@ class DungeonSystem(
         return specialTeleport.enterSpecialScene(session, def.sceneId)
     }
 
+    suspend fun enterMultiplayer(room: DungeonRoomState): Boolean {
+        val def = defs[room.dungeonId] ?: return false
+        val point = specialTeleport.deriveEntryPoint(def.sceneId) ?: return false
+        for (member in room.members.values) {
+            specialTeleport.teleport(
+                member.session,
+                def.sceneId,
+                point.first,
+                point.second,
+                room.instanceId,
+            )
+        }
+        return true
+    }
+
     private suspend fun validateDailyCount(session: GameSession, def: DungeonDef): Int {
         if (def.dailyFlag == 0 || def.dailyCount <= 0) return RESULT_OK
         val used = questSystem.getMissions(session.roleId.toLong())

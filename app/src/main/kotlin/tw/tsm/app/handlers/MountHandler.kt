@@ -61,7 +61,7 @@ class MountHandler(
         }
 
         // phát rộng S:079-007 cho mọi người chơi cùng bản đồ (gồm cả bản thân)
-        val players = worldManager.getPlayersInMap(session.mapId)
+        val players = worldManager.getPlayersInMap(session.mapId, session.instanceId)
         for (player in players) {
             responseSender.sendPlayerMount(player, session.playerId, npcId)
         }
@@ -86,7 +86,7 @@ class MountHandler(
         session.mountNpcId = 0
 
         // phát rộng S:079-007 (npcId=0 biểu thị xuống ngựa)
-        val players = worldManager.getPlayersInMap(session.mapId)
+        val players = worldManager.getPlayersInMap(session.mapId, session.instanceId)
         for (player in players) {
             responseSender.sendPlayerMount(player, session.playerId, 0)
         }
