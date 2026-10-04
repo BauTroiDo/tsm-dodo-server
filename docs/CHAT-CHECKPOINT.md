@@ -2933,3 +2933,19 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Full local `gradlew test build --rerun-tasks`: BUILD SUCCESSFUL, 21/21 tasks.
 - `git diff --check`: PASS (CRLF normalization warning only).
 - Production deployment is pending; do not mark client gameplay PASS until user retests after this phase-2 commit.
+
+## 2026-10-05 — Production deploy c0dd255 — VERIFIED, client retest pending
+
+- Gameplay commit: `c0dd255 fix: restore DVT dungeon mini-game flow`; pushed to `origin/main` and fast-forwarded to production.
+- Full production `gradlew test build --rerun-tasks`: BUILD SUCCESSFUL, 21/21 tasks.
+- First restart attempt killed game child PID 6392 while the old Gradle `app:run` wrapper was still alive; the new WMI launch did not remain running. Port 6613 was temporarily offline. This was an operational launcher/wrapper issue, not a c0dd255 application crash.
+- Verified no Java game/wrapper remained, then relaunched cleanly with existing `_launch_prod_wmi.cmd`.
+- Current production runtime:
+  - source HEAD `c0dd255`;
+  - Gradle wrapper `app:run` PID 12044;
+  - game `tw.tsm.app.MainKt` PID 10920;
+  - `0.0.0.0:6613` and `[::]:6613` LISTEN on PID 10920.
+- Fresh startup 00:25:15-00:25:19 +07 confirms Hikari/MySQL, schema init, all DVT data including Dungeon/DungeonCombo/DungeonCriteria/Eve, Netty bind and server READY.
+- Client gameplay still requires user validation; do NOT mark the two mini-games PASS until tested:
+  - scene62007 Tìm Ba Đậu Yêu should auto-run entry script on scene-ready, then each found NPC must Talk/Battle, win increments mission12358, step-specific talk runs, current NPC hides and one weighted next NPC shows; third win terminates without a fourth spawn.
+  - scene62003 Tìm bảo rương should auto-run Door entry script on scene-ready, show four weighted treasure chest placements and advance mission12330 1->2; subsequent chest clicks should advance the same EveNo phases.
