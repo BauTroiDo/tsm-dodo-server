@@ -2661,3 +2661,62 @@ Strong internal consistency:
 2. Add byte/data regression locking the reconstructed Bách Chiến NPC ranges and exact stage18/19/20 names/elements.
 3. Continue recovering exact order/position and special round-win semantics before enabling kind3 combat.
 4. Continue targeted IOS_Npc_C.dat/public-trace audit for Crazy Weekly; do not enable kind5 while Soul qualification/formation remains evidence-blocked.
+
+
+## 2026-10-04 — Dungeon F4-A — weekly reset persisted; Crazy Weekly formation anchors recovered
+
+### Code pushed — validation/deploy still pending
+- Commit `611e09195039fe48475d8d3b1090d098b135795d` — `fix: persist DVT weekly dungeon reset`.
+- This commit has NOT been claimed build-PASS and has NOT been deployed to production. Remote Desktop Commander reached its monthly quota before Gradle/production validation; production remains gameplay HEAD `edb5f86`.
+- Added `character_dungeon_weeks` persistent Monday marker and `refreshDungeonWeek()`.
+- First-ever observation records the current week without deleting legacy progress/claim state. Only a later Monday boundary clears scoped weekly data. Same/older week keys are no-ops.
+- Reset scope comes only from loaded DungeonData kind3/kind5:
+  - stage counters must be Mark kind9 + bitId0.
+  - claim flags come only from positive `costPoint` Mark kind9 bitIds. Current DVT data therefore scopes Bách Chiến claim bit1706 only; kind5 currently has no claim mark.
+- Login refreshes the weekly boundary before the initial mission/flag snapshot.
+- Protocol47 requests refresh online state so a player staying connected across Monday receives mission removals and cleared claim bits without relog.
+- Added `DungeonWeeklyResetTest` for first-observation preservation, next-Monday scoped clear, rollback/same-week no-op and concurrent single-reset behavior.
+- Pending execution checks when a runner is available: compile new Exposed `inList` deletes/selects, MockK `arg<Set<Int>>(3)`, full `gradlew test build --rerun-tasks`, then production deploy/restart/6613 verify.
+
+### CI fallback added
+- Commit `6f0499fc257477044798543a7c01ae11a81bff79` adds `.github/workflows/ci.yml` with Java21 and `./gradlew test build --rerun-tasks` on main/PR/manual dispatch.
+- At the time of this checkpoint GitHub Actions had not produced a run yet; do not treat the CI file itself as validation.
+
+### Crazy/Soul weekly — strong DVT Npc_C block
+The earlier 382xx suspicion is superseded by much stronger evidence in the DVT `IOS_Npc_C.dat` block `40687..40859`. This is still reconstruction from client data + independent battle descriptions, not an original backend formation table, so exact position/order remains evidence-sensitive.
+
+High-confidence anchors:
+- Stage8 candidate group centers on `40748..40756`: six consecutive `Hồn - Công Tôn ...` NPCs plus three support NPCs. This matches the public Crazy Weekly stage8 note that all 公孫 enemies use 青龍 and should be prioritized.
+- Stage16 candidate `40823..40828`: Ôn Dịch Vương / Ôn Dịch Trư Vương / Ôn Dịch Trư Tướng / Ôn Dịch Lang Nhân / Ôn Dịch Thi / Ôn Dịch Hộ Vệ. This matches the public stage16 pig-head + strong-poison mechanic.
+- Stage17 candidate `40829..40835`: Hủ Hủ Vương, Hủ Hủ Thi Vương, Hủ Hủ Thi Suất, Hủ Yêu Nữ, Khô Cốt Nam/Nữ, Hủ Bạch Khô Lâu. `40829` directly carries skill `23011 = Huyền vũ`, matching the public Skeleton King/Huyền Vũ warning.
+- Stage18 candidate `40836..40843`: Bạo Ngược Vương + wolf group. `40836` has special `21042 = Gia Cát Cuồng Long Chú`, matching public stage18.
+- Stage19 candidate `40844..40850`: Giảo Hoạt Vương/support group; includes Crazy Dragon/support-style skills, matching public stage19 Crazy Dragon + heal/status-clear notes.
+- Stage20 candidate `40851..40859`: Lưu Bị BDY, Quan Vũ BDY, Trương Phi BDY, Dị Giới Hoàng Kim/Lưu Lang/Ôn Dịch/Hủ Hủ/Bạo Ngược/Giảo Hoạt. The set contains `21042` Crazy Dragon, `23011` Huyền Vũ and soul-drain/support mechanics, matching public stage20 behavior.
+
+Earlier block progression also strongly looks stage-structured:
+- `40687..40700`: early Hồn groups.
+- `40701..40707`: pirate group.
+- `40708..40717`: Yellow-Turban-themed group.
+- `40718..40727`, `40728..40737`, `40738..40747`: progressively stronger Hồn groups.
+- `40757..40767`, `40768..40777`, `40778..40822`: later special groups before the high-confidence stage16 anchor.
+Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT truth.
+
+### Hidden formation-table scan
+- `IOS_MarkGroupData`, `PassAward`, `RequiemBoss`, `ActivityInfo`, `MissionAward`, `GS` do not reference the high-confidence weekly NPC anchors.
+- `IOS_SceneFight_C.dat` remains confirmed to contain no scene62015.
+- `IOS_WeekDungeon_C.dat` remains header-only.
+- `IOS_Festival.dat` contains scattered occurrences of several weekly NPC IDs but also many repeated byte-pattern hits; this is not yet evidence of a formation table and must be parsed by its own real format before use.
+- `IOS_MarkStep_C.dat` contains many raw occurrences of one Bách Chiến NPC ID but not the Crazy anchors; raw UInt16 coincidence alone is insufficient.
+
+### Current safety boundary
+- Do not enable kind3/kind5 combat merely by removing the existing kind1 validation.
+- kind3 Bách Chiến NPC membership is high-confidence, but exact position/order plus special round outcomes (stage4 max3, stage5 survive10, stage19 max20) still need a dedicated special-battle implementation.
+- kind5 is additionally blocked on Soul qualification kinds8/9/10 because the Kotlin server does not yet have sufficient equipped-Soul element/level state.
+- DVT client directly proves `EFFWar_Style.WeekDungeon = 24`; when combat is implemented it needs a separate multiplayer special-battle path using warStyle24, not ordinary Eve PvE.
+
+### START NEXT
+1. Get an executable CI/runner result for `611e091`; repair compile/tests before any production deploy.
+2. Parse/identify any remaining server-like table that references the `40687..40859` Crazy block; otherwise keep reconstruction explicitly labeled.
+3. Add data-only regression locking Bách Chiến stage18/19/20 and Crazy stage8/16/17/18/19/20 anchors.
+4. Implement server-side weekly qualification kinds1..5 only where current Pet/Npc state has exact DVT semantics; keep Soul kinds8..10 blocked.
+5. Only then build the WeekDungeon=24 battle lifecycle and its round constraints/reward/progress settlement.
