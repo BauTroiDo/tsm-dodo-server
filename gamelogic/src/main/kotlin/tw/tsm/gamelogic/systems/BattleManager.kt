@@ -197,6 +197,111 @@ class BattleManager(
     }
 
     /**
+     * Start DVT Bách Chiến as the server-driven WeekDungeon battle style (24).
+     *
+     * DVT weekly restrictions refer to singular Role.fightNpc, so even on the custom
+     * multi-pet server this mode admits at most the first deployed follower per player.
+     * Five room members therefore map naturally to five back-row players plus five
+     * front-row followers. Enemy formation is the recovered ten-NPC DVT stage roster.
+     */
+    suspend fun createWeeklyDungeonBattle(
+        room: DungeonRoomState,
+        enemyIds: List<Int>,
+        objective: WeeklyDungeonObjective,
+    ): Boolean {
+        if (!room.started || room.members.isEmpty() || room.members.size > BattleConstants.MAX_ROW) return false
+        if (enemyIds.size != BattleConstants.MAX_ROW * 2 || enemyIds.distinct().size != enemyIds.size) return false
+        if (room.members.values.any { isInBattle(it.session.playerId) }) return false
+        if (enemyIds.any { it !in npcDefs }) return false
+
+        val battleId = nextBattleId.getAndIncrement()
+        val involvedNpcs = mutableListOf<Pair<Int, NpcDef>>()
+        val battle = BattleInstance(
+            battleId = battleId,
+            warType = EWar.EVENT,
+            warStyle = EWarStyle.WEEK_DUNGEON,
+            terrain = 101,
+            eventNo = 0,
+            grid = BattleGrid(),
+            skillResolver = BattleSkillResolver(skillDefs, exclusiveSkillDefs),
+            itemResolver = battleItemResolver,
+            involvedNpcDefs = involvedNpcs,
+            dungeonId = room.dungeonId,
+            winWithinRounds = objective.winWithinRounds,
+            surviveRounds = objective.surviveRounds,
+            suppressGenericRewards = true,
+        )
+
+        for ((row, member) in room.members.values.withIndex()) {
+            val session = member.session
+            val selectedPet = petSystem
+                .getBattleDeployableFollowPets(session.roleId.toLong())
+                .firstOrNull()
+            val playerCol = if (selectedPet == null) {
+                BattleConstants.PLAYER_FRONT_COL
+            } else {
+                BattleConstants.PLAYER_BACK_COL
+            }
+
+            battle.addFighter(createPlayerFighter(session, col = playerCol, row = row))
+            battle.playerSessions[session.playerId] = session
+
+            if (selectedPet != null) {
+                val (followSlot, petData) = selectedPet
+                val npcDef = npcDefs[petData.npcId] ?: return false
+                battle.addFighter(
+                    createFollowNpcFighter(
+                        npcDef = npcDef,
+                        petData = petData,
+                        masterId = session.playerId,
+                        ownerCharacterId = session.roleId.toLong(),
+                        npcDataId = petData.npcId,
+                        followSlot = followSlot,
+                        col = BattleConstants.PLAYER_FRONT_COL,
+                        row = row,
+                    )
+                )
+            }
+        }
+
+        for ((index, npcId) in enemyIds.withIndex()) {
+            val npcDef = npcDefs.getValue(npcId)
+            involvedNpcs += npcId to npcDef
+            battle.addFighter(
+                createNpcFighter(
+                    npcDef = npcDef,
+                    col = if (index < BattleConstants.MAX_ROW) {
+                        BattleConstants.ENEMY_FRONT_COL
+                    } else {
+                        BattleConstants.ENEMY_BACK_COL
+                    },
+                    row = index % BattleConstants.MAX_ROW,
+                    battleId = battleId,
+                    npcDataId = npcId,
+                )
+            )
+        }
+
+        battles[battleId] = battle
+        for ((playerId, session) in battle.playerSessions) {
+            playerBattleMap[playerId] = battleId
+            session.battleId = battleId
+        }
+
+        // Special weekly enemies are never manual-catch targets.
+        battle.catchOwnerValidator = { _, _ -> false }
+        sendBattleInit(battle)
+
+        logger.info {
+            "Tạo Bách Chiến ${room.dungeonId}: battle=$battleId members=${room.members.size} " +
+                "enemies=$enemyIds maxRound=${objective.winWithinRounds} survive=${objective.surviveRounds}"
+        }
+
+        scope.launch { runBattleLoop(battle) }
+        return true
+    }
+
+    /**
      * Tạo trận NPC trên bản đồ (PK / luyện tập với bù nhìn gỗ)
      *
      * @param session người chơi khởi xướng trận đấu
