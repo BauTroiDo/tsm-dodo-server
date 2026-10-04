@@ -2999,3 +2999,24 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
   - first distinct chest: 2->3 and “found 1”;
   - second distinct chest: 3->4 and “found 2”;
   - third distinct chest: 4->5 then completion branch must complete 12330 and advance 12331.
+
+## 2026-10-05 — Production deploy non-battle dungeon settlement d4387a9 — VERIFIED
+
+- Commit: `d4387a9 fix: settle non-battle dungeon completion`; pushed to `origin/main`.
+- Production source fast-forwarded to `d4387a9` via Git bundle/Git Bash SSH.
+- Targeted reward + mini-game + Eve completion callback suite: BUILD SUCCESSFUL, 18/18 tasks.
+- Full local `gradlew test build --rerun-tasks`: BUILD SUCCESSFUL, 21/21 tasks.
+- Full production `gradlew test build --rerun-tasks`: BUILD SUCCESSFUL, 21/21 tasks (2m54s).
+- Restart was performed safely: game PID 3280 stopped first; old Gradle wrapper PID 12424 was verified fully exited and port 6613 released before invoking the WMI launcher.
+- Fresh runtime: Gradle app:run wrapper PID 6484, game `tw.tsm.app.MainKt` PID 6152, created at 2026-10-05 01:42:38 +07.
+- Fresh verification: production HEAD `d4387a9`; `0.0.0.0:6613` and `[::]:6613` LISTEN on PID 6152.
+- Startup 01:42:38-01:42:43 confirms Hikari/MySQL, schema init, Dungeon/DungeonCombo/DungeonCriteria/Eve data load, Netty bind, then `Máy chủ đã sẵn sàng, đang chờ kết nối...`; no ERROR/Exception/FATAL observed in this startup window.
+- Runtime gameplay validation is still pending user retest; do NOT mark reward PASS yet.
+- Expected scene62003 success path after retest:
+  - complete three treasure chests and terminal Eve mission12330;
+  - completion hook calls DungeonSystem.settleAfterEvent;
+  - reward selected from lootTable7 by remaining time and player turn;
+  - for turn0 with >=400 seconds remaining: item45664 `PhóBản lễ túi 4` x1;
+  - dailyFlag12344 increments by 1 so remaining attempts becomes 0/1 for the day;
+  - S:047-012 result packet carries the reward list;
+  - server log should contain `Dungeon 6 settled: remaining=... rewards=... dailyFlag=12344`.
