@@ -6,6 +6,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
+import tw.tsm.domain.interfaces.repositories.MissionFlagRecord
 
 private val logger = KotlinLogging.logger {}
 
@@ -70,6 +71,17 @@ class AutoSaveService(
             try {
                 for (missionId in questSystem?.refreshDungeonDaily(charId).orEmpty()) {
                     responseSender?.sendRemoveMission(session, missionId)
+                }
+                questSystem?.refreshDungeonWeekly(charId)?.let { reset ->
+                    for (missionId in reset.removedMissionIds) {
+                        responseSender?.sendRemoveMission(session, missionId)
+                    }
+                    if (reset.clearedFlagBits.isNotEmpty()) {
+                        responseSender?.sendSetMissionFlags(
+                            session,
+                            reset.clearedFlagBits.map { MissionFlagRecord(it, 0) },
+                        )
+                    }
                 }
                 // Vị trí
                 if (session.mapId > 0) {
