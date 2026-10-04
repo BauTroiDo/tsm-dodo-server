@@ -1395,6 +1395,12 @@ interface ResponseSender {
 
     // ── Linh Hồn (mainKind=120) ──
 
+    /** S:120-001 +kind(U8) +npcId(U16) +sn(I64). */
+    fun sendSoulEquipResult(session: SessionSender, kind: Int, npcId: Int, sn: Long)
+
+    /** S:120-255 +errorCode(U8). */
+    fun sendSoulError(session: SessionSender, errorCode: Int)
+
     /** S:120-008 +count(U16) + SoulThing*count + result(U8). */
     fun sendSoulSnapshot(
         session: SessionSender,

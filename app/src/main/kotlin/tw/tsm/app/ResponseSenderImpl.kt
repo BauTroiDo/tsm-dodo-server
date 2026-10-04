@@ -605,6 +605,12 @@ class ResponseSenderImpl(worldManager: WorldManager) : ResponseSender {
 
     // ── Linh Hồn (SoulResponseSender) ──
 
+    override fun sendSoulEquipResult(session: SessionSender, kind: Int, npcId: Int, sn: Long) =
+        soul.sendEquipResult(session, kind, npcId, sn)
+
+    override fun sendSoulError(session: SessionSender, errorCode: Int) =
+        soul.sendError(session, errorCode)
+
     override fun sendSoulSnapshot(
         session: SessionSender,
         souls: List<tw.tsm.domain.valueobjects.SoulThingData>,

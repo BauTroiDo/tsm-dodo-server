@@ -5,8 +5,28 @@ import tw.tsm.domain.interfaces.SessionSender
 import tw.tsm.domain.valueobjects.SoulThingData
 import tw.tsm.protocol.PacketWriter
 
-/** DVT protocol 120 Soul packets. A2 implements login snapshot S:120-008 only. */
+/** DVT protocol 120 Soul packets. */
 class SoulResponseSender {
+    fun sendEquipResult(session: SessionSender, kind: Int, npcId: Int, sn: Long) {
+        val writer = PacketWriter(14)
+            .writeByte(Opcodes.SOUL)
+            .writeByte(1)
+            .writeByte(0)
+            .writeByte(kind)
+            .writeShortLE(npcId)
+            .writeLongLE(sn)
+        session.send(writer.toByteArray())
+    }
+
+    fun sendError(session: SessionSender, errorCode: Int) {
+        val writer = PacketWriter(4)
+            .writeByte(Opcodes.SOUL)
+            .writeByte(255)
+            .writeByte(0)
+            .writeByte(errorCode)
+        session.send(writer.toByteArray())
+    }
+
     fun sendSnapshot(
         session: SessionSender,
         souls: List<SoulThingData>,

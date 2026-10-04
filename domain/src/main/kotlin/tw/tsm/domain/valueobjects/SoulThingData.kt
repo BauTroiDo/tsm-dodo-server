@@ -23,6 +23,9 @@ data class SoulThingData(
     val skills: List<SoulSkillData> = List(4) { SoulSkillData() },
     val lockFlags: Int = 0,
 ) {
+    val isLocked: Boolean get() = (lockFlags and 0x01) != 0
+    val isMining: Boolean get() = (lockFlags and 0x02) != 0
+
     init {
         require(startAtt.size == 6) { "Soul startAtt phải có đúng 6 phần tử" }
         require(nowAtt.size == 6) { "Soul nowAtt phải có đúng 6 phần tử" }

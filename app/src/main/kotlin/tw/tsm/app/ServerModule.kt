@@ -107,6 +107,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             register(get<PkSettingHandler>())
             register(get<StatHandler>())
             register(get<AstrolabeHandler>())
+            register(get<SoulHandler>())
             register(get<GodskinHandler>())
             register(get<MountHandler>())
             register(get<HotkeyHandler>())
@@ -583,6 +584,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { PkSettingHandler(get()) }
     single { StatHandler(get(), get(), get(), get<StatSystem>(), get(), get<SkillRepository>(), get<DailyProgressSystem>()) }
     single { AstrolabeHandler(get<AstrolabeSystem>(), get<ResponseSender>()) }
+    single { SoulHandler(get<SoulSystem>(), get<PetSystem>(), get<GameDataManager>().npcDefs, get<ResponseSender>()) }
     single { FurnaceResponseSender() }
     single { GodskinResponseSender() }
     single { GodskinHandler(get<MythEnchantSystem>(), get<MythUpgradeSystem>(), get<GodskinResponseSender>(), get<ResponseSender>()) }

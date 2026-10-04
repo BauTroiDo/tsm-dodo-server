@@ -3164,3 +3164,46 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Gradle removed the tracked Kotlin compiler session file during build; restored only `.kotlin/sessions/kotlin-compiler-10369008480978718564.salive`.
 - No production deploy/restart yet. A2 only makes login snapshot capable; gameplay still cannot equip/take off Souls.
 - Next A3: lock exact C:120-001 / S:120-001 equip/takeoff semantics and validation from Lua DVT, then implement atomic persistence/cache mutation. Do not mix in compound/intensify/breakthrough/affination.
+
+
+## 2026-10-05 — Soul Foundation A3 — EQUIP / TAKEOFF PASS
+
+- Scope: implement only DVT C:120-001 / S:120-001 equip/takeoff on top of A1+A2. No compound/intensify/breakthrough/affination, no Soul stat settlement, no Soul Challenge entry enablement.
+- Locked Lua DVT wire:
+  - C:120-001 = kind U8 + npcId U16 + followIndex U8 + sn I64 = exactly 12 payload bytes.
+  - kind1=equip, kind2=takeoff.
+  - S:120-001 = kind U8 + npcId U16 + sn I64; followIndex is request-only.
+  - S:120-255 = errorCode U8.
+- Target validation follows UISoul/Soul.lua:
+  - followIndex must resolve to a carried warrior;
+  - packet npcId must match that exact follow slot;
+  - eligible warrior requires canGrow != 0 and != 2;
+  - Soul element must equal the target NPC element;
+  - only one Soul may be equipped per npcId.
+- State flags:
+  - lockFlags bit0 = locked; DVT UISoul equip path does NOT pass checkLock, so locked Souls remain equippable.
+  - lockFlags bit1 = mining; equip/takeoff rejects with protocol120 error4.
+  - battle rejects before mutation with error26.
+- Implemented:
+  - SoulThingData helpers isLocked/isMining.
+  - SoulSystem per-character mutex and atomic equip/takeoff mutation.
+  - Persistence is written before cache publication; DB failure returns error255 and leaves cache unchanged.
+  - Error mapping used from Lua comments: no player1, no Soul2, mining4, warrior ID7, target already has Soul8, equip/takeoff error9, element mismatch10, no eligible warrior12, battle26, generic255.
+  - SoulHandler registered in PacketDispatcher/Koin.
+  - SoulResponseSender/ResponseSender support S120-001 and S120-255.
+- Switching behavior intentionally matches client flow: client sends takeoff, waits for S120-001, then sends a second equip request; server does not invent an atomic replace packet.
+- Regression SoulA3EquipRegressionTest covers:
+  - byte-exact S120-001 and S120-255;
+  - followIndex/npcId/canGrow validation;
+  - locked Soul may equip;
+  - mining and element mismatch reject without DB write;
+  - one-Soul-per-NPC rule;
+  - takeoff ownership check;
+  - persistence failure leaves cache unchanged;
+  - handler parses exact 12-byte C120-001 and rejects battle.
+- Validation:
+  - targeted A1+A2+A3 Soul suite: BUILD SUCCESSFUL, 18 actionable tasks.
+  - git diff --check: PASS.
+  - full gradlew test build --rerun-tasks: BUILD SUCCESSFUL, 21/21 tasks.
+- No production deploy/restart for A3. Production still does not have a verified DVT source for Soul acquisition, and stat settlement remains evidence-blocked.
+- Next safe slice A4: wire equipped Soul state into the already-identified read-only consumers (qualification kind8/9/10 and battle appearance/soul skill lookup) only where the Lua contract is explicit; keep six-stat settlement blocked until authoritative evidence.
