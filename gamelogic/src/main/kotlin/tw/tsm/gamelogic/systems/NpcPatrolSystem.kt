@@ -92,7 +92,9 @@ class NpcPatrolSystem(
 
         // NPC có thể di chuyển = motionType != 1 (dạng tuần tra) OR traceRadius > 0 (dạng truy kích)
         // Tham khảo: MapNpcManager.lua → v.motionType ~= 1 or v.traceRadius > 0
-        val movableNpcs = allNpcs.filter { it.motionType != MOTION_STAND || it.traceRadius > 0 }
+        val movableNpcs = allNpcs.filter {
+            (it.motionType != MOTION_STAND || it.traceRadius > 0) && !NpcClientPath.ownsMovement(it)
+        }
         if (movableNpcs.isEmpty()) {
             logger.info { "Bản đồ $mapId không có NPC di chuyển được, bỏ qua" }
             return

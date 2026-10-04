@@ -288,8 +288,10 @@ class EveTriggerRouter(
         val currentPos = npcPositionProvider?.invoke(mapId, triggerID)
         val targetX = currentPos?.first ?: npc.x
         val targetY = currentPos?.second ?: npc.y
-        if (subKind == 1 && !stateBuilder.isWithinRange(session.x, session.y, targetX, targetY) && !stateBuilder.isWithinRange(session.x, session.y, npc.x, npc.y)) {
-            logger.debug { "NPC quá xa: clickId=$triggerID player=(${session.x},${session.y}) npc=($targetX,$targetY)" }
+        if (subKind == 1 && !stateBuilder.isWithinRange(session.x, session.y, targetX, targetY) &&
+            !stateBuilder.isWithinRange(session.x, session.y, npc.x, npc.y) &&
+            !NpcClientPath.isWithinRoute(npc, session.x, session.y)) {
+            logger.info { "NPC quá xa: map=$mapId clickId=$triggerID player=(${session.x},${session.y}) npc=($targetX,$targetY)" }
             responseSender.sendEventEnd(session)
             return
         }

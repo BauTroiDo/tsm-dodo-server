@@ -3031,3 +3031,11 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Fresh targeted regression: BridgeEventRelease3 + DungeonF3BData4 + DungeonMiniGameFlowRegression3 + DungeonRewardLeaveRegression12 =22 tests, zero failures/errors; BUILD SUCCESSFUL18/18 tasks; diff check PASS. Existing full build/startup PASS remains valid; no new gameplay patch or restart is needed.
 - Existing untracked scratch/bundles/staging helper were preserved and excluded. Restored only the tracked compiler session file removed by this test run.
 - Next: record user confirmation of client reward display; preserve 3-chest/progression PASS and d4387a9 gameplay baseline.
+
+## 2026-10-05 — Ba Dau Yeu hidden path interaction fix — BUILD PASS, runtime retest pending
+
+- Symptom: dungeon entry selects roaming clickId=6 and mission advances to step 2, but repeated clicks do not start the event.
+- DVT contract: Role.MapNpcAppear starts motionType=4 paths locally; hidden RoleController.UpdateMove pauses. S:022-002 reveals the NPC and replaces movement, so server patrol conflicts with scripted hide/show and client path position.
+- Kotlin fix: exclude initially hidden path NPCs without trace encounters from server patrol; accept clicks within 200 pixels of the Eve path segments (including initial spawn), while retaining ordinary distance checks and rejecting positions away from the route. No reward/data/Lua changes.
+- Regression: all Ba Dau level scenes 62007..62010 retain client ownership, path vertices/interiors are clickable, remote/standing/encounter cases stay bounded. Targeted suite 20/20 PASS; app build PASS.
+- Runtime verification and player completion remain pending deployment/retest. GitHub push remains blocked by automatic approval review pending confirmation of the remote destination.
