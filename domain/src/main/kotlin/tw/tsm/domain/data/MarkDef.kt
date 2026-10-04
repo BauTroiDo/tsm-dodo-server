@@ -7,7 +7,7 @@ package tw.tsm.domain.data
  * Server chủ yếu cần trường [bitId] và [kind]; name/description dùng cho log.
  *
  * @param name        tên nhiệm vụ (UTF-16LE)
- * @param kind        loại (0:không 1:dòng chính 2:dòng phụ 3:hướng dẫn 4:phó bản đơn 5:phó bản nhóm 6:khác 7:làm mới hằng ngày 8:làm mới hằng ngày không hiển thị)
+ * @param kind        loại (0:không 1:dòng chính 2:dòng phụ 3:hướng dẫn 4:phó bản đơn 5:phó bản nhóm 6:khác 7:làm mới hằng ngày 8:làm mới hằng ngày không hiển thị 9:làm mới hằng tuần)
  * @param bitId       chỉ số bit của cờ hoàn thành (0 = không có cờ hoàn thành)
  * @param gainWay     cách nhận (0:người kích hoạt 1:người kích hoạt và thành viên tổ đội)
  * @param description mô tả (UTF-16LE)

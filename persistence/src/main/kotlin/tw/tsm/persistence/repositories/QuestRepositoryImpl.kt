@@ -9,10 +9,12 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.jdbc.upsert
+import tw.tsm.domain.interfaces.repositories.DungeonPeriodResetResult
 import tw.tsm.domain.interfaces.repositories.MissionFlagRecord
 import tw.tsm.domain.interfaces.repositories.MissionRecord
 import tw.tsm.domain.interfaces.repositories.QuestRepository
 import tw.tsm.persistence.tables.CharacterDungeonDays
+import tw.tsm.persistence.tables.CharacterDungeonWeeks
 import tw.tsm.persistence.tables.CharacterCompletedEvents
 import tw.tsm.persistence.tables.CharacterMissionFlags
 import tw.tsm.persistence.tables.CharacterMissions
@@ -47,6 +49,66 @@ class QuestRepositoryImpl : QuestRepository {
             removed
         }
 
+
+    override suspend fun refreshDungeonWeek(
+        charId: Long,
+        weekKey: Int,
+        missionIds: Set<Int>,
+        flagBits: Set<Int>,
+    ): DungeonPeriodResetResult =
+        suspendTransaction {
+            val oldWeek = CharacterDungeonWeeks.selectAll()
+                .where { CharacterDungeonWeeks.charId eq charId }
+                .singleOrNull()?.get(CharacterDungeonWeeks.weekKey)
+            if (oldWeek != null && oldWeek >= weekKey) {
+                return@suspendTransaction DungeonPeriodResetResult()
+            }
+
+            // Migration safety: the first observed week records the calendar marker
+            // without destroying progress whose previous reset boundary is unknown.
+            val removedMissions = if (oldWeek == null || missionIds.isEmpty()) {
+                emptyList()
+            } else {
+                CharacterMissions.selectAll()
+                    .where {
+                        (CharacterMissions.charId eq charId) and
+                            (CharacterMissions.missionId inList missionIds.toList())
+                    }
+                    .map { it[CharacterMissions.missionId] }
+            }
+            if (removedMissions.isNotEmpty()) {
+                CharacterMissions.deleteWhere {
+                    (CharacterMissions.charId eq charId) and
+                        (CharacterMissions.missionId inList removedMissions)
+                }
+            }
+
+            val clearedFlags = if (oldWeek == null || flagBits.isEmpty()) {
+                emptyList()
+            } else {
+                CharacterMissionFlags.selectAll()
+                    .where {
+                        (CharacterMissionFlags.charId eq charId) and
+                            (CharacterMissionFlags.bitIndex inList flagBits.toList())
+                    }
+                    .map { it[CharacterMissionFlags.bitIndex] }
+            }
+            if (clearedFlags.isNotEmpty()) {
+                CharacterMissionFlags.deleteWhere {
+                    (CharacterMissionFlags.charId eq charId) and
+                        (CharacterMissionFlags.bitIndex inList clearedFlags)
+                }
+            }
+
+            CharacterDungeonWeeks.upsert {
+                it[CharacterDungeonWeeks.charId] = charId
+                it[CharacterDungeonWeeks.weekKey] = weekKey
+            }
+            DungeonPeriodResetResult(
+                removedMissionIds = removedMissions,
+                clearedFlagBits = clearedFlags,
+            )
+        }
 
     override suspend fun getMissions(charId: Long): List<MissionRecord> =
         suspendTransaction {

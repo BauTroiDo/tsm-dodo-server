@@ -91,6 +91,28 @@ class DungeonSystem(
         for (member in room.members.values) activeRuns.remove(member.session.playerId)
     }
 
+    /**
+     * Keep online clients synchronized when a day/week boundary passes without relog.
+     * LoginService invokes the same persistence refresh before the initial Mark snapshot.
+     */
+    suspend fun refreshPeriodicProgress(session: GameSession) {
+        val charId = session.roleId.toLong()
+        for (missionId in questSystem.refreshDungeonDaily(charId)) {
+            responseSender?.sendRemoveMission(session, missionId)
+        }
+
+        val weekly = questSystem.refreshDungeonWeekly(charId)
+        for (missionId in weekly.removedMissionIds) {
+            responseSender?.sendRemoveMission(session, missionId)
+        }
+        if (weekly.clearedFlagBits.isNotEmpty()) {
+            responseSender?.sendSetMissionFlags(
+                session,
+                weekly.clearedFlagBits.map { MissionFlagRecord(it, 0) },
+            )
+        }
+    }
+
     suspend fun exitActiveDungeon(session: GameSession): Boolean {
         val run = activeRuns[session.playerId] ?: return false
         if (session.battleId != 0L || run.originMapId <= 0) return false
@@ -280,6 +302,7 @@ class DungeonSystem(
      */
     suspend fun claimWeeklyAllPass(session: GameSession, page: Int): Boolean {
         if (page < 0) return false
+        refreshPeriodicProgress(session)
         val pageDefs = defs.values
             .filter { it.kind == KIND_WEEKLY }
             .sortedBy { it.id }

@@ -41,6 +41,8 @@ class DungeonHandler(
     override suspend fun handle(session: GameSession, subKind: Int, data: ByteArray) {
         if (session.state != SessionState.IN_GAME) return
 
+        system.refreshPeriodicProgress(session)
+
         when (subKind) {
             1 -> sendRoomList(session)
             2 -> createDungeon(session, data)
