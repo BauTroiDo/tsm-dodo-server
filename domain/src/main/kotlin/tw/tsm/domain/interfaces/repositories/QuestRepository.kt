@@ -16,6 +16,11 @@ data class MissionRecord(val missionId: Int, val step: Int)
  */
 data class MissionFlagRecord(val bitIndex: Int, val bitValue: Int)
 
+data class DungeonWeeklyResetResult(
+    val removedMissionIds: List<Int> = emptyList(),
+    val clearedFlagBits: List<Int> = emptyList(),
+)
+
 /**
  * Interface truy cập cơ sở dữ liệu nhiệm vụ
  *
@@ -33,6 +38,21 @@ interface QuestRepository {
      */
     suspend fun refreshDungeonDay(charId: Long, dayKey: Int, missionIds: Set<Int>): List<Int> =
         error("Dungeon day persistence is not implemented by this repository")
+
+    /**
+     * Atomically clear only supplied weekly dungeon counters / explicit claim flags,
+     * then advance the persisted Monday week marker.
+     *
+     * First observation preserves existing state because the previous reset boundary
+     * is unknown. Same/older week keys never reset anything.
+     */
+    suspend fun refreshDungeonWeek(
+        charId: Long,
+        weekKey: Int,
+        missionIds: Set<Int>,
+        claimFlagBits: Set<Int>,
+    ): DungeonWeeklyResetResult =
+        error("Dungeon week persistence is not implemented by this repository")
 
 
     /**
