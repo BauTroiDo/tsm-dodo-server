@@ -404,6 +404,8 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<ResponseSender>(),
             get<GameDataManager>().dungeonComboDefs,
             get<InventorySystem>(),
+            get<PetSystem>(),
+            get<GameDataManager>().npcDefs,
         )
     }
     single { DungeonRoomRegistry() }
@@ -490,6 +492,15 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
                 get<MineEncounterSystem>().onBattleEnd(playerId)
                 get<EveFlowController>().resumeAfterBattle(session, playerId, playerWin)
                 get<DungeonSystem>().settleAfterBattle(session, playerWin)?.let { settlement ->
+                    get<DungeonHandler>().sendDungeonResult(session, settlement)
+                }
+            }
+            bm.onDungeonBattleAbortCallback = { session, _ ->
+                get<DungeonSystem>().clearActiveRun(session.playerId)
+                get<DungeonRoomRegistry>().leave(session.playerId)
+            }
+            bm.onDungeonBattleEndCallback = { session, _, playerWin, dungeonId ->
+                get<DungeonSystem>().settleWeeklyBattle(session, playerWin, dungeonId)?.let { settlement ->
                     get<DungeonHandler>().sendDungeonResult(session, settlement)
                 }
             }
@@ -594,7 +605,15 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<EveEventStateMachine>(), get<SpecialSceneTeleportService>()
         )
     }
-    single { DungeonHandler(get<DungeonSystem>(), get<DungeonRoomRegistry>(), get<WorldManager>(), get<CoroutineScope>()) }
+    single {
+        DungeonHandler(
+            get<DungeonSystem>(),
+            get<DungeonRoomRegistry>(),
+            get<WorldManager>(),
+            get<BattleManager>(),
+            get<CoroutineScope>(),
+        )
+    }
     single { AchievementHandler(get(), get(), get()) }
     single { EmoteHandler(get(), get()) }
     single {
