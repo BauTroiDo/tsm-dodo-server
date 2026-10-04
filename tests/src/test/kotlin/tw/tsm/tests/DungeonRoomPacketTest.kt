@@ -60,6 +60,7 @@ class DungeonRoomPacketTest {
     @Test
     fun `join packet matches DungeonPlayerData fixed 11-slot wire`() = runBlocking {
         val system = mockk<DungeonSystem>()
+        coEvery { system.refreshPeriodicProgress(any()) } just Runs
         every { system.getDef(1) } returns dungeonDef()
         coEvery { system.validateNormalRoomEntry(any(), 1, any()) } returns DungeonSystem.RESULT_OK
 
@@ -120,6 +121,7 @@ class DungeonRoomPacketTest {
     @Test
     fun `password checkbox returns four-digit offline fallback`() = runBlocking {
         val system = mockk<DungeonSystem>()
+        coEvery { system.refreshPeriodicProgress(any()) } just Runs
         every { system.getDef(1) } returns dungeonDef()
         coEvery { system.validateNormalRoomEntry(any(), 1, any()) } returns DungeonSystem.RESULT_OK
 
@@ -143,6 +145,7 @@ class DungeonRoomPacketTest {
     @Test
     fun invitedPlayerBypassesLockedRoomPassword() = runBlocking {
         val system = mockk<DungeonSystem>()
+        coEvery { system.refreshPeriodicProgress(any()) } just Runs
         every { system.getDef(1) } returns dungeonDef()
         coEvery { system.validateNormalRoomEntry(any(), 1, any()) } returns DungeonSystem.RESULT_OK
         val rooms = DungeonRoomRegistry()
@@ -205,6 +208,7 @@ class DungeonRoomPacketTest {
     @Test
     fun quickJoinSelectsUnlockedMatchingRoom() = runBlocking {
         val system = mockk<DungeonSystem>()
+        coEvery { system.refreshPeriodicProgress(any()) } just Runs
         every { system.getDef(1) } returns dungeonDef()
         coEvery { system.validateNormalRoomEntry(any(), 1, any()) } returns DungeonSystem.RESULT_OK
         val rooms = DungeonRoomRegistry()
@@ -235,6 +239,7 @@ class DungeonRoomPacketTest {
     @Test
     fun worldRecruitPacketMatchesDvtReceiverOrder() = runBlocking {
         val system = mockk<DungeonSystem>()
+        coEvery { system.refreshPeriodicProgress(any()) } just Runs
         every { system.getDef(1) } returns dungeonDef()
         coEvery { system.validateNormalRoomEntry(any(), 1, any()) } returns DungeonSystem.RESULT_OK
         val rooms = DungeonRoomRegistry()
@@ -286,6 +291,7 @@ class DungeonRoomPacketTest {
             sceneId = 62001,
         )
         val system = mockk<DungeonSystem>()
+        coEvery { system.refreshPeriodicProgress(any()) } just Runs
         every { system.getDef(2) } returns singleDef
         coEvery { system.validateSingleCreate(any(), 2) } returns DungeonSystem.RESULT_OK
         coEvery { system.enterSingle(any(), 2) } returns true
