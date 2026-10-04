@@ -312,8 +312,25 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { EveEventStateMachine() }
     single {
         val data = get<GameDataManager>()
-        QuestSystem(get(), data.markDefs, data.dungeonDefs.values
-            .filter { it.kind in setOf(1, 2) }.map { it.dailyFlag }.toSet())
+        QuestSystem(
+            repo = get(),
+            markDefs = data.markDefs,
+            dailyDungeonMissionIds = data.dungeonDefs.values
+                .filter { it.kind in setOf(1, 2) }
+                .map { it.dailyFlag }
+                .filter { it > 0 }
+                .toSet(),
+            weeklyDungeonMissionIds = data.dungeonDefs.values
+                .filter { it.kind in setOf(3, 5) }
+                .map { it.dailyFlag }
+                .filter { it > 0 }
+                .toSet(),
+            weeklyDungeonClaimMissionIds = data.dungeonDefs.values
+                .filter { it.kind in setOf(3, 5) }
+                .map { it.costPoint }
+                .filter { it > 0 }
+                .toSet(),
+        )
     }
     single { BitFlagSystem(get(), get<GameDataManager>().guideLastBitFlagId) }
     single {
