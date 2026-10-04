@@ -12,6 +12,7 @@ import tw.tsm.app.handlers.DungeonHandler
 import tw.tsm.app.handlers.PartyHandler
 import tw.tsm.data.loaders.DungeonComboDatLoader
 import tw.tsm.data.loaders.DungeonDatLoader
+import tw.tsm.data.loaders.SceneSetDatLoader
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.gamelogic.systems.DailyProgressSystem
@@ -38,6 +39,7 @@ class DungeonRewardLeaveRegressionTest {
         special,
         comboDefs = DungeonComboDatLoader.load(dataBytes("Data-ios", "IOS_DungeonCombo_C.dat")),
         clockMillis = clock,
+        sceneSetDefs = SceneSetDatLoader.load(dataBytes("Data", "SceneSet_C.dat")),
     )
 
     @Test
@@ -92,10 +94,13 @@ class DungeonRewardLeaveRegressionTest {
     }
 
     @Test
-    fun hudExitFallsBackToEveSceneInfoWhenActiveRunWasLost() = runBlocking {
+    fun hudExitUsesSceneKindTwoEvenWhenMapIsNotInDungeonData() = runBlocking {
         val special = mockk<SpecialSceneTeleportService>()
-        val defs = DungeonDatLoader.load(dataBytes("Data-ios", "IOS_Dungeon_C.dat"))
-        val sceneId = defs.getValue(2).sceneId
+        val dungeonSceneIds = DungeonDatLoader.load(dataBytes("Data-ios", "IOS_Dungeon_C.dat"))
+            .values.map { it.sceneId }.toSet()
+        val sceneId = SceneSetDatLoader.load(dataBytes("Data", "SceneSet_C.dat"))
+            .entries.first { (id, def) -> def.kind == 2 && id !in dungeonSceneIds }
+            .key
         val session = mockk<GameSession>(relaxed = true)
         every { session.playerId } returns 994L
         every { session.mapId } returns sceneId

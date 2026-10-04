@@ -2791,3 +2791,24 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Targeted regression: BUILD SUCCESSFUL, 18/18 tasks.
 - Full local `gradlew test build --rerun-tasks`: BUILD SUCCESSFUL, 21/21 tasks.
 - `git diff --check`: PASS.
+
+## 2026-10-04 — Dungeon HUD exit follows SceneSet.kind=2 — PASS
+
+### Root cause correction
+- DVT `UIMain.UpdateDungeon()` shows the HUD dungeon panel when `sceneDatas[SceneManager.sceneId].kind == 2`.
+- The HUD "Leave Dungeon" button calls `Dungeon.LeaveSinglePlayDungeon()` -> C:013-004.
+- Previous fix `1ccaa00` incorrectly gated fallback leave on whether the current map appeared in `IOS_Dungeon_C.dat`.
+- Dynamic dungeon scenes can be `SceneSet.kind == 2` without being listed as a `DungeonData.sceneId`, so C:013-004 could still fall through and do nothing.
+
+### Fix
+- `DungeonSystem` now receives the authoritative `GameDataManager.sceneSetDefs`.
+- `exitDungeonFromHud()` gates on `sceneSetDefs[currentMap].kind == 2`, matching Lua DVT exactly.
+- If an `ActiveDungeonRun` still exists, it returns to the exact captured pre-entry map/x/y/instance.
+- If the run is missing after restart/relog, it exits through DVT Eve `sceneInfo.backgroundNo + playerAppearX/Y`.
+- Outside scene kind2, C:013-004 still falls through to normal PartySystem leave.
+
+### Validation
+- Regression now explicitly selects a real `SceneSet_C.dat` kind2 scene that is NOT present in `IOS_Dungeon_C.dat` and verifies HUD exit succeeds through Eve fallback.
+- Targeted `DungeonRewardLeaveRegressionTest`: BUILD SUCCESSFUL, 18/18 tasks.
+- Full local `gradlew test build --rerun-tasks`: BUILD SUCCESSFUL, 21/21 tasks.
+- `git diff --check`: PASS.

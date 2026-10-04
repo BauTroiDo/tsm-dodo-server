@@ -394,6 +394,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<ResponseSender>(),
             get<GameDataManager>().dungeonComboDefs,
             get<InventorySystem>(),
+            sceneSetDefs = get<GameDataManager>().sceneSetDefs,
         )
     }
     single { DungeonRoomRegistry() }

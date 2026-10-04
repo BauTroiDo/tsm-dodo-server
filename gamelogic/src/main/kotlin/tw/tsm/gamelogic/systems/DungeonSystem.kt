@@ -4,6 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import java.util.concurrent.ConcurrentHashMap
 import tw.tsm.domain.data.DungeonComboDef
 import tw.tsm.domain.data.DungeonDef
+import tw.tsm.domain.data.SceneSetDef
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.repositories.MissionFlagRecord
@@ -45,6 +46,7 @@ class DungeonSystem(
     private val comboDefs: Map<Int, List<DungeonComboDef>> = emptyMap(),
     private val inventorySystem: InventorySystem? = null,
     private val clockMillis: () -> Long = System::currentTimeMillis,
+    private val sceneSetDefs: Map<Int, SceneSetDef> = emptyMap(),
 ) {
     private val activeRuns = ConcurrentHashMap<Long, ActiveDungeonRun>()
 
@@ -116,8 +118,9 @@ class DungeonSystem(
     /**
      * C:013-004 from UIMain's "Leave Dungeon" button.
      *
-     * The packet is also used by normal party leave, so only intercept it while
-     * the character is physically inside a scene referenced by DungeonData.
+     * DVT UIMain.UpdateDungeon shows this HUD exit when sceneDatas[sceneId].kind == 2.
+     * Therefore the server must use SceneSet kind=2 as the authoritative gate rather
+     * than requiring the map to appear in IOS_Dungeon_C.dat.
      *
      * Prefer the captured pre-entry position. If the in-memory ActiveDungeonRun
      * was lost by a server restart/relog, fall back to the authoritative Eve
@@ -125,12 +128,10 @@ class DungeonSystem(
      */
     suspend fun exitDungeonFromHud(session: GameSession): Boolean {
         if (session.battleId != 0L) return false
+        if (sceneSetDefs[session.mapId]?.kind != SCENE_KIND_DYNAMIC_DUNGEON) return false
 
-        val currentDungeon = defs.values.firstOrNull { it.sceneId == session.mapId }
-            ?: return false
         val run = activeRuns[session.playerId]
-
-        if (run != null && run.dungeonId == currentDungeon.id && run.originMapId > 0) {
+        if (run != null && run.originMapId > 0) {
             specialTeleport.teleport(
                 session,
                 run.originMapId,
@@ -384,6 +385,7 @@ class DungeonSystem(
         const val KIND_SINGLE = 2
         const val KIND_WEEKLY = 3
         const val KIND_SOUL_WEEKLY = 5
+        const val SCENE_KIND_DYNAMIC_DUNGEON = 2
         const val WEEK_PAGE_SIZE = 20
 
         const val RESULT_OK = 0
