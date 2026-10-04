@@ -2530,3 +2530,69 @@ Continuation from checkpoint 149ef88.
 - UIDungeon proves multiplayer preview tiers use lootTable rows and single preview uses first/last lootTable rows; extraLoot selects the row whose kindValue equals player Turn.
 - However neither Lua DVT nor the IL2CPP client binary contains the authoritative server-side selector that turns runtime score into a lootTable row. Known text only states BaDauYeu depends on enemy damage and other dungeon rewards can depend on remaining time; denominator/aggregation/tier-boundary equality are not present.
 - Therefore automatic base reward settlement remains intentionally disabled rather than inventing a formula. Exact packet/data/rebirth semantics are ready; the missing selector requires authoritative server evidence or controlled official-server trace before activation.
+
+
+## 2026-10-04 — Dungeon F3-B3 — reward settlement + Leave Dungeon — DEPLOYED; weekly battle evidence-blocked
+
+### User report / scope
+- User reported: normal dungeon has no reward, Leave Dungeon button does nothing, Weekly Dungeon and Crazy Weekly Dungeon are missing.
+- Continue strict source priority: Lua DVT + client/data + IL2CPP first; no Lua edits; no fabricated weekly enemy formations.
+
+### Reward evidence locked
+- DVT S:047-012 is exact: result Byte + dungeonId UInt16 + count Byte + repeated itemId UInt16 + quantity UInt32. UIResult displays exactly the server-sent reward list.
+- DVT DungeonComboData:GetReward selects current rebirth slot and falls back through lower nonzero slots.
+- Normal multiplayer kind1 loot tables are remaining-time tiers. UIDungeon displays row N using the previous row's kindValue/60 as that tier's lower-bound time label.
+- Real data examples:
+  - dungeon1 table1: 600/900/1200 seconds -> item46921 qty1/5/10.
+  - dungeon14 table23 -> item46922 qty1/5/10.
+  - dungeon15 table24 -> item46923 qty1/2/3.
+  - dungeon16 table25 -> item46924 qty1/2/3.
+  - dungeon17 table26 -> item32649 qty1/2/3.
+- Screenshot bags match IOS_Item + IOS_BlissBag exactly:
+  - 46921 "Túi phụ bản cấp 20 II" -> 1 equipment bag + item65412 x20 + item65464 x3.
+  - 46923 level80 II -> 1 equipment bag + item65412 x70 + item65464 x15.
+  - 46924 level110 II -> 1 equipment bag + item65412 x70 + item65464 x15.
+  - 32649 level140 III -> 1 equipment bag + item65412 x70 + item65464 x20.
+- Settlement grants the BAG item itself; opening specialAbility48 lets existing BlissBag logic grant the three inner items. No screenshot contents are hard-coded into dungeon settlement.
+- Timed kind1 returns no reward at remainingSeconds<=0. Secondary original-game documentation also states team-dungeon reward is larger when turned in sooner and overtime can yield no gift.
+- Single dungeon kind2 tables use 10/50/99/100 damage rows. Current server only activates the unambiguous 100 row on terminal full PvE victory; lower partial-damage rows remain deliberately unsupported rather than guessed.
+
+### Implementation
+- Gameplay commit: edb5f86cf0bd98255b4b0759c7c782ab7f37b83f "fix: settle DVT dungeon rewards and leave".
+- ActiveDungeonRun now retains origin map/x/y/instance + runtime start millis + idempotent settled marker.
+- Single run is marked BEFORE teleport; multiplayer members keep their individual pre-dungeon origins.
+- C:013-004 is overloaded by Lua Dungeon.LeaveSinglePlayDungeon. PartyHandler now checks active dungeon first, teleports back to captured origin and clears dungeon-room/run state; ordinary party leave remains fallback.
+- Battle end ordering is Mine -> Eve resume -> Dungeon settlement. Intermediate fights keep missionFlag active and do not settle; terminal Eve removal allows one settlement.
+- Reward insertion uses InventorySystem exact bag planning/mutation, realtime bag-slot sync, then S:047-012.
+- DungeonHandler now has S:047-012 serializer with UInt32 reward quantity.
+- C:047-022 weekly all-clear claim is future-ready from exact client fields: 20 kind3 nodes, first node costPoint=12762 claim Mark, allPassPrize=34366. It grants item34366 and sets its completion flag only when all 20 progress marks are complete and the claim flag is absent.
+
+### Weekly / Crazy Weekly audit — remaining blocker
+- IOS_Dungeon_C has exactly 20 kind3 weekly stages (IDs18..37) and 20 kind5 crazy/soul weekly stages (IDs63..82).
+- All 40 point at scene62015, missionFlag=0, time=30 minutes. They do NOT use the normal Eve mission lifecycle.
+- Lua FightManager defines dedicated battle style WeekDungeon=24.
+- Scene62015 does not exist in Eve.emg, so no weekly enemies can be spawned through Eve.
+- IOS_DungeonCriteria is entry restrictions only; IOS_DungeonArea is display/region geometry only; IOS_WeekDungeon_C.dat is count=0. IL2CPP exposes bridge/runtime types but no weekly enemy formation table.
+- Searches of local PC/reference/old-server sources did not recover an authoritative 40-stage enemy formation table.
+- Therefore kind3/kind5 combat remains intentionally disabled. Do NOT remove the kind1-only validation until the backend-only formations are recovered.
+- Reward/progress data is nevertheless exact:
+  - kind3 weekly stage reward table -> item29845 x1 per stage.
+  - kind5 crazy weekly -> item29846 x stage index (1..20).
+  - weekly all-clear item34366 ("Hộp Bách Chiến Thiên Quan") data exists and is wired for future claim.
+- Official game notice says weekly progress resets every Monday 00:00 and each stage is independent, with stage reward + all-clear reward. Weekly reset persistence is NOT implemented yet because combat itself remains blocked.
+
+### Validation / production
+- New DungeonRewardLeaveRegressionTest covers timed reward boundaries, 100% single-dungeon row, weekly fixed table preservation, origin return, C13-4 priority and S47-12 UInt32 quantities.
+- Targeted dungeon regression: PASS 18/18 tasks.
+- Full local test build --rerun-tasks: PASS 21/21 before final zero-time guard; final targeted test after guard PASS 18/18.
+- Production fast-forwarded from 7050aff to edb5f86 through verified bundle. application.conf and operational files preserved.
+- Production full test build --rerun-tasks: BUILD SUCCESSFUL 21/21 in 3m31s.
+- Runtime restart: old game PID5724 stopped; new game Java PID7188.
+- IPv4 0.0.0.0:6613 and IPv6 [::]:6613 LISTEN on PID7188.
+- Startup ready at 07:01:42; IOS_Dungeon57, IOS_DungeonCombo180, Ground4469 and Eve3797 loaded.
+- Post-start cleanup restored tracked .kotlin/sessions; deployment bundle removed. Production source HEAD exactly edb5f86.
+
+### START NEXT — Weekly battle formation recovery / runtime user test
+1. User test normal dungeon reward + result + Leave button first.
+2. Recover authoritative WeekDungeon style24 enemy formations for IDs18..37 and63..82 from original backend source or official packet/runtime trace. Do not infer NPC IDs/positions/stats from videos alone.
+3. Once formations are locked, implement kind3/5 start, criteria, per-stage progress/weekly Monday reset, fixed stage reward, all-clear claim, then production test.
