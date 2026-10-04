@@ -70,6 +70,8 @@ class BattleManager(
      */
     var onBattleAbortCallback: ((GameSession) -> Unit)? = null
     var onBattleEndCallback: (suspend (GameSession, Long, Boolean) -> Unit)? = null
+    var onDungeonBattleAbortCallback: ((GameSession, Int) -> Unit)? = null
+    var onDungeonBattleEndCallback: (suspend (GameSession, Long, Boolean, Int) -> Unit)? = null
     /** Mọi trận đấu đang diễn ra (battleId → BattleInstance)*/
     private val battles = ConcurrentHashMap<Long, BattleInstance>()
 
@@ -1485,6 +1487,7 @@ class BattleManager(
     private suspend fun createPlayerFighter(
         session: GameSession,
         col: Int = BattleConstants.PLAYER_FRONT_COL,
+        row: Int = BattleConstants.CENTER_ROW,
         kind: Int = EHuman.PLAYER
     ): BattleFighter {
         val charId = session.roleId.toLong()
@@ -1550,7 +1553,7 @@ class BattleManager(
             kind = kind,
             name = session.characterName,
             col = col,
-            row = BattleConstants.CENTER_ROW,
+            row = row,
             maxHp = battleMaxHp,
             maxSp = battleMaxSp.toLong(),
             hp = state.hp.coerceIn(0L, battleMaxHp),
