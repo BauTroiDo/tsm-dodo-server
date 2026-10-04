@@ -136,13 +136,12 @@ class PartyHandler(
      */
     private suspend fun handleLeave(session: GameSession, playerId: Long, data: ByteArray) {
         // Dungeon UI deliberately overloads C:013-004 as "Leave Dungeon".
-        // Active dungeon semantics must win over ordinary party leave.
-        if (dungeonSystem?.getActiveRun(playerId) != null) {
-            if (dungeonSystem.exitActiveDungeon(session)) {
-                dungeonRooms?.leave(playerId)
-                logger.info { "${session.characterName} left active dungeon via C:013-004" }
-                return
-            }
+        // Intercept only while physically inside a DungeonData scene; the system
+        // also handles restart/relog recovery through Eve sceneInfo.
+        if (dungeonSystem?.exitDungeonFromHud(session) == true) {
+            dungeonRooms?.leave(playerId)
+            logger.info { "${session.characterName} left dungeon via C:013-004" }
+            return
         }
 
         val result = partySystem.leaveParty(playerId)

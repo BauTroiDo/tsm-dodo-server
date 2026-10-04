@@ -2767,3 +2767,27 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Full local `gradlew test build --rerun-tasks`: BUILD SUCCESSFUL, 21/21 tasks.
 - `git diff --check`: PASS.
 - Remaining activation blocker: authoritative positional formation plus exact round-objective settlement comparison.
+
+## 2026-10-04 — Dungeon leave HUD recovery — PASS
+
+### Root cause
+- DVT UIMain "Leave Dungeon" button calls `Dungeon.LeaveSinglePlayDungeon()` -> C:013-004, not C:047-010.
+- Server already intercepted C:013-004 only when an in-memory `ActiveDungeonRun` existed.
+- `activeRuns` is volatile; after server restart/relog, or any dungeon entry path that did not mark the run, the HUD button still appeared on a dungeon scene but C:013-004 fell through to ordinary party leave and effectively did nothing.
+
+### Fix
+- Added `DungeonSystem.exitDungeonFromHud(session)`.
+- C:013-004 is intercepted only while the player is physically inside a scene referenced by `DungeonData.sceneId`, so ordinary party leave outside dungeons is preserved.
+- If a matching active run exists, return to the exact captured pre-entry map/x/y/instance.
+- If the run was lost, fallback uses DVT Eve `sceneInfo.backgroundNo + playerAppearX/Y` through `SpecialSceneTeleportService.exitSpecialScene()`; no hard-coded return map.
+- PartyHandler now routes C:013-004 through this robust HUD exit path first.
+
+### Validation
+- Extended `DungeonRewardLeaveRegressionTest`:
+  - active-run leave still returns to captured origin;
+  - lost-run/restart fallback exits through Eve sceneInfo;
+  - C:013-004 inside dungeon prefers dungeon exit over party leave;
+  - C:013-004 outside dungeon still falls through to PartySystem.
+- Targeted regression: BUILD SUCCESSFUL, 18/18 tasks.
+- Full local `gradlew test build --rerun-tasks`: BUILD SUCCESSFUL, 21/21 tasks.
+- `git diff --check`: PASS.

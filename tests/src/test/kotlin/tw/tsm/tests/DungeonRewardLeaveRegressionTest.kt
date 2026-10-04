@@ -14,7 +14,6 @@ import tw.tsm.data.loaders.DungeonComboDatLoader
 import tw.tsm.data.loaders.DungeonDatLoader
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.ResponseSender
-import tw.tsm.gamelogic.systems.ActiveDungeonRun
 import tw.tsm.gamelogic.systems.DailyProgressSystem
 import tw.tsm.gamelogic.systems.DungeonRoomRegistry
 import tw.tsm.gamelogic.systems.DungeonSettlement
@@ -93,7 +92,25 @@ class DungeonRewardLeaveRegressionTest {
     }
 
     @Test
-    fun c13LeavePrefersActiveDungeonOverPartyLeave() = runBlocking {
+    fun hudExitFallsBackToEveSceneInfoWhenActiveRunWasLost() = runBlocking {
+        val special = mockk<SpecialSceneTeleportService>()
+        val defs = DungeonDatLoader.load(dataBytes("Data-ios", "IOS_Dungeon_C.dat"))
+        val sceneId = defs.getValue(2).sceneId
+        val session = mockk<GameSession>(relaxed = true)
+        every { session.playerId } returns 994L
+        every { session.mapId } returns sceneId
+        every { session.battleId } returns 0L
+        coEvery { special.exitSpecialScene(session, sceneId) } returns true
+
+        val system = system(special)
+        assertNull(system.getActiveRun(994L))
+        assertTrue(system.exitDungeonFromHud(session))
+
+        coVerify(exactly = 1) { special.exitSpecialScene(session, sceneId) }
+    }
+
+    @Test
+    fun c13LeavePrefersDungeonHudExitOverPartyLeave() = runBlocking {
         val party = mockk<PartySystem>(relaxed = true)
         val world = mockk<WorldManager>(relaxed = true)
         val sender = mockk<ResponseSender>(relaxed = true)
@@ -101,8 +118,7 @@ class DungeonRewardLeaveRegressionTest {
         val rooms = mockk<DungeonRoomRegistry>(relaxed = true)
         val session = mockk<GameSession>(relaxed = true)
         every { session.playerId } returns 992L
-        every { dungeon.getActiveRun(992L) } returns ActiveDungeonRun(2, 46000.0, 0)
-        coEvery { dungeon.exitActiveDungeon(session) } returns true
+        coEvery { dungeon.exitDungeonFromHud(session) } returns true
 
         val handler = PartyHandler(
             party,
@@ -114,8 +130,30 @@ class DungeonRewardLeaveRegressionTest {
         )
         handler.handle(session, 4, ByteArray(8))
 
-        coVerify(exactly = 1) { dungeon.exitActiveDungeon(session) }
+        coVerify(exactly = 1) { dungeon.exitDungeonFromHud(session) }
         verify(exactly = 0) { party.leaveParty(any()) }
+    }
+
+    @Test
+    fun c13LeaveStillFallsThroughToPartyOutsideDungeon() = runBlocking {
+        val party = mockk<PartySystem>(relaxed = true)
+        val dungeon = mockk<DungeonSystem>()
+        val session = mockk<GameSession>(relaxed = true)
+        every { session.playerId } returns 993L
+        coEvery { dungeon.exitDungeonFromHud(session) } returns false
+
+        val handler = PartyHandler(
+            party,
+            mockk<WorldManager>(relaxed = true),
+            mockk<ResponseSender>(relaxed = true),
+            mockk<DailyProgressSystem>(relaxed = true),
+            dungeon,
+            mockk<DungeonRoomRegistry>(relaxed = true),
+        )
+        handler.handle(session, 4, ByteArray(8))
+
+        coVerify(exactly = 1) { dungeon.exitDungeonFromHud(session) }
+        verify(exactly = 1) { party.leaveParty(993L) }
     }
 
     @Test

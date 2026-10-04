@@ -113,6 +113,41 @@ class DungeonSystem(
         }
     }
 
+    /**
+     * C:013-004 from UIMain's "Leave Dungeon" button.
+     *
+     * The packet is also used by normal party leave, so only intercept it while
+     * the character is physically inside a scene referenced by DungeonData.
+     *
+     * Prefer the captured pre-entry position. If the in-memory ActiveDungeonRun
+     * was lost by a server restart/relog, fall back to the authoritative Eve
+     * sceneInfo exit (backgroundNo + playerAppearX/Y) instead of hard-coding a map.
+     */
+    suspend fun exitDungeonFromHud(session: GameSession): Boolean {
+        if (session.battleId != 0L) return false
+
+        val currentDungeon = defs.values.firstOrNull { it.sceneId == session.mapId }
+            ?: return false
+        val run = activeRuns[session.playerId]
+
+        if (run != null && run.dungeonId == currentDungeon.id && run.originMapId > 0) {
+            specialTeleport.teleport(
+                session,
+                run.originMapId,
+                run.originX,
+                run.originY,
+                run.originInstanceId,
+            )
+            activeRuns.remove(session.playerId, run)
+            return true
+        }
+
+        val exited = specialTeleport.exitSpecialScene(session, session.mapId)
+        if (exited) activeRuns.remove(session.playerId)
+        return exited
+    }
+
+    /** Kept for tests/callers that explicitly require an active-run-only exit. */
     suspend fun exitActiveDungeon(session: GameSession): Boolean {
         val run = activeRuns[session.playerId] ?: return false
         if (session.battleId != 0L || run.originMapId <= 0) return false
