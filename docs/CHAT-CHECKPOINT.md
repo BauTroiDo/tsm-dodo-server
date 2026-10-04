@@ -3020,3 +3020,14 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
   - dailyFlag12344 increments by 1 so remaining attempts becomes 0/1 for the day;
   - S:047-012 result packet carries the reward list;
   - server log should contain `Dungeon 6 settled: remaining=... rewards=... dailyFlag=12344`.
+
+## 2026-10-05 — Treasure reward production retest — SERVER RUNTIME PASS
+
+- Read the entire checkpoint before continuing. Verified that gameplay fix d4387a9 was built and restarted before this retest; c13f469 only adds documentation.
+- The previous missing-reward trace predates that restart. A fresh production run now confirms three distinct chest clicks advance mission12330 2->3->4->5, terminal Eve completes12330 and increments12321/12331, then the non-battle completion hook settles the reward.
+- Actual settlement: remaining457s, turn0, item45664 x1; dailyFlag12344 advances0->1. Reward settlement is SERVER RUNTIME PASS; user confirmation of client dialog/bag visibility remains separate.
+- Normal dungeon6 uses DungeonData lootTable7 / DungeonComboData, including Lua rebirth fallback. EternalDungeonPrizeData is for the separate Eternal subsystem. Kotlin S47-12 item UInt16/quantity UInt32 matches Lua. No reward or formula was changed or invented.
+- Dungeon/Combo production data match regression input. Packed Eve files differ between environments; do not claim whole-file identity. The actual production trace independently confirms the tested treasure terminal behavior.
+- Fresh targeted regression: BridgeEventRelease3 + DungeonF3BData4 + DungeonMiniGameFlowRegression3 + DungeonRewardLeaveRegression12 =22 tests, zero failures/errors; BUILD SUCCESSFUL18/18 tasks; diff check PASS. Existing full build/startup PASS remains valid; no new gameplay patch or restart is needed.
+- Existing untracked scratch/bundles/staging helper were preserved and excluded. Restored only the tracked compiler session file removed by this test run.
+- Next: record user confirmation of client reward display; preserve 3-chest/progression PASS and d4387a9 gameplay baseline.
