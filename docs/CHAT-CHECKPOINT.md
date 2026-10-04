@@ -2962,6 +2962,27 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
   - scene62007 Tìm Ba Đậu Yêu should auto-run entry script on scene-ready, then each found NPC must Talk/Battle, win increments mission12358, step-specific talk runs, current NPC hides and one weighted next NPC shows; third win terminates without a fourth spawn.
   - scene62003 Tìm bảo rương should auto-run Door entry script on scene-ready, show four weighted treasure chest placements and advance mission12330 1->2; subsequent chest clicks should advance the same EveNo phases.
 
+## 2026-10-05 — Treasure reward settlement follow-up
+
+- User runtime test confirmed treasure finding/count progression is now correct, but no completion reward was granted.
+- Fresh production trace of the successful run proves the terminal Eve path:
+  - mission12330 4->5;
+  - pStyle3 completes/removes mission12330;
+  - Eve advances mission12321 +1 and mission12331 0->1;
+  - no item/reward settlement occurred before leaving the dungeon.
+- DVT DungeonData id6: kind2, scene62003, missionFlag=12330, dayilyFlag=12344, dayilyCount=1, time=10 minutes, lootTable=7, extraLoot=0.
+- DVT DungeonCombo lootTable7 has three remaining-time rows: kindValue 200/400/600 seconds. For turn0 the rewards are 45661 x1, 45662 x1, 45664 x1 respectively; turn1/2/3 use their configured rebirth bags via DungeonComboData:GetReward fallback semantics.
+- Existing DungeonSystem.resolveRewards already matched DVT; existing settleAfterBattle already performed exact bag mutation and S:047 result construction.
+- Root cause: settleAfterBattle was invoked only from BattleManager.onBattleEnd. Treasure dungeon completes through a ClickNpc/Eve chain with no terminal battle, so it never entered settlement.
+- Fix in progress: EveFlowController exposes an app-layer completion hook only after the full Eve chain/auto-chain is terminal. ServerModule routes that hook to DungeonSystem.settleAfterEvent(), which reuses the existing settlement/reward path. Mission still active => no-op, so intermediate chest events cannot award.
+- Successful settlement also increments DungeonData.dayilyFlag (12344 for dungeon6) exactly once and syncs the mission step, because UIDungeon reads this Mark to derive remaining daily attempts while the Eve script itself never mutates it.
+- Idempotence remains protected by ActiveDungeonRun.settled, so the later BattleManager settlement callback cannot double-award.
+- Added regression for dungeon6 non-battle settlement: with 500 seconds remaining and turn0 it awards item45664 x1, increments dailyFlag12344, marks the run settled, and a second settlement attempt returns null.
+- Added EveFlowController regression proving a terminal non-battle event invokes the completion hook exactly once.
+- Targeted reward/mini-game/callback suite: BUILD SUCCESSFUL, 18/18 tasks.
+- Full local `gradlew test build --rerun-tasks`: BUILD SUCCESSFUL, 21/21 tasks.
+- Production deployment pending below.
+
 ## 2026-10-05 — Production deploy treasure progression e5f5f4c — VERIFIED
 
 - Commit: `e5f5f4c fix: keep treasure dungeon progression in Eve order`; pushed to `origin/main`.

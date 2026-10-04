@@ -27,6 +27,7 @@ import tw.tsm.gamelogic.systems.DungeonSceneTimer
 import tw.tsm.gamelogic.systems.DungeonSettlement
 import tw.tsm.gamelogic.systems.DungeonSystem
 import tw.tsm.gamelogic.systems.EveTriggerRouter
+import tw.tsm.gamelogic.systems.InventorySystem
 import tw.tsm.gamelogic.systems.PartySystem
 import tw.tsm.gamelogic.systems.QuestSystem
 import tw.tsm.gamelogic.systems.SpecialSceneTeleportService
@@ -62,6 +63,59 @@ class DungeonRewardLeaveRegressionTest {
         assertEquals(listOf(46923 to 3), system.resolveRewards(15, 0, 1000, true))
         assertEquals(listOf(46924 to 3), system.resolveRewards(16, 0, 1000, true))
         assertEquals(listOf(32649 to 3), system.resolveRewards(17, 0, 1000, true))
+    }
+
+    @Test
+    fun treasureNonBattleSettlementAwardsTierAndConsumesDailyCount() = runBlocking {
+        val defs = DungeonDatLoader.load(dataBytes("Data-ios", "IOS_Dungeon_C.dat"))
+        val combos = DungeonComboDatLoader.load(dataBytes("Data-ios", "IOS_DungeonCombo_C.dat"))
+        val quests = mockk<QuestSystem>()
+        val inventory = mockk<InventorySystem>()
+        val sender = mockk<ResponseSender>(relaxed = true)
+        val session = mockk<GameSession>(relaxed = true)
+        var now = 1_000_000L
+
+        every { session.playerId } returns 1001L
+        every { session.roleId } returns 1001
+        every { session.mapId } returns 12007
+        every { session.x } returns 90
+        every { session.y } returns 120
+        every { session.instanceId } returns 0
+        every { session.turn } returns 0
+
+        coEvery { quests.getMissions(1001L) } returns emptyList()
+        coEvery { quests.addMissionStep(1001L, 12344, 1) } returns 0
+        coEvery { inventory.addRewardsToBagExact(1001L, listOf(45664 to 1)) } returns emptyList()
+
+        val dungeon = DungeonSystem(
+            defs,
+            quests,
+            mockk<PartySystem>(relaxed = true),
+            mockk<SpecialSceneTeleportService>(relaxed = true),
+            responseSender = sender,
+            comboDefs = combos,
+            inventorySystem = inventory,
+            clockMillis = { now },
+        )
+        dungeon.markSingleStarted(session, 6, 46_000.0)
+        now = 1_100_000L
+
+        val settlement = dungeon.settleAfterEvent(session)
+        assertEquals(6, settlement?.dungeonId)
+        assertEquals(0, settlement?.result)
+        assertEquals(listOf(45664 to 1), settlement?.rewards)
+        assertEquals(true, dungeon.getActiveRun(1001L)?.settled)
+
+        coVerify(exactly = 1) {
+            inventory.addRewardsToBagExact(1001L, listOf(45664 to 1))
+        }
+        coVerify(exactly = 1) { quests.addMissionStep(1001L, 12344, 1) }
+        verify(exactly = 1) { sender.sendAddMissionStep(session, 12344, 1) }
+
+        assertNull(dungeon.settleAfterEvent(session))
+        coVerify(exactly = 1) {
+            inventory.addRewardsToBagExact(1001L, listOf(45664 to 1))
+        }
     }
 
     @Test

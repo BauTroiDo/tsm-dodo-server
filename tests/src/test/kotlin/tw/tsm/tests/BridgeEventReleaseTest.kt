@@ -29,6 +29,17 @@ class BridgeEventReleaseTest {
         coVerify(exactly = 0) { quests.insertCompletedEvent(any(), any(), any()) }
         assertEquals(0, state.getCompletedEveCounts(31, 63000)[4] ?: 0)
     }
+    @Test fun terminalNonBattleEventInvokesCompletionHookOnce() = runTest {
+        val f = flow()
+        var completed = 0
+        f.onEventCompleted = { completed++ }
+        state.activate(31, EventSession(63000, 4, 10, results = emptyList()))
+        f.advanceEvent(session)
+        assertEquals(1, completed)
+        assertNull(state.getSession(31))
+        verify(exactly = 1) { response.sendEventEnd(session) }
+    }
+
     @Test fun classLoadingFailureClearsAwaitedBattleAndAllowsRetry() = runTest {
         activate(); val f = flow()
         BattleEventContinuation.run({ throw NoClassDefFoundError("EveMissionResultOperation") }, { f.abortAfterBattle(session) })

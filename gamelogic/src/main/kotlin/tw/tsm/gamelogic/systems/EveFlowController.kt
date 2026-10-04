@@ -40,6 +40,8 @@ class EveFlowController(
     private val eveData: Map<Int, SceneEveData>,
     private val npcShopManager: NpcShopManager
 ) {
+    /** App-layer hook for terminal Eve completion (dungeon settlement, etc.). */
+    var onEventCompleted: (suspend (GameSession) -> Unit)? = null
 
     /**
      * Bắt đầu phân phát result đầu tiên (được [EveTriggerRouter] gọi)
@@ -541,6 +543,7 @@ class EveFlowController(
             }
         }
 
+        if (completedSession != null) notifyEventCompleted(session)
         responseSender.sendEventEnd(session)
     }
 
@@ -550,7 +553,8 @@ class EveFlowController(
      * Dùng cho các tình huống dịch chuyển Door, thua trận, hủy Surface, v.v.
      */
     private suspend fun finalCompleteAndEnd(session: GameSession, charId: Long) {
-        completeEventInternal(charId)
+        val completedSession = completeEventInternal(charId)
+        if (completedSession != null) notifyEventCompleted(session)
         responseSender.sendEventEnd(session)
     }
 
@@ -605,6 +609,15 @@ class EveFlowController(
             logger.info { "${session.characterName} lưu điểm kiểm tra: mapId=$mapId ($x,$y)" }
         } catch (e: Exception) {
             logger.error(e) { "${session.characterName} lưu điểm kiểm tra thất bại: mapId=$mapId ($x,$y)" }
+        }
+    }
+
+    private suspend fun notifyEventCompleted(session: GameSession) {
+        val callback = onEventCompleted ?: return
+        try {
+            callback(session)
+        } catch (e: Exception) {
+            logger.error(e) { "${session.characterName} callback hoàn tất Eve thất bại" }
         }
     }
 

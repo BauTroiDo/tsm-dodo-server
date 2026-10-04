@@ -519,7 +519,15 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { EveDoorWarpService(get(), get(), get(), get<EveEventStateMachine>(), get<GameDataManager>().eveData) }
     single { EveBattleService(get(), get<EveEventStateMachine>(), get(), get<GameDataManager>().mapTerrains, get<GameDataManager>().eveData) }
     single { NpcShopManager() }
-    single { EveFlowController(get(), get<EveEventStateMachine>(), get(), get(), get(), get(), get(), get(), get(), get(), get<GameDataManager>().eveData, get()) }
+    single {
+        EveFlowController(get(), get<EveEventStateMachine>(), get(), get(), get(), get(), get(), get(), get(), get(), get<GameDataManager>().eveData, get()).also { flow ->
+            flow.onEventCompleted = { session ->
+                get<DungeonSystem>().settleAfterEvent(session)?.let { settlement ->
+                    get<DungeonHandler>().sendDungeonResult(session, settlement)
+                }
+            }
+        }
+    }
     single { EveTriggerRouter(get<EveEventStateMachine>(), get(), get(), get(), get(), get<GameDataManager>().eveData) }
     single {
         MineEncounterSystem(

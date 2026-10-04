@@ -405,9 +405,13 @@ class DungeonSystem(
         return result
     }
 
+    /** Non-battle Eve completion uses the exact same terminal settlement path. */
+    suspend fun settleAfterEvent(session: GameSession): DungeonSettlement? =
+        settleAfterBattle(session, playerWin = true)
+
     /**
-     * Called after Eve resumeAfterBattle has applied terminal mission results.
-     * Intermediate fights keep missionFlag active and therefore do not settle.
+     * Called after Eve has applied terminal mission results.
+     * Intermediate fights/events keep missionFlag active and therefore do not settle.
      */
     suspend fun settleAfterBattle(session: GameSession, playerWin: Boolean): DungeonSettlement? {
         val playerId = session.playerId
@@ -445,13 +449,32 @@ class DungeonSystem(
             return DungeonSettlement(def.id, result = 1)
         }
 
-        val changed = inventory.addRewardsToBagExact(session.roleId.toLong(), rewards)
+        val charId = session.roleId.toLong()
+        val changed = inventory.addRewardsToBagExact(charId, rewards)
         if (changed == null) {
             dungeonLogger.warn { "Dungeon reward could not fit bag dungeon=${def.id} rewards=$rewards" }
             return DungeonSettlement(def.id, result = 1)
         }
 
+        // DVT UIDungeon derives "remaining daily attempts" from DungeonData.dayilyFlag.
+        // Eve mission scripts complete missionFlag but do not mutate this counter, so the
+        // server must record one successful use at settlement time.
+        if (def.dailyFlag > 0 && def.dailyCount > 0) {
+            val used = questSystem.getMissions(charId)
+                .firstOrNull { it.missionId == def.dailyFlag }
+                ?.step ?: 0
+            if (used < def.dailyCount) {
+                val previous = questSystem.addMissionStep(charId, def.dailyFlag, 1)
+                if (previous != null) {
+                    responseSender?.sendAddMissionStep(session, def.dailyFlag, 1)
+                }
+            }
+        }
+
         for ((slot, thing) in changed) responseSender?.sendSetBagItem(session, slot, thing, showMsg = true)
+        dungeonLogger.info {
+            "Dungeon ${def.id} settled: remaining=${remainingSeconds}s turn=${session.turn} rewards=$rewards dailyFlag=${def.dailyFlag}"
+        }
         return DungeonSettlement(def.id, result = 0, rewards = rewards)
     }
 
