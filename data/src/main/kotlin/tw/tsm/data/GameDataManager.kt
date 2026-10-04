@@ -99,6 +99,14 @@ class GameDataManager(
     var npcSoulDefs: Map<Int, NpcSoulDef> = emptyMap()
         private set
 
+    /** DVT chuyên võ: itemId -> enhanceLevel -> skill/attribute row. */
+    var exclusiveWeaponDefs: Map<Int, Map<Int, ExclusiveWeaponDef>> = emptyMap()
+        private set
+
+    /** DVT ownership groups used by ExclusiveWeapon.CheckExclusiveWarrior. */
+    var collectWarriorSortDefs: List<CollectWarriorSortDef> = emptyList()
+        private set
+
     var dungeonComboDefs: Map<Int, List<DungeonComboDef>> = emptyMap()
         private set
 
@@ -474,6 +482,17 @@ class GameDataManager(
             logger.info { "Nạp IOS_NpcSoul xong: ${npcSoulDefs.size} Hồn" }
         }
 
+        // DVT ExclusiveWeapon.GetSkill / CheckExclusiveWarrior — full FollowNpc skill lookup.
+        loadFile(dataIosDir, "IOS_ExclusiveWeapon_C.dat") { bytes ->
+            exclusiveWeaponDefs = ExclusiveWeaponDatLoader.load(bytes)
+            val rows = exclusiveWeaponDefs.values.sumOf { it.size }
+            logger.info { "Nạp IOS_ExclusiveWeapon xong: $rows bản ghi, ${exclusiveWeaponDefs.size} vũ khí" }
+        }
+        loadFile(dataIosDir, "IOS_CollectWarriorSort_C.dat") { bytes ->
+            collectWarriorSortDefs = CollectWarriorSortDatLoader.load(bytes)
+            logger.info { "Nạp IOS_CollectWarriorSort xong: ${collectWarriorSortDefs.size} nhóm" }
+        }
+
         // UITeleport — cùng hai bảng client DVT dùng cho LimitFightArea / Turn navigation.
         loadFile(dataIosDir, "IOS_LimitTimeDungeon_C.dat") { bytes ->
             limitTimeDungeonDefs = LimitTimeDungeonDatLoader.load(bytes)
@@ -740,10 +759,16 @@ class GameDataManager(
             logger.info { "Nạp LeaderbordInfo xong: ${leaderboardDefs.size} bản ghi" }
         }
 
-        // NpcUpgrade (Định nghĩa tăng cường tướng)
-        loadFile(dataDir, "NpcUpgrade_C.dat") { bytes ->
-            npcUpgradeDefs = NpcUpgradeDatLoader.load(bytes)
-            logger.info { "Nạp NpcUpgrade xong: ${npcUpgradeDefs.size} bản ghi" }
+        // NpcUpgrade — Mobile DVT DataManager đọc Data/IOS_NpcUpgrade_C.dat.
+        val iosNpcUpgrade = dataIosDir.resolve("IOS_NpcUpgrade_C.dat")
+        if (Files.isRegularFile(iosNpcUpgrade)) {
+            npcUpgradeDefs = NpcUpgradeDatLoader.load(Files.readAllBytes(iosNpcUpgrade))
+            logger.info { "Nạp IOS_NpcUpgrade xong: ${npcUpgradeDefs.size} bản ghi source=$iosNpcUpgrade" }
+        } else {
+            loadFile(dataDir, "NpcUpgrade_C.dat") { bytes ->
+                npcUpgradeDefs = NpcUpgradeDatLoader.load(bytes)
+                logger.warn { "IOS_NpcUpgrade_C.dat không tồn tại, fallback NpcUpgrade_C.dat: ${npcUpgradeDefs.size} bản ghi" }
+            }
         }
 
         // UISell (Định nghĩa tiêu hao giao diện)

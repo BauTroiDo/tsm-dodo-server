@@ -82,25 +82,64 @@ class DungeonWeeklyQualificationSafeTest {
     }
 
     @Test
-    fun `skill gates remain unsupported while Soul gates use protocol120 state`() {
-        val requireSkill = DvtWeeklyQualification.checkEntry(dungeons.getValue(28), pet(10012), npcs)
-        assertEquals(DvtWeeklyQualification.Status.UNSUPPORTED, requireSkill.status)
-        assertEquals(4, requireSkill.unsupportedKind)
-
-        val forbidSkill = DvtWeeklyQualification.checkEntry(dungeons.getValue(35), pet(41202), npcs)
-        assertEquals(DvtWeeklyQualification.Status.UNSUPPORTED, forbidSkill.status)
-        assertEquals(5, forbidSkill.unsupportedKind)
-
-        // Dungeon63 has Soul element + forbidden-skill criteria. Once Soul kind8 is supported,
-        // the remaining evidence blocker must be kind5 rather than kind8.
-        val mixed = DvtWeeklyQualification.checkEntry(
-            dungeons.getValue(63),
-            pet(10012),
-            npcs,
-            soul(10012, element = 1, level = 1),
+    fun `skill gates mirror DVT required and forbidden Soul interaction`() {
+        val source = npcs.entries.first { (it.value.skills.firstOrNull() ?: 0) > 0 }
+        val skillId = source.value.skills[0]
+        val learned = FollowNpcData(
+            slotIndex = 1,
+            npcId = source.key,
+            skill1Lv = 1,
+            isDeployed = true,
         )
-        assertEquals(DvtWeeklyQualification.Status.UNSUPPORTED, mixed.status)
-        assertEquals(5, mixed.unsupportedKind)
+        val requireStage = dungeons.getValue(18).copy(
+            needPar = listOf(DungeonNeedDef(4, skillId)),
+        )
+
+        // No Soul equipped: base GetSkillLv > 0 is enough.
+        assertEquals(
+            DvtWeeklyQualification.Status.OK,
+            DvtWeeklyQualification.checkEntry(requireStage, learned, npcs).status,
+        )
+
+        // Exact DVT oddity: once a Soul is equipped, required-skill kind4 also
+        // requires that same skill to exist on the Soul.
+        assertEquals(
+            DvtWeeklyQualification.Status.RESTRICTION_FAILED,
+            DvtWeeklyQualification.checkEntry(
+                requireStage,
+                learned,
+                npcs,
+                soul(source.key, element = 1, level = 1),
+            ).status,
+        )
+        val soulWithSkill = soul(source.key, element = 1, level = 1).copy(
+            skills = listOf(
+                tw.tsm.domain.valueobjects.SoulSkillData(skillId, 1),
+                tw.tsm.domain.valueobjects.SoulSkillData(),
+                tw.tsm.domain.valueobjects.SoulSkillData(),
+                tw.tsm.domain.valueobjects.SoulSkillData(),
+            ),
+        )
+        assertEquals(
+            DvtWeeklyQualification.Status.OK,
+            DvtWeeklyQualification.checkEntry(requireStage, learned, npcs, soulWithSkill).status,
+        )
+
+        val forbidStage = requireStage.copy(
+            needPar = listOf(DungeonNeedDef(5, skillId)),
+        )
+        assertEquals(
+            DvtWeeklyQualification.Status.RESTRICTION_FAILED,
+            DvtWeeklyQualification.checkEntry(forbidStage, learned, npcs).status,
+        )
+        assertEquals(
+            DvtWeeklyQualification.Status.OK,
+            DvtWeeklyQualification.checkEntry(
+                forbidStage,
+                learned.copy(skill1Lv = 0),
+                npcs,
+            ).status,
+        )
     }
 
     @Test

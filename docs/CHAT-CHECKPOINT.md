@@ -3242,3 +3242,47 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
   - full gradlew test build --rerun-tasks: BUILD SUCCESSFUL, 21/21 tasks.
 - Gradle compiler-session deletion was restored exactly; pre-existing scratch/bundle files remain untouched.
 - No production deploy/restart for A4. Next safe work: separately audit a verified Soul acquisition path (gacha/mail/GM/web) or complete the full skill qualification contract before wiring Soul dungeon entry. Do not remove the weekly kind guard until dedicated kind3/5 combat is complete.
+
+
+## 2026-10-05 — Soul Foundation A5 — ACQUISITION AUDIT + FULL SKILL QUALIFICATION PASS
+
+- Scope followed A4 checkpoint: first audit a verified Soul acquisition path; because creation semantics remain incomplete, do NOT fabricate Soul generation. Then complete the safe alternative: full `RoleController:GetSkillLv` qualification contract for dungeon needPar kinds 4/5.
+- Soul acquisition evidence locked:
+  - `S:120-008` result values from Lua DVT: 1=login, 2=gacha, 3=mail, 4=GM, 5=web.
+  - Doro/Mall uses `ECurrency.Soul=10` and `ColorSoul=11`.
+  - Doro Soul pools resolve through BlissBag tiers: 32994(N), 32995(R), 34073(SR), 34074(SSR), then to actual Soul item IDs 595xx.
+  - Example tier weights from current DVT data: normal Soul draw 6000/2900/1000/100; ColorSoul 7000/3000 for SR/SSR.
+  - TextData 23837 confirms Soul quality changes base stats / level cap / skill count; each strengthen level adds 2 random points across six stats.
+- Acquisition remains EVIDENCE-BLOCKED:
+  - DVT client/data still do not expose the authoritative algorithm that distributes `SoulDef.startPoint` into the six `startAtt` fields at creation.
+  - DVT client/data still do not expose the authoritative rule choosing initial Soul skill IDs for each probabilistic slot.
+  - Therefore no gacha/mail/GM/web Soul-creation mutation was added. Do not invent equal/random distribution or NPC-derived skills.
+- Full FollowNpc skill lookup implemented as `DvtFollowNpcSkillLookup`, preserving Lua order:
+  1. normal 3 slots (including immediate return of level 0 on ID match),
+  2. learned special skill,
+  3. upgrade skill,
+  4. exclusive-weapon skill,
+  5. passive skill,
+  6. Soul-only skill.
+- `DvtWeeklyQualification` kinds 4/5 now mirror exact `Dungeon.CheckForQualification` semantics:
+  - kind4: `GetSkillLv(skill)>0`, and when a Soul is equipped that Soul must also contain the required skill;
+  - kind5: reject when either `GetSkillLv(skill)>0` OR the equipped Soul contains the forbidden skill.
+- Exclusive weapon data is no longer missing in this workspace:
+  - `IOS_ExclusiveWeapon_C.dat`: 692 rows × 29 bytes; 686 unique (itemId, enhanceLv) keys because item 64524 duplicates lv0..5. Lua uses last-row-wins table assignment, and Kotlin loader now matches it.
+  - `IOS_CollectWarriorSort_C.dat`: 567 rows × 9 bytes, used for `ExclusiveWeapon.CheckExclusiveWarrior` ownership.
+  - Added domain models/loaders and GameDataManager loading for both tables.
+- Corrected NpcUpgrade source to the authoritative DVT `IOS_NpcUpgrade_C.dat` when present, with fallback to legacy `NpcUpgrade_C.dat`. Current DVT table has 15 rows; its `skillLv` values are all 0, which is preserved rather than guessed.
+- Regression:
+  - `DvtFullSkillQualificationTest` covers real DAT sizes/duplicate semantics plus normal/special/upgrade/passive/Soul/exclusive-weapon lookup behavior.
+  - `DungeonWeeklyQualificationSafeTest` now covers required/forbidden skill gates including the exact Soul interaction.
+  - Existing `SoulA4ReadOnlyIntegrationTest` remains green.
+- Validation:
+  - targeted A5/A4 qualification suite: PASS, 10 tests.
+  - full `gradlew test build --rerun-tasks`: BUILD SUCCESSFUL, 21/21 tasks.
+  - `git diff --check`: PASS.
+  - Gradle-deleted tracked `.kotlin/sessions/kotlin-compiler-10369008480978718564.salive` restored exactly.
+- Runtime boundary:
+  - `DvtWeeklyQualification.checkEntry` is still only exercised by tests; it is NOT wired into room creation/runtime yet.
+  - Weekly kind3 / Soul kind5 battle lifecycle remains blocked by dedicated combat/formation/objective implementation.
+  - No production deploy/restart for A5.
+- Next safe work: either continue evidence search for authoritative Soul creation stat/skill initialization, or wire qualification into the dedicated kind3/kind5 room path only after those battle lifecycles are implemented. Do not remove the existing kind guard merely because kinds4/5 are now evaluable.
