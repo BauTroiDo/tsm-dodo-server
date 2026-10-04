@@ -2745,3 +2745,25 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Full local `gradlew test build --rerun-tasks`: BUILD SUCCESSFUL, 21/21 tasks.
 - `git diff --check`: PASS.
 - Next blocker remains authoritative WeekDungeon formation placement/order and exact round-settlement boundary before kind3 combat can be wired.
+
+## 2026-10-04 — Dungeon F4-B2 — WeekDungeon style + order-safe membership API — PASS
+
+### Evidence / safety boundary
+- DVT `FightManager.lua` directly defines `EFFWar_Style.WeekDungeon = 24`.
+- No audited DVT Lua/data/backend source exposes exact front/back/row positions for Bách Chiến.
+- Public/server-source searches did not recover a stronger DVT-specific formation table. PC source still only provides generic 5+5 list placement and therefore remains insufficient to declare DVT weekly order.
+- The reconstructed Bách Chiến roster membership remains high-confidence, but membership must not be treated as positional order.
+
+### Implementation
+- Added `EWarStyle.WEEK_DUNGEON = 24` from exact DVT Lua.
+- Added pure, unwired `DvtBachChienMembership`.
+- The helper returns a `Set<Int>`, intentionally preventing list order from being interpreted as front/back placement.
+- Stages1..19 map to ten-NPC sets beginning at 40258; stage20 maps to 40448..40455 + 40480..40481.
+- No battle creation, placement, weekly progress/reward, or Soul behavior was enabled.
+
+### Validation
+- Extended `DungeonWeeklyFormationDataTest` to lock warStyle24 and helper membership for all20 stages while continuing to assert real DVT NPC rows/names/elements.
+- Targeted formation test: BUILD SUCCESSFUL, 18/18 Gradle tasks.
+- Full local `gradlew test build --rerun-tasks`: BUILD SUCCESSFUL, 21/21 tasks.
+- `git diff --check`: PASS.
+- Remaining activation blocker: authoritative positional formation plus exact round-objective settlement comparison.

@@ -122,6 +122,7 @@ object EWarStyle {
     const val CITY_PK = 5           // Công thành
     const val LIFE_PK = 11          // PK sinh tồn
     const val WORLD_BOSS = 16       // World Boss
+    const val WEEK_DUNGEON = 24     // DVT FightManager.lua: EFFWar_Style.WeekDungeon
     const val NEW_CHAOS_5V5 = 17    // Hỗn chiến mới
     const val NEW_MIX_5V5 = 26      // Hỗn PvP không giới hạn
     const val NEW_CHAOS_5V5_100 = 27 // Hỗn chiến không giới hạn 100LV

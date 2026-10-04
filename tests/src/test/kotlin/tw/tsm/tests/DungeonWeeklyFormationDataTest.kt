@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import tw.tsm.data.loaders.NpcDatLoader
+import tw.tsm.domain.constants.EWarStyle
+import tw.tsm.gamelogic.systems.DvtBachChienMembership
 
 /**
  * Data-only lock for the reconstructed Bách Chiến Thiên Quan NPC membership.
@@ -26,6 +28,20 @@ class DungeonWeeklyFormationDataTest {
         }
         20 -> listOf(40448, 40449, 40450, 40451, 40452, 40453, 40454, 40455, 40480, 40481)
         else -> emptyList()
+    }
+
+    @Test
+    fun `DVT client locks weekly battle style twenty four`() {
+        assertEquals(24, EWarStyle.WEEK_DUNGEON)
+    }
+
+    @Test
+    fun `pure membership helper preserves roster without asserting battle placement`() {
+        for (stage in 1..20) {
+            assertEquals(membership(stage).toSet(), DvtBachChienMembership.enemyIds(stage), "stage $stage")
+        }
+        assertEquals(null, DvtBachChienMembership.enemyIds(0))
+        assertEquals(null, DvtBachChienMembership.enemyIds(21))
     }
 
     @Test
