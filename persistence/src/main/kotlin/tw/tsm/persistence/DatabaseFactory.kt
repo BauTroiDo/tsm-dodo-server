@@ -11,6 +11,7 @@ import tw.tsm.persistence.tables.CharacterAstrolabes
 import tw.tsm.persistence.tables.CharacterBitFlags
 import tw.tsm.persistence.tables.CharacterMissionFlags
 import tw.tsm.persistence.tables.CharacterDungeonDays
+import tw.tsm.persistence.tables.CharacterDungeonWeeks
 import tw.tsm.persistence.tables.CharacterMissions
 import tw.tsm.persistence.tables.CharacterCompletedEvents
 import tw.tsm.persistence.tables.CharacterCollectionCards
@@ -74,7 +75,7 @@ object DatabaseFactory {
             SchemaUtils.createMissingTablesAndColumns(
                 Accounts, Characters, Inventories, CharacterMoney, CharacterCurrencies,
                 CharacterAstrolabes,
-                CharacterMissions, CharacterMissionFlags, CharacterCompletedEvents, CharacterBitFlags, CharacterDungeonDays,
+                CharacterMissions, CharacterMissionFlags, CharacterCompletedEvents, CharacterBitFlags, CharacterDungeonDays, CharacterDungeonWeeks,
                 CharacterSkills, CharacterTurn2Skills, CharacterTurn3States, CharacterTurn3Skills,
                 CharacterPets,
                 CharacterPetEquips,
