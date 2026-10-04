@@ -2596,3 +2596,68 @@ Continuation from checkpoint 149ef88.
 1. User test normal dungeon reward + result + Leave button first.
 2. Recover authoritative WeekDungeon style24 enemy formations for IDs18..37 and63..82 from original backend source or official packet/runtime trace. Do not infer NPC IDs/positions/stats from videos alone.
 3. Once formations are locked, implement kind3/5 start, criteria, per-stage progress/weekly Monday reset, fixed stage reward, all-clear claim, then production test.
+
+## 2026-10-04 — Dungeon F4 research — weekly reset + Bách Chiến formation recovery
+
+### Weekly calendar / Mark evidence
+- IOS_Mark_C.dat confirms the active kind3/kind5 stage counters are Mark kind=9 (weekly), not kind8 daily counters.
+- Current kind3 Bách Chiến IDs18..37 use dailyFlag 12722,12724,...,12760, all bitId=0.
+- Current kind5 Soul/Crazy weekly IDs63..82 use dailyFlag 13328,13330,...,13366, all bitId=0.
+- Bách Chiến page 1 all-clear claim Mark is 12762, kind9, bitId=1706; DungeonData id18 uses costPoint=12762 and allPassPrize=34366.
+- Current kind5 IDs63..82 have costPoint=0 and allPassPrize=0; do not invent a Soul all-clear reward.
+- Official TS Online M notice independently states weekly progress resets every Monday 00:00, stages are independent, each clear grants a reward, and clearing all Bách Chiến stages grants an extra all-clear reward.
+- Safe migration rule for production: first observation of a new weekly calendar marker must preserve existing counters/claim state because the previous reset boundary is unknown; only a proven later Monday boundary should clear scoped kind9 counters and the scoped Bách Chiến all-clear bit1706.
+- Do not reset every kind9 Mark globally. Mark_C contains legacy/future weekly pages (21..60 and additional TSN markers); reset scope must come from the currently loaded DungeonData rows plus their explicit claim Mark.
+
+### Empty/non-authoritative formation sources ruled out
+- IOS_WeekDungeon_C.dat is only 4 bytes: UInt32 count=60 with no body records; same in its earliest imported Git revision. It is not an enemy formation table.
+- IOS_SceneFight_C.dat has 381 records and no scene62015.
+- A scan of likely iOS Fight/Battle/Dungeon/Npc/Soul/War tables found no separate 62015 formation table; IOS_Dungeon_C.dat only points special dungeons at scene62015.
+- TSOnlineOS/MobileClient, old TSOnline2026/newts decompiled server sources and current repo history do not expose a backend WeekDungeon formation table.
+- Lua/client still proves EFFWar_Style.WeekDungeon = 24.
+
+### High-confidence DVT-client reconstruction — Bách Chiến 1..20
+IOS_Npc_C.dat contains a structured special-NPC block beginning at id40258. The stage grouping below is reconstructed from DVT client data, not copied from a backend formation file. Confidence is high because independent public battle descriptions for stages18/19/20 match the reconstructed groups exactly and the earlier blocks align with the DVT stage restrictions/themes.
+
+- Stage1: 40258..40267
+- Stage2: 40268..40277
+- Stage3: 40278..40287
+- Stage4: 40288..40297
+- Stage5: 40298..40307
+- Stage6: 40308..40317
+- Stage7: 40318..40327
+- Stage8: 40328..40337
+- Stage9: 40338..40347
+- Stage10: 40348..40357
+- Stage11: 40358..40367
+- Stage12: 40368..40377
+- Stage13: 40378..40387
+- Stage14: 40388..40397
+- Stage15: 40398..40407
+- Stage16: 40408..40417
+- Stage17: 40418..40427
+- Stage18: 40428..40437 = Tả Từ, Vu Cát, Gia Cát Lượng, Tư Mã Ý, Lục Tốn + 5 Cận vệ quân. This independently matches the public stage18 battle description.
+- Stage19: 40438..40447 = Đổng Trác, Điêu Thuyền, Lý Nho, Lý Biệt, Lý Xiêm, Quách Tị, Lý Giác, Đổng Mân, Đổng Hoàng, Ngưu phụ. Public stage19 description independently says there are 10 enemies and highlights Đổng Trác/Lý Nho/Điêu Thuyền.
+- Stage20 special block: 40448..40455 are 8 Lv200 Lữ Bố in earth/water/fire/wind pairs; 40480..40481 are 2 more Lv200 Lữ Bố with element5. Public stage20 description independently calls it the five-color Lữ Bố stage and warns about the heart-element confusion skill. This strongly suggests these 10 are the intended five-element pair set, but the non-contiguous final pair means exact positional/order formation must remain explicitly marked reconstructed until a backend trace is recovered.
+
+Strong internal consistency:
+- Stage5 block is ten basic soldiers with unusually large HP, consistent with DungeonCriteria kind7/10-round survival semantics.
+- Stage14/15/16/17 blocks transition through Wei/Shu/Wu/heavenly-soldier themed high-stat groups, matching late-stage progression.
+- Stage20’s five Lữ Bố element pairs provide a direct data explanation for the known five-color Lữ Bố fight.
+
+### Battle engine implications before activation
+- BattleManager.addCenteredEnemies() currently maps a 10-entry enemy list as first five in enemy front column and next five in enemy back column; it ignores Eve locationPos. Using reconstructed NPC IDs therefore still requires evidence for exact order/positions.
+- createPveBattle() is single-session and brings the custom multi-pet deployment roster. Weekly rooms need a separate multiplayer special-battle path and must not accidentally allow the 9-pet extension to occupy the entire player side.
+- Add EWarStyle.WEEK_DUNGEON = 24 only when the special battle path is implemented; DVT client directly proves this value.
+- kind3 criteria 1..5 are entry/team restrictions; kinds6/7 are round constraints and must be enforced by battle/settlement semantics, not just lobby validation.
+- kind5 criteria 8/9/10 depend on the Soul subsystem/state, which the current Kotlin server has not implemented sufficiently. Do not fake Soul qualification.
+
+### Soul/Crazy weekly formation status
+- IOS_Npc_C.dat has a suspicious Activity-NPC cluster around 38216..38250 containing Cuồng-Lữ Bố, Huyễn-Lữ Bố, Ma-Lữ Bố, light/dark elements 7/8 and later high-level Wei groups.
+- This is plausible evidence for the newer Crazy Weekly content but is not yet enough to derive 20 exact stage formations. Keep kind5 combat blocked until a complete grouping can be recovered and cross-checked.
+
+### NEXT
+1. Implement durable Monday-week reset for only the loaded kind3/kind5 counter Marks and explicit claim flags, with first-observation preservation and rollback protection.
+2. Add byte/data regression locking the reconstructed Bách Chiến NPC ranges and exact stage18/19/20 names/elements.
+3. Continue recovering exact order/position and special round-win semantics before enabling kind3 combat.
+4. Continue targeted IOS_Npc_C.dat/public-trace audit for Crazy Weekly; do not enable kind5 while Soul qualification/formation remains evidence-blocked.
