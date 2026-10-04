@@ -2887,3 +2887,18 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Fresh production trace on old runtime confirms scene62007 symptom exactly: Door event at mission12358 step1 sends show param1, then hide param1 and advances 1->2, but emits no grouped pStyle4 next-position result; subsequent ClickNpc trigger6 cannot progress the scripted search.
 - User also confirmed scene62003 enters with no visible treasure chest; this matches the same lost weighted show-results path.
 - Production deployment pending below.
+
+## 2026-10-04 — Production deploy Eve GroupData fix 2ef4aed — VERIFIED
+
+- Commit: `2ef4aed fix: honor DVT Eve group member selection`; pushed to `origin/main`.
+- Production source fast-forwarded to `2ef4aed` via Git bundle/Git Bash SSH.
+- Targeted `EveGroupDataRegressionTest + DungeonEntryRegressionTest`: BUILD SUCCESSFUL, 18/18 tasks.
+- Full local `gradlew test build --rerun-tasks`: BUILD SUCCESSFUL, 21/21 tasks.
+- Full production `gradlew test build --rerun-tasks`: BUILD SUCCESSFUL, 21/21 tasks (4m39s).
+- Runtime restarted after production build. New game process PID 6392 was created at 2026-10-04 22:21:33 +07.
+- Fresh verification: production HEAD `2ef4aed`; port 6613 LISTENING on PID 6392.
+- Startup 22:21:34-22:21:39: MySQL/Hikari + schema init PASS; DVT data including IOS_Dungeon / DungeonCombo / DungeonCriteria / Eve loaded; Netty bound 0.0.0.0:6613; server READY.
+- Runtime verification pending user gameplay:
+  - scene62007 / dungeon10 Tìm Ba Đậu Yêu: entry must reveal a valid first/next hidden NPC position, then each successful find must hide current, reveal one weighted next position, progress mission12358 2->3->4->5, and complete after the third find.
+  - scene62003 / dungeon6 Tìm bảo rương: entry weighted GroupData must emit real class3/pStyle4 show results so treasure objects become visible; no longer lose all group members through PickMember=1 misinterpretation.
+- Do not hard-code these scenes separately: fix is generic Eve GroupData semantics and applies to the same DVT group mechanism elsewhere.
