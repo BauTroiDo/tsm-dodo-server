@@ -3286,3 +3286,28 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
   - Weekly kind3 / Soul kind5 battle lifecycle remains blocked by dedicated combat/formation/objective implementation.
   - No production deploy/restart for A5.
 - Next safe work: either continue evidence search for authoritative Soul creation stat/skill initialization, or wire qualification into the dedicated kind3/kind5 room path only after those battle lifecycles are implemented. Do not remove the existing kind guard merely because kinds4/5 are now evaluable.
+
+## 2026-10-05 — Soul A1–A5 production deployment PASS
+
+- GitHub `main` fast-forwarded from `c13f469` to `227ed91` (`feat: complete DVT soul skill qualification`).
+- Production `C:\Server-Game\tsm_dodo` was previously at `df7b234`; direct GitHub fetch over non-interactive SSH could not use the Windows credential store, so deployment used a verified git bundle requiring exactly `df7b234`.
+- Production fast-forwarded cleanly `df7b234 -> 227ed91`; local `app/src/main/resources/application.conf` was preserved and no scratch/bundle files were committed.
+- Production Java 21 full gate after update: `gradlew.bat test build --rerun-tasks` => BUILD SUCCESSFUL, 21/21 tasks executed.
+- Runtime restart:
+  - old game JVM PID `7088` was stopped;
+  - first WMI launch occurred while the old `app:run` wrapper was still unwinding and did not bind 6613;
+  - after the old wrapper exited, second `_launch_prod_wmi.cmd` start succeeded;
+  - new game JVM PID `2376` owns `0.0.0.0:6613` and `[::]:6613`.
+- Startup verification on production:
+  - database pool connected successfully;
+  - `IOS_Soul`: 4 qualities;
+  - `IOS_SoulLevel`: 300 levels;
+  - `IOS_NpcSoul`: 94 Souls;
+  - `IOS_ExclusiveWeapon`: 686 effective rows / 106 weapon IDs;
+  - `IOS_CollectWarriorSort`: 567 groups;
+  - `IOS_NpcUpgrade`: 15 rows from the authoritative IOS table;
+  - Netty server reported ready on port 6613 and local health-check connections continued.
+- Scope reminder:
+  - A1–A4 protocol120 foundation/login/equip/read-only battle consumers are now live on production.
+  - A5 qualification code is present in the deployed binary but `DvtWeeklyQualification.checkEntry` is still not wired into weekly/Soul room creation, so it does not change live dungeon entry yet.
+  - Soul acquisition/gacha creation is still evidence-blocked at initial six-stat distribution and initial skill-ID selection; no speculative creation algorithm was deployed.
