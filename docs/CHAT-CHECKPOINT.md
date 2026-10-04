@@ -2661,3 +2661,66 @@ Strong internal consistency:
 2. Add byte/data regression locking the reconstructed Bách Chiến NPC ranges and exact stage18/19/20 names/elements.
 3. Continue recovering exact order/position and special round-win semantics before enabling kind3 combat.
 4. Continue targeted IOS_Npc_C.dat/public-trace audit for Crazy Weekly; do not enable kind5 while Soul qualification/formation remains evidence-blocked.
+
+
+## 2026-10-04 — Dungeon F4 branch checkpoint — weekly lifecycle/data staged, NOT merged
+
+Branch: `feature/dungeon-weekly-reset`
+
+### Staged commits
+- `a76019c` — persisted Monday week marker table.
+- `692f9d9` — scoped weekly reset lifecycle (QuestRepository/QuestSystem/login/autosave).
+- `299903b` — exact `IOS_DungeonCriteria_C.dat` loader/model/regression.
+- `12a0e99` — data-only reconstructed Bách Chiến formation catalog (not battle-wired).
+- `9d7d858` — exact DVT `EWarStyle.WEEK_DUNGEON = 24`.
+
+### Weekly reset implementation boundary
+- Weekly stage counters are only loaded kind3/kind5 `dailyFlag` Marks which resolve to Mark kind9/bitId0.
+- The only current all-clear reset bit is derived from kind3 `costPoint=12762` -> Mark kind9 bit1706.
+- First observation writes the current Monday key but preserves existing progress; only a later Monday clears the scoped counters/claim bit.
+- Same/older Monday keys are no-op, protecting clock rollback.
+- Login refresh occurs before S:024 mission/flag snapshots.
+- Online autosave performs the same scoped refresh; if an all-clear bit was removed it re-sends the full authoritative mission-flag snapshot because Lua `MarkManager.InitMissionFlag` clears its local flag table first.
+- New DB table: `character_dungeon_weeks(char_id PK, week_key)`.
+
+### DungeonCriteria exact format
+- `IOS_DungeonCriteria_C.dat`: 446 bytes = Int32 count34 + 34 * 13-byte records, no trailing bytes.
+- Record: id UInt16, playerOrNpc Byte, kind Byte, compare Byte, value UInt32, value2 UInt32.
+- Current kinds are exactly 1/2/3/4/6/7.
+- Important correction: `DungeonData.needPar[].parameter` is a direct condition parameter used by `UIDungeon.GetNeedParStr`, NOT a universal DungeonCriteria row ID. Do not wire it as an ID lookup.
+- DVT direct need kinds:
+  - 1 faction/moral restriction
+  - 2 element restriction
+  - 3 rebirth restriction
+  - 4 required skill
+  - 5 forbidden skill
+  - 6 max-round condition
+  - 7 survive/limit-round condition
+  - Soul weekly additionally uses 8 soul element, 9 soul-level lower bound, 10 soul-level upper bound.
+- Bách Chiến public stage list independently matches the loaded needPar values, including stage4 <=3 rounds, stage5 survive 10 rounds, stages6-10 faction-only warriors, stage11 required Fire Arrow, stage12 unreborn, stages13-16 element restrictions, stage17 rebirth1, stage18 forbids skill10009, stage19 <=20 rounds.
+
+### New Crazy/Soul weekly formation evidence
+Public DVT Crazy Weekly guide gives three strong anchors:
+- stage8: enemies surnamed Gongsun are priority targets and use Qinglong;
+- stage16: kill the pig-headed enemy first; enemies use poison;
+- stage17: Skeleton King can use Xuanwu/death;
+- stages18-20 use progressively richer endgame effects; stage20 includes heal/status-clear/mana-drain.
+The guide screenshots also match live kind5 needPar data, e.g. stage8 = Earth soul equipment + forbid skill10016; stage16 = Fire soul equipment + deployed soul level >60; stage17 = Dark soul equipment + forbid skill23027; stage20 = clear within 20 rounds + deployed soul level >70.
+
+A much stronger Npc_C block was found under activity-NPC kind31:
+- `40687..` begins a sequence of `Hồn - ...` high-stat enemies.
+- The stage8-themed block contains multiple `Hồn - Công Tôn ...` enemies at 40748..40753 plus supporting enemies, independently matching the guide.
+- A plague/pig block at 40823..40828 contains `Ôn Dịch Trư Vương` / `Ôn Dịch Trư Tướng`, independently matching stage16.
+- A decay/skeleton block at 40829..40835 contains `Khô Cốt Nam`, `Khô Cốt Nữ`, `Hủ Bạch Khô Lâu`, independently matching stage17.
+- The end block 40851..40859 contains BDY/interdimensional bosses and is a strong stage20 candidate.
+This is now much stronger than the earlier unrelated kind29 38216 cluster. The 38216 cluster must NOT be treated as the Crazy Weekly formation source.
+
+### Activation status / safety
+- Nothing on this branch is merged to `main`.
+- Weekly/Crazy battle creation remains disabled in production.
+- The Bách Chiến catalog is intentionally data-only; it is not passed into BattleManager.
+- Crazy Weekly formation grouping is still research-only because variable enemy counts/order/reinforcement semantics are not fully locked.
+- Exact Bách Chiến 18/19/20 and Soul 8/16/17 thematic matches are strong enough to continue reconstruction, but not enough to silently invent backend slot order.
+
+### Validation limitation
+Remote Desktop Commander quota reached 0% during this work, so no local Gradle compile/test or production deploy can be run right now. Keep all F4 changes on the feature branch until executable validation becomes available. Do not merge by inspection alone.
