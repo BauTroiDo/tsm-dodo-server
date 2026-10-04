@@ -3311,3 +3311,40 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
   - A1–A4 protocol120 foundation/login/equip/read-only battle consumers are now live on production.
   - A5 qualification code is present in the deployed binary but `DvtWeeklyQualification.checkEntry` is still not wired into weekly/Soul room creation, so it does not change live dungeon entry yet.
   - Soul acquisition/gacha creation is still evidence-blocked at initial six-stat distribution and initial skill-ID selection; no speculative creation algorithm was deployed.
+
+## 2026-10-05 — BẮT BUỘC dùng Lua ĐVT + native dump ĐVT 1.15 làm nguồn client chuẩn
+
+- Từ phiên sau, khi audit/fix subsystem client-facing, PHẢI đọc Lua ĐVT cùng với native dump chính thức ĐVT 1.15 trước khi suy từ Kotlin hoặc PC source.
+- Native dump chuẩn:
+  - root: `D:\Games\Ts-Offline\TSMobileOnLine\_native_dump_dvt115`
+  - APK gốc: `dvt115_base.apk`
+  - ARM64 IL2CPP: `lib\arm64-v8a\libil2cpp.so`
+  - ARMv7 IL2CPP: `lib\armeabi-v7a\libil2cpp.so`
+  - metadata: `assets\bin\Data\Managed\Metadata\global-metadata.dat`
+  - dump outputs: `dump.cs`, `il2cpp.h`, `script.json`
+- Danh tính APK đã xác minh trực tiếp từ AndroidManifest/signing certificate:
+  - package: `net.chinesegamer.tsn`
+  - app name: `吞食天地 多元宇宙`
+  - versionName: `1.15`
+  - versionCode: `26`
+  - signer subject/issuer: `Organization=chinesegamer, OU=cgtsn, CN=cgtsn`
+  - certificate SHA-256: `1711d2110d87514290d03b9ceb1c85ef0dc3220aea5e220afce67bd4871bc447`
+- `1.15` là Android app version của base APK; `2.4.76` là data/CDN version từng dùng trong client, không được coi là mâu thuẫn.
+- Native network trace đã khóa từ binary ARM64:
+  - `SocketClient.WriteMessage()` đóng gói header `0x91C0`, length, payload và XOR `0xAD` trước khi gửi.
+  - `SocketClient.OnReceive()` giải XOR, tách packet rồi gọi `NetworkManager.AddEvent(0x68, payload)`.
+  - `NetworkManager.Update()` lấy Lua callback, push `eventId + byte buffer`, rồi `PCall()`.
+  - relocation `0x2ed4f70 -> 0x2fcb6f0`; `script.json` xác nhận string tại đó là `Network.OnSocket`.
+  - Lua `Logic/Network.lua::Network.OnSocket()` nhận `csProtocal.Message` rồi gọi `Network.OnMessage(data)`.
+  - Kết luận: IL2CPP không tự giải nghĩa protocol gameplay 120; gameplay packet được chuyển vào Lua.
+- Quy tắc sử dụng nguồn từ nay:
+  1. Lua ĐVT vẫn là nguồn sự thật gameplay/protocol/semantics cao nhất.
+  2. Native dump ĐVT 1.15 + client DAT/assets là nguồn client chính thức song hành để xác minh C#/IL2CPP bridge, serialization, packet transport, field layout, Unity/client behavior và những gì Lua không biểu diễn.
+  3. Khi Lua và native/client data có vẻ mâu thuẫn, phải trace cả hai và xác định đúng layer trước khi sửa server; KHÔNG lấy Kotlin hiện tại làm chuẩn.
+  4. Kotlin server chỉ được sửa sau khi contract đã khóa từ Lua + native/client evidence.
+  5. PC source `bboycs/tsonline-server-tl` chỉ là fallback khi Lua + native dump + client data đều không đủ; không được lấn át ĐVT.
+- Soul/gacha note:
+  - gacha production đã xác nhận trả hộp Soul `32994/32995/34073/34074`, nhưng backend hiện còn đưa chúng vào túi item thường.
+  - Lua protocol xác nhận nhận Soul từ gacha dùng `S:120-008 result=2`.
+  - Native IL2CPP không chứa logic tạo Soul; nó chỉ chuyển packet sang Lua.
+  - thuật toán server gốc phân bố `startPoint` vào 6 stat và chọn initial skill IDs vẫn chưa có bằng chứng; tiếp tục tìm trong toàn bộ APK/assets/Lua binary/server evidence, không được bịa.
