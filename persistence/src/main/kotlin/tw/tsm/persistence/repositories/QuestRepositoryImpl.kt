@@ -43,9 +43,18 @@ class QuestRepositoryImpl : QuestRepository {
                         (CharacterMissions.missionId inList removed)
                 }
             }
-            CharacterDungeonDays.upsert {
-                it[CharacterDungeonDays.charId] = charId
-                it[CharacterDungeonDays.dayKey] = dayKey
+            if (oldDay == null) {
+                CharacterDungeonDays.insert {
+                    it[CharacterDungeonDays.charId] = charId
+                    it[CharacterDungeonDays.dayKey] = dayKey
+                    it[CharacterDungeonDays.weekKey] = 0
+                }
+            } else {
+                CharacterDungeonDays.update(
+                    where = { CharacterDungeonDays.charId eq charId }
+                ) {
+                    it[CharacterDungeonDays.dayKey] = dayKey
+                }
             }
             removed
         }
@@ -104,9 +113,18 @@ class QuestRepositoryImpl : QuestRepository {
                 }
             }
 
-            CharacterDungeonDays.upsert {
-                it[CharacterDungeonDays.charId] = charId
-                it[CharacterDungeonDays.weekKey] = weekKey
+            if (oldWeek == null) {
+                CharacterDungeonDays.insert {
+                    it[CharacterDungeonDays.charId] = charId
+                    it[CharacterDungeonDays.dayKey] = 0
+                    it[CharacterDungeonDays.weekKey] = weekKey
+                }
+            } else {
+                CharacterDungeonDays.update(
+                    where = { CharacterDungeonDays.charId eq charId }
+                ) {
+                    it[CharacterDungeonDays.weekKey] = weekKey
+                }
             }
             DungeonWeekRefreshResult(
                 removedMissionIds = removed,
