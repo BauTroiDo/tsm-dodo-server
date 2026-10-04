@@ -2724,3 +2724,13 @@ This is now much stronger than the earlier unrelated kind29 38216 cluster. The 3
 
 ### Validation limitation
 Remote Desktop Commander quota reached 0% during this work, so no local Gradle compile/test or production deploy can be run right now. Keep all F4 changes on the feature branch until executable validation becomes available. Do not merge by inspection alone.
+
+
+### Full Crazy Weekly partition — research checkpoint
+- DVT Npc_C has a dedicated kind31 block ID40687..40859: 173 NPCs total.
+- Physical Npc_C record order partitions into exactly 20 stage groups with sizes 7,7,7,10,10,10,10,10,10,10,4,10,11,10,10,6,7,8,7,9.
+- Stage8 uses 40748..40756 + 40763; stage9 uses 40757..40762 + 40764..40767. The flattened catalog matches the physical record order and consumes every ID40687..40859 exactly once.
+- Independent guide/Skill_C anchors match stage8 and stages16..20: Công Tôn/Thanh Long; plague-pig/23019; skeleton/23011; stage18/19 special21042; stage20 has 12052 + 23011 + 21042.
+- Commit 62d36ed reconstructs all 20 groups in SoulWeeklyFormationCatalog and keeps them data-only.
+- Do not wire this catalog to BattleManager until multiplayer WeekDungeon creation, slot/deployment policy, Soul entry rules, round rules, and executable tests are available.
+- F4 remains isolated on feature/dungeon-weekly-reset; main/production unchanged.
