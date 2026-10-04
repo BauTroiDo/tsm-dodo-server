@@ -992,8 +992,8 @@ class BattleManager(
         }
 
         for ((playerId, session) in battle.playerSessions) {
-            // Thưởng (chỉ khi thắng)
-            if (endResult.playerWin) {
+            // WeeklyDungeon gives protocol-47 stage rewards, not generic NPC EXP/gold/drop settlement.
+            if (endResult.playerWin && !battle.suppressGenericRewards) {
                 if (defeatedEnemyNpcCount > 0) {
                     grantKillNum(session, battle.battleId, defeatedEnemyNpcCount)
                 }
@@ -1233,6 +1233,25 @@ class BattleManager(
 
         // Release battle ownership before an event callback can warp or start another fight.
         cleanupBattle(battle)
+
+        if (battle.warStyle == EWarStyle.WEEK_DUNGEON && battle.dungeonId > 0) {
+            delay(300)
+            val callback = onDungeonBattleEndCallback
+            if (callback != null) {
+                for ((playerId, session) in battle.playerSessions) {
+                    BattleEventContinuation.run(
+                        resume = { callback(session, playerId, endResult.playerWin, battle.dungeonId) },
+                        abort = {
+                            onDungeonBattleAbortCallback?.invoke(session, battle.dungeonId)
+                                ?: responseSender.sendEventEnd(session)
+                        },
+                    )
+                }
+            } else {
+                for (session in battle.playerSessions.values) responseSender.sendEventEnd(session)
+            }
+            return
+        }
 
         // Trận PVP và PK với NPC trên bản đồ không đi qua callback sự kiện
         if (battle.warType == EWar.PK_PLAYERS || battle.warType == EWar.PK_MAP_NPC) {
@@ -1475,7 +1494,12 @@ class BattleManager(
                 if (it.isHumanPlayer && it.roleId == playerId) 1 else 0
             }
             for (fighter in exitOrder) responseSender.sendBattleExitFight(session, fighter.col, fighter.row)
-            onBattleAbortCallback?.invoke(session) ?: responseSender.sendEventEnd(session)
+            if (battle.warStyle == EWarStyle.WEEK_DUNGEON && battle.dungeonId > 0) {
+                onDungeonBattleAbortCallback?.invoke(session, battle.dungeonId)
+                    ?: responseSender.sendEventEnd(session)
+            } else {
+                onBattleAbortCallback?.invoke(session) ?: responseSender.sendEventEnd(session)
+            }
             responseSender.sendSystemMessage(session, "Trận bị gián đoạn. Đã mở lại thao tác; bạn có thể di chuyển hoặc thử lại.")
         }
     }
