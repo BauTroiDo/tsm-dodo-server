@@ -17,40 +17,55 @@ class SoulWeeklyFormationCatalogTest {
     )
 
     @Test
-    fun onlyHighConfidenceLateCrazyWeeklyBlocksAreExposed() {
-        assertNull(SoulWeeklyFormationCatalog.npcIdsForDungeon(77))
-        assertEquals((40823..40828).toList(), SoulWeeklyFormationCatalog.npcIdsForDungeon(78))
-        assertEquals((40829..40835).toList(), SoulWeeklyFormationCatalog.npcIdsForDungeon(79))
-        assertEquals((40836..40843).toList(), SoulWeeklyFormationCatalog.npcIdsForDungeon(80))
-        assertEquals((40844..40850).toList(), SoulWeeklyFormationCatalog.npcIdsForDungeon(81))
-        assertEquals((40851..40859).toList(), SoulWeeklyFormationCatalog.npcIdsForDungeon(82))
+    fun catalogPartitionsTheDedicatedSoulBlockIntoExactlyTwentyStages() {
+        val npcs = npcs()
+        val physicalOrder = npcs.keys.filter { it in 40687..40859 }
+        val catalogOrder = SoulWeeklyFormationCatalog.allNpcIdsInStageOrder()
+
+        assertEquals(173, physicalOrder.size)
+        assertEquals(173, catalogOrder.size)
+        assertEquals(physicalOrder, catalogOrder)
+        assertEquals((40687..40859).toSet(), catalogOrder.toSet())
+        assertEquals(20, (63..82).count { SoulWeeklyFormationCatalog.npcIdsForDungeon(it) != null })
     }
 
     @Test
-    fun lateBlocksCarryTheExactDvtSkillsThatAnchorTheirIdentity() {
+    fun stageGroupSizesMatchThePhysicalDvtRecordThemes() {
+        assertEquals(
+            listOf(7, 7, 7, 10, 10, 10, 10, 10, 10, 10, 4, 10, 11, 10, 10, 6, 7, 8, 7, 9),
+            (63..82).map { SoulWeeklyFormationCatalog.npcIdsForDungeon(it)!!.size },
+        )
+    }
+
+    @Test
+    fun publicGuideAnchorsMatchLiveDvtNpcAndSkillData() {
         val npcs = npcs()
 
-        val plaguePig = npcs.getValue(40825)
-        assertEquals("Ôn Dịch Trư Tướng", plaguePig.name)
-        assertTrue(23019 in plaguePig.skills) // Vạn độc xuyên tâm
+        // Stage8: the guide warns that Gongsun enemies use Qinglong.
+        val stage8 = SoulWeeklyFormationCatalog.npcIdsForDungeon(70)!!.map(npcs::getValue)
+        assertTrue(stage8.count { it.name.contains("Công Tôn") } >= 6)
+        assertTrue(stage8.any { 13015 in it.skills })
 
-        val skeletonKing = npcs.getValue(40829)
-        assertEquals("Hủ Hủ Vương", skeletonKing.name)
-        assertTrue(23011 in skeletonKing.skills) // Huyền vũ
+        // Stage16: pig/plague enemies and poison.
+        val stage16 = SoulWeeklyFormationCatalog.npcIdsForDungeon(78)!!.map(npcs::getValue)
+        assertTrue(stage16.any { it.name.contains("Trư") })
+        assertTrue(stage16.any { 23019 in it.skills })
 
-        val stage18Boss = npcs.getValue(40836)
-        assertEquals("Bạo Ngược Vương", stage18Boss.name)
-        assertEquals(21042, stage18Boss.specialSkill) // Gia Cát Cuồng Long Chú
+        // Stage17: skeleton/decay king uses Xuanwu.
+        val stage17 = SoulWeeklyFormationCatalog.npcIdsForDungeon(79)!!.map(npcs::getValue)
+        assertTrue(stage17.any { it.name.contains("Khô") })
+        assertTrue(stage17.any { 23011 in it.skills })
 
-        val stage19Caster = npcs.getValue(40849)
-        assertEquals("Giảo Hoạt Tiểu Ma", stage19Caster.name)
-        assertEquals(21042, stage19Caster.specialSkill)
+        // Stages18-19: Crazy Dragon spell exists in each group.
+        val stage18 = SoulWeeklyFormationCatalog.npcIdsForDungeon(80)!!.map(npcs::getValue)
+        val stage19 = SoulWeeklyFormationCatalog.npcIdsForDungeon(81)!!.map(npcs::getValue)
+        assertTrue(stage18.any { it.specialSkill == 21042 })
+        assertTrue(stage19.any { it.specialSkill == 21042 })
 
-        val stage20Dragon = npcs.getValue(40858)
-        assertEquals("Dị Giới Bạo Ngược Vương", stage20Dragon.name)
-        assertEquals(21042, stage20Dragon.specialSkill)
-        assertEquals("Dị Giới Hủ Hủ Vương", npcs.getValue(40857).name)
-        assertTrue(23011 in npcs.getValue(40857).skills)
-        assertEquals(12052, npcs.getValue(40856).specialSkill) // Hấp Hồn Địa Ngục
+        // Stage20 reuses the late bosses and exposes soul-drain + Xuanwu + Crazy Dragon.
+        val stage20 = SoulWeeklyFormationCatalog.npcIdsForDungeon(82)!!.map(npcs::getValue)
+        assertTrue(stage20.any { it.specialSkill == 12052 })
+        assertTrue(stage20.any { 23011 in it.skills })
+        assertTrue(stage20.any { it.specialSkill == 21042 })
     }
 }
