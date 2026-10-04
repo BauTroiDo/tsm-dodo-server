@@ -81,6 +81,73 @@ class DungeonMiniGameFlowRegressionTest {
     }
 
     @Test
+    fun `treasure clicks keep increment condition ahead of count talk until completion`() {
+        val all = scenes()
+        val resolver = EveConditionResolver(all)
+
+        val cases = listOf(
+            Triple(5, 2, 2),
+            Triple(7, 3, 3),
+            Triple(9, 4, 4),
+        )
+
+        for ((eveNo, beforeStep, expectedTalkCondition) in cases) {
+            val event = all.getValue(62003).npcEvents.getValue(eveNo)
+            val click = resolver.resolveEventInDataOrder(
+                event,
+                PlayerEventState(
+                    missionSteps = mapOf(12330 to beforeStep),
+                    dungeonMissionIds = setOf(12330),
+                ),
+                62003,
+            )
+
+            assertEquals(1, click?.matchedConditionNo, "eve=$eveNo step=$beforeStep must increment first")
+            assertTrue(click!!.results.any {
+                it.resultClass == 2 &&
+                    it.parameter == 12330 &&
+                    it.parameterStyle == 1 &&
+                    it.resultValue == 1
+            })
+
+            val afterStep = beforeStep + 1
+            val continuation = resolver.resolveEventInDataOrder(
+                event,
+                PlayerEventState(
+                    missionSteps = mapOf(12330 to afterStep),
+                    dungeonMissionIds = setOf(12330),
+                ),
+                62003,
+                afterConditionNo = 1,
+            )
+            assertEquals(
+                expectedTalkCondition,
+                continuation?.matchedConditionNo,
+                "eve=$eveNo after step=$afterStep must continue to the matching count/completion branch",
+            )
+        }
+
+        val finalEvent = all.getValue(62003).npcEvents.getValue(9)
+        val finalContinuation = resolver.resolveEventInDataOrder(
+            finalEvent,
+            PlayerEventState(
+                missionSteps = mapOf(12330 to 5),
+                dungeonMissionIds = setOf(12330),
+            ),
+            62003,
+            afterConditionNo = 1,
+        )
+        assertEquals(4, finalContinuation?.matchedConditionNo)
+        assertTrue(finalContinuation!!.results.any {
+            it.resultClass == 2 && it.parameter == 12330 && it.parameterStyle == 3
+        })
+        assertTrue(finalContinuation.results.any {
+            it.resultClass == 2 && it.parameter == 12331 &&
+                it.parameterStyle == 1 && it.resultValue == 1
+        })
+    }
+
+    @Test
     fun `treasure entry event resolves four visible chests and advances mission`() {
         val all = scenes()
         val event = all.getValue(62003).npcEvents.getValue(1)

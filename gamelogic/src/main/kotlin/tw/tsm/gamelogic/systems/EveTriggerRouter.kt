@@ -311,7 +311,9 @@ class EveTriggerRouter(
             val isBattleStateMachine =
                 eventData.conditions.any { c -> c.results.any { it.resultType == 3 } } &&
                     eventData.conditions.any { it.conditionClass == 8 }
-            val resolved = if (isBattleStateMachine) {
+            val isProgressiveClickStateMachine = isProgressiveClickStateMachine(eventData)
+            val isOrderedStateMachine = isBattleStateMachine || isProgressiveClickStateMachine
+            val resolved = if (isOrderedStateMachine) {
                 conditionResolver.resolveEventInDataOrder(eventData, stateWithEve, mapId)
             } else {
                 conditionResolver.resolveEvent(eventData, stateWithEve, mapId)
@@ -322,7 +324,7 @@ class EveTriggerRouter(
             }
 
             // Chống trùng lặp cấp condNo: chỉ chặn chuỗi điều kiện cụ thể đã hoàn thành, cho phép tiến triển điều kiện khác của cùng eveNo
-            if (!isBattleStateMachine && stateMachine.isConditionCompleted(charId, mapId, eveNo, resolved.matchedConditionNo)) {
+            if (!isOrderedStateMachine && stateMachine.isConditionCompleted(charId, mapId, eveNo, resolved.matchedConditionNo)) {
                 logger.info { "${session.characterName} eveNo=$eveNo condNo=${resolved.matchedConditionNo} đã hoàn thành, bỏ qua" }
                 continue
             }
@@ -378,6 +380,41 @@ class EveTriggerRouter(
     // ══════════════════════════════════════════════
     //  Tiện ích private
     // ══════════════════════════════════════════════
+
+    /**
+     * Event click nhiều pha kiểu DVT:
+     * - một condition sớm tăng mission bằng resultClass=2/pStyle=1;
+     * - các condition phía sau đọc lại cùng mission ở step cao hơn để phát thoại,
+     *   kết thúc hoặc chuyển pha.
+     *
+     * Với shape này phải giữ thứ tự Eve.emg. Nếu dùng resolver ưu tiên stepScore,
+     * condition hậu kỳ (ví dụ step=3) sẽ thắng condition tăng step, làm progression
+     * đứng yên. Scene 62003 treasure events 5..10 là bằng chứng runtime.
+     */
+    private fun isProgressiveClickStateMachine(eventData: NpcEventData): Boolean {
+        for (condition in eventData.conditions) {
+            val incrementMissions = condition.results.asSequence()
+                .filter {
+                    it.resultClass == 2 &&
+                        it.parameterStyle == 1 &&
+                        it.resultValue > 0
+                }
+                .map { it.parameter }
+                .filter { it > 0 }
+                .toSet()
+
+            for (missionId in incrementMissions) {
+                val hasLaterStepReader = eventData.conditions.any { later ->
+                    later.conditionNo != condition.conditionNo &&
+                        later.conditionClass == 2 &&
+                        later.conditionParameter == missionId &&
+                        later.conditionValue > condition.conditionValue
+                }
+                if (hasLaterStepReader) return true
+            }
+        }
+        return false
+    }
 
     /**
      * Phân tích điều kiện + khởi tạo Session + lấy result đầu tiên

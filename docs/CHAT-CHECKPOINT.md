@@ -2888,6 +2888,18 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - User also confirmed scene62003 enters with no visible treasure chest; this matches the same lost weighted show-results path.
 - Production deployment pending below.
 
+## 2026-10-05 — Treasure progression follow-up after c0dd255
+
+- User runtime test on scene62003: four chests now appear and are clickable, but HUD/dialog remained at “found 1” after opening additional chests.
+- Fresh production trace proves entry flow is correct: mission12330 starts at 1, auto-entry Eve1 shows chests and advances 1->2.
+- First opened chest (clickId4 / Eve7) correctly executes condition1, hides the chest and advances mission12330 2->3.
+- At mission12330=3, later chest clicks (for example clickId6 / Eve9) incorrectly selected condition2 (step==3 talk) instead of condition1 (hide + mission +1), so mission stayed at 3 and the UI count stayed at 1.
+- Root cause: ClickNpc only used Eve data-order for battle/class8 state machines. Treasure events 5..10 are also progressive multi-phase state machines but contain no battle.
+- Fix: detect ClickNpc events whose early result increments a mission (class2/pStyle1/value>0) and later conditions read higher steps of the same mission; resolve these events in Eve.emg data order and do not apply completed-condition blocking to their reusable progression head.
+- Regression now locks the three treasure transitions: step2->3 then count branch, step3->4 then count branch, step4->5 then completion branch; final branch must complete mission12330 and advance mission12331.
+- Targeted DungeonMiniGameFlowRegressionTest: BUILD SUCCESSFUL, 18/18 tasks.
+- Full local gradlew test build --rerun-tasks: BUILD SUCCESSFUL, 21/21 tasks.
+
 ## 2026-10-04 — Production deploy Eve GroupData fix 2ef4aed — VERIFIED
 
 - Commit: `2ef4aed fix: honor DVT Eve group member selection`; pushed to `origin/main`.
