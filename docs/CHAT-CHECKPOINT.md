@@ -3053,3 +3053,15 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - The final branch completed mission12358, incremented12359 from0→1, and reward settlement logged `Dungeon 10 settled: remaining=539s turn=0 rewards=[(45664, 1)] dailyFlag=12360`.
 - This reproduces and clears the previously blocked roaming clickId6. All three finds, terminal completion and server reward issuance now have post-deploy evidence. Client bag/dialog receipt has not been explicitly confirmed by the player.
 - Gameplay runtime remains commit48c7aec; later commits only synchronize checkpoint. The focused20/20 tests and production build passed before restart.
+
+## 2026-10-05 — Weekly and Soul dungeon continuation — entry blocker confirmed, evidence required
+
+- User explicitly confirms Ba Dau PASS, then requests Bách chiến thiên quan and Khiêu chiến Linh Hồn; symptom: clicking a stage does not enter.
+- Verified production source df7b234 and live listener from the last successful deployment; no new runtime patch/restart during this audit.
+- Exact blocker: DungeonSystem.validateNormalRoomEntry accepts only kind1. kind3/5 requests return RESULT_NO_SPACE before room creation. This is the deliberate missing WeekDungeon battle implementation described in earlier checkpoints, not a new dungeon entry regression.
+- Real DungeonData: Bách Chiến stage1 is id18/kind3/scene62015/missionFlag0, maxPlayer5, level1..450, dailyFlag12722, lootTable82. First Soul stage id63/kind5 requires level50..450 plus needPar(8,1),(5,10004). The last observed character was level36; level requirements must remain data-driven.
+- All found WeekDungeon data copies are header-only (4 bytes); available sources do not supply battle formation records. Membership helper remains reconstructed and unwired, not authoritative placement.
+- Additional direct gameplay reference: https://www.youtube.com/watch?v=_9Gf1vtFBS8 (2019-05-22, original recording). Visible stage1 has Wei Bing/An Lu Na-style enemies around level50; candidate40258..40267 in current DVT data instead contains Hac Manh/Lu Bu/Chen Gong etc at110..120. This may be a version difference; it cannot establish current DVT formation or validate the candidate stage mapping. Do not promote this video or candidate mapping to authoritative current data.
+- Rechecked both luaDVT and active Lua Dungeon.CheckForQualification: `kind ~= 3 or kind ~= 5` returns true for every kind, leaving later checks unreachable. This client bug does NOT prove server qualification should be bypassed; needPar and the server-side contract still need correct handling. Do not change Lua to fit Kotlin.
+- Audit-only scratch parsed real Npc/Dungeon data successfully and was removed. No gameplay/reward/qualification behavior changed. Existing regression files and prior PASS runtime are preserved.
+- Asked user for original DVT backend path, original battle log, or matching-version video to recover per-stage formation. Next: resolve exact NPC IDs/slots, dedicated warStyle24 multiplayer battle, round limits, progress/reward, then Soul120 state/qualification. Do not enable entry to an empty unsupported scene.
