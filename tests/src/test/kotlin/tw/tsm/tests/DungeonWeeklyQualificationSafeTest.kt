@@ -6,7 +6,9 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import tw.tsm.data.loaders.DungeonDatLoader
 import tw.tsm.data.loaders.NpcDatLoader
+import tw.tsm.domain.data.DungeonNeedDef
 import tw.tsm.domain.valueobjects.FollowNpcData
+import tw.tsm.domain.valueobjects.SoulThingData
 import tw.tsm.gamelogic.systems.DvtWeeklyQualification
 
 class DungeonWeeklyQualificationSafeTest {
@@ -20,6 +22,14 @@ class DungeonWeeklyQualificationSafeTest {
         slotIndex = 1,
         npcId = npcId,
         isDeployed = true,
+    )
+
+    private fun soul(npcId: Int, element: Int, level: Int) = SoulThingData(
+        sn = 1L,
+        itemId = 59501,
+        element = element,
+        equipId = npcId,
+        level = level,
     )
 
     @Test
@@ -72,7 +82,7 @@ class DungeonWeeklyQualificationSafeTest {
     }
 
     @Test
-    fun `skill and Soul dependent gates remain unsupported instead of using partial server state`() {
+    fun `skill gates remain unsupported while Soul gates use protocol120 state`() {
         val requireSkill = DvtWeeklyQualification.checkEntry(dungeons.getValue(28), pet(10012), npcs)
         assertEquals(DvtWeeklyQualification.Status.UNSUPPORTED, requireSkill.status)
         assertEquals(4, requireSkill.unsupportedKind)
@@ -81,9 +91,69 @@ class DungeonWeeklyQualificationSafeTest {
         assertEquals(DvtWeeklyQualification.Status.UNSUPPORTED, forbidSkill.status)
         assertEquals(5, forbidSkill.unsupportedKind)
 
-        val soul = DvtWeeklyQualification.checkEntry(dungeons.getValue(63), pet(10012), npcs)
-        assertEquals(DvtWeeklyQualification.Status.UNSUPPORTED, soul.status)
-        assertEquals(8, soul.unsupportedKind)
+        // Dungeon63 has Soul element + forbidden-skill criteria. Once Soul kind8 is supported,
+        // the remaining evidence blocker must be kind5 rather than kind8.
+        val mixed = DvtWeeklyQualification.checkEntry(
+            dungeons.getValue(63),
+            pet(10012),
+            npcs,
+            soul(10012, element = 1, level = 1),
+        )
+        assertEquals(DvtWeeklyQualification.Status.UNSUPPORTED, mixed.status)
+        assertEquals(5, mixed.unsupportedKind)
+    }
+
+    @Test
+    fun `Soul element min and max level gates match DVT semantics`() {
+        val warrior = pet(10012)
+
+        val minStage = dungeons.getValue(71).copy(
+            needPar = listOf(DungeonNeedDef(9, 10), DungeonNeedDef(8, 8)),
+        )
+        assertEquals(
+            DvtWeeklyQualification.Status.OK,
+            DvtWeeklyQualification.checkEntry(
+                minStage, warrior, npcs, soul(10012, element = 8, level = 10)
+            ).status,
+        )
+        assertEquals(
+            DvtWeeklyQualification.Status.RESTRICTION_FAILED,
+            DvtWeeklyQualification.checkEntry(minStage, warrior, npcs, null).status,
+        )
+        assertEquals(
+            DvtWeeklyQualification.Status.RESTRICTION_FAILED,
+            DvtWeeklyQualification.checkEntry(
+                minStage, warrior, npcs, soul(10012, element = 7, level = 10)
+            ).status,
+        )
+        assertEquals(
+            DvtWeeklyQualification.Status.RESTRICTION_FAILED,
+            DvtWeeklyQualification.checkEntry(
+                minStage, warrior, npcs, soul(10012, element = 8, level = 9)
+            ).status,
+        )
+        assertEquals(
+            DvtWeeklyQualification.Status.RESTRICTION_FAILED,
+            DvtWeeklyQualification.checkEntry(
+                minStage, warrior, npcs, soul(10039, element = 8, level = 10)
+            ).status,
+        )
+
+        val maxStage = dungeons.getValue(72).copy(
+            needPar = listOf(DungeonNeedDef(10, 50), DungeonNeedDef(0, 0)),
+        )
+        assertEquals(
+            DvtWeeklyQualification.Status.OK,
+            DvtWeeklyQualification.checkEntry(
+                maxStage, warrior, npcs, soul(10012, element = 2, level = 50)
+            ).status,
+        )
+        assertEquals(
+            DvtWeeklyQualification.Status.RESTRICTION_FAILED,
+            DvtWeeklyQualification.checkEntry(
+                maxStage, warrior, npcs, soul(10012, element = 2, level = 51)
+            ).status,
+        )
     }
 
     @Test

@@ -59,6 +59,7 @@ class BattleManager(
     private val collectionSystem: CollectionSystem? = null,
     private val sacredEquipPrimaryDefs: Map<Int, SacredEquipPrimaryDef> = emptyMap(),
     private val exclusiveSkillDefs: Map<Int, Map<Int, ExclusiveSkillDef>> = emptyMap(),
+    private val soulSystem: SoulSystem? = null,
 ) {
     /** Trình phân tích vật phẩm chiến đấu (stateless, dùng chung cho toàn trận)*/
     private val battleItemResolver = BattleItemResolver(inventorySystem, itemDefs)
@@ -485,7 +486,8 @@ class BattleManager(
                 turn = fighter.turn,
                 career = fighter.career,
                 equipItemIds = fighter.equipItemIds,
-                outfitItemIds = fighter.outfitItemIds
+                outfitItemIds = fighter.outfitItemIds,
+                soulEquipId = fighter.soulEquipId
             )
         }
         val newRoleBytes = BattleRoleSerializer.serializeAll(newRoleDataList)
@@ -610,7 +612,8 @@ class BattleManager(
                 turn = fighter.turn,
                 career = fighter.career,
                 equipItemIds = fighter.equipItemIds,
-                outfitItemIds = fighter.outfitItemIds
+                outfitItemIds = fighter.outfitItemIds,
+                soulEquipId = fighter.soulEquipId
             )
         }
         val roleBytes = BattleRoleSerializer.serializeAll(roleDataList)
@@ -1691,6 +1694,8 @@ class BattleManager(
         val hp = petData.hp.coerceIn(1L, maxHp)
         val sp = petData.sp.toLong().coerceIn(0L, maxSp)
 
+        val equippedSoul = soulSystem?.equippedForNpc(ownerCharacterId, npcDataId)
+
         val normalSkills = npcDef.skills.take(3)
             .zip(listOf(petData.skill1Lv, petData.skill2Lv, petData.skill3Lv))
             .filter { (id, lv) -> id > 0 && lv > 0 }
@@ -1708,12 +1713,15 @@ class BattleManager(
             normalSkills[npcDef.upgradeSkill] = upgradeSkillLv
         }
 
+        val battleSkillLevels = SoulSkillLevelMerge.merge(normalSkills, equippedSoul)
+
         return BattleFighter(
             roleId = npcDataId.toLong(),
             kind = EHuman.FOLLOW_NPC,
             masterId = masterId,
             npcId = npcDataId,
             followSlot = followSlot,
+            soulEquipId = equippedSoul?.itemId ?: 0,
             name = petData.name.ifEmpty { npcDef.name },
             col = col,
             row = row,
@@ -1741,8 +1749,8 @@ class BattleManager(
             damageReduction = equipBonus.damageReduction,
             reduceTotalDamage = equipBonus.reduceTotalDamage,
             increaseDamageTakenSelf = equipBonus.increaseDamageTakenSelf,
-            skills = normalSkills.keys.toIntArray(),
-            skillLevels = normalSkills
+            skills = battleSkillLevels.keys.toIntArray(),
+            skillLevels = battleSkillLevels
         )
     }
 

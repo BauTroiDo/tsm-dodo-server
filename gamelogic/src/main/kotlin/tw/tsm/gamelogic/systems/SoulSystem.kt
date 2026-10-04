@@ -136,3 +136,20 @@ object SoulEquipTargetValidator {
         return null
     }
 }
+
+/**
+ * DVT RoleController:GetSkillLv(showHigher=true): a Soul-only skill is exposed
+ * at its Soul level; if the warrior already knows the same skill, the higher
+ * of the warrior and Soul levels wins.
+ */
+object SoulSkillLevelMerge {
+    fun merge(base: Map<Int, Int>, soul: SoulThingData?): Map<Int, Int> {
+        if (soul == null) return base
+        val result = base.toMutableMap()
+        for (skill in soul.skills) {
+            if (skill.id <= 0 || skill.level <= 0) continue
+            result[skill.id] = maxOf(result[skill.id] ?: 0, skill.level)
+        }
+        return result
+    }
+}

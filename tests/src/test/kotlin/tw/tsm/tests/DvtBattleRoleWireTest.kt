@@ -36,6 +36,19 @@ class DvtBattleRoleWireTest {
     }
 
     @Test
+    fun `follower RoleAppear sends Soul item id as trailing soulEquipId`() {
+        val pet = BattleRoleData(
+            warType=1, humanKind=EHuman.FOLLOW_NPC, roleId=43, npcId=1001, masterId=42,
+            col=2, row=3, maxHp=100, maxSp=50, hp=100, sp=50, level=1,
+            element=1, name="Pet", soulEquipId=59576
+        )
+        val bytes = BattleRoleSerializer.serialize(pet)
+        val value = ByteBuffer.wrap(bytes.takeLast(2).toByteArray())
+            .order(ByteOrder.LITTLE_ENDIAN).short.toInt() and 0xffff
+        assertEquals(59576, value)
+    }
+
+    @Test
     fun `Vietnamese player and pet names carry UTF-8 BOM on battle wire`() {
         fun assertBomPrefixedName(bytes: ByteArray) {
             // Common BattleRoleData header before the conditional name field:

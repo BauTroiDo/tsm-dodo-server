@@ -45,9 +45,9 @@ object BattleRoleSerializer {
             // Tên tướng (UTF-8)
             writer.writeUtf8WithByteLen(data.name)
         }
-        // RoleAppear always consumes one trailing UInt16 after every fighter,
-        // regardless of EHuman kind. DVT uses it as soulEquipId.
-        writer.writeShortLE(0)
+        // RoleAppear always consumes one trailing UInt16 after every fighter.
+        // For a follower with Soul this is the Soul itemId (NpcSoulData key).
+        writer.writeShortLE(data.soulEquipId)
 
         return writer.toByteArray()
     }
@@ -139,5 +139,6 @@ data class BattleRoleData(
     val turn: Int = 0,
     val career: Int = 0,
     val equipItemIds: IntArray = intArrayOf(),
-    val outfitItemIds: IntArray = intArrayOf()
+    val outfitItemIds: IntArray = intArrayOf(),
+    val soulEquipId: Int = 0,
 )

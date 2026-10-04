@@ -28,6 +28,8 @@ class BattleFighter(
     val npcId: Int = 0,
     /** Carried follow slot for player-owned battle pets; 0 for non-follow fighters. */
     val followSlot: Int = 0,
+    /** DVT FightField soulEquipId: Soul itemId (NpcSoulData key), 0 when none. */
+    val soulEquipId: Int = 0,
 
     // ── Vị trí trên bàn cờ ──
     var col: Int,
@@ -66,7 +68,7 @@ class BattleFighter(
     /** DVT EAttribute.IncreaseDamageTakenSelf=118 (%). */
     var increaseDamageTakenSelf: Int = 0,
 
-    // ── Kỹ năng (tối đa 3) ──
+    // ── Kỹ năng khả dụng (base + special/upgrade/Soul khi có bằng chứng) ──
     val skills: IntArray = intArrayOf(),
     /** Skill level snapshot; needed by SkillData:GetFightArea(skillLv). */
     val skillLevels: Map<Int, Int> = emptyMap(),

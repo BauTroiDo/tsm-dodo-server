@@ -3207,3 +3207,38 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
   - full gradlew test build --rerun-tasks: BUILD SUCCESSFUL, 21/21 tasks.
 - No production deploy/restart for A3. Production still does not have a verified DVT source for Soul acquisition, and stat settlement remains evidence-blocked.
 - Next safe slice A4: wire equipped Soul state into the already-identified read-only consumers (qualification kind8/9/10 and battle appearance/soul skill lookup) only where the Lua contract is explicit; keep six-stat settlement blocked until authoritative evidence.
+
+
+## 2026-10-05 — Soul Foundation A4 — READ-ONLY CONSUMERS PASS
+
+- Scope: consume already-persisted/equipped protocol120 Soul state in explicit Lua DVT read paths only. No Soul acquisition, no six-stat settlement, no weekly/Soul dungeon battle enablement.
+- Qualification evidence from Dungeon.CheckForQualification:
+  - kind8 requires equipped Soul element == parameter.
+  - kind9 requires equipped Soul level >= parameter.
+  - kind10 requires equipped Soul level <= parameter.
+  - kinds4/5 remain UNSUPPORTED in DvtWeeklyQualification because their full RoleController:GetSkillLv contract also includes special/upgrade/exclusive-weapon/passive skills; do not pretend partial state is complete.
+- DvtWeeklyQualification now accepts optional equippedSoul and evaluates kinds1/2/3/8/9/10. It requires the Soul equipId to match the deployed warrior npcId.
+- This qualification helper is still NOT wired to weekly room creation/runtime. Existing kind3/5 combat/formation blockers remain; Soul Challenge entry is NOT enabled by A4.
+- Battle appearance evidence from FightField.RoleAppear:
+  - every fighter has trailing soulEquipId U16;
+  - when >0, client indexes npcSoulDatas[soulEquipId], therefore the wire value is the Soul itemId (595xx), not equipId and not the mapped NPC avatar id.
+- Battle integration:
+  - BattleFighter/BattleRoleData now carry soulEquipId.
+  - BattleRoleSerializer writes the authoritative value instead of unconditional zero.
+  - player-owned FollowNpc fighters resolve SoulSystem.equippedForNpc and use equippedSoul.itemId on the battle wire.
+- Soul skill evidence from RoleController:GetSkillLv(showHigher=true):
+  - Soul-only skills expose their Soul level.
+  - duplicate warrior/Soul skills use the higher level.
+- SoulSkillLevelMerge implements exactly that rule and is applied to follower battle skill snapshots.
+- A4 intentionally DOES NOT add Soul startAtt/nowAtt conversion to ATK/DEF/INT/AGI/HPX/SPX. Client formulas are known, but authoritative server settlement/order is still evidence-blocked.
+- Regression:
+  - DungeonWeeklyQualificationSafeTest covers kind8 element, kind9 minimum level, kind10 maximum level, missing Soul, wrong element/level, and equipId mismatch.
+  - DvtBattleRoleWireTest proves follower trailing soulEquipId serializes Soul item59576.
+  - SoulA4ReadOnlyIntegrationTest proves duplicate skill higher-level semantics and Soul-only skill insertion.
+  - Existing A3 equip tests remain PASS.
+- Validation:
+  - targeted A3/A4 + weekly qualification/battle-wire suite: BUILD SUCCESSFUL, 18 actionable tasks.
+  - git diff --check: PASS.
+  - full gradlew test build --rerun-tasks: BUILD SUCCESSFUL, 21/21 tasks.
+- Gradle compiler-session deletion was restored exactly; pre-existing scratch/bundle files remain untouched.
+- No production deploy/restart for A4. Next safe work: separately audit a verified Soul acquisition path (gacha/mail/GM/web) or complete the full skill qualification contract before wiring Soul dungeon entry. Do not remove the weekly kind guard until dedicated kind3/5 combat is complete.
