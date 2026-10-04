@@ -40,7 +40,15 @@ class BattleInstance(
     /** Trình phân tích vật phẩm trận chiến*/
     val itemResolver: BattleItemResolver,
     /** Định nghĩa NPC tham chiến (npcId + NpcDef, dùng cho tính thưởng và rơi đồ)*/
-    val involvedNpcDefs: List<Pair<Int, NpcDef>>
+    val involvedNpcDefs: List<Pair<Int, NpcDef>>,
+    /** DVT protocol-47 dungeon id for server-driven special battles; 0 = ordinary battle. */
+    val dungeonId: Int = 0,
+    /** NeedKind MaxRound: all enemies must be defeated by the end of this round. */
+    val winWithinRounds: Int = 0,
+    /** NeedKind LimitRound: remaining alive through this many resolved rounds clears the stage. */
+    val surviveRounds: Int = 0,
+    /** Weekly stage rewards come from DungeonCombo, not generic NPC EXP/gold/drop settlement. */
+    val suppressGenericRewards: Boolean = false,
 ) {
     /** Máy trạng thái trận chiến*/
     enum class State {
@@ -679,6 +687,8 @@ class BattleInstance(
         return when {
             aliveEnemies.isEmpty() -> BattleEndResult(playerWin = true)
             alivePlayers.isEmpty() -> BattleEndResult(playerWin = false)
+            surviveRounds > 0 && currentRound >= surviveRounds -> BattleEndResult(playerWin = true)
+            winWithinRounds > 0 && currentRound >= winWithinRounds -> BattleEndResult(playerWin = false)
             else -> null
         }
     }
