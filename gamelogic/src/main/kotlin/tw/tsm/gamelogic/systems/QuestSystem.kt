@@ -3,9 +3,15 @@ package tw.tsm.gamelogic.systems
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.temporal.TemporalAdjusters
 import java.util.concurrent.ConcurrentHashMap
 import tw.tsm.domain.data.DecMissionResult
 import tw.tsm.domain.data.MarkDef
+import tw.tsm.domain.interfaces.repositories.DungeonWeekRefreshResult
 import tw.tsm.domain.interfaces.repositories.MissionFlagRecord
 import tw.tsm.domain.interfaces.repositories.MissionRecord
 import tw.tsm.domain.interfaces.repositories.QuestRepository
@@ -31,13 +37,27 @@ class QuestSystem(
     private val markDefs: Map<Int, MarkDef>,
     dailyDungeonMissionIds: Set<Int> = emptySet(),
     private val today: () -> Int = DispatchSystem::currentDayKey,
+    weeklyDungeonMissionIds: Set<Int> = emptySet(),
+    weeklyClaimMissionIds: Set<Int> = emptySet(),
+    private val thisWeek: () -> Int = ::currentDungeonWeekKey,
 ) {
 
     // Only normal kind1/2 dungeon dailyFlag counters proven kind8/bitId0 may be cleared.
     private val dailyDungeonIds = dailyDungeonMissionIds.filterTo(mutableSetOf()) {
         markDefs[it]?.let { mark -> mark.kind == 8 && mark.bitId == 0 } == true
     }
+
+    // DVT Mark_C kind9 is the weekly family. Scope comes only from currently
+    // loaded DungeonData rows; never sweep every legacy/future kind9 mark.
+    private val weeklyDungeonIds = weeklyDungeonMissionIds.filterTo(mutableSetOf()) {
+        markDefs[it]?.let { mark -> mark.kind == 9 && mark.bitId == 0 } == true
+    }
+    private val weeklyClaimBits = weeklyClaimMissionIds.mapNotNullTo(mutableSetOf()) {
+        markDefs[it]?.takeIf { mark -> mark.kind == 9 && mark.bitId > 0 }?.bitId
+    }
+
     private val checkedDays = ConcurrentHashMap<Long, Int>()
+    private val checkedWeeks = ConcurrentHashMap<Long, Int>()
 
     suspend fun refreshDungeonDaily(charId: Long): List<Int> {
         if (dailyDungeonIds.isEmpty() || charId <= 0) return emptyList()
@@ -47,6 +67,19 @@ class QuestSystem(
             val removed = repo.refreshDungeonDay(charId, day, dailyDungeonIds)
             checkedDays[charId] = day
             removed
+        }
+    }
+
+    suspend fun refreshDungeonWeekly(charId: Long): DungeonWeekRefreshResult {
+        if ((weeklyDungeonIds.isEmpty() && weeklyClaimBits.isEmpty()) || charId <= 0) {
+            return DungeonWeekRefreshResult()
+        }
+        return mutationLock(charId).withLock {
+            val week = thisWeek()
+            if ((checkedWeeks[charId] ?: 0) >= week) return@withLock DungeonWeekRefreshResult()
+            val reset = repo.refreshDungeonWeek(charId, week, weeklyDungeonIds, weeklyClaimBits)
+            checkedWeeks[charId] = week
+            reset
         }
     }
 
@@ -208,4 +241,12 @@ class QuestSystem(
      * @return Danh sách đánh dấu
      */
     suspend fun getFlags(charId: Long): List<MissionFlagRecord> = repo.getMissionFlags(charId)
+}
+
+
+/** Monday 00:00 boundary used by the DVT weekly-dungeon calendar. */
+private fun currentDungeonWeekKey(): Int {
+    val monday = LocalDate.now(ZoneId.of("Asia/Taipei"))
+        .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+    return monday.format(DateTimeFormatter.BASIC_ISO_DATE).toInt()
 }
