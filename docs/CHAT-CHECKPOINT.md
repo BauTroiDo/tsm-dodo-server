@@ -2705,7 +2705,7 @@ Public DVT Crazy Weekly guide gives three strong anchors:
 - stage16: kill the pig-headed enemy first; enemies use poison;
 - stage17: Skeleton King can use Xuanwu/death;
 - stages18-20 use progressively richer endgame effects; stage20 includes heal/status-clear/mana-drain.
-The guide screenshots also match live kind5 needPar data, e.g. stage8 = Earth soul equipment + forbid skill10016; stage16 = Fire soul equipment + deployed soul level >60; stage17 = Dark soul equipment + forbid skill23027; stage20 = clear within 20 rounds + deployed soul level >70.
+Version warning: the 2024 guide screenshots are NOT authoritative for current 2.4.76 entry conditions. Stage8 still matches current data (Earth-soul equipment + forbid skill10016), but the guide's stage16/17/20 conditions differ from current IOS_Dungeon_C. For current entry/round restrictions always use the loaded DVT data; use the guide only as secondary formation/behavior evidence.
 
 A much stronger Npc_C block was found under activity-NPC kind31:
 - `40687..` begins a sequence of `Hồn - ...` high-stat enemies.
