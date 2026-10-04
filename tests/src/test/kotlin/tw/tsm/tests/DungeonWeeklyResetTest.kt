@@ -64,8 +64,10 @@ class DungeonWeeklyResetTest {
     private fun system(store: Store, week: () -> Int) = QuestSystem(
         repo = store.repo,
         markDefs = defs,
-        weeklyDungeonMissionIds = setOf(12722, 13328, 14000, 12336),
-        weeklyClaimMissionIds = setOf(12762, 14001),
+        // Scope comes from currently loaded DungeonData only. 14000/14001 remain
+        // in the backing store to prove unrelated kind9 records are untouched.
+        weeklyDungeonMissionIds = setOf(12722, 13328, 12336),
+        weeklyClaimMissionIds = setOf(12762),
         thisWeek = week,
     )
 
