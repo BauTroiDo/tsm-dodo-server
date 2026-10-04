@@ -6,6 +6,16 @@ data class DungeonNeedDef(
     val parameter: Int,
 )
 
+/** DVT Data/DungeonCriteriaData.lua + IOS_DungeonCriteria_C.dat. */
+data class DungeonCriteriaDef(
+    val id: Int,
+    val playerOrNpc: Int,
+    val kind: Int,
+    val compare: Int,
+    val value: Long,
+    val value2: Long,
+)
+
 data class DungeonDef(
     val id: Int,
     val nameId: Long,
