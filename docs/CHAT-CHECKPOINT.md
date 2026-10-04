@@ -3046,3 +3046,10 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Restart completed through the established detached WMI launcher after old game and app wrapper exited. Fresh connections confirm the new game owns the configured listener, the new NpcClientPath class was compiled, and startup is ready without runtime errors.
 - Player was asked to enter Ba Dau again after restart. No post-deploy gameplay trace yet; do not mark the three finds or client visibility PASS until observed.
 - Dev tracked working tree is clean; pre-existing untracked bundles/scratch/tools are preserved. GitHub push still awaits trusted-remote confirmation after automatic approval rejection.
+
+### Ba Dau post-deploy live retest — SERVER RUNTIME PASS
+
+- New player run after restart selected clickIds 2, 6 (roaming), then 4. Each click opened the dialogue and battle; mission12358 advanced 2→3→4→5.
+- The final branch completed mission12358, incremented12359 from0→1, and reward settlement logged `Dungeon 10 settled: remaining=539s turn=0 rewards=[(45664, 1)] dailyFlag=12360`.
+- This reproduces and clears the previously blocked roaming clickId6. All three finds, terminal completion and server reward issuance now have post-deploy evidence. Client bag/dialog receipt has not been explicitly confirmed by the player.
+- Gameplay runtime remains commit48c7aec; later commits only synchronize checkpoint. The focused20/20 tests and production build passed before restart.
