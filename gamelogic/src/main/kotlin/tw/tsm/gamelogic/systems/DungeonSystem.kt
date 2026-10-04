@@ -4,6 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import java.util.concurrent.ConcurrentHashMap
 import tw.tsm.domain.data.DungeonComboDef
 import tw.tsm.domain.data.DungeonDef
+import tw.tsm.domain.data.NpcDef
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.repositories.MissionFlagRecord
@@ -44,6 +45,8 @@ class DungeonSystem(
     private val responseSender: ResponseSender? = null,
     private val comboDefs: Map<Int, List<DungeonComboDef>> = emptyMap(),
     private val inventorySystem: InventorySystem? = null,
+    private val petSystem: PetSystem? = null,
+    private val npcDefs: Map<Int, NpcDef> = emptyMap(),
     private val clockMillis: () -> Long = System::currentTimeMillis,
 ) {
     private val activeRuns = ConcurrentHashMap<Long, ActiveDungeonRun>()
@@ -127,14 +130,58 @@ class DungeonSystem(
         alreadyInRoom: Boolean,
     ): Int {
         val def = defs[dungeonId] ?: return RESULT_NO_DUNGEON
-        // Kinds 3/5 are special WeekDungeon style 24 and require backend-only enemy formations.
-        if (def.kind != KIND_NORMAL_MULTIPLAYER || def.maxPlayer <= 1) return RESULT_NO_SPACE
+        if (def.kind !in setOf(KIND_NORMAL_MULTIPLAYER, KIND_WEEKLY)) return RESULT_NO_SPACE
+        if (def.kind == KIND_NORMAL_MULTIPLAYER && def.maxPlayer <= 1) return RESULT_NO_SPACE
+        if (def.maxPlayer <= 0) return RESULT_NO_SPACE
         if (session.level !in def.minLv..def.maxLv) return RESULT_LEVEL_MISMATCH
-        if (alreadyInRoom || session.mapId == def.sceneId) return RESULT_ALREADY_IN_ROOM
+        if (alreadyInRoom || (def.kind == KIND_NORMAL_MULTIPLAYER && session.mapId == def.sceneId)) {
+            return RESULT_ALREADY_IN_ROOM
+        }
         if (session.battleId != 0L) return RESULT_IN_BATTLE
         if (partySystem.isInParty(session.playerId)) return RESULT_CANNOT_TEAM
 
-        return validateDailyCount(session, def)
+        return if (def.kind == KIND_WEEKLY) {
+            refreshWeeklyState(session)
+            RESULT_OK
+        } else {
+            validateDailyCount(session, def)
+        }
+    }
+
+    suspend fun refreshWeeklyState(session: GameSession) {
+        val reset = questSystem.refreshDungeonWeekly(session.roleId.toLong())
+        for (missionId in reset.removedMissionIds) {
+            responseSender?.sendRemoveMission(session, missionId)
+        }
+        if (reset.clearedFlagBits.isNotEmpty()) {
+            responseSender?.sendSetMissionFlags(
+                session,
+                reset.clearedFlagBits.map { MissionFlagRecord(it, 0) },
+            )
+        }
+    }
+
+    /**
+     * Revalidate every room member immediately before the 5-second start countdown.
+     * Lua's client-side guard is buggy, so S:047-019 must be enforced by the server.
+     */
+    suspend fun validateWeeklyRoomStart(room: DungeonRoomState): Map<Long, Int> {
+        val def = defs[room.dungeonId] ?: return mapOf(room.ownerId to DvtWeeklyQualification.RESTRICTION_FAILED)
+        if (def.kind != KIND_WEEKLY) return emptyMap()
+
+        val pets = petSystem
+        if (pets == null) return mapOf(room.ownerId to DvtWeeklyQualification.RESTRICTION_FAILED)
+
+        val failures = linkedMapOf<Long, Int>()
+        for ((playerId, member) in room.members) {
+            val session = member.session
+            refreshWeeklyState(session)
+            val selected = pets.getBattleDeployableFollowPets(session.roleId.toLong()).firstOrNull()?.second
+            val npc = selected?.npcId?.let(npcDefs::get)
+            val result = DvtWeeklyQualification.checkKind3(def, selected, npc)
+            if (result != DvtWeeklyQualification.OK) failures[playerId] = result
+        }
+        return failures
     }
 
     suspend fun enterSingle(session: GameSession, dungeonId: Int): Boolean {
@@ -272,6 +319,57 @@ class DungeonSystem(
 
         for ((slot, thing) in changed) responseSender?.sendSetBagItem(session, slot, thing, showMsg = true)
         return DungeonSettlement(def.id, result = 0, rewards = rewards)
+    }
+
+    /**
+     * Settle a server-driven kind3 WeekDungeon battle. Stage progress is weekly Mark
+     * kind9; repeat clears stay playable but cannot duplicate the stage reward.
+     */
+    suspend fun settleWeeklyBattle(
+        session: GameSession,
+        playerWin: Boolean,
+        dungeonId: Int,
+    ): DungeonSettlement? {
+        val playerId = session.playerId
+        val run = activeRuns[playerId] ?: return null
+        if (run.dungeonId != dungeonId || run.settled) return null
+        val def = defs[dungeonId] ?: return null
+        if (def.kind != KIND_WEEKLY || def.dailyFlag <= 0) return null
+
+        val settledRun = run.copy(settled = true)
+        if (!activeRuns.replace(playerId, run, settledRun)) return null
+        if (!playerWin) return DungeonSettlement(dungeonId, result = 1)
+
+        refreshWeeklyState(session)
+        val charId = session.roleId.toLong()
+        val alreadyCompleted = questSystem.getMissions(charId)
+            .firstOrNull { it.missionId == def.dailyFlag }
+            ?.step
+            ?.let { it >= def.dailyCount.coerceAtLeast(1) }
+            ?: false
+        if (alreadyCompleted) return DungeonSettlement(dungeonId, result = 0)
+
+        val elapsedSeconds = ((clockMillis() - run.startedAtMillis).coerceAtLeast(0L) / 1000L)
+            .coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+        val remainingSeconds = (def.timeMinutes * 60 - elapsedSeconds).coerceAtLeast(0)
+        val rewards = resolveRewards(dungeonId, session.turn, remainingSeconds, playerWin = true)
+        if (rewards.isEmpty()) {
+            dungeonLogger.warn {
+                "Weekly dungeon $dungeonId won without supported reward row; remaining=$remainingSeconds"
+            }
+            return DungeonSettlement(dungeonId, result = 1)
+        }
+
+        val inventory = inventorySystem ?: return DungeonSettlement(dungeonId, result = 1)
+        val changed = inventory.addRewardsToBagExact(charId, rewards)
+            ?: return DungeonSettlement(dungeonId, result = 1)
+
+        questSystem.setMissionStep(charId, def.dailyFlag, def.dailyCount.coerceAtLeast(1))
+        responseSender?.sendAddMissionStep(session, def.dailyFlag, def.dailyCount.coerceAtLeast(1))
+        for ((slot, thing) in changed) {
+            responseSender?.sendSetBagItem(session, slot, thing, showMsg = true)
+        }
+        return DungeonSettlement(dungeonId, result = 0, rewards = rewards)
     }
 
     /**
