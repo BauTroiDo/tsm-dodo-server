@@ -68,8 +68,19 @@ class AutoSaveService(
             if (charId <= 0) continue
 
             try {
-                for (missionId in questSystem?.refreshDungeonDaily(charId).orEmpty()) {
-                    responseSender?.sendRemoveMission(session, missionId)
+                questSystem?.let { quests ->
+                    for (missionId in quests.refreshDungeonDaily(charId)) {
+                        responseSender?.sendRemoveMission(session, missionId)
+                    }
+                    val weekly = quests.refreshDungeonWeekly(charId)
+                    for (missionId in weekly.removedMissionIds) {
+                        responseSender?.sendRemoveMission(session, missionId)
+                    }
+                    if (weekly.removedFlagBits.isNotEmpty()) {
+                        // MarkManager.InitMissionFlag clears its local table before
+                        // applying this snapshot, so the all-pass bit disappears live.
+                        responseSender?.sendInitMissionFlags(session, quests.getFlags(charId))
+                    }
                 }
                 // Vị trí
                 if (session.mapId > 0) {

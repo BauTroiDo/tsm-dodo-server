@@ -3,9 +3,14 @@ package tw.tsm.gamelogic.systems
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.temporal.TemporalAdjusters
 import java.util.concurrent.ConcurrentHashMap
 import tw.tsm.domain.data.DecMissionResult
 import tw.tsm.domain.data.MarkDef
+import tw.tsm.domain.interfaces.repositories.DungeonWeekRefreshResult
 import tw.tsm.domain.interfaces.repositories.MissionFlagRecord
 import tw.tsm.domain.interfaces.repositories.MissionRecord
 import tw.tsm.domain.interfaces.repositories.QuestRepository
@@ -31,6 +36,9 @@ class QuestSystem(
     private val markDefs: Map<Int, MarkDef>,
     dailyDungeonMissionIds: Set<Int> = emptySet(),
     private val today: () -> Int = DispatchSystem::currentDayKey,
+    weeklyDungeonMissionIds: Set<Int> = emptySet(),
+    weeklyClaimBitIds: Set<Int> = emptySet(),
+    private val currentWeek: () -> Int = { currentDungeonWeekKey() },
 ) {
 
     // Only normal kind1/2 dungeon dailyFlag counters proven kind8/bitId0 may be cleared.
@@ -38,6 +46,14 @@ class QuestSystem(
         markDefs[it]?.let { mark -> mark.kind == 8 && mark.bitId == 0 } == true
     }
     private val checkedDays = ConcurrentHashMap<Long, Int>()
+
+    private val weeklyDungeonIds = weeklyDungeonMissionIds.filterTo(mutableSetOf()) {
+        markDefs[it]?.let { mark -> mark.kind == 9 && mark.bitId == 0 } == true
+    }
+    private val weeklyClaimBits = weeklyClaimBitIds.filterTo(mutableSetOf()) { bit ->
+        bit > 0 && markDefs.values.any { mark -> mark.kind == 9 && mark.bitId == bit }
+    }
+    private val checkedWeeks = ConcurrentHashMap<Long, Int>()
 
     suspend fun refreshDungeonDaily(charId: Long): List<Int> {
         if (dailyDungeonIds.isEmpty() || charId <= 0) return emptyList()
@@ -47,6 +63,21 @@ class QuestSystem(
             val removed = repo.refreshDungeonDay(charId, day, dailyDungeonIds)
             checkedDays[charId] = day
             removed
+        }
+    }
+
+    suspend fun refreshDungeonWeekly(charId: Long): DungeonWeekRefreshResult {
+        if ((weeklyDungeonIds.isEmpty() && weeklyClaimBits.isEmpty()) || charId <= 0) {
+            return DungeonWeekRefreshResult()
+        }
+        return mutationLock(charId).withLock {
+            val week = currentWeek()
+            if ((checkedWeeks[charId] ?: 0) >= week) {
+                return@withLock DungeonWeekRefreshResult()
+            }
+            val result = repo.refreshDungeonWeek(charId, week, weeklyDungeonIds, weeklyClaimBits)
+            checkedWeeks[charId] = week
+            result
         }
     }
 
@@ -208,4 +239,15 @@ class QuestSystem(
      * @return Danh sách đánh dấu
      */
     suspend fun getFlags(charId: Long): List<MissionFlagRecord> = repo.getMissionFlags(charId)
+
+    companion object {
+        private val DUNGEON_WEEK_ZONE: ZoneId = ZoneId.of("Asia/Taipei")
+
+        /** Official weekly dungeon boundary: Monday 00:00. */
+        fun currentDungeonWeekKey(): Int {
+            val monday = LocalDate.now(DUNGEON_WEEK_ZONE)
+                .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+            return monday.year * 10000 + monday.monthValue * 100 + monday.dayOfMonth
+        }
+    }
 }

@@ -9,10 +9,12 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.jdbc.upsert
+import tw.tsm.domain.interfaces.repositories.DungeonWeekRefreshResult
 import tw.tsm.domain.interfaces.repositories.MissionFlagRecord
 import tw.tsm.domain.interfaces.repositories.MissionRecord
 import tw.tsm.domain.interfaces.repositories.QuestRepository
 import tw.tsm.persistence.tables.CharacterDungeonDays
+import tw.tsm.persistence.tables.CharacterDungeonWeeks
 import tw.tsm.persistence.tables.CharacterCompletedEvents
 import tw.tsm.persistence.tables.CharacterMissionFlags
 import tw.tsm.persistence.tables.CharacterMissions
@@ -45,6 +47,62 @@ class QuestRepositoryImpl : QuestRepository {
                 it[CharacterDungeonDays.dayKey] = dayKey
             }
             removed
+        }
+
+
+    override suspend fun refreshDungeonWeek(
+        charId: Long,
+        weekKey: Int,
+        missionIds: Set<Int>,
+        claimFlagBits: Set<Int>,
+    ): DungeonWeekRefreshResult =
+        suspendTransaction {
+            val oldWeek = CharacterDungeonWeeks.selectAll()
+                .where { CharacterDungeonWeeks.charId eq charId }
+                .singleOrNull()?.get(CharacterDungeonWeeks.weekKey)
+            if (oldWeek != null && oldWeek >= weekKey) {
+                return@suspendTransaction DungeonWeekRefreshResult()
+            }
+
+            val removedMissions = if (oldWeek == null || missionIds.isEmpty()) {
+                emptyList()
+            } else {
+                CharacterMissions.selectAll()
+                    .where {
+                        (CharacterMissions.charId eq charId) and
+                            (CharacterMissions.missionId inList missionIds.toList())
+                    }
+                    .map { it[CharacterMissions.missionId] }
+            }
+            if (removedMissions.isNotEmpty()) {
+                CharacterMissions.deleteWhere {
+                    (CharacterMissions.charId eq charId) and
+                        (CharacterMissions.missionId inList removedMissions)
+                }
+            }
+
+            val removedFlags = if (oldWeek == null || claimFlagBits.isEmpty()) {
+                emptyList()
+            } else {
+                CharacterMissionFlags.selectAll()
+                    .where {
+                        (CharacterMissionFlags.charId eq charId) and
+                            (CharacterMissionFlags.bitIndex inList claimFlagBits.toList())
+                    }
+                    .map { it[CharacterMissionFlags.bitIndex] }
+            }
+            if (removedFlags.isNotEmpty()) {
+                CharacterMissionFlags.deleteWhere {
+                    (CharacterMissionFlags.charId eq charId) and
+                        (CharacterMissionFlags.bitIndex inList removedFlags)
+                }
+            }
+
+            CharacterDungeonWeeks.upsert {
+                it[CharacterDungeonWeeks.charId] = charId
+                it[CharacterDungeonWeeks.weekKey] = weekKey
+            }
+            DungeonWeekRefreshResult(removedMissions, removedFlags)
         }
 
 

@@ -16,6 +16,11 @@ data class MissionRecord(val missionId: Int, val step: Int)
  */
 data class MissionFlagRecord(val bitIndex: Int, val bitValue: Int)
 
+data class DungeonWeekRefreshResult(
+    val removedMissionIds: List<Int> = emptyList(),
+    val removedFlagBits: List<Int> = emptyList(),
+)
+
 /**
  * Interface truy cập cơ sở dữ liệu nhiệm vụ
  *
@@ -33,6 +38,14 @@ interface QuestRepository {
      */
     suspend fun refreshDungeonDay(charId: Long, dayKey: Int, missionIds: Set<Int>): List<Int> =
         error("Dungeon day persistence is not implemented by this repository")
+
+    suspend fun refreshDungeonWeek(
+        charId: Long,
+        weekKey: Int,
+        missionIds: Set<Int>,
+        claimFlagBits: Set<Int>,
+    ): DungeonWeekRefreshResult =
+        error("Dungeon week persistence is not implemented by this repository")
 
 
     /**
