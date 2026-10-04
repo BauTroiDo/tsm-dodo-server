@@ -2841,4 +2841,19 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Added legacy 62003 record-point rescue regression.
 - Full local gradlew test build --rerun-tasks: BUILD SUCCESSFUL, 21/21 tasks.
 - git diff --check: PASS (only CRLF normalization warnings).
-- Production deployment/runtime verification pending this checkpoint.
+- Production deployment/runtime verification is recorded immediately below.
+
+## Production deploy c3504fe — VERIFIED
+- Production source is exactly `c3504fe fix: persist dungeon lifecycle and timeout`.
+- Production full Gradle test/build passed 21/21 tasks.
+- Runtime restarted by the existing WMI launcher; Java game PID 8980 was created at 2026-10-04 20:17:35 +07 and runs `tw.tsm.app.MainKt`.
+- Fresh Git Bash SSH verification: `0.0.0.0:6613` and `[::]:6613` LISTEN on PID 8980; recurring localhost health checks continue.
+- Startup log at 20:17:36-20:17:40 confirms Hikari/MySQL connection, DatabaseFactory schema initialization, Dungeon/DungeonCombo/DungeonCriteria/Eve data load, Netty bind, then `Máy chủ đã sẵn sàng, đang chờ kết nối...`.
+- No ERROR/Exception/FATAL was observed in this startup window or current runtime tail.
+- Production-local `application.conf`, WMI launchers and deployment bundles remain intentionally untracked/preserved.
+
+### Runtime client check next
+- Relog/enter a timed DungeonData scene and confirm the HUD now shows numeric `Phút/Giây` from S:047-018.
+- Press `Rời khỏi` -> `Có`; C:013-004 must return to the exact persisted pre-entry origin for new runs.
+- For a character already stranded in legacy scene 62003 before c3504fe, recovery may use the character's saved record point because DVT Eve has no SceneInfo exit there.
+- Timeout must auto-eject through the same exit path when DungeonData.time expires; production log should record the dungeon timeout/exit line.
