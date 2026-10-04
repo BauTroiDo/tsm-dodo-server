@@ -2720,3 +2720,28 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 3. Add data-only regression locking Bách Chiến stage18/19/20 and Crazy stage8/16/17/18/19/20 anchors.
 4. Implement server-side weekly qualification kinds1..5 only where current Pet/Npc state has exact DVT semantics; keep Soul kinds8..10 blocked.
 5. Only then build the WeekDungeon=24 battle lifecycle and its round constraints/reward/progress settlement.
+
+## 2026-10-04 — Dungeon F4-B1 — weekly round objective data contract — PASS
+
+### Evidence
+- Lua DVT `UIDungeon.ENeedKindTag` defines `kind=6 MaxRound -- 回合數(上限)` and `kind=7 LimitRound -- 回合數(下限)`.
+- Therefore kind6 is an upper-bound round requirement and kind7 is a lower-bound round requirement at the data-contract level.
+- Exact server-side pass/fail comparison timing/equality at battle settlement is still not exposed by Lua/client and is NOT activated in this milestone.
+- Real `IOS_Dungeon_C.dat` anchors:
+  - dungeon id21 / Bách Chiến stage4 => kind6 param3.
+  - dungeon id22 / stage5 => kind7 param10.
+  - dungeon id36 / stage19 => kind6 param20.
+  - Soul weekly id81 => kind6 param20, but Soul entry/combat remains blocked independently.
+
+### Implementation
+- Added pure, unwired `DvtWeeklyRoundObjective`.
+- It decodes only weekly kind3/kind5 `DungeonData.needPar` into nullable `maxRound` / `minRound`.
+- Nonpositive parameters are ignored; ordinary dungeons never receive weekly objectives.
+- No battle settlement, automatic victory/failure, progress/reward mutation, formation placement or Soul behavior was changed.
+
+### Validation
+- Added `DungeonWeeklyRoundObjectiveTest` using real tracked `IOS_Dungeon_C.dat`.
+- Targeted test: BUILD SUCCESSFUL, 18/18 Gradle tasks.
+- Full local `gradlew test build --rerun-tasks`: BUILD SUCCESSFUL, 21/21 tasks.
+- `git diff --check`: PASS.
+- Next blocker remains authoritative WeekDungeon formation placement/order and exact round-settlement boundary before kind3 combat can be wired.
