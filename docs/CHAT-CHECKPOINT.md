@@ -3039,3 +3039,10 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Kotlin fix: exclude initially hidden path NPCs without trace encounters from server patrol; accept clicks within 200 pixels of the Eve path segments (including initial spawn), while retaining ordinary distance checks and rejecting positions away from the route. No reward/data/Lua changes.
 - Regression: all Ba Dau level scenes 62007..62010 retain client ownership, path vertices/interiors are clickable, remote/standing/encounter cases stay bounded. Targeted suite 20/20 PASS; app build PASS.
 - Runtime verification and player completion remain pending deployment/retest. GitHub push remains blocked by automatic approval review pending confirmation of the remote destination.
+
+### Ba Dau deployment verification
+
+- Production source is gameplay commit `48c7aec`; app build and the same 20 targeted tests passed on production.
+- Restart completed through the established detached WMI launcher after old game and app wrapper exited. Fresh connections confirm the new game owns the configured listener, the new NpcClientPath class was compiled, and startup is ready without runtime errors.
+- Player was asked to enter Ba Dau again after restart. No post-deploy gameplay trace yet; do not mark the three finds or client visibility PASS until observed.
+- Dev tracked working tree is clean; pre-existing untracked bundles/scratch/tools are preserved. GitHub push still awaits trusted-remote confirmation after automatic approval rejection.
