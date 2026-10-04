@@ -56,6 +56,7 @@ class ResponseSenderImpl(worldManager: WorldManager) : ResponseSender {
     private val battle = BattleResponseSender()
     private val partyPet = PartyPetResponseSender()
     private val astrolabe = AstrolabeResponseSender()
+    private val soul = SoulResponseSender()
     private val mount = MountResponseSender()
     private val inn = InnResponseSender()
     private val macroBox = MacroBoxResponseSender()
@@ -601,6 +602,14 @@ class ResponseSenderImpl(worldManager: WorldManager) : ResponseSender {
 
     override fun sendAstrolabeLevels(session: SessionSender, isLevelUp: Boolean, levels: IntArray) =
         astrolabe.sendLevels(session, isLevelUp, levels)
+
+    // ── Linh Hồn (SoulResponseSender) ──
+
+    override fun sendSoulSnapshot(
+        session: SessionSender,
+        souls: List<tw.tsm.domain.valueobjects.SoulThingData>,
+        result: Int,
+    ) = soul.sendSnapshot(session, souls, result)
 
     // ── Thú cưỡi (MountResponseSender) ──
 

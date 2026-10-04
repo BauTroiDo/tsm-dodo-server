@@ -43,6 +43,7 @@ class LoginService(
     private val petSystem: PetSystem,
     private val mountSystem: MountSystem,
     private val astrolabeSystem: AstrolabeSystem,
+    private val soulSystem: SoulSystem,
     private val hotkeyRepository: HotkeyRepository,
     private val skillRepository: SkillRepository,
     private val roleCountSystem: RoleCountSystem,
@@ -195,6 +196,11 @@ class LoginService(
         val mergedCounts = roleCountSystem.getAllCounts(record.id)
             .mapValues { (_, valuePair) -> valuePair.first }  // value (Không phải maxValue)
         responseSender.sendRoleCountData(session, mergedCounts)
+
+        // S:120-008 Linh Hồn: gửi sau RoleCount vì UI Soul dùng RoleCount.Get(823)
+        // để tính sức chứa kho Hồn. result=1 là login init theo protocal.lua.
+        val soulSnapshot = soulSystem.load(record.id)
+        responseSender.sendSoulSnapshot(session, soulSnapshot, result = 1)
 
         // DVT Chat.Clear() xóa leaveMessages khi reset phiên; nạp snapshot đúng một lần khi đăng nhập.
         val messageBoardSnapshot = try {

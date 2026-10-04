@@ -3095,3 +3095,72 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Use Android Studio JBR E:\Soft\AndroidStudio\jbr\bin on dev and explicit GRADLE_USER_HOME=C:\Users\QT\.gradle for builds. Build can remove tracked .kotlin/sessions/kotlin-compiler-10369008480978718564.salive; restore only that exact unrelated cache file afterward.
 - Production restart only after build/test PASS: terminate old game and app:run wrapper, verify both exited, then existing _launch_prod_wmi.cmd → _start_prod_detached.cmd, reconnect SSH and check newPID/listener/log. Preserve production application.conf.
 - Temporary BaDauProductionAuditScratchTest and WeeklyAuditScratchTest created in this session were removed. Read-only production Eve snapshot remains in this chat workspace work/production-eve.emg. Production packed Eve hash differs from test fixture; do not assert whole-file identity.
+
+
+## 2026-10-05 — Soul Foundation A1 — DATA CONTRACT / LOADERS PASS
+
+- Scope follows user-approved order: establish the Linh Hồn foundation before enabling Soul Challenge dungeon. Lua DVT remains authoritative; no Lua/data/reward edits.
+- Authoritative client/data files locked:
+  - `Logic/Soul.lua`, `Data/SoulData.lua`, `Data/SoulLevelData.lua`, `Data/NpcSoulData.lua`, `UI/UISoul.lua`, `UI/UISoulInfo.lua`, `Common/protocal.lua`.
+  - `IOS_Soul_C.dat`, `IOS_SoulLevel_C.dat`, `IOS_NpcSoul_C.dat`.
+- Real DVT data parsed byte-exact:
+  - IOS_Soul_C: 4 records × 28 bytes, qualities 0..3 (N/R/SR/SSR), no trailing bytes.
+  - IOS_SoulLevel_C: 300 records × 26 bytes, levels 1..300, no trailing bytes.
+  - IOS_NpcSoul_C: 94 records × 5 bytes, item59501..59594 -> npc46415..46508; quality counts N41/R20/SR14/SSR19.
+- Lua Soul formulas locked:
+  - max level = basicLvLimit + starLv×20;
+  - max breakthrough/star = 5 from all four rows;
+  - final caps at star5: N200, R220, SR250, SSR300;
+  - conversion percent = convertRate[starLv] / 10000;
+  - converted six-stat value = floor((startAtt+nowAtt) × conversion percent).
+- Protocol120 SoulThing wire locked: sn Int64, Id U16, element U8, equipId U16, lv U16, starLv U8, startAtt[6] U16, nowAtt[6] U16, 4×(skillId U16 + skillLv U8), lock U8. Quality is derived from item data, not serialized.
+- Important separation: existing Kotlin `FollowNpcData.soulId` / `character_pets.soul_id` is DVT 魂玉ID (Hồn Ngọc / original ID before transformation) from protocol15, NOT protocol120 equipped Linh Hồn. Never reuse this field for Soul120 state.
+- Soul Challenge qualification contract locked from `Dungeon.CheckForQualification`:
+  - kind4 required skill, kind5 forbidden skill;
+  - kind8 equipped Soul element equals parameter;
+  - kind9 equipped Soul level >= parameter;
+  - kind10 equipped Soul level <= parameter.
+  - Existing client Lua OR guard is buggy/unreachable, but server must preserve the intended checks instead of bypassing them.
+- Combat/client dependency confirmed:
+  - RoleController includes equipped Soul skills; duplicate/base skills use the higher level where requested.
+  - Battle RoleAppear consumes trailing U16 `soulEquipId`; Kotlin currently always serializes 0, so Soul battle avatar is not yet wired.
+  - Client exposes converted six-stat formulas, but no authoritative original backend trace was found for the server-side stat settlement/update packet. Do not guess this part.
+- Backend gap before this patch: no Soul handler, no protocol120 persistence/repository, no Soul static loaders, no login S120-008; DvtWeeklyQualification correctly leaves Soul-dependent kinds unsupported.
+- Implemented evidence-safe A1 only:
+  - `domain/.../SoulDefs.kt`;
+  - `data/.../SoulDatLoaders.kt`;
+  - GameDataManager wiring for all three IOS Soul tables;
+  - `SoulFoundationDataRegressionTest.kt` against real DVT files.
+- Validation:
+  - targeted `SoulFoundationDataRegressionTest`: BUILD SUCCESSFUL;
+  - `git diff --check`: PASS;
+  - full `gradlew test build --rerun-tasks`: BUILD SUCCESSFUL, 21/21 tasks.
+- No production deploy/restart for A1: loaders alone do not expose gameplay and protocol120 remains unwired.
+- Next safe slice A2: separate protocol120 Soul persistence + login sync S120-008, then C120-001 equip/takeoff. Do not implement compound/intensify/breakthrough/affination or Soul dungeon rewards until their mutation semantics are separately locked.
+
+
+## 2026-10-05 — Soul Foundation A2 — PERSISTENCE + LOGIN SYNC PASS
+
+- A2 scope stays read-only from gameplay: persistent protocol120 SoulThing state, online cache and login init only. No C120 mutation handler, no stat bonus, no Soul Challenge entry change.
+- Confirmed Lua `RoleCount.Get(index)` returns 0 for missing counters, so Soul bag use of RoleCount823 is safe without inventing a default DB row.
+- Added dedicated protocol120 model/repository/table; it is deliberately separate from pet `soul_id` (protocol15 Hồn Ngọc/original NPC id).
+- `character_souls` persists the exact S120 SoulThing fields: SN, itemId, element, equipId, level/star, 6 start stats, 6 current stats, 4 skill id/levels, lock flags.
+- Added `SoulSystem` authoritative online snapshot with load/find/equippedForNpc/unload. A2 does not mutate or save gameplay state.
+- Added opcode120 and `SoulResponseSender.sendSnapshot` for S:120-008:
+  - header 120/8/0;
+  - count UInt16LE;
+  - exact 53-byte SoulThing rows;
+  - trailing result UInt8; result=1 for login.
+- LoginService now loads/sends Soul snapshot after RoleCount init, matching the client dependency on RoleCount823 for Soul bag capacity.
+- DatabaseFactory creates/migrates CharacterSouls; ServerModule wires SoulRepository/SoulSystem and unloads the cache on disconnect.
+- Regression:
+  - one populated Soul snapshot is asserted byte-for-byte at 59 bytes;
+  - empty login still emits [120,8,0,0,0,1];
+  - SoulSystem load/find/equipped lookup/unload verified.
+- Validation:
+  - A1+A2 targeted suite BUILD SUCCESSFUL, 18 actionable tasks;
+  - `git diff --check` PASS;
+  - full `gradlew test build --rerun-tasks` BUILD SUCCESSFUL, 21/21 tasks.
+- Gradle removed the tracked Kotlin compiler session file during build; restored only `.kotlin/sessions/kotlin-compiler-10369008480978718564.salive`.
+- No production deploy/restart yet. A2 only makes login snapshot capable; gameplay still cannot equip/take off Souls.
+- Next A3: lock exact C:120-001 / S:120-001 equip/takeoff semantics and validation from Lua DVT, then implement atomic persistence/cache mutation. Do not mix in compound/intensify/breakthrough/affination.

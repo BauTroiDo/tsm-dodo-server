@@ -1393,6 +1393,15 @@ interface ResponseSender {
     /** S:078-001 +isLevelUp(1) +level(1)*7. */
     fun sendAstrolabeLevels(session: SessionSender, isLevelUp: Boolean, levels: IntArray)
 
+    // ── Linh Hồn (mainKind=120) ──
+
+    /** S:120-008 +count(U16) + SoulThing*count + result(U8). */
+    fun sendSoulSnapshot(
+        session: SessionSender,
+        souls: List<tw.tsm.domain.valueobjects.SoulThingData>,
+        result: Int = 1,
+    )
+
     // ── Hệ thống vật cưỡi (mainKind=79) ──
 
     /**

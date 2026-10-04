@@ -87,6 +87,18 @@ class GameDataManager(
     var dungeonDefs: Map<Int, DungeonDef> = emptyMap()
         private set
 
+    /** DVT Linh Hồn: cấu hình phẩm chất N/R/SR/SSR từ IOS_Soul_C.dat. */
+    var soulDefs: Map<Int, SoulDef> = emptyMap()
+        private set
+
+    /** DVT Linh Hồn: chi phí theo cấp 1..300 từ IOS_SoulLevel_C.dat. */
+    var soulLevelDefs: Map<Int, SoulLevelDef> = emptyMap()
+        private set
+
+    /** DVT Linh Hồn: item Hồn -> NPC/avatar từ IOS_NpcSoul_C.dat. */
+    var npcSoulDefs: Map<Int, NpcSoulDef> = emptyMap()
+        private set
+
     var dungeonComboDefs: Map<Int, List<DungeonComboDef>> = emptyMap()
         private set
 
@@ -446,6 +458,20 @@ class GameDataManager(
         loadFile(dataIosDir, "IOS_DungeonCriteria_C.dat") { bytes ->
             dungeonCriteriaDefs = DungeonCriteriaDatLoader.load(bytes)
             logger.info { "Nạp IOS_DungeonCriteria xong: ${dungeonCriteriaDefs.size} bản ghi" }
+        }
+
+        // Linh Hồn — đúng ba bảng Lua DVT DataManager.OnLoadSoul*.
+        loadFile(dataIosDir, "IOS_Soul_C.dat") { bytes ->
+            soulDefs = SoulDatLoader.load(bytes)
+            logger.info { "Nạp IOS_Soul xong: ${soulDefs.size} phẩm chất" }
+        }
+        loadFile(dataIosDir, "IOS_SoulLevel_C.dat") { bytes ->
+            soulLevelDefs = SoulLevelDatLoader.load(bytes)
+            logger.info { "Nạp IOS_SoulLevel xong: ${soulLevelDefs.size} cấp" }
+        }
+        loadFile(dataIosDir, "IOS_NpcSoul_C.dat") { bytes ->
+            npcSoulDefs = NpcSoulDatLoader.load(bytes)
+            logger.info { "Nạp IOS_NpcSoul xong: ${npcSoulDefs.size} Hồn" }
         }
 
         // UITeleport — cùng hai bảng client DVT dùng cho LimitFightArea / Turn navigation.

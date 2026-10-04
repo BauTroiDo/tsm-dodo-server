@@ -17,6 +17,7 @@ import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.StatCalculator
 import tw.tsm.domain.interfaces.repositories.AccountRepository
 import tw.tsm.domain.interfaces.repositories.AstrolabeRepository
+import tw.tsm.domain.interfaces.repositories.SoulRepository
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
 import tw.tsm.domain.interfaces.repositories.InventoryRepository
 import tw.tsm.domain.interfaces.repositories.BitFlagRepository
@@ -27,6 +28,7 @@ import tw.tsm.network.PacketDispatcher
 import tw.tsm.network.SessionManager
 import tw.tsm.persistence.repositories.AccountRepositoryImpl
 import tw.tsm.persistence.repositories.AstrolabeRepositoryImpl
+import tw.tsm.persistence.repositories.SoulRepositoryImpl
 import tw.tsm.persistence.repositories.CharacterRepositoryImpl
 import tw.tsm.persistence.repositories.InventoryRepositoryImpl
 import tw.tsm.persistence.repositories.BitFlagRepositoryImpl
@@ -151,6 +153,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
         val roleCountSystem = get<RoleCountSystem>()
         val collectionSystem = get<CollectionSystem>()
         val astrolabeSystem = get<AstrolabeSystem>()
+        val soulSystem = get<SoulSystem>()
         val friendSystem = get<FriendSystem>()
         val scope = get<CoroutineScope>()
         NettyGameServer(get(), get(), get()) { session ->
@@ -192,6 +195,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
                     }
                 }
                 collectionSystem.unload(roleId)
+                soulSystem.unload(roleId)
                 playerStateManager.removePlayer(roleId)
             }
 
@@ -242,6 +246,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     // Repository (interface domain → triển khai persistence)
     single<AccountRepository> { AccountRepositoryImpl() }
     single<AstrolabeRepository> { AstrolabeRepositoryImpl() }
+    single<SoulRepository> { SoulRepositoryImpl() }
     single<CharacterRepository> { CharacterRepositoryImpl() }
     single<InventoryRepository> { InventoryRepositoryImpl() }
     single<QuestRepository> { QuestRepositoryImpl() }
@@ -311,6 +316,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             statSystem = get<StatSystem>()
         )
     }
+    single { SoulSystem(get<SoulRepository>()) }
     single { ItemUseProcessor(get(), get<PetSystem>(), get<GameDataManager>().itemDefs, get<GameDataManager>().blissBagDefs) }
     single { EveEventStateMachine() }
     single {
@@ -492,7 +498,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             }
         }
     }
-    single { LoginService(get(), get(), get(), get(), get(), get<PointSystem>(), get<PlayerCurrencySystem>(), get(), get(), get<EveEventStateMachine>(), get(), get(), get(), get(), get(), get<AstrolabeSystem>(), get(), get<SkillRepository>(), get<RoleCountSystem>(), get<FlyPointSystem>(), get<MailSystem>(), get<FriendSystem>(), get<GameDataManager>().eveData, get<GameDataManager>().itemDefs, get<JiugonggeSystem>(), get<DailyProgressSystem>(), get<CollectionSystem>(), get<GameDataManager>().sacredEquipPrimaryDefs, get<MessageBoardRepository>()) }
+    single { LoginService(get(), get(), get(), get(), get(), get<PointSystem>(), get<PlayerCurrencySystem>(), get(), get(), get<EveEventStateMachine>(), get(), get(), get(), get(), get(), get<AstrolabeSystem>(), get<SoulSystem>(), get(), get<SkillRepository>(), get<RoleCountSystem>(), get<FlyPointSystem>(), get<MailSystem>(), get<FriendSystem>(), get<GameDataManager>().eveData, get<GameDataManager>().itemDefs, get<JiugonggeSystem>(), get<DailyProgressSystem>(), get<CollectionSystem>(), get<GameDataManager>().sacredEquipPrimaryDefs, get<MessageBoardRepository>()) }
 
     // Hệ thống sự kiện Eve (9 dịch vụ con sau khi tách)
     single {

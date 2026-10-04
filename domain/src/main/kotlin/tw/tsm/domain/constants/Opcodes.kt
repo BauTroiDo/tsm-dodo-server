@@ -187,6 +187,9 @@ object Opcodes {
     /** Kho báu (kho thứ hai song song với Tiền Trang)*/
     const val STORAGE = 102
 
+    /** Linh Hồn (protocolTable[120]) */
+    const val SOUL = 120
+
     /** Kho tướng (protocolTable[122])*/
     const val WARRIOR_REPO = 122
 
