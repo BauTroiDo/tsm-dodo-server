@@ -3065,3 +3065,33 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Rechecked both luaDVT and active Lua Dungeon.CheckForQualification: `kind ~= 3 or kind ~= 5` returns true for every kind, leaving later checks unreachable. This client bug does NOT prove server qualification should be bypassed; needPar and the server-side contract still need correct handling. Do not change Lua to fit Kotlin.
 - Audit-only scratch parsed real Npc/Dungeon data successfully and was removed. No gameplay/reward/qualification behavior changed. Existing regression files and prior PASS runtime are preserved.
 - Asked user for original DVT backend path, original battle log, or matching-version video to recover per-stage formation. Next: resolve exact NPC IDs/slots, dedicated warStyle24 multiplayer battle, round limits, progress/reward, then Soul120 state/qualification. Do not enable entry to an empty unsupported scene.
+
+## 2026-10-05 — SESSION HANDOFF — resume weekly/Soul implementation
+
+### User decisions and scope
+- User confirms Tìm Ba Đậu Yêu PASS and wants to continue Bách chiến thiên quan + Khiêu chiến Linh Hồn; both fail to enter when clicking a stage.
+- User has NO original DVT server, original battle logs, or matching-version video to provide. Do not repeat that question as if unanswered.
+- User explicitly waived the exclusive-machine-access rule earlier (`ko cần quy định đó nữa`). Local PowerShell/Git Bash SSH has been used with authorized production access. This waiver does not authorize invented rewards or fabricated DVT formations.
+- User now asks to save the entire progress for the next chat. Next chat MUST read the complete checkpoint before continuing.
+
+### Verified PASS and production baseline
+- Treasure dungeon6/scene62003: three chests and progression PASS; fresh trace mission12330 2→3→4→5, complete12330, increase12321/12331, settlement remaining457s/item45664×1/dailyFlag12344. Reward gameplay fix d4387a9 was built/restarted before that trace.
+- Ba Dau dungeon10/scene62007: gameplay48c7aec preserves hidden client-owned motionType4 paths and bounds clicks to Eve route segments. Patched files: NpcClientPath.kt, NpcPatrolSystem.kt, EveTriggerRouter.kt; regression BaDauNpcMovementRegressionTest.kt.
+- Live retest clickIds2→6(roaming)→4; mission12358 2→3→4→5, complete12358,12359 0→1; settlement remaining539s/item45664×1/dailyFlag12360. User explicitly says PASS. Do not reopen this issue without new evidence.
+- Dev and production app builds PASS; targeted20/20 tests PASS (movement3, mini-game3, reward12, state-builder2).
+- Last verified production source df7b234, gameplay48c7aec; gamePID7088 owns port6613, startup02:13:34+07. Later docs do not require restart. Production path C:\Server-Game\tsm_dodo on192.168.1.69; dev D:\Games\Ts-Offline\TSMobileOnLine\tsm_dodo_chatgpt_main / feature/9-pet.
+
+### Current blockers and next work
+- Weekly create is explicitly rejected by validateNormalRoomEntry kind1-only guard; removing that guard alone would leave unsupported combat.
+- Bách Chiến stages id18..37 kind3, scene62015; first stage has no missionFlag and needs a dedicated warStyle24 multiplayer battle, per-stage formation, round objective enforcement, success/failure settlement and data-driven loot/progress.
+- Soul stages start id63 kind5, require level50 and Soul/skill qualifications; latest observed character level36. Soul protocol120 equipped state is not implemented sufficiently. Retain real level restrictions.
+- DvtBachChienMembership / DvtWeeklyRoundObjective / DvtWeeklyQualification are evidence helpers, not complete wired gameplay. Existing inferred stage memberships must not be promoted to verified slot/order data. Historical video stage1 differs from inferred candidate; version applicability remains unresolved.
+- Lua qualification OR guard always returns true in both current source copies; this is a client bug, not evidence for bypassing server restrictions. No Lua/data/reward edits made.
+- Further local/public searches did not recover a matching original formation table. Original WeekDungeon data copies are4-byte headers. No new weekly/Soul gameplay patch has been deployed; do not claim these modes PASS.
+
+### Git, runtime operations and clean-up
+- Latest pre-handoff dev commit1b4bb59 is audit documentation; it was NOT deployed. Production remainsdf7b234. Tracked dev tree clean; pre-existing untracked scratch/bundles/staging helper preserved.
+- GitHub push was rejected twice by automatic approval review because the remote destination was not confirmed trusted. Human confirmation of BauTroiDo/tsm-dodo-server ownership/trust and main push is still absent. Do not bypass the rejection via another upload path.
+- Use Android Studio JBR E:\Soft\AndroidStudio\jbr\bin on dev and explicit GRADLE_USER_HOME=C:\Users\QT\.gradle for builds. Build can remove tracked .kotlin/sessions/kotlin-compiler-10369008480978718564.salive; restore only that exact unrelated cache file afterward.
+- Production restart only after build/test PASS: terminate old game and app:run wrapper, verify both exited, then existing _launch_prod_wmi.cmd → _start_prod_detached.cmd, reconnect SSH and check newPID/listener/log. Preserve production application.conf.
+- Temporary BaDauProductionAuditScratchTest and WeeklyAuditScratchTest created in this session were removed. Read-only production Eve snapshot remains in this chat workspace work/production-eve.emg. Production packed Eve hash differs from test fixture; do not assert whole-file identity.
