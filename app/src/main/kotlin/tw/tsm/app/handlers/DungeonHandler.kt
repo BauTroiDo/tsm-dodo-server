@@ -100,10 +100,8 @@ class DungeonHandler(
                 val startTime = OleDate.nowLocal()
                 // Capture return point before teleport; C:013-004 uses this run state.
                 system.markSingleStarted(session, dungeonId, startTime)
-                if (system.enterSingle(session, dungeonId)) {
-                    sendStartTime(session, startTime)
-                } else {
-                    system.clearActiveRun(session.playerId)
+                if (!system.enterSingle(session, dungeonId)) {
+                    system.clearActiveRun(session)
                     dungeonHandlerLogger.error {
                         "Không suy được entry point cho dungeon=$dungeonId scene=${system.getDef(dungeonId)?.sceneId}"
                     }
@@ -340,9 +338,6 @@ class DungeonHandler(
             val started = rooms.commitStart(room.id, session.playerId) ?: return@launch
             val startTime = OleDate.nowLocal()
             system.markRoomStarted(started, startTime)
-            for (member in started.members.values) {
-                sendStartTime(member.session, startTime)
-            }
             if (!system.enterMultiplayer(started)) {
                 system.clearRoomRuns(started)
                 dungeonHandlerLogger.error {
@@ -354,7 +349,7 @@ class DungeonHandler(
     }
 
     fun handleDisconnect(session: GameSession) {
-        system.clearActiveRun(session.playerId)
+        system.onDisconnect(session)
         val left = rooms.leave(session.playerId) ?: return
         for (member in left.room.members.values) {
             sendPlayerLeave(member.session, session.playerId, LEAVE_DISCONNECT)
@@ -479,17 +474,6 @@ class DungeonHandler(
             .writeByte(channel)
             .writeByte(if (room.isLocked) 1 else 0)
             .toByteArray()
-
-    private fun sendStartTime(session: GameSession, startTime: Double) {
-        session.send(
-            PacketWriter()
-                .writeByte(Opcodes.DUNGEON)
-                .writeByte(18)
-                .writeByte(0)
-                .writeDoubleLE(startTime)
-                .toByteArray()
-        )
-    }
 
     private fun sendCreateResult(session: GameSession, result: Int, password: String? = null) {
         val writer = PacketWriter()

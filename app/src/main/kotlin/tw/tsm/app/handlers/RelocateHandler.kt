@@ -6,8 +6,11 @@ import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.PacketHandler
 import tw.tsm.domain.interfaces.ResponseSender
+import tw.tsm.domain.util.OleDate
+import tw.tsm.gamelogic.systems.DungeonSystem
 import tw.tsm.gamelogic.systems.WorldManager
 import tw.tsm.gamelogic.systems.LimitTimeDungeonSystem
+import tw.tsm.protocol.PacketWriter
 
 private val logger = KotlinLogging.logger {}
 
@@ -23,6 +26,7 @@ class RelocateHandler(
     private val responseSender: ResponseSender,
     private val groundItemManager: tw.tsm.gamelogic.systems.GroundItemManager? = null,
     private val limitTimeDungeonSystem: LimitTimeDungeonSystem? = null,
+    private val dungeonSystem: DungeonSystem? = null,
 ) : PacketHandler {
 
     /** mainKind = 12 (0x0C) */
@@ -54,6 +58,11 @@ class RelocateHandler(
         // LimitFightArea: vào mới hoặc relog/restart trong scene giới hạn đều khôi phục timer.
         limitTimeDungeonSystem?.onSceneReady(session)
 
+        // Ordinary DungeonData: arm server-side deadline and restore S:047-018.
+        dungeonSystem?.onSceneReady(session, OleDate.nowLocal())?.let { timer ->
+            sendDungeonStartTime(session, timer.startTime, timer.dungeonId)
+        }
+
         // S:022-004 danh sách trống — kích hoạt ContinueNavigation() của client (dự phòng)
         responseSender.sendMapNpcInit(session, emptyList())
 
@@ -76,5 +85,17 @@ class RelocateHandler(
                 responseSender.sendOtherPlayerAppear(other, session)
             }
         }
+    }
+
+    private fun sendDungeonStartTime(session: GameSession, startTime: Double, dungeonId: Int) {
+        session.send(
+            PacketWriter()
+                .writeByte(Opcodes.DUNGEON)
+                .writeByte(18)
+                .writeByte(0)
+                .writeDoubleLE(startTime)
+                .writeShortLE(dungeonId)
+                .toByteArray()
+        )
     }
 }

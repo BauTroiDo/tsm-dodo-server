@@ -2812,3 +2812,33 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Targeted `DungeonRewardLeaveRegressionTest`: BUILD SUCCESSFUL, 18/18 tasks.
 - Full local `gradlew test build --rerun-tasks`: BUILD SUCCESSFUL, 21/21 tasks.
 - `git diff --check`: PASS.
+
+## 2026-10-04 — Dungeon lifecycle timer + durable leave origin — PASS local
+
+### Root cause confirmed
+- DVT UIMain shows dungeon HUD for SceneSet.kind=2 and displays time from Dungeon.nowDungeonId + S:047-018 startTime.
+- Lua Dungeon.UpdateTime only updates/stops the client timer; it does NOT eject the player at zero. Timeout eject is backend responsibility.
+- S:047-018 reconnect contract: Double startTime; when client nowDungeonId==0 it additionally reads UInt16 dungeonId.
+- Scene 62003 / dungeon 6 has one Eve Door but zero SceneInfo and zero resultType=2 exit. Therefore a backend restart cannot reconstruct the exact return map from Eve; server must persist the pre-entry origin.
+
+### Implementation
+- Added durable CharacterDungeonRuns / DungeonRunRepository keyed by characterId.
+- Persisted state: dungeonId, OLE startTime, Unix startedAtMillis, instanceId, origin map/x/y/instance, settled.
+- Single and multiplayer runs persist the exact origin before teleport.
+- C:012-001 scene-ready restores ActiveDungeonRun from DB after reconnect/server restart, preserving original startTime/deadline and re-sending S:047-018 + dungeonId.
+- Server-side watchdog uses DungeonData.time and auto-exits at deadline; if battle is active it waits until battle cleanup is safe, then uses the same exit path.
+- Leaving a dungeon clears both runtime and durable run state. Loading a non-dungeon scene also clears stale durable state.
+- Legacy rescue for players already stranded before this schema existed:
+  - first prefer authoritative Eve exit;
+  - if the scene has no Eve exit (62003), use that character's own saved record point;
+  - never hard-code a return map and never use a record point that is the same/dynamic dungeon scene.
+- SpecialSceneTeleportService recovery SceneInfo coordinates now follow EveDoorWarpService's tile->pixel *20 contract.
+
+### Validation
+- Targeted DungeonActiveRun / DungeonRewardLeaveRegression / DungeonRoomPacket / DungeonEntryRegression: BUILD SUCCESSFUL, 18/18 tasks.
+- Added restart regression: run saved by runtime A -> runtime B restores exact startTime/origin -> HUD exit returns to exact origin -> durable row cleared.
+- Added DVT-data regression proving 62001/62002 have Eve exits but 62003 does not.
+- Added legacy 62003 record-point rescue regression.
+- Full local gradlew test build --rerun-tasks: BUILD SUCCESSFUL, 21/21 tasks.
+- git diff --check: PASS (only CRLF normalization warnings).
+- Production deployment/runtime verification pending this checkpoint.

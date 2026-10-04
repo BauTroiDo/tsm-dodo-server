@@ -3,6 +3,7 @@ package tw.tsm.tests
 import io.mockk.*
 import java.nio.file.Files
 import java.nio.file.Path
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
@@ -10,13 +11,19 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import tw.tsm.app.handlers.DungeonHandler
 import tw.tsm.app.handlers.PartyHandler
+import tw.tsm.app.handlers.RelocateHandler
 import tw.tsm.data.loaders.DungeonComboDatLoader
 import tw.tsm.data.loaders.DungeonDatLoader
 import tw.tsm.data.loaders.SceneSetDatLoader
+import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.ResponseSender
+import tw.tsm.domain.interfaces.repositories.DungeonRunRecord
+import tw.tsm.domain.interfaces.repositories.DungeonRunRepository
+import tw.tsm.domain.util.OleDate
 import tw.tsm.gamelogic.systems.DailyProgressSystem
 import tw.tsm.gamelogic.systems.DungeonRoomRegistry
+import tw.tsm.gamelogic.systems.DungeonSceneTimer
 import tw.tsm.gamelogic.systems.DungeonSettlement
 import tw.tsm.gamelogic.systems.DungeonSystem
 import tw.tsm.gamelogic.systems.PartySystem
@@ -94,6 +101,77 @@ class DungeonRewardLeaveRegressionTest {
     }
 
     @Test
+    fun persistedRunSurvivesServerRestartAndRestoresExactOrigin() = runBlocking {
+        val defs = DungeonDatLoader.load(dataBytes("Data-ios", "IOS_Dungeon_C.dat"))
+        val scenes = SceneSetDatLoader.load(dataBytes("Data", "SceneSet_C.dat"))
+        val def = defs.getValue(2)
+        val repo = mockk<DungeonRunRepository>()
+        val persisted = slot<DungeonRunRecord>()
+        coEvery { repo.save(capture(persisted)) } just Runs
+        coEvery { repo.load(998L) } answers { persisted.captured }
+        coEvery { repo.clear(998L) } just Runs
+
+        val special = mockk<SpecialSceneTeleportService>()
+        coEvery { special.teleport(any(), any(), any(), any(), any()) } just Runs
+
+        val before = mockk<GameSession>(relaxed = true)
+        every { before.playerId } returns 998L
+        every { before.roleId } returns 998
+        every { before.mapId } returns 12003
+        every { before.x } returns 70
+        every { before.y } returns 580
+        every { before.instanceId } returns 0
+
+        val firstRuntime = DungeonSystem(
+            defs,
+            mockk<QuestSystem>(relaxed = true),
+            mockk<PartySystem>(relaxed = true),
+            special,
+            clockMillis = { 1_000_000L },
+            sceneSetDefs = scenes,
+            dungeonRunRepository = repo,
+        )
+        firstRuntime.markSingleStarted(before, def.id, 46_000.0)
+
+        assertEquals(def.id, persisted.captured.dungeonId)
+        assertEquals(12003, persisted.captured.originMapId)
+        assertEquals(70, persisted.captured.originX)
+        assertEquals(580, persisted.captured.originY)
+        assertEquals(1_000_000L, persisted.captured.startedAtMillis)
+
+        val after = mockk<GameSession>(relaxed = true)
+        every { after.playerId } returns 998L
+        every { after.roleId } returns 998
+        every { after.characterName } returns "Restarted"
+        every { after.mapId } returns def.sceneId
+        every { after.instanceId } returns 0
+        every { after.battleId } returns 0L
+        every { after.state } returns SessionState.IN_GAME
+
+        val secondRuntime = DungeonSystem(
+            defs,
+            mockk<QuestSystem>(relaxed = true),
+            mockk<PartySystem>(relaxed = true),
+            special,
+            clockMillis = { 1_001_000L },
+            sceneSetDefs = scenes,
+            dungeonRunRepository = repo,
+        )
+
+        val timer = secondRuntime.onSceneReady(after, 47_000.0)
+        assertEquals(def.id, timer?.dungeonId)
+        assertEquals(46_000.0, timer?.startTime)
+        assertEquals(true, timer?.recovered)
+        assertEquals(12003, secondRuntime.getActiveRun(998L)?.originMapId)
+
+        assertTrue(secondRuntime.exitDungeonFromHud(after))
+        coVerify(exactly = 1) { special.teleport(after, 12003, 70, 580, 0) }
+        coVerify(exactly = 1) { repo.load(998L) }
+        coVerify(exactly = 1) { repo.clear(998L) }
+        assertNull(secondRuntime.getActiveRun(998L))
+    }
+
+    @Test
     fun hudExitUsesSceneKindTwoEvenWhenMapIsNotInDungeonData() = runBlocking {
         val special = mockk<SpecialSceneTeleportService>()
         val dungeonSceneIds = DungeonDatLoader.load(dataBytes("Data-ios", "IOS_Dungeon_C.dat"))
@@ -159,6 +237,86 @@ class DungeonRewardLeaveRegressionTest {
 
         coVerify(exactly = 1) { dungeon.exitDungeonFromHud(session) }
         verify(exactly = 1) { party.leaveParty(993L) }
+    }
+
+    @Test
+    fun sceneReadyRecoversTimedDungeonAndServerTimeoutAutoExits() = runBlocking {
+        val defs = DungeonDatLoader.load(dataBytes("Data-ios", "IOS_Dungeon_C.dat"))
+        val scenes = SceneSetDatLoader.load(dataBytes("Data", "SceneSet_C.dat"))
+        val candidates = defs.values
+            .filter {
+                it.kind in setOf(DungeonSystem.KIND_NORMAL_MULTIPLAYER, DungeonSystem.KIND_SINGLE) &&
+                    it.timeMinutes > 0 && scenes[it.sceneId]?.kind == DungeonSystem.SCENE_KIND_DYNAMIC_DUNGEON
+            }
+            .groupBy { it.sceneId }
+            .values
+            .filter { it.size == 1 }
+            .flatten()
+        val def = candidates.minBy { it.timeMinutes }
+
+        val special = mockk<SpecialSceneTeleportService>()
+        val session = mockk<GameSession>(relaxed = true)
+        every { session.playerId } returns 996L
+        every { session.roleId } returns 996
+        every { session.characterName } returns "Timeout"
+        every { session.mapId } returns def.sceneId
+        every { session.instanceId } returns 0
+        every { session.battleId } returns 0L
+        every { session.state } returns SessionState.IN_GAME
+        coEvery { special.exitSpecialScene(session, def.sceneId) } returns true
+
+        val system = DungeonSystem(
+            defs,
+            mockk<QuestSystem>(relaxed = true),
+            mockk<PartySystem>(relaxed = true),
+            special,
+            sceneSetDefs = scenes,
+            scope = this,
+            dungeonMinuteMillis = 1L,
+        )
+
+        val timer = system.onSceneReady(session, 46_000.25)
+        assertEquals(def.id, timer?.dungeonId)
+        assertEquals(46_000.25, timer?.startTime)
+        assertEquals(true, timer?.recovered)
+
+        delay(def.timeMinutes.toLong() + 100L)
+        coVerify(exactly = 1) { special.exitSpecialScene(session, def.sceneId) }
+        assertNull(system.getActiveRun(996L))
+    }
+
+    @Test
+    fun relocateSceneReadySendsReconnectTimerWithDungeonId() = runBlocking {
+        val session = mockk<GameSession>(relaxed = true)
+        val packets = mutableListOf<ByteArray>()
+        every { session.state } returns SessionState.IN_GAME
+        every { session.playerId } returns 997L
+        every { session.mapId } returns 62001
+        every { session.instanceId } returns 0
+        every { session.send(capture(packets)) } just Runs
+
+        val world = mockk<WorldManager>(relaxed = true)
+        every { world.getPlayersInMap(any(), any()) } returns emptySet()
+        val dungeon = mockk<DungeonSystem>()
+        coEvery { dungeon.onSceneReady(session, any()) } returns
+            DungeonSceneTimer(dungeonId = 2, startTime = 46_123.5, recovered = true)
+
+        val handler = RelocateHandler(
+            world,
+            mockk<ResponseSender>(relaxed = true),
+            dungeonSystem = dungeon,
+        )
+        handler.handle(session, 1, ByteArray(0))
+
+        assertEquals(1, packets.size)
+        val packet = PacketReader(packets.single())
+        assertEquals(47, packet.readUByte())
+        assertEquals(18, packet.readUByte())
+        assertEquals(0, packet.readUByte())
+        assertEquals(46_123.5, packet.readDoubleLE())
+        assertEquals(2, packet.readUShortLE())
+        assertEquals(0, packet.remaining)
+        coVerify(exactly = 1) { dungeon.onSceneReady(session, any()) }
     }
 
     @Test

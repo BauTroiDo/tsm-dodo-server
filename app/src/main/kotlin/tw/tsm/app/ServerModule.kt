@@ -36,6 +36,7 @@ import tw.tsm.domain.interfaces.repositories.PetRepository
 import tw.tsm.domain.interfaces.repositories.FlyPointRepository
 import tw.tsm.domain.interfaces.repositories.RoleCountRepository
 import tw.tsm.domain.interfaces.repositories.DispatchRepository
+import tw.tsm.domain.interfaces.repositories.DungeonRunRepository
 import tw.tsm.domain.interfaces.repositories.FriendRepository
 import tw.tsm.domain.interfaces.repositories.MailRepository
 import tw.tsm.domain.interfaces.repositories.MiningRepository
@@ -50,6 +51,7 @@ import tw.tsm.persistence.repositories.CharacterCurrencyRepositoryImpl
 import tw.tsm.persistence.repositories.CollectionBookRepositoryImpl
 import tw.tsm.persistence.repositories.SlotMachineRepositoryImpl
 import tw.tsm.persistence.repositories.DispatchRepositoryImpl
+import tw.tsm.persistence.repositories.DungeonRunRepositoryImpl
 import tw.tsm.persistence.repositories.FriendRepositoryImpl
 import tw.tsm.persistence.repositories.MailRepositoryImpl
 import tw.tsm.persistence.repositories.MiningRepositoryImpl
@@ -255,6 +257,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single<CollectionBookRepository> { CollectionBookRepositoryImpl() }
     single<SlotMachineRepository> { SlotMachineRepositoryImpl() }
     single<DispatchRepository> { DispatchRepositoryImpl() }
+    single<DungeonRunRepository> { DungeonRunRepositoryImpl() }
     single<MailRepository> { MailRepositoryImpl() }
     single<MessageBoardRepository> { MessageBoardRepositoryImpl() }
     single<FriendRepository> { FriendRepositoryImpl() }
@@ -376,7 +379,8 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single {
         SpecialSceneTeleportService(
             get<ResponseSender>(), get<WorldManager>(), get<CharacterRepository>(),
-            get<GameDataManager>().eveData, get<GameDataManager>().mapWalkGrids
+            get<GameDataManager>().eveData, get<GameDataManager>().mapWalkGrids,
+            get<GameDataManager>().sceneSetDefs
         )
     }
     single {
@@ -395,6 +399,8 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<GameDataManager>().dungeonComboDefs,
             get<InventorySystem>(),
             sceneSetDefs = get<GameDataManager>().sceneSetDefs,
+            scope = get<CoroutineScope>(),
+            dungeonRunRepository = get<DungeonRunRepository>(),
         )
     }
     single { DungeonRoomRegistry() }
@@ -546,7 +552,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { MoveHandler(get(), get(), get(), get<MineEncounterSystem>()) }
     single { ChatHandler(get(), get(), get()) }
     single { SceneHandler(get(), get()) }
-    single { RelocateHandler(get(), get(), get(), get<LimitTimeDungeonSystem>()) }
+    single { RelocateHandler(get(), get(), get(), get<LimitTimeDungeonSystem>(), get<DungeonSystem>()) }
     single { NpcEventHandler(get<EveTriggerRouter>(), get<EveFlowController>()) }
     single { ItemHandler(get(), get(), get(), get(), get(), get<GameDataManager>().itemDefs, get(), get<PlayerStateManager>(), get<StatSystem>(), get(), get<FlyPointSystem>(), get<CharacterRepository>(), get<PetEquipSystem>(), get<QuestSystem>(), get<SkillSystem>(), get<DailyProgressSystem>(), get<PetSystem>(), get<GameDataManager>().npcDefs, get<RoleCountSystem>(), get<CollectionSystem>(), get<AstrolabeSystem>(), get<GameDataManager>().sacredEquipPrimaryDefs, get<CompoundSystem>()) }
     single { NpcTradeHandler(get(), get(), get(), get<GameDataManager>().itemDefs, get()) }

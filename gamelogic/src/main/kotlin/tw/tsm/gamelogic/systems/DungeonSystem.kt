@@ -2,11 +2,20 @@ package tw.tsm.gamelogic.systems
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.util.concurrent.ConcurrentHashMap
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import tw.tsm.domain.data.DungeonComboDef
 import tw.tsm.domain.data.DungeonDef
 import tw.tsm.domain.data.SceneSetDef
+import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.ResponseSender
+import tw.tsm.domain.interfaces.repositories.DungeonRunRecord
+import tw.tsm.domain.interfaces.repositories.DungeonRunRepository
 import tw.tsm.domain.interfaces.repositories.MissionFlagRecord
 
 private val dungeonLogger = KotlinLogging.logger {}
@@ -21,6 +30,13 @@ data class ActiveDungeonRun(
     val originInstanceId: Int = 0,
     val startedAtMillis: Long = System.currentTimeMillis(),
     val settled: Boolean = false,
+)
+
+data class DungeonSceneTimer(
+    val dungeonId: Int,
+    val startTime: Double,
+    /** true when the run had to be reconstructed from the current scene. */
+    val recovered: Boolean,
 )
 
 data class DungeonSettlement(
@@ -47,15 +63,99 @@ class DungeonSystem(
     private val inventorySystem: InventorySystem? = null,
     private val clockMillis: () -> Long = System::currentTimeMillis,
     private val sceneSetDefs: Map<Int, SceneSetDef> = emptyMap(),
+    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+    private val dungeonMinuteMillis: Long = REAL_MINUTE_MS,
+    private val dungeonRunRepository: DungeonRunRepository? = null,
 ) {
     private val activeRuns = ConcurrentHashMap<Long, ActiveDungeonRun>()
+    private val timeoutJobs = ConcurrentHashMap<Long, Job>()
 
     fun getDef(id: Int): DungeonDef? = defs[id]
     fun getActiveRun(playerId: Long): ActiveDungeonRun? = activeRuns[playerId]
 
-    /** Capture origin before scene entry so C:013-004 can really leave a dungeon. */
-    fun markSingleStarted(session: GameSession, dungeonId: Int, startTime: Double) {
-        activeRuns[session.playerId] = ActiveDungeonRun(
+    /**
+     * C:012-001 scene-ready hook for ordinary DungeonData instances.
+     *
+     * DVT S:047-018 carries the OLE start time; on reconnect the client may also
+     * consume a trailing UInt16 dungeonId when Dungeon.nowDungeonId was reset.
+     * If the runtime run survived, keep its original start time/deadline. If the
+     * server restarted and the run was lost, recover only when exactly one timed
+     * DungeonData row owns this scene and start a fresh offline fallback window.
+     */
+    suspend fun onSceneReady(session: GameSession, recoveryStartTime: Double): DungeonSceneTimer? {
+        val playerId = session.playerId
+        val characterId = session.roleId.toLong()
+        stopTimeout(playerId)
+
+        if (sceneSetDefs[session.mapId]?.kind != SCENE_KIND_DYNAMIC_DUNGEON) {
+            activeRuns.remove(playerId)
+            dungeonRunRepository?.clear(characterId)
+            return null
+        }
+
+        val existing = activeRuns[playerId]
+        if (existing != null) {
+            val def = defs[existing.dungeonId]
+            if (isTimedRunForScene(def, session.mapId)) {
+                armTimeout(session, existing, def!!)
+                return DungeonSceneTimer(existing.dungeonId, existing.startTime, recovered = false)
+            }
+            activeRuns.remove(playerId, existing)
+        }
+
+        val persisted = dungeonRunRepository?.load(characterId)
+        if (persisted != null) {
+            val def = defs[persisted.dungeonId]
+            if (isTimedRunForScene(def, session.mapId)) {
+                val restored = persisted.toActiveDungeonRun()
+                activeRuns[playerId] = restored
+                armTimeout(session, restored, def!!)
+                dungeonLogger.info {
+                    session.characterName + " khôi phục ActiveDungeonRun bền vững dungeon=" +
+                        restored.dungeonId + " scene=" + session.mapId +
+                        " origin=" + restored.originMapId
+                }
+                return DungeonSceneTimer(restored.dungeonId, restored.startTime, recovered = true)
+            }
+            dungeonRunRepository.clear(characterId)
+        }
+
+        // Legacy recovery for players already stranded before durable run persistence existed.
+        // The timer can be reconstructed from a unique DungeonData scene, but origin remains
+        // unknown and exitSpecialScene() must use Eve or the player's saved record point.
+        val def = uniqueTimedDungeonForScene(session.mapId) ?: return null
+        val recovered = ActiveDungeonRun(
+            dungeonId = def.id,
+            startTime = recoveryStartTime,
+            instanceId = session.instanceId,
+            startedAtMillis = clockMillis(),
+        )
+        activeRuns[playerId] = recovered
+        persistRun(session, recovered)
+        armTimeout(session, recovered, def)
+        dungeonLogger.info {
+            session.characterName + " khôi phục legacy timer phụ bản scene=" + session.mapId +
+                " dungeon=" + def.id + " (không có origin cũ)"
+        }
+        return DungeonSceneTimer(def.id, recovered.startTime, recovered = true)
+    }
+
+    /** Preserve durable state across reconnect; only the live-session timeout job is released. */
+    fun onDisconnect(session: GameSession) {
+        val playerId = session.playerId
+        stopTimeout(playerId)
+        val run = activeRuns[playerId] ?: return
+        val def = defs[run.dungeonId]
+        if (!isTimedRunForScene(def, session.mapId)) {
+            activeRuns.remove(playerId, run)
+            return
+        }
+        armDisconnectedExpiry(playerId, run, def!!)
+    }
+
+    /** Capture and persist origin before scene entry so C:013-004 can always leave after restart. */
+    suspend fun markSingleStarted(session: GameSession, dungeonId: Int, startTime: Double) {
+        val run = ActiveDungeonRun(
             dungeonId = dungeonId,
             startTime = startTime,
             instanceId = 0,
@@ -65,14 +165,16 @@ class DungeonSystem(
             originInstanceId = session.instanceId,
             startedAtMillis = clockMillis(),
         )
+        persistRun(session, run)
+        activeRuns[session.playerId] = run
     }
 
-    /** Called before room teleport; each member keeps their own return point. */
-    fun markRoomStarted(room: DungeonRoomState, startTime: Double) {
+    /** Called before room teleport; each member persists their own exact return point. */
+    suspend fun markRoomStarted(room: DungeonRoomState, startTime: Double) {
         val now = clockMillis()
         for (member in room.members.values) {
             val s = member.session
-            activeRuns[s.playerId] = ActiveDungeonRun(
+            val run = ActiveDungeonRun(
                 dungeonId = room.dungeonId,
                 startTime = startTime,
                 instanceId = room.instanceId,
@@ -82,15 +184,19 @@ class DungeonSystem(
                 originInstanceId = s.instanceId,
                 startedAtMillis = now,
             )
+            persistRun(s, run)
+            activeRuns[s.playerId] = run
         }
     }
 
-    fun clearActiveRun(playerId: Long) {
-        activeRuns.remove(playerId)
+    suspend fun clearActiveRun(session: GameSession) {
+        stopTimeout(session.playerId)
+        activeRuns.remove(session.playerId)
+        dungeonRunRepository?.clear(session.roleId.toLong())
     }
 
-    fun clearRoomRuns(room: DungeonRoomState) {
-        for (member in room.members.values) activeRuns.remove(member.session.playerId)
+    suspend fun clearRoomRuns(room: DungeonRoomState) {
+        for (member in room.members.values) clearActiveRun(member.session)
     }
 
     /**
@@ -140,11 +246,25 @@ class DungeonSystem(
                 run.originInstanceId,
             )
             activeRuns.remove(session.playerId, run)
+            stopTimeout(session.playerId)
+            dungeonRunRepository?.clear(session.roleId.toLong())
+            dungeonLogger.info {
+                session.characterName + " rời phụ bản về origin " + run.originMapId +
+                    " từ scene=" + session.mapId
+            }
             return true
         }
 
-        val exited = specialTeleport.exitSpecialScene(session, session.mapId)
-        if (exited) activeRuns.remove(session.playerId)
+        val fromScene = session.mapId
+        val exited = specialTeleport.exitSpecialScene(session, fromScene)
+        if (exited) {
+            activeRuns.remove(session.playerId)
+            stopTimeout(session.playerId)
+            dungeonRunRepository?.clear(session.roleId.toLong())
+            dungeonLogger.info { session.characterName + " rời phụ bản qua Eve sceneInfo từ scene=" + fromScene }
+        } else {
+            dungeonLogger.warn { session.characterName + " không tìm được Eve sceneInfo để rời scene=" + fromScene }
+        }
         return exited
     }
 
@@ -161,6 +281,8 @@ class DungeonSystem(
             run.originInstanceId,
         )
         activeRuns.remove(session.playerId, run)
+        stopTimeout(session.playerId)
+        dungeonRunRepository?.clear(session.roleId.toLong())
         return true
     }
 
@@ -300,6 +422,7 @@ class DungeonSystem(
 
         val settledRun = run.copy(settled = true)
         if (!activeRuns.replace(playerId, run, settledRun)) return null
+        persistRun(session, settledRun)
 
         if (!playerWin) return DungeonSettlement(def.id, result = 1)
 
@@ -380,6 +503,132 @@ class DungeonSystem(
         return if (used >= def.dailyCount) RESULT_COUNT_EXHAUSTED else RESULT_OK
     }
 
+    private fun isTimedRunForScene(def: DungeonDef?, sceneId: Int): Boolean =
+        def != null &&
+            def.sceneId == sceneId &&
+            def.timeMinutes > 0 &&
+            def.kind in setOf(KIND_NORMAL_MULTIPLAYER, KIND_SINGLE)
+
+    private suspend fun persistRun(session: GameSession, run: ActiveDungeonRun) {
+        dungeonRunRepository?.save(
+            DungeonRunRecord(
+                characterId = session.roleId.toLong(),
+                dungeonId = run.dungeonId,
+                startTime = run.startTime,
+                startedAtMillis = run.startedAtMillis,
+                instanceId = run.instanceId,
+                originMapId = run.originMapId,
+                originX = run.originX,
+                originY = run.originY,
+                originInstanceId = run.originInstanceId,
+                settled = run.settled,
+            )
+        )
+    }
+
+    private fun DungeonRunRecord.toActiveDungeonRun(): ActiveDungeonRun =
+        ActiveDungeonRun(
+            dungeonId = dungeonId,
+            startTime = startTime,
+            instanceId = instanceId,
+            originMapId = originMapId,
+            originX = originX,
+            originY = originY,
+            originInstanceId = originInstanceId,
+            startedAtMillis = startedAtMillis,
+            settled = settled,
+        )
+
+    private fun uniqueTimedDungeonForScene(sceneId: Int): DungeonDef? {
+        val matches = defs.values.filter {
+            it.sceneId == sceneId &&
+                it.timeMinutes > 0 &&
+                it.kind in setOf(KIND_NORMAL_MULTIPLAYER, KIND_SINGLE)
+        }
+        return when (matches.size) {
+            1 -> matches.single()
+            0 -> null
+            else -> {
+                dungeonLogger.warn {
+                    "Không thể khôi phục timer scene=$sceneId vì có nhiều DungeonData: " +
+                        matches.joinToString { it.id.toString() }
+                }
+                null
+            }
+        }
+    }
+
+    private fun stopTimeout(playerId: Long) {
+        timeoutJobs.remove(playerId)?.cancel()
+    }
+
+    private fun armTimeout(session: GameSession, run: ActiveDungeonRun, def: DungeonDef) {
+        val playerId = session.playerId
+        stopTimeout(playerId)
+
+        val job = scope.launch {
+            try {
+                val deadline = run.startedAtMillis + def.timeMinutes.toLong() * dungeonMinuteMillis
+                val initialWait = deadline - clockMillis()
+                if (initialWait > 0L) delay(initialWait)
+
+                // Manual leave is blocked during battle by the DVT client. For timeout,
+                // keep the deadline authoritative but wait until battle cleanup is safe.
+                while (
+                    session.state == SessionState.IN_GAME &&
+                    session.mapId == def.sceneId &&
+                    session.battleId != 0L
+                ) {
+                    delay(TIMEOUT_BATTLE_RETRY_MS)
+                }
+
+                val current = activeRuns[playerId]
+                val sameRun = current != null &&
+                    current.dungeonId == run.dungeonId &&
+                    current.startedAtMillis == run.startedAtMillis
+                if (
+                    sameRun &&
+                    session.state == SessionState.IN_GAME &&
+                    session.mapId == def.sceneId
+                ) {
+                    val exited = exitDungeonFromHud(session)
+                    if (exited) {
+                        dungeonLogger.info {
+                            session.characterName + " hết thời gian dungeon=" + def.id +
+                                " scene=" + def.sceneId + " và đã bị đưa ra ngoài"
+                        }
+                    } else {
+                        dungeonLogger.warn {
+                            session.characterName + " hết thời gian dungeon=" + def.id +
+                                " nhưng không suy được điểm thoát scene=" + def.sceneId
+                        }
+                    }
+                }
+            } finally {
+                val me = kotlin.coroutines.coroutineContext[Job]
+                if (me != null) timeoutJobs.remove(playerId, me)
+            }
+        }
+        timeoutJobs[playerId] = job
+    }
+
+    private fun armDisconnectedExpiry(playerId: Long, run: ActiveDungeonRun, def: DungeonDef) {
+        stopTimeout(playerId)
+        val remaining = (
+            run.startedAtMillis + def.timeMinutes.toLong() * dungeonMinuteMillis - clockMillis()
+        ).coerceAtLeast(0L)
+        val job = scope.launch {
+            try {
+                if (remaining > 0L) delay(remaining)
+                activeRuns.remove(playerId, run)
+            } finally {
+                val me = kotlin.coroutines.coroutineContext[Job]
+                if (me != null) timeoutJobs.remove(playerId, me)
+            }
+        }
+        timeoutJobs[playerId] = job
+    }
+
     companion object {
         const val KIND_NORMAL_MULTIPLAYER = 1
         const val KIND_SINGLE = 2
@@ -387,6 +636,8 @@ class DungeonSystem(
         const val KIND_SOUL_WEEKLY = 5
         const val SCENE_KIND_DYNAMIC_DUNGEON = 2
         const val WEEK_PAGE_SIZE = 20
+        const val REAL_MINUTE_MS = 60_000L
+        const val TIMEOUT_BATTLE_RETRY_MS = 1_000L
 
         const val RESULT_OK = 0
         const val RESULT_NO_DUNGEON = 1

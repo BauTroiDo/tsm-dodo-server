@@ -2,6 +2,7 @@ package tw.tsm.tests
 
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
@@ -27,7 +28,7 @@ class DungeonActiveRunTest {
     )
 
     @Test
-    fun `single active run retains dungeon id and start time`() {
+    fun `single active run retains dungeon id and start time`() = runBlocking {
         val system = system()
         val player = session(6001)
         system.markSingleStarted(player, 2, 46000.25)
@@ -37,12 +38,12 @@ class DungeonActiveRunTest {
         assertEquals(46000.25, run.startTime)
         assertEquals(0, run.instanceId)
 
-        system.clearActiveRun(player.playerId)
+        system.clearActiveRun(player)
         assertNull(system.getActiveRun(player.playerId))
     }
 
     @Test
-    fun `multiplayer members share dungeon start and instance`() {
+    fun `multiplayer members share dungeon start and instance`() = runBlocking {
         val system = system()
         val owner = session(6101)
         val member = session(6102)

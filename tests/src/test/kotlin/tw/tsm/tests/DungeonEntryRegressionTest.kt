@@ -17,6 +17,7 @@ class DungeonEntryRegressionTest {
     private fun scenes() = EveDataLoader.load(bytes("CompreseData", "Eve.emg"))
     private fun defs() = DungeonDatLoader.load(bytes("Data-ios", "IOS_Dungeon_C.dat"))
     private fun grids() = GroundWalkGridLoader.load(bytes("CompreseData", "Ground.mmg"))
+    private fun sceneSets() = SceneSetDatLoader.load(bytes("Data", "SceneSet_C.dat"))
 
     @Test fun `BaDauYeu old centroid is blocked and every normal dungeon has a walkable entrance`() {
         val grids = grids()
@@ -27,6 +28,45 @@ class DungeonEntryRegressionTest {
             assertNotNull(point, "dungeon ${d.id}")
             assertTrue(grids.getValue(d.sceneId).isWalkablePixel(point!!.first, point.second), "dungeon ${d.id}")
         }
+    }
+
+    @Test fun `Eve exit inventory proves scene62003 requires server persisted origin`() {
+        val sets = sceneSets()
+        val teleport = SpecialSceneTeleportService(
+            mockk(), mockk(), mockk(), scenes(), grids(), sets,
+        )
+
+        val exit62001 = teleport.deriveSpecialSceneExit(62001)
+        assertNotNull(exit62001)
+        assertNotEquals(DungeonSystem.SCENE_KIND_DYNAMIC_DUNGEON, sets[exit62001!!.backgroundNo]?.kind)
+
+        val exit62002 = teleport.deriveSpecialSceneExit(62002)
+        assertNotNull(exit62002)
+        assertNotEquals(DungeonSystem.SCENE_KIND_DYNAMIC_DUNGEON, sets[exit62002!!.backgroundNo]?.kind)
+
+        assertNull(
+            teleport.deriveSpecialSceneExit(62003),
+            "DVT Eve scene62003 has no SceneInfo/resultType2 exit; backend must remember origin",
+        )
+    }
+
+    @Test fun `legacy scene62003 can escape through player record point without hardcoded map`() = runBlocking {
+        val sender = mockk<ResponseSender>(relaxed = true)
+        val world = mockk<WorldManager>(relaxed = true)
+        val characters = mockk<CharacterRepository>(relaxed = true)
+        val session = mockk<GameSession>(relaxed = true)
+        every { session.roleId } returns 31
+        every { session.playerId } returns 31L
+        every { session.characterName } returns "Legacy"
+        coEvery { characters.getRecordPoint(31) } returns Triple(12003, 70, 580)
+
+        val teleport = SpecialSceneTeleportService(
+            sender, world, characters, scenes(), grids(), sceneSets(),
+        )
+        assertTrue(teleport.exitSpecialScene(session, 62003))
+
+        verify(exactly = 1) { world.enterMap(session, 12003, 70, 580, 0) }
+        coVerify(exactly = 1) { characters.updatePosition(31, 12003, 70, 580) }
     }
 
     @Test fun `Ground grid preserves column order and both client obstacle bits`() {
