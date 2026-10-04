@@ -2961,3 +2961,20 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Client gameplay still requires user validation; do NOT mark the two mini-games PASS until tested:
   - scene62007 Tìm Ba Đậu Yêu should auto-run entry script on scene-ready, then each found NPC must Talk/Battle, win increments mission12358, step-specific talk runs, current NPC hides and one weighted next NPC shows; third win terminates without a fourth spawn.
   - scene62003 Tìm bảo rương should auto-run Door entry script on scene-ready, show four weighted treasure chest placements and advance mission12330 1->2; subsequent chest clicks should advance the same EveNo phases.
+
+## 2026-10-05 — Production deploy treasure progression e5f5f4c — VERIFIED
+
+- Commit: `e5f5f4c fix: keep treasure dungeon progression in Eve order`; pushed to `origin/main`.
+- Production source fast-forwarded to `e5f5f4c` via Git bundle/Git Bash SSH.
+- Targeted `DungeonMiniGameFlowRegressionTest`: BUILD SUCCESSFUL, 18/18 tasks.
+- Full local `gradlew test build --rerun-tasks`: BUILD SUCCESSFUL, 21/21 tasks.
+- Full production `gradlew test build --rerun-tasks`: BUILD SUCCESSFUL, 21/21 tasks (3m16s).
+- First restart attempt happened while the previous Gradle `app:run` was still tearing down after game PID termination, so it produced no live Java process; no gameplay validation was claimed from that attempt.
+- After the old Gradle run fully exited, the existing WMI launcher was invoked again from a clean state.
+- Fresh runtime: game Java PID 3280, created at 2026-10-05 01:07:27 +07; port 6613 LISTENING on IPv4 and IPv6.
+- Startup 01:07:27-01:07:31 confirms Hikari/MySQL, schema init, DVT data/Eve load, Netty bind 0.0.0.0:6613, then `Máy chủ đã sẵn sàng, đang chờ kết nối...`.
+- Runtime gameplay verification still pending user retest of scene62003:
+  - entry must set mission12330 1->2 and show treasure chests;
+  - first distinct chest: 2->3 and “found 1”;
+  - second distinct chest: 3->4 and “found 2”;
+  - third distinct chest: 4->5 then completion branch must complete 12330 and advance 12331.
