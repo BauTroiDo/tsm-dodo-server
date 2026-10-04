@@ -62,7 +62,8 @@ class DungeonWeeklyFormationDataTest {
 
     @Test
     fun `stage twenty is five elemental Lu Bu pairs without asserting positions`() {
-        val defs = membership(20).map { npcs().getValue(it) }
+        val npcDefs = npcs()
+        val defs = membership(20).map(npcDefs::getValue)
 
         assertTrue(defs.all { it.name == "Lữ Bố" && it.level == 200 && it.hpBase == 5_291_927 })
         assertEquals(
