@@ -72,16 +72,35 @@ class EveAutoChainEngine(
 
         // Tái cấu trúc trạng thái (results đã làm thay đổi trạng thái người chơi)
         val state = stateBuilder.buildPlayerState(charId, completedSession.mapId, session)
+            .copy(
+                battleResult = completedSession.battleResult,
+                lastSurfaceId = completedSession.lastSurfaceId,
+                lastChoiceCode = completedSession.lastChoiceCode,
+            )
         val newDepth = completedSession.chainDepth + 1
 
         for (eveNo in eventList) {
             val eventData = sceneData.npcEvents[eveNo] ?: continue
-            if (shouldSkipEvent(eventList, eveNo, eventData, state)) {
+            val sameEvent = eveNo == completedSession.eveNo
+            // pStyle=3 của resultClass=2 là COMPLETE_MISSION. Sau khi một chain
+            // đã kết thúc mission, không được nối tiếp cùng EveNo; nếu không các
+            // condition kiểu step<5 sẽ thấy step đã bị xóa về 0 và mở lại mini-game.
+            if (sameEvent && hasTerminalMissionCompletion(completedSession)) continue
+            if (!sameEvent && shouldSkipEvent(eventList, eveNo, eventData, state)) {
                 logger.debug { "${session.characterName} bỏ qua auto-chain eveNo=$eveNo (Đã hoàn thành hoặc tiến độ đã vượt qua)" }
                 continue
             }
 
-            val resolved = conditionResolver.resolveEvent(eventData, state, completedSession.mapId)
+            val resolved = if (sameEvent) {
+                conditionResolver.resolveEventInDataOrder(
+                    eventData = eventData,
+                    state = state,
+                    mapId = completedSession.mapId,
+                    afterConditionNo = completedSession.matchedConditionNo,
+                )
+            } else {
+                conditionResolver.resolveEvent(eventData, state, completedSession.mapId)
+            }
             if (resolved != null) {
                 // Tạo session ứng viên
                 val candidateSession = EventSession(
@@ -174,6 +193,12 @@ class EveAutoChainEngine(
      *
      * Sự kiện đã hoàn thành trao vật phẩm A, sự kiện mới lại muốn trao vật phẩm A → Trùng lặp.
      */
+    /** Mission pStyle=3 đã kết thúc; cùng EveNo phải dừng ở đây. */
+    fun hasTerminalMissionCompletion(completedSession: EventSession): Boolean =
+        completedSession.results.any {
+            it.resultClass == 2 && it.parameterStyle == 3
+        }
+
     fun detectDuplicateItems(newSession: EventSession, completedSession: EventSession): Boolean {
         val completedGiveItems = completedSession.results
             .filter { it.resultClass == 1 && it.parameterStyle == 1 }

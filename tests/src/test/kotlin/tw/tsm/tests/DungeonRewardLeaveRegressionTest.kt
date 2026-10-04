@@ -26,6 +26,7 @@ import tw.tsm.gamelogic.systems.DungeonRoomRegistry
 import tw.tsm.gamelogic.systems.DungeonSceneTimer
 import tw.tsm.gamelogic.systems.DungeonSettlement
 import tw.tsm.gamelogic.systems.DungeonSystem
+import tw.tsm.gamelogic.systems.EveTriggerRouter
 import tw.tsm.gamelogic.systems.PartySystem
 import tw.tsm.gamelogic.systems.QuestSystem
 import tw.tsm.gamelogic.systems.SpecialSceneTeleportService
@@ -298,13 +299,17 @@ class DungeonRewardLeaveRegressionTest {
         val world = mockk<WorldManager>(relaxed = true)
         every { world.getPlayersInMap(any(), any()) } returns emptySet()
         val dungeon = mockk<DungeonSystem>()
+        val def = DungeonDatLoader.load(dataBytes("Data-ios", "IOS_Dungeon_C.dat")).getValue(2)
         coEvery { dungeon.onSceneReady(session, any()) } returns
             DungeonSceneTimer(dungeonId = 2, startTime = 46_123.5, recovered = true)
+        every { dungeon.getDef(2) } returns def
+        val eveTrigger = mockk<EveTriggerRouter>(relaxed = true)
 
         val handler = RelocateHandler(
             world,
             mockk<ResponseSender>(relaxed = true),
             dungeonSystem = dungeon,
+            eveTriggerRouter = eveTrigger,
         )
         handler.handle(session, 1, ByteArray(0))
 
@@ -317,6 +322,7 @@ class DungeonRewardLeaveRegressionTest {
         assertEquals(2, packet.readUShortLE())
         assertEquals(0, packet.remaining)
         coVerify(exactly = 1) { dungeon.onSceneReady(session, any()) }
+        coVerify(exactly = 1) { eveTrigger.triggerDungeonEntry(session, def.missionFlag) }
     }
 
     @Test

@@ -552,7 +552,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { MoveHandler(get(), get(), get(), get<MineEncounterSystem>()) }
     single { ChatHandler(get(), get(), get()) }
     single { SceneHandler(get(), get()) }
-    single { RelocateHandler(get(), get(), get(), get<LimitTimeDungeonSystem>(), get<DungeonSystem>()) }
+    single { RelocateHandler(get(), get(), get(), get<LimitTimeDungeonSystem>(), get<DungeonSystem>(), get<EveTriggerRouter>()) }
     single { NpcEventHandler(get<EveTriggerRouter>(), get<EveFlowController>()) }
     single { ItemHandler(get(), get(), get(), get(), get(), get<GameDataManager>().itemDefs, get(), get<PlayerStateManager>(), get<StatSystem>(), get(), get<FlyPointSystem>(), get<CharacterRepository>(), get<PetEquipSystem>(), get<QuestSystem>(), get<SkillSystem>(), get<DailyProgressSystem>(), get<PetSystem>(), get<GameDataManager>().npcDefs, get<RoleCountSystem>(), get<CollectionSystem>(), get<AstrolabeSystem>(), get<GameDataManager>().sacredEquipPrimaryDefs, get<CompoundSystem>()) }
     single { NpcTradeHandler(get(), get(), get(), get<GameDataManager>().itemDefs, get()) }

@@ -228,6 +228,27 @@ class EveAutoChainEngineTest : DescribeSpec({
         }
     }
 
+    describe("terminal mission completion") {
+        val engine = EveAutoChainEngine(
+            stateMachine = io.mockk.mockk(relaxed = true),
+            stateBuilder = io.mockk.mockk(relaxed = true),
+            conditionResolver = io.mockk.mockk(relaxed = true),
+            eveData = emptyMap()
+        )
+
+        it("pStyle3 mission result stops same-event continuation") {
+            engine.hasTerminalMissionCompletion(
+                session(results = listOf(result(cls = 2, pStyle = 3, param = 12358)))
+            ) shouldBe true
+        }
+
+        it("normal mission increment may continue same event") {
+            engine.hasTerminalMissionCompletion(
+                session(results = listOf(result(cls = 2, pStyle = 1, param = 12358)))
+            ) shouldBe false
+        }
+    }
+
     // ══════════════════════════════════════════════
     //  #4 detectDuplicateItems — phòng trùng lặp vật phẩm
     // ══════════════════════════════════════════════

@@ -2902,3 +2902,34 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
   - scene62007 / dungeon10 Tìm Ba Đậu Yêu: entry must reveal a valid first/next hidden NPC position, then each successful find must hide current, reveal one weighted next position, progress mission12358 2->3->4->5, and complete after the third find.
   - scene62003 / dungeon6 Tìm bảo rương: entry weighted GroupData must emit real class3/pStyle4 show results so treasure objects become visible; no longer lose all group members through PickMember=1 misinterpretation.
 - Do not hard-code these scenes separately: fix is generic Eve GroupData semantics and applies to the same DVT group mechanism elsewhere.
+
+## 2026-10-04 — Dungeon mini-game lifecycle phase 2 — PASS local, production pending
+
+### User retest invalidated previous gameplay PASS assumption
+- User retested production commit `2ef4aed` and confirmed both scene62007 Tìm Ba Đậu Yêu and scene62003 Tìm bảo rương were still not scripted correctly.
+- Treat `2ef4aed` as a necessary GroupData fix only, NOT a complete mini-game gameplay PASS.
+
+### Fresh production trace root causes
+- Scene62007 at 23:47-23:48 proves GroupData selection now works: entry showed clickId2; clicking it hid clickId2 and selected weighted next clickId6.
+- However event2 skipped its Talk/Battle branch because generic Eve resolver chose condition8 (mission12358 step<5, higher stepScore) over condition1 (mission12358 step>1). Mission stayed at step2.
+- Real Eve event2 is a multi-phase state machine: cond1 Talk/Battle -> cond2 class8 WIN + mission increment -> cond5/6 step talk -> cond8 hide/current + weighted show next; step5 uses cond7 terminal completion.
+- Scene62003 at 23:50-23:52 loaded with mission12330 step1 but no Door entry event ran. Thus no weighted class3/pStyle4 chest show results were sent; only guard ServerBump battles ran.
+
+### Fix design
+- Keep global `EveChainResolver.resolve()` heuristic unchanged for ordinary quests.
+- Add `resolveInDataOrder()` / `resolveEventInDataOrder()` for multi-phase state-machine continuation.
+- ClickNpc events containing both a Battle result and class8 post-battle conditions use data-order resolution; ordinary Eve events keep existing resolver.
+- Same-Eve auto-chain continues after the completed condition in data order and bypasses completed-event blocking for that continuation.
+- Same-Eve continuation stops after any resultClass2/pStyle3 COMPLETE_MISSION so terminal mini-game chains cannot reopen after mission step is removed to 0.
+- Add generic DungeonData scene-ready entry hook: after map init, trigger only a Door event whose WhenHappen[1] condition and mission-add result both match the active DungeonData.missionFlag. No scene ID is hard-coded; reconnect at later mission steps naturally fails the entry condition.
+
+### DVT-data regressions
+- Added `DungeonMiniGameFlowRegressionTest` against tracked Eve.emg.
+- scene62007/event2 locks sequence cond1 battle -> cond2 win/increment -> cond5 step3 talk -> cond8 hide + exactly one weighted next position.
+- scene62003/event1 locks exactly four visible chest show results plus mission12330 add1.
+- Relocate regression verifies scene-ready calls dungeon entry trigger using DungeonDef.missionFlag.
+- Auto-chain regression verifies pStyle3 mission completion stops same-Eve continuation.
+- Targeted mini-game/Eve suite: BUILD SUCCESSFUL, 18/18 tasks.
+- Full local `gradlew test build --rerun-tasks`: BUILD SUCCESSFUL, 21/21 tasks.
+- `git diff --check`: PASS (CRLF normalization warning only).
+- Production deployment is pending; do not mark client gameplay PASS until user retests after this phase-2 commit.

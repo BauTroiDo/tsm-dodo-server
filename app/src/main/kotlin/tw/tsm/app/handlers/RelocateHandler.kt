@@ -8,6 +8,7 @@ import tw.tsm.domain.interfaces.PacketHandler
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.util.OleDate
 import tw.tsm.gamelogic.systems.DungeonSystem
+import tw.tsm.gamelogic.systems.EveTriggerRouter
 import tw.tsm.gamelogic.systems.WorldManager
 import tw.tsm.gamelogic.systems.LimitTimeDungeonSystem
 import tw.tsm.protocol.PacketWriter
@@ -27,6 +28,7 @@ class RelocateHandler(
     private val groundItemManager: tw.tsm.gamelogic.systems.GroundItemManager? = null,
     private val limitTimeDungeonSystem: LimitTimeDungeonSystem? = null,
     private val dungeonSystem: DungeonSystem? = null,
+    private val eveTriggerRouter: EveTriggerRouter? = null,
 ) : PacketHandler {
 
     /** mainKind = 12 (0x0C) */
@@ -59,12 +61,23 @@ class RelocateHandler(
         limitTimeDungeonSystem?.onSceneReady(session)
 
         // Ordinary DungeonData: arm server-side deadline and restore S:047-018.
-        dungeonSystem?.onSceneReady(session, OleDate.nowLocal())?.let { timer ->
+        val dungeonTimer = dungeonSystem?.onSceneReady(session, OleDate.nowLocal())
+        dungeonTimer?.let { timer ->
             sendDungeonStartTime(session, timer.startTime, timer.dungeonId)
         }
 
         // S:022-004 danh sách trống — kích hoạt ContinueNavigation() của client (dự phòng)
         responseSender.sendMapNpcInit(session, emptyList())
+
+        // Một số phó bản đơn DVT dùng Door event như script mở màn (ẩn/hiện NPC,
+        // tăng mission step...) nhưng client không tự gửi ClickDoor sau khi scene load.
+        // Chỉ kích hoạt Door event gắn đúng missionFlag của DungeonData; nếu mission
+        // đã qua step mở đầu thì triggerDungeonEntry tự từ chối nên reconnect an toàn.
+        dungeonTimer?.let { timer ->
+            dungeonSystem.getDef(timer.dungeonId)?.missionFlag
+                ?.takeIf { it > 0 }
+                ?.let { missionFlag -> eveTriggerRouter?.triggerDungeonEntry(session, missionFlag) }
+        }
 
         // DVT S:023-004 includes explicit indices, including static Eve Goods.
         groundItemManager?.let { ground ->

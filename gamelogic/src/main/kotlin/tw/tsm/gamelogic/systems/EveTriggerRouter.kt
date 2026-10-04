@@ -70,6 +70,57 @@ class EveTriggerRouter(
     var npcPositionProvider: ((mapId: Int, npcId: Int) -> Pair<Int, Int>?)? = null
 
     /**
+     * Kích hoạt script mở màn của một DungeonData sau khi client đã tải scene.
+     * Chỉ nhận Door event có WhenHappen[1] và condition/result cùng missionFlag
+     * của dungeon, nên không đụng Door thường hay chạy lại khi mission đã qua step đầu.
+     */
+    suspend fun triggerDungeonEntry(session: GameSession, missionFlag: Int): Boolean {
+        if (missionFlag <= 0 || session.battleId != 0L) return false
+        val charId = session.roleId.toLong()
+        if (stateMachine.getSession(charId) != null) return false
+        val mapId = session.mapId
+        val sceneData = eveData[mapId] ?: return false
+        val state = stateBuilder.buildPlayerState(charId, mapId, session)
+
+        for ((doorId, door) in sceneData.doors.toSortedMap()) {
+            for (eveNo in door.events) {
+                val eventData = sceneData.npcEvents[eveNo] ?: continue
+                if (eventData.whenHappen.size <= 1 || !eventData.whenHappen[1]) continue
+                if (eventData.conditions.none { it.conditionClass == 2 && it.conditionParameter == missionFlag }) continue
+
+                val resolved = conditionResolver.resolveEvent(eventData, state, mapId) ?: continue
+                val matched = eventData.conditions.firstOrNull { it.conditionNo == resolved.matchedConditionNo }
+                    ?: continue
+                if (matched.conditionClass != 2 || matched.conditionParameter != missionFlag) continue
+                if (resolved.results.none {
+                        it.resultClass == 2 && it.parameter == missionFlag &&
+                            it.parameterStyle == 1 && it.resultValue > 0
+                    }) continue
+
+                stateMachine.activate(
+                    charId,
+                    EventSession(
+                        mapId = mapId,
+                        eveNo = eveNo,
+                        npcClickId = doorId,
+                        triggerKind = 4,
+                        results = resolved.results,
+                        matchedConditionNo = resolved.matchedConditionNo,
+                    )
+                )
+                val first = stateMachine.advance(charId) ?: continue
+                logger.info {
+                    "${session.characterName} auto-entry dungeon: map=$mapId door=$doorId " +
+                        "eve=$eveNo mission=$missionFlag cond=${resolved.matchedConditionNo}"
+                }
+                flowController.startEvent(session, first)
+                return true
+            }
+        }
+        return false
+    }
+
+    /**
      * Server-side Mine trigger (EEventTrigger.Mine=7).
      *
      * DVT client EventManager.lua ghi rõ Mine hiện do server kích hoạt. MineData.events
@@ -256,16 +307,22 @@ class EveTriggerRouter(
         for (eveNo in npc.events) {
             val eventData = sceneData.npcEvents[eveNo] ?: continue
 
-            val resolved = conditionResolver.resolveEvent(
-                eventData, state.copy(currentEveNo = eveNo), mapId
-            )
+            val stateWithEve = state.copy(currentEveNo = eveNo)
+            val isBattleStateMachine =
+                eventData.conditions.any { c -> c.results.any { it.resultType == 3 } } &&
+                    eventData.conditions.any { it.conditionClass == 8 }
+            val resolved = if (isBattleStateMachine) {
+                conditionResolver.resolveEventInDataOrder(eventData, stateWithEve, mapId)
+            } else {
+                conditionResolver.resolveEvent(eventData, stateWithEve, mapId)
+            }
             if (resolved == null) {
                 logger.info { "${session.characterName} eveNo=$eveNo không khớp (${eventData.conditions.size} điều kiện)" }
                 continue
             }
 
             // Chống trùng lặp cấp condNo: chỉ chặn chuỗi điều kiện cụ thể đã hoàn thành, cho phép tiến triển điều kiện khác của cùng eveNo
-            if (stateMachine.isConditionCompleted(charId, mapId, eveNo, resolved.matchedConditionNo)) {
+            if (!isBattleStateMachine && stateMachine.isConditionCompleted(charId, mapId, eveNo, resolved.matchedConditionNo)) {
                 logger.info { "${session.characterName} eveNo=$eveNo condNo=${resolved.matchedConditionNo} đã hoàn thành, bỏ qua" }
                 continue
             }

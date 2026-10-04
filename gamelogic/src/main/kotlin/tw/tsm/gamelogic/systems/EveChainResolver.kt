@@ -81,6 +81,48 @@ object EveChainResolver {
     }
 
     /**
+     * Resolve theo đúng thứ tự chain trong Eve.emg, tùy chọn bắt đầu sau một
+     * condition đã hoàn thành. Dùng cho event dạng state-machine nhiều pha
+     * (battle -> class8 -> mission-step talk -> hide/show) nơi các condition
+     * phía sau không phải là "candidate tốt hơn" mà là continuation.
+     */
+    fun resolveInDataOrder(
+        conditions: List<EveCondition>,
+        evaluator: (EveCondition) -> Boolean,
+        chainFilter: ((List<EveCondition>) -> Boolean)? = null,
+        afterConditionNo: Int? = null,
+    ): ChainResolveResult? {
+        val chains = buildChains(conditions)
+        val startIndex = if (afterConditionNo == null) {
+            0
+        } else {
+            val completedIndex = chains.indexOfFirst {
+                it.firstOrNull()?.conditionNo == afterConditionNo
+            }
+            if (completedIndex < 0) 0 else completedIndex + 1
+        }
+
+        for (i in startIndex until chains.size) {
+            val chain = chains[i]
+            val head = chain.first()
+            if (head.results.isEmpty()) continue
+            if (chainFilter != null && !chainFilter(chain)) continue
+            if (!chain.all { evaluator(it) }) continue
+
+            val stepScore = chain
+                .filter { it.conditionClass == 2 }
+                .maxOfOrNull { it.conditionValue } ?: 0
+
+            logger.debug {
+                "Chuỗi data-order khớp: after=$afterConditionNo condNos=${chain.map { it.conditionNo }} " +
+                    "→ ${head.results.size} result"
+            }
+            return ChainResolveResult(head.results, head.conditionNo, stepScore)
+        }
+        return null
+    }
+
+    /**
      * Tìm Door continuation hậu chiến đi kèm một nhánh thắng cụ thể.
      *
      * DVT scene 12421/eve2 có hai chain cùng hợp lệ sau khi thắng:

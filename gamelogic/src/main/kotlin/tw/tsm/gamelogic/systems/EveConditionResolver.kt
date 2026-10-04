@@ -94,6 +94,30 @@ class EveConditionResolver(
     }
 
     /**
+     * Phiên bản resolve theo đúng thứ tự Eve.emg, dùng cho event nhiều pha.
+     * afterConditionNo cho phép tiếp tục từ condition kế tiếp của cùng eveNo.
+     */
+    fun resolveEventInDataOrder(
+        eventData: NpcEventData,
+        state: PlayerEventState,
+        mapId: Int,
+        chainFilter: ((List<EveCondition>) -> Boolean)? = null,
+        afterConditionNo: Int? = null,
+    ): ConditionResolveResult? {
+        val stateWithEve = state.copy(currentEveNo = eventData.eveNo)
+        val chainResult = EveChainResolver.resolveInDataOrder(
+            conditions = eventData.conditions,
+            evaluator = { cond -> EveConditionEvaluator.evaluate(cond, stateWithEve) },
+            chainFilter = chainFilter,
+            afterConditionNo = afterConditionNo,
+        ) ?: return null
+
+        val groupDatas = eveData[mapId]?.groupDatas ?: emptyMap()
+        val filtered = applyGroupData(chainResult.results, groupDatas)
+        return ConditionResolveResult(filtered, chainResult.matchedConditionNo, chainResult.stepScore)
+    }
+
+    /**
      * Áp dụng GroupData để lọc danh sách kết quả
      *
      * - resultGroupNo == 0: Nhóm ban đầu, chắc chắn được giữ lại
