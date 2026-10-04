@@ -147,19 +147,34 @@ class EveConditionResolver(
      * @return resultNo được chọn; -1 = giữ lại toàn bộ thành viên
      */
     private fun selectMember(groupData: EveGroupData): Int {
-        if (groupData.pickMember > 0) return groupData.pickMember
-        if (groupData.memberNoAy.size == 1) return groupData.memberNoAy[0]
         if (groupData.memberNoAy.isEmpty()) return -1
+        if (groupData.memberNoAy.size == 1) return groupData.memberNoAy[0]
 
+        /*
+         * DVT Eve_GroupData.lua only parses PickMember; selection is server-side.
+         * A full Eve.emg audit proves PickMember is NOT a resultNo:
+         * - every positive PickMember is 1;
+         * - hundreds of groups have members that do not contain resultNo 1;
+         * - BaDauYeu / treasure-search groups use PickMember=1 with members such
+         *   as [2,3], [4,5], [8..13] and positive ProbabilityRateAy.
+         *
+         * Therefore PickMember=1 means "pick one member", while MemberNoAy holds
+         * the actual result numbers. Weighted groups must select from MemberNoAy.
+         */
         val totalWeight = groupData.probabilityRateAy.sum()
-        if (totalWeight <= 0) return -1
-
-        var roll = (0 until totalWeight).random()
-        for (i in groupData.memberNoAy.indices) {
-            roll -= groupData.probabilityRateAy[i]
-            if (roll < 0) return groupData.memberNoAy[i]
+        if (totalWeight > 0) {
+            var roll = (0 until totalWeight).random()
+            for (i in groupData.memberNoAy.indices) {
+                roll -= groupData.probabilityRateAy.getOrElse(i) { 0 }
+                if (roll < 0) return groupData.memberNoAy[i]
+            }
+            return groupData.memberNoAy.last()
         }
-        return groupData.memberNoAy.last()
+
+        // DVT has exactly one PickMember=1 / zero-weight group and it has one
+        // member (handled above). Unknown multi-member zero-weight shapes stay
+        // fail-open here, preserving all results rather than guessing a member.
+        return -1
     }
 }
 

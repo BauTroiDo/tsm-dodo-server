@@ -2857,3 +2857,33 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Press `Rời khỏi` -> `Có`; C:013-004 must return to the exact persisted pre-entry origin for new runs.
 - For a character already stranded in legacy scene 62003 before c3504fe, recovery may use the character's saved record point because DVT Eve has no SceneInfo exit there.
 - Timeout must auto-eject through the same exit path when DungeonData.time expires; production log should record the dungeon timeout/exit line.
+
+## 2026-10-04 — Dungeon Eve GroupData weighted member selection — PASS local
+
+### Root cause
+- DVT `Eve_GroupData.lua` parses `MemberNoAy[]`, `ProbabilityRateAy[]` and `PickMember`; client does not execute GroupData, so selection is backend-side.
+- Server incorrectly treated `PickMember=1` as literal `resultNo=1` before consulting weights.
+- Full tracked Eve.emg audit: 9,289 groups; 2,794 groups have positive PickMember; every positive value is 1; 374 of those groups do not even contain member/resultNo 1. Therefore PickMember cannot mean a literal result number.
+- Production scene 62007 log confirmed the symptom: door event advanced mission 12358 from step1->2, but no grouped class3 show-NPC result was dispatched.
+
+### DVT dungeon evidence
+- Treasure search dungeon id6 / scene62003 / mission12330 contains six hidden chest placements (npcId20001). Door event1 uses weighted groups 20:[2,3], 21:[4,5], 22:[6,7], 11:[8..13], all PickMember=1, to send class3/pStyle4 show results. Wrong filtering explains entering with no treasure chest visible.
+- Find BaDauYeu dungeon id10 / scene62007 / mission12358 contains six hidden positions of npcId22087. After entry, mission step1->2; each successful find/battle advances 2->3->4->5. While step<5, class3 pStyle3 hides the current position and weighted pStyle4 group selection reveals one valid next position. At step5 it completes mission12359.
+- Higher BaDauYeu tiers use the same contract in scenes62008..62010 with mission flags12362/12366/12370.
+
+### Fix
+- `EveConditionResolver.selectMember()` no longer returns `pickMember` as a result number.
+- Weighted groups now choose one actual member from `MemberNoAy` using `ProbabilityRateAy`.
+- A single-member zero-weight group selects its only member; unknown multi-member zero-weight groups remain fail-open/preserve-all rather than guessing.
+- Updated `EveGroupData.pickMember` documentation to record that DVT uses it as a pick-count flag (0/1), not resultNo.
+
+### Validation
+- Added `EveGroupDataRegressionTest` against real tracked Eve.emg:
+  - scene62003 entry retains exactly one show result from each weighted treasure group;
+  - scene62007 relocation retains exactly one valid next-location result;
+  - positive PickMember corpus is {1} and includes groups where resultNo1 is absent.
+- Targeted regression: BUILD SUCCESSFUL, 18/18 tasks.
+- Full local `gradlew test build --rerun-tasks`: BUILD SUCCESSFUL, 21/21 tasks.
+- Fresh production trace on old runtime confirms scene62007 symptom exactly: Door event at mission12358 step1 sends show param1, then hide param1 and advances 1->2, but emits no grouped pStyle4 next-position result; subsequent ClickNpc trigger6 cannot progress the scripted search.
+- User also confirmed scene62003 enters with no visible treasure chest; this matches the same lost weighted show-results path.
+- Production deployment pending below.

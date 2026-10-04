@@ -248,7 +248,7 @@ data class EveSurfaceData(
  * @param useMode          chế độ lựa chọn
  * @param memberNoAy       danh sách resultNo của các thành viên
  * @param probabilityRateAy trọng số xác suất của từng thành viên
- * @param pickMember       thành viên chọn trước (0=không)
+ * @param pickMember       số lượng member cần chọn; dữ liệu DVT hiện dùng 0 hoặc 1, không phải resultNo
  */
 data class EveGroupData(
     val eveNo: Int,
