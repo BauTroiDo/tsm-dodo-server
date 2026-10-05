@@ -3682,3 +3682,37 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Targeted AdminBypassAndActivityEntryTest PASS.
 - git diff --check PASS; full local gradlew test build --rerun-tasks PASS 21/21.
 - DeathMatch id21 evidence: map49952 is dynamic (0 NPC, no normal inbound reverse-link), uses EWar.DeathMatch=22 plus S77-012/013 for life/kill/rank; lifecycle still pending and must not be implemented as normal navigation.
+
+
+## 2026-10-06 — Activity batch tiếp theo: Tiên Đấu + Vô Giới + Trung Thu
+- Production trước batch này vẫn ở f20e7b9 (id2..5); local HEAD đã có:
+  - 1410c68 Add DVT Immortal Arena activity entry.
+  - f301713 Bridge DVT activity server to production GS.
+- Tiên Đấu activityId37 / kind48:
+  - IOS_ActivityInfo: Lv65, bitFunction=3.
+  - Eve authoritative entry: scene49909, npc27141 "T.Đấu Trọngtài", (1010,560).
+  - Talk33567 xác nhận trọng tài Tiên Đấu, solo-only, Lv65.
+  - f301713 gửi S172-001 trỏ activityServerId về chính GS hiện tại để Lua không reconnect sang shard hoạt động giả khi bitFunction có flag2.
+- Lôi Đài Vô Giới:
+  - activityId89 kind101 Vô giới tổ đội PK.
+  - activityId90 kind102 Vô Giới loạn đấu.
+  - activityId92 kind103 LV100 loạn đấu.
+  - Cả ba dùng public entry scene12003, npc15280 "VGTruyềnTốngSư", (650,880).
+  - Eve chain public được phân biệt với placement cũ scene10993 bằng Talk20458/20459 + reborn gate conditionClass7/param8.
+  - Server derive từ Eve runtime và map cả id89/90/92 về cùng entry.
+- Trung Thu activityId94 / kind116 "Nghiễm Hàn Dật Sự":
+  - IOS_ActivityInfo Lv30.
+  - Description24563 yêu cầu đến hồ Quảng Hàn.
+  - Eve scene49998 chứa cụm Hằng Nga38264 / Ngọc Thố22095 / Ngô Cương38465 / Hậu Nghệ38462.
+  - Entry khóa tại Hằng Nga npc38264 (910,340), derive bằng cụm NPC để tránh hard-code scene mù.
+- ActivityHandler minimumLevel:
+  - id37 = 65; id94 = 30; các id89/90/92 giữ Lv15.
+- Regression AdminBypassAndActivityEntryTest khóa exact entries:
+  - id37 -> 49909/27141/(1010,560)
+  - id89/90/92 -> 12003/15280/(650,880)
+  - id94 -> 49998/38264/(910,340)
+  - S172-001 activity-server bridge byte contract vẫn PASS.
+- Targeted activity tests: PASS.
+- Full local gradlew test build --rerun-tasks: BUILD SUCCESSFUL, 21/21 tasks.
+- git diff --check: PASS.
+- id21 Tử chiến TS vẫn evidence-blocked: chưa khóa được public entry NPC/scene nên chưa đoán.

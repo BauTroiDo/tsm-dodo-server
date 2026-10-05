@@ -109,12 +109,23 @@ class ActivityHandler(
         const val DARE_NPC_ACTIVITY_ID = 4
         const val WORLD_BOSS_ACTIVITY_ID = 5
         const val IMMORTAL_ARENA_ACTIVITY_ID = 37
+        const val UNBOUNDED_TEAM_ACTIVITY_ID = 89
+        const val UNBOUNDED_CHAOS_ACTIVITY_ID = 90
+        const val UNBOUNDED_LV100_ACTIVITY_ID = 92
+        const val MID_AUTUMN_ACTIVITY_ID = 94
 
         private const val MIX_VS_ENTRY_NPC_ID = 15163
         private const val CHAOS_VS_ENTRY_NPC_ID = 15226
         private const val DARE_NPC_ENTRY_NPC_ID = 15244
         private const val WORLD_BOSS_ENTRY_NPC_ID = 38177
         private const val IMMORTAL_ARENA_ENTRY_NPC_ID = 27141
+        private const val UNBOUNDED_ENTRY_NPC_ID = 15280
+        private const val UNBOUNDED_TALK_INTRO_ID = 20458
+        private const val UNBOUNDED_TALK_SELECT_ID = 20459
+        private const val MID_AUTUMN_CHANG_E_NPC_ID = 38264
+        private const val MID_AUTUMN_RABBIT_NPC_ID = 22095
+        private const val MID_AUTUMN_WU_GANG_NPC_ID = 38465
+        private const val MID_AUTUMN_HOU_YI_NPC_ID = 38462
         private const val GRID = 20
 
         fun deriveJudgmentTowerEntry(eveData: Map<Int, SceneEveData>): Pair<Int, Int>? {
@@ -129,6 +140,7 @@ class ActivityHandler(
         fun minimumLevel(activityId: Int): Int =
             when (activityId) {
                 IMMORTAL_ARENA_ACTIVITY_ID -> 65
+                MID_AUTUMN_ACTIVITY_ID -> 30
                 else -> ACTIVITY_MIN_LEVEL
             }
 
@@ -190,6 +202,61 @@ class ActivityHandler(
                 result[IMMORTAL_ARENA_ACTIVITY_ID] = ActivityNavigationEntry(
                     sceneId, IMMORTAL_ARENA_ENTRY_NPC_ID, npc.x, npc.y
                 )
+            }
+
+            // Vô Giới has an older arena placement in 10993 and the public registration
+            // master in 12003. The public one is the placement whose Eve chain contains
+            // both registration talks 20458/20459 and the reborn gate (class7,param8).
+            val unboundedPlacement = eveData.entries.asSequence()
+                .mapNotNull { (sceneId, scene) ->
+                    val npc = scene.npcs.values.firstOrNull { candidate ->
+                        candidate.npcId == UNBOUNDED_ENTRY_NPC_ID &&
+                            candidate.events.any { eveNo ->
+                                val event = scene.npcEvents[eveNo] ?: return@any false
+                                val talks = event.conditions.asSequence()
+                                    .flatMap { it.results.asSequence() }
+                                    .filter { it.resultType == 1 }
+                                    .map { it.resultMeanNo }
+                                    .toSet()
+                                val hasRebornGate = event.conditions.any {
+                                    it.conditionClass == 7 && it.conditionParameter == 8
+                                }
+                                hasRebornGate &&
+                                    UNBOUNDED_TALK_INTRO_ID in talks &&
+                                    UNBOUNDED_TALK_SELECT_ID in talks
+                            }
+                    } ?: return@mapNotNull null
+                    sceneId to npc
+                }
+                .singleOrNull()
+            if (unboundedPlacement != null) {
+                val (sceneId, npc) = unboundedPlacement
+                val entry = ActivityNavigationEntry(sceneId, UNBOUNDED_ENTRY_NPC_ID, npc.x, npc.y)
+                result[UNBOUNDED_TEAM_ACTIVITY_ID] = entry
+                result[UNBOUNDED_CHAOS_ACTIVITY_ID] = entry
+                result[UNBOUNDED_LV100_ACTIVITY_ID] = entry
+            }
+
+            // Nghiễm Hàn Dật Sự starts at hồ Quảng Hàn. The authoritative event scene
+            // is uniquely identified by the Hằng Nga / Ngọc Thố / Ngô Cương / Hậu Nghệ cluster.
+            val midAutumnNpcIds = setOf(
+                MID_AUTUMN_CHANG_E_NPC_ID,
+                MID_AUTUMN_RABBIT_NPC_ID,
+                MID_AUTUMN_WU_GANG_NPC_ID,
+                MID_AUTUMN_HOU_YI_NPC_ID,
+            )
+            val midAutumn = eveData.entries.firstOrNull { (_, scene) ->
+                val present = scene.npcs.values.map { it.npcId }.toSet()
+                midAutumnNpcIds.all { it in present }
+            }
+            if (midAutumn != null) {
+                val (sceneId, scene) = midAutumn
+                val npc = scene.npcs.values.firstOrNull { it.npcId == MID_AUTUMN_CHANG_E_NPC_ID }
+                if (npc != null) {
+                    result[MID_AUTUMN_ACTIVITY_ID] = ActivityNavigationEntry(
+                        sceneId, MID_AUTUMN_CHANG_E_NPC_ID, npc.x, npc.y
+                    )
+                }
             }
             return result
         }

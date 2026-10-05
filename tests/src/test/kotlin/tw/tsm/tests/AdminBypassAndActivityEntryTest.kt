@@ -81,7 +81,16 @@ class AdminBypassAndActivityEntryTest {
             ActivityHandler.ActivityNavigationEntry(49909, 27141, 1010, 560),
             entries[ActivityHandler.IMMORTAL_ARENA_ACTIVITY_ID],
         )
+        val unboundedEntry = ActivityHandler.ActivityNavigationEntry(12003, 15280, 650, 880)
+        assertEquals(unboundedEntry, entries[ActivityHandler.UNBOUNDED_TEAM_ACTIVITY_ID])
+        assertEquals(unboundedEntry, entries[ActivityHandler.UNBOUNDED_CHAOS_ACTIVITY_ID])
+        assertEquals(unboundedEntry, entries[ActivityHandler.UNBOUNDED_LV100_ACTIVITY_ID])
+        assertEquals(
+            ActivityHandler.ActivityNavigationEntry(49998, 38264, 910, 340),
+            entries[ActivityHandler.MID_AUTUMN_ACTIVITY_ID],
+        )
         assertEquals(65, ActivityHandler.minimumLevel(ActivityHandler.IMMORTAL_ARENA_ACTIVITY_ID))
+        assertEquals(30, ActivityHandler.minimumLevel(ActivityHandler.MID_AUTUMN_ACTIVITY_ID))
     }
 
     @Test
