@@ -3410,3 +3410,35 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
   - exact public-web searches for `NpcSkillProb_C.dat`, `NpcSoul_C.dat`, `Soul_C.dat`, and `TSM.Shared.Protocol.SoulSub` produced no usable external source.
 - Current evidence-block remains unchanged and explicit: no authoritative source for initial 6-stat distribution, initial skill-ID pool/selection, or exact initial element derivation.
 - Do NOT fabricate official DVT semantics. If an offline fallback is later desired, implement it behind an explicitly custom/offline policy and keep the DVT evidence status documented.
+
+## 2026-10-05 — Official TSN website pinned as authoritative DVT evidence source
+
+- Official website pinned for all future DVT audits: `https://tsn.chinesegamer.net/index.php`.
+- Official Soul system page: `https://tsn.chinesegamer.net/sys.php`.
+- Official Requiem/Soul-point page: `https://tsn.chinesegamer.net/sys1.php`.
+- Source priority for future work is now:
+  1. Lua DVT gameplay/protocol semantics.
+  2. Official TSN website `tsn.chinesegamer.net` for published game rules/system behavior.
+  3. Official DVT 1.15 native dump + client DAT/assets for C#/IL2CPP bridge, transport, field layout and client data.
+  4. Kotlin server implementation.
+  5. PC source fallback only when all DVT sources above are insufficient.
+- Official Soul rules confirmed from `sys.php`:
+  - Soul grants both stat bonuses and Soul skills when equipped.
+  - A warrior can equip only one Soul.
+  - Soul must match the warrior element to be equippable.
+  - qualities are white/green/blue/purple and quality changes conversion rate, total initial stat points, max level, and number of acquired skills.
+  - each strengthen level grants exactly 2 points randomly distributed among the 6 Soul stats.
+  - refinement only changes strengthened/added stats; initial Soul stats cannot be changed by refinement.
+  - Soul skill sets are independent/flexible; official examples include Zhou Yu with Freeze/Revive, Guan Yu with Stealth/Stun, Ma Chao with Barrier/Tree-Spirit. Therefore do NOT derive Soul skill IDs from the base warrior's own normal skill set.
+  - breakthrough requires same quality + same Soul name and raises level cap; each Soul can break through at most 5 times.
+  - skill upgrade consumes Souls with matching skills; all matching skills can level when multiple overlap.
+- Official `sys1.php` confirms Requiem/Soul-point behavior:
+  - equipped Soul on an active warrior enables Soul-point drops from outdoor battle victories;
+  - Soul quality affects Soul-point drop amount;
+  - up to 4 bosses can accumulate; Soul points stop accumulating while slots are full;
+  - refresh consumes 500 Soul points.
+- Official launch/event page confirms Soul gacha currencies and event terminology (`靈魂幣`, `幻彩靈魂幣`) but does not expose the missing generator internals.
+- Critical evidence status after official-site audit:
+  - authoritative: element source, quality, startPoint totals, skill-count probabilities, packet/storage structure, strengthen semantics, and the fact that Soul skills come from an independent/flexible pool.
+  - still NOT published/locked: exact initial distribution algorithm of startPoint across six stats; complete Soul skill-ID pool and exact skill-ID selection algorithm.
+  - therefore DO NOT implement an 'official DVT' Soul generator yet. Keep production guard for item-use 240 until those two pieces are evidenced, or explicitly choose a separate custom/offline fallback policy.
