@@ -3348,3 +3348,45 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
   - Lua protocol xác nhận nhận Soul từ gacha dùng `S:120-008 result=2`.
   - Native IL2CPP không chứa logic tạo Soul; nó chỉ chuyển packet sang Lua.
   - thuật toán server gốc phân bố `startPoint` vào 6 stat và chọn initial skill IDs vẫn chưa có bằng chứng; tiếp tục tìm trong toàn bộ APK/assets/Lua binary/server evidence, không được bịa.
+
+## 2026-10-05 — Soul acquisition flow corrected + item-use 240 safety guard
+
+- IMPORTANT correction to the earlier gacha diagnosis: DVT Soul gacha does NOT create a SoulThing directly.
+- Authoritative flow locked from official DVT 1.15 Lua + real IOS DAT:
+  1. Doro gacha rewards a normal-bag Soul box.
+  2. Soul box uses normal item-use specialAbility 48 and opens through BlissBag data.
+  3. Box reward is a real Soul item 595xx with specialAbility 240 (`EItemUseKind.Soul`).
+  4. Using the 595xx Soul item through C:023-015 is the server-side Soul creation path.
+  5. Server must create/persist a fully populated SoulThing and then send protocol120 receive/bag data; client does not generate it.
+- Exact four Doro Soul boxes from `IOS_Item_C.dat`:
+  - 32994 `Bộ Linh Hồn Trắng`: kind38, specialAbility48.
+  - 32995 `Bộ Linh Hồn Lục`: kind38, specialAbility48.
+  - 34073 `Túi Linh Hồn - Lam`: kind38, specialAbility48.
+  - 34074 `Túi Linh Hồn - Tím`: kind38, specialAbility48.
+- `IOS_BlissBag_C.dat` maps those boxes to 595xx Soul items. Regression now asserts every reward has specialAbility240 and the expected quality N/R/SR/SSR, with total pool weight 10000.
+- Therefore Soul bag `0/100` immediately after gacha is expected DVT behavior if the player has only received the box and has not opened/used the resulting Soul item yet.
+- `59501..59594` are kind94 + specialAbility240. Their item metadata does NOT provide generation data: element/elementValue/skillLink/spare2/spare3/attr1/attr2 are all zero; only quality varies.
+- Official DVT 1.15 `SoulThing.New(data)` only deserializes server data: sn, itemId, element, equipId, lv, starLv, six startAtt, six nowAtt, four skill(id+lv), lock. There is no client generator.
+- `IOS_Soul_C.dat` quality rows lock skill-slot probabilities / startPoint:
+  - N: startPoint150, skillGetProb 10000/0/0/0.
+  - R: startPoint250, skillGetProb 10000/2000/0/0.
+  - SR: startPoint400, skillGetProb 10000/10000/1500/0.
+  - SSR: startPoint550, skillGetProb 10000/10000/10000/1000.
+- Still evidence-blocked: authoritative initial six-stat distribution, skill-ID pool/selection, and exact initial element derivation. Do not invent them.
+- `IOS_NpcSoul_C.dat` avatar NPCs cannot provide initial skills: their six stats are all 1 and skills are zero.
+- Client-side candidate tables were eliminated:
+  - `IOS_NpcSkillProb_C.dat` APK asset is only a 4-byte count/stub and has no usable payload.
+  - `IOS_WeapBody.dat` is loaded by `OnLoadNpcWeaponData` (appearance data), not a Soul skill pool.
+  - `IOS_Skill2.dat` is not loaded by DVT 1.15 Lua and is not authoritative for Soul generation.
+- MoonDev/GOC decompile contains opcode120/SoulSub and pet SoulId/SoulEquipId fields, but no standalone Soul model/table and no startPoint/skillGetProb/generator implementation. It is insufficient as an authoritative generator source.
+- Actual Kotlin bug found: `ItemUseProcessor` had no EItemUseKind.SOUL=240 case, so a 595xx item could fall into generic item use and be consumed without creating a Soul.
+- Safety fix implemented (not a generator):
+  - added `EItemUseKind.SOUL = 240` to Kotlin constants;
+  - ItemUseProcessor now rejects 240 with `success=false, consumed=false` until the authoritative generator is implemented;
+  - this prevents loss of real Soul items during continued reverse-engineering.
+- Regression `SoulItemUseSafetyTest`:
+  - locks box->Soul-item quality semantics from real DAT;
+  - locks item59501 specialAbility240;
+  - asserts 240 is never consumed as generic/no-op.
+- Validation: targeted Soul safety tests PASS; full `gradlew test build --rerun-tasks` PASS, 21/21 tasks; `git diff --check` PASS.
+- Next safe work: commit/push/deploy this loss-prevention guard to production, then continue server-side evidence search for the missing Soul generator. Do NOT change Doro to issue SoulThing directly.

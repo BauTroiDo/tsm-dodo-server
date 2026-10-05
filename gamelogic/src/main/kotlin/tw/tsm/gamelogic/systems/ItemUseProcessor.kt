@@ -100,6 +100,14 @@ class ItemUseProcessor(
             EItemUseKind.EXP_GOD -> processExpBuff(characterId, def.attr1Value.toDouble() / 100.0)
             EItemUseKind.NO_ENCOUNTER -> processNoEncounter(characterId)
             EItemUseKind.GIFT_BOX -> processGiftBox(itemId, quantity)
+            EItemUseKind.SOUL -> {
+                // DVT item 240 is the Soul acquisition/use path. The client only deserializes
+                // a fully generated SoulThing; authoritative initial stat/skill generation is
+                // server-side and is still evidence-blocked. Never consume the item as a generic
+                // no-op while that generator is unavailable.
+                logger.warn { "Tạm hoãn dùng vật phẩm Hồn: itemId=$itemId - chưa khóa generator Soul ĐVT" }
+                ItemUseResult(success = false, consumed = false)
+            }
             else -> processGenericAttrItem(characterId, def, quantity)
         }
     }
