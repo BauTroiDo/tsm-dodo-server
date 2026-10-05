@@ -571,7 +571,12 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             }
         }
     }
-    single { EveTriggerRouter(get<EveEventStateMachine>(), get(), get(), get(), get(), get<GameDataManager>().eveData) }
+    single {
+        EveTriggerRouter(
+            get<EveEventStateMachine>(), get(), get(), get(), get(),
+            get<GameDataManager>().eveData, get<AdminBypassPolicy>()
+        )
+    }
     single {
         MineEncounterSystem(
             get<GameDataManager>().eveData,

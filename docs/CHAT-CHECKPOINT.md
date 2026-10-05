@@ -3591,3 +3591,12 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - C77-003 activityId=1 validates current schedule for normal players; GM uses schedule+level bypass, then teleports to scene 12921 at the Eve-derived (620,1200). No guessed coordinates.
 - Added dispatcher registration for ActivityHandler and regression `AdminBypassAndActivityEntryTest`: normal flags all false, gmLevel=99 flags all true, Eve-derived tower entry exactly 12921/(620,1200).
 - Targeted tests PASS; full `gradlew test build --rerun-tasks` PASS 21/21 locally.
+
+## 2026-10-05 — Judgment Tower A3 GM battle-gate fix
+- Runtime trace after user test: entered activity correctly, then reached scene 12955; Nhân Hùng (NPC 38382, clickId=1) only owns Eve6 Talk 53182. Battle is on the Door directly under/near him, not on the NPC talk.
+- Scene12955 Door2/Eve2 authoritative chain requires mission 10690 progress >=81, mission10691 gate, Lv15+, then emits Talk 53181 + Battle resultType3/FightData key1. User's mission10690 was absent (step=0), so Door2 correctly failed under normal Eve evaluation and no battle started.
+- Added optional conditionOverride to EveConditionResolver without changing normal-player semantics.
+- EveTriggerRouter now applies a tightly-scoped GM override only on battle-bearing Door events in the authoritative Trial Tower scene chain 12921..12959: mission/class2 and player-level gate are bypassed, while class8 battle-result and class10 choice conditions are NOT bypassed. This lets gmLevel>0 test any tower battle without corrupting normal event branching.
+- AdminBypassPolicy injected into EveTriggerRouter.
+- Regression uses real Eve.emg scene12955 Eve2: normal empty state resolves null; GM override resolves the exact Talk53181 + Battle FightData key1 branch.
+- Targeted tests PASS; full local test/build PASS 21/21.

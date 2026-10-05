@@ -26,7 +26,8 @@ class EveTriggerRouter(
     private val conditionResolver: EveConditionResolver,
     private val flowController: EveFlowController,
     private val responseSender: ResponseSender,
-    private val eveData: Map<Int, SceneEveData>
+    private val eveData: Map<Int, SceneEveData>,
+    private val adminBypassPolicy: AdminBypassPolicy = AdminBypassPolicy(),
 ) {
 
     /**
@@ -234,8 +235,37 @@ class EveTriggerRouter(
         }
         for (eveNo in door.events) {
             val eventData = sceneData.npcEvents[eveNo] ?: continue
-            val result = resolveActivateAndAdvance(charId, mapId, triggerID, eventData, state, triggerKind = subKind)
-            if (result != null) { flowController.startEvent(session, result); return }
+            val gmTrialOverride = if (
+                mapId in TRIAL_TOWER_SCENE_RANGE &&
+                adminBypassPolicy.bypassQuestGate(session) &&
+                eventData.conditions.any { c -> c.results.any { it.resultType == 3 } }
+            ) {
+                { cond: tw.tsm.domain.data.EveCondition ->
+                    when {
+                        cond.conditionClass == 2 -> true
+                        adminBypassPolicy.bypassLevel(session) &&
+                            cond.conditionClass == 7 &&
+                            cond.conditionParameter == 0 &&
+                            cond.conditionParameterStyle == 1 -> true
+                        else -> null
+                    }
+                }
+            } else null
+
+            val result = resolveActivateAndAdvance(
+                charId, mapId, triggerID, eventData, state,
+                triggerKind = subKind,
+                conditionOverride = gmTrialOverride,
+            )
+            if (result != null) {
+                if (gmTrialOverride != null) {
+                    logger.info {
+                        "${session.characterName} GM bypass cổng Tháp Thử Luyện: map=$mapId door=$triggerID eve=$eveNo"
+                    }
+                }
+                flowController.startEvent(session, result)
+                return
+            }
             logger.info { "Door eveNo=$eveNo không khớp (${eventData.conditions.size} điều kiện)" }
         }
         logger.warn { "Cảnh $mapId doorId=$triggerID Door không có điều kiện kích hoạt được (${door.events.size} sự kiện đều thất bại)" +
@@ -426,9 +456,13 @@ class EveTriggerRouter(
         eventData: NpcEventData,
         state: PlayerEventState,
         triggerKind: Int = 0, chainDepth: Int = 0,
-        onlyIfIdle: Boolean = false
+        onlyIfIdle: Boolean = false,
+        conditionOverride: ((tw.tsm.domain.data.EveCondition) -> Boolean?)? = null,
     ): EveResult? {
-        val resolved = conditionResolver.resolveEvent(eventData, state, mapId) ?: return null
+        val resolved = conditionResolver.resolveEvent(
+            eventData, state, mapId,
+            conditionOverride = conditionOverride,
+        ) ?: return null
 
         val eventSession = EventSession(
             mapId = mapId, eveNo = eventData.eveNo, npcClickId = npcClickId,
@@ -447,6 +481,9 @@ class EveTriggerRouter(
     }
 
     companion object {
+        /** DVT Tháp Thử Luyện / Giải cứu Nhị Kiều uses the linked 12921..12959 scene chain. */
+        val TRIAL_TOWER_SCENE_RANGE = 12921..12959
+
         /** Bảng đối chiếu tên loại kích hoạt sự kiện (EEventTrigger)*/
         private val TRIGGER_NAMES = mapOf(
             1 to "ClickNpc",

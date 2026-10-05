@@ -53,7 +53,8 @@ class EveConditionResolver(
         state: PlayerEventState,
         mapId: Int,
         chainFilter: ((List<EveCondition>) -> Boolean)? = null,
-        excludedConditionNos: Set<Int> = emptySet()
+        excludedConditionNos: Set<Int> = emptySet(),
+        conditionOverride: ((EveCondition) -> Boolean?)? = null,
     ): ConditionResolveResult? {
         // Dump chẩn đoán: tất cả chuỗi điều kiện của sự kiện + kết quả
         logger.trace { "Dump sự kiện eveNo=${eventData.eveNo}: số điều kiện=${eventData.conditions.size} " +
@@ -80,7 +81,9 @@ class EveConditionResolver(
         val stateWithEve = state.copy(currentEveNo = eventData.eveNo)
         val chainResult = EveChainResolver.resolve(
             conditions = eventData.conditions,
-            evaluator = { cond -> EveConditionEvaluator.evaluate(cond, stateWithEve) },
+            evaluator = { cond ->
+                conditionOverride?.invoke(cond) ?: EveConditionEvaluator.evaluate(cond, stateWithEve)
+            },
             chainFilter = { chain ->
                 (chainFilter?.invoke(chain) ?: true) &&
                         chain.first().conditionNo !in excludedConditionNos
