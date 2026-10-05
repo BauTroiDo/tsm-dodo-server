@@ -1,7 +1,9 @@
 package tw.tsm.gamelogic.systems
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import tw.tsm.domain.constants.DEFAULT_PORT
 import tw.tsm.domain.constants.EAttribute
+import tw.tsm.protocol.PacketWriter
 import tw.tsm.domain.data.ItemDef
 import tw.tsm.domain.data.SceneEveData
 import tw.tsm.domain.data.SacredEquipPrimaryDef
@@ -342,6 +344,12 @@ class LoginService(
         // but requires S:077-001/002 to know the actual current window/state.
         activityScheduleSystem?.sendAllActivityStates(session)
 
+        // S:172-001 activity-server route. The original DVT client switches shards for
+        // activities whose bitFunction includes flag 2. Offline runs one authoritative GS,
+        // so advertise the current server itself as the activity server. Lua then sees
+        // activityServerId == serverId and proceeds to C:077-003 without a fake reconnect.
+        session.send(activityServerInfoPacket(session.serverId))
+
         // S:077 thời gian hoạt động runtime + S:091-001 bảng cửu cung daily.
         // UIJiugongge opens later from the Hằng ngày button and expects this state to exist.
         jiugonggeSystem?.sendDailyInit(session)
@@ -462,6 +470,26 @@ class LoginService(
     }
 
     companion object {
+        /**
+         * S:172-001 <activity server> + ServerID(Int32) + ServerPort(Int32) + ServerIP(raw Big5).
+         *
+         * DVT's offline one-server profile intentionally advertises the current GS as
+         * the activity server. The client replaces the IP from Network.servers when the
+         * server id matches, so an empty raw IP is both sufficient and safer than
+         * hard-coding a LAN address.
+         */
+        fun activityServerInfoPacket(
+            serverId: Int,
+            port: Int = DEFAULT_PORT,
+            ip: String = "",
+        ): ByteArray =
+            PacketWriter()
+                .writeByte(172).writeByte(1).writeByte(0)
+                .writeIntLE(serverId)
+                .writeIntLE(port)
+                .writeBytes(ip.toByteArray(PacketWriter.BIG5))
+                .toByteArray()
+
         /**
          * Lấy thời gian máy chủ theo định dạng OLE Automation Date
          *

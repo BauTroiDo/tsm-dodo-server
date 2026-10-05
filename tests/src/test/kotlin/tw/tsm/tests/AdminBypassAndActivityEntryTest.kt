@@ -12,6 +12,7 @@ import tw.tsm.data.loaders.EveDataLoader
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.gamelogic.systems.AdminBypassPolicy
 import tw.tsm.gamelogic.systems.EveConditionResolver
+import tw.tsm.gamelogic.systems.LoginService
 import tw.tsm.gamelogic.systems.PlayerEventState
 import java.nio.file.Files
 import java.nio.file.Path
@@ -81,6 +82,18 @@ class AdminBypassAndActivityEntryTest {
             entries[ActivityHandler.IMMORTAL_ARENA_ACTIVITY_ID],
         )
         assertEquals(65, ActivityHandler.minimumLevel(ActivityHandler.IMMORTAL_ARENA_ACTIVITY_ID))
+    }
+
+    @Test
+    fun activityServerInfoPacketMatchesLuaS172Sub1Contract() {
+        assertArrayEquals(
+            byteArrayOf(
+                172.toByte(), 1, 0,
+                1, 0, 0, 0,
+                0xD5.toByte(), 0x19, 0, 0,
+            ),
+            LoginService.activityServerInfoPacket(serverId = 1),
+        )
     }
 
     @Test

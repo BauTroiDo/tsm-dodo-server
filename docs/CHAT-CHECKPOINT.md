@@ -3667,3 +3667,18 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Regression AdminBypassAndActivityEntryTest locks exact id37 mapping and Lv65.
 - Validation local: targeted PASS; git diff --check PASS; full `gradlew test build --rerun-tasks` PASS 21/21.
 - Vô Giới id89/90/92 and Tử chiến TS id21 remain under evidence audit; do not guess their entry NPC. Evidence found: scene12003 has LôiĐàiTruyềnSư, NVthụlýtrậnđấu, VGTruyềnTốngSư, Quản Lý LôiĐài, but these roles must be distinguished before wiring C77-003.
+
+
+## 2026-10-06 — Single-server Activity Server bridge (S172-001)
+- Lua UIActivity: activities whose bitFunction includes flag2 attempt activity-server switching before C77-003.
+- Root blocker: client Network.activityServerId defaults 0; current Kotlin never sent S172-001, so bitFunction=3 activities could return before sending C77-003.
+- Lua protocol locked: S172-001 = ServerID(Int32)+ServerPort(Int32)+ServerIP(raw); Network.ConnectToActivityServer uses C1-100 only when activityServerId != current serverId.
+- Offline authoritative solution: advertise current GS itself as the activity server during character-enter sequence.
+  - S172-001 serverId=session.serverId
+  - port=DEFAULT_PORT 6613
+  - empty raw IP; Lua replaces IP from Network.servers for the matching server id.
+  - Result: activityServerId == serverId, so client proceeds directly to C77-003 without fake shard reconnect.
+- Added byte regression: AC 01 00 01 00 00 00 D5 19 00 00 for serverId1/port6613.
+- Targeted AdminBypassAndActivityEntryTest PASS.
+- git diff --check PASS; full local gradlew test build --rerun-tasks PASS 21/21.
+- DeathMatch id21 evidence: map49952 is dynamic (0 NPC, no normal inbound reverse-link), uses EWar.DeathMatch=22 plus S77-012/013 for life/kill/rank; lifecycle still pending and must not be implemented as normal navigation.
