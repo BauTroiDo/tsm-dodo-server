@@ -37,6 +37,15 @@ class WelfareLoginAwardTest {
         assertEquals(65347 to 1, login.first().rewards.first())
         assertEquals(28, login.last().day)
         assertEquals(65349 to 3, login.last().rewards.first())
+
+        // Tab Việt hoá "Quà đăng nhập" trong ảnh thực tế là EAward.OpenServer=4,
+        // không phải EAward.Login=1. Khóa đúng hàng ngày 1 để tránh regress về "Sai chủng loại".
+        val openDay1 = defs.single { it.group == 4 && it.day == 1 }
+        assertEquals(
+            listOf(65301 to 100, 46575 to 1, 51964 to 1, 65345 to 10, 35671 to 1),
+            openDay1.rewards,
+        )
+        assertEquals(1500, openDay1.flag)
         assertThrows(IllegalArgumentException::class.java) {
             LoginAwardDatLoader.load(bytes + byteArrayOf(0))
         }
@@ -134,6 +143,50 @@ class WelfareLoginAwardTest {
         assertEquals(2, r.readUByte())
         assertEquals(0, r.readUByte())
         assertEquals(1, r.readUByte())
+        assertEquals(0, r.readUByte())
+        assertEquals(0, r.remaining)
+    }
+
+    @Test
+    fun `C87-002 OpenServer day1 claim matches Vietnamese Quà đăng nhập tab`() = runBlocking {
+        val awards = listOf(
+            LoginAwardDef(4, 0, 1, listOf(65301 to 100, 0 to 0, 0 to 0, 0 to 0, 0 to 0), 0, 0, 0, 1500)
+        )
+        val stateRepo = mockk<WelfareStateRepository>()
+        coEvery { stateRepo.getLastLoginClaimDay(77L) } returns DispatchSystem.currentDayKey()
+        val roleCounts = mockk<RoleCountSystem>()
+        val bitFlags = mockk<BitFlagSystem>()
+        coEvery { bitFlags.getSetFlagIds(77L) } returns emptySet()
+        coEvery { bitFlags.setFlag(77L, 1500) } just Runs
+        val inventory = mockk<InventorySystem>(relaxed = true)
+        val point = mockk<PointSystem>(relaxed = true)
+        coEvery { point.addRealPoint(77L, 100) } returns true
+        coEvery { point.savePoints(77L) } just Runs
+        every { point.getPoints(77L) } returns (100 to 0)
+        val money = mockk<MoneySystem>(relaxed = true)
+        every { money.getMoney(77L) } returns (0 to 0)
+        val currency = mockk<PlayerCurrencySystem>(relaxed = true)
+        every { currency.get(77L, any()) } returns 0
+        val response = mockk<ResponseSender>(relaxed = true)
+        val packets = mutableListOf<ByteArray>()
+        val session = mockk<GameSession> {
+            every { state } returns SessionState.IN_GAME
+            every { roleId } returns 77
+            every { send(capture(packets)) } just Runs
+        }
+        val handler = WelfareHandler(awards, stateRepo, roleCounts, bitFlags, inventory, point, money, currency, response)
+        val body = PacketWriter().writeByte(4).writeIntLE(1).writeByte(1).toByteArray()
+
+        handler.handle(session, 2, body)
+
+        coVerify(exactly = 1) { point.addRealPoint(77L, 100) }
+        coVerify(exactly = 1) { bitFlags.setFlag(77L, 1500) }
+        verify(exactly = 1) { response.sendBitFlagChanges(session, listOf(1500 to true)) }
+        val r = PacketReader(packets.last())
+        assertEquals(87, r.readUByte())
+        assertEquals(2, r.readUByte())
+        assertEquals(0, r.readUByte())
+        assertEquals(4, r.readUByte())
         assertEquals(0, r.readUByte())
         assertEquals(0, r.remaining)
     }

@@ -62,18 +62,22 @@ class WelfareHandler(
         val kind = reader.readUByte()
         val requestedDay = reader.readIntLE()
         val count = reader.readUByte()
-        if (reader.remaining != 0 || kind != AWARD_LOGIN || count != 1) {
+        if (reader.remaining != 0 || count != 1) {
             sendClaimResult(session, kind, RESULT_WRONG_KIND)
             return
         }
 
+        when (kind) {
+            AWARD_LOGIN -> handleDailyLoginClaim(session, requestedDay)
+            AWARD_OPEN_SERVER -> handleOpenServerClaim(session, requestedDay)
+            else -> sendClaimResult(session, kind, RESULT_WRONG_KIND)
+        }
+    }
+
+    private suspend fun handleDailyLoginClaim(session: GameSession, requestedDay: Int) {
         val charId = session.roleId.toLong()
         val today = DispatchSystem.currentDayKey()
         if (stateRepo.getLastLoginClaimDay(charId) == today) {
-            // DVT UpdateLoginAward() tự gửi lại C:087-002 mỗi khi RoleCount 107/108 refresh
-            // trong lúc BitFlag.Login chưa kịp tới client. Xử lý duplicate cùng ngày theo kiểu
-            // idempotent: KHÔNG phát thưởng lần nữa, nhưng đồng bộ state rồi ACK success để client
-            // không hiện lỗi giả "sai chủng loại/đã nhận" do race packet.
             bitFlagSystem.setFlag(charId, LOGIN_BIT_FLAG)
             responseSender.sendBitFlagChanges(session, listOf(LOGIN_BIT_FLAG to true))
             responseSender.sendRoleCountUpdate(
@@ -83,40 +87,22 @@ class WelfareHandler(
                     CONTINUE_LOGIN to (roleCountSystem.getValue(charId, CONTINUE_LOGIN) to 0),
                 )
             )
-            sendClaimResult(session, kind, RESULT_SUCCESS)
+            sendClaimResult(session, AWARD_LOGIN, RESULT_SUCCESS)
             welfareLogger.debug { "Welfare login duplicate ACK: charId=$charId day=$requestedDay" }
             return
         }
 
         val expectedDay = roleCountSystem.getValue(charId, LOGIN_SIGN_DAY) + 1
         if (requestedDay != expectedDay) {
-            sendClaimResult(session, kind, RESULT_CONDITION_NOT_MET)
+            sendClaimResult(session, AWARD_LOGIN, RESULT_CONDITION_NOT_MET)
             return
         }
         val award = loginAwardDefs.firstOrNull { it.group == AWARD_LOGIN && it.day == requestedDay }
         if (award == null) {
-            sendClaimResult(session, kind, RESULT_BAD_REWARD)
+            sendClaimResult(session, AWARD_LOGIN, RESULT_BAD_REWARD)
             return
         }
-        val rewards = award.rewards.filter { it.first > 0 && it.second > 0 }
-        if (rewards.isEmpty()) {
-            sendClaimResult(session, kind, RESULT_BAD_REWARD)
-            return
-        }
-
-        val normalItems = rewards.filterNot { isVirtualReward(it.first) }
-        val changedBag = if (normalItems.isNotEmpty()) {
-            inventorySystem.addItemBundleToBagExact(charId, normalItems)
-                ?: run { sendClaimResult(session, kind, RESULT_BAG_FULL); return }
-        } else emptyList()
-
-        for ((itemId, qty) in rewards) {
-            if (!grantVirtualReward(charId, itemId, qty)) {
-                welfareLogger.error { "Welfare login reward lỗi: charId=$charId itemId=$itemId qty=$qty" }
-                sendClaimResult(session, kind, RESULT_BAD_REWARD)
-                return
-            }
-        }
+        if (!grantAward(session, award)) return
 
         roleCountSystem.setValue(charId, LOGIN_SIGN_DAY, requestedDay)
         roleCountSystem.increment(charId, CONTINUE_LOGIN, 1)
@@ -124,10 +110,6 @@ class WelfareHandler(
         stateRepo.setLastLoginClaimDay(charId, today)
         bitFlagSystem.setFlag(charId, LOGIN_BIT_FLAG)
 
-        for ((slot, thing) in changedBag) responseSender.sendSetBagItem(session, slot, thing)
-        // Lua RoleCount.lua đăng ký 107/108 -> UILoginAward.RefreshRoleCount(), và
-        // UpdateLoginAward() sẽ tự gửi lại C:087-002 nếu BitFlag.Login vẫn false.
-        // Vì vậy phải đồng bộ BitFlag trước RoleCount để chặn vòng gửi lặp trên client.
         responseSender.sendBitFlagChanges(session, listOf(LOGIN_BIT_FLAG to true))
         responseSender.sendRoleCountUpdate(
             session,
@@ -137,8 +119,73 @@ class WelfareHandler(
             )
         )
         syncVirtualBalances(session)
-        sendClaimResult(session, kind, RESULT_SUCCESS)
-        welfareLogger.info { "Welfare login claim: charId=$charId day=$requestedDay rewards=$rewards" }
+        sendClaimResult(session, AWARD_LOGIN, RESULT_SUCCESS)
+        welfareLogger.info { "Welfare login claim: charId=$charId day=$requestedDay rewards=${award.rewards}" }
+    }
+
+    /**
+     * EAward.OpenServer=4 — chính là tab đang hiển thị "Quà đăng nhập" của client Việt hoá.
+     * Lua UpdateOpenServer dùng Role.GetLoginDay() >= row.day và BitFlag(row.flag) để quyết định
+     * Available/Complete/Processing. LoginService hiện gửi S:003-001 loginDay=1, nên backend claim
+     * phải dùng cùng giá trị để không mở sớm ngày 2+. Không tự suy diễn lịch sử login chưa tồn tại.
+     */
+    private suspend fun handleOpenServerClaim(session: GameSession, requestedDay: Int) {
+        val charId = session.roleId.toLong()
+        val award = loginAwardDefs.firstOrNull { it.group == AWARD_OPEN_SERVER && it.day == requestedDay }
+        if (award == null) {
+            sendClaimResult(session, AWARD_OPEN_SERVER, RESULT_BAD_REWARD)
+            return
+        }
+        if (OPEN_SERVER_LOGIN_DAY < award.day) {
+            sendClaimResult(session, AWARD_OPEN_SERVER, RESULT_CONDITION_NOT_MET)
+            return
+        }
+
+        val flagId = award.flag
+        if (flagId <= 0) {
+            sendClaimResult(session, AWARD_OPEN_SERVER, RESULT_BAD_REWARD)
+            return
+        }
+        if (bitFlagSystem.getSetFlagIds(charId).contains(flagId)) {
+            // Idempotent ACK: client may click again before the flag redraw finishes.
+            responseSender.sendBitFlagChanges(session, listOf(flagId to true))
+            sendClaimResult(session, AWARD_OPEN_SERVER, RESULT_SUCCESS)
+            return
+        }
+
+        if (!grantAward(session, award)) return
+        bitFlagSystem.setFlag(charId, flagId)
+        responseSender.sendBitFlagChanges(session, listOf(flagId to true))
+        syncVirtualBalances(session)
+        sendClaimResult(session, AWARD_OPEN_SERVER, RESULT_SUCCESS)
+        welfareLogger.info {
+            "Welfare open-server claim: charId=$charId day=$requestedDay flag=$flagId rewards=${award.rewards}"
+        }
+    }
+
+    private suspend fun grantAward(session: GameSession, award: LoginAwardDef): Boolean {
+        val charId = session.roleId.toLong()
+        val rewards = award.rewards.filter { it.first > 0 && it.second > 0 }
+        if (rewards.isEmpty()) {
+            sendClaimResult(session, award.group, RESULT_BAD_REWARD)
+            return false
+        }
+
+        val normalItems = rewards.filterNot { isVirtualReward(it.first) }
+        val changedBag = if (normalItems.isNotEmpty()) {
+            inventorySystem.addItemBundleToBagExact(charId, normalItems)
+                ?: run { sendClaimResult(session, award.group, RESULT_BAG_FULL); return false }
+        } else emptyList()
+
+        for ((itemId, qty) in rewards) {
+            if (!grantVirtualReward(charId, itemId, qty)) {
+                welfareLogger.error { "Welfare reward lỗi: charId=$charId kind=${award.group} itemId=$itemId qty=$qty" }
+                sendClaimResult(session, award.group, RESULT_BAD_REWARD)
+                return false
+            }
+        }
+        for ((slot, thing) in changedBag) responseSender.sendSetBagItem(session, slot, thing)
+        return true
     }
 
     private fun isVirtualReward(itemId: Int): Boolean = itemId in setOf(
@@ -186,12 +233,13 @@ class WelfareHandler(
 
     companion object {
         private const val AWARD_LOGIN = 1
+        private const val AWARD_OPEN_SERVER = 4
+        private const val OPEN_SERVER_LOGIN_DAY = 1
         private const val LOGIN_BIT_FLAG = 1
         private const val LOGIN_SIGN_DAY = 107
         private const val CONTINUE_LOGIN = 108
         private const val RESULT_SUCCESS = 0
         private const val RESULT_WRONG_KIND = 1
-        private const val RESULT_ALREADY_CLAIMED = 2
         private const val RESULT_CONDITION_NOT_MET = 3
         private const val RESULT_BAG_FULL = 4
         private const val RESULT_BAD_REWARD = 7
