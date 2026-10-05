@@ -70,7 +70,21 @@ class WelfareHandler(
         val charId = session.roleId.toLong()
         val today = DispatchSystem.currentDayKey()
         if (stateRepo.getLastLoginClaimDay(charId) == today) {
-            sendClaimResult(session, kind, RESULT_ALREADY_CLAIMED)
+            // DVT UpdateLoginAward() tự gửi lại C:087-002 mỗi khi RoleCount 107/108 refresh
+            // trong lúc BitFlag.Login chưa kịp tới client. Xử lý duplicate cùng ngày theo kiểu
+            // idempotent: KHÔNG phát thưởng lần nữa, nhưng đồng bộ state rồi ACK success để client
+            // không hiện lỗi giả "sai chủng loại/đã nhận" do race packet.
+            bitFlagSystem.setFlag(charId, LOGIN_BIT_FLAG)
+            responseSender.sendBitFlagChanges(session, listOf(LOGIN_BIT_FLAG to true))
+            responseSender.sendRoleCountUpdate(
+                session,
+                mapOf(
+                    LOGIN_SIGN_DAY to (roleCountSystem.getValue(charId, LOGIN_SIGN_DAY) to 0),
+                    CONTINUE_LOGIN to (roleCountSystem.getValue(charId, CONTINUE_LOGIN) to 0),
+                )
+            )
+            sendClaimResult(session, kind, RESULT_SUCCESS)
+            welfareLogger.debug { "Welfare login duplicate ACK: charId=$charId day=$requestedDay" }
             return
         }
 
@@ -111,6 +125,10 @@ class WelfareHandler(
         bitFlagSystem.setFlag(charId, LOGIN_BIT_FLAG)
 
         for ((slot, thing) in changedBag) responseSender.sendSetBagItem(session, slot, thing)
+        // Lua RoleCount.lua đăng ký 107/108 -> UILoginAward.RefreshRoleCount(), và
+        // UpdateLoginAward() sẽ tự gửi lại C:087-002 nếu BitFlag.Login vẫn false.
+        // Vì vậy phải đồng bộ BitFlag trước RoleCount để chặn vòng gửi lặp trên client.
+        responseSender.sendBitFlagChanges(session, listOf(LOGIN_BIT_FLAG to true))
         responseSender.sendRoleCountUpdate(
             session,
             mapOf(
@@ -118,7 +136,6 @@ class WelfareHandler(
                 CONTINUE_LOGIN to (roleCountSystem.getValue(charId, CONTINUE_LOGIN) to 0),
             )
         )
-        responseSender.sendBitFlagChanges(session, listOf(LOGIN_BIT_FLAG to true))
         syncVirtualBalances(session)
         sendClaimResult(session, kind, RESULT_SUCCESS)
         welfareLogger.info { "Welfare login claim: charId=$charId day=$requestedDay rewards=$rewards" }

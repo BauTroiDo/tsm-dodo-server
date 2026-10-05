@@ -92,4 +92,49 @@ class WelfareLoginAwardTest {
         assertEquals(0, r.readUByte())
         assertEquals(0, r.remaining)
     }
+
+    @Test
+    fun `same-day duplicate login claim is idempotent success and does not grant twice`() = runBlocking {
+        val loginAwards = listOf(
+            LoginAwardDef(1, 0, 1, listOf(65347 to 1, 0 to 0, 0 to 0, 0 to 0, 0 to 0), 0, 0, 0, 0)
+        )
+        val stateRepo = mockk<WelfareStateRepository>()
+        coEvery { stateRepo.getLastLoginClaimDay(77L) } returns DispatchSystem.currentDayKey()
+        val roleCounts = mockk<RoleCountSystem>()
+        every { roleCounts.getValue(77L, 107) } returns 1
+        every { roleCounts.getValue(77L, 108) } returns 1
+        val bitFlags = mockk<BitFlagSystem>()
+        coEvery { bitFlags.getSetFlagIds(77L) } returns setOf(1)
+        coEvery { bitFlags.setFlag(77L, 1) } just Runs
+        val inventory = mockk<InventorySystem>(relaxed = true)
+        val point = mockk<PointSystem>(relaxed = true)
+        val money = mockk<MoneySystem>(relaxed = true)
+        val currency = mockk<PlayerCurrencySystem>(relaxed = true)
+        val response = mockk<ResponseSender>(relaxed = true)
+        val packets = mutableListOf<ByteArray>()
+        val session = mockk<GameSession> {
+            every { state } returns SessionState.IN_GAME
+            every { roleId } returns 77
+            every { send(capture(packets)) } just Runs
+        }
+        val handler = WelfareHandler(loginAwards, stateRepo, roleCounts, bitFlags, inventory, point, money, currency, response)
+        val body = PacketWriter().writeByte(1).writeIntLE(1).writeByte(1).toByteArray()
+
+        handler.handle(session, 2, body)
+
+        coVerify(exactly = 0) { currency.add(any(), any(), any()) }
+        coVerify(exactly = 0) { stateRepo.setLastLoginClaimDay(any(), any()) }
+        coVerify(exactly = 1) { bitFlags.setFlag(77L, 1) }
+        verifyOrder {
+            response.sendBitFlagChanges(session, listOf(1 to true))
+            response.sendRoleCountUpdate(session, any())
+        }
+        val r = PacketReader(packets.last())
+        assertEquals(87, r.readUByte())
+        assertEquals(2, r.readUByte())
+        assertEquals(0, r.readUByte())
+        assertEquals(1, r.readUByte())
+        assertEquals(0, r.readUByte())
+        assertEquals(0, r.remaining)
+    }
 }
