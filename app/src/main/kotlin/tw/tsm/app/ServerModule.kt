@@ -639,7 +639,8 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
         TeleportHandler(
             get(), get(), get(), get(), get(),
             get<GameDataManager>().warpDefs,
-            get<GameDataManager>().markDefs
+            get<GameDataManager>().markDefs,
+            get<AdminBypassPolicy>()
         )
     }
     single {

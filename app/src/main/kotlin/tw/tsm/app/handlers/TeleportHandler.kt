@@ -9,6 +9,7 @@ import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.PacketHandler
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
+import tw.tsm.gamelogic.systems.AdminBypassPolicy
 import tw.tsm.gamelogic.systems.BitFlagSystem
 import tw.tsm.gamelogic.systems.PartySystem
 import tw.tsm.gamelogic.systems.WorldManager
@@ -35,7 +36,8 @@ class TeleportHandler(
     private val bitFlagSystem: BitFlagSystem,
     private val partySystem: PartySystem,
     private val warpDefs: Map<Int, WarpDef>,
-    private val markDefs: Map<Int, MarkDef>
+    private val markDefs: Map<Int, MarkDef>,
+    private val adminBypassPolicy: AdminBypassPolicy,
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.TELEPORT
@@ -85,10 +87,14 @@ class TeleportHandler(
 
         // Kiểm tra mốc đã mở khoá
         val charId = session.roleId.toLong()
-        if (!validateWarpMark(charId, warpDef)) {
+        val bypassMark = adminBypassPolicy.bypassQuestGate(session)
+        if (!bypassMark && !validateWarpMark(charId, warpDef)) {
             logger.warn { "${session.characterName} Thiên Hành Dị Năng thất bại: mốc chưa mở khóa mark=${warpDef.mark}" }
             sendWarpResult(session, 1, 1)
             return
+        }
+        if (bypassMark && warpDef.mark != 0) {
+            logger.info { "${session.characterName} GM bypass mốc Thiên Hành Dị Năng mark=${warpDef.mark}" }
         }
 
         // Thực hiện dịch chuyển
