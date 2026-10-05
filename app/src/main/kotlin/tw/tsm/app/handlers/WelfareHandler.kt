@@ -176,8 +176,11 @@ class WelfareHandler(
 
         val normalItems = rewards.filterNot { isVirtualReward(it.first) }
         val changedBag = if (normalItems.isNotEmpty()) {
-            inventorySystem.addItemBundleToBagExact(charId, normalItems)
-                ?: run { sendClaimResult(session, award.group, RESULT_BAG_FULL); return false }
+            inventorySystem.addItemBundleToBagExact(
+                charId,
+                normalItems,
+                allowUnknownItemDefs = award.group == AWARD_OPEN_SERVER,
+            ) ?: run { sendClaimResult(session, award.group, RESULT_BAG_FULL); return false }
         } else emptyList()
 
         for ((itemId, qty) in rewards) {

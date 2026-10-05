@@ -220,6 +220,7 @@ class InventorySystem(
     suspend fun addItemBundleToBagExact(
         characterId: Long,
         rewards: List<Pair<Int, Int>>,
+        allowUnknownItemDefs: Boolean = false,
     ): List<Pair<Int, ThingData>>? {
         val bag = bags[characterId] ?: run {
             logger.warn { "addItemBundleToBagExact: chưa nạp túi characterId=$characterId" }
@@ -236,11 +237,18 @@ class InventorySystem(
         val simulated = before.toMutableMap()
 
         for ((itemId, totalQty) in normalized) {
-            val def = itemDefs[itemId] ?: run {
+            val def = itemDefs[itemId]
+            if (def == null && !allowUnknownItemDefs) {
                 logger.warn { "addItemBundleToBagExact: thiếu ItemDef itemId=$itemId characterId=$characterId" }
                 return null
             }
-            val stackLimit = if (def.fitType == 0) ItemConstants.MAX_STACK else 1
+            if (def == null) {
+                logger.warn {
+                    "addItemBundleToBagExact: cho phép reward authoritative chưa có ItemDef itemId=$itemId " +
+                        "characterId=$characterId; mặc định non-stackable"
+                }
+            }
+            val stackLimit = if (def != null && def.fitType == 0) ItemConstants.MAX_STACK else 1
             var remaining = totalQty
 
             if (stackLimit > 1) {
