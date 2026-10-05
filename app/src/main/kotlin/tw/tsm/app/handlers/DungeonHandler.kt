@@ -113,11 +113,21 @@ class DungeonHandler(
             return
         }
 
+        val alreadyInRoom = rooms.roomOf(session.playerId) != null
         val result = system.validateNormalRoomEntry(
             session,
             dungeonId,
-            rooms.roomOf(session.playerId) != null,
+            alreadyInRoom,
         )
+        dungeonHandlerLogger.info {
+            "C47-002 create player=" + session.characterName +
+                " dungeonId=" + dungeonId +
+                " kind=" + (def?.kind ?: -1) +
+                " maxPlayer=" + (def?.maxPlayer ?: -1) +
+                " weeklyFormation=" + (DvtWeeklyDungeonFormation.enemyIds(dungeonId) != null) +
+                " alreadyInRoom=" + alreadyInRoom +
+                " result=" + result
+        }
         if (result != DungeonSystem.RESULT_OK) {
             sendCreateResult(session, result)
             return
