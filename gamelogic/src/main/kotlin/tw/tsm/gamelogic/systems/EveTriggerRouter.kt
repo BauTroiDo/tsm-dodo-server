@@ -252,10 +252,17 @@ class EveTriggerRouter(
                 }
             } else null
 
+            val gmTrialBattleChainFilter = if (gmTrialOverride != null) {
+                { chain: List<tw.tsm.domain.data.EveCondition> ->
+                    chain.any { cond -> cond.results.any { it.resultType == 3 } }
+                }
+            } else null
+
             val result = resolveActivateAndAdvance(
                 charId, mapId, triggerID, eventData, state,
                 triggerKind = subKind,
                 conditionOverride = gmTrialOverride,
+                chainFilter = gmTrialBattleChainFilter,
             )
             if (result != null) {
                 if (gmTrialOverride != null) {
@@ -458,9 +465,11 @@ class EveTriggerRouter(
         triggerKind: Int = 0, chainDepth: Int = 0,
         onlyIfIdle: Boolean = false,
         conditionOverride: ((tw.tsm.domain.data.EveCondition) -> Boolean?)? = null,
+        chainFilter: ((List<tw.tsm.domain.data.EveCondition>) -> Boolean)? = null,
     ): EveResult? {
         val resolved = conditionResolver.resolveEvent(
             eventData, state, mapId,
+            chainFilter = chainFilter,
             conditionOverride = conditionOverride,
         ) ?: return null
 
