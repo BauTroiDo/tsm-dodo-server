@@ -125,6 +125,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             register(get<AchievementHandler>())
             register(get<EmoteHandler>())
             register(get<DispatchHandler>())
+            register(get<WelfareHandler>())
             register(get<MailHandler>())
             register(get<LeaderboardHandler>())
             register(get<FurnaceHandler>())
@@ -646,6 +647,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<PointSystem>(),
         )
     }
+    single { WelfareHandler() }
     single { MailHandler(get()) }
     single { LeaderboardHandler(get()) }
     single {

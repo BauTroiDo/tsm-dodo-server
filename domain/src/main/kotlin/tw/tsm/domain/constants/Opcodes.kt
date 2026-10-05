@@ -181,6 +181,9 @@ object Opcodes {
     /** Hệ thống phái cử (C:086-001 truy vấn, C:086-002 xuất phát, C:086-005 hoàn thành)*/
     const val DISPATCH = 86
 
+    /** Phúc lợi / nút Quà trên HUD (protocolTable[87]) */
+    const val WELFARE = 87
+
     /** Dữ liệu đếm của nhân vật (số ô túi đồ, v.v.)*/
     const val ROLE_COUNT = 100
 
