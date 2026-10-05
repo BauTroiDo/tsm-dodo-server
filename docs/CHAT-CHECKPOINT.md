@@ -3794,3 +3794,16 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
   - commit/push/deploy A1+A2 to production .69.
   - client test: S.Kiện -> Thần Binh Bảo Khố must open UI and show layer/reward data.
   - Resume A3 only when authoritative server-side EternalDungeon monster tables are recovered; do not invent them.
+
+
+### 2026-10-06 — Eternal Dungeon A1+A2 production deployed
+- Gameplay commit: d51b0d9 Add DVT Eternal Dungeon UI backend.
+- GitHub feature/9-pet + main pushed to d51b0d9.
+- Production C:\Server-Game\tsm_dodo fast-forward fab7d01 -> d51b0d9 bằng verified Git bundle; giữ nguyên application.conf local.
+- Production full gradlew test build --rerun-tasks PASS 21/21.
+- Runtime restart sạch; TCP 192.168.1.69:6613 = True.
+- Runtime log xác nhận:
+  - IOS_EternalDungeonLayer = 19 mốc tầng.
+  - IOS_EternalDungeonPrize = 30 tầng thưởng.
+- Client test cần xác nhận: S.Kiện -> Thần Binh Bảo Khố mở UI và hiển thị tầng/phần thưởng.
+- Battle C48-001 vẫn evidence-blocked vì thiếu server-side NPC/BaseAttr/enriched-layer tables; tuyệt đối không phát quái/reward giả.
