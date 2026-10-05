@@ -187,6 +187,9 @@ object Opcodes {
     /** Kho báu (kho thứ hai song song với Tiền Trang)*/
     const val STORAGE = 102
 
+    /** Hồ sơ / Quà / Gift Wall (protocolTable[105]) */
+    const val HOUSE_BOARD = 105
+
     /** Linh Hồn (protocolTable[120]) */
     const val SOUL = 120
 

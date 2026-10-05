@@ -244,5 +244,11 @@ class RoleCountSystem(
 
         /** DVT RoleCount.lua: mảnh vũ khí chuyên dụng / Lò. */
         const val SWEAPON_DEBRIS = 654
+
+        /** DVT RoleCount.lua: kinh nghiệm phản hồi khi tặng Souvenir. */
+        const val SOUVENIR_FEEDBACK_EXP = 696
+
+        /** DVT RoleCount.lua: tổng tiền game mua quà trong ngày. */
+        const val BUY_GIFT_MAX_MONEY = 987
     }
 }

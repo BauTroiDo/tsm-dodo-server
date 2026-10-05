@@ -3501,3 +3501,40 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
   - full `gradlew test build --rerun-tasks` PASS, 21/21 tasks;
   - `git diff --check` PASS.
 - Deployment status at this checkpoint: local code complete and validated; not yet committed/deployed in this paragraph. Next action is commit/push, deploy to production `.69`, restart, then client test using 595xx item.
+
+
+## 2026-10-05 — QUÀ / HOUSE BOARD Q1+Q2 LOCAL PASS
+- Source of truth: Lua DVT protocolTable[105], HouseBoard.lua, UISouvenirShop.lua, SouvenirShop.lua, SouvenirData.lua, IOS_Souvenir_C.dat.
+- Xác định nút/hệ “Quà” chính là House Board / Gift Wall, mainKind=105. Backend trước mốc này không có handler 105.
+- Chia mốc:
+  - Q1 PASS local: profile + friend list + gift wall read-only + gift history (105-001/008/009), profile update 105-002 cũng đã có.
+  - Q2 PASS local: gửi quà C/S105-003, nhận realtime S105-010, shop/bag source, persist history/charm, friendly, role counts và currency sync.
+  - Q3 CHƯA LÀM: leaderboard 105-004, charm feedback reward 105-005/006.
+- IOS_Souvenir_C.dat authoritative:
+  - 19 records, mỗi record 18 bytes.
+  - fields: itemId U16, quality U8, payment U8, price I32, addCharm U16, addFriendly U16, addExp U16, naming U8, broadcast U8, roleCount U16.
+  - payment chỉ có 1=ECurrency.Gold/KNB và 3=ECurrency.Money.
+  - per-item RoleCount 711..729.
+  - RoleCount 696 = SouvenirFeedbackExp; 987 = BuyGiftMaxMoney.
+  - quà từ BAG chỉ chấp nhận itemId thuộc souvenirDatas; Lua SetListOfGiftsInBag xác nhận điều này.
+- C105-003 wire authoritative: targetId Int64 + itemId UInt16 + quantity U8 + sourceKind U8 = 12 bytes.
+- S105-003 result authoritative: 1 success, 8 no data, 9 daily spend cap, 14 chưa nhất chuyển.
+- S105-001 friend friendly là 4 bytes Int32 (đã có regression để tránh lệch packet).
+- S105-009/010 time dùng Double OADate; server dùng OleDate.nowLocal().
+- Persistence mới, không nhét dữ liệu vào Characters:
+  - character_house_profiles
+  - character_gift_records
+- Q2 mutation:
+  - người nhận: charm += addCharm * qty + gift history.
+  - nếu là bạn: friendly hai chiều += addFriendly * qty, clamp FriendConstants.MAX_FRIENDLY.
+  - người gửi: RoleCount 696 += addExp * qty; RoleCount item 711..729 += qty; money-shop dùng 987.
+  - shop source trừ KNB qua PointSystem hoặc Money qua MoneySystem; bag source tự tìm stack itemId vì C105-003 không gửi slot.
+  - transaction DB gift record + charm atomic; system có rollback cho currency/item/friendly/RoleCount nếu persist lỗi.
+- Realtime người nhận online nhận S105-010; client tự append gift wall/history/red-dot, không tự cộng charm/friendly.
+- Regression: HouseBoardGiftQ12Test PASS: real DAT 19x18 bytes, S105-001 Int32 friendly, S105-008/009/010 byte contract, C105-003 parse 12 bytes/result relay.
+- Validation local:
+  - :app:compileKotlin PASS.
+  - targeted HouseBoardGiftQ12Test PASS.
+  - git diff --check PASS.
+  - full gradlew test build --rerun-tasks PASS 21/21 tasks in 31s.
+- Chưa deploy production tại thời điểm ghi checkpoint này. Bước kế: commit/push Q1+Q2 -> kiểm production HEAD/status -> deploy production 192.168.1.69:6613 -> runtime smoke -> client test -> sau đó Q3.

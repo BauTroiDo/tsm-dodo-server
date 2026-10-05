@@ -13,6 +13,7 @@ import tw.tsm.app.response.FurnaceResponseSender
 import tw.tsm.app.response.GodskinResponseSender
 import tw.tsm.app.response.InnResponseSender
 import tw.tsm.app.response.SoulResponseSender
+import tw.tsm.app.response.HouseBoardResponseSender
 import tw.tsm.data.GameDataManager
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.StatCalculator
@@ -41,6 +42,7 @@ import tw.tsm.domain.interfaces.repositories.RoleCountRepository
 import tw.tsm.domain.interfaces.repositories.DispatchRepository
 import tw.tsm.domain.interfaces.repositories.DungeonRunRepository
 import tw.tsm.domain.interfaces.repositories.FriendRepository
+import tw.tsm.domain.interfaces.repositories.HouseBoardRepository
 import tw.tsm.domain.interfaces.repositories.MailRepository
 import tw.tsm.domain.interfaces.repositories.MiningRepository
 import tw.tsm.domain.interfaces.repositories.MessageBoardRepository
@@ -56,6 +58,7 @@ import tw.tsm.persistence.repositories.SlotMachineRepositoryImpl
 import tw.tsm.persistence.repositories.DispatchRepositoryImpl
 import tw.tsm.persistence.repositories.DungeonRunRepositoryImpl
 import tw.tsm.persistence.repositories.FriendRepositoryImpl
+import tw.tsm.persistence.repositories.HouseBoardRepositoryImpl
 import tw.tsm.persistence.repositories.MailRepositoryImpl
 import tw.tsm.persistence.repositories.MiningRepositoryImpl
 import tw.tsm.persistence.repositories.MessageBoardRepositoryImpl
@@ -109,6 +112,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             register(get<StatHandler>())
             register(get<AstrolabeHandler>())
             register(get<SoulHandler>())
+            register(get<HouseBoardHandler>())
             register(get<GodskinHandler>())
             register(get<MountHandler>())
             register(get<HotkeyHandler>())
@@ -268,6 +272,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single<MailRepository> { MailRepositoryImpl() }
     single<MessageBoardRepository> { MessageBoardRepositoryImpl() }
     single<FriendRepository> { FriendRepositoryImpl() }
+    single<HouseBoardRepository> { HouseBoardRepositoryImpl() }
     single<MiningRepository> { MiningRepositoryImpl() }
 
     // Dữ liệu game
@@ -477,6 +482,19 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { MailSystem(get(), get(), get()) }
     single { FriendSystem(get(), get(), get(), get(), get<RoleCountSystem>()) }
     single {
+        HouseBoardSystem(
+            get<HouseBoardRepository>(),
+            get<CharacterRepository>(),
+            get<FriendRepository>(),
+            get<InventorySystem>(),
+            get<MoneySystem>(),
+            get<PointSystem>(),
+            get<RoleCountSystem>(),
+            get<GameDataManager>().souvenirDefs,
+        )
+    }
+    single { HouseBoardResponseSender() }
+    single {
         LeaderboardSystem(get(), get<GameDataManager>().leaderboardDefs, get(), get()).also {
             it.startPeriodicRefresh()
         }
@@ -640,6 +658,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     }
     single { MessageBoardHandler(get<RoleCountSystem>(), get<ResponseSender>(), get<MessageBoardRepository>(), get<SessionManager>()) }
     single { FriendHandler(get()) }
+    single { HouseBoardHandler(get(), get(), get<ResponseSender>(), get<PointSystem>(), get<WorldManager>()) }
     single { CollectionHandler(get<CollectionSystem>(), get<ResponseSender>(), get<MountSystem>()) }
     single {
         UISellHandler(

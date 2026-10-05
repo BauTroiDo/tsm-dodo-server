@@ -9,6 +9,8 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import tw.tsm.persistence.tables.Accounts
 import tw.tsm.persistence.tables.CharacterAstrolabes
 import tw.tsm.persistence.tables.CharacterSouls
+import tw.tsm.persistence.tables.CharacterHouseProfiles
+import tw.tsm.persistence.tables.CharacterGiftRecords
 import tw.tsm.persistence.tables.CharacterBitFlags
 import tw.tsm.persistence.tables.CharacterMissionFlags
 import tw.tsm.persistence.tables.CharacterDungeonDays
@@ -77,6 +79,7 @@ object DatabaseFactory {
             SchemaUtils.createMissingTablesAndColumns(
                 Accounts, Characters, Inventories, CharacterMoney, CharacterCurrencies,
                 CharacterAstrolabes, CharacterSouls,
+                CharacterHouseProfiles, CharacterGiftRecords,
                 CharacterMissions, CharacterMissionFlags, CharacterCompletedEvents, CharacterBitFlags,
                 CharacterDungeonDays, CharacterDungeonRuns, CharacterDungeonWeeks,
                 CharacterSkills, CharacterTurn2Skills, CharacterTurn3States, CharacterTurn3Skills,

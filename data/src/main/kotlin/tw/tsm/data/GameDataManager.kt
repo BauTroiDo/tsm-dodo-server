@@ -99,6 +99,10 @@ class GameDataManager(
     var npcSoulDefs: Map<Int, NpcSoulDef> = emptyMap()
         private set
 
+    /** DVT Quà/Souvenir shop từ IOS_Souvenir_C.dat, key=itemId. */
+    var souvenirDefs: Map<Int, SouvenirDef> = emptyMap()
+        private set
+
     /** DVT chuyên võ: itemId -> enhanceLevel -> skill/attribute row. */
     var exclusiveWeaponDefs: Map<Int, Map<Int, ExclusiveWeaponDef>> = emptyMap()
         private set
@@ -479,7 +483,11 @@ class GameDataManager(
         }
         loadFile(dataIosDir, "IOS_NpcSoul_C.dat") { bytes ->
             npcSoulDefs = NpcSoulDatLoader.load(bytes)
-            logger.info { "Nạp IOS_NpcSoul xong: ${npcSoulDefs.size} Hồn" }
+            logger.info { "Nạp IOS_NpcSoul xong: " + npcSoulDefs.size + " Hồn" }
+        }
+        loadFile(dataIosDir, "IOS_Souvenir_C.dat") { bytes ->
+            souvenirDefs = SouvenirDatLoader.load(bytes)
+            logger.info { "Nạp IOS_Souvenir xong: " + souvenirDefs.size + " quà" }
         }
 
         // DVT ExclusiveWeapon.GetSkill / CheckExclusiveWarrior — full FollowNpc skill lookup.
