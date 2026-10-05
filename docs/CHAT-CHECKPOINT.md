@@ -3538,3 +3538,15 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
   - git diff --check PASS.
   - full gradlew test build --rerun-tasks PASS 21/21 tasks in 31s.
 - Chưa deploy production tại thời điểm ghi checkpoint này. Bước kế: commit/push Q1+Q2 -> kiểm production HEAD/status -> deploy production 192.168.1.69:6613 -> runtime smoke -> client test -> sau đó Q3.
+
+### 2026-10-05 — QUÀ Q1+Q2 PRODUCTION PASS
+- Commit gameplay: 960b369 Implement DVT House Board gifts Q1 Q2.
+- GitHub main đã fast-forward tới 960b369.
+- Production C:\Server-Game\tsm_dodo fast-forward từ 5360cd4 -> 960b369 bằng verified Git bundle vì Git Credential Manager trên production không fetch HTTPS được; không force/reset và giữ nguyên application.conf local.
+- Production full gradlew test build --rerun-tasks PASS 21/21 tasks trong 2m53s.
+- Runtime production restart bằng _launch_prod_wmi.cmd; HEAD 960b369; port 6613 LISTEN PID 12156.
+- Runtime log xác nhận DatabaseFactory init thành công và GameDataManager nạp IOS_Souvenir = 19 quà.
+- TCP smoke từ máy client tới 192.168.1.69:6613 = True.
+- Refined runtime scan: không có ERROR, FATAL, Exception: hoặc HouseBoard rollback sau restart.
+- Bundle tạm houseboard-q12-960b369.bundle đã xóa ở local và production.
+- Trạng thái: Q1+Q2 deployed PASS; chờ client test UI/gửi quà. Q3 (105-004/005/006) vẫn pending.
