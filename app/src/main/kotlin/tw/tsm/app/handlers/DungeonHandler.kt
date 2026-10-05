@@ -11,11 +11,13 @@ import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.PacketHandler
 import tw.tsm.domain.util.OleDate
+import tw.tsm.gamelogic.systems.BattleManager
 import tw.tsm.gamelogic.systems.DungeonRoomMember
 import tw.tsm.gamelogic.systems.DungeonRoomRegistry
 import tw.tsm.gamelogic.systems.DungeonRoomState
 import tw.tsm.gamelogic.systems.DungeonSystem
 import tw.tsm.gamelogic.systems.DungeonSettlement
+import tw.tsm.gamelogic.systems.DvtWeeklyDungeonFormation
 import tw.tsm.gamelogic.systems.WorldManager
 import tw.tsm.protocol.PacketReader
 import tw.tsm.protocol.PacketWriter
@@ -33,6 +35,7 @@ class DungeonHandler(
     private val system: DungeonSystem,
     private val rooms: DungeonRoomRegistry = DungeonRoomRegistry(),
     private val worldManager: WorldManager? = null,
+    private val battleManager: BattleManager? = null,
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
     private val countdownMs: Long = 5_000L,
 ) : PacketHandler {
@@ -325,6 +328,28 @@ class DungeonHandler(
     }
 
     private fun startMultiplayer(session: GameSession) {
+        val candidate = rooms.roomOf(session.playerId) ?: return
+        if (candidate.ownerId != session.playerId) return
+
+        val def = system.getDef(candidate.dungeonId) ?: return
+        if (def.kind in setOf(DungeonSystem.KIND_WEEKLY, DungeonSystem.KIND_SOUL_WEEKLY)) {
+            scope.launch {
+                val failures = system.validateWeeklyRoomStart(candidate)
+                if (failures.isNotEmpty()) {
+                    for ((playerId, result) in failures) {
+                        candidate.members[playerId]?.session?.let { sendQualificationFailed(it, result) }
+                    }
+                    return@launch
+                }
+                beginRoomStart(session, candidate)
+            }
+            return
+        }
+
+        beginRoomStart(session, candidate)
+    }
+
+    private fun beginRoomStart(session: GameSession, candidate: DungeonRoomState) {
         val room = rooms.beginStart(session.playerId) ?: return
 
         // Lua UIDungeon.RecivePlayerPrePare starts a fixed five-second countdown
@@ -336,8 +361,47 @@ class DungeonHandler(
         scope.launch {
             delay(countdownMs)
             val started = rooms.commitStart(room.id, session.playerId) ?: return@launch
+            val def = system.getDef(started.dungeonId) ?: return@launch
             val startTime = OleDate.nowLocal()
             system.markRoomStarted(started, startTime)
+            for (member in started.members.values) {
+                sendStartTime(member.session, startTime)
+            }
+
+            if (def.kind in setOf(DungeonSystem.KIND_WEEKLY, DungeonSystem.KIND_SOUL_WEEKLY)) {
+                val formation = DvtWeeklyDungeonFormation.enemyIds(started.dungeonId)
+                val battle = battleManager
+                if (formation == null || battle == null) {
+                    system.clearRoomRuns(started)
+                    for (member in started.members.values) sendQualificationFailed(member.session, 1)
+                    dungeonHandlerLogger.error {
+                        "WeekDungeon thiếu formation/battle manager dungeon=" + started.dungeonId
+                    }
+                    return@launch
+                }
+
+                // DVT S47-020 exists for kind3; harmlessly close the same dungeon UI
+                // before Soul weekly style24 as well so battle scene owns focus.
+                for (member in started.members.values) {
+                    sendCloseDungeonUi(member.session, started.dungeonId)
+                }
+
+                if (!battle.createWeeklyDungeonBattle(
+                        started,
+                        formation,
+                        DvtWeeklyDungeonFormation.objective(def),
+                    )
+                ) {
+                    system.clearRoomRuns(started)
+                    for (member in started.members.values) sendQualificationFailed(member.session, 1)
+                    dungeonHandlerLogger.error {
+                        "Không thể tạo WeekDungeon battle dungeon=" + started.dungeonId +
+                            " room=" + started.id
+                    }
+                }
+                return@launch
+            }
+
             if (!system.enterMultiplayer(started)) {
                 system.clearRoomRuns(started)
                 dungeonHandlerLogger.error {
@@ -397,6 +461,39 @@ class DungeonHandler(
         )
     }
 
+    private fun sendStartTime(session: GameSession, startTime: Double) {
+        session.send(
+            PacketWriter()
+                .writeByte(Opcodes.DUNGEON)
+                .writeByte(18)
+                .writeByte(0)
+                .writeDoubleLE(startTime)
+                .toByteArray()
+        )
+    }
+
+    private fun sendQualificationFailed(session: GameSession, result: Int) {
+        session.send(
+            PacketWriter()
+                .writeByte(Opcodes.DUNGEON)
+                .writeByte(19)
+                .writeByte(0)
+                .writeByte(result)
+                .toByteArray()
+        )
+    }
+
+    private fun sendCloseDungeonUi(session: GameSession, dungeonId: Int) {
+        session.send(
+            PacketWriter()
+                .writeByte(Opcodes.DUNGEON)
+                .writeByte(20)
+                .writeByte(0)
+                .writeShortLE(dungeonId)
+                .toByteArray()
+        )
+    }
+
     fun sendDungeonResult(session: GameSession, settlement: DungeonSettlement) {
         val writer = PacketWriter()
             .writeByte(Opcodes.DUNGEON)
@@ -410,6 +507,11 @@ class DungeonHandler(
             writer.writeShortLE(itemId).writeIntLE(quantity)
         }
         session.send(writer.toByteArray())
+
+        val kind = system.getDef(settlement.dungeonId)?.kind
+        if (kind in setOf(DungeonSystem.KIND_WEEKLY, DungeonSystem.KIND_SOUL_WEEKLY)) {
+            rooms.completeForPlayer(session.playerId)
+        }
     }
 
     private fun sendInviteResult(session: GameSession, result: Int) {

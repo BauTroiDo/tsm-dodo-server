@@ -40,7 +40,15 @@ class BattleInstance(
     /** Trình phân tích vật phẩm trận chiến*/
     val itemResolver: BattleItemResolver,
     /** Định nghĩa NPC tham chiến (npcId + NpcDef, dùng cho tính thưởng và rơi đồ)*/
-    val involvedNpcDefs: List<Pair<Int, NpcDef>>
+    val involvedNpcDefs: List<Pair<Int, NpcDef>>,
+    /** DungeonData id for server-driven weekly/Soul battles; 0 for ordinary battles. */
+    val dungeonId: Int = 0,
+    /** DVT need kind6: must clear no later than this round; 0 = none. */
+    val weeklyMaxRound: Int = 0,
+    /** DVT need kind7: surviving through this round is success; 0 = none. */
+    val weeklySurviveRound: Int = 0,
+    /** Weekly/Soul rewards are protocol47 rewards, not generic NPC exp/gold/drop. */
+    val suppressGenericRewards: Boolean = false,
 ) {
     /** Máy trạng thái trận chiến*/
     enum class State {
@@ -679,6 +687,10 @@ class BattleInstance(
         return when {
             aliveEnemies.isEmpty() -> BattleEndResult(playerWin = true)
             alivePlayers.isEmpty() -> BattleEndResult(playerWin = false)
+            weeklySurviveRound > 0 && currentRound >= weeklySurviveRound ->
+                BattleEndResult(playerWin = true)
+            weeklyMaxRound > 0 && currentRound >= weeklyMaxRound ->
+                BattleEndResult(playerWin = false)
             else -> null
         }
     }

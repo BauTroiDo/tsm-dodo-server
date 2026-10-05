@@ -8,8 +8,13 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import tw.tsm.domain.data.CollectWarriorSortDef
 import tw.tsm.domain.data.DungeonComboDef
 import tw.tsm.domain.data.DungeonDef
+import tw.tsm.domain.data.ExclusiveWeaponDef
+import tw.tsm.domain.data.ItemDef
+import tw.tsm.domain.data.NpcDef
+import tw.tsm.domain.data.NpcUpgradeDef
 import tw.tsm.domain.data.SceneSetDef
 import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.GameSession
@@ -67,6 +72,13 @@ class DungeonSystem(
     private val dungeonMinuteMillis: Long = REAL_MINUTE_MS,
     private val dungeonRunRepository: DungeonRunRepository? = null,
     private val adminBypassPolicy: AdminBypassPolicy = AdminBypassPolicy(),
+    private val petSystem: PetSystem? = null,
+    private val soulSystem: SoulSystem? = null,
+    private val npcDefs: Map<Int, NpcDef> = emptyMap(),
+    private val npcUpgradeDefs: Map<Int, NpcUpgradeDef> = emptyMap(),
+    private val itemDefs: Map<Int, ItemDef> = emptyMap(),
+    private val exclusiveWeaponDefs: Map<Int, Map<Int, ExclusiveWeaponDef>> = emptyMap(),
+    private val collectWarriorSortDefs: List<CollectWarriorSortDef> = emptyList(),
 ) {
     private val activeRuns = ConcurrentHashMap<Long, ActiveDungeonRun>()
     private val timeoutJobs = ConcurrentHashMap<Long, Job>()
@@ -308,14 +320,69 @@ class DungeonSystem(
         alreadyInRoom: Boolean,
     ): Int {
         val def = defs[dungeonId] ?: return RESULT_NO_DUNGEON
-        // Kinds 3/5 are special WeekDungeon style 24 and require backend-only enemy formations.
-        if (def.kind != KIND_NORMAL_MULTIPLAYER || def.maxPlayer <= 1) return RESULT_NO_SPACE
-        if (!adminBypassPolicy.bypassLevel(session) && session.level !in def.minLv..def.maxLv) return RESULT_LEVEL_MISMATCH
+        val supported = when (def.kind) {
+            KIND_NORMAL_MULTIPLAYER -> def.maxPlayer > 1
+            KIND_WEEKLY, KIND_SOUL_WEEKLY -> def.maxPlayer >= 1 &&
+                DvtWeeklyDungeonFormation.enemyIds(def.id) != null
+            else -> false
+        }
+        if (!supported) return RESULT_NO_SPACE
+        if (!adminBypassPolicy.bypassLevel(session) && session.level !in def.minLv..def.maxLv) {
+            return RESULT_LEVEL_MISMATCH
+        }
         if (alreadyInRoom || session.mapId == def.sceneId) return RESULT_ALREADY_IN_ROOM
         if (session.battleId != 0L) return RESULT_IN_BATTLE
         if (partySystem.isInParty(session.playerId)) return RESULT_CANNOT_TEAM
 
+        if (def.kind == KIND_SOUL_WEEKLY &&
+            !adminBypassPolicy.bypassQuestGate(session) &&
+            dungeonId > SOUL_WEEKLY_FIRST_ID
+        ) {
+            val previous = defs[dungeonId - 1] ?: return RESULT_NO_DUNGEON
+            val cleared = questSystem.getMissions(session.roleId.toLong())
+                .firstOrNull { it.missionId == previous.dailyFlag }
+                ?.step ?: 0
+            if (cleared < previous.dailyCount.coerceAtLeast(1)) return RESULT_SOUL_STAGE_LOCKED
+        }
+
         return validateDailyCount(session, def)
+    }
+
+    /**
+     * Revalidate all weekly room members at the actual start boundary.
+     * Lua's local weekly qualification guard is buggy, so server state is authoritative.
+     */
+    suspend fun validateWeeklyRoomStart(room: DungeonRoomState): Map<Long, Int> {
+        val def = defs[room.dungeonId] ?: return mapOf(room.ownerId to QUALIFICATION_FAILED)
+        if (def.kind !in setOf(KIND_WEEKLY, KIND_SOUL_WEEKLY)) return emptyMap()
+        val pets = petSystem ?: return mapOf(room.ownerId to QUALIFICATION_FAILED)
+
+        val failures = linkedMapOf<Long, Int>()
+        for ((playerId, member) in room.members) {
+            val session = member.session
+            refreshPeriodicProgress(session)
+            if (adminBypassPolicy.bypassQuestGate(session)) continue
+            val selected = pets.getBattleDeployableFollowPets(session.roleId.toLong()).firstOrNull()?.second
+            val soul = selected?.let {
+                soulSystem?.equippedForNpc(session.roleId.toLong(), it.npcId)
+            }
+            val result = DvtWeeklyQualification.checkEntry(
+                dungeon = def,
+                deployedPet = selected,
+                npcDefs = npcDefs,
+                equippedSoul = soul,
+                npcUpgradeDefs = npcUpgradeDefs,
+                itemDefs = itemDefs,
+                exclusiveWeaponDefs = exclusiveWeaponDefs,
+                collectWarriorSortDefs = collectWarriorSortDefs,
+            )
+            when (result.status) {
+                DvtWeeklyQualification.Status.OK -> Unit
+                DvtWeeklyQualification.Status.FIGHT_NPC_REQUIRED -> failures[playerId] = 3
+                else -> failures[playerId] = QUALIFICATION_FAILED
+            }
+        }
+        return failures
     }
 
     suspend fun enterSingle(session: GameSession, dungeonId: Int): Boolean {
@@ -477,6 +544,78 @@ class DungeonSystem(
             "Dungeon ${def.id} settled: remaining=${remainingSeconds}s turn=${session.turn} rewards=$rewards dailyFlag=${def.dailyFlag}"
         }
         return DungeonSettlement(def.id, result = 0, rewards = rewards)
+    }
+
+    /**
+     * Dedicated WeekDungeon/Soul settlement. These battles do not use Eve missionFlag
+     * and must never receive generic NPC EXP/gold/drop settlement.
+     */
+    suspend fun settleWeeklyBattle(
+        session: GameSession,
+        dungeonId: Int,
+        playerWin: Boolean,
+    ): DungeonSettlement? {
+        val playerId = session.playerId
+        val run = activeRuns[playerId] ?: return null
+        if (run.dungeonId != dungeonId || run.settled) return null
+        val def = defs[dungeonId] ?: return null
+        if (def.kind !in setOf(KIND_WEEKLY, KIND_SOUL_WEEKLY) || def.dailyFlag <= 0) return null
+
+        val settledRun = run.copy(settled = true)
+        if (!activeRuns.replace(playerId, run, settledRun)) return null
+        if (!playerWin) {
+            finishWeeklyRun(session, settledRun)
+            return DungeonSettlement(dungeonId, result = 1)
+        }
+
+        refreshPeriodicProgress(session)
+        val charId = session.roleId.toLong()
+        val requiredCount = def.dailyCount.coerceAtLeast(1)
+        val alreadyCompleted = questSystem.getMissions(charId)
+            .firstOrNull { it.missionId == def.dailyFlag }
+            ?.step
+            ?.let { it >= requiredCount }
+            ?: false
+        if (alreadyCompleted) {
+            finishWeeklyRun(session, settledRun)
+            return DungeonSettlement(dungeonId, result = 0)
+        }
+
+        val elapsedSeconds = ((clockMillis() - run.startedAtMillis).coerceAtLeast(0L) / 1000L)
+            .coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+        val remainingSeconds = (def.timeMinutes * 60 - elapsedSeconds).coerceAtLeast(0)
+        val rewards = resolveRewards(dungeonId, session.turn, remainingSeconds, playerWin = true)
+
+        val changed = if (rewards.isNotEmpty()) {
+            val inventory = inventorySystem ?: run {
+                finishWeeklyRun(session, settledRun)
+                return DungeonSettlement(dungeonId, result = 1)
+            }
+            inventory.addRewardsToBagExact(charId, rewards) ?: run {
+                finishWeeklyRun(session, settledRun)
+                return DungeonSettlement(dungeonId, result = 1)
+            }
+        } else {
+            emptyList()
+        }
+
+        questSystem.setMissionStep(charId, def.dailyFlag, requiredCount)
+        responseSender?.sendAddMissionStep(session, def.dailyFlag, requiredCount)
+        for ((slot, thing) in changed) {
+            responseSender?.sendSetBagItem(session, slot, thing, showMsg = true)
+        }
+        dungeonLogger.info {
+            "WeekDungeon settled dungeon=$dungeonId kind=${def.kind} charId=$charId " +
+                "rewards=$rewards dailyFlag=${def.dailyFlag}"
+        }
+        finishWeeklyRun(session, settledRun)
+        return DungeonSettlement(dungeonId, result = 0, rewards = rewards)
+    }
+
+    private suspend fun finishWeeklyRun(session: GameSession, run: ActiveDungeonRun) {
+        stopTimeout(session.playerId)
+        activeRuns.remove(session.playerId, run)
+        dungeonRunRepository?.clear(session.roleId.toLong())
     }
 
     /**
@@ -663,6 +802,7 @@ class DungeonSystem(
         const val KIND_SINGLE = 2
         const val KIND_WEEKLY = 3
         const val KIND_SOUL_WEEKLY = 5
+        const val SOUL_WEEKLY_FIRST_ID = 63
         const val SCENE_KIND_DYNAMIC_DUNGEON = 2
         const val WEEK_PAGE_SIZE = 20
         const val REAL_MINUTE_MS = 60_000L
@@ -676,5 +816,9 @@ class DungeonSystem(
         const val RESULT_CANNOT_TEAM = 5
         const val RESULT_NO_SPACE = 7
         const val RESULT_IN_BATTLE = 8
+        const val RESULT_SOUL_STAGE_LOCKED = 9
+
+        /** S47-019 generic weekly qualification failure; result=3 is fightNpc missing. */
+        const val QUALIFICATION_FAILED = 1
     }
 }

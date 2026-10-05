@@ -429,6 +429,13 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             scope = get<CoroutineScope>(),
             dungeonRunRepository = get<DungeonRunRepository>(),
             adminBypassPolicy = get<AdminBypassPolicy>(),
+            petSystem = get<PetSystem>(),
+            soulSystem = get<SoulSystem>(),
+            npcDefs = get<GameDataManager>().npcDefs,
+            npcUpgradeDefs = get<GameDataManager>().npcUpgradeDefs,
+            itemDefs = get<GameDataManager>().itemDefs,
+            exclusiveWeaponDefs = get<GameDataManager>().exclusiveWeaponDefs,
+            collectWarriorSortDefs = get<GameDataManager>().collectWarriorSortDefs,
         )
     }
     single { DungeonRoomRegistry() }
@@ -538,6 +545,11 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
                 get<MineEncounterSystem>().onBattleEnd(playerId)
                 get<EveFlowController>().resumeAfterBattle(session, playerId, playerWin)
                 get<DungeonSystem>().settleAfterBattle(session, playerWin)?.let { settlement ->
+                    get<DungeonHandler>().sendDungeonResult(session, settlement)
+                }
+            }
+            bm.onWeeklyDungeonBattleEndCallback = { session, dungeonId, playerWin, _ ->
+                get<DungeonSystem>().settleWeeklyBattle(session, dungeonId, playerWin)?.let { settlement ->
                     get<DungeonHandler>().sendDungeonResult(session, settlement)
                 }
             }
@@ -657,7 +669,15 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<EveEventStateMachine>(), get<SpecialSceneTeleportService>()
         )
     }
-    single { DungeonHandler(get<DungeonSystem>(), get<DungeonRoomRegistry>(), get<WorldManager>(), get<CoroutineScope>()) }
+    single {
+        DungeonHandler(
+            get<DungeonSystem>(),
+            get<DungeonRoomRegistry>(),
+            get<WorldManager>(),
+            get<BattleManager>(),
+            get<CoroutineScope>(),
+        )
+    }
     single { AchievementHandler(get(), get(), get()) }
     single { EmoteHandler(get(), get()) }
     single {

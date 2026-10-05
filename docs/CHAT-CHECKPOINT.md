@@ -3885,3 +3885,70 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Targeted DvtLeaderboardRegressionTest PASS after source fix.
 - Full local gradlew test build --rerun-tasks PASS 21/21 after source fix.
 - Do not mark ranking runtime PASS until redeployed and log confirms IOS_LeaderbordInfo=19 with no legacy-ID warnings.
+
+
+## 2026-10-06 — Xếp Hạng / Leaderboard runtime PASS
+- User runtime confirmed phần Xếp Hạng PASS.
+- DVT protocol 88 / UILeaderboard flow validated in client.
+- Core semantics locked during audit:
+  - C88-001 = leaderboardId(U8) + page(U8).
+  - UI page is 1-based.
+  - UILeaderboard.maxInfo = 5 rows/page.
+  - IOS_LeaderbordInfo_C.dat current DVT has 19 boards.
+  - Current DVT element mapping: Earth=1, Water=2, Fire=3, Wind=4.
+  - ID1 = Tất cả; ID2=Địa; ID3=Thủy; ID4=Hỏa; ID5=Phong.
+  - ID6 = Võ tướng; ID7 = Bảng vàng; ID20 = Bảng thành tựu.
+  - Lua Role.playerMaxLv = 200; cumulative player level = level + turn*200.
+- Do not restore legacy leaderboard mappings (e.g. IDs 32..36 or ID10/11 as gold/auction gold) because they do not match current DVT DAT.
+- Runtime status: user says PASS; next subsystem can proceed.
+
+
+## 2026-10-06 — Weekly dungeon + Soul weekly style24 backend implemented locally
+
+- Scope: the two remaining dungeon tabs shown by user:
+  - Phó bản tuần -> Bách chiến thiên quân: DungeonData ids18..37, kind3, 20 stages.
+  - PB Tuần Cường -> Khiêu chiến Linh Hồn: ids63..82, kind5, 20 stages.
+- Lua/client authoritative contracts:
+  - both use protocol47 room flow and EWarStyle.WeekDungeon=24.
+  - FightField index = col*5+row; server grid enemy front col0 / enemy back col1.
+  - Bách all-pass uses C47-22; anchor id18 has allPassPrize34366 and claim flag/costPoint12762.
+  - Soul has no all-pass reward in DungeonData.
+  - Soul stage N>1 requires prior stage dailyFlag completion.
+- Formation membership locked from DVT IOS_Npc_C.dat:
+  - Bách ids18..36 -> contiguous ten-NPC blocks from40258; id37 -> explicit 10 Lữ Bố set 40448..40455 +40480..40481.
+  - Soul ids63..82 -> exact contiguous 200-NPC block40687..40886, ten NPCs per stage.
+- Original backend-only WeekDungeon placement file is absent (WeekDungeon_C.dat is only 4-byte header).
+  - Offline reconstructed placement is therefore explicitly documented, not claimed official:
+    first5 roster IDs -> enemy col0 rows0..4; next5 -> enemy col1 rows0..4.
+    This follows DVT client fightIndex grouping and server BattleConstants.
+- Added DvtWeeklyDungeonFormation for both kind3/kind5.
+- BattleInstance/BattleManager:
+  - style24 battle metadata dungeonId/maxRound/minRound/suppressGenericRewards.
+  - maxRound kind6 = failure if enemies remain at limit.
+  - minRound kind7 = success after surviving required rounds.
+  - up to five room members; one singular fightNpc per player, matching Lua Role.fightNpc qualification.
+  - no catch, no generic EXP/gold/drop/KillNum/follower EXP for weekly/Soul.
+  - dedicated weekly completion callback bypasses Eve continuation.
+- DungeonSystem:
+  - validateNormalRoomEntry now permits kind3/kind5 with formation present.
+  - normal Lv/room/battle/team/daily gates preserved.
+  - Soul stages server-side sequential gate; GM bypassQuestGate can test directly.
+  - validateWeeklyRoomStart uses DvtWeeklyQualification with deployed pet, equipped Soul and full skill lookup data.
+  - settleWeeklyBattle first-clear writes dailyFlag and grants exact DungeonCombo reward; repeat clear does not duplicate reward; failures do not progress.
+  - active weekly run is cleared after settlement.
+- Rewards verified:
+  - Bách loot tables82..101 are DungeonCombo kind1, 1800s, reward29845x1.
+  - Soul tables72..81 and102..111 are kind1, 1800s, reward29846 quantities1..20.
+- DungeonRoomRegistry completeForPlayer releases all members after battle so next stage can be created.
+- Regression DungeonWeeklyBattleV2Test:
+  - 20 Bách rosters real/unique;
+  - exact Soul 200-NPC block;
+  - round objectives;
+  - Bách vs Soul all-pass metadata;
+  - room release.
+- Existing qualification/needPar/formation/round tests also PASS.
+- Validation:
+  - targeted weekly suite BUILD SUCCESSFUL 18/18.
+  - full local gradlew test build --rerun-tasks BUILD SUCCESSFUL 21/21.
+  - git diff --check PASS (line-ending warnings only).
+- Next: commit/push, deploy production .69, full production build/restart, then user runtime tests Bách ải1 and Soul ải1 before declaring PASS.

@@ -166,6 +166,17 @@ class DungeonRoomRegistry {
     }
 
     @Synchronized
+    fun completeForPlayer(playerId: Long): DungeonRoomState? {
+        val roomId = playerRoom[playerId] ?: return null
+        val room = rooms.remove(roomId) ?: return null
+        for (memberId in room.members.keys) {
+            playerRoom.remove(memberId)
+        }
+        invitations.remove(roomId)
+        return room.snapshot()
+    }
+
+    @Synchronized
     fun clear() {
         rooms.clear()
         playerRoom.clear()
