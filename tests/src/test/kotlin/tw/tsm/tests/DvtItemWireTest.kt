@@ -6,6 +6,9 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import tw.tsm.app.handlers.ItemHandler
 import tw.tsm.app.response.InventoryResponseSender
+import tw.tsm.data.loaders.ItemDatLoader
+import tw.tsm.data.loaders.NpcDatLoader
+import tw.tsm.data.loaders.SkillDatLoader
 import tw.tsm.domain.constants.EItemUseKind
 import tw.tsm.domain.data.ItemDef
 import tw.tsm.domain.data.NpcDef
@@ -288,5 +291,38 @@ class DvtItemWireTest {
             r.position(r.position() + (ThingDataWire.SIZE - 6))
         }
         assertFalse(r.hasRemaining())
+    }
+
+    @Test fun `DVT Light Dark NpcPicture data resolves all authoritative tokens`() {
+        fun bytes(name: String): ByteArray {
+            val direct = java.nio.file.Path.of("File.dat", "Data-ios", name)
+            val path = if (java.nio.file.Files.exists(direct)) direct
+                else java.nio.file.Path.of("..", "File.dat", "Data-ios", name)
+            return java.nio.file.Files.readAllBytes(path)
+        }
+        val items = ItemDatLoader.load(bytes("IOS_Item_C.dat"))
+        val npcs = NpcDatLoader.load(bytes("IOS_Npc_C.dat"))
+        val skills = SkillDatLoader.load(bytes("IOS_Skill_C.dat"))
+        val expected = setOf(
+            48502,48503,48504,48506,48507,48511,48513,48514,48517,
+            51929,51932,51938,51942,51947,51948,51960,51963,51964,
+            51968,51969,51971,51972,51973,51974
+        )
+        val actual = items.filterValues { it.specialAbility == EItemUseKind.NPC_PICTURE }
+            .filter { (_, item) -> npcs[item.spare3]?.element in setOf(7, 8) }
+        assertEquals(expected, actual.keys)
+        actual.values.forEach { item ->
+            val npc = npcs[item.spare3]
+            assertNotNull(npc)
+            npc!!.skills.filter { it > 0 }.forEach { assertNotNull(skills[it]) }
+        }
+        assertEquals(14748, items.getValue(51964).spare3)
+        assertEquals(8, npcs.getValue(14748).element)
+        assertArrayEquals(intArrayOf(23003,23006,23011), npcs.getValue(14748).skills)
+        assertEquals(8, npcs.getValue(22116).element)
+        assertEquals(7, npcs.getValue(22119).element)
+        assertNotNull(npcs[45505])
+        assertNotNull(npcs[45513])
+        assertEquals(25, skills.getValue(22007).level)
     }
 }

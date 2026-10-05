@@ -282,10 +282,12 @@ class GameDataManager(
             logger.info { "Nạp Formula xong: baseHp=${formulaParams.baseHp}, baseSp=${formulaParams.baseSp}, w35=${formulaParams.w35}, w36=${formulaParams.w36}" }
         }
 
-        // Item
-        loadFile(dataDir, "Item_C.dat") { bytes ->
+        // Item — Lua DVT DataManager.LoadResourcePacked() đọc Data/IOS_Item_C.dat.
+        // Không dùng ResourcesPacked/Data/Item_C.dat legacy vì bản đó thiếu item mới
+        // (ví dụ reward 35671) và làm backend lệch client DVT.
+        loadFile(dataIosDir, "IOS_Item_C.dat") { bytes ->
             itemDefs = ItemDatLoader.load(bytes)
-            logger.info { "Nạp Item xong: ${itemDefs.size} bản ghi" }
+            logger.info { "Nạp IOS_Item xong: ${itemDefs.size} bản ghi source=${dataIosDir.resolve("IOS_Item_C.dat")}" }
         }
 
         // SceneSet
@@ -294,16 +296,16 @@ class GameDataManager(
             logger.info { "Nạp SceneSet xong: ${sceneSetDefs.size} bản ghi" }
         }
 
-        // Npc
-        loadFile(dataDir, "Npc_C.dat") { bytes ->
+        // NPC/Skill — Lua DVT dùng IOS_Npc_C.dat + IOS_Skill_C.dat.
+        // Bản Data legacy đang thiếu một số võ tướng Quang/Ám và có record cũ sai hệ/kỹ năng.
+        loadFile(dataIosDir, "IOS_Npc_C.dat") { bytes ->
             npcDefs = NpcDatLoader.load(bytes)
-            logger.info { "Nạp Npc xong: ${npcDefs.size} bản ghi" }
+            logger.info { "Nạp IOS_Npc xong: ${npcDefs.size} bản ghi source=${dataIosDir.resolve("IOS_Npc_C.dat")}" }
         }
 
-        // Skill
-        loadFile(dataDir, "Skill_C.dat") { bytes ->
+        loadFile(dataIosDir, "IOS_Skill_C.dat") { bytes ->
             skillDefs = SkillDatLoader.load(bytes)
-            logger.info { "Nạp Skill xong: ${skillDefs.size} bản ghi" }
+            logger.info { "Nạp IOS_Skill xong: ${skillDefs.size} bản ghi source=${dataIosDir.resolve("IOS_Skill_C.dat")}" }
         }
 
         // DVT passive/exclusive server-effect table. Preserve raw semantics only;
