@@ -43,6 +43,7 @@ import tw.tsm.domain.interfaces.repositories.DispatchRepository
 import tw.tsm.domain.interfaces.repositories.DungeonRunRepository
 import tw.tsm.domain.interfaces.repositories.FriendRepository
 import tw.tsm.domain.interfaces.repositories.HouseBoardRepository
+import tw.tsm.domain.interfaces.repositories.WelfareStateRepository
 import tw.tsm.domain.interfaces.repositories.MailRepository
 import tw.tsm.domain.interfaces.repositories.MiningRepository
 import tw.tsm.domain.interfaces.repositories.MessageBoardRepository
@@ -59,6 +60,7 @@ import tw.tsm.persistence.repositories.DispatchRepositoryImpl
 import tw.tsm.persistence.repositories.DungeonRunRepositoryImpl
 import tw.tsm.persistence.repositories.FriendRepositoryImpl
 import tw.tsm.persistence.repositories.HouseBoardRepositoryImpl
+import tw.tsm.persistence.repositories.WelfareStateRepositoryImpl
 import tw.tsm.persistence.repositories.MailRepositoryImpl
 import tw.tsm.persistence.repositories.MiningRepositoryImpl
 import tw.tsm.persistence.repositories.MessageBoardRepositoryImpl
@@ -274,6 +276,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single<MessageBoardRepository> { MessageBoardRepositoryImpl() }
     single<FriendRepository> { FriendRepositoryImpl() }
     single<HouseBoardRepository> { HouseBoardRepositoryImpl() }
+    single<WelfareStateRepository> { WelfareStateRepositoryImpl() }
     single<MiningRepository> { MiningRepositoryImpl() }
 
     // Dữ liệu game
@@ -647,7 +650,13 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<PointSystem>(),
         )
     }
-    single { WelfareHandler() }
+    single {
+        WelfareHandler(
+            get<GameDataManager>().loginAwardDefs, get<WelfareStateRepository>(), get<RoleCountSystem>(),
+            get<BitFlagSystem>(), get<InventorySystem>(), get<PointSystem>(), get<MoneySystem>(),
+            get<PlayerCurrencySystem>(), get<ResponseSender>(),
+        )
+    }
     single { MailHandler(get()) }
     single { LeaderboardHandler(get()) }
     single {

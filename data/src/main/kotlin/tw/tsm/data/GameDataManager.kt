@@ -103,6 +103,10 @@ class GameDataManager(
     var souvenirDefs: Map<Int, SouvenirDef> = emptyMap()
         private set
 
+    /** DVT Welfare/LoginAward từ IOS_LoginAwardData_C.dat. */
+    var loginAwardDefs: List<LoginAwardDef> = emptyList()
+        private set
+
     /** DVT chuyên võ: itemId -> enhanceLevel -> skill/attribute row. */
     var exclusiveWeaponDefs: Map<Int, Map<Int, ExclusiveWeaponDef>> = emptyMap()
         private set
@@ -488,6 +492,10 @@ class GameDataManager(
         loadFile(dataIosDir, "IOS_Souvenir_C.dat") { bytes ->
             souvenirDefs = SouvenirDatLoader.load(bytes)
             logger.info { "Nạp IOS_Souvenir xong: " + souvenirDefs.size + " quà" }
+        }
+        loadFile(dataIosDir, "IOS_LoginAwardData_C.dat") { bytes ->
+            loginAwardDefs = LoginAwardDatLoader.load(bytes)
+            logger.info { "Nạp IOS_LoginAwardData xong: " + loginAwardDefs.size + " bản ghi" }
         }
 
         // DVT ExclusiveWeapon.GetSkill / CheckExclusiveWarrior — full FollowNpc skill lookup.

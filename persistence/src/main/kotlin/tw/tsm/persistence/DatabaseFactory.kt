@@ -16,6 +16,7 @@ import tw.tsm.persistence.tables.CharacterMissionFlags
 import tw.tsm.persistence.tables.CharacterDungeonDays
 import tw.tsm.persistence.tables.CharacterDungeonRuns
 import tw.tsm.persistence.tables.CharacterDungeonWeeks
+import tw.tsm.persistence.tables.CharacterWelfareState
 import tw.tsm.persistence.tables.CharacterMissions
 import tw.tsm.persistence.tables.CharacterCompletedEvents
 import tw.tsm.persistence.tables.CharacterCollectionCards
@@ -81,7 +82,7 @@ object DatabaseFactory {
                 CharacterAstrolabes, CharacterSouls,
                 CharacterHouseProfiles, CharacterGiftRecords,
                 CharacterMissions, CharacterMissionFlags, CharacterCompletedEvents, CharacterBitFlags,
-                CharacterDungeonDays, CharacterDungeonRuns, CharacterDungeonWeeks,
+                CharacterDungeonDays, CharacterDungeonRuns, CharacterDungeonWeeks, CharacterWelfareState,
                 CharacterSkills, CharacterTurn2Skills, CharacterTurn3States, CharacterTurn3Skills,
                 CharacterPets,
                 CharacterPetEquips,

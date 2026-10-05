@@ -2,53 +2,187 @@ package tw.tsm.app.handlers
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import tw.tsm.domain.constants.Opcodes
+import tw.tsm.domain.data.LoginAwardDef
 import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.PacketHandler
+import tw.tsm.domain.interfaces.ResponseSender
+import tw.tsm.domain.interfaces.repositories.WelfareStateRepository
+import tw.tsm.gamelogic.systems.*
+import tw.tsm.protocol.PacketReader
 import tw.tsm.protocol.PacketWriter
 
 private val welfareLogger = KotlinLogging.logger {}
 
-/**
- * DVT phúc lợi / nút "Quà" trên HUD (protocolTable[87]).
- *
- * Function.Use(EFunction.Welfare) không mở UI ngay. Client gửi C:087-003 và chỉ
- * mở UILoginAward sau khi nhận S:087-003 trong UILoginAward.ReciveExpData().
- *
- * Server offline hiện chưa triển khai tích luỹ EXP offline, vì vậy trả snapshot
- * hợp lệ rỗng (count=0). Không tạo giả multiplier hay chi phí.
- */
-class WelfareHandler : PacketHandler {
+/** DVT Phúc lợi / nút "Quà" trên HUD (protocolTable[87]). */
+class WelfareHandler(
+    private val loginAwardDefs: List<LoginAwardDef>,
+    private val stateRepo: WelfareStateRepository,
+    private val roleCountSystem: RoleCountSystem,
+    private val bitFlagSystem: BitFlagSystem,
+    private val inventorySystem: InventorySystem,
+    private val pointSystem: PointSystem,
+    private val moneySystem: MoneySystem,
+    private val currencySystem: PlayerCurrencySystem,
+    private val responseSender: ResponseSender,
+) : PacketHandler {
     override val mainKind: Int = Opcodes.WELFARE
 
-    override suspend fun handle(session: GameSession, subKind: Int, data: ByteArray) {
+    override suspend fun handle(session: GameSession, subKind: Int, payload: ByteArray) {
         if (session.state != SessionState.IN_GAME) return
-
         when (subKind) {
-            3 -> handleOfflineExpData(session, data)
-            else -> welfareLogger.warn {
-                "Welfare chưa hỗ trợ subKind=$subKind (${data.size} bytes)"
+            2 -> handleClaim(session, payload)
+            3 -> handleOfflineExpData(session, payload)
+            else -> welfareLogger.warn { "Welfare chưa hỗ trợ subKind=$subKind (${payload.size} bytes)" }
+        }
+    }
+
+    private suspend fun prepareDaily(session: GameSession) {
+        val charId = session.roleId.toLong()
+        val today = DispatchSystem.currentDayKey()
+        val lastClaim = stateRepo.getLastLoginClaimDay(charId)
+        if (lastClaim != today) {
+            if (bitFlagSystem.getSetFlagIds(charId).contains(LOGIN_BIT_FLAG)) {
+                bitFlagSystem.clearFlag(charId, LOGIN_BIT_FLAG)
+                responseSender.sendBitFlagChanges(session, listOf(LOGIN_BIT_FLAG to false))
+            }
+            val maxDay = loginAwardDefs.filter { it.group == AWARD_LOGIN }.maxOfOrNull { it.day } ?: 0
+            if (maxDay > 0 && roleCountSystem.getValue(charId, LOGIN_SIGN_DAY) >= maxDay) {
+                roleCountSystem.setValue(charId, LOGIN_SIGN_DAY, 0)
+                roleCountSystem.saveCounts(charId)
+                responseSender.sendRoleCountUpdate(session, mapOf(LOGIN_SIGN_DAY to (0 to 0)))
             }
         }
     }
 
-    private fun handleOfflineExpData(session: GameSession, data: ByteArray) {
-        if (data.isNotEmpty()) {
-            welfareLogger.warn {
-                "C:087-003 phải không có payload, nhận ${data.size} bytes"
-            }
+    private suspend fun handleClaim(session: GameSession, payload: ByteArray) {
+        if (payload.size != 6) return
+        prepareDaily(session)
+        val reader = PacketReader(payload)
+        val kind = reader.readUByte()
+        val requestedDay = reader.readIntLE()
+        val count = reader.readUByte()
+        if (reader.remaining != 0 || kind != AWARD_LOGIN || count != 1) {
+            sendClaimResult(session, kind, RESULT_WRONG_KIND)
             return
         }
 
-        // S:087-003 = count(U8) + count * [rate(U16) + money(U32)]
-        // count=0 là snapshot rỗng hợp lệ và đủ để client mở UILoginAward.
+        val charId = session.roleId.toLong()
+        val today = DispatchSystem.currentDayKey()
+        if (stateRepo.getLastLoginClaimDay(charId) == today) {
+            sendClaimResult(session, kind, RESULT_ALREADY_CLAIMED)
+            return
+        }
+
+        val expectedDay = roleCountSystem.getValue(charId, LOGIN_SIGN_DAY) + 1
+        if (requestedDay != expectedDay) {
+            sendClaimResult(session, kind, RESULT_CONDITION_NOT_MET)
+            return
+        }
+        val award = loginAwardDefs.firstOrNull { it.group == AWARD_LOGIN && it.day == requestedDay }
+        if (award == null) {
+            sendClaimResult(session, kind, RESULT_BAD_REWARD)
+            return
+        }
+        val rewards = award.rewards.filter { it.first > 0 && it.second > 0 }
+        if (rewards.isEmpty()) {
+            sendClaimResult(session, kind, RESULT_BAD_REWARD)
+            return
+        }
+
+        val normalItems = rewards.filterNot { isVirtualReward(it.first) }
+        val changedBag = if (normalItems.isNotEmpty()) {
+            inventorySystem.addItemBundleToBagExact(charId, normalItems)
+                ?: run { sendClaimResult(session, kind, RESULT_BAG_FULL); return }
+        } else emptyList()
+
+        for ((itemId, qty) in rewards) {
+            if (!grantVirtualReward(charId, itemId, qty)) {
+                welfareLogger.error { "Welfare login reward lỗi: charId=$charId itemId=$itemId qty=$qty" }
+                sendClaimResult(session, kind, RESULT_BAD_REWARD)
+                return
+            }
+        }
+
+        roleCountSystem.setValue(charId, LOGIN_SIGN_DAY, requestedDay)
+        roleCountSystem.increment(charId, CONTINUE_LOGIN, 1)
+        roleCountSystem.saveCounts(charId)
+        stateRepo.setLastLoginClaimDay(charId, today)
+        bitFlagSystem.setFlag(charId, LOGIN_BIT_FLAG)
+
+        for ((slot, thing) in changedBag) responseSender.sendSetBagItem(session, slot, thing)
+        responseSender.sendRoleCountUpdate(
+            session,
+            mapOf(
+                LOGIN_SIGN_DAY to (roleCountSystem.getValue(charId, LOGIN_SIGN_DAY) to 0),
+                CONTINUE_LOGIN to (roleCountSystem.getValue(charId, CONTINUE_LOGIN) to 0),
+            )
+        )
+        responseSender.sendBitFlagChanges(session, listOf(LOGIN_BIT_FLAG to true))
+        syncVirtualBalances(session)
+        sendClaimResult(session, kind, RESULT_SUCCESS)
+        welfareLogger.info { "Welfare login claim: charId=$charId day=$requestedDay rewards=$rewards" }
+    }
+
+    private fun isVirtualReward(itemId: Int): Boolean = itemId in setOf(
+        ITEM_POINT, ITEM_MONEY, ITEM_TS, ITEM_WARRIOR_TICKET, ITEM_CARD_TICKET, ITEM_EXCLUSIVE_TICKET
+    )
+
+    private suspend fun grantVirtualReward(charId: Long, itemId: Int, qty: Int): Boolean = when (itemId) {
+        ITEM_POINT -> pointSystem.addRealPoint(charId, qty).also { if (it) pointSystem.savePoints(charId) }
+        ITEM_MONEY -> moneySystem.addGold(charId, qty).also { if (it) moneySystem.saveMoney(charId) }
+        ITEM_TS -> currencySystem.add(charId, 8, qty)
+        ITEM_WARRIOR_TICKET -> currencySystem.add(charId, 12, qty)
+        ITEM_CARD_TICKET -> currencySystem.add(charId, 13, qty)
+        ITEM_EXCLUSIVE_TICKET -> currencySystem.add(charId, 14, qty)
+        else -> true
+    }
+
+    private fun syncVirtualBalances(session: GameSession) {
+        val charId = session.roleId.toLong()
+        val (real, virtual) = pointSystem.getPoints(charId)
+        responseSender.sendPointBalance(session, real, virtual)
+        val (money, auctionMoney) = moneySystem.getMoney(charId)
+        responseSender.sendInitMoney(session, money, auctionMoney)
+        for (kind in listOf(8, 12, 13, 14)) {
+            responseSender.sendPlayerCurrency(session, kind, currencySystem.get(charId, kind))
+        }
+    }
+
+    private suspend fun handleOfflineExpData(session: GameSession, payload: ByteArray) {
+        if (payload.isNotEmpty()) return
+        prepareDaily(session)
+        session.send(PacketWriter(4).writeByte(Opcodes.WELFARE).writeByte(3).writeByte(0).writeByte(0).toByteArray())
+    }
+
+    private fun sendClaimResult(session: GameSession, kind: Int, result: Int) {
         session.send(
-            PacketWriter(4)
+            PacketWriter(5)
                 .writeByte(Opcodes.WELFARE)
-                .writeByte(3)
+                .writeByte(2)
                 .writeByte(0)
-                .writeByte(0)
+                .writeByte(kind)
+                .writeByte(result)
                 .toByteArray()
         )
+    }
+
+    companion object {
+        private const val AWARD_LOGIN = 1
+        private const val LOGIN_BIT_FLAG = 1
+        private const val LOGIN_SIGN_DAY = 107
+        private const val CONTINUE_LOGIN = 108
+        private const val RESULT_SUCCESS = 0
+        private const val RESULT_WRONG_KIND = 1
+        private const val RESULT_ALREADY_CLAIMED = 2
+        private const val RESULT_CONDITION_NOT_MET = 3
+        private const val RESULT_BAG_FULL = 4
+        private const val RESULT_BAD_REWARD = 7
+        private const val ITEM_POINT = 65301
+        private const val ITEM_MONEY = 65351
+        private const val ITEM_TS = 65343
+        private const val ITEM_WARRIOR_TICKET = 65347
+        private const val ITEM_CARD_TICKET = 65348
+        private const val ITEM_EXCLUSIVE_TICKET = 65349
     }
 }
