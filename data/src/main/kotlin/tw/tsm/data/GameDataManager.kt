@@ -789,10 +789,15 @@ class GameDataManager(
             logger.info { "Nạp DispatchBonus xong: ${dispatchBonusDefs.size} bản ghi" }
         }
 
-        // Leaderboard (Định nghĩa bảng xếp hạng)
-        loadFile(dataDir, "LeaderbordInfo_C.dat") { bytes ->
+        // Leaderboard — Lua DVT DataManager đọc Data/IOS_LeaderbordInfo_C.dat.
+        // Không dùng LeaderbordInfo_C.dat legacy của server-data vì bộ đó có ID cũ
+        // (27, 32..36, 45) không tồn tại trong client DVT hiện tại.
+        loadFile(dataIosDir, "IOS_LeaderbordInfo_C.dat") { bytes ->
             leaderboardDefs = LeaderboardDatLoader.load(bytes)
-            logger.info { "Nạp LeaderbordInfo xong: ${leaderboardDefs.size} bản ghi" }
+            logger.info {
+                "Nạp IOS_LeaderbordInfo xong: ${leaderboardDefs.size} bản ghi source=" +
+                    dataIosDir.resolve("IOS_LeaderbordInfo_C.dat")
+            }
         }
 
         // NpcUpgrade — Mobile DVT DataManager đọc Data/IOS_NpcUpgrade_C.dat.

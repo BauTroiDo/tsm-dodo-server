@@ -3876,3 +3876,12 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
   - commit/push/deploy production .69.
   - client test core boards first: cấp độ tabs, Võ tướng, Bảng vàng, Bảng thành tựu, and page switching.
   - event/BOSS leaderboard persistence is a later slice; do not invent scores.
+
+
+### 2026-10-06 — Leaderboard production source correction before client PASS
+- First runtime after commit 79a6631 exposed source mismatch: GameDataManager still loaded server-data/Data/LeaderbordInfo_C.dat legacy, producing 23 boards and warnings for legacy IDs 27,32..36,45.
+- Production authoritative client DVT file exists at File.dat/Data-ios/IOS_LeaderbordInfo_C.dat, size 752 bytes, exact 19 records.
+- Root fix: GameDataManager leaderboard loader changed from Data/LeaderbordInfo_C.dat to Data-ios/IOS_LeaderbordInfo_C.dat, matching Lua DVT DataManager.OnLoadLeaderboardData.
+- Targeted DvtLeaderboardRegressionTest PASS after source fix.
+- Full local gradlew test build --rerun-tasks PASS 21/21 after source fix.
+- Do not mark ranking runtime PASS until redeployed and log confirms IOS_LeaderbordInfo=19 with no legacy-ID warnings.
