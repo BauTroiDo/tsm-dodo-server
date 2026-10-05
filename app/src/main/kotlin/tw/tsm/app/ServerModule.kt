@@ -502,7 +502,14 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     }
     single { HouseBoardResponseSender() }
     single {
-        LeaderboardSystem(get(), get<GameDataManager>().leaderboardDefs, get(), get()).also {
+        LeaderboardSystem(
+            get(),
+            get<GameDataManager>().leaderboardDefs,
+            get(),
+            get(),
+            get<GameDataManager>().npcDefs,
+            get<AchievementSystem>(),
+        ).also {
             it.startPeriodicRefresh()
         }
     }

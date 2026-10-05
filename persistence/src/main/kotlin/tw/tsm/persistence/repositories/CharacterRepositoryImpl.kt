@@ -209,6 +209,7 @@ class CharacterRepositoryImpl : CharacterRepository {
                     exp = row[Characters.exp],
                     element = row[Characters.element],
                     turn = row[Characters.turn],
+                    career = row[Characters.career],
                     sex = row[Characters.sex],
                     hair = row[Characters.hair],
                     color1 = row[Characters.color1],
@@ -224,19 +225,30 @@ class CharacterRepositoryImpl : CharacterRepository {
                 )
             }
 
-            // 3. Cấp cao nhất của tướng (characterId → MAX(level))
-            val petMaxLevelMap = CharacterPets.selectAll()
+            // 3. Võ tướng cao nhất cho leaderboard ID6.
+            // DVT score format cần element + turn + level, nên không được chỉ MAX(level).
+            val bestPetMap = CharacterPets.selectAll()
                 .groupBy { it[CharacterPets.characterId] }
-                .mapValues { (_, rows) -> rows.maxOf { it[CharacterPets.level] } }
+                .mapValues { (_, rows) ->
+                    rows.maxWithOrNull(
+                        compareBy<ResultRow> { it[CharacterPets.turnKind] }
+                            .thenBy { it[CharacterPets.level] }
+                            .thenBy { it[CharacterPets.exp] }
+                            .thenBy { it[CharacterPets.id] }
+                    )
+                }
 
             // Gộp
             chars.map { char ->
                 val money = moneyMap[char.id]
-                val petMax = petMaxLevelMap[char.id] ?: 0
+                val pet = bestPetMap[char.id]
                 char.copy(
                     gold = money?.first ?: 0,
                     auctionGold = money?.second ?: 0,
-                    petMaxLevel = petMax
+                    petNpcId = pet?.get(CharacterPets.npcId) ?: 0,
+                    petLevel = pet?.get(CharacterPets.level) ?: 0,
+                    petTurn = pet?.get(CharacterPets.turnKind) ?: 0,
+                    petExp = pet?.get(CharacterPets.exp) ?: 0L,
                 )
             }
         }

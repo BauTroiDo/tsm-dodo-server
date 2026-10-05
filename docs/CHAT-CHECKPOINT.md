@@ -3807,3 +3807,72 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
   - IOS_EternalDungeonPrize = 30 tầng thưởng.
 - Client test cần xác nhận: S.Kiện -> Thần Binh Bảo Khố mở UI và hiển thị tầng/phần thưởng.
 - Battle C48-001 vẫn evidence-blocked vì thiếu server-side NPC/BaseAttr/enriched-layer tables; tuyệt đối không phát quái/reward giả.
+
+
+## 2026-10-06 — Xếp Hạng / Leaderboard protocol 88 core fixed to current DVT
+
+- User confirmed previous Activity/Eternal Dungeon slice PASS, then moved to Xếp Hạng.
+- Authoritative Lua DVT protocol:
+  - C:088-001 = leaderboardId(U8) + page(U8).
+  - S:088-001 = leaderboardId/page/maxPage/myRank U8 + self score Int32[] + ranked rows.
+  - Ranked row = rank/state U8 + roleId Int64 + name + level/element/turn3Element/turn/career U8 + score Int32[].
+  - UILeaderboard.maxInfo = 5, and UI page is 1-based.
+- Fixed legacy backend bugs:
+  - PAGE_SIZE 10 -> 5.
+  - page 0-based -> 1-based.
+  - empty board maxPage now 1 so client page guard stays valid.
+  - leaderboard refresh starts immediately on server startup instead of waiting 5 seconds.
+  - career now comes from Characters.career instead of hard-coded 0.
+  - rank list capped at 255 because rank/page/maxPage/myRank are byte fields on S88-001.
+- Current DVT IOS_LeaderbordInfo_C.dat:
+  - exactly 19 boards (not legacy 26).
+  - IDs = 1,2,3,4,5,6,7,20,44,29,30,31,8,9,19,10,11,17,16.
+  - ID1 = level / Tất cả.
+  - ID2 = level / Hệ Địa.
+  - ID3 = level / Hệ Thủy.
+  - ID4 = level / Hệ Hỏa.
+  - ID5 = level / Hệ Phong.
+  - ID6 = Võ tướng.
+  - ID7 = Bảng vàng.
+  - ID20 = Bảng thành tựu.
+  - 44/29/30/31 = Lôi Đài Vô Giới variants.
+  - 8/9/19 = lôi đài loạn đấu / tổ đội / Tiên Đấu.
+  - 10/11 = BOSS Thế Giới sát thương 1 lần / tích lũy.
+  - 17 = BOSS Quân đoàn sát thương tuần.
+  - 16 = Tử đấu bảng / số lần giết.
+- Element enum locked from Lua DVT:
+  - Earth=1, Water=2, Fire=3, Wind=4.
+  - Old backend mapping (Kim/Mộc/Thủy/Hỏa/Thổ and legacy IDs 32..36) removed.
+- Level score:
+  - Lua Role.playerMaxLv=200.
+  - cumulative level score = level + turn*200.
+  - old Kotlin +150 logic removed.
+- Warrior leaderboard ID6:
+  - CharacterPets has npcId/level/exp/turnKind.
+  - best warrior selected by turn -> level -> exp -> row id.
+  - NpcDef.element supplies warrior element.
+  - scoreInfo wire = [element, turn, level], matching DVT scoreFormat.
+- Gold ID7:
+  - uses CharacterMoney.gold.
+- Achievement ID20:
+  - uses authoritative AchievementSystem.calculateTotalScore() from DVT BitFlags/achievement defs.
+- Event/BOSS boards:
+  - no authoritative persisted score source was found in current Lua/RoleCount/server data for IDs 8,9,10,11,16,17,19,29,30,31,44.
+  - They intentionally return empty rather than reusing unrelated gold/pet/level values.
+  - Must be connected later to each event subsystem when its score lifecycle is implemented/persisted.
+- Regression added: DvtLeaderboardRegressionTest.
+  - real IOS_LeaderbordInfo_C.dat count/ID mapping.
+  - cumulative level 100 + 2*200 = 500.
+  - 11 rows -> 3 pages, 5 rows/page, 1-based/clamping.
+  - runtime page2 ranks 6..10.
+  - Earth board filters element=1.
+  - warrior turn/element/level score and career wire.
+  - byte-level S:088-001 serialization regression.
+- Validation:
+  - targeted DvtLeaderboardRegressionTest PASS.
+  - full gradlew test build --rerun-tasks PASS 21/21.
+  - git diff --check PASS.
+- Next:
+  - commit/push/deploy production .69.
+  - client test core boards first: cấp độ tabs, Võ tướng, Bảng vàng, Bảng thành tựu, and page switching.
+  - event/BOSS leaderboard persistence is a later slice; do not invent scores.

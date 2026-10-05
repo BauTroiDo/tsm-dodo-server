@@ -191,16 +191,20 @@ data class LeaderboardCharRecord(
     val exp: Long,
     val element: Int,
     val turn: Int,
+    val career: Int,
     val sex: Int,
     val hair: Int,
     val color1: Int,
     val color2: Int,
-    /** Tiền (từ CharacterMoney)*/
+    /** Tiền (từ CharacterMoney). */
     val gold: Int = 0,
-    /** Tiền đấu giá (từ CharacterMoney)*/
+    /** Tiền đấu giá legacy; current DVT leaderboard table does not expose it. */
     val auctionGold: Int = 0,
-    /** Cấp độ tướng cao nhất (từ CharacterPets MAX(level))*/
-    val petMaxLevel: Int = 0
+    /** Võ tướng cao nhất theo turn -> level -> exp. */
+    val petNpcId: Int = 0,
+    val petLevel: Int = 0,
+    val petTurn: Int = 0,
+    val petExp: Long = 0,
 )
 
 data class CharacterCreateData(
