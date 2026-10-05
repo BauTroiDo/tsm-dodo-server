@@ -113,6 +113,7 @@ class ActivityHandler(
         const val UNBOUNDED_CHAOS_ACTIVITY_ID = 90
         const val UNBOUNDED_LV100_ACTIVITY_ID = 92
         const val MID_AUTUMN_ACTIVITY_ID = 94
+        const val UNBOUNDED_DUEL_ACTIVITY_ID = 124
 
         private const val MIX_VS_ENTRY_NPC_ID = 15163
         private const val CHAOS_VS_ENTRY_NPC_ID = 15226
@@ -141,6 +142,7 @@ class ActivityHandler(
             when (activityId) {
                 IMMORTAL_ARENA_ACTIVITY_ID -> 65
                 MID_AUTUMN_ACTIVITY_ID -> 30
+                UNBOUNDED_DUEL_ACTIVITY_ID -> 1
                 else -> ACTIVITY_MIN_LEVEL
             }
 
@@ -235,6 +237,7 @@ class ActivityHandler(
                 result[UNBOUNDED_TEAM_ACTIVITY_ID] = entry
                 result[UNBOUNDED_CHAOS_ACTIVITY_ID] = entry
                 result[UNBOUNDED_LV100_ACTIVITY_ID] = entry
+                result[UNBOUNDED_DUEL_ACTIVITY_ID] = entry
             }
 
             // Nghiễm Hàn Dật Sự starts at hồ Quảng Hàn. The authoritative event scene

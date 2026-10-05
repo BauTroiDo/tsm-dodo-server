@@ -85,12 +85,14 @@ class AdminBypassAndActivityEntryTest {
         assertEquals(unboundedEntry, entries[ActivityHandler.UNBOUNDED_TEAM_ACTIVITY_ID])
         assertEquals(unboundedEntry, entries[ActivityHandler.UNBOUNDED_CHAOS_ACTIVITY_ID])
         assertEquals(unboundedEntry, entries[ActivityHandler.UNBOUNDED_LV100_ACTIVITY_ID])
+        assertEquals(unboundedEntry, entries[ActivityHandler.UNBOUNDED_DUEL_ACTIVITY_ID])
         assertEquals(
             ActivityHandler.ActivityNavigationEntry(49998, 38264, 910, 340),
             entries[ActivityHandler.MID_AUTUMN_ACTIVITY_ID],
         )
         assertEquals(65, ActivityHandler.minimumLevel(ActivityHandler.IMMORTAL_ARENA_ACTIVITY_ID))
         assertEquals(30, ActivityHandler.minimumLevel(ActivityHandler.MID_AUTUMN_ACTIVITY_ID))
+        assertEquals(1, ActivityHandler.minimumLevel(ActivityHandler.UNBOUNDED_DUEL_ACTIVITY_ID))
     }
 
     @Test

@@ -3716,3 +3716,25 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Full local gradlew test build --rerun-tasks: BUILD SUCCESSFUL, 21/21 tasks.
 - git diff --check: PASS.
 - id21 Tử chiến TS vẫn evidence-blocked: chưa khóa được public entry NPC/scene nên chưa đoán.
+
+
+## 2026-10-06 — Activity id124 Vô giới Nhất Kỵ Thảo + audit blocker 48/171
+- activityId124 / kind136 "Vô giới Nhất Kỵ Thảo":
+  - IOS_ActivityInfo lv=1, bitFunction=1.
+  - Description24476: reborn player, personal registration, click arena master, random 1v1 with up to 4 warriors.
+  - Public Vô Giới entry remains scene12003 npc15280 "VGTruyềnTốngSư" at (650,880).
+  - Eve public entry flow has a fourth choice style33 only in the newer event branch, consistent with the additional Vô Giới duel mode.
+  - ActivityHandler maps id124 to the same authoritative Vô Giới entry as id89/90/92.
+  - minimumLevel(id124)=1 to match DAT; rebirth qualification remains an event/backend rule, not faked as a level gate.
+- id96 Thần Binh Bảo Khố:
+  - Lua UIEternalDungeon uses protocol 48: C48-1 battle layer, C48-2 request layer info; S48-2/3 opens/updates UI.
+  - DAT authoritative exists: IOS_EternalDungeonLayer_C.dat + IOS_EternalDungeonPrize_C.dat.
+  - Kotlin server currently has no EternalDungeon/protocol48 backend. Treat as a dedicated subsystem; do not fake navigation-only PASS.
+- id121 Cứ điểm trận chiến / ArmyBattle:
+  - UIActivity does NOT use C77-003; it sends mainKind171 subKind7.
+  - Kotlin server currently has no mainKind171 handler. Treat as separate organization-war backend; do not fake with ActivityHandler.
+- id21 Tử chiến TS remains evidence-blocked for public entry.
+- Validation id124:
+  - targeted AdminBypassAndActivityEntryTest PASS.
+  - full gradlew test build --rerun-tasks PASS 21/21.
+  - git diff --check PASS.
