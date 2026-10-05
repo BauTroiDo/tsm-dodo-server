@@ -4,11 +4,7 @@ import tw.tsm.domain.interfaces.GameSession
 
 /**
  * Central policy for GM/Admin testing bypasses.
- *
- * Normal players always follow authoritative DVT rules. GM accounts (gmLevel > 0)
- * receive the safe testing bypasses below. Destructive/economy-affecting bypasses
- * stay disabled by default and must be explicitly introduced by the subsystem that
- * needs them.
+ * Normal players always follow authoritative DVT rules.
  */
 class AdminBypassPolicy(
     val defaults: AdminBypassFlags = AdminBypassFlags(),
@@ -29,8 +25,8 @@ data class AdminBypassFlags(
     val bypassLevel: Boolean = true,
     val bypassEntryLimit: Boolean = true,
     val bypassQuestGate: Boolean = true,
-    val freeCost: Boolean = false,
-    val rewardRepeatTest: Boolean = false,
+    val freeCost: Boolean = true,
+    val rewardRepeatTest: Boolean = true,
 ) {
     companion object {
         val NONE = AdminBypassFlags(

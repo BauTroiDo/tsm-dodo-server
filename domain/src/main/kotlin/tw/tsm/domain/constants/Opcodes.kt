@@ -145,6 +145,9 @@ object Opcodes {
     @Deprecated("Use DUNGEON; DVT protocolTable[47] is Dungeon")
     const val MISSION = DUNGEON
 
+    /** Danh sách hoạt động / Sự kiện (protocolTable[77]) */
+    const val ACTIVITY = 77
+
     /** Thất Tinh Mệnh Bàn (protocolTable[78])*/
     const val ASTROLABE = 78
 

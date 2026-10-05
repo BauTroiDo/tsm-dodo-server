@@ -138,6 +138,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             register(get<PetUpgradeHandler>())
             register(get<PetRebornHandler>())
             register(get<JiugonggeHandler>())
+            register(get<ActivityHandler>())
             register(get<ActivityModelHandler>())
             register(get<MallHandler>())
             register(get<SlotMachineHandler>())
@@ -411,7 +412,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single {
         LimitTimeDungeonSystem(
             get<GameDataManager>().limitTimeDungeonDefs,
-            get<RoleCountSystem>(), get<ResponseSender>(), get<SpecialSceneTeleportService>(), get<CoroutineScope>()
+            get<RoleCountSystem>(), get<ResponseSender>(), get<SpecialSceneTeleportService>(), get<CoroutineScope>(), get<AdminBypassPolicy>()
         )
     }
     single {
@@ -426,6 +427,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             sceneSetDefs = get<GameDataManager>().sceneSetDefs,
             scope = get<CoroutineScope>(),
             dungeonRunRepository = get<DungeonRunRepository>(),
+            adminBypassPolicy = get<AdminBypassPolicy>(),
         )
     }
     single { DungeonRoomRegistry() }
@@ -698,6 +700,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { PetUpgradeHandler(get(), get()) }
     single { PetRebornHandler(get(), get(), get()) }
     single { JiugonggeHandler(get()) }
+    single { ActivityHandler(get<ActivityScheduleSystem>(), get<AdminBypassPolicy>(), get<SpecialSceneTeleportService>(), get<GameDataManager>().activityTimeDefs, get<GameDataManager>().eveData) }
     single { ActivityModelHandler() }
     single { MallHandler(get(), get(), get<PointSystem>(), get<MoneySystem>(), get<PlayerCurrencySystem>(), get<ResponseSender>()) }
     single { SlotMachineHandler(get<SlotMachineSystem>(), get<ResponseSender>()) }

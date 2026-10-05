@@ -66,6 +66,7 @@ class DungeonSystem(
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
     private val dungeonMinuteMillis: Long = REAL_MINUTE_MS,
     private val dungeonRunRepository: DungeonRunRepository? = null,
+    private val adminBypassPolicy: AdminBypassPolicy = AdminBypassPolicy(),
 ) {
     private val activeRuns = ConcurrentHashMap<Long, ActiveDungeonRun>()
     private val timeoutJobs = ConcurrentHashMap<Long, Job>()
@@ -288,7 +289,7 @@ class DungeonSystem(
 
     suspend fun validateSingleCreate(session: GameSession, dungeonId: Int): Int {
         val def = defs[dungeonId] ?: return RESULT_NO_DUNGEON
-        if (session.level !in def.minLv..def.maxLv) return RESULT_LEVEL_MISMATCH
+        if (!adminBypassPolicy.bypassLevel(session) && session.level !in def.minLv..def.maxLv) return RESULT_LEVEL_MISMATCH
         if (session.battleId != 0L) return RESULT_IN_BATTLE
         if (def.kind != KIND_SINGLE || def.maxPlayer != 1) return RESULT_NO_SPACE
         if (partySystem.isInParty(session.playerId)) return RESULT_CANNOT_TEAM
@@ -309,7 +310,7 @@ class DungeonSystem(
         val def = defs[dungeonId] ?: return RESULT_NO_DUNGEON
         // Kinds 3/5 are special WeekDungeon style 24 and require backend-only enemy formations.
         if (def.kind != KIND_NORMAL_MULTIPLAYER || def.maxPlayer <= 1) return RESULT_NO_SPACE
-        if (session.level !in def.minLv..def.maxLv) return RESULT_LEVEL_MISMATCH
+        if (!adminBypassPolicy.bypassLevel(session) && session.level !in def.minLv..def.maxLv) return RESULT_LEVEL_MISMATCH
         if (alreadyInRoom || session.mapId == def.sceneId) return RESULT_ALREADY_IN_ROOM
         if (session.battleId != 0L) return RESULT_IN_BATTLE
         if (partySystem.isInParty(session.playerId)) return RESULT_CANNOT_TEAM
@@ -459,7 +460,7 @@ class DungeonSystem(
         // DVT UIDungeon derives "remaining daily attempts" from DungeonData.dayilyFlag.
         // Eve mission scripts complete missionFlag but do not mutate this counter, so the
         // server must record one successful use at settlement time.
-        if (def.dailyFlag > 0 && def.dailyCount > 0) {
+        if (def.dailyFlag > 0 && def.dailyCount > 0 && !adminBypassPolicy.bypassEntryLimit(session)) {
             val used = questSystem.getMissions(charId)
                 .firstOrNull { it.missionId == def.dailyFlag }
                 ?.step ?: 0
@@ -496,8 +497,8 @@ class DungeonSystem(
         if (anchor.costPoint <= 0 || anchor.allPassPrize <= 0) return false
         val charId = session.roleId.toLong()
         val missions = questSystem.getMissions(charId).associateBy { it.missionId }
-        if (pageDefs.any { (missions[it.dailyFlag]?.step ?: 0) <= 0 }) return false
-        if (questSystem.hasMissionFlag(charId, anchor.costPoint)) return false
+        if (!adminBypassPolicy.bypassQuestGate(session) && pageDefs.any { (missions[it.dailyFlag]?.step ?: 0) <= 0 }) return false
+        if (!adminBypassPolicy.rewardRepeatTest(session) && questSystem.hasMissionFlag(charId, anchor.costPoint)) return false
 
         val inventory = inventorySystem ?: return false
         val changed = inventory.addItemsToBagExact(charId, anchor.allPassPrize, 1) ?: return false
@@ -513,6 +514,7 @@ class DungeonSystem(
     }
 
     private suspend fun validateDailyCount(session: GameSession, def: DungeonDef): Int {
+        if (adminBypassPolicy.bypassEntryLimit(session)) return RESULT_OK
         if (def.dailyFlag == 0 || def.dailyCount <= 0) return RESULT_OK
         // Durable reset is currently evidenced only for normal kind1/2 Mark-kind8 counters.
         if (def.kind in setOf(KIND_NORMAL_MULTIPLAYER, KIND_SINGLE)) {
@@ -587,6 +589,10 @@ class DungeonSystem(
 
     private fun armTimeout(session: GameSession, run: ActiveDungeonRun, def: DungeonDef) {
         val playerId = session.playerId
+        if (adminBypassPolicy.bypassEntryLimit(session)) {
+            stopTimeout(playerId)
+            return
+        }
         stopTimeout(playerId)
 
         val job = scope.launch {

@@ -20,6 +20,7 @@ class LimitTimeDungeonSystem(
     private val responseSender: ResponseSender,
     private val specialTeleport: SpecialSceneTeleportService,
     private val scope: CoroutineScope,
+    private val adminBypassPolicy: AdminBypassPolicy = AdminBypassPolicy(),
 ) {
     private val jobs = ConcurrentHashMap<Long, Job>()
 
@@ -31,6 +32,7 @@ class LimitTimeDungeonSystem(
         stopTracking(charId)
 
         val def = defs.values.firstOrNull { it.sceneId == session.mapId } ?: return
+        if (adminBypassPolicy.bypassEntryLimit(session)) return
         val used = roleCountSystem.getValue(charId, def.limitIndex)
         if (used >= def.limitTimeMinutes) {
             scope.launch {

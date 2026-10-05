@@ -3579,3 +3579,15 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Regression added: same Monday timestamp yields STATE_NONE for normal session and STATE_STARTED for GM session; existing S:077 byte-contract tests remain PASS.
 - Targeted test PASS; full `gradlew test build --rerun-tasks` PASS 21/21; git diff --check pending commit step.
 - Framework is now the single policy point for future subsystem integrations; A2 C:077-003 entry handler should consult the same policy for level/entry-limit checks.
+
+## 2026-10-05 — GM gameplay-wide bypass + Judgment Tower A2 entry
+- User requirement: any account with `gmLevel > 0` must be able to test locked content.
+- Existing authority remains authoritative: `accounts.gm_level` -> `session.gmLevel`; no account-name hardcode.
+- AdminBypassPolicy defaults for GM are now all testing flags ON: schedule, level, entry-limit, quest-gate, free-cost, reward-repeat. Normal accounts still receive all-false flags.
+- Integrated shared GM bypass into `DungeonSystem`: level gates, daily entry limits/counters, weekly/all-pass quest gate, reward-repeat guard, and dungeon timeout enforcement are skipped for GM only.
+- Integrated shared GM bypass into `LimitTimeDungeonSystem`: GM is not auto-expelled / time-counted by limit-time dungeon quota.
+- Activity protocol A2 implemented: `Opcodes.ACTIVITY = 77`; new `ActivityHandler` handles C:077-003 (UInt16 activityId).
+- Judgment Tower authoritative Eve evidence: scene 12921 is the tower entrance; external scene 12061 has SceneInfo target 12921 spawn raw (31,60) => world (620,1200). Scenes 12921..12939 form the linked trial-tower chain in Eve.emg.
+- C77-003 activityId=1 validates current schedule for normal players; GM uses schedule+level bypass, then teleports to scene 12921 at the Eve-derived (620,1200). No guessed coordinates.
+- Added dispatcher registration for ActivityHandler and regression `AdminBypassAndActivityEntryTest`: normal flags all false, gmLevel=99 flags all true, Eve-derived tower entry exactly 12921/(620,1200).
+- Targeted tests PASS; full `gradlew test build --rerun-tasks` PASS 21/21 locally.
