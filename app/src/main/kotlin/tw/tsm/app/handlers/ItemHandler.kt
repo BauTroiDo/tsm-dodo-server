@@ -27,6 +27,9 @@ import tw.tsm.gamelogic.systems.InventorySystem
 import tw.tsm.gamelogic.systems.ItemUseProcessor
 import tw.tsm.gamelogic.systems.MoneySystem
 import tw.tsm.gamelogic.systems.MountSystem
+import tw.tsm.gamelogic.systems.OfflineSoulGenerationPolicy
+import tw.tsm.gamelogic.systems.SoulSystem
+import tw.tsm.app.response.SoulResponseSender
 import tw.tsm.gamelogic.systems.PetEquipSystem
 import tw.tsm.gamelogic.systems.PetSystem
 import tw.tsm.gamelogic.systems.PlayerStateManager
@@ -72,6 +75,9 @@ class ItemHandler(
     private val astrolabeSystem: AstrolabeSystem? = null,
     private val sacredEquipPrimaryDefs: Map<Int, SacredEquipPrimaryDef> = emptyMap(),
     private val compoundSystem: CompoundSystem? = null,
+    private val soulSystem: SoulSystem? = null,
+    private val soulGenerationPolicy: OfflineSoulGenerationPolicy? = null,
+    private val soulResponseSender: SoulResponseSender? = null,
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.SHOP  // 23
@@ -593,6 +599,10 @@ class ItemHandler(
             handleAstrolabePointItem(session, characterId, bagIndex, bagItem, itemDef, quantity)
             return
         }
+        if (itemDef != null && itemDef.specialAbility == EItemUseKind.SOUL) {
+            handleSoulItem(session, characterId, bagIndex, bagItem)
+            return
+        }
 
         val useQty = minOf(quantity, bagItem.quantity)
 
@@ -651,6 +661,58 @@ class ItemHandler(
         }
 
         logger.trace { "Dùng vật phẩm: characterId=$characterId itemId=${bagItem.itemId} qty=$useQty hiệu ứng=${result.attrChanges.size} dòng thưởng=${result.rewardItems.size} dòng" }
+    }
+
+    private suspend fun handleSoulItem(
+        session: GameSession,
+        characterId: Long,
+        bagIndex: Int,
+        bagItem: ThingData,
+    ) {
+        val system = soulSystem ?: return
+        val policy = soulGenerationPolicy ?: return
+        val sender = soulResponseSender ?: return
+        if (bagItem.quantity <= 0) return
+
+        val template = policy.generate(bagItem.itemId)
+        if (template == null) {
+            logger.warn { "Không tạo được Soul template cho itemId=" + bagItem.itemId }
+            return
+        }
+
+        val created = system.create(characterId, template)
+        if (created == null) {
+            logger.warn { "Tạo/persist Soul thất bại hoặc túi Hồn đầy: characterId=" + characterId + " itemId=" + bagItem.itemId }
+            return
+        }
+
+        if (!inventorySystem.removeFromBag(characterId, bagIndex, 1)) {
+            val rolledBack = system.delete(characterId, created.sn)
+            logger.error {
+                "Đã tạo Soul nhưng không trừ được item, rollback=" + rolledBack +
+                    " characterId=" + characterId + " itemId=" + bagItem.itemId + " sn=" + created.sn
+            }
+            return
+        }
+
+        responseSender.sendReduceBagItem(session, bagIndex, 1)
+        responseSender.sendUseItemSuccess(session, bagItem.itemId, 1, showMsg = true)
+
+        // Lua DVT protocolTable[120][8]: result != 1 appends every received
+        // Soul into the next empty Soul bag slot. Therefore result=2 must carry
+        // only the newly created Soul, never the full snapshot.
+        sender.sendSnapshot(
+            session = session,
+            souls = listOf(created),
+            result = SoulResponseSender.RESULT_GACHA,
+        )
+
+        logger.info {
+            "CUSTOM OFFLINE Soul created: characterId=" + characterId +
+                " itemId=" + created.itemId + " sn=" + created.sn +
+                " element=" + created.element + " startAtt=" + created.startAtt +
+                " skills=" + created.skills
+        }
     }
 
     /**

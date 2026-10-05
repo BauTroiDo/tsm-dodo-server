@@ -41,6 +41,51 @@ class SoulSystem(
     fun equippedForNpc(characterId: Long, npcId: Int): SoulThingData? =
         cache[characterId]?.values?.firstOrNull { it.equipId == npcId }
 
+    suspend fun create(
+        characterId: Long,
+        template: SoulThingData,
+    ): SoulThingData? = lockFor(characterId).withLock {
+        val state = cache[characterId] ?: return@withLock null
+        if (state.size >= MAX_SOUL_BAG) return@withLock null
+
+        val nextFromClock = System.currentTimeMillis().coerceAtLeast(1L)
+        val nextFromState = ((state.keys.maxOrNull() ?: 0L) + 1L).coerceAtLeast(1L)
+        var sn = maxOf(nextFromClock, nextFromState)
+        while (state.containsKey(sn)) sn++
+
+        val created = template.copy(sn = sn)
+        validate(created)
+
+        try {
+            repository.save(characterId, created)
+            state[sn] = created
+            created
+        } catch (e: Exception) {
+            soulLogger.error(e) {
+                "Persist Soul create failed: characterId=" + characterId + " itemId=" + template.itemId
+            }
+            null
+        }
+    }
+
+    suspend fun delete(
+        characterId: Long,
+        sn: Long,
+    ): Boolean = lockFor(characterId).withLock {
+        val state = cache[characterId] ?: return@withLock false
+        if (!state.containsKey(sn)) return@withLock false
+        try {
+            repository.delete(characterId, sn)
+            state.remove(sn)
+            true
+        } catch (e: Exception) {
+            soulLogger.error(e) {
+                "Persist Soul delete failed: characterId=" + characterId + " sn=" + sn
+            }
+            false
+        }
+    }
+
     suspend fun equip(
         characterId: Long,
         npcId: Int,
@@ -114,6 +159,7 @@ class SoulSystem(
     }
 
     companion object {
+        const val MAX_SOUL_BAG = 100
         const val ERR_NO_PLAYER = 1
         const val ERR_NO_SOUL = 2
         const val ERR_MINING = 4

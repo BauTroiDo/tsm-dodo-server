@@ -62,6 +62,7 @@ class SoulResponseSender {
 
     companion object {
         const val RESULT_LOGIN = 1
+        const val RESULT_GACHA = 2
         const val SOUL_WIRE_SIZE = 53
     }
 }

@@ -12,6 +12,7 @@ import tw.tsm.app.handlers.*
 import tw.tsm.app.response.FurnaceResponseSender
 import tw.tsm.app.response.GodskinResponseSender
 import tw.tsm.app.response.InnResponseSender
+import tw.tsm.app.response.SoulResponseSender
 import tw.tsm.data.GameDataManager
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.StatCalculator
@@ -318,6 +319,14 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
         )
     }
     single { SoulSystem(get<SoulRepository>()) }
+    single {
+        OfflineSoulGenerationPolicy(
+            soulDefs = get<GameDataManager>().soulDefs,
+            npcSoulDefs = get<GameDataManager>().npcSoulDefs,
+            npcDefs = get<GameDataManager>().npcDefs,
+        )
+    }
+    single { SoulResponseSender() }
     single { ItemUseProcessor(get(), get<PetSystem>(), get<GameDataManager>().itemDefs, get<GameDataManager>().blissBagDefs) }
     single { EveEventStateMachine() }
     single {
@@ -569,7 +578,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { SceneHandler(get(), get()) }
     single { RelocateHandler(get(), get(), get(), get<LimitTimeDungeonSystem>(), get<DungeonSystem>(), get<EveTriggerRouter>()) }
     single { NpcEventHandler(get<EveTriggerRouter>(), get<EveFlowController>()) }
-    single { ItemHandler(get(), get(), get(), get(), get(), get<GameDataManager>().itemDefs, get(), get<PlayerStateManager>(), get<StatSystem>(), get(), get<FlyPointSystem>(), get<CharacterRepository>(), get<PetEquipSystem>(), get<QuestSystem>(), get<SkillSystem>(), get<DailyProgressSystem>(), get<PetSystem>(), get<GameDataManager>().npcDefs, get<RoleCountSystem>(), get<CollectionSystem>(), get<AstrolabeSystem>(), get<GameDataManager>().sacredEquipPrimaryDefs, get<CompoundSystem>()) }
+    single { ItemHandler(get(), get(), get(), get(), get(), get<GameDataManager>().itemDefs, get(), get<PlayerStateManager>(), get<StatSystem>(), get(), get<FlyPointSystem>(), get<CharacterRepository>(), get<PetEquipSystem>(), get<QuestSystem>(), get<SkillSystem>(), get<DailyProgressSystem>(), get<PetSystem>(), get<GameDataManager>().npcDefs, get<RoleCountSystem>(), get<CollectionSystem>(), get<AstrolabeSystem>(), get<GameDataManager>().sacredEquipPrimaryDefs, get<CompoundSystem>(), get<SoulSystem>(), get<OfflineSoulGenerationPolicy>(), get<SoulResponseSender>()) }
     single { NpcTradeHandler(get(), get(), get(), get<GameDataManager>().itemDefs, get()) }
     single { BankHandler(get(), get(), get<GameDataManager>().itemDefs, get()) }
     single { StorageHandler(get(), get(), get<GameDataManager>().itemDefs, get()) }

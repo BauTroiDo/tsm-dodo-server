@@ -3451,3 +3451,53 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Use native dump/client DAT/assets to verify transport, serialization, field layout, client-side behavior, and hidden implementation details not expressed in Lua.
 - If sources appear to conflict, resolve in this order: **Lua DVT > official TSN rules > DVT 1.15 native/client DAT/assets > Kotlin > PC fallback**.
 - For every future Soul/Dungeon/Item/Protocol audit, inspect the relevant Lua DVT files first before modifying server code.
+
+## 2026-10-05 — Soul acquisition made usable end-to-end with explicit CUSTOM OFFLINE generator
+
+- Goal of this step: make item Soul 595xx usable end-to-end without pretending the unknown original server generator is recovered.
+- Lua DVT remains supreme source. Official TSN website and DVT 1.15 client/native data are supporting evidence only.
+- Authoritative DVT flow now implemented:
+  1. Doro gives Soul boxes 32994/32995/34073/34074 (specialAbility48).
+  2. Opening those boxes via BlissBag yields Soul items 595xx (specialAbility240).
+  3. C:023-015 using a 595xx item invokes the Soul creation path.
+  4. `NpcSoul_C.dat` supplies itemId -> Soul avatar NPC + quality.
+  5. `Npc_C.dat` Soul avatar supplies the authoritative element.
+  6. `Soul_C.dat` supplies authoritative startPoint total and skill-count probabilities by quality.
+  7. Soul is persisted in `character_souls`, then S:120-008 result=2 sends the newly created Soul.
+  8. Only after Soul creation persists successfully is the 595xx item consumed.
+- Lua DVT `protocolTable[120][8]` was re-read and locked:
+  - result=1 (login) populates the full equipped/Soul bags from the received list.
+  - result!=1 appends each received Soul into the next free Soul-bag slot and shows a receive message.
+  - therefore result=2 MUST send only the newly created Soul(s), never the full Soul snapshot.
+- `SoulSystem` now has atomic `create()` and `delete()` support:
+  - enforces max Soul bag size 100;
+  - allocates a unique positive SN under the per-character mutex;
+  - repository save happens before publishing to cache;
+  - rollback delete is available if item consumption unexpectedly fails.
+- `SoulResponseSender` now defines `RESULT_GACHA = 2`.
+- `ItemHandler` now handles `EItemUseKind.SOUL=240` as a direct-use special case before generic item processing:
+  - generate template -> `SoulSystem.create()` -> consume exactly 1 bag item -> S:023-015 success -> S:120-008 count=1/result=2.
+  - if generate/persist fails or Soul bag is full, the item is NOT consumed.
+  - if item removal fails after create, the created Soul is deleted as rollback.
+- `OfflineSoulGenerationPolicy` is intentionally marked CUSTOM OFFLINE for only the two original-server details still unpublished:
+  - initial six-stat distribution: each of `startPoint` points is distributed uniformly at random among the 6 Soul stats; sum is always exactly authoritative `startPoint`.
+  - Soul skill-ID pool: independent Soul-skill whitelist derived only from unambiguous official DVT examples and exact IOS_Skill_C.dat IDs:
+    - 10004 Cây tinh (樹精)
+    - 10010 kết giới (結界)
+    - 11013 Thuật hồi sinh (復活)
+    - 11014 Băng phong (冰封)
+    - 13005 Thuật ẩn mình (隱身)
+  - 暈擊 is deliberately NOT mapped because the localized DAT contains multiple stun-producing skills and no authoritative one-to-one ID was found.
+  - selected Soul skill IDs are unique, initial skill level=1, and the number of selected slots follows authoritative `skillGetProb` from `Soul_C.dat`.
+- Everything outside those two CUSTOM choices remains DVT-authoritative: item mapping, quality, element, startPoint totals, skill-count probability, storage, packet wire, equip rules and battle consumers.
+- New regression `SoulOfflineGenerationRegressionTest`:
+  - loads real IOS_Soul_C.dat / IOS_NpcSoul_C.dat / IOS_Npc_C.dat / IOS_Skill_C.dat;
+  - verifies all four qualities preserve authoritative element/startPoint/skill-count bounds;
+  - verifies skill IDs are unique, level1 and in the explicit CUSTOM whitelist;
+  - verifies `SoulSystem.create/delete` persist-first cache behavior.
+- `SoulA2LoginSyncRegressionTest` now also locks S:120-008 result=2 as count=1 + exactly one Soul + final byte 2.
+- Validation:
+  - targeted Soul suite PASS;
+  - full `gradlew test build --rerun-tasks` PASS, 21/21 tasks;
+  - `git diff --check` PASS.
+- Deployment status at this checkpoint: local code complete and validated; not yet committed/deployed in this paragraph. Next action is commit/push, deploy to production `.69`, restart, then client test using 595xx item.

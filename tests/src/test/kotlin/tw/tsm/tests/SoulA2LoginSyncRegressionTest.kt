@@ -66,6 +66,24 @@ class SoulA2LoginSyncRegressionTest {
     }
 
     @Test
+    fun gachaReceiveSendsOnlyNewSoulWithResult2() {
+        val session = CaptureSession()
+        val soul = sampleSoul().copy(equipId = 0)
+        SoulResponseSender().sendSnapshot(
+            session = session,
+            souls = listOf(soul),
+            result = SoulResponseSender.RESULT_GACHA,
+        )
+
+        val packet = requireNotNull(session.packet)
+        assertEquals(120, packet[0].toInt() and 0xFF)
+        assertEquals(8, packet[1].toInt() and 0xFF)
+        assertEquals(1, (packet[3].toInt() and 0xFF) or ((packet[4].toInt() and 0xFF) shl 8))
+        assertEquals(2, packet.last().toInt() and 0xFF)
+        assertEquals(59, packet.size)
+    }
+
+    @Test
     fun emptyLoginSnapshotStillSendsAuthoritativeInitPacket() {
         val session = CaptureSession()
         SoulResponseSender().sendSnapshot(session, emptyList())
