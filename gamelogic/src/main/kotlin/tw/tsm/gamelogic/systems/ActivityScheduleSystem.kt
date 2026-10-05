@@ -17,6 +17,15 @@ class ActivityScheduleSystem(
     private val activityTimes: Map<Int, ActivityTimeDef>,
     private val adminBypassPolicy: AdminBypassPolicy = AdminBypassPolicy(),
 ) {
+    fun sendAllActivityStates(
+        session: GameSession,
+        now: LocalDateTime = LocalDateTime.now(),
+    ) {
+        activityTimes.keys.sorted().forEach { activityId ->
+            sendActivityState(session, activityId, now)
+        }
+    }
+
     fun sendActivityState(
         session: GameSession,
         activityId: Int,
@@ -57,6 +66,8 @@ class ActivityScheduleSystem(
         now: LocalDateTime,
         bypassSchedule: Boolean = false,
     ): Int {
+        if (bypassSchedule) return STATE_STARTED
+
         val staticStart = LocalDateTime.of(
             def.startYear, def.startMonth, def.startDay, def.startHour, def.startMinute
         )
@@ -65,7 +76,6 @@ class ActivityScheduleSystem(
         )
         if (now.isBefore(staticStart)) return STATE_NONE
         if (now.isAfter(staticEnd)) return STATE_ENDED
-        if (bypassSchedule) return STATE_STARTED
 
         if (!isOpenDay(def, now.toLocalDate())) return STATE_NONE
 

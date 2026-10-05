@@ -70,6 +70,32 @@ class DvtJudgmentTowerActivityTest {
     }
 
     @Test
+    fun allActivitySchedulesAreSentAndGmSeesThemStarted() {
+        val defs = JiugonggeDatLoader.loadActivityTimes(fixture("IOS_ActivityTime_C.dat"))
+        val system = ActivityScheduleSystem(defs)
+        val packets = mutableListOf<ByteArray>()
+        val gm = mockk<GameSession>()
+        every { gm.gmLevel } returns 99
+        every { gm.send(capture(packets)) } just runs
+
+        system.sendAllActivityStates(gm, LocalDateTime.of(2026, 10, 5, 21, 0))
+
+        val enabled = defs.values.count { it.switchKind >= 1 }
+        assertEquals(enabled * 2, packets.size)
+        val statePackets = packets.filter { p -> p.size >= 6 && (p[0].toInt() and 0xFF) == 77 && (p[1].toInt() and 0xFF) == 2 }
+        assertEquals(enabled, statePackets.size)
+        statePackets.forEach { p ->
+            PacketReader(p).let { r ->
+                assertEquals(77, r.readUByte())
+                assertEquals(2, r.readUByte())
+                assertEquals(0, r.readUByte())
+                r.readUShortLE()
+                assertEquals(ActivityScheduleSystem.STATE_STARTED, r.readUByte())
+            }
+        }
+    }
+
+    @Test
     fun gmBypassMakesClosedActivityStartedWithoutChangingNormalRules() {
         val defs = JiugonggeDatLoader.loadActivityTimes(fixture("IOS_ActivityTime_C.dat"))
         val system = ActivityScheduleSystem(defs)

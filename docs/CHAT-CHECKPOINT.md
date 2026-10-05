@@ -3600,3 +3600,19 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - AdminBypassPolicy injected into EveTriggerRouter.
 - Regression uses real Eve.emg scene12955 Eve2: normal empty state resolves null; GM override resolves the exact Talk53181 + Battle FightData key1 branch.
 - Targeted tests PASS; full local test/build PASS 21/21.
+
+## 2026-10-06 — GM mở toàn bộ lịch S.Kiện
+- User chuyển sang audit các sự kiện khác sau khi Teleport GM PASS.
+- `IOS_ActivityInfo_C.dat` có 25 activity records; nhóm đầu:
+  - id1 kind30 JudgmentTower / Giải cứu Nhị Kiều, Lv15, Chủ nhật 08:00-23:00.
+  - id2 kind31 MixVS / Đấu tổ đội, Lv15, openDayMask=8, 19:00-21:00.
+  - id3 kind32 ChaosVS / Loạn đấu lôi đài, Lv15, openDayMask=2, 19:00-21:00.
+  - id4 kind33 DareNpc / Khiêu chiến lôi đài NPC, Lv15, openDayMask=21, 19:00-21:00.
+  - id5 kind34 KingOfTheWorld / World Boss, Lv15, openDayMask=127, 10:00-23:00.
+- Lua `UIActivity.OnClick_Go()` xác nhận mọi activity thường đều gửi C:077-003 + activityId(U16), ngoại trừ ArmyBattle dùng 171-007.
+- Trước patch LoginService chỉ gửi S:077-001/002 cho activityId=1, nên các event khác không có runtime state từ server.
+- `ActivityScheduleSystem` thêm `sendAllActivityStates()` và LoginService giờ gửi runtime schedule/state cho toàn bộ activityTimeDefs khi đăng nhập.
+- GM `gmLevel>0` được `STATE_STARTED` trước cả static lifetime/day/time checks, đúng yêu cầu test mọi event; account thường vẫn giữ nguyên DVT lifetime/day/time.
+- Regression `allActivitySchedulesAreSentAndGmSeesThemStarted` dùng real IOS_ActivityTime_C.dat: mọi enabled activity có đủ S77-1/S77-2 và GM đều STARTED.
+- Targeted test PASS; full local `gradlew test build --rerun-tasks` PASS 21/21.
+- Entry backend C77-003 hiện mới authoritative cho id1; id2..id5 sẽ audit/implement lần lượt, không đoán scene đích.

@@ -340,10 +340,7 @@ class LoginService(
 
         // S:077 runtime schedule/state. Lua UIActivity keeps static ActivityTime_C locally
         // but requires S:077-001/002 to know the actual current window/state.
-        activityScheduleSystem?.sendActivityState(
-            session,
-            ActivityScheduleSystem.JUDGMENT_TOWER_ACTIVITY_ID,
-        )
+        activityScheduleSystem?.sendAllActivityStates(session)
 
         // S:077 thời gian hoạt động runtime + S:091-001 bảng cửu cung daily.
         // UIJiugongge opens later from the Hằng ngày button and expects this state to exist.
