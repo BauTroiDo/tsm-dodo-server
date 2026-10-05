@@ -76,6 +76,11 @@ class AdminBypassAndActivityEntryTest {
             ActivityHandler.ActivityNavigationEntry(12001, 38177, 1870, 1180),
             entries[ActivityHandler.WORLD_BOSS_ACTIVITY_ID],
         )
+        assertEquals(
+            ActivityHandler.ActivityNavigationEntry(49909, 27141, 1010, 560),
+            entries[ActivityHandler.IMMORTAL_ARENA_ACTIVITY_ID],
+        )
+        assertEquals(65, ActivityHandler.minimumLevel(ActivityHandler.IMMORTAL_ARENA_ACTIVITY_ID))
     }
 
     @Test

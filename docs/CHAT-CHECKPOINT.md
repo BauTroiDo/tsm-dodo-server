@@ -3648,3 +3648,22 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
   - full gradlew test build --rerun-tasks: BUILD SUCCESSFUL, 21/21 tasks executed.
   - git diff --check: PASS before full build; final check performed again before commit.
 - Next: deploy production 192.168.1.69:6613 and runtime-test GM "Đến ngay" for id2/3/4/5. Arrival should be navigation to the entry NPC; deeper matchmaking/WorldBoss protocol73 behavior is a separate backend slice if runtime exposes it.
+
+
+## 2026-10-06 — World Boss live PASS + Activity id37 Tiên Đấu entry
+- World Boss id5 runtime root cause confirmed on production before deploy: logs showed `C77-003 activityId=5 chưa hỗ trợ` while production HEAD was 007e1f0.
+- Deployed commit f20e7b9 to production 192.168.1.69 via Git Bash SSH + verified bundle, preserving local application.conf.
+- Production full `gradlew test build --rerun-tasks` PASS 21/21, restart recovered correctly, port 6613 and login runtime healthy; user confirmed World Boss works.
+- Continued activity audit from real IOS_ActivityInfo_C.dat / TextData / Talk_C / Eve.emg.
+- Next authoritative entry locked:
+  - activityId37 kind48, subTag 99596 = Tiên Đấu, required level 65.
+  - Eve scene49909 contains unique npc27141 `T.Đấu Trọngtài` at (1010,560).
+  - Talk33567 from that NPC explicitly states this is the Tiên Đấu referee, solo-only, no charms, pet loyalty >=40.
+  - Therefore C77-003 id37 uses the same Lua S77-003 result=1 navigation contract to scene49909/(1010,560), not direct teleport.
+- ActivityHandler updated:
+  - adds IMMORTAL_ARENA_ACTIVITY_ID=37 / entry NPC 27141;
+  - derives entry from the unique Eve placement at runtime;
+  - normal players require Lv65 for id37; GM level bypass remains centralized in AdminBypassPolicy.
+- Regression AdminBypassAndActivityEntryTest locks exact id37 mapping and Lv65.
+- Validation local: targeted PASS; git diff --check PASS; full `gradlew test build --rerun-tasks` PASS 21/21.
+- Vô Giới id89/90/92 and Tử chiến TS id21 remain under evidence audit; do not guess their entry NPC. Evidence found: scene12003 has LôiĐàiTruyềnSư, NVthụlýtrậnđấu, VGTruyềnTốngSư, Quản Lý LôiĐài, but these roles must be distinguished before wiring C77-003.

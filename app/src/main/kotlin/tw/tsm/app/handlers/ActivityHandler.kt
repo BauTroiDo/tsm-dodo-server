@@ -54,7 +54,8 @@ class ActivityHandler(
             }
             return
         }
-        if (!adminBypassPolicy.bypassLevel(session) && session.level < ACTIVITY_MIN_LEVEL) return
+        val requiredLevel = minimumLevel(activityId)
+        if (!adminBypassPolicy.bypassLevel(session) && session.level < requiredLevel) return
 
         if (activityId == ActivityScheduleSystem.JUDGMENT_TOWER_ACTIVITY_ID) {
             val entry = deriveJudgmentTowerEntry(eveData) ?: run {
@@ -107,11 +108,13 @@ class ActivityHandler(
         const val CHAOS_VS_ACTIVITY_ID = 3
         const val DARE_NPC_ACTIVITY_ID = 4
         const val WORLD_BOSS_ACTIVITY_ID = 5
+        const val IMMORTAL_ARENA_ACTIVITY_ID = 37
 
         private const val MIX_VS_ENTRY_NPC_ID = 15163
         private const val CHAOS_VS_ENTRY_NPC_ID = 15226
         private const val DARE_NPC_ENTRY_NPC_ID = 15244
         private const val WORLD_BOSS_ENTRY_NPC_ID = 38177
+        private const val IMMORTAL_ARENA_ENTRY_NPC_ID = 27141
         private const val GRID = 20
 
         fun deriveJudgmentTowerEntry(eveData: Map<Int, SceneEveData>): Pair<Int, Int>? {
@@ -122,6 +125,12 @@ class ActivityHandler(
                 ?: return null
             return inbound.playerAppearX * GRID to inbound.playerAppearY * GRID
         }
+
+        fun minimumLevel(activityId: Int): Int =
+            when (activityId) {
+                IMMORTAL_ARENA_ACTIVITY_ID -> 65
+                else -> ACTIVITY_MIN_LEVEL
+            }
 
         /**
          * DVT UIActivity does not receive a direct teleport for arena activities.
@@ -166,6 +175,20 @@ class ActivityHandler(
                 val (sceneId, npc) = worldBossPlacements.single()
                 result[WORLD_BOSS_ACTIVITY_ID] = ActivityNavigationEntry(
                     sceneId, WORLD_BOSS_ENTRY_NPC_ID, npc.x, npc.y
+                )
+            }
+
+            val immortalArenaPlacements = eveData.entries.asSequence()
+                .flatMap { (sceneId, scene) ->
+                    scene.npcs.values.asSequence()
+                        .filter { it.npcId == IMMORTAL_ARENA_ENTRY_NPC_ID }
+                        .map { sceneId to it }
+                }
+                .toList()
+            if (immortalArenaPlacements.size == 1) {
+                val (sceneId, npc) = immortalArenaPlacements.single()
+                result[IMMORTAL_ARENA_ACTIVITY_ID] = ActivityNavigationEntry(
+                    sceneId, IMMORTAL_ARENA_ENTRY_NPC_ID, npc.x, npc.y
                 )
             }
             return result
