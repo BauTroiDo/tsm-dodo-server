@@ -2,6 +2,7 @@ package tw.tsm.tests
 
 import io.mockk.every
 import io.mockk.mockk
+import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -52,6 +53,48 @@ class AdminBypassAndActivityEntryTest {
         val eve = EveDataLoader.load(file("gamedata", "Eve.emg"))
         assertEquals(12921, ActivityHandler.JUDGMENT_TOWER_SCENE_ID)
         assertEquals(620 to 1200, ActivityHandler.deriveJudgmentTowerEntry(eve))
+    }
+
+    @Test
+    fun arenaAndWorldBossEntriesAreDerivedFromAuthoritativeEvePlacements() {
+        val eve = EveDataLoader.load(file("gamedata", "Eve.emg"))
+        val entries = ActivityHandler.deriveActivityNavigationEntries(eve)
+
+        assertEquals(
+            ActivityHandler.ActivityNavigationEntry(10991, 15163, 1070, 120),
+            entries[ActivityHandler.MIX_VS_ACTIVITY_ID],
+        )
+        assertEquals(
+            ActivityHandler.ActivityNavigationEntry(10991, 15226, 990, 260),
+            entries[ActivityHandler.CHAOS_VS_ACTIVITY_ID],
+        )
+        assertEquals(
+            ActivityHandler.ActivityNavigationEntry(10991, 15244, 990, 260),
+            entries[ActivityHandler.DARE_NPC_ACTIVITY_ID],
+        )
+        assertEquals(
+            ActivityHandler.ActivityNavigationEntry(12001, 38177, 1870, 1180),
+            entries[ActivityHandler.WORLD_BOSS_ACTIVITY_ID],
+        )
+    }
+
+    @Test
+    fun activityNavigationPacketMatchesLuaS77Sub3Result1Contract() {
+        val entry = ActivityHandler.ActivityNavigationEntry(
+            sceneId = 10991,
+            npcId = 15163,
+            x = 1070,
+            y = 120,
+        )
+        assertArrayEquals(
+            byteArrayOf(
+                77, 3, 0, 1,
+                0xEF.toByte(), 0x2A,
+                0x2E, 0x04,
+                0x78, 0x00,
+            ),
+            ActivityHandler.navigationPacket(entry),
+        )
     }
 
     @Test

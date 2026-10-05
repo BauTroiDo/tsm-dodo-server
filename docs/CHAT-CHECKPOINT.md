@@ -3616,3 +3616,35 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Regression `allActivitySchedulesAreSentAndGmSeesThemStarted` dùng real IOS_ActivityTime_C.dat: mọi enabled activity có đủ S77-1/S77-2 và GM đều STARTED.
 - Targeted test PASS; full local `gradlew test build --rerun-tasks` PASS 21/21.
 - Entry backend C77-003 hiện mới authoritative cho id1; id2..id5 sẽ audit/implement lần lượt, không đoán scene đích.
+
+
+## 2026-10-06 — Activity 77 entry id2–id5 fixed from authoritative DVT Eve/Talk
+
+- Root cause after GM-open-all-schedules commit 007e1f0:
+  - Login/UI state was correct for all enabled activities, but ActivityHandler still hard-returned every C:077-003 activityId != 1.
+  - Therefore GM saw events as STARTED but pressing "Đến ngay" for other events did nothing.
+- Re-read Lua DVT protocol 77:
+  - S:077-003 result=1 payload = sceneId U16 + X U16 + Y U16.
+  - Client calls MarkManager.StartNavigation(0, sceneId, 1, position); this is navigation to the event entry NPC, not direct teleport.
+- Locked public entry NPCs from IOS_Npc_C.dat + Talk_C.dat + Eve.emg:
+  - activityId2 MixVS / Đoàn P -> scene10991, npc15163 "Chủ Lôi Đài", (1070,120). Talk12334 explicitly describes 5v5.
+  - activityId3 ChaosVS / Loạn đấu -> scene10991, npc15226 "Chủ LoạnĐấuĐài", (990,260). Talk12345/12346 explicitly describe solo chaos arena registration.
+  - activityId4 DareNpc / Khiêu chiến lôi đài NPC -> scene10991, npc15244 "Chủđài Kchiến", (990,260). Eve chain + Talk20217 identify challenge-arena flow/reward.
+  - activityId5 KingOfTheWorld / World Boss -> scene12001, npc38177 "BOSSKhiêuChiến", (1870,1180). Talk52373/52376/52377/52378 matches no-team, five-attempt World Boss rules.
+  - scene10991 also contains Bảng Công Bố npc24009 / Talk20220 naming the three arena schedules, strengthening the mapping.
+- ActivityHandler now:
+  - keeps activityId1 JudgmentTower direct teleport behavior unchanged;
+  - supports id2..5 with the authoritative S77-003 result=1 navigation contract;
+  - derives arena scene/coordinates from Eve at runtime by requiring the three authoritative entry NPCs in one public scene, avoiding stale hard-coded coordinates;
+  - derives World Boss entry from the unique Eve placement of npc38177;
+  - keeps normal-player schedule + Lv15 checks; GM continues to bypass schedule/level via AdminBypassPolicy.
+  - unsupported later activity IDs remain explicitly unimplemented rather than guessed.
+- Regression AdminBypassAndActivityEntryTest:
+  - locks exact Eve-derived mappings id2..5;
+  - byte-locks S77-003 result=1 packet for scene10991/(1070,120);
+  - existing Judgment Tower/GM battle-gate regressions remain green.
+- Validation:
+  - targeted AdminBypassAndActivityEntryTest + DvtJudgmentTowerActivityTest: BUILD SUCCESSFUL.
+  - full gradlew test build --rerun-tasks: BUILD SUCCESSFUL, 21/21 tasks executed.
+  - git diff --check: PASS before full build; final check performed again before commit.
+- Next: deploy production 192.168.1.69:6613 and runtime-test GM "Đến ngay" for id2/3/4/5. Arrival should be navigation to the entry NPC; deeper matchmaking/WorldBoss protocol73 behavior is a separate backend slice if runtime exposes it.
