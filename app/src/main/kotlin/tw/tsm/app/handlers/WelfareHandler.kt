@@ -62,6 +62,9 @@ class WelfareHandler(
         val kind = reader.readUByte()
         val requestedDay = reader.readIntLE()
         val count = reader.readUByte()
+        welfareLogger.info {
+            "Welfare C87-002: roleId=${session.roleId} playerId=${session.playerId} kind=$kind day=$requestedDay count=$count"
+        }
         if (reader.remaining != 0 || count != 1) {
             sendClaimResult(session, kind, RESULT_WRONG_KIND)
             return

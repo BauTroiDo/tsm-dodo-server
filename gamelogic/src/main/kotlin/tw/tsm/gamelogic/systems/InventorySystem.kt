@@ -54,7 +54,12 @@ class InventorySystem(
         banks[characterId] = bankData
         storages[characterId] = storageData
 
-        logger.info { "Tải vật phẩm nhân vật: characterId=$characterId Túi đồ=${bagData.size} Trang bị=${equipData.size} Tiền trang=${bankData.size} Bảo khố=${storageData.size}" }
+        logger.info {
+            "Tải vật phẩm nhân vật: characterId=$characterId Túi đồ=${bagData.size} " +
+                "slotMin=${bagData.keys.minOrNull()} slotMax=${bagData.keys.maxOrNull()} " +
+                "capacity=${roleCountSystem.getBagCapacity(characterId)} " +
+                "Trang bị=${equipData.size} Tiền trang=${bankData.size} Bảo khố=${storageData.size}"
+        }
     }
 
     /**
@@ -216,7 +221,10 @@ class InventorySystem(
         characterId: Long,
         rewards: List<Pair<Int, Int>>,
     ): List<Pair<Int, ThingData>>? {
-        val bag = bags[characterId] ?: return null
+        val bag = bags[characterId] ?: run {
+            logger.warn { "addItemBundleToBagExact: chưa nạp túi characterId=$characterId" }
+            return null
+        }
         val normalized = rewards
             .filter { (itemId, qty) -> itemId > 0 && qty > 0 }
             .groupBy({ it.first }, { it.second })
@@ -228,7 +236,10 @@ class InventorySystem(
         val simulated = before.toMutableMap()
 
         for ((itemId, totalQty) in normalized) {
-            val def = itemDefs[itemId] ?: return null
+            val def = itemDefs[itemId] ?: run {
+                logger.warn { "addItemBundleToBagExact: thiếu ItemDef itemId=$itemId characterId=$characterId" }
+                return null
+            }
             val stackLimit = if (def.fitType == 0) ItemConstants.MAX_STACK else 1
             var remaining = totalQty
 
@@ -245,7 +256,13 @@ class InventorySystem(
 
             while (remaining > 0) {
                 val emptySlot = (0 until capacity).firstOrNull { !simulated.containsKey(it) }
-                    ?: return null
+                    ?: run {
+                        logger.warn {
+                            "addItemBundleToBagExact: túi thực sự đầy characterId=$characterId " +
+                                "capacity=$capacity bagSize=${before.size} itemId=$itemId remaining=$remaining"
+                        }
+                        return null
+                    }
                 val qty = minOf(remaining, stackLimit)
                 simulated[emptySlot] = ThingData(itemId = itemId, quantity = qty)
                 remaining -= qty

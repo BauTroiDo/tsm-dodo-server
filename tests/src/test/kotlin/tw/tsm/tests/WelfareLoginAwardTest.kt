@@ -9,6 +9,7 @@ import java.nio.file.Path
 import tw.tsm.app.handlers.WelfareHandler
 import tw.tsm.data.GameDataManager
 import tw.tsm.data.loaders.LoginAwardDatLoader
+import tw.tsm.data.loaders.ItemDatLoader
 import tw.tsm.domain.data.LoginAwardDef
 import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.GameSession
@@ -49,6 +50,13 @@ class WelfareLoginAwardTest {
         assertThrows(IllegalArgumentException::class.java) {
             LoginAwardDatLoader.load(bytes + byteArrayOf(0))
         }
+    }
+
+    @Test
+    fun `OpenServer day1 physical rewards exist in authoritative item table`() {
+        val defs = ItemDatLoader.load(fixture("File.dat", "Data-ios", "IOS_Item_C.dat"))
+        val missing = listOf(46575, 51964, 65345, 35671).filterNot { defs.containsKey(it) }
+        assertTrue(missing.isEmpty(), "Missing OpenServer reward item defs: $missing")
     }
 
     @Test
