@@ -3390,3 +3390,23 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
   - asserts 240 is never consumed as generic/no-op.
 - Validation: targeted Soul safety tests PASS; full `gradlew test build --rerun-tasks` PASS, 21/21 tasks; `git diff --check` PASS.
 - Next safe work: commit/push/deploy this loss-prevention guard to production, then continue server-side evidence search for the missing Soul generator. Do NOT change Doro to issue SoulThing directly.
+
+## 2026-10-05 — Soul guard production PASS + MoonDev generator ruled out
+
+- Commit `a749513` (`fix: preserve Soul items until generator is verified`) pushed to GitHub main and deployed to production `.69`.
+- Production validation:
+  - source HEAD `a749513108b77a6c12ec7089aa0eafe8d3d8dc95`;
+  - full production `gradlew test build --rerun-tasks` PASS, 21/21 tasks;
+  - runtime restarted cleanly via `_launch_prod_wmi.cmd`;
+  - production listener `0.0.0.0:6613` is active on Java PID 11592;
+  - startup log confirms server ready and accepting local health-check connections.
+- Runtime guard behavior now active: item Soul 595xx / `specialAbility=240` is NOT consumed until authoritative SoulThing generation is implemented.
+- Reverse-engineering update:
+  - all seven workspace copies of `NpcSkillProb_C.dat` are byte-identical 4-byte stubs: `02 00 00 00` (count=2, no payload); this includes server-data and CDN 2.4.69/2.4.76/2.7 copies.
+  - the previous `probs=[...]` strings recovered from MoonDev were traced to Eve GroupData selection logs, not Soul skill probabilities.
+  - `UpdateSoulPoints` recovered from MoonDev is `RequiemSub.UpdateSoulPoints`, unrelated to Soul item generation.
+  - IL-level xref over extracted `TSM.GameServer.dll` against `TSM.Shared.Protocol.SoulSub` returned `HITS=0`.
+  - therefore the MoonDev package has Soul protocol enum scaffolding in `TSM.Shared`, but its actual GameServer does not implement SoulSub handlers and cannot provide an authoritative initial Soul generator.
+  - exact public-web searches for `NpcSkillProb_C.dat`, `NpcSoul_C.dat`, `Soul_C.dat`, and `TSM.Shared.Protocol.SoulSub` produced no usable external source.
+- Current evidence-block remains unchanged and explicit: no authoritative source for initial 6-stat distribution, initial skill-ID pool/selection, or exact initial element derivation.
+- Do NOT fabricate official DVT semantics. If an offline fallback is later desired, implement it behind an explicitly custom/offline policy and keep the DVT evidence status documented.
