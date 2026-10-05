@@ -124,6 +124,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             register(get<TeleportHandler>())
             register(get<LimitTimeDungeonHandler>())
             register(get<DungeonHandler>())
+            register(get<EternalDungeonHandler>())
             register(get<AchievementHandler>())
             register(get<EmoteHandler>())
             register(get<DispatchHandler>())
@@ -706,6 +707,13 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { PetUpgradeHandler(get(), get()) }
     single { PetRebornHandler(get(), get(), get()) }
     single { JiugonggeHandler(get()) }
+    single {
+        EternalDungeonHandler(
+            get<RoleCountSystem>(),
+            get<GameDataManager>().eternalDungeonLayerDefs,
+            get<GameDataManager>().eternalDungeonPrizeDefs,
+        )
+    }
     single { ActivityHandler(get<ActivityScheduleSystem>(), get<AdminBypassPolicy>(), get<SpecialSceneTeleportService>(), get<GameDataManager>().activityTimeDefs, get<GameDataManager>().eveData) }
     single { ActivityModelHandler() }
     single { MallHandler(get(), get(), get<PointSystem>(), get<MoneySystem>(), get<PlayerCurrencySystem>(), get<ResponseSender>()) }

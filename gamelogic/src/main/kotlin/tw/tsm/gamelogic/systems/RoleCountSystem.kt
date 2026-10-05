@@ -248,6 +248,9 @@ class RoleCountSystem(
         /** DVT RoleCount.lua: kinh nghiệm phản hồi khi tặng Souvenir. */
         const val SOUVENIR_FEEDBACK_EXP = 696
 
+        /** DVT RoleCount.lua: số tầng Eternal Dungeon đã vượt qua. */
+        const val ETERNAL_DUNGEON = 707
+
         /** DVT RoleCount.lua: tổng tiền game mua quà trong ngày. */
         const val BUY_GIFT_MAX_MONEY = 987
     }

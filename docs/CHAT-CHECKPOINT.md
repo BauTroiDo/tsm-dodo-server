@@ -3738,3 +3738,59 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
   - targeted AdminBypassAndActivityEntryTest PASS.
   - full gradlew test build --rerun-tasks PASS 21/21.
   - git diff --check PASS.
+
+
+## 2026-10-06 — Activity id96 Thần Binh Bảo Khố / Eternal Dungeon A1+A2
+
+- ActivityInfo authoritative:
+  - activityId=96, kind=119, Lv15, bitFunction=1.
+  - Vietnamese UI: mainTag 23316 = "Địa Tầng Thâm Uyên", subTag 25087 = "Thần Binh Bảo Khố".
+- Lua DVT protocol 48 locked:
+  - C:048-001: UI sends selected layer Int32 when pressing battle.
+  - C:048-002: UI sends requested layer Int32 from RequestInfo().
+  - S:048-001: result U8; result=3 shows message 21971, otherwise closes UI.
+  - S:048-002: layer Int32 + result U8; client calls OverBattle(result) then reopens UI.
+  - S:048-003: no payload; client opens UIEternalDungeon.
+  - S:048-004 (Lua comment stale as 006): layer Int32 + count Int32 + record payload; client updates layer record list.
+- Entry from S.Kiện:
+  - No authoritative public NPC/navigation target could be locked from Eve/Talk/data for id96.
+  - Therefore C:077-003 id96 now bridges to authoritative S:048-003, which is the client registration/open-UI packet, rather than inventing a map/NPC.
+  - Normal Lv15/schedule validation remains in ActivityHandler; GM uses existing AdminBypassPolicy.
+- RoleCount:
+  - ERoleCount.EternalDungeon = 707.
+  - Lua UIEternalDungeon.OnOpen uses currentLayer = RoleCount.Get(707) + 1, so 707 is number of cleared layers, not current layer.
+- Authoritative DAT loaders added:
+  - IOS_EternalDungeonLayer_C.dat: 19 records, 13 bytes each:
+    id U16 + effects[3] U16 + compare U8 + needs[2] U16.
+  - IOS_EternalDungeonPrize_C.dat: 30 records, 19 bytes each:
+    id Int32 + 5 × (itemId U16 + count U8).
+  - Real data examples locked:
+    layer1 effects=[0,0,0], compare=2, needs=[8,10].
+    layer30 effects=[113,0,0], compare=2, needs=[8,10].
+    prize1 = 35290x1 + 33989x3.
+    prize30 = 35344x1 + 32708x1 + 65301x200.
+- Criteria evidence:
+  - DungeonCriteria 8: follow NPCs, element, equality, values 3/7.
+  - DungeonCriteria 10: follow NPCs, element, equality, values 7/3.
+  - Lua follow-NPC evaluator accepts primary OR secondary value for each follow NPC.
+- Backend A2:
+  - added Opcodes.ETERNAL_DUNGEON=48.
+  - EternalDungeonHandler registered in dispatcher/Koin.
+  - C48-002 returns S48-004 with requested normalized layer and count=0 offline record list.
+  - helper packet contracts for S48-001/002/003/004 are byte-regressed.
+  - GameDataManager loads both Eternal Dungeon DAT tables.
+- A3 battle/progression is deliberately evidence-blocked:
+  - MoonDev fallback proves a server-side design using war style39, RoleCount707 progression and prize table.
+  - Its battle generator requires three server-side datasets not present in DVT client/workspace: enriched layer NPC configs, EternalDungeonNpcs, EternalDungeonBaseAttrDefs.
+  - MoonDev parser shapes were recovered (NPC records 7 bytes; BaseAttr records 13 bytes; enriched layer includes five NPC configs), but exhaustive workspace scan found no matching authoritative binary tables.
+  - C48-001 therefore logs the blocker and does NOT create guessed monsters/rewards.
+- Validation:
+  - targeted EternalDungeonDataTest PASS.
+  - real DAT parser regression PASS.
+  - protocol 48 byte regression PASS.
+  - full gradlew test build --rerun-tasks PASS 21/21.
+  - git diff --check PASS.
+- Next:
+  - commit/push/deploy A1+A2 to production .69.
+  - client test: S.Kiện -> Thần Binh Bảo Khố must open UI and show layer/reward data.
+  - Resume A3 only when authoritative server-side EternalDungeon monster tables are recovered; do not invent them.

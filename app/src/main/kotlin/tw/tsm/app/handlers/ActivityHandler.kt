@@ -57,6 +57,15 @@ class ActivityHandler(
         val requiredLevel = minimumLevel(activityId)
         if (!adminBypassPolicy.bypassLevel(session) && session.level < requiredLevel) return
 
+        if (activityId == ETERNAL_DUNGEON_ACTIVITY_ID) {
+            session.send(EternalDungeonHandler.registrationPacket())
+            activityLogger.info {
+                session.characterName + " mở Thần Binh Bảo Khố activityId=" + activityId +
+                    " gmLevel=" + session.gmLevel
+            }
+            return
+        }
+
         if (activityId == ActivityScheduleSystem.JUDGMENT_TOWER_ACTIVITY_ID) {
             val entry = deriveJudgmentTowerEntry(eveData) ?: run {
                 activityLogger.error { "Không tìm được Eve reverse-link vào Tháp thí luyện 12921" }
@@ -113,6 +122,7 @@ class ActivityHandler(
         const val UNBOUNDED_CHAOS_ACTIVITY_ID = 90
         const val UNBOUNDED_LV100_ACTIVITY_ID = 92
         const val MID_AUTUMN_ACTIVITY_ID = 94
+        const val ETERNAL_DUNGEON_ACTIVITY_ID = 96
         const val UNBOUNDED_DUEL_ACTIVITY_ID = 124
 
         private const val MIX_VS_ENTRY_NPC_ID = 15163

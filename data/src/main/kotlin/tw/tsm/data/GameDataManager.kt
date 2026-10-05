@@ -122,6 +122,14 @@ class GameDataManager(
     var dungeonCriteriaDefs: Map<Int, DungeonCriteriaDef> = emptyMap()
         private set
 
+    /** DVT Eternal Dungeon layer breakpoints from IOS_EternalDungeonLayer_C.dat. */
+    var eternalDungeonLayerDefs: Map<Int, EternalDungeonLayerDef> = emptyMap()
+        private set
+
+    /** DVT Eternal Dungeon rewards for layers 1..30. */
+    var eternalDungeonPrizeDefs: Map<Int, EternalDungeonPrizeDef> = emptyMap()
+        private set
+
     /** Khu luyện công giới hạn DVT từ IOS_LimitTimeDungeon_C.dat, key=index. */
     var limitTimeDungeonDefs: Map<Int, LimitTimeDungeonDef> = emptyMap()
         private set
@@ -476,6 +484,16 @@ class GameDataManager(
         loadFile(dataIosDir, "IOS_DungeonCriteria_C.dat") { bytes ->
             dungeonCriteriaDefs = DungeonCriteriaDatLoader.load(bytes)
             logger.info { "Nạp IOS_DungeonCriteria xong: ${dungeonCriteriaDefs.size} bản ghi" }
+        }
+
+        loadFile(dataIosDir, "IOS_EternalDungeonLayer_C.dat") { bytes ->
+            eternalDungeonLayerDefs = EternalDungeonLayerDatLoader.load(bytes)
+            logger.info { "Nạp IOS_EternalDungeonLayer xong: ${eternalDungeonLayerDefs.size} mốc tầng" }
+        }
+
+        loadFile(dataIosDir, "IOS_EternalDungeonPrize_C.dat") { bytes ->
+            eternalDungeonPrizeDefs = EternalDungeonPrizeDatLoader.load(bytes)
+            logger.info { "Nạp IOS_EternalDungeonPrize xong: ${eternalDungeonPrizeDefs.size} tầng thưởng" }
         }
 
         // Linh Hồn — đúng ba bảng Lua DVT DataManager.OnLoadSoul*.

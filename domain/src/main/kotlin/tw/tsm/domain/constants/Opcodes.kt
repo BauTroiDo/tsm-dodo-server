@@ -141,6 +141,9 @@ object Opcodes {
     /** Phó bản / Dungeon (DVT protocolTable[47]) */
     const val DUNGEON = 47
 
+    /** Thần Binh Bảo Khố / Eternal Dungeon (DVT protocolTable[48]) */
+    const val ETERNAL_DUNGEON = 48
+
     /** Alias cũ; protocol 47 thực tế là Dungeon trong Lua DVT. */
     @Deprecated("Use DUNGEON; DVT protocolTable[47] is Dungeon")
     const val MISSION = DUNGEON
