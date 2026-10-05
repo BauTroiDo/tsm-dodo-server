@@ -6,7 +6,6 @@ import tw.tsm.domain.util.OleDate
 import tw.tsm.protocol.PacketWriter
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.LocalTime
 
 /**
  * DVT protocol 77 schedule/state bridge.
@@ -16,6 +15,7 @@ import java.time.LocalTime
  */
 class ActivityScheduleSystem(
     private val activityTimes: Map<Int, ActivityTimeDef>,
+    private val adminBypassPolicy: AdminBypassPolicy = AdminBypassPolicy(),
 ) {
     fun sendActivityState(
         session: GameSession,
@@ -25,12 +25,15 @@ class ActivityScheduleSystem(
         val def = activityTimes[activityId] ?: return
         if (def.switchKind < 1) return
 
+        val bypassSchedule = adminBypassPolicy.bypassSchedule(session)
         val today = now.toLocalDate()
-        val start = today.atTime(def.openHour, def.openMinute)
-        var close = today.atTime(def.closeHour, def.closeMinute)
+        val start = if (bypassSchedule) now.minusMinutes(1)
+        else today.atTime(def.openHour, def.openMinute)
+        var close = if (bypassSchedule) now.plusDays(1)
+        else today.atTime(def.closeHour, def.closeMinute)
         if (!close.isAfter(start)) close = close.plusDays(1)
 
-        val state = calculateState(def, now)
+        val state = calculateState(def, now, bypassSchedule)
 
         session.send(
             PacketWriter()
@@ -49,7 +52,11 @@ class ActivityScheduleSystem(
         )
     }
 
-    fun calculateState(def: ActivityTimeDef, now: LocalDateTime): Int {
+    fun calculateState(
+        def: ActivityTimeDef,
+        now: LocalDateTime,
+        bypassSchedule: Boolean = false,
+    ): Int {
         val staticStart = LocalDateTime.of(
             def.startYear, def.startMonth, def.startDay, def.startHour, def.startMinute
         )
@@ -58,6 +65,7 @@ class ActivityScheduleSystem(
         )
         if (now.isBefore(staticStart)) return STATE_NONE
         if (now.isAfter(staticEnd)) return STATE_ENDED
+        if (bypassSchedule) return STATE_STARTED
 
         if (!isOpenDay(def, now.toLocalDate())) return STATE_NONE
 

@@ -44,6 +44,7 @@ class DvtJudgmentTowerActivityTest {
         val system = ActivityScheduleSystem(defs)
         val packets = mutableListOf<ByteArray>()
         val session = mockk<GameSession>()
+        every { session.gmLevel } returns 0
         every { session.send(capture(packets)) } just runs
 
         system.sendActivityState(session, ActivityScheduleSystem.JUDGMENT_TOWER_ACTIVITY_ID, LocalDateTime.of(2026, 10, 11, 9, 0))
@@ -65,6 +66,33 @@ class DvtJudgmentTowerActivityTest {
             assertEquals(1, r.readUShortLE())
             assertEquals(1, r.readUByte())
             assertEquals(0, r.remaining)
+        }
+    }
+
+    @Test
+    fun gmBypassMakesClosedActivityStartedWithoutChangingNormalRules() {
+        val defs = JiugonggeDatLoader.loadActivityTimes(fixture("IOS_ActivityTime_C.dat"))
+        val system = ActivityScheduleSystem(defs)
+        val monday = LocalDateTime.of(2026, 10, 5, 21, 0)
+
+        val normalPackets = mutableListOf<ByteArray>()
+        val normal = mockk<GameSession>()
+        every { normal.gmLevel } returns 0
+        every { normal.send(capture(normalPackets)) } just runs
+        system.sendActivityState(normal, ActivityScheduleSystem.JUDGMENT_TOWER_ACTIVITY_ID, monday)
+        PacketReader(normalPackets[1]).let { r ->
+            r.readUByte(); r.readUByte(); r.readUByte(); r.readUShortLE()
+            assertEquals(ActivityScheduleSystem.STATE_NONE, r.readUByte())
+        }
+
+        val gmPackets = mutableListOf<ByteArray>()
+        val gm = mockk<GameSession>()
+        every { gm.gmLevel } returns 1
+        every { gm.send(capture(gmPackets)) } just runs
+        system.sendActivityState(gm, ActivityScheduleSystem.JUDGMENT_TOWER_ACTIVITY_ID, monday)
+        PacketReader(gmPackets[1]).let { r ->
+            r.readUByte(); r.readUByte(); r.readUByte(); r.readUShortLE()
+            assertEquals(ActivityScheduleSystem.STATE_STARTED, r.readUByte())
         }
     }
 }

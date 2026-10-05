@@ -3560,3 +3560,22 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Added `DvtJudgmentTowerActivityTest` using real IOS_ActivityTime_C.dat and byte-level S77 regression.
 - Targeted test PASS; full `gradlew test build --rerun-tasks` PASS 21/21.
 - A2 pending: authoritative C77-003 destination/entry semantics; do not guess map/coords.
+
+## 2026-10-05 — Central Admin/GM bypass policy + Judgment Tower live test
+- Reused existing authoritative account permission: `accounts.gm_level` -> `session.gmLevel`; no hard-coded account/character names.
+- Added central `AdminBypassPolicy` with flags:
+  - bypassSchedule=true for GM
+  - bypassLevel=true for GM
+  - bypassEntryLimit=true for GM
+  - bypassQuestGate=true for GM
+  - freeCost=false by default
+  - rewardRepeatTest=false by default
+- Normal players always receive all-false flags and remain 100% on DVT rules.
+- Destructive/economy/reward-repeat bypasses intentionally remain disabled by default.
+- Integrated policy into `ActivityScheduleSystem` first:
+  - normal account: Judgment Tower activityId=1 still Sunday 08:00-23:00 from IOS_ActivityTime_C.dat.
+  - GM/Admin (`gmLevel>0`): schedule state is forced STARTED for testing, with an admin-only runtime window around current time.
+  - static DVT DAT/Lua are untouched.
+- Regression added: same Monday timestamp yields STATE_NONE for normal session and STATE_STARTED for GM session; existing S:077 byte-contract tests remain PASS.
+- Targeted test PASS; full `gradlew test build --rerun-tasks` PASS 21/21; git diff --check pending commit step.
+- Framework is now the single policy point for future subsystem integrations; A2 C:077-003 entry handler should consult the same policy for level/entry-limit checks.

@@ -503,7 +503,8 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             it.startPeriodicRefresh()
         }
     }
-    single { ActivityScheduleSystem(get<GameDataManager>().activityTimeDefs) }
+    single { AdminBypassPolicy() }
+    single { ActivityScheduleSystem(get<GameDataManager>().activityTimeDefs, get<AdminBypassPolicy>()) }
 
     single {
         JiugonggeSystem(
