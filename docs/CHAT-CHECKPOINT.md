@@ -3550,3 +3550,13 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Refined runtime scan: không có ERROR, FATAL, Exception: hoặc HouseBoard rollback sau restart.
 - Bundle tạm houseboard-q12-960b369.bundle đã xóa ở local và production.
 - Trạng thái: Q1+Q2 deployed PASS; chờ client test UI/gửi quà. Q3 (105-004/005/006) vẫn pending.
+
+## 2026-10-05 — Judgment Tower A1 Activity 77 schedule
+- Lua DVT `EActivity.JudgmentTower=30` = 搶救二喬 (試煉之塔) / Giải cứu Nhị Kiều.
+- `IOS_ActivityInfo_C.dat`: activityId=1, lv=15, awards are luckyBag IDs 10016..10020, bitFunction=1.
+- `IOS_ActivityTime_C.dat`: id=1, switch=1, lifetime 2022-01-01..2032-12-31, openDayMask=64 (Sunday only), 08:00..23:00.
+- Lua protocol 77 locked: S:077-001 = activityId U16 + start OADate Double + close OADate Double; S:077-002 = activityId U16 + state U8. C:077-003 = enter activity + activityId U16.
+- Added `ActivityScheduleSystem` to send runtime S77-1/2 for activity 1 during character login, deriving state from authoritative DAT schedule. Monday/non-open day => state0; Sunday 08:00-23:00 => state1; after close => state2.
+- Added `DvtJudgmentTowerActivityTest` using real IOS_ActivityTime_C.dat and byte-level S77 regression.
+- Targeted test PASS; full `gradlew test build --rerun-tasks` PASS 21/21.
+- A2 pending: authoritative C77-003 destination/entry semantics; do not guess map/coords.

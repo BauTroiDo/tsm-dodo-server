@@ -53,6 +53,7 @@ class LoginService(
     private val eveData: Map<Int, SceneEveData> = emptyMap(),
     private val itemDefs: Map<Int, ItemDef> = emptyMap(),
     private val jiugonggeSystem: JiugonggeSystem? = null,
+    private val activityScheduleSystem: ActivityScheduleSystem? = null,
     private val dailyProgressSystem: DailyProgressSystem? = null,
     private val collectionSystem: CollectionSystem? = null,
     private val sacredEquipPrimaryDefs: Map<Int, SacredEquipPrimaryDef> = emptyMap(),
@@ -336,6 +337,13 @@ class LoginService(
             responseSender.sendCollectionCardData(session, collectionSnapshot.cardLevels)
             responseSender.sendCollectionNftShine(session, collectionSystem.getNftShine(record.id))
         }
+
+        // S:077 runtime schedule/state. Lua UIActivity keeps static ActivityTime_C locally
+        // but requires S:077-001/002 to know the actual current window/state.
+        activityScheduleSystem?.sendActivityState(
+            session,
+            ActivityScheduleSystem.JUDGMENT_TOWER_ACTIVITY_ID,
+        )
 
         // S:077 thời gian hoạt động runtime + S:091-001 bảng cửu cung daily.
         // UIJiugongge opens later from the Hằng ngày button and expects this state to exist.
