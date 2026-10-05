@@ -3442,3 +3442,12 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
   - authoritative: element source, quality, startPoint totals, skill-count probabilities, packet/storage structure, strengthen semantics, and the fact that Soul skills come from an independent/flexible pool.
   - still NOT published/locked: exact initial distribution algorithm of startPoint across six stats; complete Soul skill-ID pool and exact skill-ID selection algorithm.
   - therefore DO NOT implement an 'official DVT' Soul generator yet. Keep production guard for item-use 240 until those two pieces are evidenced, or explicitly choose a separate custom/offline fallback policy.
+
+### Clarification — Lua DVT remains the supreme source of truth
+
+- **Lua Đa Vũ Trụ is the highest-priority and most important source.**
+- Never let the official website, native dump, Kotlin server, or PC source override behavior that is clearly defined by Lua DVT.
+- Use the official website only to supplement published rules/descriptions that Lua does not fully explain.
+- Use native dump/client DAT/assets to verify transport, serialization, field layout, client-side behavior, and hidden implementation details not expressed in Lua.
+- If sources appear to conflict, resolve in this order: **Lua DVT > official TSN rules > DVT 1.15 native/client DAT/assets > Kotlin > PC fallback**.
+- For every future Soul/Dungeon/Item/Protocol audit, inspect the relevant Lua DVT files first before modifying server code.
