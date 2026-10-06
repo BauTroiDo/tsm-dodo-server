@@ -27,6 +27,7 @@ import tw.tsm.domain.valueobjects.FollowNpcData
 import tw.tsm.domain.valueobjects.MountData
 import tw.tsm.domain.valueobjects.PlayerDataDto
 import tw.tsm.domain.valueobjects.ThingData
+import tw.tsm.protocol.PacketWriter
 import tw.tsm.gamelogic.systems.WorldManager
 
 /**
@@ -366,6 +367,29 @@ class ResponseSenderImpl(worldManager: WorldManager) : ResponseSender {
 
     override fun sendSlotMachineCoin(session: SessionSender, coin: Int) =
         slotMachine.sendCoin(session, coin)
+
+    override fun sendPokeCoin(session: SessionSender, coin: Int) {
+        session.send(PacketWriter().writeByte(92).writeByte(1).writeByte(0).writeShortLE(coin).toByteArray())
+    }
+
+    override fun sendPokeAwards(session: SessionSender, awards: List<tw.tsm.domain.data.PokeAward>) {
+        val writer = PacketWriter().writeByte(92).writeByte(2).writeByte(0).writeByte(awards.size)
+        awards.forEach { award ->
+            writer.writeByte(award.id).writeByte(award.kind).writeShortLE(award.itemId)
+                .writeIntLE(award.count).writeByte(award.index).writeShortLE(award.prWeight)
+        }
+        session.send(writer.toByteArray())
+    }
+
+    override fun sendPokeSuccess(session: SessionSender, awardId: Int, gridIndex: Int) {
+        session.send(PacketWriter().writeByte(92).writeByte(3).writeByte(0)
+            .writeByte(1).writeByte(awardId).writeByte(gridIndex).toByteArray())
+    }
+
+    override fun sendPokeFailure(session: SessionSender, failKind: Int) {
+        session.send(PacketWriter().writeByte(92).writeByte(3).writeByte(0)
+            .writeByte(2).writeByte(failKind).toByteArray())
+    }
 
     override fun sendDoroResult(session: SessionSender, rewards: List<tw.tsm.domain.data.DoroReward>) =
         mall.sendDoroResult(session, rewards)
