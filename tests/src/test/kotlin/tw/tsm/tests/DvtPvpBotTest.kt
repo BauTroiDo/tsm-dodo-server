@@ -175,4 +175,12 @@ class DvtPvpBotTest {
         assertEquals(5_000L, TeamDungeonBotPolicy.BOT_FILL_DELAY_MS)
     }
 
+
+    @Test
+    fun `team dungeon assist stays active inside the same instance`() {
+        assertEquals(true, TeamDungeonBotPolicy.assistMatchesInstance(2, 2))
+        assertEquals(false, TeamDungeonBotPolicy.assistMatchesInstance(2, 3))
+        assertEquals(false, TeamDungeonBotPolicy.assistMatchesInstance(0, 0))
+    }
+
 }

@@ -381,7 +381,7 @@ class DungeonHandler(
                             hairOffset = profile.hairOffset,
                             color1Xor = profile.color1Xor,
                             color2Xor = profile.color2Xor,
-                            copyEquipment = false,
+                            copyEquipment = true,
                         )
                     )
                 }
@@ -875,9 +875,10 @@ class DungeonHandler(
         session.send(writer.toByteArray())
 
         val kind = system.getDef(settlement.dungeonId)?.kind
-        if (kind == DungeonSystem.KIND_NORMAL_MULTIPLAYER) {
-            battleManager?.clearDungeonBotAssist(session.playerId)
-        }
+        // Do not clear normal-team bot assistance here. Some DVT dungeons emit
+        // an intermediate settlement/result while the player remains inside the
+        // same dungeon instance and can still enter later Eve fights.
+        // BattleManager drops stale assists automatically when instanceId changes.
         if (kind in setOf(DungeonSystem.KIND_WEEKLY, DungeonSystem.KIND_SOUL_WEEKLY)) {
             rooms.resetAfterBattleForPlayer(session.playerId)
         }

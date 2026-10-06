@@ -187,8 +187,13 @@ class BattleManager(
         // AutomanualPlayer (kind 28) assistants. Only the first deployed pet accompanies
         // the real player in this party-shaped layout so the 5-row DVT grid cannot overflow.
         val charId = session.roleId.toLong()
-        val dungeonAssist = dungeonBotAssists[session.playerId]
-            ?.takeIf { it.instanceId == session.instanceId && it.botCount > 0 }
+        val storedDungeonAssist = dungeonBotAssists[session.playerId]
+        val dungeonAssist = storedDungeonAssist?.takeIf {
+            TeamDungeonBotPolicy.assistMatchesInstance(it.instanceId, session.instanceId) && it.botCount > 0
+        }
+        if (storedDungeonAssist != null && dungeonAssist == null) {
+            dungeonBotAssists.remove(session.playerId, storedDungeonAssist)
+        }
         val battlePets = petSystem.getBattleDeployableFollowPets(charId)
 
         if (dungeonAssist != null) {
@@ -235,7 +240,6 @@ class BattleManager(
                         hairOverride = ((session.hair + profile.hairOffset - 1) % 8) + 1,
                         color1Xor = profile.color1Xor,
                         color2Xor = profile.color2Xor,
-                        equipItemIdsOverride = intArrayOf(),
                     )
                 )
                 if (petDef != null) {

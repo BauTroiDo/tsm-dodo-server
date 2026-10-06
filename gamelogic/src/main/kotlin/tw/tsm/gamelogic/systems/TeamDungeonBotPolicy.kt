@@ -38,4 +38,7 @@ object TeamDungeonBotPolicy {
     }
 
     fun profile(index: Int): TeamDungeonBotProfile = PROFILES[index.mod(PROFILES.size)]
+
+    fun assistMatchesInstance(assistInstanceId: Int, currentInstanceId: Int): Boolean =
+        assistInstanceId > 0 && assistInstanceId == currentInstanceId
 }
