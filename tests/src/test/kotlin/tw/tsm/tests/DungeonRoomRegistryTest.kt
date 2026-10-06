@@ -61,6 +61,31 @@ class DungeonRoomRegistryTest {
         assertNull(rooms.room(room.id))
     }
     @Test
+    fun `weekly battle end resets room instead of creating ghost room`() {
+        val rooms = DungeonRoomRegistry()
+        val owner = session(2501, "Owner")
+        val member = session(2502, "Member")
+
+        val room = rooms.create(owner, dungeonId = 18, maxPlayers = 5, password = "")
+        rooms.join(room.id, member)
+        assertEquals(true, rooms.togglePrepared(member.playerId)?.second)
+        assertTrue(rooms.beginStart(owner.playerId)!!.starting)
+        assertTrue(rooms.commitStart(room.id, owner.playerId)!!.started)
+
+        val reset = rooms.resetAfterBattleForPlayer(owner.playerId)!!
+        assertFalse(reset.starting)
+        assertFalse(reset.started)
+        assertFalse(reset.members.getValue(member.playerId).prepared)
+        assertEquals(room.id, rooms.roomOf(owner.playerId)?.id)
+        assertEquals(room.id, rooms.roomOf(member.playerId)?.id)
+
+        val left = rooms.leave(owner.playerId)!!
+        assertEquals(member.playerId, left.newOwnerId)
+        assertNull(rooms.roomOf(owner.playerId))
+        assertEquals(room.id, rooms.roomOf(member.playerId)?.id)
+    }
+
+    @Test
     fun `ready room start allocates isolated instance`() {
         val rooms = DungeonRoomRegistry()
         val owner = session(3001, "Owner")

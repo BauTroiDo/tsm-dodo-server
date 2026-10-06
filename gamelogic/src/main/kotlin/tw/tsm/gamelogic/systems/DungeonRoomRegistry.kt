@@ -165,6 +165,25 @@ class DungeonRoomRegistry {
         return leave(targetId)
     }
 
+    /**
+     * Battle completion must not silently delete the room.
+     *
+     * Lua Dungeon.ReciveDungeonResult only opens UIResult; the client still owns
+     * the dungeon-room UI/state afterwards and may leave or retry. Removing the
+     * room here makes C47-010 (leave) a no-op and strands the client in a ghost room.
+     */
+    @Synchronized
+    fun resetAfterBattleForPlayer(playerId: Long): DungeonRoomState? {
+        val roomId = playerRoom[playerId] ?: return null
+        val room = rooms[roomId] ?: return null
+        room.starting = false
+        room.started = false
+        for (member in room.members.values) {
+            member.prepared = false
+        }
+        return room.snapshot()
+    }
+
     @Synchronized
     fun completeForPlayer(playerId: Long): DungeonRoomState? {
         val roomId = playerRoom[playerId] ?: return null

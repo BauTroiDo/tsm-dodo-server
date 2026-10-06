@@ -520,7 +520,7 @@ class DungeonHandler(
 
         val kind = system.getDef(settlement.dungeonId)?.kind
         if (kind in setOf(DungeonSystem.KIND_WEEKLY, DungeonSystem.KIND_SOUL_WEEKLY)) {
-            rooms.completeForPlayer(session.playerId)
+            rooms.resetAfterBattleForPlayer(session.playerId)
         }
     }
 

@@ -3952,3 +3952,20 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
   - full local gradlew test build --rerun-tasks BUILD SUCCESSFUL 21/21.
   - git diff --check PASS (line-ending warnings only).
 - Next: commit/push, deploy production .69, full production build/restart, then user runtime tests Bách ải1 and Soul ải1 before declaring PASS.
+
+
+## 2026-10-06 — Weekly dungeon ghost-room fix
+- Runtime finding: Bách Chiến create room PASS after production received weekly battle chain.
+- Quick Join semantics remain DVT-native: C47-13 joins an existing unlocked room; with no other room it may return result=7 ("Không có phó bản nào để tham gia"). No auto-create invented.
+- Real lifecycle bug after weekly battle defeat:
+  - Server sent S47-12 result then called DungeonRoomRegistry.completeForPlayer(), deleting room/playerRoom mappings.
+  - Lua Dungeon.ReciveDungeonResult() does NOT clear dungeon-room state; it opens UIResult and later invokes Dungeon.LeaveSinglePlayDungeon via C13-4.
+  - Therefore client still showed room UI while server had already removed the room; later C47-10 leave became a no-op (ghost room).
+- Fix:
+  - add DungeonRoomRegistry.resetAfterBattleForPlayer().
+  - weekly/Soul-weekly sendDungeonResult now resets starting=false, started=false and prepared=false for all members while preserving room membership.
+  - Client can now retry or leave through normal C47 room lifecycle after win/loss.
+- Regression:
+  - DungeonRoomRegistryTest reproduces started weekly room -> reset after battle -> owner can leave and ownership migrates.
+  - DungeonRoomRegistryTest + DungeonWeeklyBattleV2Test targeted PASS.
+  - full gradlew test build --rerun-tasks PASS 21/21.
