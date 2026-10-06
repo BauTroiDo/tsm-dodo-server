@@ -181,6 +181,9 @@ object Opcodes {
     /** Hệ thống tiêu phí giao diện (C:084-001 truy vấn 介消, C:084-002 sử dụng 介消)*/
     const val UI_SELL = 84
 
+    /** Trạc / Poke (UIPoke, protocolTable[92]). */
+    const val POKE = 92
+
     /** Hệ thống dữ liệu đếm của người chơi (số ô túi đồ, số ô Tiền Trang, v.v.), dùng S:085-001/002*/
     const val ROLE_COUNT_SYSTEM = 85
 
