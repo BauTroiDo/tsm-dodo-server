@@ -397,8 +397,7 @@ class UISellHandler(
         if (amount <= 0) return UiSellQuote.Fail(UISellSystem.REASON_NOT_USABLE)
         val coin = slotMachineSystem.getCoin(charId)
         if (coin + amount > SlotMachineSystem.MAX_COIN) {
-            return UiSellQuote.Fail(UISellSystem.REASON_LIMIT_REACHED)
-        }
+            return UiSellQuote.Fail(UISellSystem.REASON_LIMIT_REACHED)        }
 
         return if (itemRoute) {
             UiSellQuote.Item(UISellSystem.SLOT_COIN_ITEM_ID, amount)
@@ -671,8 +670,15 @@ class UISellHandler(
             }
             val (real, virtual) = pointSystem.getPoints(charId)
             responseSender.sendPointBalance(session, real, virtual)
-            PokePackets.sendCoin(session, updated.coin)
             responseSender.sendUiSellSuccess(session, sellId)
+            delay(75L)
+            val persisted = system.open(charId)
+            PokePackets.sendSnapshot(session, system, persisted)
+            logger.info {
+                "POKE44 success roleId=" + session.roleId +
+                    " amount=" + amount + " coin=" + persisted.coin +
+                    " pointsAfter=" + pointSystem.getPoints(charId)
+            }
             return
         }
 
@@ -797,8 +803,7 @@ class UISellHandler(
             is UiSellQuote.Item -> {
                 // đường dẫn client chọn vật phẩm: kiểm tra hợp lệ vật phẩm ô túi đồ khớp với báo giá
                 if (useKind != USE_KIND_ITEM) {
-                    responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_PRICE_ERROR)
-                    return false
+                    responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_PRICE_ERROR)                    return false
                 }
                 val thing = inventorySystem.getBagItem(charId, bagIndex)
                 if (thing == null || thing.itemId != quote.itemId || thing.quantity < quote.count) {
