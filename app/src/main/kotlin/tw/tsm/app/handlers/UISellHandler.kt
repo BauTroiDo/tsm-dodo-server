@@ -61,6 +61,7 @@ class UISellHandler(
     private val playerStateManager: PlayerStateManager,
     private val skillSystem: SkillSystem,
     private val slotMachineSystem: SlotMachineSystem,
+    private val pokeSystem: PokeSystem,
     private val moneySystem: MoneySystem? = null,
     private val dispatchSystem: DispatchSystem? = null,
     private val furnaceSystem: FurnaceSystem? = null,
@@ -91,10 +92,10 @@ class UISellHandler(
         val args = readArgs(reader)
 
         val charId = session.roleId.toLong()
-        val quote = if (sellId == UISellSystem.SELL_SLOT_COIN) {
-            querySlotCoin(charId, args)
-        } else {
-            uiSellSystem.query(charId, sellId)
+        val quote = when (sellId) {
+            UISellSystem.SELL_SLOT_COIN -> querySlotCoin(charId, args)
+            UISellSystem.SELL_POKE_COIN -> queryPokeCoin(charId, args)
+            else -> uiSellSystem.query(charId, sellId)
         }
         when (quote) {
             is UiSellQuote.Fail -> {
@@ -128,6 +129,14 @@ class UISellHandler(
 
         if (sellId == UISellSystem.SELL_SLOT_COIN) {
             handleSlotCoinUse(session, useKind, reader)
+            return
+        }
+        if (sellId == UISellSystem.SELL_POKE_COIN) {
+            handlePokeCoinUse(session, useKind, reader)
+            return
+        }
+        if (sellId == UISellSystem.SELL_POKE_CHANGE) {
+            handlePokeChangeUse(session, useKind, reader)
             return
         }
 
