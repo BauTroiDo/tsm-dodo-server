@@ -573,7 +573,7 @@ class BattleManager(
                 val npcDef = npcDefs[petData.npcId]
                 if (npcDef != null) {
                     battle.addFighter(
-                        createFollowNpcFighter(
+                        createFollowNpcFighterInternal(
                             npcDef = npcDef,
                             petData = petData,
                             masterId = botRoleId,
@@ -2093,7 +2093,32 @@ class BattleManager(
      * @param npcDataId ID loại NPC
      * @param col cột bàn cờ
      */
+    /**
+     * Stable legacy helper signature used by existing battle code/tests.
+     * Bot-specific metadata stays in createFollowNpcFighterInternal so normal pet
+     * behavior and reflective tests are not changed.
+     */
     private fun createFollowNpcFighter(
+        npcDef: NpcDef,
+        petData: FollowNpcData,
+        masterId: Long,
+        ownerCharacterId: Long,
+        npcDataId: Int,
+        followSlot: Int,
+        col: Int,
+        row: Int,
+    ): BattleFighter = createFollowNpcFighterInternal(
+        npcDef = npcDef,
+        petData = petData,
+        masterId = masterId,
+        ownerCharacterId = ownerCharacterId,
+        npcDataId = npcDataId,
+        followSlot = followSlot,
+        col = col,
+        row = row,
+    )
+
+    private fun createFollowNpcFighterInternal(
         npcDef: NpcDef,
         petData: FollowNpcData,
         masterId: Long,
