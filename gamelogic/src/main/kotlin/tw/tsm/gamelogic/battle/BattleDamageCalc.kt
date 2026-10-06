@@ -99,7 +99,9 @@ object BattleDamageCalc {
             elementMultiplier = elementMultiplier,
             rebornMultiplier = rebornMultiplier,
             variance = variance,
-            pvpOrPet = target.isHumanPlayer || target.kind == EHuman.FOLLOW_NPC,
+            pvpOrPet = target.isHumanPlayer ||
+                target.kind == EHuman.FOLLOW_NPC ||
+                target.kind == EHuman.AUTOMANUAL_NPC,
             defending = target.isDefending
         )
 
