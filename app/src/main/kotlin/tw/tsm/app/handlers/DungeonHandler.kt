@@ -19,6 +19,12 @@ import tw.tsm.gamelogic.systems.DungeonSystem
 import tw.tsm.gamelogic.systems.DungeonSettlement
 import tw.tsm.gamelogic.systems.DvtWeeklyDungeonFormation
 import tw.tsm.gamelogic.systems.WorldManager
+import tw.tsm.gamelogic.systems.PvpBotMatchmakingSystem
+import tw.tsm.gamelogic.systems.PvpBotMode
+import tw.tsm.gamelogic.systems.PvpLobbyClaim
+import tw.tsm.gamelogic.systems.PvpLobbyPolicy
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicLong
 import tw.tsm.protocol.PacketReader
 import tw.tsm.protocol.PacketWriter
 
@@ -38,7 +44,17 @@ class DungeonHandler(
     private val battleManager: BattleManager? = null,
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
     private val countdownMs: Long = 5_000L,
+    private val pvpBotMatchmakingSystem: PvpBotMatchmakingSystem? = null,
 ) : PacketHandler {
+    private data class LobbyBot(
+        val id: Long,
+        val name: String,
+        val template: GameSession,
+    )
+
+    private val pvpRoomModes = ConcurrentHashMap<Long, PvpBotMode>()
+    private val pvpRoomBots = ConcurrentHashMap<Long, List<LobbyBot>>()
+    private val nextLobbyBotId = AtomicLong(-2_000_000_000L)
     override val mainKind: Int = Opcodes.DUNGEON
 
     override suspend fun handle(session: GameSession, subKind: Int, data: ByteArray) {
@@ -141,6 +157,14 @@ class DungeonHandler(
             password = password,
         )
         sendCreateResult(session, DungeonSystem.RESULT_OK, room.password)
+
+        pvpBotMatchmakingSystem?.claimForLobby(session.playerId)?.let { claim ->
+            pvpRoomModes[room.id] = claim.mode
+            schedulePvpLobbyFill(room.id, claim)
+            dungeonHandlerLogger.info {
+                "PvP lobby claimed: room=${room.id} player=${session.characterName} mode=${claim.mode}"
+            }
+        }
     }
 
     private suspend fun joinRoom(session: GameSession, data: ByteArray) {
@@ -182,6 +206,11 @@ class DungeonHandler(
             return
         }
 
+        // A real player replaces one visible PvP lobby bot slot.
+        if (pvpRoomModes.containsKey(roomId)) {
+            removeOneLobbyBot(roomId)
+        }
+
         val existing = room.members.values.toList()
         val joined = rooms.join(roomId, session)
         if (joined == null) {
@@ -192,6 +221,99 @@ class DungeonHandler(
         sendJoinSuccess(session, joined, existing)
         for (member in existing) {
             sendPlayerJoined(member.session, session)
+        }
+        pvpRoomBots[roomId].orEmpty().forEach { bot ->
+            sendLobbyBotJoined(session, bot)
+            sendPrepared(session, bot.id, true)
+        }
+        if (pvpRoomModes.containsKey(roomId)) {
+            scope.launch { fillPvpLobbyBots(roomId) }
+        }
+    }
+
+    private fun schedulePvpLobbyFill(roomId: Long, claim: PvpLobbyClaim) {
+        val elapsed = (System.currentTimeMillis() - claim.registeredAt).coerceAtLeast(0L)
+        val waitMs = (PvpBotMatchmakingSystem.BOT_FILL_DELAY_MS - elapsed).coerceAtLeast(0L)
+        scope.launch {
+            if (waitMs > 0) delay(waitMs)
+            fillPvpLobbyBots(roomId)
+        }
+    }
+
+    private fun fillPvpLobbyBots(roomId: Long) {
+        val room = rooms.room(roomId)
+        val mode = pvpRoomModes[roomId]
+        if (room == null || mode == null || room.starting || room.started) {
+            pvpRoomBots.remove(roomId)
+            if (room == null) pvpRoomModes.remove(roomId)
+            return
+        }
+
+        val desired = PvpLobbyPolicy.visibleBotCount(mode, room.members.size, room.maxPlayers)
+        var current = pvpRoomBots[roomId].orEmpty()
+
+        while (current.size > desired) {
+            val removed = current.last()
+            current = current.dropLast(1)
+            room.members.values.forEach { member ->
+                sendPlayerLeave(member.session, removed.id, LEAVE_DISCONNECT)
+            }
+        }
+
+        if (current.size < desired) {
+            val template = room.members[room.ownerId]?.session
+                ?: room.members.values.firstOrNull()?.session
+                ?: return
+            val added = buildList {
+                repeat(desired - current.size) { index ->
+                    add(
+                        LobbyBot(
+                            id = nextLobbyBotId.getAndDecrement(),
+                            name = "AI Fighter ${current.size + index + 1}",
+                            template = template,
+                        )
+                    )
+                }
+            }
+            current = current + added
+            pvpRoomBots[roomId] = current
+
+            for (bot in added) {
+                for (member in room.members.values) {
+                    sendLobbyBotJoined(member.session, bot)
+                    sendPrepared(member.session, bot.id, true)
+                }
+            }
+            dungeonHandlerLogger.info {
+                "PvP lobby bots filled: room=$roomId mode=$mode real=${room.members.size} bots=${current.size}"
+            }
+        } else {
+            pvpRoomBots[roomId] = current
+        }
+    }
+
+    private fun removeOneLobbyBot(roomId: Long) {
+        val current = pvpRoomBots[roomId].orEmpty()
+        if (current.isEmpty()) return
+        val room = rooms.room(roomId)
+        val removed = current.last()
+        val remain = current.dropLast(1)
+        if (remain.isEmpty()) pvpRoomBots.remove(roomId) else pvpRoomBots[roomId] = remain
+        room?.members?.values?.forEach { member ->
+            sendPlayerLeave(member.session, removed.id, LEAVE_DISCONNECT)
+        }
+    }
+
+    private fun clearPvpLobby(roomId: Long, notifyMembers: Boolean = true) {
+        val room = rooms.room(roomId)
+        val bots = pvpRoomBots.remove(roomId).orEmpty()
+        pvpRoomModes.remove(roomId)
+        if (notifyMembers && room != null) {
+            for (bot in bots) {
+                room.members.values.forEach { member ->
+                    sendPlayerLeave(member.session, bot.id, LEAVE_DISCONNECT)
+                }
+            }
         }
     }
 
@@ -278,6 +400,10 @@ class DungeonHandler(
             return
         }
 
+        if (pvpRoomModes.containsKey(room.id)) {
+            removeOneLobbyBot(room.id)
+        }
+
         val existing = room.members.values.toList()
         val joined = rooms.join(room.id, session)
         if (joined == null) {
@@ -288,6 +414,13 @@ class DungeonHandler(
         sendJoinSuccess(session, joined, existing)
         for (member in existing) {
             sendPlayerJoined(member.session, session)
+        }
+        pvpRoomBots[room.id].orEmpty().forEach { bot ->
+            sendLobbyBotJoined(session, bot)
+            sendPrepared(session, bot.id, true)
+        }
+        if (pvpRoomModes.containsKey(room.id)) {
+            scope.launch { fillPvpLobbyBots(room.id) }
         }
     }
 
@@ -312,6 +445,7 @@ class DungeonHandler(
     }
 
     private fun leaveRoom(session: GameSession) {
+        val roomBefore = rooms.roomOf(session.playerId)
         val left = rooms.leave(session.playerId)
         if (left == null) {
             // A server restart clears the in-memory room registry while the client can
@@ -340,6 +474,14 @@ class DungeonHandler(
                 sendOwnerChanged(member.session, newOwnerId)
             }
         }
+
+        roomBefore?.id?.let { roomId ->
+            if (left.disbanded || newOwnerId != null) {
+                clearPvpLobby(roomId)
+            } else if (pvpRoomModes.containsKey(roomId)) {
+                scope.launch { fillPvpLobbyBots(roomId) }
+            }
+        }
     }
 
     private fun togglePrepare(session: GameSession) {
@@ -353,6 +495,11 @@ class DungeonHandler(
     private fun startMultiplayer(session: GameSession) {
         val candidate = rooms.roomOf(session.playerId) ?: return
         if (candidate.ownerId != session.playerId) return
+
+        pvpRoomModes[candidate.id]?.let { mode ->
+            beginPvpRoomStart(session, candidate, mode)
+            return
+        }
 
         val def = system.getDef(candidate.dungeonId) ?: return
         if (def.kind in setOf(DungeonSystem.KIND_WEEKLY, DungeonSystem.KIND_SOUL_WEEKLY)) {
@@ -370,6 +517,61 @@ class DungeonHandler(
         }
 
         beginRoomStart(session, candidate)
+    }
+
+    private fun beginPvpRoomStart(
+        session: GameSession,
+        candidate: DungeonRoomState,
+        mode: PvpBotMode,
+    ) {
+        val room = rooms.beginStart(session.playerId) ?: return
+        for (member in room.members.values) {
+            sendPrepared(member.session, session.playerId, true)
+        }
+
+        scope.launch {
+            delay(countdownMs)
+            val started = rooms.commitStart(room.id, session.playerId) ?: return@launch
+            val battle = battleManager
+            val realSessions = started.members.values.map { it.session }
+            val plan = PvpLobbyPolicy.battlePlan(mode, realSessions.size)
+            if (battle == null || plan == null) {
+                rooms.resetAfterBattleForPlayer(session.playerId)
+                dungeonHandlerLogger.error {
+                    "PvP lobby start plan failed room=${room.id} mode=$mode real=${realSessions.size}"
+                }
+                return@launch
+            }
+
+            val right = plan.rightIndices.map { realSessions[it] }
+            val left = plan.leftIndices.map { realSessions[it] }
+            val created = battle.createArenaBotBattle(
+                mode = mode,
+                rightReal = right,
+                leftReal = left,
+                rightBotCount = plan.rightBots,
+                leftBotCount = plan.leftBots,
+            )
+            if (!created) {
+                rooms.resetAfterBattleForPlayer(session.playerId)
+                realSessions.forEach {
+                    sendPrepared(it, session.playerId, false)
+                }
+                dungeonHandlerLogger.error {
+                    "PvP lobby battle create failed room=${room.id} mode=$mode"
+                }
+                return@launch
+            }
+
+            // Battle init is already sent. Clear only the staging-room state so
+            // reopening UIDungeon after battle cannot resurrect a ghost lobby.
+            rooms.completeForPlayer(session.playerId)
+            clearPvpLobby(room.id, notifyMembers = false)
+            delay(100)
+            realSessions.forEach {
+                sendPlayerLeave(it, it.playerId, LEAVE_SELF)
+            }
+        }
     }
 
     private fun beginRoomStart(session: GameSession, candidate: DungeonRoomState) {
@@ -441,6 +643,7 @@ class DungeonHandler(
 
     fun handleDisconnect(session: GameSession) {
         system.onDisconnect(session)
+        val roomBefore = rooms.roomOf(session.playerId)
         val left = rooms.leave(session.playerId) ?: return
         for (member in left.room.members.values) {
             sendPlayerLeave(member.session, session.playerId, LEAVE_DISCONNECT)
@@ -449,6 +652,13 @@ class DungeonHandler(
         if (newOwnerId != null) {
             for (member in left.room.members.values) {
                 sendOwnerChanged(member.session, newOwnerId)
+            }
+        }
+        roomBefore?.id?.let { roomId ->
+            if (left.disbanded || newOwnerId != null) {
+                clearPvpLobby(roomId)
+            } else if (pvpRoomModes.containsKey(roomId)) {
+                scope.launch { fillPvpLobbyBots(roomId) }
             }
         }
     }
@@ -647,6 +857,30 @@ class DungeonHandler(
 
         writer.writeShortLE(room.dungeonId)
         session.send(writer.toByteArray())
+    }
+
+    private fun sendLobbyBotJoined(target: GameSession, bot: LobbyBot) {
+        val role = bot.template
+        val writer = PacketWriter()
+            .writeByte(Opcodes.DUNGEON)
+            .writeByte(13)
+            .writeByte(0)
+            .writeLongLE(bot.id)
+            .writeBig5WithByteLen(bot.name)
+            .writeByte(role.level)
+            .writeByte(role.sex)
+            .writeByte(role.hair)
+            .writeIntLE(role.color1)
+            .writeIntLE(role.color2)
+
+        for (i in 0 until DUNGEON_EQUIP_STYLE_SLOTS) {
+            writer.writeShortLE(role.equipItemIds.getOrElse(i) { 0 })
+        }
+
+        writer.writeByte(role.turn)
+            .writeShortLE(role.titleId)
+
+        target.send(writer.toByteArray())
     }
 
     private fun sendPlayerJoined(target: GameSession, joined: GameSession) {

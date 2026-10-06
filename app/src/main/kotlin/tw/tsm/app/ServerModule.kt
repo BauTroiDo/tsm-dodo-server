@@ -712,6 +712,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<WorldManager>(),
             get<BattleManager>(),
             get<CoroutineScope>(),
+            pvpBotMatchmakingSystem = get<PvpBotMatchmakingSystem>(),
         )
     }
     single { AchievementHandler(get(), get(), get()) }
