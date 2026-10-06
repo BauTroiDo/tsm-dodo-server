@@ -122,6 +122,7 @@ class UISellSystem(
             SELL_DISPATCH_QUICK,
             SELL_TURN3_UNLOCK_SKILL,
             SELL_TURN3_CHANGE_ELEMENT,
+            SELL_POKE_CHANGE,
             in FURNACE_REFRESH_SELL_IDS -> queryFormulaPrice(formula)
             in expansions -> queryExpansion(charId, sellId, formula)
             // TODO: Các sellId còn lại (Vòng quay may mắn, Đặt lại thuộc tính...) chờ các hệ thống thực thi xong sẽ bổ sung dần
@@ -276,6 +277,14 @@ class UISellSystem(
 
         /** UISlotMachine.lua hardcode floor(Role.GetPoint()/9): 9 real Point / 1 xu. */
         const val SLOT_COIN_POINT_PRICE = 9
+
+        /** UIPoke: nạp xu Trạc. */
+        const val SELL_POKE_COIN = 44
+        const val POKE_COIN_ITEM_ID = 29507
+        const val POKE_COIN_POINT_PRICE = 9
+
+        /** UIPoke: đổi bàn, UISell formula kind=1 value=50. */
+        const val SELL_POKE_CHANGE = 46
 
         /** Tam chuyển: mở khóa skill Quang/Ám (UISkillTree.UnLockSkill). */
         const val SELL_TURN3_UNLOCK_SKILL = 57
