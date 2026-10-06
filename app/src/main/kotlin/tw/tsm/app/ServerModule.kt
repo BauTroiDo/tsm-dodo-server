@@ -574,11 +574,12 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             partySystem = get<PartySystem>(),
             sceneSetDefs = get<GameDataManager>().sceneSetDefs,
             activityTimeDefs = get<GameDataManager>().activityTimeDefs,
+            markStepMissionIds = get<GameDataManager>().markStepMissionIds,
         )
     }
     single { EveConditionResolver(get<GameDataManager>().eveData) }
     single { EveAutoChainEngine(get<EveEventStateMachine>(), get(), get(), get<GameDataManager>().eveData) }
-    single { EveResultExecutor(get(), get(), get(), get(), get(), get(), get<GameDataManager>().npcDefs, get<GameDataManager>().markDefs, get<GameDataManager>().markFlagToGuideId, get<GameDataManager>().eveData, get<MountSystem>(), get<AchievementSystem>(), get<BitFlagSystem>(), get<RoleCountSystem>(), get<DailyProgressSystem>(), get<PointSystem>(), get<CollectionSystem>(), get<PlayerStateManager>(), get<CharacterRepository>()) }
+    single { EveResultExecutor(get(), get(), get(), get(), get(), get(), get<GameDataManager>().npcDefs, get<GameDataManager>().markDefs, get<GameDataManager>().markFlagToGuideId, get<GameDataManager>().eveData, get<MountSystem>(), get<AchievementSystem>(), get<BitFlagSystem>(), get<RoleCountSystem>(), get<DailyProgressSystem>(), get<PointSystem>(), get<CollectionSystem>(), get<PlayerStateManager>(), get<CharacterRepository>(), get<GameDataManager>().markStepMissionIds) }
     single { EveDoorWarpService(get(), get(), get(), get<EveEventStateMachine>(), get<GameDataManager>().eveData) }
     single { EveBattleService(get(), get<EveEventStateMachine>(), get(), get<GameDataManager>().mapTerrains, get<GameDataManager>().eveData) }
     single { NpcShopManager() }

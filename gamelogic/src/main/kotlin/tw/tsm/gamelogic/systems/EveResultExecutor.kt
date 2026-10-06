@@ -50,9 +50,11 @@ class EveResultExecutor(
     private val collectionSystem: CollectionSystem? = null,
     private val playerStateManager: PlayerStateManager? = null,
     private val characterRepository: CharacterRepository? = null,
+    private val markStepMissionIds: Set<Int> = emptySet(),
 ) {
     private companion object {
-        val FUNCTION_UNLOCK_MARKER_MISSION_IDS = setOf(11804, 12283, 12285, 12396)
+        // Chỉ dùng khi IOS_MarkStep_C.dat không khả dụng. Production bình thường dùng data-driven detection.
+        val LEGACY_MARKER_MISSION_IDS = setOf(11804, 12283, 12285, 12396)
     }
 
     /**
@@ -580,11 +582,10 @@ class EveResultExecutor(
                     }
                 responseSender.sendAddMissionStep(session, missionId, delta)
                 if (prevStep == 0) {
-                    // DVT AddMissionStep normally only starts/advances a mission. These four
-                    // UiOpen marker missions are special: Eve.emg only emits ADD_STEP +1 for
-                    // them and IOS_MarkStep_C.dat has no progression records. Their Mark_C
-                    // completion bit is therefore the function-unlock marker.
-                    if (missionId in FUNCTION_UNLOCK_MARKER_MISSION_IDS) {
+                    // DVT marker mission: có MarkDef.bitId nhưng không hề có MarkStep.
+                    // Eve vẫn ADD_STEP +1 rồi các event kế tiếp kiểm pStyle=3 flag==1.
+                    // Nhận diện theo IOS_Mark_C + IOS_MarkStep_C thay vì danh sách ID cứng.
+                    if (isMarkerMission(missionId)) {
                         val bitId = markDefs[missionId]?.bitId ?: 0
                         if (bitId > 0) {
                             questSystem.setFlag(charId, bitId, 1)
@@ -592,11 +593,7 @@ class EveResultExecutor(
                                 session, listOf(MissionFlagRecord(bitId, 1))
                             )
                             logger.info {
-                                "${session.characterName} Mở khóa chức năng: markerMission=$missionId bitId=$bitId"
-                            }
-                        } else {
-                            logger.warn {
-                                "${session.characterName} Marker mission=$missionId không có MarkDef/bitId hợp lệ"
+                                "${session.characterName} Kích hoạt marker mission=$missionId bitId=$bitId"
                             }
                         }
                     }
@@ -676,6 +673,16 @@ class EveResultExecutor(
             }
         }
         return true
+    }
+
+    private fun isMarkerMission(missionId: Int): Boolean {
+        val bitId = markDefs[missionId]?.bitId ?: 0
+        if (bitId <= 0) return false
+        return if (markStepMissionIds.isNotEmpty()) {
+            missionId !in markStepMissionIds
+        } else {
+            missionId in LEGACY_MARKER_MISSION_IDS
+        }
     }
 
     /**

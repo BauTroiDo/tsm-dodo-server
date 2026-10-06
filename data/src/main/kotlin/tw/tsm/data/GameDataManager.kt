@@ -63,6 +63,10 @@ class GameDataManager(
     var bitToMissionId: Map<Int, Int> = emptyMap()
         private set
 
+    /** Các mission có ít nhất một bản ghi thật trong IOS_MarkStep_C.dat. */
+    var markStepMissionIds: Set<Int> = emptySet()
+        private set
+
     /** Định nghĩa túi phúc (key = ID vật phẩm túi phúc)*/
     var blissBagDefs: Map<Int, BlissBagDef> = emptyMap()
         private set
@@ -350,6 +354,15 @@ class GameDataManager(
                 val def = markDefs[mid]
                 logger.debug { "Chẩn đoán Mark: mission=$mid → ${def?.let { "bitId=${it.bitId} name=${it.name}" } ?: "不存在"}" }
             }
+        }
+
+        // MarkStep — chỉ cần tập missionId để phân biệt marker mission với nhiệm vụ có tiến trình thật.
+        val markStepSource = dataIosDir.resolve("IOS_MarkStep_C.dat")
+        if (Files.isRegularFile(markStepSource)) {
+            markStepMissionIds = MarkStepDatLoader.loadMissionIds(Files.readAllBytes(markStepSource))
+            logger.info { "Nạp MarkStep xong: ${markStepMissionIds.size} mission có step thật" }
+        } else {
+            logger.warn { "Không tìm thấy IOS_MarkStep_C.dat; marker mission sẽ không được tự nhận diện từ data" }
         }
 
         // TeachInfo — DVT client hiện tại đọc IOS_TeachInfo_C.dat.

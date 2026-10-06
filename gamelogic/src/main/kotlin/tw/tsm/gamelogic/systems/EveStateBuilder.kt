@@ -40,6 +40,7 @@ class EveStateBuilder(
     private val partySystem: PartySystem? = null,
     private val sceneSetDefs: Map<Int, SceneSetDef> = emptyMap(),
     private val activityTimeDefs: Map<Int, ActivityTimeDef> = emptyMap(),
+    private val markStepMissionIds: Set<Int> = emptySet(),
 ) {
 
     /**
@@ -55,6 +56,26 @@ class EveStateBuilder(
         // Cờ nhiệm vụ (dùng cho điều kiện conditionClass=2 pStyle=3)
         val rawFlags = questSystem.getFlags(charId)
             .associateBy({ it.bitIndex }, { it.bitValue })
+            .toMutableMap()
+
+        // Tự chữa dữ liệu marker cũ: một số DVT Mark có bitId nhưng không hề có MarkStep.
+        // Eve ADD_STEP +1 cho marker rồi các event kế tiếp kiểm pStyle=3 flag==1.
+        // Các bản server cũ chỉ hardcode vài ID nên có thể đã lưu step=1 nhưng bỏ sót flag.
+        if (markStepMissionIds.isNotEmpty()) {
+            for ((missionId, step) in missionSteps) {
+                if (step <= 0) continue
+                val markDef = markDefs[missionId] ?: continue
+                if (markDef.bitId <= 0 || missionId in markStepMissionIds) continue
+                if ((rawFlags[markDef.bitId] ?: 0) > 0) continue
+
+                questSystem.setFlag(charId, markDef.bitId, 1)
+                rawFlags[markDef.bitId] = 1
+                logger.info {
+                    "Tự chữa marker mission: charId=$charId mission=$missionId step=$step bitId=${markDef.bitId}"
+                }
+            }
+        }
+
         val missionFlagValues = mutableMapOf<Int, Int>()
         for ((missionId, markDef) in markDefs) {
             val flagValue = rawFlags[markDef.bitId] ?: 0

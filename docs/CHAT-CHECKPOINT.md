@@ -4048,3 +4048,14 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Permanent DvtMissionComparatorRegressionTest loads real Eve scene12705/event6 and locks the full mission11120 item hand-in branch.
 - Targeted EveConditionEvaluator + EveChainResolver + DvtMissionComparatorRegression PASS 18/18.
 - Full local gradlew test build --rerun-tasks PASS 21/21.
+
+
+## 2026-10-06 — DVT marker mission data-driven root fix / Bình Trưởng scene12992
+- Runtime symptom after mission11120 fix: map12992 NPC38050 Bình Trưởng only showed default Lv16-20 training talk; no challenge progression.
+- Runtime trace: player had mission11121=1 but flag for Mark11121 bitId588 was absent. Event10 requires class2 mission11121 pStyle3 ops5 value1, so branch was blocked.
+- DVT data evidence: Mark11121 has bitId=588 and has no record in IOS_MarkStep_C.dat. Existing server already hardcoded four similar no-MarkStep marker missions (11804,12283,12285,12396) to set completion flags on ADD_STEP.
+- Root fix removes production dependence on marker-ID hardcoding: added MarkStepDatLoader + GameDataManager.markStepMissionIds. A marker mission is recognized from data as MarkDef.bitId>0 and missionId absent from IOS_MarkStep_C.dat; legacy list remains fallback only if MarkStep data is unavailable.
+- EveResultExecutor ADD_STEP now sets the Mark completion flag for any data-driven marker mission, while preserving the mission step write/client packet.
+- EveStateBuilder now auto-reconciles stale data: if a marker mission already has step>0 but its flag is missing, it persists flag=1 and exposes it immediately to the same Eve evaluation. This repairs existing characters such as 11121=1/flag588=0 without reset.
+- Permanent DvtMarkerMissionRegressionTest locks: 11121 bitId588 + no MarkStep, ADD_STEP sets flag588, real-step mission11120 does not auto-flag, and stale marker step is backfilled before evaluation.
+- Targeted marker/comparator/door-chain tests PASS; full local gradlew test build --rerun-tasks PASS 21/21.
