@@ -246,6 +246,9 @@ class GameDataManager(
         private set
 
     /** Định nghĩa thời gian hoạt động (key = activity ID)*/
+    var passAwardDefs: List<PassAwardDef> = emptyList()
+        private set
+
     var activityTimeDefs: Map<Int, ActivityTimeDef> = emptyMap()
         private set
 
@@ -703,6 +706,16 @@ class GameDataManager(
         loadFile(dataDir, "AchievementData_C.dat") { bytes ->
             achievementDefs = AchievementDatLoader.load(bytes)
             logger.info { "Nạp Achievement xong: ${achievementDefs.size} bản ghi" }
+        }
+
+        val passAwardFile = dataIosDir.resolve("IOS_PassAward_C.dat")
+        if (Files.isRegularFile(passAwardFile)) {
+            try {
+                passAwardDefs = PassAwardDatLoader.load(Files.readAllBytes(passAwardFile))
+                logger.info { "Nạp IOS_PassAward xong: ${passAwardDefs.size} cấp, seasons=${passAwardDefs.map { it.seasonId }.distinct()}" }
+            } catch (e: Exception) {
+                logger.error(e) { "Nạp IOS_PassAward thất bại; BattlePass disabled" }
+            }
         }
 
         // ActivityTime — Lua DVT DataManager đọc Data/IOS_ActivityTime_C.dat.

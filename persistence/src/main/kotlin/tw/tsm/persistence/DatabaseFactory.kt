@@ -33,6 +33,7 @@ import tw.tsm.persistence.tables.CharacterPetEquips
 import tw.tsm.persistence.tables.CharacterPets
 import tw.tsm.persistence.tables.CharacterHotkeys
 import tw.tsm.persistence.tables.CharacterFlyPoints
+import tw.tsm.persistence.tables.CharacterBattlePassSeasons
 import tw.tsm.persistence.tables.CharacterRoleCounts
 import tw.tsm.persistence.tables.CharacterUiSellCounts
 import tw.tsm.persistence.tables.CharacterSlotMachines
@@ -89,7 +90,7 @@ object DatabaseFactory {
                 CharacterMounts,
                 CharacterMountEquips,
                 CharacterHotkeys,
-                CharacterRoleCounts,
+                CharacterRoleCounts, CharacterBattlePassSeasons,
                 CharacterFlyPoints,
                 CharacterMining,
                 CharacterUiSellCounts,

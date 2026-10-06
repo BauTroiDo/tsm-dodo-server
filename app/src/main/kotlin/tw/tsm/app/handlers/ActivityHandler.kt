@@ -7,6 +7,9 @@ import tw.tsm.domain.data.SceneEveData
 import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.PacketHandler
+import tw.tsm.gamelogic.systems.BattlePassSystem
+import tw.tsm.gamelogic.systems.RoleCountSystem
+import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.gamelogic.systems.ActivityScheduleSystem
 import tw.tsm.gamelogic.systems.AdminBypassPolicy
 import tw.tsm.gamelogic.systems.SpecialSceneTeleportService
@@ -22,6 +25,10 @@ class ActivityHandler(
     private val specialTeleport: SpecialSceneTeleportService,
     private val activityTimes: Map<Int, ActivityTimeDef>,
     private val eveData: Map<Int, SceneEveData>,
+    private val battlePass: BattlePassSystem? = null,
+    private val roleCounts: RoleCountSystem? = null,
+    private val inventory: tw.tsm.gamelogic.systems.InventorySystem? = null,
+    private val response: ResponseSender? = null,
 ) : PacketHandler {
     override val mainKind: Int = Opcodes.ACTIVITY
 
@@ -33,7 +40,30 @@ class ActivityHandler(
         if (session.state != SessionState.IN_GAME) return
         when (subKind) {
             3 -> handleEnter(session, data)
+            11 -> handleBattlePass(session, data)
             else -> activityLogger.warn { "Activity chưa hỗ trợ subKind=$subKind (${data.size} bytes)" }
+        }
+    }
+
+    private suspend fun handleBattlePass(session: GameSession, data: ByteArray) {
+        if (data.size != 2 || (data[0].toInt() and 255) != BattlePassSystem.KIND || data[1].toInt() !in 0..1) return
+        val request = data[1].toInt()
+        val now = LocalDateTime.now()
+        val charId = session.roleId.toLong()
+        try {
+            val open = battlePass?.isOpen(charId, now) == true
+            if (!open) { session.send(battlePassPacket(255, request)); return }
+            val success = request == 0 || (session.battleId == 0L && battlePass!!.claim(charId, now))
+            if (success && request == 1) {
+                response!!.sendAllBagItems(session, inventory!!.getBag(charId), refresh = true)
+                val counts = roleCounts!!
+                response.sendRoleCountUpdate(session, listOf(BattlePassSystem.EXP, BattlePassSystem.FREE, BattlePassSystem.PAID)
+                    .associateWith { counts.getValue(charId, it) to counts.getMaxValue(charId, it) })
+            }
+            session.send(battlePassPacket(if (success) 1 else 0, request))
+        } catch (e: Exception) {
+            activityLogger.error(e) { "BattlePass request failed charId=$charId" }
+            session.send(battlePassPacket(0, request))
         }
     }
 
@@ -110,6 +140,10 @@ class ActivityHandler(
     )
 
     companion object {
+        fun battlePassPacket(result: Int, request: Int): ByteArray = PacketWriter()
+            .writeByte(77).writeByte(11).writeByte(0).writeByte(BattlePassSystem.KIND)
+            .writeByte(result).writeByte(request).toByteArray()
+
         const val JUDGMENT_TOWER_SCENE_ID = 12921
         const val ACTIVITY_MIN_LEVEL = 15
 

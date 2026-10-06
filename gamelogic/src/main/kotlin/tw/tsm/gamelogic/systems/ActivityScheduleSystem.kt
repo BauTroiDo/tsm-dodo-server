@@ -16,6 +16,7 @@ import java.time.LocalDateTime
 class ActivityScheduleSystem(
     private val activityTimes: Map<Int, ActivityTimeDef>,
     private val adminBypassPolicy: AdminBypassPolicy = AdminBypassPolicy(),
+    private val battlePassSeasonIds: Set<Int> = emptySet(),
 ) {
     fun sendAllActivityStates(
         session: GameSession,
@@ -34,6 +35,22 @@ class ActivityScheduleSystem(
         val def = activityTimes[activityId] ?: return
         if (def.switchKind < 1) return
 
+        if (activityId in battlePassSeasonIds) {
+            val start = BattlePassSystem.start(def)
+            val close = BattlePassSystem.end(def)
+            val state = when {
+                now.isBefore(start) -> STATE_NONE
+                !now.isBefore(close) -> STATE_ENDED
+                !isOpenDay(def, now.toLocalDate()) -> STATE_NONE
+                else -> STATE_STARTED
+            }
+            session.send(PacketWriter().writeByte(MAIN_KIND).writeByte(1).writeByte(0)
+                .writeShortLE(activityId).writeDoubleLE(OleDate.fromLocalDateTime(start))
+                .writeDoubleLE(OleDate.fromLocalDateTime(close)).toByteArray())
+            session.send(PacketWriter().writeByte(MAIN_KIND).writeByte(2).writeByte(0)
+                .writeShortLE(activityId).writeByte(state).toByteArray())
+            return
+        }
         val bypassSchedule = adminBypassPolicy.bypassSchedule(session)
         val today = now.toLocalDate()
         val start = if (bypassSchedule) now.minusMinutes(1)

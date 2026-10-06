@@ -14,6 +14,9 @@ import tw.tsm.domain.valueobjects.MythAttribute
 import tw.tsm.domain.valueobjects.ThingData
 import tw.tsm.persistence.tables.CharacterMoney
 import tw.tsm.persistence.tables.Inventories
+import tw.tsm.persistence.tables.CharacterRoleCounts
+import tw.tsm.persistence.tables.CharacterBattlePassSeasons
+import tw.tsm.domain.constants.EThings
 
 /**
  * Triển khai InventoryRepository bằng Exposed ORM
@@ -71,6 +74,54 @@ class InventoryRepositoryImpl : InventoryRepository {
                     it.setThingData(thing)
                 }
             }
+        }
+        Unit
+    }
+
+    override suspend fun loadBattlePassSeason(characterId: Long): Int? = suspendTransaction {
+        CharacterBattlePassSeasons.selectAll().where { CharacterBattlePassSeasons.charId eq characterId }
+            .singleOrNull()?.get(CharacterBattlePassSeasons.seasonId)
+    }
+
+    override suspend fun saveBattlePassClaimAtomic(
+        characterId: Long, seasonId: Int, changes: Map<Int, ThingData?>,
+        expectedProgress: Map<Int, Int>, nextProgress: Map<Int, Pair<Int, Int>>,
+    ) = suspendTransaction {
+        val boundSeason = CharacterBattlePassSeasons.selectAll()
+            .where { CharacterBattlePassSeasons.charId eq characterId }
+            .singleOrNull()?.get(CharacterBattlePassSeasons.seasonId)
+        check(boundSeason == null || boundSeason == seasonId) { "BattlePass rollover requires evidenced reset policy" }
+        val persisted = CharacterRoleCounts.selectAll().where { CharacterRoleCounts.charId eq characterId }
+            .associate { it[CharacterRoleCounts.countIndex] to it[CharacterRoleCounts.value] }
+        check(expectedProgress.all { (index, value) -> (persisted[index] ?: 0) == value })
+        val storageType = EThings.BAG
+        for ((slot, thing) in changes) {
+            if (thing == null || thing.isEmpty) {
+                Inventories.deleteWhere {
+                    (Inventories.characterId eq characterId) and
+                    (Inventories.storageType eq storageType) and
+                    (Inventories.slot eq slot)
+                }
+            } else {
+                Inventories.upsert {
+                    it[Inventories.characterId] = characterId
+                    it[Inventories.storageType] = storageType
+                    it[Inventories.slot] = slot
+                    it.setThingData(thing)
+                }
+            }
+        }
+        nextProgress.forEach { (index, pair) ->
+            CharacterRoleCounts.upsert {
+                it[CharacterRoleCounts.charId] = characterId
+                it[CharacterRoleCounts.countIndex] = index
+                it[CharacterRoleCounts.value] = pair.first
+                it[CharacterRoleCounts.maxValue] = pair.second
+            }
+        }
+        CharacterBattlePassSeasons.upsert {
+            it[CharacterBattlePassSeasons.charId] = characterId
+            it[CharacterBattlePassSeasons.seasonId] = seasonId
         }
         Unit
     }

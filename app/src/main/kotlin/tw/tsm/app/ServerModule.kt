@@ -521,7 +521,10 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
         }
     }
     single { AdminBypassPolicy() }
-    single { ActivityScheduleSystem(get<GameDataManager>().activityTimeDefs, get<AdminBypassPolicy>()) }
+    single { BattlePassSystem(get<GameDataManager>().passAwardDefs, get<GameDataManager>().activityTimeDefs,
+        get<GameDataManager>().itemDefs, get<InventorySystem>(), get<RoleCountSystem>(), get<BitFlagSystem>()) }
+    single { ActivityScheduleSystem(get<GameDataManager>().activityTimeDefs, get<AdminBypassPolicy>(),
+        get<GameDataManager>().passAwardDefs.map { it.seasonId }.toSet()) }
 
     single {
         JiugonggeSystem(
@@ -742,7 +745,9 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<GameDataManager>().eternalDungeonPrizeDefs,
         )
     }
-    single { ActivityHandler(get<ActivityScheduleSystem>(), get<AdminBypassPolicy>(), get<SpecialSceneTeleportService>(), get<GameDataManager>().activityTimeDefs, get<GameDataManager>().eveData) }
+    single { ActivityHandler(get<ActivityScheduleSystem>(), get<AdminBypassPolicy>(), get<SpecialSceneTeleportService>(),
+        get<GameDataManager>().activityTimeDefs, get<GameDataManager>().eveData, get<BattlePassSystem>(),
+        get<RoleCountSystem>(), get<InventorySystem>(), get<ResponseSender>()) }
     single { ActivityModelHandler() }
     single { MallHandler(get(), get(), get<PointSystem>(), get<MoneySystem>(), get<PlayerCurrencySystem>(), get<ResponseSender>()) }
     single { SlotMachineHandler(get<SlotMachineSystem>(), get<ResponseSender>()) }

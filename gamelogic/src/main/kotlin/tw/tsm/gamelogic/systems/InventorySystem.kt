@@ -625,6 +625,20 @@ class InventorySystem(
         }
     }
 
+    suspend fun commitBattlePassClaim(
+        characterId: Long, seasonId: Int, changes: Map<Int, ThingData?>,
+        expectedProgress: Map<Int, Int>, nextProgress: Map<Int, Pair<Int, Int>>,
+    ) {
+        val bag = bags[characterId] ?: error("Bag not loaded")
+        inventoryRepo.saveBattlePassClaimAtomic(characterId, seasonId, changes, expectedProgress, nextProgress)
+        changes.forEach { (slot, thing) ->
+            if (thing == null || thing.isEmpty) bag.remove(slot) else bag[slot] = thing
+        }
+        nextProgress.forEach { (index, pair) -> roleCountSystem.setValue(characterId, index, pair.first, pair.second) }
+    }
+
+    suspend fun battlePassSeason(characterId: Long): Int? = inventoryRepo.loadBattlePassSeason(characterId)
+
     // ── Thao tác trang bị ──
 
     /**

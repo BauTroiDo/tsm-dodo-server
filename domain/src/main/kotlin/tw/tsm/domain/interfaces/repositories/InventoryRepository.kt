@@ -32,6 +32,14 @@ interface InventoryRepository {
         }
     }
 
+    suspend fun loadBattlePassSeason(characterId: Long): Int? = null
+
+    /** Real persistence commits bag, both claim counters and season identity together. */
+    suspend fun saveBattlePassClaimAtomic(
+        characterId: Long, seasonId: Int, changes: Map<Int, ThingData?>,
+        expectedProgress: Map<Int, Int>, nextProgress: Map<Int, Pair<Int, Int>>,
+    ) { error("Atomic BattlePass persistence unavailable") }
+
     /**
      * Lưu hàng loạt toàn bộ vật phẩm của loại lưu trữ chỉ định (xóa sạch rồi ghi vào)
      */
