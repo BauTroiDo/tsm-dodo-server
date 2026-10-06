@@ -3983,3 +3983,43 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Regression: DungeonRoomPacketTest locks kind5 id63 -> close anchor18, kind3 ids stay unchanged.
 - Targeted DungeonRoomPacketTest + DungeonWeeklyBattleV2Test PASS.
 - Full local gradlew test build --rerun-tasks PASS 21/21.
+
+
+## 2026-10-06 — Quest 10143 Đại Phá Quân Ô Tản / class4 skill comparator fix
+- Runtime screenshot route identified:
+  - current map scene12705 = Lều Hương Dũng quân.
+  - NPC click1 = Tốt Bá npc38048; it belongs to separate Hương Dũng mission12292.
+  - current character runtime has mission10143=1 and no mission12292, so Tốt Bá generic greeting is expected and is not quest10143 target.
+- IOS_Mark_C.dat:
+  - 10143 = marker mission "Đại Phá Quân Ô Tản", bitId0.
+  - 10144 = completion mission same name, bitId91.
+- IOS_MarkStep_C.dat:
+  - 10143 step1: "Đến Lư Long khẩu đánh bại Khâu Lực Cư, học được thuật đào tẩu".
+  - destination scene12820, pos(1390,310), eventKind1/eventId1, checkTeam=true.
+- Eve scene12820 click1 = Âu Lực Cư npc14249, event6:
+  - mission10143 step>=1 + 10144 absent + skill14001 gate.
+  - Talk10735 -> Talk10737 -> fightDataKey11.
+  - win: Talk10739 + item46285 + skill14002 + complete10143 + add10144=1.
+- IOS_Skill_C.dat:
+  - 14001 Thuật trinh thám, maxLv1.
+  - 14002 Thuật đào tẩu, maxLv1, preSkill14001.
+- Root cause:
+  - Eve class4 previously reused compareStep().
+  - scene12820/eve6 uses skill14001 ops4/value1.
+  - compareStep ops4 means >, making required condition level>1 impossible because skill14001 maxLv=1.
+- Full production-Eve class4 inventory: 36 rows, shapes only:
+  - ops5/value0 = 12
+  - ops5/value1 = 8
+  - ops4/value1 = 4
+  - ops2/value0 = 8
+  - ops2/value9 = 4
+- Data forces class4 to use Eve numeric comparator family:
+  - ops5 exact equality (unlearned Lv0 / exact Lv1).
+  - ops4 >= threshold.
+  - ops2 > threshold (e.g. maxLv10 skills use ops2/value9 for Lv10).
+- Fix:
+  - EveConditionEvaluator conditionClass4 now uses compareEveNumeric(), not compareStep().
+  - permanent regression locks mission10143 skill14001 Lv1 ops4/value1 and other real class4 shapes.
+- Temporary Lulong/EveSkill probe tests removed before commit.
+- Targeted EveConditionEvaluatorTest PASS.
+- Full local gradlew test build --rerun-tasks PASS 21/21.

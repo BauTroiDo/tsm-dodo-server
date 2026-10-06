@@ -197,8 +197,15 @@ object EveConditionEvaluator {
             }
 
             4 -> {
+                // Eve skill conditions use the Eve numeric comparator family, not mission-step ops.
+                // Real DVT evidence:
+                // - 14001 (maxLv=1): ops5/value0 = not learned, ops5/value1 = exactly Lv1.
+                // - 14001/14004 (maxLv 1/10): ops4/value1 = learned / at least Lv1.
+                // - 14005/14011 (maxLv=10): ops2/value9 = Lv10.
+                // Reusing compareStep made ops4 mean > and permanently blocked maxLv1 quest skills
+                // such as mission10143 (Thuật trinh thám -> Thuật đào tẩu).
                 val skillLevel = state.skillLevels[cond.conditionParameter] ?: 0
-                val result = compareStep(skillLevel, cond.conditionOps, cond.conditionValue)
+                val result = compareEveNumeric(skillLevel, cond.conditionOps, cond.conditionValue)
                 logger.debug { "class=4 skillId=${cond.conditionParameter} level=$skillLevel ops=${cond.conditionOps} val=${cond.conditionValue} → $result" }
                 result
             }

@@ -785,24 +785,46 @@ class EveConditionEvaluatorTest : DescribeSpec({
         }
     }
 
-    describe("class=4 điều kiện kỹ năng") {
-        it("sẽ so cấp kỹ năng với conditionValue") {
-            val state = PlayerEventState(skillLevels = mapOf(14001 to 2))
+    describe("class=4 điều kiện kỹ năng dùng comparator Eve riêng") {
+        it("quest 10143: Thuật trinh thám Lv1 thỏa ops4 value1") {
+            val learned = PlayerEventState(skillLevels = mapOf(14001 to 1))
+            val absent = PlayerEventState(skillLevels = emptyMap())
 
+            // scene12820/eve6: 14001 maxLv=1, ops4/value1 phải là >=1.
             EveConditionEvaluator.evaluate(
-                cond(cls = 4, param = 14001, ops = 5, value = 1), state
+                cond(cls = 4, param = 14001, pStyle = 1, ops = 4, value = 1), learned
             ) shouldBe true
             EveConditionEvaluator.evaluate(
-                cond(cls = 4, param = 14001, ops = 2, value = 1), state
+                cond(cls = 4, param = 14001, pStyle = 1, ops = 4, value = 1), absent
             ) shouldBe false
         }
 
-        it("kỹ năng chưa học tính cấp là 0") {
-            val state = PlayerEventState(skillLevels = emptyMap())
+        it("ops5 là exact level cho nhánh chưa học và đã học Lv1") {
+            val absent = PlayerEventState(skillLevels = emptyMap())
+            val learned = PlayerEventState(skillLevels = mapOf(14001 to 1))
 
             EveConditionEvaluator.evaluate(
-                cond(cls = 4, param = 14001, ops = 1, value = 0), state
+                cond(cls = 4, param = 14001, pStyle = 1, ops = 5, value = 0), absent
             ) shouldBe true
+            EveConditionEvaluator.evaluate(
+                cond(cls = 4, param = 14001, pStyle = 1, ops = 5, value = 0), learned
+            ) shouldBe false
+            EveConditionEvaluator.evaluate(
+                cond(cls = 4, param = 14001, pStyle = 1, ops = 5, value = 1), learned
+            ) shouldBe true
+        }
+
+        it("ops2 là lớn hơn, khóa các skill đạt cấp tối đa") {
+            val level10 = PlayerEventState(skillLevels = mapOf(14005 to 10))
+            val level9 = PlayerEventState(skillLevels = mapOf(14005 to 9))
+
+            // scene18102 uses skill14005 maxLv10 + ops2/value9.
+            EveConditionEvaluator.evaluate(
+                cond(cls = 4, param = 14005, pStyle = 1, ops = 2, value = 9), level10
+            ) shouldBe true
+            EveConditionEvaluator.evaluate(
+                cond(cls = 4, param = 14005, pStyle = 1, ops = 2, value = 9), level9
+            ) shouldBe false
         }
     }
 
