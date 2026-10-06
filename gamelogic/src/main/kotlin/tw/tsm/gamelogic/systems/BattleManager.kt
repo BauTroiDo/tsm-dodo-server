@@ -89,6 +89,8 @@ class BattleManager(
 
     /** Trình tạo ID trận đấu*/
     private val nextBattleId = AtomicLong(1)
+    /** ID âm chỉ tồn tại trong battle, không bao giờ đụng characterId DB thật. */
+    private val nextBotRoleId = AtomicLong(-1_000_000_000L)
 
     /**
      * DVT manual catch owner-side gates from FightRoleController.DoClick.
@@ -476,6 +478,150 @@ class BattleManager(
         scope.launch {
             runBattleLoop(battle)
         }
+    }
+
+    /**
+     * Tạo trận arena VS/Chaos/Mix có thể lấp bot sau timeout matchmaking.
+     *
+     * Bot dùng EHuman.AutomanualPlayer=28 và pet bot dùng 29, đúng wire contract DVT.
+     * AI là policy offline custom; trận này tuyệt đối không dùng reward/drop PvE.
+     */
+    suspend fun createArenaBotBattle(
+        mode: PvpBotMode,
+        rightReal: List<GameSession>,
+        leftReal: List<GameSession>,
+        rightBotCount: Int,
+        leftBotCount: Int,
+    ): Boolean {
+        val allReal = (rightReal + leftReal).distinctBy { it.playerId }
+        if (allReal.isEmpty()) return false
+        if (allReal.any { isInBattle(it.playerId) }) return false
+        if (rightReal.size + rightBotCount !in 1..mode.sideSize) return false
+        if (leftReal.size + leftBotCount !in 1..mode.sideSize) return false
+        if (rightReal.size + rightBotCount != mode.sideSize ||
+            leftReal.size + leftBotCount != mode.sideSize
+        ) return false
+
+        val battleId = nextBattleId.getAndIncrement()
+        val battle = BattleInstance(
+            battleId = battleId,
+            warType = EWar.VS,
+            warStyle = mode.warStyle,
+            terrain = 101,
+            eventNo = 0,
+            grid = BattleGrid(),
+            skillResolver = BattleSkillResolver(skillDefs, exclusiveSkillDefs),
+            itemResolver = battleItemResolver,
+            involvedNpcDefs = emptyList(),
+            suppressGenericRewards = true,
+        )
+
+        suspend fun addReal(session: GameSession, right: Boolean, row: Int) {
+            val charId = session.roleId.toLong()
+            val selectedPet = petSystem.getBattleDeployableFollowPets(charId).firstOrNull()
+            val frontCol = if (right) BattleConstants.PLAYER_FRONT_COL else BattleConstants.ENEMY_FRONT_COL
+            val backCol = if (right) BattleConstants.PLAYER_BACK_COL else BattleConstants.ENEMY_BACK_COL
+            val kind = if (right) EHuman.PLAYER else EHuman.PLAYERS
+            val player = createPlayerFighter(
+                session = session,
+                col = if (selectedPet == null) frontCol else backCol,
+                row = row,
+                kind = kind,
+            )
+            battle.addFighter(player)
+            battle.playerSessions[session.playerId] = session
+
+            if (selectedPet != null) {
+                val (followSlot, petData) = selectedPet
+                val npcDef = npcDefs[petData.npcId]
+                if (npcDef != null) {
+                    battle.addFighter(
+                        createFollowNpcFighter(
+                            npcDef = npcDef,
+                            petData = petData,
+                            masterId = session.playerId,
+                            ownerCharacterId = charId,
+                            npcDataId = petData.npcId,
+                            followSlot = followSlot,
+                            col = frontCol,
+                            row = row,
+                        )
+                    )
+                }
+            }
+        }
+
+        suspend fun addBot(template: GameSession, right: Boolean, row: Int, ordinal: Int) {
+            val botRoleId = nextBotRoleId.getAndDecrement()
+            val charId = template.roleId.toLong()
+            val selectedPet = petSystem.getBattleDeployableFollowPets(charId).firstOrNull()
+            val frontCol = if (right) BattleConstants.PLAYER_FRONT_COL else BattleConstants.ENEMY_FRONT_COL
+            val backCol = if (right) BattleConstants.PLAYER_BACK_COL else BattleConstants.ENEMY_BACK_COL
+            val bot = createPlayerFighter(
+                session = template,
+                col = if (selectedPet == null) frontCol else backCol,
+                row = row,
+                kind = EHuman.AUTOMANUAL_PLAYER,
+                roleIdOverride = botRoleId,
+                nameOverride = "Đấu Sĩ $ordinal",
+                restoreFull = true,
+            )
+            battle.addFighter(bot)
+
+            if (selectedPet != null) {
+                val (_, petData) = selectedPet
+                val npcDef = npcDefs[petData.npcId]
+                if (npcDef != null) {
+                    battle.addFighter(
+                        createFollowNpcFighter(
+                            npcDef = npcDef,
+                            petData = petData,
+                            masterId = botRoleId,
+                            ownerCharacterId = charId,
+                            npcDataId = petData.npcId,
+                            followSlot = 0,
+                            col = frontCol,
+                            row = row,
+                            kind = EHuman.AUTOMANUAL_NPC,
+                            roleIdOverride = nextBotRoleId.getAndDecrement(),
+                            restoreFull = true,
+                        )
+                    )
+                }
+            }
+        }
+
+        rightReal.forEachIndexed { row, session -> addReal(session, true, row) }
+        leftReal.forEachIndexed { row, session -> addReal(session, false, row) }
+
+        val templates = allReal.ifEmpty { return false }
+        repeat(rightBotCount) { i ->
+            addBot(templates[i % templates.size], true, rightReal.size + i, i + 1)
+        }
+        repeat(leftBotCount) { i ->
+            addBot(
+                templates[(rightBotCount + i) % templates.size],
+                false,
+                leftReal.size + i,
+                rightBotCount + i + 1,
+            )
+        }
+
+        battles[battleId] = battle
+        for ((playerId, session) in battle.playerSessions) {
+            playerBattleMap[playerId] = battleId
+            session.battleId = battleId
+        }
+        battle.catchOwnerValidator = { _, _ -> false }
+
+        sendBattleInit(battle)
+        logger.info {
+            "ArenaBot battle=$battleId mode=$mode " +
+                "rightReal=${rightReal.map { it.characterName }} rightBots=$rightBotCount " +
+                "leftReal=${leftReal.map { it.characterName }} leftBots=$leftBotCount"
+        }
+        scope.launch { runBattleLoop(battle) }
+        return true
     }
 
     /**
@@ -1423,7 +1569,10 @@ class BattleManager(
         }
 
         // Trận PVP và PK với NPC trên bản đồ không đi qua callback sự kiện
-        if (battle.warType == EWar.PK_PLAYERS || battle.warType == EWar.PK_MAP_NPC) {
+        if (battle.warType == EWar.PK_PLAYERS ||
+            battle.warType == EWar.PK_MAP_NPC ||
+            battle.warType == EWar.VS
+        ) {
             logger.info { "Trận ${battle.battleId} không thuộc sự kiện đã kết thúc, không gọi callback sự kiện" }
             return
         }
@@ -1782,7 +1931,10 @@ class BattleManager(
         session: GameSession,
         col: Int = BattleConstants.PLAYER_FRONT_COL,
         row: Int = BattleConstants.CENTER_ROW,
-        kind: Int = EHuman.PLAYER
+        kind: Int = EHuman.PLAYER,
+        roleIdOverride: Long? = null,
+        nameOverride: String? = null,
+        restoreFull: Boolean = false,
     ): BattleFighter {
         val charId = session.roleId.toLong()
         val state = playerStateManager.getState(charId)
@@ -1843,15 +1995,15 @@ class BattleManager(
         )
 
         return BattleFighter(
-            roleId = session.playerId,
+            roleId = roleIdOverride ?: session.playerId,
             kind = kind,
-            name = session.characterName,
+            name = nameOverride ?: session.characterName,
             col = col,
             row = row,
             maxHp = battleMaxHp,
             maxSp = battleMaxSp.toLong(),
-            hp = state.hp.coerceIn(0L, battleMaxHp),
-            sp = state.sp.toLong().coerceIn(0L, battleMaxSp.toLong()),
+            hp = if (restoreFull) battleMaxHp else state.hp.coerceIn(0L, battleMaxHp),
+            sp = if (restoreFull) battleMaxSp.toLong() else state.sp.toLong().coerceIn(0L, battleMaxSp.toLong()),
             level = state.level,
             element = state.element,
             atk = BattlePercentStatCalc.addBasePercent(state.atk, state.atkPercent) +
@@ -1952,7 +2104,10 @@ class BattleManager(
         npcDataId: Int,
         followSlot: Int = 0,
         col: Int = BattleConstants.PLAYER_BACK_COL,
-        row: Int = BattleConstants.CENTER_ROW
+        row: Int = BattleConstants.CENTER_ROW,
+        kind: Int = EHuman.FOLLOW_NPC,
+        roleIdOverride: Long? = null,
+        restoreFull: Boolean = false,
     ): BattleFighter {
         // Cộng dồn trang bị của tướng (Calc.GetMaxHp: hpx và EquipHpx cùng bậc được tính, EquipMaxHp cộng trực tiếp)
         val equipBonus = EquipBonusCalculator.calculateTotalBonus(
@@ -2010,8 +2165,8 @@ class BattleManager(
         val battleSkillLevels = SoulSkillLevelMerge.merge(normalSkills, equippedSoul)
 
         return BattleFighter(
-            roleId = npcDataId.toLong(),
-            kind = EHuman.FOLLOW_NPC,
+            roleId = roleIdOverride ?: npcDataId.toLong(),
+            kind = kind,
             masterId = masterId,
             npcId = npcDataId,
             followSlot = followSlot,
@@ -2021,8 +2176,8 @@ class BattleManager(
             row = row,
             maxHp = maxHp,
             maxSp = maxSp,
-            hp = hp,
-            sp = sp,
+            hp = if (restoreFull) maxHp else hp,
+            sp = if (restoreFull) maxSp else sp,
             level = petData.level,
             element = npcDef.element,
             atk = BattlePercentStatCalc.addBasePercent(petData.atk, equipBonus.atkPercent) +
