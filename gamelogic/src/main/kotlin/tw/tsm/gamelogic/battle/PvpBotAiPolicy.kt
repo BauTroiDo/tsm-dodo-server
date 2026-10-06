@@ -13,6 +13,13 @@ import tw.tsm.domain.constants.BattleConstants
 object PvpBotAiPolicy {
     private const val HEAL_THRESHOLD_PERCENT = 55
     private val FRIENDLY_FIGHT_WAYS = setOf(4, 6, 7, 8, 14, 19)
+    /**
+     * Live DVT IOS_Skill_C.dat encodes Trị Liệu/Toàn Trị Liệu as fightWay=7.
+     * Keep this PvP-bot-only until battle-core heal semantics are audited separately.
+     */
+    fun isPvpHpHeal(skill: tw.tsm.domain.data.SkillDef): Boolean =
+        skill.fightWay == 7
+
     private val NON_BATTLE_SKILLS = setOf(
         14003, 14004, 14005,
         14009, 14010, 14011,
@@ -96,7 +103,7 @@ object PvpBotAiPolicy {
             .minByOrNull { if (it.maxHp <= 0) 100 else (it.hp * 100L / it.maxHp).toInt() }
         if (wounded != null) {
             val heal = learned.firstOrNull { (_, def) ->
-                BattleDamageCalc.isHealSkill(def) && def.fightWay in FRIENDLY_FIGHT_WAYS
+                isPvpHpHeal(def)
             }
             if (heal != null) {
                 result += BattleAction(
