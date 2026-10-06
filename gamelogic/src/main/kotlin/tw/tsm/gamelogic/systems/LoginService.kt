@@ -345,11 +345,15 @@ class LoginService(
         // but requires S:077-001/002 to know the actual current window/state.
         activityScheduleSystem?.sendAllActivityStates(session)
 
-        // S:172-001 activity-server route. The original DVT client switches shards for
-        // activities whose bitFunction includes flag 2. Offline runs one authoritative GS,
-        // so advertise the current server itself as the activity server. Lua then sees
-        // activityServerId == serverId and proceeds to C:077-003 without a fake reconnect.
-        session.send(activityServerInfoPacket(session.serverId))
+        // S:172-001 activity-server route. Keep a distinct logical activity-server ID so
+        // FightField/UITeleport do not classify the production GS itself as an event server.
+        // C:001-100 is handled as a ticketed reconnect back to this same physical GS.
+        session.send(
+            activityServerInfoPacket(
+                ACTIVITY_VIRTUAL_SERVER_ID,
+                ip = ACTIVITY_ROUTE_MARKER_IP,
+            )
+        )
 
         // S:077 thời gian hoạt động runtime + S:091-001 bảng cửu cung daily.
         // UIJiugongge opens later from the Hằng ngày button and expects this state to exist.
@@ -471,13 +475,18 @@ class LoginService(
     }
 
     companion object {
+        /** Logical activity-shard identity used by the original DVT client handoff path. */
+        const val ACTIVITY_VIRTUAL_SERVER_ID = 90
+
+        /**
+         * Network.ConnectToActivityServer only requires a non-empty activityServerIp before
+         * it sends C:001-100. The actual reconnect host is selected from S:001-100 GSID,
+         * so this marker is never used as a socket destination.
+         */
+        const val ACTIVITY_ROUTE_MARKER_IP = "same-gs"
+
         /**
          * S:172-001 <activity server> + ServerID(Int32) + ServerPort(Int32) + ServerIP(raw Big5).
-         *
-         * DVT's offline one-server profile intentionally advertises the current GS as
-         * the activity server. The client replaces the IP from Network.servers when the
-         * server id matches, so an empty raw IP is both sufficient and safer than
-         * hard-coding a LAN address.
          */
         fun activityServerInfoPacket(
             serverId: Int,

@@ -8,7 +8,9 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import tw.tsm.app.handlers.ActivityHandler
+import tw.tsm.app.handlers.LoginHandler
 import tw.tsm.data.loaders.EveDataLoader
+import tw.tsm.domain.enums.LoginKind
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.gamelogic.systems.AdminBypassPolicy
 import tw.tsm.gamelogic.systems.EveConditionResolver
@@ -104,6 +106,34 @@ class AdminBypassAndActivityEntryTest {
                 0xD5.toByte(), 0x19, 0, 0,
             ),
             LoginService.activityServerInfoPacket(serverId = 1),
+        )
+    }
+
+    @Test
+    fun logicalActivityBridgeKeepsProductionOutOfActivityServerIdentity() {
+        assertEquals(90, LoginService.ACTIVITY_VIRTUAL_SERVER_ID)
+        assertEquals(LoginKind.CHANGE_AREA, LoginKind.fromCode(254))
+        assertArrayEquals(
+            byteArrayOf(
+                172.toByte(), 1, 0,
+                90, 0, 0, 0,
+                0xD5.toByte(), 0x19, 0, 0,
+                's'.code.toByte(), 'a'.code.toByte(), 'm'.code.toByte(), 'e'.code.toByte(),
+                '-'.code.toByte(), 'g'.code.toByte(), 's'.code.toByte(),
+            ),
+            LoginService.activityServerInfoPacket(
+                serverId = LoginService.ACTIVITY_VIRTUAL_SERVER_ID,
+                ip = LoginService.ACTIVITY_ROUTE_MARKER_IP,
+            ),
+        )
+        assertArrayEquals(
+            byteArrayOf(
+                1, 100, 0,
+                1,
+                1, 0,
+                0x78, 0x56, 0x34, 0x12,
+            ),
+            LoginHandler.serverSwitchResultPacket(1, 1, 0x12345678L),
         )
     }
 

@@ -4093,3 +4093,18 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Runtime restart sạch; production HEAD=0c05141, TCP 6613 LISTEN PID 6516.
 - Startup log xác nhận `IOS_TitleData` nạp đúng 33 danh hiệu và server ready trên 0.0.0.0:6613; không thấy ERROR/Exception/FATAL/Koin creation error trong đoạn verify.
 - Runtime client test cần xác nhận: danh hiệu đã mở có thể đeo; title chưa mở không thể forged; bấm lại để tháo; overhead/chat cập nhật; relog giữ đúng title.
+
+
+## 2026-10-06 — Fix cảnh báo "máy chủ sự kiện" / logical Activity GS handoff
+- User xác nhận Danh hiệu PASS nhưng mọi trận chiến hiện string 24880 ("chức năng bị hạn chế trong máy chủ sự kiện").
+- Root cause khóa từ Lua DVT: `FightField.Create()` hiển thị 24880 khi `Network.activityServerId == Network.serverId`; bridge cũ f301713 cố tình gửi S172-001 với activityServerId=current GS để né reconnect nên production bị client coi là Activity Server ở mọi trận.
+- Kiến trúc gốc ĐVT xác nhận có activity/sub-server: UIActivity bitFunction flag2 gọi `Network.ConnectToActivityServer()` -> C:001-100; S:001-100 success gọi `UIServerArea.DoConnect`; sau S:001-002 client tự gọi `UIActivity.TeleportToActivityScene()`.
+- Fix backend-only, không sửa Lua/client:
+  - S172-001 giờ quảng bá logical activity server ID 90, khác physical production serverId 1; raw IP dùng marker `same-gs` chỉ để vượt guard non-empty, không dùng làm socket destination.
+  - LoginHandler hỗ trợ C:001-100: cấp transfer ticket ngẫu nhiên 30s và trả S:001-100 success với GSID vật lý hiện tại, khiến client reconnect lại cùng production host/port.
+  - Thêm LoginKind CHANGE_AREA=254; reconnect xác thực bằng one-time transfer ticket thay vì plaintext password.
+  - Existing-character session được `loadFromRecord()` trước S:001-002 để tránh race C77-003 bị drop khi Lua auto-teleport ngay sau handoff.
+  - Production vẫn chỉ một process/port; activity server chỉ là logical identity, không tạo staging/dev server mới.
+- Regression AdminBypassAndActivityEntryTest khóa: logical ID90, ELogin254, S172 bytes với marker same-gs, S1-100 result bytes.
+- Targeted test PASS; full local `gradlew test build --rerun-tasks` PASS 21/21.
+- Next: commit/push/deploy production, verify login normal + normal battle không còn 24880 + activity bitFunction2 vẫn handoff/entry được.

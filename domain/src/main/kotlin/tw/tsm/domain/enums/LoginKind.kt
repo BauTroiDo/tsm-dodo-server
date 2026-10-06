@@ -16,6 +16,8 @@ enum class LoginKind(val code: Int) {
     GOOGLE(4),
     /** Đăng nhập Apple*/
     APPLE(7),
+    /** Chuyển GS/phân luồng sau S:001-100. */
+    CHANGE_AREA(254),
     /** Đăng nhập server không biên giới*/
     UNBOUNDED(255);
 

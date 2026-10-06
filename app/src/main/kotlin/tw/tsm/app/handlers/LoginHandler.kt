@@ -16,6 +16,8 @@ import tw.tsm.gamelogic.systems.LoginService
 import tw.tsm.gamelogic.systems.WorldManager
 import tw.tsm.protocol.PacketReader
 import tw.tsm.protocol.PacketWriter
+import java.security.SecureRandom
+import java.util.concurrent.ConcurrentHashMap
 
 private val logger = KotlinLogging.logger {}
 
@@ -33,6 +35,16 @@ class LoginHandler(
     private val characterRepository: CharacterRepository,
     private val worldManager: WorldManager
 ) : PacketHandler {
+    private data class TransferTicket(
+        val accountId: Long,
+        val account: String,
+        val gmLevel: Int,
+        val expiresAtMs: Long,
+    )
+
+    private val transferTickets = ConcurrentHashMap<Long, TransferTicket>()
+    private val secureRandom = SecureRandom()
+
     override val mainKind: Int = Opcodes.LOGIN
 
     override suspend fun handle(session: GameSession, subKind: Int, data: ByteArray) {
@@ -40,6 +52,7 @@ class LoginHandler(
             0 -> handleLogin(session, data)
             1 -> handleReconnect(session, data)
             16 -> handleServerTimeQuery(session)
+            100 -> handleServerSwitchRequest(session, data)
             else -> logger.warn { "Sub-protocol đăng nhập chưa xử lý: subKind=$subKind" }
         }
     }
@@ -98,6 +111,12 @@ class LoginHandler(
                 // TODO: xác thực đăng nhập bên thứ ba
                 responseSender.sendLoginResult(session, resultCode = RESULT_LOGIN_KIND_ERROR)
             }
+            LoginKind.CHANGE_AREA -> {
+                val account = reader.readBig5WithByteLen()
+                reader.readBig5WithByteLen() // password/token legacy; activity handoff uses ticket instead
+                val verifyCode = reader.readUIntLE()
+                handleChangeAreaLogin(session, account, verifyCode)
+            }
             LoginKind.UNBOUNDED -> {
                 val account = reader.readBig5WithByteLen()
                 val password = reader.readBig5WithByteLen()
@@ -155,6 +174,52 @@ class LoginHandler(
         }
     }
 
+    /** C:001-100 xin chuyển sang logical Activity GS. */
+    private fun handleServerSwitchRequest(session: GameSession, data: ByteArray) {
+        if (data.size != 2 || session.accountId <= 0L || session.roleId <= 0) return
+        val targetServerId = PacketReader(data).readUShortLE()
+        if (targetServerId != LoginService.ACTIVITY_VIRTUAL_SERVER_ID) {
+            logger.warn { "Từ chối chuyển GS không hỗ trợ: target=$targetServerId role=${session.roleId}" }
+            session.send(serverSwitchResultPacket(0, session.serverId, 0L))
+            return
+        }
+
+        val now = System.currentTimeMillis()
+        transferTickets.entries.removeIf { it.value.expiresAtMs <= now }
+        var verifyCode: Long
+        do {
+            verifyCode = (secureRandom.nextInt(Int.MAX_VALUE - 1) + 1).toLong()
+        } while (transferTickets.containsKey(verifyCode))
+
+        transferTickets[verifyCode] = TransferTicket(
+            accountId = session.accountId,
+            account = session.account,
+            gmLevel = session.gmLevel,
+            expiresAtMs = now + TRANSFER_TICKET_TTL_MS,
+        )
+
+        // Trả GSID thật (server 1) để client reconnect vào chính production host/port.
+        // activityServerId vẫn là logical ID 90 nên client không tự nhận production là Activity Server.
+        session.send(serverSwitchResultPacket(1, session.serverId, verifyCode))
+        logger.info {
+            "Cấp activity transfer ticket role=${session.roleId} logicalTarget=$targetServerId " +
+                "physicalGs=${session.serverId} verifyCode=$verifyCode"
+        }
+    }
+
+    private suspend fun handleChangeAreaLogin(session: GameSession, account: String, verifyCode: Long) {
+        val ticket = transferTickets.remove(verifyCode)
+        if (ticket == null || ticket.expiresAtMs <= System.currentTimeMillis() || ticket.account != account) {
+            logger.warn { "Activity transfer ticket không hợp lệ: account=$account verifyCode=$verifyCode" }
+            responseSender.sendLoginResult(session, resultCode = RESULT_LOGIN_KIND_ERROR)
+            return
+        }
+
+        session.gmLevel = ticket.gmLevel
+        logger.info { "Activity logical handoff hợp lệ: account=$account verifyCode=$verifyCode" }
+        completeLogin(session, ticket.accountId, ticket.account, "")
+    }
+
     /**
      * Đăng nhập thành công — thiết lập session và phân luồng theo trạng thái nhân vật
      *
@@ -179,6 +244,14 @@ class LoginHandler(
         session.connectCode = System.currentTimeMillis()
         session.state = SessionState.LOGGED_IN
 
+        // Resolve/load the existing character before S:001-002. On activity handoff,
+        // protocal.lua sends C:077-003 immediately from the S:001-002 callback; having
+        // IN_GAME state ready here avoids a race where that request could be discarded.
+        val record = characterRepository.findByAccountId(accountId).firstOrNull()
+        if (record != null) {
+            session.loadFromRecord(record)
+        }
+
         val serverTime = LoginService.currentServerTime()
 
         // S:001-002 kết quả đăng nhập (thành công) — luôn gửi
@@ -194,13 +267,8 @@ class LoginHandler(
             accountKind = 0
         )
 
-        // tra xem đã có nhân vật chưa
-        val characters = characterRepository.findByAccountId(accountId)
-        if (characters.isNotEmpty()) {
+        if (record != null) {
             // đã có nhân vật: vào game luôn (bỏ qua S:001-003 / UICreateRole)
-            val record = characters.first()
-            session.loadFromRecord(record)
-
             logger.info { "Đã có nhân vật, vào thẳng: '${record.name}' (id=${record.id}) tài khoản=$account" }
 
             loginService.executeCharacterEnterSequence(
@@ -252,6 +320,16 @@ class LoginHandler(
     }
 
     companion object {
+        private const val TRANSFER_TICKET_TTL_MS = 30_000L
+
+        fun serverSwitchResultPacket(result: Int, gsId: Int, verifyCode: Long): ByteArray =
+            PacketWriter()
+                .writeByte(Opcodes.LOGIN).writeByte(100).writeByte(0)
+                .writeByte(result)
+                .writeShortLE(gsId)
+                .writeUIntLE(verifyCode)
+                .toByteArray()
+
         const val RESULT_SUCCESS = 0
         const val RESULT_WRONG_PASSWORD = 1
         const val RESULT_DB_ERROR = 2
