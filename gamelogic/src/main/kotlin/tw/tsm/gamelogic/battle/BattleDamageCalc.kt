@@ -440,13 +440,11 @@ object BattleDamageCalc {
     }
 
     /**
-     * DVT live Skill_C stores water recovery rows with attribute=0.
-     * Lua RoleController proves fightWay 6/7/14 are friendly utility and treats 6
-     * separately; live DAT names show 11007/11010 (Trị Liệu) use fightWay=7,
-     * while 11006/11009 (Hồi Ma) use fightWay=6. Therefore HP healing is
-     * data-driven by fightWay=7, not by the unused attribute column.
+     * Xác định có phải kỹ năng hồi phục không (loại hồi phục hệ thuỷ)
      */
-    fun isHealSkill(skill: SkillDef): Boolean = skill.fightWay == 7
+    fun isHealSkill(skill: SkillDef): Boolean {
+        return skill.element == 2 && skill.attribute == EAttribute.HP
+    }
     private val ICE_BOUND_SKILLS = setOf(11014, 20026, 11027, 11039, 11028, 22016, 22017, 22044)
     private val WHIRL_WIND_SKILLS = setOf(13002, 13015, 13016, 13017, 13018, 13046, 13050, 13052, 20027, 20048, 21042, 23036, 46002)
     private val CLUMP_SKILLS = setOf(10004, 20025, 20049, 10033)
