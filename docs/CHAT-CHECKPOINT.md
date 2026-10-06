@@ -4108,3 +4108,8 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Regression AdminBypassAndActivityEntryTest khóa: logical ID90, ELogin254, S172 bytes với marker same-gs, S1-100 result bytes.
 - Targeted test PASS; full local `gradlew test build --rerun-tasks` PASS 21/21.
 - Next: commit/push/deploy production, verify login normal + normal battle không còn 24880 + activity bitFunction2 vẫn handoff/entry được.
+
+- Deploy production hoàn tất: production fast-forward 0c05141 -> 1e4c501; production `gradlew test build --rerun-tasks` PASS 21/21 (4m55s).
+- Restart lần đầu vướng Gradle `app:run` cha cũ còn sống sau khi kill Java child; đợi lifecycle cũ kết thúc rồi chạy lại `_launch_prod_wmi.cmd` sạch.
+- Runtime mới PASS: HEAD=1e4c501, TCP 6613 LISTENING PID 14108; startup 15:28:38 nạp data đầy đủ và `NettyGameServer` ready, không có startup ERROR/Koin/Exception trong log mới.
+- Client phải relog để nhận S172 mới. Runtime validation cần user: trận thường không còn string24880; sau đó thử activity bitFunction2 để kiểm tra C1-100 ticket -> CHANGE_AREA -> C77-003 tự động.
