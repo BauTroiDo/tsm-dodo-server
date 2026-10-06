@@ -87,6 +87,12 @@ class GameDataManager(
     var slotMachinePools: SlotMachinePools? = null
         private set
 
+    var pokeCandidates: List<PokeCandidate> = emptyList()
+        private set
+
+    var pokeRates: Map<Int, Int> = emptyMap()
+        private set
+
     /** Bảng recipe Chế tạo Mobile DVT từ IOS_Compound.dat. */
     var compoundRecipes: List<CompoundRecipeDef> = emptyList()
         private set
@@ -486,6 +492,17 @@ class GameDataManager(
                     logger.error(e) { "Nạp Slot.dat fallback thất bại: $slot" }
                 }
             }
+        }
+
+        val iosPokeData = dataIosDir.resolve("IOS_PokeData_C.dat")
+        if (Files.exists(iosPokeData)) {
+            pokeCandidates = PokeDatLoader.loadCandidates(Files.readAllBytes(iosPokeData))
+            logger.info { "Nạp IOS_PokeData xong: " + pokeCandidates.size + " giải" }
+        }
+        val iosPokeRate = dataIosDir.resolve("IOS_PokeRate_C.dat")
+        if (Files.exists(iosPokeRate)) {
+            pokeRates = PokeDatLoader.loadRates(Files.readAllBytes(iosPokeRate))
+            logger.info { "Nạp IOS_PokeRate xong: " + pokeRates }
         }
 
         // Chế tạo Mobile DVT: recipe kind/material/ratio từ IOS_Compound.dat.
