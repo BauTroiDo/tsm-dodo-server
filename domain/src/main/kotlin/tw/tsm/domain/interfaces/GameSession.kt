@@ -34,6 +34,8 @@ interface SessionStatus {
     var state: SessionState
     /** Đã hoàn tất chuỗi đăng nhập hay chưa*/
     var loginFinished: Boolean
+    /** Mốc bắt đầu phiên online của nhân vật hiện tại, epoch millis. */
+    var onlineStartMillis: Long
 }
 
 /**

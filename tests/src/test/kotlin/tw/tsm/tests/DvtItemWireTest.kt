@@ -22,6 +22,7 @@ import tw.tsm.domain.valueobjects.ThingData
 import tw.tsm.gamelogic.systems.InventorySystem
 import tw.tsm.gamelogic.systems.PetEquipSystem
 import tw.tsm.gamelogic.systems.PetSystem
+import tw.tsm.gamelogic.systems.PlayerCurrencySystem
 import tw.tsm.protocol.ThingDataWire
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -41,6 +42,56 @@ class DvtItemWireTest {
     }
     private val handler = ItemHandler(inventory, mockk(), mockk(), response, mockk(),
         emptyMap(), mockk(), mockk(), mockk(), mockk(), mockk(), mockk(), pet, mockk(), mockk())
+
+    @Test
+    fun `DVT Linh Xu item65344 maps ItemUse216 to Elf currency9`() = runTest {
+        val direct = java.nio.file.Path.of("File.dat", "Data-ios", "IOS_Item_C.dat")
+        val itemPath = if (java.nio.file.Files.exists(direct)) direct else java.nio.file.Path.of("..", "File.dat", "Data-ios", "IOS_Item_C.dat")
+        val defs = ItemDatLoader.load(java.nio.file.Files.readAllBytes(itemPath))
+        val def = defs.getValue(65344)
+        assertEquals("Tiểu Tinh Linh Tệ", def.name)
+        assertEquals(1, def.directUse)
+        assertEquals(EItemUseKind.DIRECT_CURRENCY, def.specialAbility)
+        assertEquals(17, def.attr1Kind)
+        assertEquals(1, def.attr1Value)
+
+        val currencies = mockk<PlayerCurrencySystem>()
+        every { currencies.get(42L, 9) } returnsMany listOf(10, 12, 12)
+        coEvery { currencies.add(42L, 9, 2) } returns true
+        every { inventory.getBagItem(42L, 0x1234) } returns ThingData(itemId = 65344, quantity = 3)
+        coEvery { inventory.removeFromBag(42L, 0x1234, 2) } returns true
+
+        val directCurrencyHandler = ItemHandler(
+            inventorySystem = inventory,
+            moneySystem = mockk(),
+            groundItemManager = mockk(),
+            responseSender = response,
+            worldManager = mockk(),
+            itemDefs = mapOf(65344 to def),
+            itemUseProcessor = mockk(),
+            playerStateManager = mockk(),
+            statCalc = mockk(),
+            mountSystem = mockk(),
+            flyPointSystem = mockk(),
+            characterRepository = mockk(),
+            petEquipSystem = pet,
+            questSystem = mockk(),
+            skillSystem = mockk(),
+            playerCurrencySystem = currencies,
+        )
+
+        directCurrencyHandler.handle(
+            session,
+            15,
+            byteArrayOf(0x34, 0x12, 2, 0, 0, 0, 0, 1)
+        )
+
+        coVerify(exactly = 1) { currencies.add(42L, 9, 2) }
+        coVerify(exactly = 1) { inventory.removeFromBag(42L, 0x1234, 2) }
+        verify(exactly = 1) { response.sendReduceBagItem(session, 0x1234, 2) }
+        verify(exactly = 1) { response.sendUseItemSuccess(session, 65344, 2, true) }
+        verify(exactly = 1) { response.sendPlayerCurrency(session, 9, 12) }
+    }
 
     @Test fun `bag drop and use read full index before looking up inventory`() = runTest {
         every { inventory.getBagItem(42, 0x1234) } returns null

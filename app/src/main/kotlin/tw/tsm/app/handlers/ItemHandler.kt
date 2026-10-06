@@ -33,6 +33,7 @@ import tw.tsm.app.response.SoulResponseSender
 import tw.tsm.gamelogic.systems.PetEquipSystem
 import tw.tsm.gamelogic.systems.PetSystem
 import tw.tsm.gamelogic.systems.PlayerStateManager
+import tw.tsm.gamelogic.systems.PlayerCurrencySystem
 import tw.tsm.gamelogic.systems.QuestSystem
 import tw.tsm.gamelogic.systems.SkillSystem
 import tw.tsm.gamelogic.systems.RoleCountSystem
@@ -44,6 +45,7 @@ import tw.tsm.gamelogic.systems.WorldManager
 import tw.tsm.protocol.PacketReader
 
 private val logger = KotlinLogging.logger {}
+private const val DIRECT_CURRENCY_ATTR_OFFSET = 8
 
 /**
  * Bộ xử lý thao tác vật phẩm (mainKind = 23)
@@ -78,6 +80,7 @@ class ItemHandler(
     private val soulSystem: SoulSystem? = null,
     private val soulGenerationPolicy: OfflineSoulGenerationPolicy? = null,
     private val soulResponseSender: SoulResponseSender? = null,
+    private val playerCurrencySystem: PlayerCurrencySystem? = null,
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.SHOP  // 23
@@ -599,6 +602,10 @@ class ItemHandler(
             handleAstrolabePointItem(session, characterId, bagIndex, bagItem, itemDef, quantity)
             return
         }
+        if (itemDef != null && itemDef.directUse == 1 && itemDef.specialAbility == EItemUseKind.DIRECT_CURRENCY) {
+            handleDirectCurrencyItem(session, characterId, bagIndex, bagItem, itemDef, quantity)
+            return
+        }
         if (itemDef != null && itemDef.specialAbility == EItemUseKind.SOUL) {
             handleSoulItem(session, characterId, bagIndex, bagItem)
             return
@@ -661,6 +668,69 @@ class ItemHandler(
         }
 
         logger.trace { "Dùng vật phẩm: characterId=$characterId itemId=${bagItem.itemId} qty=$useQty hiệu ứng=${result.attrChanges.size} dòng thưởng=${result.rewardItems.size} dòng" }
+    }
+
+    /**
+     * DVT ItemUse_216: cộng generic currency.
+     * IOS_Item_C.dat dùng attribute[1].kind = ECurrency + 8, value = số lượng / item.
+     * Ví dụ item 65344 Tiểu Tinh Linh Tệ: attr1Kind=17 => ECurrency.Elf=9.
+     */
+    private suspend fun handleDirectCurrencyItem(
+        session: GameSession,
+        characterId: Long,
+        bagIndex: Int,
+        bagItem: ThingData,
+        itemDef: ItemDef,
+        requestedQuantity: Int,
+    ) {
+        val system = playerCurrencySystem ?: return
+        if (requestedQuantity <= 0 || bagItem.quantity <= 0 || itemDef.attr1Value <= 0) return
+
+        val currencyKind = itemDef.attr1Kind - DIRECT_CURRENCY_ATTR_OFFSET
+        if (currencyKind !in PlayerCurrencySystem.MIN_KIND..PlayerCurrencySystem.MAX_KIND) {
+            logger.warn {
+                "DirectCurrency invalid kind: itemId=${bagItem.itemId} attr1Kind=${itemDef.attr1Kind}"
+            }
+            return
+        }
+
+        val useQty = minOf(requestedQuantity, bagItem.quantity)
+        val amountLong = itemDef.attr1Value.toLong() * useQty.toLong()
+        if (amountLong <= 0 || amountLong > Int.MAX_VALUE) return
+        val amount = amountLong.toInt()
+
+        val before = system.get(characterId, currencyKind)
+        if (before.toLong() + amount > PlayerCurrencySystem.MAX_VALUE) return
+
+        // Persist currency trước, chỉ tiêu item sau khi currency mutation thành công.
+        val added = try {
+            system.add(characterId, currencyKind, amount)
+        } catch (e: Exception) {
+            logger.error(e) {
+                "DirectCurrency persist failed: characterId=$characterId itemId=${bagItem.itemId}"
+            }
+            false
+        }
+        if (!added) return
+
+        if (!inventorySystem.removeFromBag(characterId, bagIndex, useQty)) {
+            // rollback currency nếu inventory thay đổi cạnh tranh.
+            try {
+                system.set(characterId, currencyKind, before)
+            } catch (e: Exception) {
+                logger.error(e) { "DirectCurrency rollback failed: characterId=$characterId kind=$currencyKind" }
+            }
+            return
+        }
+
+        responseSender.sendReduceBagItem(session, bagIndex, useQty)
+        responseSender.sendUseItemSuccess(session, bagItem.itemId, useQty, showMsg = true)
+        responseSender.sendPlayerCurrency(session, currencyKind, system.get(characterId, currencyKind))
+
+        logger.info {
+            "DirectCurrency item used: characterId=$characterId itemId=${bagItem.itemId} " +
+                "qty=$useQty kind=$currencyKind +$amount balance=${system.get(characterId, currencyKind)}"
+        }
     }
 
     private suspend fun handleSoulItem(

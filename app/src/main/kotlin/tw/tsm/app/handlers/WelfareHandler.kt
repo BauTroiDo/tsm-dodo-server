@@ -72,6 +72,7 @@ class WelfareHandler(
 
         when (kind) {
             AWARD_LOGIN -> handleDailyLoginClaim(session, requestedDay)
+            AWARD_ONLINE -> handleOnlineClaim(session, requestedDay)
             AWARD_OPEN_SERVER -> handleOpenServerClaim(session, requestedDay)
             else -> sendClaimResult(session, kind, RESULT_WRONG_KIND)
         }
@@ -124,6 +125,52 @@ class WelfareHandler(
         syncVirtualBalances(session)
         sendClaimResult(session, AWARD_LOGIN, RESULT_SUCCESS)
         welfareLogger.info { "Welfare login claim: charId=$charId day=$requestedDay rewards=${award.rewards}" }
+    }
+
+    /** EAward.Online=3 — thưởng theo số phút online trong ngày. */
+    private suspend fun handleOnlineClaim(session: GameSession, requestedMinute: Int) {
+        val charId = session.roleId.toLong()
+        val award = loginAwardDefs.firstOrNull { it.group == AWARD_ONLINE && it.day == requestedMinute }
+        if (award == null) {
+            sendClaimResult(session, AWARD_ONLINE, RESULT_BAD_REWARD)
+            return
+        }
+
+        val flagId = award.flag
+        if (flagId <= 0) {
+            sendClaimResult(session, AWARD_ONLINE, RESULT_BAD_REWARD)
+            return
+        }
+
+        if (bitFlagSystem.getSetFlagIds(charId).contains(flagId)) {
+            responseSender.sendBitFlagChanges(session, listOf(flagId to true))
+            sendClaimResult(session, AWARD_ONLINE, RESULT_SUCCESS)
+            return
+        }
+
+        val persistedSeconds = roleCountSystem.getValue(charId, ONLINE_TIME_ROLE_COUNT).coerceAtLeast(0)
+        val elapsedSeconds = if (session.onlineStartMillis > 0L) {
+            ((System.currentTimeMillis() - session.onlineStartMillis) / 1000L)
+                .coerceAtLeast(0L)
+                .coerceAtMost(Int.MAX_VALUE.toLong())
+                .toInt()
+        } else 0
+        val onlineMinutes = (persistedSeconds.toLong() + elapsedSeconds.toLong()) / 60L
+        if (onlineMinutes < award.day.toLong()) {
+            sendClaimResult(session, AWARD_ONLINE, RESULT_CONDITION_NOT_MET)
+            return
+        }
+
+        if (!grantAward(session, award)) return
+        bitFlagSystem.setFlag(charId, flagId)
+        responseSender.sendBitFlagChanges(session, listOf(flagId to true))
+        syncVirtualBalances(session)
+        sendClaimResult(session, AWARD_ONLINE, RESULT_SUCCESS)
+
+        welfareLogger.info {
+            "Welfare online claim: charId=$charId minute=${award.day} flag=$flagId " +
+                "onlineMinutes=$onlineMinutes rewards=${award.rewards}"
+        }
     }
 
     /**
@@ -236,11 +283,13 @@ class WelfareHandler(
 
     companion object {
         private const val AWARD_LOGIN = 1
+        private const val AWARD_ONLINE = 3
         private const val AWARD_OPEN_SERVER = 4
         private const val OPEN_SERVER_LOGIN_DAY = 1
         private const val LOGIN_BIT_FLAG = 1
         private const val LOGIN_SIGN_DAY = 107
         private const val CONTINUE_LOGIN = 108
+        private const val ONLINE_TIME_ROLE_COUNT = 10
         private const val RESULT_SUCCESS = 0
         private const val RESULT_WRONG_KIND = 1
         private const val RESULT_CONDITION_NOT_MET = 3

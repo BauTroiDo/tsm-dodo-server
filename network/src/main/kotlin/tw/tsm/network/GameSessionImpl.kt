@@ -26,6 +26,7 @@ class GameSessionImpl(private val channel: Channel) : GameSession {
     // ── SessionStatus ──
     override var state: SessionState = SessionState.CONNECTED
     override var loginFinished: Boolean = false
+    override var onlineStartMillis: Long = 0L
 
     // ── SessionCharacter ──
     override var playerId: Long = 0

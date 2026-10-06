@@ -8,6 +8,7 @@ import tw.tsm.domain.interfaces.repositories.CharacterRepository
 import tw.tsm.gamelogic.systems.*
 
 private val logger = KotlinLogging.logger {}
+private const val ONLINE_TIME_ROLE_COUNT = 10
 
 /**
  * Bộ xử lý mất kết nối (mainKind = 0)
@@ -102,6 +103,14 @@ class DisconnectHandler(
 
             try { mountSystem.saveAndUnload(characterId) }
             catch (e: Exception) { logger.error(e) { "Lưu ngắt kết nối thất bại (vật cưỡi): charId=$characterId" } }
+
+            // DVT UILoginAward.GetOnlineTime = elapsed phiên hiện tại + RoleCount.OnlineTime (index 10, giây).
+            if (session.onlineStartMillis > 0L) {
+                val elapsedSeconds = ((System.currentTimeMillis() - session.onlineStartMillis) / 1000L)
+                    .coerceAtLeast(0L).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+                if (elapsedSeconds > 0) roleCountSystem.increment(characterId, ONLINE_TIME_ROLE_COUNT, elapsedSeconds)
+                session.onlineStartMillis = 0L
+            }
 
             try { roleCountSystem.saveAndUnload(characterId) }
             catch (e: Exception) { logger.error(e) { "Lưu ngắt kết nối thất bại (bộ đếm): charId=$characterId" } }

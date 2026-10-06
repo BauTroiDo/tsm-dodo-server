@@ -27,6 +27,7 @@ object EItemUseKind {
     const val SOUL = 240                    // Vật phẩm Hồn (ĐVT EItemUseKind.Soul)
     const val CAREER_CHANGE = 208           // Phù chuyển nghề
     const val ASTROLABE = 211              // Vật phẩm tăng điểm Thất Tinh Mệnh Bàn
+    const val DIRECT_CURRENCY = 216         // ItemUse_216: cộng currency theo attribute[1]
     const val ROLE_COUNT = 218              // Mã RoleCount
     const val BATTLE_ATTR_PILL = 200        // BUFF chiến đấu
     const val MOUNTS = 217                  // Tuyển tập tranh vật cưỡi (spare3 = NPC ID)

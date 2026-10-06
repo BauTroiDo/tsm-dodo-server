@@ -803,7 +803,8 @@ class UISellHandler(
             is UiSellQuote.Item -> {
                 // đường dẫn client chọn vật phẩm: kiểm tra hợp lệ vật phẩm ô túi đồ khớp với báo giá
                 if (useKind != USE_KIND_ITEM) {
-                    responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_PRICE_ERROR)                    return false
+                    responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_PRICE_ERROR)
+                    return false
                 }
                 val thing = inventorySystem.getBagItem(charId, bagIndex)
                 if (thing == null || thing.itemId != quote.itemId || thing.quantity < quote.count) {

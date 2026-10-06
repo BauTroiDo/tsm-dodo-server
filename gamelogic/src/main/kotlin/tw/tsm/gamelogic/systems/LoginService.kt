@@ -248,7 +248,8 @@ class LoginService(
         // 4. S:003-001 Số ngày đăng nhập
         responseSender.sendLoginDay(session, loginDay = 1, continueLogin = 1)
 
-        // 5. S:003-002 Thời gian online hằng ngày
+        // 5. S:003-002 Thời gian online hằng ngày. Lua lấy elapsed từ mốc này + RoleCount.OnlineTime.
+        session.onlineStartMillis = System.currentTimeMillis()
         responseSender.sendOnlineTime(session, serverTime)
 
         // 6. S:003-003 Thời gian thẻ bán nguyệt

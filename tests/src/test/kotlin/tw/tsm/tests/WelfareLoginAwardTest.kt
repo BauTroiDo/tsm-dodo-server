@@ -53,6 +53,62 @@ class WelfareLoginAwardTest {
     }
 
     @Test
+    fun `DVT online rewards are exact 10 to 120 minute rows`() {
+        val defs = LoginAwardDatLoader.load(fixture("File.dat", "Data-ios", "IOS_LoginAwardData_C.dat"))
+        val online = defs.filter { it.group == 3 }.sortedBy { it.day }
+        assertEquals(listOf(10, 20, 30, 60, 90, 120), online.map { it.day })
+        assertEquals(listOf(2, 3, 4, 5, 6, 7), online.map { it.flag })
+        assertEquals(46038 to 20, online.first().rewards.first())
+        assertEquals(29898 to 2, online.last().rewards.first())
+    }
+
+    @Test
+    fun `C87-002 online 10 minute claim grants once and sets DVT flag2`() = runBlocking {
+        val awards = listOf(
+            LoginAwardDef(3, 0, 10, listOf(46038 to 20, 0 to 0, 0 to 0, 0 to 0, 0 to 0), 0, 0, 0, 2)
+        )
+        val stateRepo = mockk<WelfareStateRepository>()
+        coEvery { stateRepo.getLastLoginClaimDay(77L) } returns DispatchSystem.currentDayKey()
+        val roleCounts = mockk<RoleCountSystem>()
+        every { roleCounts.getValue(77L, 10) } returns 0
+        val bitFlags = mockk<BitFlagSystem>()
+        coEvery { bitFlags.getSetFlagIds(77L) } returns emptySet()
+        coEvery { bitFlags.setFlag(77L, 2) } just Runs
+        val inventory = mockk<InventorySystem>()
+        coEvery { inventory.addItemBundleToBagExact(77L, listOf(46038 to 20)) } returns emptyList()
+        val point = mockk<PointSystem>(relaxed = true)
+        every { point.getPoints(77L) } returns (0 to 0)
+        val money = mockk<MoneySystem>(relaxed = true)
+        every { money.getMoney(77L) } returns (0 to 0)
+        val currency = mockk<PlayerCurrencySystem>(relaxed = true)
+        every { currency.get(77L, any()) } returns 0
+        val response = mockk<ResponseSender>(relaxed = true)
+        val packets = mutableListOf<ByteArray>()
+        val session = mockk<GameSession> {
+            every { state } returns SessionState.IN_GAME
+            every { roleId } returns 77
+            every { playerId } returns 7700L
+            every { onlineStartMillis } returns System.currentTimeMillis() - 11L * 60L * 1000L
+            every { send(capture(packets)) } just Runs
+        }
+        val handler = WelfareHandler(awards, stateRepo, roleCounts, bitFlags, inventory, point, money, currency, response)
+        val body = PacketWriter().writeByte(3).writeIntLE(10).writeByte(1).toByteArray()
+
+        handler.handle(session, 2, body)
+
+        coVerify(exactly = 1) { inventory.addItemBundleToBagExact(77L, listOf(46038 to 20)) }
+        coVerify(exactly = 1) { bitFlags.setFlag(77L, 2) }
+        verify(exactly = 1) { response.sendBitFlagChanges(session, listOf(2 to true)) }
+        val r = PacketReader(packets.last())
+        assertEquals(87, r.readUByte())
+        assertEquals(2, r.readUByte())
+        assertEquals(0, r.readUByte())
+        assertEquals(3, r.readUByte())
+        assertEquals(0, r.readUByte())
+        assertEquals(0, r.remaining)
+    }
+
+    @Test
     fun `OpenServer day1 physical rewards exist in authoritative item table`() {
         val defs = ItemDatLoader.load(fixture("File.dat", "Data-ios", "IOS_Item_C.dat"))
         val missing = listOf(46575, 51964, 65345, 35671).filterNot { defs.containsKey(it) }
