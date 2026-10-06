@@ -122,11 +122,20 @@ class BattleFighter(
     /** Có phải phe địch không (cột 0-1, bên trái)*/
     val isEnemySide: Boolean get() = col < 2
 
-    /** Có phải người chơi thật không (PLAYER hoặc PLAYERS, dùng để phân biệt người và NPC trong PVP)*/
-    val isHumanPlayer: Boolean get() = kind == EHuman.PLAYER || kind == EHuman.PLAYERS
+    /**
+     * Player-shaped combatant for PvP rules.
+     * AutomanualPlayer=28 is rendered and damaged as a player, but is server-controlled.
+     */
+    val isHumanPlayer: Boolean get() =
+        kind == EHuman.PLAYER || kind == EHuman.PLAYERS || kind == EHuman.AUTOMANUAL_PLAYER
 
-    /** Có do người chơi điều khiển không (bao gồm tướng và các nhân vật ràng buộc masterID, dùng cho client FindMasterID phán đoán)*/
-    val isPlayerControlled: Boolean get() = isHumanPlayer || kind == EHuman.FOLLOW_NPC
+    /** Real client-controlled units only. PvP bots (28/29) must never block command readiness. */
+    val isPlayerControlled: Boolean get() =
+        kind == EHuman.PLAYER || kind == EHuman.PLAYERS || kind == EHuman.FOLLOW_NPC
+
+    /** Server-controlled player-shaped bot or its semi-auto NPC companion. */
+    val isAutomanual: Boolean get() =
+        kind == EHuman.AUTOMANUAL_PLAYER || kind == EHuman.AUTOMANUAL_NPC
 
     /** Có còn sống không*/
     val isAlive: Boolean get() = !isDead && hp > 0
