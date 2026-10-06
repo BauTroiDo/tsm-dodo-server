@@ -1,6 +1,7 @@
 package tw.tsm.app.handlers
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.delay
 import tw.tsm.app.response.FurnaceResponseSender
 import tw.tsm.domain.constants.Opcodes
 import tw.tsm.domain.constants.EAttribute
@@ -93,6 +94,16 @@ class UISellHandler(
         val args = readArgs(reader)
 
         val charId = session.roleId.toLong()
+
+        // DVT UIAlert.OnClick_Submit invokes its callback BEFORE UI.Close(UIAlert).
+        // UIPoke's callback immediately sends C84-1 sellId44 and S84-1 opens another
+        // UIAlert. On an offline/LAN server an immediate reply races the old
+        // UI.Close and the new confirmation is closed invisibly. Defer only this
+        // query so the original alert has synchronously completed its close.
+        if (sellId == UISellSystem.SELL_POKE_COIN) {
+            delay(POKE_UISELL_QUERY_DELAY_MS)
+        }
+
         val quote = when (sellId) {
             UISellSystem.SELL_SLOT_COIN -> querySlotCoin(charId, args)
             UISellSystem.SELL_POKE_COIN -> queryPokeCoin(charId, args)
@@ -978,6 +989,9 @@ class UISellHandler(
 
         /** C:084-002 loại 2: điểm/miễn phí*/
         private const val USE_KIND_POINT = 2
+
+        /** Avoid DVT UIAlert submit/open-close race on localhost/LAN. */
+        internal const val POKE_UISELL_QUERY_DELAY_MS = 50L
 
         private const val TURN3_LIGHT = 7
         private const val TURN3_DARK = 8
