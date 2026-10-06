@@ -4155,3 +4155,16 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Fix commit 7dd5840: ActivityHandler routes both kind122 and kind129 into the same validated mission claim path; response remains kind122 because protocal.lua only has S77-11 kind122 receiver MissionAward.ReceiveMissionAward.
 - Local targeted BattlePassMissionAwardTest PASS; full local build PASS 21/21; production full build PASS 21/21. Runtime production HEAD 7dd5840, port 6613 PID 5152.
 
+
+
+## 2026-10-06 — Trạc / Poke (戳戳樂) backend production
+- Xác định đúng feature: EFunction.Poke=54, UI UIPoke, protocol mainKind 92; không phải Affix/Tẩy luyện.
+- Lua DVT: C92-003 gridIndex U8; S92-001 coin U16; S92-002 reward rows [id U8, kind U8, itemId U16, qty U32, gridIndex U8, prWeight U16]; S92-003 success/fail.
+- Coin item29507, max999; fallback mua 9 real Point/xu qua UISell44. Cost mở ô = openCount*2+1. UISell46 đổi bàn; IOS_UISell_Formula_C.dat xác nhận 50 Point.
+- DAT: IOS_PokeData_C.dat=93 rewards (38/18/16/21 theo kind1..4); IOS_PokeRate_C.dat={1:18,2:4,3:2,4:1}; IOS_PokeBonusReward_C.dat=53 rows.
+- Backend: PokeSystem/PokeHandler/PokeRepository; persist coin + rewardId->gridIndex qua relog; mutex; weighted draw chỉ reward chưa trúng; chống mở trùng; rollback state khi grant fail.
+- Direct-use specialAbility216 dùng mapping đã chứng minh ở SlotMachine/Welfare: currencyKind=attr1Kind-8, qty=attr1Value*rewardCount. Current Poke currencies kinds 6,10,11,13,14.
+- Login đẩy S92-1 + S92-2 vì current UIPoke.OnOpen không gửi query riêng.
+- DvtPokeTest target PASS; full local build PASS21/21; production full build PASS21/21.
+- Gameplay commit 8f490e3; production HEAD=8f490e3, TCP6613 PID13740; startup log nạp PokeData93/PokeRate/PokeBonusReward53 và server ready.
+- Blocker: current UIPoke.lua không trực tiếp dùng IOS_PokeBonusReward_C.dat; chưa đoán bonus/double semantics. changeItemId29508 cũng chỉ khai báo nhưng không dùng, nên chưa tự tiêu.
