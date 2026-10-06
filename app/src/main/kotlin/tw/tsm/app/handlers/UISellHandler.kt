@@ -101,6 +101,7 @@ class UISellHandler(
         // UI.Close and the new confirmation is closed invisibly. Defer only this
         // query so the original alert has synchronously completed its close.
         if (sellId == UISellSystem.SELL_POKE_COIN) {
+            logger.info { "POKE44 query recv roleId=" + session.roleId + " args=" + args }
             delay(POKE_UISELL_QUERY_DELAY_MS)
         }
 
@@ -144,6 +145,10 @@ class UISellHandler(
             return
         }
         if (sellId == UISellSystem.SELL_POKE_COIN) {
+            logger.info {
+                "POKE44 use recv roleId=" + session.roleId +
+                    " useKind=" + useKind + " remaining=" + reader.remaining
+            }
             handlePokeCoinUse(session, useKind, reader)
             return
         }
@@ -639,6 +644,8 @@ class UISellHandler(
             }
             val cost = quote.cost.toInt()
             val amount = args[1]
+            val beforePoints = pointSystem.getPoints(charId)
+            logger.info { "POKE44 point path roleId=" + session.roleId + " amount=" + amount + " cost=" + cost + " pointsBefore=" + beforePoints }
             val updated = try {
                 system.depositCoinWithPayment(charId, amount) {
                     if (!pointSystem.subtractRealPoint(charId, cost)) {
