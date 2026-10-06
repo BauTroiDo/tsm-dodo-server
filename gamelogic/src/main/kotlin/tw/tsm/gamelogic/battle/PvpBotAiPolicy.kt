@@ -59,8 +59,9 @@ object PvpBotAiPolicy {
             .filter { (id, def) ->
                 id !in NON_BATTLE_SKILLS &&
                     def.fightWay != 0 &&
-                    def.useLimit != 0 &&
-                    (def.requireSp <= 0 || def.requireSp == 1 || fighter.sp >= def.requireSp)
+                    (def.requireSp <= 0 ||
+                        (def.requireSp == 1 && fighter.sp > 0) ||
+                        (def.requireSp > 1 && fighter.sp >= def.requireSp))
             }
             .sortedWith(
                 compareByDescending<Pair<Int, tw.tsm.domain.data.SkillDef>> {
