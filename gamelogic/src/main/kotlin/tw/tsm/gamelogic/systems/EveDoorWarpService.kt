@@ -74,11 +74,20 @@ class EveDoorWarpService(
             else -> sceneInfo!!.playerAppearY * 20
         }
         val oldMapId = session.mapId
-        logger.info { "${session.characterName} Door dịch chuyển: sceneInfo[$sceneInfoKey] → scene=$targetScene ($targetX,$targetY)" }
+        val oldInstanceId = session.instanceId
+        logger.info {
+            "${session.characterName} Door dịch chuyển: sceneInfo[$sceneInfoKey] → scene=$targetScene " +
+                "($targetX,$targetY) instance=$oldInstanceId"
+        }
 
         responseSender.sendEventChangeScene(session)
         worldManager.leaveMap(session)
-        worldManager.enterMap(session, targetScene, targetX, targetY)
+        // Eve doors inside an instanced dungeon are intra-run movement. WorldManager.enterMap()
+        // defaults to instance=0, which silently detached the player after the first fight and
+        // made later fights lose their team-dungeon bot assist. Explicit dungeon exit uses
+        // DungeonSystem/SpecialSceneTeleportService and supplies the origin instance separately,
+        // so preserving the current instance here is the correct lifecycle contract.
+        worldManager.enterMap(session, targetScene, targetX, targetY, oldInstanceId)
 
         if (charId > 0) {
             characterRepository.updatePosition(charId, targetScene, targetX, targetY)
