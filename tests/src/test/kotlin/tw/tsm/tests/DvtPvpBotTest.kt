@@ -68,7 +68,7 @@ class DvtPvpBotTest {
     fun `PvP bot heal selection uses real Skill DAT classifier`() {
         val defs = SkillDatLoader.load(fixture("File.dat", "Data-ios", "IOS_Skill_C.dat"))
         val healEntry = defs.entries.first { (_, def) ->
-            BattleDamageCalc.isHealSkill(def) && def.fightWay in setOf(4, 6, 7, 14, 19)
+            PvpBotAiPolicy.isPvpHpHeal(def)
         }
 
         val bot = fighter(-10, EHuman.AUTOMANUAL_PLAYER, 3, 0, skills = intArrayOf(healEntry.key))
