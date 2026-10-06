@@ -157,24 +157,20 @@ object EveConditionEvaluator {
 
             2 -> {
                 // Điều kiện nhiệm vụ: param=missionId, ops=so sánh, val=giá trị mục tiêu
-                // pStyle=3 → đồng thời kiểm tra bước nhiệm vụ và cờ, lấy giá trị lớn hơn
-                //   Nhiệm vụ đang tiến hành: step=1, flag=0 → actual=1
+                // pStyle=3 → kiểm tra completion flag (MarkData.bitId), KHÔNG trộn với active step.
+                //   Nhiệm vụ đang tiến hành: step>0, flag=0 → actual=0
                 //   Nhiệm vụ đã hoàn thành: step=0, flag=1 → actual=1
-                //   Nhiệm vụ chưa bắt đầu: step=0, flag=0 → actual=0
-                // pStyle=1/2 → chỉ kiểm tra bước nhiệm vụ
+                // pStyle khác → kiểm tra active mission step.
                 val step = state.missionSteps[cond.conditionParameter] ?: 0
-                val actual = if (cond.conditionParameterStyle == 3) {
-                    val flag = state.missionFlags[cond.conditionParameter] ?: 0
-                    maxOf(step, flag)
-                } else {
-                    step
-                }
-                val checkType = if (cond.conditionParameterStyle == 3) "step|flag" else "step"
-                // Dungeon gates prove ops2 > (BaDauYeu step>0; treasure step>1),
-                // ops5 == (treasure mutually exclusive steps3/4 and staged multiplayer).
-                val result = if (cond.conditionParameter in state.dungeonMissionIds)
-                    compareEveNumeric(actual, cond.conditionOps, cond.conditionValue)
-                else compareStep(actual, cond.conditionOps, cond.conditionValue)
+                val flag = state.missionFlags[cond.conditionParameter] ?: 0
+                val actual = if (cond.conditionParameterStyle == 3) flag else step
+                val checkType = if (cond.conditionParameterStyle == 3) "flag" else "step"
+                // Mission conditions use the Eve numeric comparator family, not
+                // DungeonCriteria/compareStep. Real DVT evidence:
+                // - mission11120 step1 uses ops2/value0 for "step > 0";
+                // - ordinary missions use ops5 for mutually-exclusive exact steps;
+                // - ops1/3/4/6 complete the < / <= / >= / != family.
+                val result = compareMissionStep(actual, cond.conditionOps, cond.conditionValue)
                 logger.debug { "class=2 missionId=${cond.conditionParameter} $checkType=$actual ops=${cond.conditionOps} val=${cond.conditionValue} → $result" }
                 result
             }
@@ -825,7 +821,22 @@ object EveConditionEvaluator {
         }
     }
 
-    /** Comparator số riêng của Eve.emg, dùng cho Moral và Honor. */
+    /** Comparator của conditionClass=2 mission progress trong Eve.emg. */
+    fun compareMissionStep(actual: Int, ops: Int, expected: Int): Boolean = when (ops) {
+        0 -> actual == expected
+        1 -> actual < expected
+        2 -> actual > expected
+        3 -> actual <= expected
+        4 -> actual >= expected
+        5 -> actual == expected
+        6 -> actual != expected
+        else -> {
+            logger.warn { "Mission ops=$ops chưa xác định actual=$actual expected=$expected → false" }
+            false
+        }
+    }
+
+    /** Comparator số riêng của Eve.emg, dùng cho Moral, Honor và skill. */
     fun compareEveNumeric(actual: Int, ops: Int, expected: Int): Boolean = when (ops) {
         0 -> actual == expected
         1 -> actual < expected

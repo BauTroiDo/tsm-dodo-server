@@ -4033,3 +4033,18 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - LocationPos=0 remains evidence-blocked; legacy placement is retained but capped to 10 cells so it cannot crash BattleGrid.
 - Whole Eve audit: 497 sides have duplicate valid LocationPos; 523 sides have >10 records, so this is systemic.
 - DvtEveBattlePlacementTest locks scene12820 FightData20 = 10 initial + 3 pending; targeted PASS; full local test build PASS 21/21.
+
+
+## 2026-10-06 — DVT mission class2 comparator root fix / mission11120
+- Runtime blocker: quest 'Nguyên liệu trang bị (2)' had mission11120=1 and item44042 VD Thiết Thạch 1/1, but clicking Tốt Bá scene12705/click1 failed to enter the hand-in branch.
+- Production log proved the evaluator rejected `class2 mission11120 step=1 ops=2 value=0` as false.
+- Real DVT Eve scene12705 event6 hand-in branch requires that condition, then consumes item44042 x1, grants item45605 x1, completes11120, adds11121=1 and updates related guide missions.
+- Whole Eve class2 audit proves mission comparator semantics differ from legacy compareStep:
+  - ops2/value0 appears 856 times for pStyle1 and represents active step > 0.
+  - ops5 is exact equality: many events contain multiple mutually-exclusive ops5 step values for the same mission (e.g. mission11568 values1..6).
+  - mission comparator is 0==,1<,2>,3<=,4>=,5==,6!=.
+- pStyle3 is completion-flag only (MarkData.bitId), not max(activeStep,flag). Full-suite regression scene12421/eve2 proved active step6 with no completion flag must satisfy pStyle3 ops5 value0 for post-battle door continuation.
+- EveConditionEvaluator class2 now uses compareMissionStep and selects flag for pStyle3, active step otherwise.
+- Permanent DvtMissionComparatorRegressionTest loads real Eve scene12705/event6 and locks the full mission11120 item hand-in branch.
+- Targeted EveConditionEvaluator + EveChainResolver + DvtMissionComparatorRegression PASS 18/18.
+- Full local gradlew test build --rerun-tasks PASS 21/21.

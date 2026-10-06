@@ -112,32 +112,52 @@ class EveConditionEvaluatorTest : DescribeSpec({
         }
     }
 
-    describe("class=2 bước nhiệm vụ") {
-        val state = PlayerEventState(
-            missionSteps = mapOf(10 to 2),
-            missionFlags = mapOf(10 to 1)
-        )
-
-        it("pStyle=1 chỉ xem step — step=2 ops=5 val=1 → 2>=1 true") {
+    describe("class=2 bước nhiệm vụ dùng comparator Eve") {
+        it("mission11120 step1 ops2 val0 nghĩa là step > 0") {
+            val state = PlayerEventState(missionSteps = mapOf(11120 to 1))
             EveConditionEvaluator.evaluate(
-                cond(cls = 2, param = 10, pStyle = 1, ops = 5, value = 1), state
+                cond(cls = 2, param = 11120, pStyle = 1, ops = 2, value = 0), state
             ) shouldBe true
         }
-        it("pStyle=3 lấy max(step, flag) — nhiệm vụ đã xong dùng giá trị cờ") {
-            // mission 20: step=0, flag=1 → actual = max(0,1) = 1
-            val s = PlayerEventState(
+
+        it("ops5 là exact step, không phải >=") {
+            val state = PlayerEventState(missionSteps = mapOf(10 to 2))
+            EveConditionEvaluator.evaluate(
+                cond(cls = 2, param = 10, pStyle = 1, ops = 5, value = 2), state
+            ) shouldBe true
+            EveConditionEvaluator.evaluate(
+                cond(cls = 2, param = 10, pStyle = 1, ops = 5, value = 1), state
+            ) shouldBe false
+        }
+
+        it("pStyle=3 chỉ đọc completion flag, không bị active step làm nhiễu") {
+            val active = PlayerEventState(
+                missionSteps = mapOf(20 to 6),
+                missionFlags = emptyMap()
+            )
+            EveConditionEvaluator.evaluate(
+                cond(cls = 2, param = 20, pStyle = 3, ops = 5, value = 0), active
+            ) shouldBe true
+
+            val completed = PlayerEventState(
                 missionSteps = emptyMap(),
                 missionFlags = mapOf(20 to 1)
             )
             EveConditionEvaluator.evaluate(
-                cond(cls = 2, param = 20, pStyle = 3, ops = 5, value = 1), s
+                cond(cls = 2, param = 20, pStyle = 3, ops = 5, value = 1), completed
             ) shouldBe true
-        }
-        it("pStyle=3 nhiệm vụ chưa bắt đầu → actual=0") {
-            val s = PlayerEventState()
             EveConditionEvaluator.evaluate(
-                cond(cls = 2, param = 99, pStyle = 3, ops = 1, value = 0), s
-            ) shouldBe true
+                cond(cls = 2, param = 20, pStyle = 3, ops = 5, value = 0), completed
+            ) shouldBe false
+        }
+
+        it("mission comparator đủ họ < > <= >= != và ==") {
+            EveConditionEvaluator.compareMissionStep(4, 1, 5) shouldBe true
+            EveConditionEvaluator.compareMissionStep(6, 2, 5) shouldBe true
+            EveConditionEvaluator.compareMissionStep(5, 3, 5) shouldBe true
+            EveConditionEvaluator.compareMissionStep(5, 4, 5) shouldBe true
+            EveConditionEvaluator.compareMissionStep(5, 5, 5) shouldBe true
+            EveConditionEvaluator.compareMissionStep(4, 6, 5) shouldBe true
         }
     }
 
