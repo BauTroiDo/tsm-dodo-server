@@ -12,6 +12,7 @@ import tw.tsm.gamelogic.battle.BattleLifecyclePolicy
 import tw.tsm.gamelogic.battle.BattleSkillResolver
 import tw.tsm.gamelogic.battle.PvpBotAiPolicy
 import tw.tsm.gamelogic.systems.PvpBotMode
+import tw.tsm.gamelogic.systems.PvpLobbyPolicy
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -85,6 +86,29 @@ class DvtPvpBotTest {
         assertEquals(healEntry.key, actions.first().id)
         assertEquals(wounded.col, actions.first().targetCol)
         assertEquals(wounded.row, actions.first().targetRow)
+    }
+
+    @Test
+    fun `five-slot lobby shows bot placeholders and maps real players to battle sides`() {
+        assertEquals(1, PvpLobbyPolicy.visibleBotCount(PvpBotMode.VS, realCount = 1, roomMaxPlayers = 5))
+        assertEquals(4, PvpLobbyPolicy.visibleBotCount(PvpBotMode.MIX, realCount = 1, roomMaxPlayers = 5))
+        assertEquals(4, PvpLobbyPolicy.visibleBotCount(PvpBotMode.CHAOS, realCount = 1, roomMaxPlayers = 5))
+
+        val vs = PvpLobbyPolicy.battlePlan(PvpBotMode.VS, 1)!!
+        assertEquals(listOf(0), vs.rightIndices)
+        assertEquals(emptyList<Int>(), vs.leftIndices)
+        assertEquals(1, vs.leftBots)
+
+        val mix = PvpLobbyPolicy.battlePlan(PvpBotMode.MIX, 2)!!
+        assertEquals(listOf(0, 1), mix.rightIndices)
+        assertEquals(3, mix.rightBots)
+        assertEquals(5, mix.leftBots)
+
+        val chaos = PvpLobbyPolicy.battlePlan(PvpBotMode.CHAOS, 3)!!
+        assertEquals(listOf(0, 2), chaos.rightIndices)
+        assertEquals(listOf(1), chaos.leftIndices)
+        assertEquals(3, chaos.rightBots)
+        assertEquals(4, chaos.leftBots)
     }
 
     @Test

@@ -12,6 +12,11 @@ import java.util.concurrent.atomic.AtomicLong
 
 private val pvpQueueLogger = KotlinLogging.logger {}
 
+data class PvpLobbyClaim(
+    val mode: PvpBotMode,
+    val registeredAt: Long,
+)
+
 enum class PvpBotMode(
     val sideSize: Int,
     val warStyle: Int,
@@ -92,6 +97,24 @@ class PvpBotMatchmakingSystem(
 
     fun isQueued(playerId: Long): Boolean = synchronized(lock) {
         playerId in playerToToken
+    }
+
+    /**
+     * Transfer one queued registration into the explicit five-slot lobby UI.
+     * Removing the token prevents the background 10-second queue task from
+     * starting a second battle behind UIDungeon.
+     */
+    fun claimForLobby(playerId: Long): PvpLobbyClaim? = synchronized(lock) {
+        val token = playerToToken[playerId] ?: return@synchronized null
+        for (queue in queues.values) {
+            val index = queue.indexOfFirst { it.token == token }
+            if (index < 0) continue
+            val reg = queue.removeAt(index)
+            detachLocked(reg)
+            return@synchronized PvpLobbyClaim(reg.mode, reg.createdAt)
+        }
+        playerToToken.remove(playerId)
+        null
     }
 
     private fun buildRegistration(session: GameSession, mode: PvpBotMode): Registration? {
