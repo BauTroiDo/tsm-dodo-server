@@ -18,8 +18,9 @@ import java.nio.file.Path
 
 class DvtPvpBotTest {
     private fun fixture(vararg parts: String): ByteArray {
-        val direct = Path.of(*parts)
-        val path = if (Files.exists(direct)) direct else Path.of("..", *parts)
+        val direct = Path.of(parts.first(), *parts.drop(1).toTypedArray())
+        val path = if (Files.exists(direct)) direct
+        else Path.of("..", parts.first(), *parts.drop(1).toTypedArray())
         return Files.readAllBytes(path)
     }
 
