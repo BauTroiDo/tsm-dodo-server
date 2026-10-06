@@ -537,6 +537,147 @@ class UISellHandler(
         responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_PRICE_ERROR)
     }
 
+    private suspend fun queryPokeCoin(charId: Long, args: List<Int>): UiSellQuote {
+        val amount: Int
+        val itemRoute: Boolean
+        when {
+            args.size == 1 -> { amount = args[0]; itemRoute = true }
+            args.size == 2 && args[0] == 0 -> { amount = args[1]; itemRoute = false }
+            else -> return UiSellQuote.Fail(UISellSystem.REASON_NOT_USABLE)
+        }
+        if (amount <= 0) return UiSellQuote.Fail(UISellSystem.REASON_NOT_USABLE)
+        val state = pokeSystem.state(charId)
+        if (state.coin + amount > PokeSystem.MAX_COIN) {
+            return UiSellQuote.Fail(UISellSystem.REASON_LIMIT_REACHED)
+        }
+        return if (itemRoute) {
+            UiSellQuote.Item(UISellSystem.POKE_COIN_ITEM_ID, amount)
+        } else {
+            UiSellQuote.Money(
+                UISellSystem.CURRENCY_GOLD,
+                amount.toLong() * UISellSystem.POKE_COIN_POINT_PRICE
+            )
+        }
+    }
+
+    private suspend fun handlePokeCoinUse(
+        session: GameSession,
+        useKind: Int,
+        reader: PacketReader,
+    ) {
+        val charId = session.roleId.toLong()
+        val sellId = UISellSystem.SELL_POKE_COIN
+
+        if (useKind == USE_KIND_ITEM) {
+            if (reader.remaining < 2) {
+                responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_ITEM_DEDUCT_FAIL)
+                return
+            }
+            val bagIndex = reader.readUShortLE()
+            val args = readArgs(reader)
+            val quote = queryPokeCoin(charId, args)
+            if (quote !is UiSellQuote.Item) {
+                responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_PRICE_ERROR)
+                return
+            }
+            val thing = inventorySystem.getBagItem(charId, bagIndex)
+            if (thing == null || thing.itemId != quote.itemId || thing.quantity < quote.count) {
+                responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_ITEM_DEDUCT_FAIL)
+                return
+            }
+            val next = pokeSystem.depositCoinWithPayment(charId, quote.count) {
+                inventorySystem.removeFromBag(charId, bagIndex, quote.count)
+            }
+            if (next == null) {
+                responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_ITEM_DEDUCT_FAIL)
+                return
+            }
+            responseSender.sendReduceBagItem(session, bagIndex, quote.count)
+            responseSender.sendPokeCoin(session, next.coin)
+            responseSender.sendUiSellSuccess(session, sellId)
+            return
+        }
+
+        if (useKind == USE_KIND_POINT) {
+            val args = readArgs(reader)
+            val quote = queryPokeCoin(charId, args)
+            if (quote !is UiSellQuote.Money || args.size != 2 || args[0] != 0) {
+                responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_PRICE_ERROR)
+                return
+            }
+            val cost = quote.cost.toInt()
+            val next = pokeSystem.depositCoinWithPayment(charId, args[1]) {
+                if (!pointSystem.subtractRealPoint(charId, cost)) {
+                    false
+                } else {
+                    try {
+                        pointSystem.savePoints(charId)
+                        true
+                    } catch (e: Exception) {
+                        pointSystem.addRealPoint(charId, cost)
+                        runCatching { pointSystem.savePoints(charId) }
+                        false
+                    }
+                }
+            }
+            if (next == null) {
+                responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_GOLD_NOT_ENOUGH)
+                return
+            }
+            val (real, virtual) = pointSystem.getPoints(charId)
+            responseSender.sendPointBalance(session, real, virtual)
+            responseSender.sendPokeCoin(session, next.coin)
+            responseSender.sendUiSellSuccess(session, sellId)
+            return
+        }
+
+        responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_PRICE_ERROR)
+    }
+
+    private suspend fun handlePokeChangeUse(
+        session: GameSession,
+        useKind: Int,
+        reader: PacketReader,
+    ) {
+        val sellId = UISellSystem.SELL_POKE_CHANGE
+        if (useKind != USE_KIND_POINT || reader.remaining != 0) {
+            responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_PRICE_ERROR)
+            return
+        }
+
+        val charId = session.roleId.toLong()
+        val quote = uiSellSystem.query(charId, sellId)
+        if (quote !is UiSellQuote.Money || quote.currencyKind != UISellSystem.CURRENCY_GOLD) {
+            responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_PRICE_ERROR)
+            return
+        }
+
+        val cost = quote.cost.toInt()
+        val next = pokeSystem.resetWithPayment(charId) {
+            if (!pointSystem.subtractRealPoint(charId, cost)) {
+                false
+            } else {
+                try {
+                    pointSystem.savePoints(charId)
+                    true
+                } catch (e: Exception) {
+                    pointSystem.addRealPoint(charId, cost)
+                    runCatching { pointSystem.savePoints(charId) }
+                    false
+                }
+            }
+        }
+        if (next == null) {
+            responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_GOLD_NOT_ENOUGH)
+            return
+        }
+
+        val (real, virtual) = pointSystem.getPoints(charId)
+        responseSender.sendPointBalance(session, real, virtual)
+        responseSender.sendPokeAwards(session, pokeSystem.awards(next))
+        responseSender.sendUiSellSuccess(session, sellId)
+    }
+
     /** Refresh một category của UIFurnace sau khi UISell đã trừ phí thành công. */
     private suspend fun executeFurnaceRefresh(
         session: GameSession,
