@@ -4178,3 +4178,37 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - DvtPokeTest targeted PASS; full local build PASS21/21; production full build PASS21/21.
 - Production runtime HEAD=0912034, TCP6613 PID6304, startup ready and PokeData93/PokeRate/PokeBonusReward53 loaded.
 - Retest: relog, Trạc -> Thêm xu -> nhập quantity -> Đồng ý; second confirmation must now remain visible, then final confirm should deduct Point and increase Trạc coin.
+
+
+## 2026-10-06 — Linh Xu + Nhận thưởng online
+- User xác nhận Trạc/Poke PASS.
+- Linh Xu authoritative:
+  - IOS_Item_C.dat item65344 = Tiểu Tinh Linh Tệ, icon6082, directUse=1, specialAbility=216, attr1Kind=17, attr1Value=1.
+  - Lua define.lua ECurrency.Elf=9; ItemData.lua ItemUse_216=216 (加數值).
+  - Mapping DVT: currencyKind = attr1Kind - 8 => 9. Root cause: ItemHandler thiếu ItemUse216, item bị tiêu nhưng PlayerCurrency không tăng.
+  - Fix: generic direct-currency item handler persist currency -> consume item -> S35-50 currency sync; rollback currency nếu consume fail. Regression locks item65344 -> currency9.
+- Online reward authoritative:
+  - UILoginAward EAward.Online=3; click -> SendGetAward -> C87-2 [kind U8, day Int32, count U8].
+  - IOS_LoginAwardData group3 exact rows: 10/20/30/60/90/120 phút, flags 2/3/4/5/6/7; first reward 46038x20.
+  - Lua GetOnlineTime = elapsed current session + RoleCount.OnlineTime(index10), then /60.
+  - Root cause: WelfareHandler chỉ xử lý kind1(Login) và kind4(OpenServer), kind3 bị WrongKind.
+  - Fix: handle kind3, validate elapsed minutes + persisted RoleCount10, grant reward, set DVT row flag, idempotent duplicate ACK; persist current-session online seconds into RoleCount10 on disconnect.
+- Tests: DvtItemWireTest + WelfareLoginAwardTest targeted PASS; full local build PASS21/21; production full build PASS21/21.
+- Commit 13bcd4d pushed main. Production HEAD=13bcd4d, TCP6613 PID12756, startup ready.
+- Production application.conf preserved.
+- TODO evidence/robustness: daily reset lifecycle for RoleCount.OnlineTime(10) + online reward flags2..7 is not yet separately persisted by a welfare-day marker; do not invent reset semantics until audited.
+
+## 2026-10-06 — Mission11900 auto-navigation data repair
+- User reported [Chính] Cứu viện Trương Bảo / Giúp Trương Giác đi does not auto-path.
+- Exact mission: Mark 11900. Root cause is client data, not server pathfinder: IOS_MarkStep_C.dat step1-4 and step12 had endSceneId=0, endPosition=(0,0), endEventKind=0, endEventId=0. Lua MarkManager.Navigation refuses navigation when scene=0 or position=(0,0).
+- Eve.emg authoritative mapping from exact mission-step gates:
+  - step1 -> scene12861, door5, pos(1220,1720), eventKind=2.
+  - step2 -> scene12581, door3, pos(2880,1020), eventKind=2.
+  - step3 -> scene12584, door4, pos(560,360), eventKind=2.
+  - step4 -> scene12589, NPC10269 Tr.Bảo bị hại, clickId17, pos(1490,1020), eventKind=1.
+  - step12 -> scene12242, NPC10002 Trương Bảo, clickId7, pos(130,500), eventKind=1.
+- Supporting Eve identity: scene12012 click48 NPC10001=Trương Giác pos(510,260), event2 is quest start/accept path; step5-11 existing MarkStep condition already points to injured Trương Bảo NPC10269 in scene12589.
+- Patched only navigation metadata in IOS_MarkStep_C.dat; conditions, descriptions, mission semantics and Lua untouched.
+- Patched source File.dat/Data-ios/IOS_MarkStep_C.dat and active client C:\Users\QT\Downloads\TSNPCVN_9PET_STAGING\AssetBundles\Data\IOS_MarkStep_C.dat.
+- Old C:\Users\QT\Downloads\TSNPCVN client not present.
+- Server restart not required; client must fully close/reopen so DataManager reloads IOS_MarkStep_C.dat.
