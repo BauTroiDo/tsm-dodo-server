@@ -830,6 +830,11 @@ interface ResponseSender {
     /** S:072-006 Vòng quay: số xu hiện có (UInt16). */
     fun sendSlotMachineCoin(session: SessionSender, coin: Int)
 
+    fun sendPokeCoin(session: SessionSender, coin: Int)
+    fun sendPokeAwards(session: SessionSender, awards: List<tw.tsm.domain.data.PokeAward>)
+    fun sendPokeSuccess(session: SessionSender, awardId: Int, gridIndex: Int)
+    fun sendPokeFailure(session: SessionSender, failKind: Int)
+
     /** S:023-150 Doro draw results; one entry per egg/draw. */
     fun sendDoroResult(session: SessionSender, rewards: List<tw.tsm.domain.data.DoroReward>)
 
