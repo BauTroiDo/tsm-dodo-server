@@ -48,7 +48,7 @@ class ActivityHandler(
     private suspend fun handleBattlePass(session: GameSession, data: ByteArray) {
         if (data.isEmpty()) return
         val kind = data[0].toInt() and 255
-        if (kind == MISSION_AWARD_KIND) {
+        if (kind == MISSION_AWARD_KIND || kind == 129) {
             handleMissionAward(session, data)
             return
         }
