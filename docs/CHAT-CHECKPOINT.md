@@ -4168,3 +4168,13 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - DvtPokeTest target PASS; full local build PASS21/21; production full build PASS21/21.
 - Gameplay commit 8f490e3; production HEAD=8f490e3, TCP6613 PID13740; startup log nạp PokeData93/PokeRate/PokeBonusReward53 và server ready.
 - Blocker: current UIPoke.lua không trực tiếp dùng IOS_PokeBonusReward_C.dat; chưa đoán bonus/double semantics. changeItemId29508 cũng chỉ khai báo nhưng không dùng, nên chưa tự tiêu.
+
+
+### 2026-10-06 Trạc/Poke UISell44 alert race hotfix
+- User symptom: nhập số lượng mua xu Trạc rồi bấm Đồng ý nhưng không thấy phản hồi.
+- Root cause locked from Lua DVT: UIAlert.OnClick_Submit invokes currentClickEvent(...) BEFORE UI.Close(UIAlert). UIPoke callback immediately calls UISell.Launch(44,nil,0,text). Server LAN/offline returned S84-1 fast enough that UISell.ReceiveQuery opened the second ShowCheckMessage on the same UIAlert, then the old submit handler closed it immediately. This made the query look like no response.
+- Client IOS_UISell_C.dat was verified to contain sellId44 (moneyString22462/itemString20327), so this was not missing client data.
+- Fix commit 0912034: defer only C84-1 sellId44 response by 50ms before quote/send; Lua remains untouched.
+- DvtPokeTest targeted PASS; full local build PASS21/21; production full build PASS21/21.
+- Production runtime HEAD=0912034, TCP6613 PID6304, startup ready and PokeData93/PokeRate/PokeBonusReward53 loaded.
+- Retest: relog, Trạc -> Thêm xu -> nhập quantity -> Đồng ý; second confirmation must now remain visible, then final confirm should deduct Point and increase Trạc coin.
