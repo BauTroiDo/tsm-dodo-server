@@ -13,6 +13,8 @@ import tw.tsm.gamelogic.battle.BattleSkillResolver
 import tw.tsm.gamelogic.battle.PvpBotAiPolicy
 import tw.tsm.gamelogic.systems.PvpBotMode
 import tw.tsm.gamelogic.systems.PvpLobbyPolicy
+import tw.tsm.gamelogic.systems.DungeonSystem
+import tw.tsm.gamelogic.systems.TeamDungeonBotPolicy
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -109,6 +111,42 @@ class DvtPvpBotTest {
         assertEquals(listOf(1), chaos.leftIndices)
         assertEquals(3, chaos.rightBots)
         assertEquals(4, chaos.leftBots)
+    }
+
+    @Test
+    fun `normal team dungeon bots fill only a solo room and leave space for humans`() {
+        assertEquals(
+            4,
+            TeamDungeonBotPolicy.visibleBotCount(
+                DungeonSystem.KIND_NORMAL_MULTIPLAYER,
+                realCount = 1,
+                roomMaxPlayers = 5,
+            )
+        )
+        assertEquals(
+            0,
+            TeamDungeonBotPolicy.visibleBotCount(
+                DungeonSystem.KIND_NORMAL_MULTIPLAYER,
+                realCount = 2,
+                roomMaxPlayers = 5,
+            )
+        )
+        assertEquals(
+            0,
+            TeamDungeonBotPolicy.visibleBotCount(
+                DungeonSystem.KIND_SINGLE,
+                realCount = 1,
+                roomMaxPlayers = 5,
+            )
+        )
+        assertEquals(
+            0,
+            TeamDungeonBotPolicy.visibleBotCount(
+                DungeonSystem.KIND_WEEKLY,
+                realCount = 1,
+                roomMaxPlayers = 5,
+            )
+        )
     }
 
     @Test
