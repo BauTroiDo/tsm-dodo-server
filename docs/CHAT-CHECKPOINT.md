@@ -4085,3 +4085,11 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Full local `gradlew test build --rerun-tasks`: PASS 21/21.
 - `git diff --check`: không có whitespace error; chỉ warning CRLF hiện hữu.
 - Next: commit/push/deploy production .69; runtime test đeo/tháo + chat/overhead + relog persistence.
+
+### 2026-10-06 — Danh hiệu production deployed
+- Commit gameplay `0c05141 Fix DVT title ownership and persistence` pushed to feature/9-pet + main.
+- Production `C:\Server-Game\tsm_dodo` fast-forward 1651df4 -> 0c05141 bằng verified bundle, không đụng application.conf/local production files.
+- Production full `gradlew test build --rerun-tasks`: PASS 21/21.
+- Runtime restart sạch; production HEAD=0c05141, TCP 6613 LISTEN PID 6516.
+- Startup log xác nhận `IOS_TitleData` nạp đúng 33 danh hiệu và server ready trên 0.0.0.0:6613; không thấy ERROR/Exception/FATAL/Koin creation error trong đoạn verify.
+- Runtime client test cần xác nhận: danh hiệu đã mở có thể đeo; title chưa mở không thể forged; bấm lại để tháo; overhead/chat cập nhật; relog giữ đúng title.
