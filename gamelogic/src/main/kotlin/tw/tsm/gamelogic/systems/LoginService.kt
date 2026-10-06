@@ -60,6 +60,7 @@ class LoginService(
     private val collectionSystem: CollectionSystem? = null,
     private val sacredEquipPrimaryDefs: Map<Int, SacredEquipPrimaryDef> = emptyMap(),
     private val messageBoardRepository: MessageBoardRepository? = null,
+    private val pokeSystem: PokeSystem? = null,
 ) {
 
     /**
@@ -200,6 +201,11 @@ class LoginService(
         val mergedCounts = roleCountSystem.getAllCounts(record.id)
             .mapValues { (_, valuePair) -> valuePair.first }  // value (Không phải maxValue)
         responseSender.sendRoleCountData(session, mergedCounts)
+
+        pokeSystem?.state(record.id)?.let { poke ->
+            responseSender.sendPokeCoin(session, poke.coin)
+            responseSender.sendPokeAwards(session, pokeSystem.awards(poke))
+        }
 
         // S:120-008 Linh Hồn: gửi sau RoleCount vì UI Soul dùng RoleCount.Get(823)
         // để tính sức chứa kho Hồn. result=1 là login init theo protocal.lua.
