@@ -4212,3 +4212,39 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Patched source File.dat/Data-ios/IOS_MarkStep_C.dat and active client C:\Users\QT\Downloads\TSNPCVN_9PET_STAGING\AssetBundles\Data\IOS_MarkStep_C.dat.
 - Old C:\Users\QT\Downloads\TSNPCVN client not present.
 - Server restart not required; client must fully close/reopen so DataManager reloads IOS_MarkStep_C.dat.
+
+
+## 2026-10-07 PvP bot VS / Chaos / Mix — production
+
+- Client/wire contract already audited: player-shaped bot uses `EHuman.AutomanualPlayer=28`; bot companion uses `AutomanualNpc=29`. Client does not choose bot skill/target; backend does.
+- Implemented custom offline-server matchmaking policy (not claimed to be original DVT AI/rules):
+  - real players are preferred for 10 seconds;
+  - VS: 1v1, missing opponent becomes bot;
+  - Chaos: solo registrations are split across two 5-slot sides, remaining slots become bots;
+  - Mix: current party snapshot stays on one side, missing slots become bots.
+- Eve registration hooks:
+  - VS: authoritative scene 12003 / NPC click 10 / result type2 class7 param8;
+  - Mix mission marker 10007;
+  - Chaos mission marker 10578.
+- Battle safety:
+  - kind28 counts as player-shaped for PvP damage/capture immunity but is not client-controlled;
+  - kind29 companion is server-controlled and treated as PvP pet;
+  - arena battles use `EWar.VS`, `suppressGenericRewards=true`, no PvE EXP/drop/KillNum/capture settlement;
+  - standalone arena lifecycle does not resume unrelated Eve after battle end;
+  - queue cancels on disconnect or invalid party/player state.
+- Bot AI v1 is explicitly custom:
+  - revive first when a learned fightWay=8 skill and dead ally exist;
+  - HP heal priority below 55%;
+  - live `IOS_Skill_C.dat` proved Trị Liệu rows use `fightWay=7`; this classifier is isolated to PvP-bot AI so existing battle-core semantics are unchanged;
+  - otherwise use legal learned offensive skill, fallback HandFight.
+- Regression:
+  - new `DvtPvpBotTest`;
+  - fixed two integration regressions found by full gate by restoring the legacy `createFollowNpcFighter(...8 args)` JVM signature and keeping DAT heal discovery out of global `BattleDamageCalc.isHealSkill`.
+- Validation:
+  - local targeted tests PASS;
+  - local full `test build --rerun-tasks` PASS 21/21;
+  - merged GitHub PR #4 as squash commit `111877b`;
+  - production fast-forward `13bcd4d -> 111877b`;
+  - production full `test build --rerun-tasks` PASS 21/21 in 4m02s;
+  - production runtime restarted; TCP `192.168.1.69:6613` reachable, listener PID 268.
+- Runtime test requested next: enter VS / Chaos / Mix through their normal NPC/event entry and verify after 10 seconds that bots appear, act, can heal/revive, battle closes cleanly, and no PvE reward/capture is granted.
