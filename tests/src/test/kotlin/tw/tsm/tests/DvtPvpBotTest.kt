@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import tw.tsm.data.loaders.SkillDatLoader
 import tw.tsm.domain.constants.EHuman
-import tw.tsm.gamelogic.battle.BattleDamageCalc
 import tw.tsm.gamelogic.battle.BattleFighter
 import tw.tsm.gamelogic.battle.BattleGrid
 import tw.tsm.gamelogic.battle.BattleLifecyclePolicy
