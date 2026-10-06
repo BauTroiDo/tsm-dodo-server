@@ -4248,3 +4248,30 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
   - production full `test build --rerun-tasks` PASS 21/21 in 4m02s;
   - production runtime restarted; TCP `192.168.1.69:6613` reachable, listener PID 268.
 - Runtime test requested next: enter VS / Chaos / Mix through their normal NPC/event entry and verify after 10 seconds that bots appear, act, can heal/revive, battle closes cleanly, and no PvE reward/capture is granted.
+
+
+## 2026-10-07 PvP bot lobby bridge — production
+
+- User reported PvP bot v1 battle worked only at BattleInstance level; UIDungeon five-slot lobby still showed only the real player and empty '+' slots. User also hit stale-room leave after restart.
+- Client contract re-verified from decrypted DVT Lua:
+  - UIDungeon room member appears only after S47-013 DungeonPlayerData;
+  - readiness uses S47-011 RoleID + prepared flag;
+  - owner Start is enabled only when every non-owner room member has prepare=true;
+  - leave uses C47-010 / S47-010.
+- Lobby fix merged as gameplay commit 13304bf (PR #5), including prior fdcafbd idempotent stale-room leave fix.
+- PvPBotMatchmakingSystem.claimForLobby() transfers a queued VS/Chaos/Mix registration into UIDungeon staging and removes its background queue token to prevent duplicate battle start.
+- After the existing 10-second real-player preference window:
+  - VS with one real shows one AI placeholder;
+  - Mix/Chaos with one real show four AI placeholders in the five-slot room;
+  - lobby bots are sent with S47-013 and S47-011 ready=true;
+  - real joins replace visible bot placeholders and bot slots refill as needed.
+- Owner C47-012 Start now routes PvP lobby through PvpLobbyPolicy into existing BattleManager.createArenaBotBattle(kind28/29); the normal five-second DVT room countdown remains intact.
+- Staging room state is removed once battle init succeeds so lobby cannot resurrect after battle. C47-010 remains idempotent if registry state was lost by restart.
+- Validation:
+  - DvtPvpBotTest targeted PASS;
+  - local full test build --rerun-tasks PASS 21/21;
+  - production fast-forward 111877b -> 13304bf while preserving modified application.conf;
+  - production full test build --rerun-tasks PASS 21/21 in 4m20s;
+  - production restarted from _start_prod_detached.cmd;
+  - production HEAD=13304bf, TCP 6613 LISTENING PID 12988.
+- Runtime retest: reconnect/login, enter the same PvP room through normal event/NPC flow, wait up to 10 seconds. Bot placeholders named AI Fighter N should appear and show ready; Start should become enabled. Rời khỏi must now close the room even after a server restart.
