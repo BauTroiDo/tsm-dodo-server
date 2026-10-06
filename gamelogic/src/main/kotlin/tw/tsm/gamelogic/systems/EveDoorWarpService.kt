@@ -99,17 +99,21 @@ class EveDoorWarpService(
         session.lastDoorWarpMapId = targetScene
         session.lastDoorWarpTime = System.currentTimeMillis()
 
-        // Phải đăng ký bộ chờ trước rồi mới gửi gói cảnh. Nếu không client trả về rất nhanh
-        // Khi C:012-001 không có waiter, nhân vật sẽ dừng ở trạng thái màn hình đen/đang tải.
-        val deferred = worldManager.createSceneLoadDeferred(session.playerId)
+        val sameSceneWarp = targetScene == oldMapId
+        val deferred = if (sameSceneWarp) null else worldManager.createSceneLoadDeferred(session.playerId)
         responseSender.sendPlayerTeleport(session, session.playerId, targetScene, targetX, targetY)
         responseSender.sendSceneChange(session, session.playerId, targetScene, targetX, targetY, session.equipItemIds, session.titleId)
 
-        // Treo để chờ C:012-001 (client tải cảnh xong)
-        logger.debug { "${session.characterName} cập nhật cảnh: $oldMapId → $targetScene (chờ C:012-001)" }
-
-        withTimeoutOrNull(10_000L) { deferred.await() }
-            ?: logger.warn { "${session.characterName} chờ C:012-001 quá hạn (10s), buộc hoàn tất sự kiện" }
+        if (deferred != null) {
+            logger.debug { "${session.characterName} cập nhật cảnh: $oldMapId → $targetScene (chờ C:012-001)" }
+            withTimeoutOrNull(10_000L) { deferred.await() }
+                ?: logger.warn { "${session.characterName} chờ C:012-001 quá hạn (10s), buộc hoàn tất sự kiện" }
+        } else {
+            // DVT client does not reliably emit C:012-001 for an intra-scene reposition.
+            // Waiting here kept the Eve state locked for the full timeout and looked like
+            // a frozen character between dungeon stages.
+            logger.debug { "${session.characterName} dịch chuyển nội cảnh $targetScene → bỏ qua chờ C:012-001" }
+        }
 
         onComplete()
     }
