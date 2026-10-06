@@ -26,6 +26,7 @@ import tw.tsm.gamelogic.battle.*
 import tw.tsm.protocol.BattleRoleData
 import tw.tsm.protocol.BattleRoleSerializer
 import tw.tsm.protocol.PacketWriter
+import java.util.ArrayDeque
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 
@@ -78,6 +79,13 @@ class BattleManager(
 
     /** Ánh xạ người chơi → ID trận đấu*/
     private val playerBattleMap = ConcurrentHashMap<Long, Long>()
+
+    /**
+     * DVT Eve_FightData reinforcement queues keyed by the real battlefield slot.
+     * Only populated for sides whose LocationPos values are all authoritative 1..10.
+     */
+    private val pendingEveEnemies =
+        ConcurrentHashMap<Long, MutableMap<DvtEveBattlePlacement.Slot, ArrayDeque<EveFightEnemy>>>()
 
     /** Trình tạo ID trận đấu*/
     private val nextBattleId = AtomicLong(1)
@@ -169,14 +177,25 @@ class BattleManager(
             )
         }
 
-        // 2. Thêm NPC phe địch vào bàn cờ (bên trái col=0-1, sắp canh giữa)
-        addCenteredEnemies(fightData.leftEnemies, battle, battleId, involvedNpcs)
+        // 2. Eve_FightData carries authoritative LocationPos 1..10.
+        // Duplicate positions are sequential reinforcements for that slot.
+        addEveEnemySide(
+            fightData.leftEnemies,
+            battle,
+            battleId,
+            involvedNpcs,
+            frontCol = BattleConstants.ENEMY_FRONT_COL,
+            backCol = BattleConstants.ENEMY_BACK_COL,
+        )
 
-        // rightEnemies (thường để trống, dự phòng, cũng sắp canh giữa, dùng cột phía người chơi)
-        addCenteredEnemies(
-            fightData.rightEnemies, battle, battleId, involvedNpcs,
+        // RightEnemyAy uses the same per-side LocationPos contract on the player side.
+        addEveEnemySide(
+            fightData.rightEnemies,
+            battle,
+            battleId,
+            involvedNpcs,
             frontCol = BattleConstants.PLAYER_FRONT_COL,
-            backCol = BattleConstants.PLAYER_BACK_COL
+            backCol = BattleConstants.PLAYER_BACK_COL,
         )
 
         // 3. Đăng ký trận đấu
@@ -636,6 +655,77 @@ class BattleManager(
     // ── Phương thức private ──
 
     /**
+     * Place one Eve_FightData side using authoritative LocationPos when available.
+     * Repeated slots are queued as reinforcements and are not present in S11-250.
+     *
+     * LocationPos=0 still exists in legacy data and its server semantics are not
+     * authoritative yet. Those fights keep the old centered placement, capped to
+     * the 10 physical cells so malformed/unknown data can never crash BattleGrid.
+     */
+    private fun addEveEnemySide(
+        enemies: List<EveFightEnemy>,
+        battle: BattleInstance,
+        battleId: Long,
+        involvedNpcs: MutableList<Pair<Int, NpcDef>>,
+        frontCol: Int,
+        backCol: Int,
+    ) {
+        if (enemies.isEmpty()) return
+
+        val plan = DvtEveBattlePlacement.plan(enemies, frontCol, backCol)
+        if (plan == null) {
+            if (enemies.size > BattleConstants.MAX_ROW * 2) {
+                logger.warn {
+                    "Trận $battleId: Eve side có ${enemies.size} record nhưng LocationPos chưa authoritative; " +
+                        "chỉ spawn 10 record đầu để tránh tràn BattleGrid"
+                }
+            }
+            addCenteredEnemies(
+                enemies.take(BattleConstants.MAX_ROW * 2),
+                battle,
+                battleId,
+                involvedNpcs,
+                frontCol,
+                backCol,
+            )
+            return
+        }
+
+        for (enemy in enemies) {
+            val npcDef = npcDefs[enemy.npcId]
+            if (npcDef != null) {
+                involvedNpcs += enemy.npcId to npcDef
+            } else {
+                logger.warn { "Trận $battleId: không tìm thấy định nghĩa NPC npcId=${enemy.npcId}" }
+            }
+        }
+
+        for (placed in plan.initial) {
+            val npcDef = npcDefs[placed.enemy.npcId] ?: continue
+            battle.addFighter(
+                createNpcFighter(
+                    npcDef = npcDef,
+                    col = placed.slot.col,
+                    row = placed.slot.row,
+                    battleId = battleId,
+                    npcDataId = placed.enemy.npcId,
+                )
+            )
+        }
+
+        if (plan.pending.isNotEmpty()) {
+            val bySlot = pendingEveEnemies.computeIfAbsent(battleId) { LinkedHashMap() }
+            for ((slot, queue) in plan.pending) {
+                val valid = queue.filter { it.npcId in npcDefs }
+                if (valid.isNotEmpty()) {
+                    bySlot[slot] = ArrayDeque(valid)
+                }
+            }
+            if (bySlot.isEmpty()) pendingEveEnemies.remove(battleId)
+        }
+    }
+
+    /**
      * Xếp kẻ địch vào hàng trước trước rồi hàng sau, trong mỗi hàng sắp canh giữa
      *
      * Hàng trước tối đa MAX_ROW (5) con, tràn sang hàng sau.
@@ -650,7 +740,9 @@ class BattleManager(
         backCol: Int = BattleConstants.ENEMY_BACK_COL
     ) {
         val frontEnemies = enemies.take(BattleConstants.MAX_ROW)
-        val backEnemies = enemies.drop(BattleConstants.MAX_ROW)
+        val backEnemies = enemies
+            .drop(BattleConstants.MAX_ROW)
+            .take(BattleConstants.MAX_ROW)
         addColumnCentered(frontEnemies, frontCol, battle, battleId, involvedNpcs)
         addColumnCentered(backEnemies, backCol, battle, battleId, involvedNpcs)
     }
@@ -680,43 +772,44 @@ class BattleManager(
         }
     }
 
+    private fun toBattleRoleData(battle: BattleInstance, fighter: BattleFighter): BattleRoleData =
+        BattleRoleData(
+            warType = battle.warType,
+            humanKind = fighter.kind,
+            roleId = fighter.roleId,
+            npcId = fighter.npcId,
+            masterId = fighter.masterId,
+            col = fighter.col,
+            row = fighter.row,
+            maxHp = fighter.maxHp,
+            maxSp = fighter.maxSp,
+            hp = fighter.hp,
+            sp = fighter.sp,
+            level = fighter.level,
+            upgradeLv = fighter.upgradeLv,
+            element = fighter.element,
+            name = fighter.name,
+            sex = fighter.sex,
+            face = fighter.face,
+            hair = fighter.hair,
+            color1 = fighter.color1,
+            color2 = fighter.color2,
+            turn = fighter.turn,
+            career = fighter.career,
+            equipItemIds = fighter.equipItemIds,
+            outfitItemIds = fighter.outfitItemIds,
+            soulEquipId = fighter.soulEquipId,
+        )
+
     /**
      * Gửi gói tin khởi tạo chiến đấu cho mọi người chơi tham chiến (hoặc người chơi chỉ định)
      *
      * @param onlyTo nếu khác null thì chỉ gửi cho người chơi đó (dùng khi tham chiến)
      */
     private fun sendBattleInit(battle: BattleInstance, onlyTo: GameSession? = null) {
-        // Tuần tự hoá dữ liệu của mọi nhân vật
-        val roleDataList = battle.getAllFighters().map { fighter ->
-            BattleRoleData(
-                warType = battle.warType,
-                humanKind = fighter.kind,
-                roleId = fighter.roleId,
-                npcId = fighter.npcId,
-                masterId = fighter.masterId,
-                col = fighter.col,
-                row = fighter.row,
-                maxHp = fighter.maxHp,
-                maxSp = fighter.maxSp,
-                hp = fighter.hp,
-                sp = fighter.sp,
-                level = fighter.level,
-                upgradeLv = fighter.upgradeLv,
-                element = fighter.element,
-                name = fighter.name,
-                sex = fighter.sex,
-                face = fighter.face,
-                hair = fighter.hair,
-                color1 = fighter.color1,
-                color2 = fighter.color2,
-                turn = fighter.turn,
-                career = fighter.career,
-                equipItemIds = fighter.equipItemIds,
-                outfitItemIds = fighter.outfitItemIds,
-                soulEquipId = fighter.soulEquipId
-            )
-        }
-        val roleBytes = BattleRoleSerializer.serializeAll(roleDataList)
+        val roleBytes = BattleRoleSerializer.serializeAll(
+            battle.getAllFighters().map { toBattleRoleData(battle, it) }
+        )
 
         val targets = if (onlyTo != null) listOf(onlyTo) else battle.playerSessions.values.toList()
 
@@ -729,6 +822,85 @@ class BattleManager(
         for (session in targets) {
             responseSender.sendBattleFieldType(session, battle.warStyle, 0, 0, 0)
         }
+    }
+
+    /**
+     * Spawn at most one queued Eve reinforcement per newly-vacant slot.
+     *
+     * The old role must leave the client field before S11-005 reuses its slot.
+     */
+    private fun spawnEveReinforcements(battle: BattleInstance): Int {
+        val pending = pendingEveEnemies[battle.battleId] ?: return 0
+        if (pending.isEmpty()) {
+            pendingEveEnemies.remove(battle.battleId)
+            return 0
+        }
+
+        var spawnedCount = 0
+        val emptyQueues = mutableListOf<DvtEveBattlePlacement.Slot>()
+
+        for ((slot, queue) in pending.entries.toList()) {
+            if (queue.isEmpty()) {
+                emptyQueues += slot
+                continue
+            }
+
+            val current = battle.grid.getAt(slot.col, slot.row)
+            if (current?.isAlive == true) continue
+
+            // Never evict a player-controlled corpse on the allied side.
+            if (current?.isPlayerControlled == true) continue
+
+            if (current != null) {
+                battle.grid.remove(slot.col, slot.row)
+                for (session in battle.playerSessions.values) {
+                    responseSender.sendBattleExitFight(session, slot.col, slot.row)
+                }
+            }
+
+            var next: EveFightEnemy? = null
+            while (queue.isNotEmpty() && next == null) {
+                val candidate = queue.removeFirst()
+                if (candidate.npcId in npcDefs) {
+                    next = candidate
+                } else {
+                    logger.warn {
+                        "Trận ${battle.battleId}: reinforcement thiếu NpcDef npcId=${candidate.npcId}"
+                    }
+                }
+            }
+
+            if (next != null) {
+                val npcDef = npcDefs.getValue(next.npcId)
+                val fighter = createNpcFighter(
+                    npcDef = npcDef,
+                    col = slot.col,
+                    row = slot.row,
+                    battleId = battle.battleId,
+                    npcDataId = next.npcId,
+                )
+                battle.addFighter(fighter)
+
+                val roleBytes = BattleRoleSerializer.serializeAll(
+                    listOf(toBattleRoleData(battle, fighter))
+                )
+                for (session in battle.playerSessions.values) {
+                    responseSender.sendBattleJoinRoleAppear(session, roleBytes)
+                }
+                spawnedCount++
+                logger.info {
+                    "Trận ${battle.battleId}: reinforcement npcId=${next.npcId} " +
+                        "LocationPos=${next.locationPos} -> (${slot.col},${slot.row}), " +
+                        "còn=${queue.size}"
+                }
+            }
+
+            if (queue.isEmpty()) emptyQueues += slot
+        }
+
+        emptyQueues.forEach(pending::remove)
+        if (pending.isEmpty()) pendingEveEnemies.remove(battle.battleId)
+        return spawnedCount
     }
 
     /**
@@ -745,6 +917,7 @@ class BattleManager(
                 // PC start_round applies surviving periodic statuses before commands/countdown.
                 val statusResult = battle.resolveRoundStartStatusEffects()
                 broadcastRoundResult(battle, statusResult)
+                spawnEveReinforcements(battle)
                 val statusEnd = battle.checkBattleEnd()
                 if (statusEnd != null) {
                     handleBattleEnd(battle, statusEnd)
@@ -788,6 +961,10 @@ class BattleManager(
 
                 // 6. Chờ hoạt ảnh cuối cùng phát xong
                 delay(BattleConstants.ROUND_END_DELAY_MS)
+
+                // 6.5 DVT Eve_FightData: dead slots may immediately receive the
+                // next queued NPC with the same LocationPos.
+                spawnEveReinforcements(battle)
 
                 // 7. Kiểm tra kết thúc trận đấu
                 val endResult = battle.checkBattleEnd()
@@ -1492,6 +1669,7 @@ class BattleManager(
     }
 
     private fun cleanupBattle(battle: BattleInstance) {
+        pendingEveEnemies.remove(battle.battleId)
         battles.remove(battle.battleId)
         for (playerId in battle.playerSessions.keys) {
             playerBattleMap.remove(playerId, battle.battleId)

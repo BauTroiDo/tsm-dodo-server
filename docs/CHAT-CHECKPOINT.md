@@ -4023,3 +4023,13 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Temporary Lulong/EveSkill probe tests removed before commit.
 - Targeted EveConditionEvaluatorTest PASS.
 - Full local gradlew test build --rerun-tasks PASS 21/21.
+
+
+## 2026-10-06 — DVT Eve battle LocationPos / reinforcement fix
+- Viễn Chinh Ô Hoàn / Bố Lỗ blocker: scene12820 click13 event17, mission10376 step3 reached FightData20, then BattleManager crashed with BattleGrid row=-1.
+- FightData20 has 13 left records: first 10 occupy LocationPos 1..10; final 3 repeat 7,8,9 with npc17071. Repeated LocationPos is handled as sequential reinforcement, not simultaneous fighters.
+- Lua DVT keeps NO + NPCID + LocationPos + AI in Eve_FightData; S11-250 is initial battle snapshot and S11-005 calls FightField.RoleAppear for a role joining an existing battle.
+- Generic fix: DvtEveBattlePlacement maps positions 1..5 to front rows0..4, 6..10 to back rows0..4; first record per slot is initial, duplicates queue. Dead/vacant queued slots exit old role with S11-001 then spawn next role with S11-005. Pending queues clear with battle cleanup and battle-end checks occur after reinforcement opportunity.
+- LocationPos=0 remains evidence-blocked; legacy placement is retained but capped to 10 cells so it cannot crash BattleGrid.
+- Whole Eve audit: 497 sides have duplicate valid LocationPos; 523 sides have >10 records, so this is systemic.
+- DvtEveBattlePlacementTest locks scene12820 FightData20 = 10 initial + 3 pending; targeted PASS; full local test build PASS 21/21.
