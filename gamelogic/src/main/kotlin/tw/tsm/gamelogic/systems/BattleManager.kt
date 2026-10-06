@@ -240,6 +240,7 @@ class BattleManager(
                         hairOverride = ((session.hair + profile.hairOffset - 1) % 8) + 1,
                         color1Xor = profile.color1Xor,
                         color2Xor = profile.color2Xor,
+                        equipItemIdsOverride = profile.outfitItemIds.takeIf { it.isNotEmpty() },
                     )
                 )
                 if (petDef != null) {

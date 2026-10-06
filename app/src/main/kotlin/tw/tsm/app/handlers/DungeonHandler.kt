@@ -55,6 +55,7 @@ class DungeonHandler(
         val color1Xor: Int = 0,
         val color2Xor: Int = 0,
         val copyEquipment: Boolean = true,
+        val outfitItemIds: IntArray = intArrayOf(),
     )
 
     private val pvpRoomModes = ConcurrentHashMap<Long, PvpBotMode>()
@@ -381,7 +382,8 @@ class DungeonHandler(
                             hairOffset = profile.hairOffset,
                             color1Xor = profile.color1Xor,
                             color2Xor = profile.color2Xor,
-                            copyEquipment = true,
+                            copyEquipment = profile.outfitItemIds.isEmpty(),
+                            outfitItemIds = profile.outfitItemIds,
                         )
                     )
                 }
@@ -1007,7 +1009,9 @@ class DungeonHandler(
             .writeIntLE(role.color2 xor bot.color2Xor)
 
         for (i in 0 until DUNGEON_EQUIP_STYLE_SLOTS) {
-            writer.writeShortLE(if (bot.copyEquipment) role.equipItemIds.getOrElse(i) { 0 } else 0)
+            val visualItemId = bot.outfitItemIds.getOrNull(i)
+                ?: if (bot.copyEquipment) role.equipItemIds.getOrElse(i) { 0 } else 0
+            writer.writeShortLE(visualItemId)
         }
 
         writer.writeByte(role.turn)

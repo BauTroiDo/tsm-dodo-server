@@ -501,6 +501,23 @@ class DungeonSystem(
         val elapsedSeconds = ((clockMillis() - run.startedAtMillis).coerceAtLeast(0L) / 1000L)
             .coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
         val remainingSeconds = (def.timeMinutes * 60 - elapsedSeconds).coerceAtLeast(0)
+        val charId = session.roleId.toLong()
+
+        // DVT UIDungeon shows remaining attempts as dayilyCount - MarkManager.missions[dayilyFlag].step.
+        // Record a successful completion independently from reward resolution. GM/admin accounts may
+        // bypass the entry gate, but the client-visible daily counter must still advance normally.
+        if (def.dailyFlag > 0 && def.dailyCount > 0) {
+            val used = questSystem.getMissions(charId)
+                .firstOrNull { it.missionId == def.dailyFlag }
+                ?.step ?: 0
+            if (used < def.dailyCount) {
+                val previous = questSystem.addMissionStep(charId, def.dailyFlag, 1)
+                if (previous != null) {
+                    responseSender?.sendAddMissionStep(session, def.dailyFlag, 1)
+                }
+            }
+        }
+
         val rewards = resolveRewards(def.id, session.turn, remainingSeconds, playerWin = true)
 
         if (rewards.isEmpty()) {
@@ -517,26 +534,10 @@ class DungeonSystem(
             return DungeonSettlement(def.id, result = 1)
         }
 
-        val charId = session.roleId.toLong()
         val changed = inventory.addRewardsToBagExact(charId, rewards)
         if (changed == null) {
             dungeonLogger.warn { "Dungeon reward could not fit bag dungeon=${def.id} rewards=$rewards" }
             return DungeonSettlement(def.id, result = 1)
-        }
-
-        // DVT UIDungeon derives "remaining daily attempts" from DungeonData.dayilyFlag.
-        // Eve mission scripts complete missionFlag but do not mutate this counter, so the
-        // server must record one successful use at settlement time.
-        if (def.dailyFlag > 0 && def.dailyCount > 0 && !adminBypassPolicy.bypassEntryLimit(session)) {
-            val used = questSystem.getMissions(charId)
-                .firstOrNull { it.missionId == def.dailyFlag }
-                ?.step ?: 0
-            if (used < def.dailyCount) {
-                val previous = questSystem.addMissionStep(charId, def.dailyFlag, 1)
-                if (previous != null) {
-                    responseSender?.sendAddMissionStep(session, def.dailyFlag, 1)
-                }
-            }
         }
 
         for ((slot, thing) in changed) responseSender?.sendSetBagItem(session, slot, thing, showMsg = true)

@@ -83,6 +83,7 @@ private val serverLogger = KotlinLogging.logger {}
  * @param gameDataManager bộ quản lý dữ liệu game đã khởi tạo
  */
 fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
+    TeamDungeonBotPolicy.configureOutfits(gameDataManager.itemDefs)
     // CoroutineScope dùng chung
     single { CoroutineScope(SupervisorJob() + Dispatchers.Default) }
 

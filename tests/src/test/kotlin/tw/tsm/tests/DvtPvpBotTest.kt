@@ -1,11 +1,14 @@
 package tw.tsm.tests
 
+import io.mockk.every
+import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import tw.tsm.data.loaders.SkillDatLoader
 import tw.tsm.domain.constants.EHuman
+import tw.tsm.domain.data.ItemDef
 import tw.tsm.gamelogic.battle.BattleFighter
 import tw.tsm.gamelogic.battle.BattleGrid
 import tw.tsm.gamelogic.battle.BattleLifecyclePolicy
@@ -181,6 +184,29 @@ class DvtPvpBotTest {
         assertEquals(true, TeamDungeonBotPolicy.assistMatchesInstance(2, 2))
         assertEquals(false, TeamDungeonBotPolicy.assistMatchesInstance(2, 3))
         assertEquals(false, TeamDungeonBotPolicy.assistMatchesInstance(0, 0))
+    }
+
+
+    @Test
+    fun `team dungeon bot outfits are built from valid Item_C visual slots`() {
+        val defs = linkedMapOf<Int, ItemDef>()
+        for (slot in 1..5) {
+            for (n in 0 until 8) {
+                val id = slot * 1000 + n + 1
+                defs[id] = mockk<ItemDef>().also { def ->
+                    every { def.fitType } returns slot
+                    every { def.malePicId } returns 100 + id
+                    every { def.femalePicId } returns 200 + id
+                    every { def.openUsed } returns 0
+                }
+            }
+        }
+
+        TeamDungeonBotPolicy.configureOutfits(defs)
+        val outfits = (0 until 4).map { TeamDungeonBotPolicy.profile(it).outfitItemIds.toList() }
+
+        assertTrue(outfits.all { it.size == 5 && it.all { itemId -> itemId > 0 } })
+        assertEquals(4, outfits.toSet().size)
     }
 
 }
