@@ -46,7 +46,13 @@ class ActivityHandler(
     }
 
     private suspend fun handleBattlePass(session: GameSession, data: ByteArray) {
-        if (data.size != 2 || (data[0].toInt() and 255) != BattlePassSystem.KIND || data[1].toInt() !in 0..1) return
+        if (data.isEmpty()) return
+        val kind = data[0].toInt() and 255
+        if (kind == MISSION_AWARD_KIND) {
+            handleMissionAward(session, data)
+            return
+        }
+        if (data.size != 2 || kind != BattlePassSystem.KIND || data[1].toInt() !in 0..1) return
         val request = data[1].toInt()
         val now = LocalDateTime.now()
         val charId = session.roleId.toLong()
@@ -54,10 +60,10 @@ class ActivityHandler(
             val open = battlePass?.isOpen(charId, now) == true
             if (!open) { session.send(battlePassPacket(255, request)); return }
             val success = request == 0 || (session.battleId == 0L && battlePass!!.claim(charId, now))
-            if (success) {
-                if (request == 1) response!!.sendAllBagItems(session, inventory!!.getBag(charId), refresh = true)
+            if (success && request == 1) {
+                response!!.sendAllBagItems(session, inventory!!.getBag(charId), refresh = true)
                 val counts = roleCounts!!
-                response!!.sendRoleCountUpdate(session, listOf(BattlePassSystem.EXP, BattlePassSystem.FREE, BattlePassSystem.PAID)
+                response.sendRoleCountUpdate(session, listOf(BattlePassSystem.EXP, BattlePassSystem.FREE, BattlePassSystem.PAID)
                     .associateWith { counts.getValue(charId, it) to counts.getMaxValue(charId, it) })
             }
             session.send(battlePassPacket(if (success) 1 else 0, request))
@@ -65,6 +71,25 @@ class ActivityHandler(
             activityLogger.error(e) { "BattlePass request failed charId=$charId" }
             session.send(battlePassPacket(0, request))
         }
+    }
+
+    private suspend fun handleMissionAward(session: GameSession, data: ByteArray) {
+        if (data.size != 3) return
+        val missionId = (data[1].toInt() and 255) or ((data[2].toInt() and 255) shl 8)
+        val charId = session.roleId.toLong()
+        val outcome = try {
+            if (session.battleId != 0L || battlePass == null) BattlePassSystem.MissionClaimOutcome(0)
+            else battlePass.claimMission(charId, missionId, LocalDateTime.now())
+        } catch (e: Exception) {
+            activityLogger.error(e) { "MissionAward request failed charId=$charId missionId=$missionId" }
+            BattlePassSystem.MissionClaimOutcome(0)
+        }
+
+        if (outcome.code == 1) {
+            response?.sendAllBagItems(session, inventory!!.getBag(charId), refresh = true)
+            outcome.flagId?.let { response?.sendBitFlagChanges(session, listOf(it to true)) }
+        }
+        session.send(missionAwardPacket(outcome.code, missionId))
     }
 
     private suspend fun handleEnter(session: GameSession, data: ByteArray) {
@@ -140,9 +165,18 @@ class ActivityHandler(
     )
 
     companion object {
+        const val MISSION_AWARD_KIND = 122
+
         fun battlePassPacket(result: Int, request: Int): ByteArray = PacketWriter()
             .writeByte(77).writeByte(11).writeByte(0).writeByte(BattlePassSystem.KIND)
             .writeByte(result).writeByte(request).toByteArray()
+
+        fun missionAwardPacket(result: Int, missionId: Int): ByteArray {
+            val writer = PacketWriter().writeByte(77).writeByte(11).writeByte(0)
+                .writeByte(MISSION_AWARD_KIND).writeByte(result)
+            if (result in 1..4) writer.writeShortLE(missionId)
+            return writer.toByteArray()
+        }
 
         const val JUDGMENT_TOWER_SCENE_ID = 12921
         const val ACTIVITY_MIN_LEVEL = 15

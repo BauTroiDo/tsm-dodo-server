@@ -6,6 +6,7 @@ import kotlinx.coroutines.sync.withLock
 import tw.tsm.domain.constants.ItemConstants
 import tw.tsm.domain.data.ActivityTimeDef
 import tw.tsm.domain.data.ItemDef
+import tw.tsm.domain.data.MissionAwardDef
 import tw.tsm.domain.data.PassAwardDef
 import tw.tsm.domain.valueobjects.ThingData
 import java.time.LocalDateTime
@@ -21,6 +22,7 @@ class BattlePassSystem(
     private val inventory: InventorySystem,
     private val counts: RoleCountSystem,
     private val flags: BitFlagSystem,
+    private val missions: Map<Int, MissionAwardDef> = emptyMap(),
 ) {
     private val locks = ConcurrentHashMap<Long, Mutex>()
 
@@ -80,6 +82,54 @@ class BattlePassSystem(
             battlePassLogger.info { "BattlePass claim charId=$characterId season=$season level=$level free=$nextFree paid=$nextPaid" }
             true
         }
+
+    data class MissionClaimOutcome(val code: Int, val flagId: Int? = null)
+
+    suspend fun claimMission(characterId: Long, missionId: Int, now: LocalDateTime): MissionClaimOutcome =
+        locks.computeIfAbsent(characterId) { Mutex() }.withLock {
+            val season = currentSeason(now) ?: return@withLock MissionClaimOutcome(255)
+            if (!isOpen(characterId, now)) return@withLock MissionClaimOutcome(255)
+            val mission = missions[missionId] ?: return@withLock MissionClaimOutcome(0)
+            if (mission.activityId != season) return@withLock MissionClaimOutcome(255)
+            if (mission.getFlag in flags.getSetFlagIds(characterId)) return@withLock MissionClaimOutcome(3, mission.getFlag)
+            if (mission.conditionKind != 14 || !compare(
+                    counts.getValue(characterId, mission.conditionValue),
+                    mission.operator,
+                    mission.targetValue,
+                )
+            ) return@withLock MissionClaimOutcome(2, mission.getFlag)
+            if (!inventory.canAddItemToBag(characterId, mission.itemId, mission.itemCount)) {
+                return@withLock MissionClaimOutcome(4, mission.getFlag)
+            }
+
+            val before = inventory.getBag(characterId).toMap()
+            val changed = inventory.addItemsToBagExact(characterId, mission.itemId, mission.itemCount)
+                ?: return@withLock MissionClaimOutcome(4, mission.getFlag)
+            try {
+                flags.setFlag(characterId, mission.getFlag)
+            } catch (e: Exception) {
+                battlePassLogger.error(e) { "MissionAward flag persist failed charId=$characterId missionId=$missionId; rollback bag" }
+                val after = inventory.getBag(characterId)
+                val slots = before.keys union after.keys
+                inventory.setBagItemsAtomic(characterId, slots.associateWith { before[it] })
+                return@withLock MissionClaimOutcome(0)
+            }
+            battlePassLogger.info {
+                "MissionAward claim charId=$characterId missionId=$missionId activity=${mission.activityId} " +
+                    "item=${mission.itemId}x${mission.itemCount} flag=${mission.getFlag} changed=${changed.size}"
+            }
+            MissionClaimOutcome(1, mission.getFlag)
+        }
+
+    private fun compare(current: Int, operator: Int, target: Int): Boolean = when (operator) {
+        1 -> current == target
+        2 -> current > target
+        3 -> current >= target
+        4 -> current < target
+        5 -> current <= target
+        6 -> current != target
+        else -> false
+    }
 
     companion object {
         const val KIND = 128

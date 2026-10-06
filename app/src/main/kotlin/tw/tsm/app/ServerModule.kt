@@ -522,7 +522,8 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     }
     single { AdminBypassPolicy() }
     single { BattlePassSystem(get<GameDataManager>().passAwardDefs, get<GameDataManager>().activityTimeDefs,
-        get<GameDataManager>().itemDefs, get<InventorySystem>(), get<RoleCountSystem>(), get<BitFlagSystem>()) }
+        get<GameDataManager>().itemDefs, get<InventorySystem>(), get<RoleCountSystem>(), get<BitFlagSystem>(),
+        get<GameDataManager>().missionAwardDefs) }
     single { ActivityScheduleSystem(get<GameDataManager>().activityTimeDefs, get<AdminBypassPolicy>(),
         get<GameDataManager>().passAwardDefs.map { it.seasonId }.toSet()) }
 

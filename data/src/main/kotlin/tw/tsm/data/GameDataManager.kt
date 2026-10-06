@@ -249,6 +249,9 @@ class GameDataManager(
     var passAwardDefs: List<PassAwardDef> = emptyList()
         private set
 
+    var missionAwardDefs: Map<Int, MissionAwardDef> = emptyMap()
+        private set
+
     var activityTimeDefs: Map<Int, ActivityTimeDef> = emptyMap()
         private set
 
@@ -715,6 +718,16 @@ class GameDataManager(
                 logger.info { "Nạp IOS_PassAward xong: ${passAwardDefs.size} cấp, seasons=${passAwardDefs.map { it.seasonId }.distinct()}" }
             } catch (e: Exception) {
                 logger.error(e) { "Nạp IOS_PassAward thất bại; BattlePass disabled" }
+            }
+        }
+
+        val missionAwardFile = dataIosDir.resolve("IOS_MissionAward_C.dat")
+        if (Files.isRegularFile(missionAwardFile)) {
+            try {
+                missionAwardDefs = MissionAwardDatLoader.load(Files.readAllBytes(missionAwardFile))
+                logger.info { "Nạp IOS_MissionAward xong: ${missionAwardDefs.size} nhiệm vụ" }
+            } catch (e: Exception) {
+                logger.error(e) { "Nạp IOS_MissionAward thất bại; mission rewards disabled" }
             }
         }
 
