@@ -32,7 +32,7 @@ interface InventoryRepository {
         }
     }
 
-    suspend fun loadBattlePassSeason(characterId: Long): Int? = null
+    suspend fun loadBattlePassProgress(characterId: Long): tw.tsm.domain.data.BattlePassProgress? = null
 
     /** Real persistence commits bag, both claim counters and season identity together. */
     suspend fun saveBattlePassClaimAtomic(

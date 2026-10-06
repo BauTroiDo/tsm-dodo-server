@@ -53,6 +53,7 @@ class DvtBattlePassRegressionTest {
         val progress = mutableMapOf(791 to (exp to 0))
         val bag = mutableMapOf<Int, ThingData>()
         var season: Int? = null
+        var ledger: BattlePassProgress? = null
         var paid = false
         var fail = false
         var writes = 0
@@ -61,14 +62,17 @@ class DvtBattlePassRegressionTest {
         }
         val repo = mockk<InventoryRepository>(relaxed = true).also { r ->
             coEvery { r.loadItems(any(), any()) } answers { if (secondArg<Int>() == EThings.BAG) bag.toMap() else emptyMap() }
-            coEvery { r.loadBattlePassSeason(any()) } answers { season }
+            coEvery { r.loadBattlePassProgress(any()) } answers { ledger ?: season?.let { BattlePassProgress(it,0,0) } }
             coEvery { r.saveBattlePassClaimAtomic(any(), any(), any(), any(), any()) } coAnswers {
                 if (fail) error("DB unavailable")
-                check(arg<Map<Int, Int>>(3).all { (index, value) -> (progress[index]?.first ?: 0) == value })
+                check(arg<Map<Int, Int>>(3).all { (index, value) ->
+                    if (ledger == null) (progress[index]?.first ?: 0) == value else (progress[index]?.first ?: 0) <= value
+                })
                 val changes = arg<Map<Int, ThingData?>>(2)
                 changes.forEach { (slot, thing) -> if (thing == null) bag.remove(slot) else bag[slot] = thing }
                 progress.putAll(arg<Map<Int, Pair<Int, Int>>>(4))
                 season = secondArg()
+                ledger = BattlePassProgress(season!!, progress.getValue(792).first, progress.getValue(793).first)
                 writes++
             }
         }
@@ -101,6 +105,13 @@ class DvtBattlePassRegressionTest {
         all.forEach { (id, qty) -> assertEquals(qty, store.bag.values.filter { it.itemId == id }.sumOf { it.quantity.toLong() }) }
         assertFalse(store.runtime().first.claim(1, now))
         assertEquals(2, store.writes)
+        store.progress[792] = 0 to 0
+        store.progress[793] = 0 to 0
+        val (staleRelog, _, staleCounts) = store.runtime()
+        assertFalse(staleRelog.claim(1,now))
+        assertEquals(3,staleCounts.getValue(1,792))
+        assertEquals(3,staleCounts.getValue(1,793))
+        assertEquals(2,store.writes)
     }
 
     @Test fun `persistence failure full bag expiry and unproven rollover never consume progress`() = runTest {

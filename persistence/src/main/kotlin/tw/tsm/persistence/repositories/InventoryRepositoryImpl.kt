@@ -78,22 +78,35 @@ class InventoryRepositoryImpl : InventoryRepository {
         Unit
     }
 
-    override suspend fun loadBattlePassSeason(characterId: Long): Int? = suspendTransaction {
+    override suspend fun loadBattlePassProgress(characterId: Long): tw.tsm.domain.data.BattlePassProgress? = suspendTransaction {
         CharacterBattlePassSeasons.selectAll().where { CharacterBattlePassSeasons.charId eq characterId }
-            .singleOrNull()?.get(CharacterBattlePassSeasons.seasonId)
+            .singleOrNull()?.let {
+                tw.tsm.domain.data.BattlePassProgress(it[CharacterBattlePassSeasons.seasonId],
+                    it[CharacterBattlePassSeasons.freeLevel], it[CharacterBattlePassSeasons.paidLevel])
+            }
     }
 
     override suspend fun saveBattlePassClaimAtomic(
         characterId: Long, seasonId: Int, changes: Map<Int, ThingData?>,
         expectedProgress: Map<Int, Int>, nextProgress: Map<Int, Pair<Int, Int>>,
     ) = suspendTransaction {
-        val boundSeason = CharacterBattlePassSeasons.selectAll()
-            .where { CharacterBattlePassSeasons.charId eq characterId }
-            .singleOrNull()?.get(CharacterBattlePassSeasons.seasonId)
-        check(boundSeason == null || boundSeason == seasonId) { "BattlePass rollover requires evidenced reset policy" }
+        val bound = CharacterBattlePassSeasons.selectAll()
+            .where { CharacterBattlePassSeasons.charId eq characterId }.forUpdate().singleOrNull()
+        check(bound == null || bound[CharacterBattlePassSeasons.seasonId] == seasonId) {
+            "BattlePass rollover requires evidenced reset policy"
+        }
+        if (bound != null) {
+            check(bound[CharacterBattlePassSeasons.freeLevel] <= expectedProgress.getValue(792) &&
+                bound[CharacterBattlePassSeasons.paidLevel] <= expectedProgress.getValue(793)) {
+                "BattlePass claim ledger already advanced"
+            }
+        }
         val persisted = CharacterRoleCounts.selectAll().where { CharacterRoleCounts.charId eq characterId }
             .associate { it[CharacterRoleCounts.countIndex] to it[CharacterRoleCounts.value] }
-        check(expectedProgress.all { (index, value) -> (persisted[index] ?: 0) == value })
+        check(expectedProgress.all { (index, value) ->
+            if (bound == null) (persisted[index] ?: 0) == value
+            else (persisted[index] ?: 0) <= value
+        })
         val storageType = EThings.BAG
         for ((slot, thing) in changes) {
             if (thing == null || thing.isEmpty) {
@@ -122,6 +135,8 @@ class InventoryRepositoryImpl : InventoryRepository {
         CharacterBattlePassSeasons.upsert {
             it[CharacterBattlePassSeasons.charId] = characterId
             it[CharacterBattlePassSeasons.seasonId] = seasonId
+            it[CharacterBattlePassSeasons.freeLevel] = nextProgress.getValue(792).first
+            it[CharacterBattlePassSeasons.paidLevel] = nextProgress.getValue(793).first
         }
         Unit
     }

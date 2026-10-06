@@ -54,10 +54,10 @@ class ActivityHandler(
             val open = battlePass?.isOpen(charId, now) == true
             if (!open) { session.send(battlePassPacket(255, request)); return }
             val success = request == 0 || (session.battleId == 0L && battlePass!!.claim(charId, now))
-            if (success && request == 1) {
-                response!!.sendAllBagItems(session, inventory!!.getBag(charId), refresh = true)
+            if (success) {
+                if (request == 1) response!!.sendAllBagItems(session, inventory!!.getBag(charId), refresh = true)
                 val counts = roleCounts!!
-                response.sendRoleCountUpdate(session, listOf(BattlePassSystem.EXP, BattlePassSystem.FREE, BattlePassSystem.PAID)
+                response!!.sendRoleCountUpdate(session, listOf(BattlePassSystem.EXP, BattlePassSystem.FREE, BattlePassSystem.PAID)
                     .associateWith { counts.getValue(charId, it) to counts.getMaxValue(charId, it) })
             }
             session.send(battlePassPacket(if (success) 1 else 0, request))

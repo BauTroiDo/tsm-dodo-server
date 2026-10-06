@@ -6,5 +6,7 @@ import org.jetbrains.exposed.v1.core.Table
 object CharacterBattlePassSeasons : Table("character_battle_pass_seasons") {
     val charId = long("char_id")
     val seasonId = integer("season_id")
+    val freeLevel = integer("free_level").default(0)
+    val paidLevel = integer("paid_level").default(0)
     override val primaryKey = PrimaryKey(charId)
 }

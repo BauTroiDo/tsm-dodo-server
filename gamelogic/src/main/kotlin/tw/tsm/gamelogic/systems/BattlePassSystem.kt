@@ -32,8 +32,14 @@ class BattlePassSystem(
 
     suspend fun isOpen(characterId: Long, now: LocalDateTime): Boolean {
         val season = currentSeason(now) ?: return false
-        val bound = inventory.battlePassSeason(characterId)
-        return bound == null || bound == season
+        val bound = inventory.battlePassProgress(characterId)
+        if (bound != null && bound.seasonId != season) return false
+        if (bound != null) {
+            // A stale generic RoleCount autosave must never re-open already paid rewards.
+            counts.setValue(characterId, FREE, maxOf(counts.getValue(characterId, FREE), bound.freeLevel), counts.getMaxValue(characterId, FREE))
+            counts.setValue(characterId, PAID, maxOf(counts.getValue(characterId, PAID), bound.paidLevel), counts.getMaxValue(characterId, PAID))
+        }
+        return true
     }
 
     suspend fun claim(characterId: Long, now: LocalDateTime): Boolean =

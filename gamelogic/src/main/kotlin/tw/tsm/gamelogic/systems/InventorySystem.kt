@@ -637,7 +637,8 @@ class InventorySystem(
         nextProgress.forEach { (index, pair) -> roleCountSystem.setValue(characterId, index, pair.first, pair.second) }
     }
 
-    suspend fun battlePassSeason(characterId: Long): Int? = inventoryRepo.loadBattlePassSeason(characterId)
+    suspend fun battlePassProgress(characterId: Long): tw.tsm.domain.data.BattlePassProgress? =
+        inventoryRepo.loadBattlePassProgress(characterId)
 
     // ── Thao tác trang bị ──
 
