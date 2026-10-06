@@ -92,6 +92,29 @@ class BattleManager(
     /** ID âm chỉ tồn tại trong battle, không bao giờ đụng characterId DB thật. */
     private val nextBotRoleId = AtomicLong(-1_000_000_000L)
 
+    private data class DungeonBotAssist(val instanceId: Int, val botCount: Int)
+    private val dungeonBotAssists = ConcurrentHashMap<Long, DungeonBotAssist>()
+
+    /**
+     * Attach offline bot assistance to one real player inside one normal-dungeon instance.
+     * The assist survives intermediate Eve fights and is cleared at dungeon settlement/exit.
+     */
+    fun configureDungeonBotAssist(playerId: Long, instanceId: Int, botCount: Int) {
+        if (botCount <= 0) {
+            dungeonBotAssists.remove(playerId)
+            return
+        }
+        dungeonBotAssists[playerId] = DungeonBotAssist(
+            instanceId = instanceId,
+            botCount = botCount.coerceAtMost(BattleConstants.MAX_ROW - 1),
+        )
+    }
+
+    fun clearDungeonBotAssist(playerId: Long) {
+        dungeonBotAssists.remove(playerId)
+    }
+
+
     /**
      * DVT manual catch owner-side gates from FightRoleController.DoClick.
      * Scene NoCatch and Elephant/14034 are intentionally handled separately when their
@@ -159,24 +182,75 @@ class BattleManager(
         )
         battle.linkToResult = fightData.linkToResult
 
-        // 1. Nine-pet extension: roster ownership is always open; battle progression
-        // controls how many logical carried slots may enter this battle.
+        // 1. Normal PvE keeps the nine-pet extension. A solo normal team-dungeon
+        // may instead reserve one row per missing party member for server-controlled
+        // AutomanualPlayer (kind 28) assistants. Only the first deployed pet accompanies
+        // the real player in this party-shaped layout so the 5-row DVT grid cannot overflow.
         val charId = session.roleId.toLong()
+        val dungeonAssist = dungeonBotAssists[session.playerId]
+            ?.takeIf { it.instanceId == session.instanceId && it.botCount > 0 }
         val battlePets = petSystem.getBattleDeployableFollowPets(charId)
-        val hasBattlePets = battlePets.isNotEmpty()
-        val playerCol = if (hasBattlePets) BattleConstants.PLAYER_BACK_COL else BattleConstants.PLAYER_FRONT_COL
-        val playerFighter = createPlayerFighter(session, col = playerCol)
-        battle.addFighter(playerFighter)
-        battle.playerSessions[session.playerId] = session
 
-        // 1.5 Fill the remaining player-side grid slots with deployed followers.
-        if (hasBattlePets) {
-            addBattleFollowNpcs(
-                session, battle,
-                frontCol = BattleConstants.PLAYER_FRONT_COL,
-                backCol = BattleConstants.PLAYER_BACK_COL,
-                pets = battlePets
-            )
+        if (dungeonAssist != null) {
+            val selectedPet = battlePets.firstOrNull()
+            val playerCol = if (selectedPet == null) {
+                BattleConstants.PLAYER_FRONT_COL
+            } else {
+                BattleConstants.PLAYER_BACK_COL
+            }
+            battle.addFighter(createPlayerFighter(session, col = playerCol, row = 0))
+            battle.playerSessions[session.playerId] = session
+
+            if (selectedPet != null) {
+                val (followSlot, petData) = selectedPet
+                npcDefs[petData.npcId]?.let { npcDef ->
+                    battle.addFighter(
+                        createFollowNpcFighter(
+                            npcDef = npcDef,
+                            petData = petData,
+                            masterId = session.playerId,
+                            ownerCharacterId = charId,
+                            npcDataId = petData.npcId,
+                            followSlot = followSlot,
+                            col = BattleConstants.PLAYER_FRONT_COL,
+                            row = 0,
+                        )
+                    )
+                }
+            }
+
+            repeat(dungeonAssist.botCount.coerceAtMost(BattleConstants.MAX_ROW - 1)) { index ->
+                battle.addFighter(
+                    createPlayerFighter(
+                        session = session,
+                        col = BattleConstants.PLAYER_FRONT_COL,
+                        row = index + 1,
+                        kind = EHuman.AUTOMANUAL_PLAYER,
+                        roleIdOverride = nextBotRoleId.getAndDecrement(),
+                        nameOverride = "AI Fighter ${index + 1}",
+                        restoreFull = true,
+                    )
+                )
+            }
+            logger.info {
+                "TeamDungeon bots attached battle=$battleId player=${session.characterName} " +
+                    "instance=${session.instanceId} bots=${dungeonAssist.botCount}"
+            }
+        } else {
+            val hasBattlePets = battlePets.isNotEmpty()
+            val playerCol = if (hasBattlePets) BattleConstants.PLAYER_BACK_COL else BattleConstants.PLAYER_FRONT_COL
+            val playerFighter = createPlayerFighter(session, col = playerCol)
+            battle.addFighter(playerFighter)
+            battle.playerSessions[session.playerId] = session
+
+            if (hasBattlePets) {
+                addBattleFollowNpcs(
+                    session, battle,
+                    frontCol = BattleConstants.PLAYER_FRONT_COL,
+                    backCol = BattleConstants.PLAYER_BACK_COL,
+                    pets = battlePets
+                )
+            }
         }
 
         // 2. Eve_FightData carries authoritative LocationPos 1..10.

@@ -23,6 +23,7 @@ import tw.tsm.gamelogic.systems.PvpBotMatchmakingSystem
 import tw.tsm.gamelogic.systems.PvpBotMode
 import tw.tsm.gamelogic.systems.PvpLobbyClaim
 import tw.tsm.gamelogic.systems.PvpLobbyPolicy
+import tw.tsm.gamelogic.systems.TeamDungeonBotPolicy
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 import tw.tsm.protocol.PacketReader
@@ -54,6 +55,7 @@ class DungeonHandler(
 
     private val pvpRoomModes = ConcurrentHashMap<Long, PvpBotMode>()
     private val pvpRoomBots = ConcurrentHashMap<Long, List<LobbyBot>>()
+    private val teamRoomBots = ConcurrentHashMap<Long, List<LobbyBot>>()
     private val nextLobbyBotId = AtomicLong(-2_000_000_000L)
     override val mainKind: Int = Opcodes.DUNGEON
 
@@ -158,12 +160,15 @@ class DungeonHandler(
         )
         sendCreateResult(session, DungeonSystem.RESULT_OK, room.password)
 
-        pvpBotMatchmakingSystem?.claimForLobby(session.playerId)?.let { claim ->
-            pvpRoomModes[room.id] = claim.mode
-            schedulePvpLobbyFill(room.id, claim)
+        val pvpClaim = pvpBotMatchmakingSystem?.claimForLobby(session.playerId)
+        if (pvpClaim != null) {
+            pvpRoomModes[room.id] = pvpClaim.mode
+            schedulePvpLobbyFill(room.id, pvpClaim)
             dungeonHandlerLogger.info {
-                "PvP lobby claimed: room=${room.id} player=${session.characterName} mode=${claim.mode}"
+                "PvP lobby claimed: room=${room.id} player=${session.characterName} mode=${pvpClaim.mode}"
             }
+        } else if (def.kind == DungeonSystem.KIND_NORMAL_MULTIPLAYER && def.maxPlayer > 1) {
+            scheduleTeamDungeonLobbyFill(room.id)
         }
     }
 
@@ -206,9 +211,13 @@ class DungeonHandler(
             return
         }
 
-        // A real player replaces one visible PvP lobby bot slot.
+        // PvP replaces one placeholder at a time. Normal team-dungeon bots are an
+        // offline-only fallback: the first additional real player removes all of them
+        // and the room immediately returns to ordinary multiplayer semantics.
         if (pvpRoomModes.containsKey(roomId)) {
             removeOneLobbyBot(roomId)
+        } else if (teamRoomBots.containsKey(roomId)) {
+            clearTeamDungeonLobby(roomId)
         }
 
         val existing = room.members.values.toList()
@@ -308,6 +317,88 @@ class DungeonHandler(
         val room = rooms.room(roomId)
         val bots = pvpRoomBots.remove(roomId).orEmpty()
         pvpRoomModes.remove(roomId)
+        if (notifyMembers && room != null) {
+            for (bot in bots) {
+                room.members.values.forEach { member ->
+                    sendPlayerLeave(member.session, bot.id, LEAVE_DISCONNECT)
+                }
+            }
+        }
+    }
+
+    private fun scheduleTeamDungeonLobbyFill(roomId: Long) {
+        scope.launch {
+            delay(TeamDungeonBotPolicy.BOT_FILL_DELAY_MS)
+            fillTeamDungeonLobbyBots(roomId)
+        }
+    }
+
+    private fun fillTeamDungeonLobbyBots(roomId: Long) {
+        val room = rooms.room(roomId) ?: run {
+            teamRoomBots.remove(roomId)
+            return
+        }
+        if (room.starting || room.started || pvpRoomModes.containsKey(roomId)) {
+            clearTeamDungeonLobby(roomId)
+            return
+        }
+
+        val def = system.getDef(room.dungeonId) ?: run {
+            clearTeamDungeonLobby(roomId)
+            return
+        }
+        val desired = TeamDungeonBotPolicy.visibleBotCount(
+            kind = def.kind,
+            realCount = room.members.size,
+            roomMaxPlayers = room.maxPlayers,
+        )
+        var current = teamRoomBots[roomId].orEmpty()
+
+        while (current.size > desired) {
+            val removed = current.last()
+            current = current.dropLast(1)
+            room.members.values.forEach { member ->
+                sendPlayerLeave(member.session, removed.id, LEAVE_DISCONNECT)
+            }
+        }
+
+        if (current.size < desired) {
+            val template = room.members[room.ownerId]?.session
+                ?: room.members.values.firstOrNull()?.session
+                ?: return
+            val added = buildList {
+                repeat(desired - current.size) { index ->
+                    add(
+                        LobbyBot(
+                            id = nextLobbyBotId.getAndDecrement(),
+                            name = "AI Fighter ${current.size + index + 1}",
+                            template = template,
+                        )
+                    )
+                }
+            }
+            current = current + added
+            teamRoomBots[roomId] = current
+            for (bot in added) {
+                room.members.values.forEach { member ->
+                    sendLobbyBotJoined(member.session, bot)
+                    sendPrepared(member.session, bot.id, true)
+                }
+            }
+            dungeonHandlerLogger.info {
+                "Team dungeon lobby bots filled: room=$roomId dungeon=${room.dungeonId} " +
+                    "real=${room.members.size} bots=${current.size}"
+            }
+        } else if (current.isEmpty()) {
+            teamRoomBots.remove(roomId)
+        } else {
+            teamRoomBots[roomId] = current
+        }
+    }
+
+    private fun clearTeamDungeonLobby(roomId: Long, notifyMembers: Boolean = true) {
+        val room = rooms.room(roomId)
+        val bots = teamRoomBots.remove(roomId).orEmpty()
         if (notifyMembers && room != null) {
             for (bot in bots) {
                 room.members.values.forEach { member ->
@@ -445,6 +536,7 @@ class DungeonHandler(
     }
 
     private fun leaveRoom(session: GameSession) {
+        battleManager?.clearDungeonBotAssist(session.playerId)
         val roomBefore = rooms.roomOf(session.playerId)
         val left = rooms.leave(session.playerId)
         if (left == null) {
@@ -478,8 +570,14 @@ class DungeonHandler(
         roomBefore?.id?.let { roomId ->
             if (left.disbanded || newOwnerId != null) {
                 clearPvpLobby(roomId)
+                clearTeamDungeonLobby(roomId)
+                if (!left.disbanded && left.room.members.size == 1) {
+                    scheduleTeamDungeonLobbyFill(roomId)
+                }
             } else if (pvpRoomModes.containsKey(roomId)) {
                 scope.launch { fillPvpLobbyBots(roomId) }
+            } else if (left.room.members.size == 1) {
+                scheduleTeamDungeonLobbyFill(roomId)
             }
         }
     }
@@ -587,6 +685,21 @@ class DungeonHandler(
             delay(countdownMs)
             val started = rooms.commitStart(room.id, session.playerId) ?: return@launch
             val def = system.getDef(started.dungeonId) ?: return@launch
+
+            if (def.kind == DungeonSystem.KIND_NORMAL_MULTIPLAYER) {
+                val bots = teamRoomBots[started.id].orEmpty()
+                val battle = battleManager
+                if (started.members.size == 1 && bots.isNotEmpty() && battle != null) {
+                    val real = started.members.values.first().session
+                    battle.configureDungeonBotAssist(real.playerId, started.instanceId, bots.size)
+                } else {
+                    started.members.values.forEach { member ->
+                        battle?.clearDungeonBotAssist(member.session.playerId)
+                    }
+                }
+                clearTeamDungeonLobby(started.id, notifyMembers = false)
+            }
+
             val startTime = OleDate.nowLocal()
             system.markRoomStarted(started, startTime)
             for (member in started.members.values) {
@@ -642,6 +755,7 @@ class DungeonHandler(
     }
 
     fun handleDisconnect(session: GameSession) {
+        battleManager?.clearDungeonBotAssist(session.playerId)
         system.onDisconnect(session)
         val roomBefore = rooms.roomOf(session.playerId)
         val left = rooms.leave(session.playerId) ?: return
@@ -657,8 +771,14 @@ class DungeonHandler(
         roomBefore?.id?.let { roomId ->
             if (left.disbanded || newOwnerId != null) {
                 clearPvpLobby(roomId)
+                clearTeamDungeonLobby(roomId)
+                if (!left.disbanded && left.room.members.size == 1) {
+                    scheduleTeamDungeonLobbyFill(roomId)
+                }
             } else if (pvpRoomModes.containsKey(roomId)) {
                 scope.launch { fillPvpLobbyBots(roomId) }
+            } else if (left.room.members.size == 1) {
+                scheduleTeamDungeonLobbyFill(roomId)
             }
         }
     }
@@ -746,6 +866,9 @@ class DungeonHandler(
         session.send(writer.toByteArray())
 
         val kind = system.getDef(settlement.dungeonId)?.kind
+        if (kind == DungeonSystem.KIND_NORMAL_MULTIPLAYER) {
+            battleManager?.clearDungeonBotAssist(session.playerId)
+        }
         if (kind in setOf(DungeonSystem.KIND_WEEKLY, DungeonSystem.KIND_SOUL_WEEKLY)) {
             rooms.resetAfterBattleForPlayer(session.playerId)
         }
