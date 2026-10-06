@@ -38,6 +38,8 @@ import tw.tsm.persistence.tables.CharacterRoleCounts
 import tw.tsm.persistence.tables.CharacterUiSellCounts
 import tw.tsm.persistence.tables.CharacterSlotMachines
 import tw.tsm.persistence.tables.CharacterSlotMachineAwards
+import tw.tsm.persistence.tables.CharacterPokes
+import tw.tsm.persistence.tables.CharacterPokeAwards
 import tw.tsm.persistence.tables.CharacterSkills
 import tw.tsm.persistence.tables.CharacterTurn2Skills
 import tw.tsm.persistence.tables.CharacterTurn3States
@@ -95,6 +97,7 @@ object DatabaseFactory {
                 CharacterMining,
                 CharacterUiSellCounts,
                 CharacterSlotMachines, CharacterSlotMachineAwards,
+                CharacterPokes, CharacterPokeAwards,
                 CharacterCollectionStyles, CharacterCollectionCards,
                 CharacterDispatches, CharacterDispatchDaily,
                 Friends, FriendInvites,

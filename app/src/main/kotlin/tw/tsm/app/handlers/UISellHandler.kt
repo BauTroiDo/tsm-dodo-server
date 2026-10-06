@@ -20,6 +20,7 @@ import tw.tsm.gamelogic.systems.PointSystem
 import tw.tsm.gamelogic.systems.RoleCountSystem
 import tw.tsm.gamelogic.systems.SkillSystem
 import tw.tsm.gamelogic.systems.SlotMachineSystem
+import tw.tsm.gamelogic.systems.PokeSystem
 import tw.tsm.gamelogic.systems.UISellSystem
 import tw.tsm.gamelogic.systems.UiSellQuote
 import tw.tsm.gamelogic.systems.WorldManager
@@ -65,6 +66,7 @@ class UISellHandler(
     private val dispatchSystem: DispatchSystem? = null,
     private val furnaceSystem: FurnaceSystem? = null,
     private val furnaceResponse: FurnaceResponseSender? = null,
+    private val pokeSystem: PokeSystem? = null,
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.UI_SELL
@@ -91,10 +93,10 @@ class UISellHandler(
         val args = readArgs(reader)
 
         val charId = session.roleId.toLong()
-        val quote = if (sellId == UISellSystem.SELL_SLOT_COIN) {
-            querySlotCoin(charId, args)
-        } else {
-            uiSellSystem.query(charId, sellId)
+        val quote = when (sellId) {
+            UISellSystem.SELL_SLOT_COIN -> querySlotCoin(charId, args)
+            UISellSystem.SELL_POKE_COIN -> queryPokeCoin(charId, args)
+            else -> uiSellSystem.query(charId, sellId)
         }
         when (quote) {
             is UiSellQuote.Fail -> {
@@ -128,6 +130,14 @@ class UISellHandler(
 
         if (sellId == UISellSystem.SELL_SLOT_COIN) {
             handleSlotCoinUse(session, useKind, reader)
+            return
+        }
+        if (sellId == UISellSystem.SELL_POKE_COIN) {
+            handlePokeCoinUse(session, useKind, reader)
+            return
+        }
+        if (sellId == UISellSystem.SELL_POKE_RESET) {
+            handlePokeResetUse(session, useKind, reader)
             return
         }
 
@@ -384,6 +394,36 @@ class UISellHandler(
         }
     }
 
+    /** Báo giá sellId=44 của UIPoke: item29507 hoặc 9 real Point / xu. */
+    private suspend fun queryPokeCoin(charId: Long, args: List<Int>): UiSellQuote {
+        val system = pokeSystem ?: return UiSellQuote.Fail(UISellSystem.REASON_NOT_USABLE)
+        val amount: Int
+        val itemRoute: Boolean
+        when {
+            args.size == 1 -> {
+                amount = args[0]
+                itemRoute = true
+            }
+            args.size == 2 && args[0] == 0 -> {
+                amount = args[1]
+                itemRoute = false
+            }
+            else -> return UiSellQuote.Fail(UISellSystem.REASON_NOT_USABLE)
+        }
+        if (amount <= 0) return UiSellQuote.Fail(UISellSystem.REASON_NOT_USABLE)
+        if (system.getCoin(charId) + amount > PokeSystem.MAX_COIN) {
+            return UiSellQuote.Fail(UISellSystem.REASON_LIMIT_REACHED)
+        }
+        return if (itemRoute) {
+            UiSellQuote.Item(PokeSystem.COIN_ITEM_ID, amount)
+        } else {
+            UiSellQuote.Money(
+                UISellSystem.CURRENCY_GOLD,
+                amount.toLong() * PokeSystem.COIN_POINT_PRICE
+            )
+        }
+    }
+
     /**
      * C84-2 special của sellId=11.
      *
@@ -526,6 +566,159 @@ class UISellHandler(
         }
 
         responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_PRICE_ERROR)
+    }
+
+    /** C84-2 sellId=44: nạp xu Trạc bằng item29507 hoặc real Point. */
+    private suspend fun handlePokeCoinUse(
+        session: GameSession,
+        useKind: Int,
+        reader: PacketReader,
+    ) {
+        val charId = session.roleId.toLong()
+        val sellId = UISellSystem.SELL_POKE_COIN
+        val system = pokeSystem
+        if (system == null) {
+            responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_NOT_USABLE)
+            return
+        }
+
+        if (useKind == USE_KIND_ITEM) {
+            if (reader.remaining < 2) {
+                responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_ITEM_DEDUCT_FAIL)
+                return
+            }
+            val bagIndex = reader.readUShortLE()
+            val args = readArgs(reader)
+            val quote = queryPokeCoin(charId, args)
+            if (quote !is UiSellQuote.Item || args.size != 1) {
+                responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_PRICE_ERROR)
+                return
+            }
+            val thing = inventorySystem.getBagItem(charId, bagIndex)
+            if (thing == null || thing.itemId != PokeSystem.COIN_ITEM_ID || thing.quantity < quote.count) {
+                responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_ITEM_DEDUCT_FAIL)
+                return
+            }
+            val updated = try {
+                system.depositCoinWithPayment(charId, quote.count) {
+                    inventorySystem.removeFromBag(charId, bagIndex, quote.count)
+                }
+            } catch (e: Exception) {
+                logger.error(e) { "Nạp xu Poke bằng item thất bại" }
+                null
+            }
+            if (updated == null) {
+                responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_ITEM_DEDUCT_FAIL)
+                return
+            }
+            responseSender.sendReduceBagItem(session, bagIndex, quote.count)
+            PokePackets.sendCoin(session, updated.coin)
+            responseSender.sendUiSellSuccess(session, sellId)
+            return
+        }
+
+        if (useKind == USE_KIND_POINT) {
+            val args = readArgs(reader)
+            val quote = queryPokeCoin(charId, args)
+            if (quote !is UiSellQuote.Money || args.size != 2 || args[0] != 0 ||
+                quote.cost <= 0 || quote.cost > Int.MAX_VALUE
+            ) {
+                responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_PRICE_ERROR)
+                return
+            }
+            val cost = quote.cost.toInt()
+            val amount = args[1]
+            val updated = try {
+                system.depositCoinWithPayment(charId, amount) {
+                    if (!pointSystem.subtractRealPoint(charId, cost)) {
+                        false
+                    } else {
+                        try {
+                            pointSystem.savePoints(charId)
+                            true
+                        } catch (e: Exception) {
+                            pointSystem.addRealPoint(charId, cost)
+                            try { pointSystem.savePoints(charId) } catch (_: Exception) {}
+                            false
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                logger.error(e) { "Nạp xu Poke bằng Point thất bại" }
+                null
+            }
+            if (updated == null) {
+                responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_GOLD_NOT_ENOUGH)
+                return
+            }
+            val (real, virtual) = pointSystem.getPoints(charId)
+            responseSender.sendPointBalance(session, real, virtual)
+            PokePackets.sendCoin(session, updated.coin)
+            responseSender.sendUiSellSuccess(session, sellId)
+            return
+        }
+
+        responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_PRICE_ERROR)
+    }
+
+    /** C84-2 sellId=46: 50 Point để xóa các ô đã mở và làm mới bàn Trạc. */
+    private suspend fun handlePokeResetUse(
+        session: GameSession,
+        useKind: Int,
+        reader: PacketReader,
+    ) {
+        val sellId = UISellSystem.SELL_POKE_RESET
+        val system = pokeSystem
+        if (system == null) {
+            responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_NOT_USABLE)
+            return
+        }
+        val args = readArgs(reader)
+        if (useKind != USE_KIND_POINT || args.isNotEmpty()) {
+            responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_PRICE_ERROR)
+            return
+        }
+
+        val quote = uiSellSystem.query(session.roleId.toLong(), sellId)
+        if (quote !is UiSellQuote.Money ||
+            quote.currencyKind != UISellSystem.CURRENCY_GOLD ||
+            quote.cost <= 0 || quote.cost > Int.MAX_VALUE
+        ) {
+            responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_PRICE_ERROR)
+            return
+        }
+
+        val charId = session.roleId.toLong()
+        val cost = quote.cost.toInt()
+        val state = try {
+            system.resetBoardWithPayment(charId) {
+                if (!pointSystem.subtractRealPoint(charId, cost)) {
+                    false
+                } else {
+                    try {
+                        pointSystem.savePoints(charId)
+                        true
+                    } catch (e: Exception) {
+                        pointSystem.addRealPoint(charId, cost)
+                        try { pointSystem.savePoints(charId) } catch (_: Exception) {}
+                        false
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            logger.error(e) { "Reset bàn Poke thất bại" }
+            null
+        }
+
+        if (state == null) {
+            responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_GOLD_NOT_ENOUGH)
+            return
+        }
+
+        val (real, virtual) = pointSystem.getPoints(charId)
+        responseSender.sendPointBalance(session, real, virtual)
+        PokePackets.sendAwards(session, system, state)
+        responseSender.sendUiSellSuccess(session, sellId)
     }
 
     /** Refresh một category của UIFurnace sau khi UISell đã trừ phí thành công. */

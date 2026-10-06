@@ -122,6 +122,7 @@ class UISellSystem(
             SELL_DISPATCH_QUICK,
             SELL_TURN3_UNLOCK_SKILL,
             SELL_TURN3_CHANGE_ELEMENT,
+            SELL_POKE_RESET,
             in FURNACE_REFRESH_SELL_IDS -> queryFormulaPrice(formula)
             in expansions -> queryExpansion(charId, sellId, formula)
             // TODO: Các sellId còn lại (Vòng quay may mắn, Đặt lại thuộc tính...) chờ các hệ thống thực thi xong sẽ bổ sung dần
@@ -270,6 +271,12 @@ class UISellSystem(
 
         /** UISlotMachine: đổi bàn thưởng (Launch(41)); payment formula kind19 còn UNKNOWN. */
         const val SELL_SLOT_CHANGE = 41
+
+        /** UIPoke: nạp xu Trạc. Client tự chọn item29507 hoặc 9 Point/xu. */
+        const val SELL_POKE_COIN = 44
+
+        /** UIPoke: làm mới bàn, IOS_UISell_Formula_C.dat kind=1 value=50. */
+        const val SELL_POKE_RESET = 46
 
         /** Item tiền Thôn Thực hoan lạc. */
         const val SLOT_COIN_ITEM_ID = 31171

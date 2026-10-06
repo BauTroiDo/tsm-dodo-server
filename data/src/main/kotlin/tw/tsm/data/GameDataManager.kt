@@ -87,6 +87,18 @@ class GameDataManager(
     var slotMachinePools: SlotMachinePools? = null
         private set
 
+    /** Trạc/Poke possible rewards from IOS_PokeData_C.dat. */
+    var pokeRewardDefs: List<PokeRewardDef> = emptyList()
+        private set
+
+    /** Trạc/Poke per-tier probability weight from IOS_PokeRate_C.dat. */
+    var pokeRateByKind: Map<Int, Int> = emptyMap()
+        private set
+
+    /** DVT IOS_PokeBonusReward_C.dat, preserved for bonus/jackpot semantics. */
+    var pokeBonusRewardDefs: List<PokeBonusRewardDef> = emptyList()
+        private set
+
     /** Bảng recipe Chế tạo Mobile DVT từ IOS_Compound.dat. */
     var compoundRecipes: List<CompoundRecipeDef> = emptyList()
         private set
@@ -811,6 +823,19 @@ class GameDataManager(
         loadIosCollection("IOS_CollectCardSort_C.dat", "CollectCardSort_C.dat") { bytes ->
             collectCardSortDefs = CollectionBookDatLoader.loadCardSorts(bytes)
             logger.info { "Nạp CollectCardSort xong: ${collectCardSortDefs.size} thẻ" }
+        }
+
+        loadFile(dataIosDir, "IOS_PokeData_C.dat") { bytes ->
+            pokeRewardDefs = PokeDatLoader.loadRewards(bytes)
+            logger.info { "Nạp IOS_PokeData xong: " + pokeRewardDefs.size + " giải" }
+        }
+        loadFile(dataIosDir, "IOS_PokeRate_C.dat") { bytes ->
+            pokeRateByKind = PokeDatLoader.loadRates(bytes)
+            logger.info { "Nạp IOS_PokeRate xong: " + pokeRateByKind }
+        }
+        loadFile(dataIosDir, "IOS_PokeBonusReward_C.dat") { bytes ->
+            pokeBonusRewardDefs = PokeDatLoader.loadBonusRewards(bytes)
+            logger.info { "Nạp IOS_PokeBonusReward xong: " + pokeBonusRewardDefs.size + " bản ghi" }
         }
 
         loadFile(dataIosDir, "IOS_CommonAward_C.dat") { bytes ->

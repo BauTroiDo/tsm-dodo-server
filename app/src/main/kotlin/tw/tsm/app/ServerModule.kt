@@ -52,10 +52,12 @@ import tw.tsm.domain.interfaces.repositories.UiSellCountRepository
 import tw.tsm.domain.interfaces.repositories.CharacterCurrencyRepository
 import tw.tsm.domain.interfaces.repositories.CollectionBookRepository
 import tw.tsm.domain.interfaces.repositories.SlotMachineRepository
+import tw.tsm.domain.interfaces.repositories.PokeRepository
 import tw.tsm.persistence.repositories.UiSellCountRepositoryImpl
 import tw.tsm.persistence.repositories.CharacterCurrencyRepositoryImpl
 import tw.tsm.persistence.repositories.CollectionBookRepositoryImpl
 import tw.tsm.persistence.repositories.SlotMachineRepositoryImpl
+import tw.tsm.persistence.repositories.PokeRepositoryImpl
 import tw.tsm.persistence.repositories.DispatchRepositoryImpl
 import tw.tsm.persistence.repositories.DungeonRunRepositoryImpl
 import tw.tsm.persistence.repositories.FriendRepositoryImpl
@@ -143,6 +145,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             register(get<ActivityModelHandler>())
             register(get<MallHandler>())
             register(get<SlotMachineHandler>())
+            register(get<PokeHandler>())
             register(get<MiningHandler>())
         }
     }
@@ -272,6 +275,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single<CharacterCurrencyRepository> { CharacterCurrencyRepositoryImpl() }
     single<CollectionBookRepository> { CollectionBookRepositoryImpl() }
     single<SlotMachineRepository> { SlotMachineRepositoryImpl() }
+    single<PokeRepository> { PokeRepositoryImpl() }
     single<DispatchRepository> { DispatchRepositoryImpl() }
     single<DungeonRunRepository> { DungeonRunRepositoryImpl() }
     single<MailRepository> { MailRepositoryImpl() }
@@ -316,6 +320,16 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<InventorySystem>(),
             get<PlayerCurrencySystem>(),
             get<GameDataManager>().itemDefs
+        )
+    }
+    single {
+        PokeSystem(
+            get<PokeRepository>(),
+            get<GameDataManager>().pokeRewardDefs,
+            get<GameDataManager>().pokeRateByKind,
+            get<InventorySystem>(),
+            get<GameDataManager>().itemDefs,
+            get<PlayerCurrencySystem>(),
         )
     }
     single { GroundItemManager(get<GameDataManager>().eveData) }
@@ -628,7 +642,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { KeepaliveHandler() }
     single { LoginHandler(get(), get(), get(), get(), get()) }
     single { CreateCharHandler(get(), get()) }
-    single { SelectCharHandler(get(), get()) }
+    single { SelectCharHandler(get(), get(), get<PokeSystem>()) }
     single { DisconnectHandler(get(), get(), get(), get(), get<PlayerCurrencySystem>(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     single { MoveHandler(get(), get(), get(), get<MineEncounterSystem>()) }
     single { ChatHandler(get(), get(), get()) }
@@ -734,6 +748,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<DispatchSystem>(),
             get<FurnaceSystem>(),
             get<FurnaceResponseSender>(),
+            get<PokeSystem>(),
         )
     }
     single { PetUpgradeHandler(get(), get()) }
@@ -752,6 +767,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { ActivityModelHandler() }
     single { MallHandler(get(), get(), get<PointSystem>(), get<MoneySystem>(), get<PlayerCurrencySystem>(), get<ResponseSender>()) }
     single { SlotMachineHandler(get<SlotMachineSystem>(), get<ResponseSender>()) }
+    single { PokeHandler(get<PokeSystem>(), get<ResponseSender>()) }
     single {
         MiningHandler(
             get<MiningSystem>(),

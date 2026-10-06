@@ -8,6 +8,7 @@ import tw.tsm.domain.interfaces.PacketHandler
 import tw.tsm.domain.interfaces.loadFromRecord
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
 import tw.tsm.gamelogic.systems.LoginService
+import tw.tsm.gamelogic.systems.PokeSystem
 
 private val logger = KotlinLogging.logger {}
 
@@ -24,7 +25,8 @@ private val logger = KotlinLogging.logger {}
  */
 class SelectCharHandler(
     private val characterRepository: CharacterRepository,
-    private val loginService: LoginService
+    private val loginService: LoginService,
+    private val pokeSystem: PokeSystem? = null,
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.CHARACTER
@@ -65,6 +67,11 @@ class SelectCharHandler(
             serverId = session.serverId,
             connectCode = session.connectCode
         )
+
+        pokeSystem?.let { system ->
+            val state = system.open(record.id)
+            PokePackets.sendSnapshot(session, system, state)
+        }
 
         session.loginFinished = true
     }
