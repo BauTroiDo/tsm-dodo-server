@@ -4149,3 +4149,9 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Paid purchase audit: client product index 133, StoreValue cashIndex 6005, DAT internal price 670; platform display/billing varies. Lua calls external StoreValue/IAP/MyCard. No backend payment callback evidence exists in this repo, so normal-user paid purchase is NOT guessed/emulated with KNB.
 - GM paid test requires no new code: existing `/setflag 6060` persists/syncs the exact DVT paid entitlement and refreshes BattlePass client state.
 - Season rollover/reset remains evidence-blocked: Lua only reads RoleCount 791/792/793 and does not reset them; season 118 has no authoritative ActivityTime window in current DAT. Do not invent rollover/reset until DVT/billing/server evidence is found.
+
+### 2026-10-06 BattlePass mission receive hotfix
+- Root cause from Lua UI: UIBattlePass.SendCompleteMission sends C:077-011 kind129 + missionId UInt16. Generic MissionAward.SendCompleteMission uses kind122. Server previously only routed 122, so BattlePass button Nhận was ignored.
+- Fix commit 7dd5840: ActivityHandler routes both kind122 and kind129 into the same validated mission claim path; response remains kind122 because protocal.lua only has S77-11 kind122 receiver MissionAward.ReceiveMissionAward.
+- Local targeted BattlePassMissionAwardTest PASS; full local build PASS 21/21; production full build PASS 21/21. Runtime production HEAD 7dd5840, port 6613 PID 5152.
+
