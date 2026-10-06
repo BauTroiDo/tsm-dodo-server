@@ -51,6 +51,9 @@ class DungeonHandler(
         val id: Long,
         val name: String,
         val template: GameSession,
+        val hairOffset: Int = 0,
+        val color1Xor: Int = 0,
+        val color2Xor: Int = 0,
     )
 
     private val pvpRoomModes = ConcurrentHashMap<Long, PvpBotMode>()
@@ -368,11 +371,15 @@ class DungeonHandler(
                 ?: return
             val added = buildList {
                 repeat(desired - current.size) { index ->
+                    val profile = TeamDungeonBotPolicy.profile(current.size + index)
                     add(
                         LobbyBot(
                             id = nextLobbyBotId.getAndDecrement(),
-                            name = "AI Fighter ${current.size + index + 1}",
+                            name = profile.name,
                             template = template,
+                            hairOffset = profile.hairOffset,
+                            color1Xor = profile.color1Xor,
+                            color2Xor = profile.color2Xor,
                         )
                     )
                 }
@@ -992,19 +999,20 @@ class DungeonHandler(
             .writeBig5WithByteLen(bot.name)
             .writeByte(role.level)
             .writeByte(role.sex)
-            .writeByte(role.hair)
-            .writeIntLE(role.color1)
-            .writeIntLE(role.color2)
+            .writeByte(((role.hair + bot.hairOffset - 1).floorMod(8)) + 1)
+            .writeIntLE(role.color1 xor bot.color1Xor)
+            .writeIntLE(role.color2 xor bot.color2Xor)
 
         for (i in 0 until DUNGEON_EQUIP_STYLE_SLOTS) {
-            writer.writeShortLE(role.equipItemIds.getOrElse(i) { 0 })
-        }
+            writer.writeShortLE(role.equipItemIds.getOrElse(i) { 0 })        }
 
         writer.writeByte(role.turn)
             .writeShortLE(role.titleId)
 
         target.send(writer.toByteArray())
     }
+
+    private fun Int.floorMod(mod: Int): Int = ((this % mod) + mod) % mod
 
     private fun sendPlayerJoined(target: GameSession, joined: GameSession) {
         val writer = PacketWriter()

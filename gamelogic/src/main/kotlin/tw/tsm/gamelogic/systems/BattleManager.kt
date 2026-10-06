@@ -220,17 +220,56 @@ class BattleManager(
             }
 
             repeat(dungeonAssist.botCount.coerceAtMost(BattleConstants.MAX_ROW - 1)) { index ->
+                val profile = TeamDungeonBotPolicy.profile(index)
+                val botRoleId = nextBotRoleId.getAndDecrement()
+                val petDef = npcDefs[profile.petNpcId]
                 battle.addFighter(
                     createPlayerFighter(
                         session = session,
-                        col = BattleConstants.PLAYER_FRONT_COL,
+                        col = if (petDef == null) BattleConstants.PLAYER_FRONT_COL else BattleConstants.PLAYER_BACK_COL,
                         row = index + 1,
                         kind = EHuman.AUTOMANUAL_PLAYER,
-                        roleIdOverride = nextBotRoleId.getAndDecrement(),
-                        nameOverride = "AI Fighter ${index + 1}",
+                        roleIdOverride = botRoleId,
+                        nameOverride = profile.name,
                         restoreFull = true,
+                        hairOverride = ((session.hair + profile.hairOffset - 1) % 8) + 1,
+                        color1Xor = profile.color1Xor,
+                        color2Xor = profile.color2Xor,
                     )
                 )
+                if (petDef != null) {
+                    val npcProfile = NpcBattleProfileCalc.from(petDef, skillDefs)
+                    val petData = FollowNpcData(
+                        slotIndex = 0,
+                        npcId = profile.petNpcId,
+                        name = petDef.name,
+                        level = npcProfile.level,
+                        hp = npcProfile.maxHp,
+                        sp = npcProfile.maxSp.toInt(),
+                        atk = npcProfile.atk,
+                        def = npcProfile.def,
+                        agi = npcProfile.agi,
+                        intelligence = npcProfile.intelligence,
+                        skill1Lv = petDef.skills.getOrNull(0)?.let { npcProfile.skillLevels[it] } ?: 0,
+                        skill2Lv = petDef.skills.getOrNull(1)?.let { npcProfile.skillLevels[it] } ?: 0,
+                        skill3Lv = petDef.skills.getOrNull(2)?.let { npcProfile.skillLevels[it] } ?: 0,
+                    )
+                    battle.addFighter(
+                        createFollowNpcFighterInternal(
+                            npcDef = petDef,
+                            petData = petData,
+                            masterId = botRoleId,
+                            ownerCharacterId = charId,
+                            npcDataId = profile.petNpcId,
+                            followSlot = 0,
+                            col = BattleConstants.PLAYER_FRONT_COL,
+                            row = index + 1,
+                            kind = EHuman.AUTOMANUAL_NPC,
+                            roleIdOverride = nextBotRoleId.getAndDecrement(),
+                            restoreFull = true,
+                        )
+                    )
+                }
             }
             logger.info {
                 "TeamDungeon bots attached battle=$battleId player=${session.characterName} " +
@@ -897,8 +936,7 @@ class BattleManager(
             if (enemies.size > BattleConstants.MAX_ROW * 2) {
                 logger.warn {
                     "Trận $battleId: Eve side có ${enemies.size} record nhưng LocationPos chưa authoritative; " +
-                        "chỉ spawn 10 record đầu để tránh tràn BattleGrid"
-                }
+                        "chỉ spawn 10 record đầu để tránh tràn BattleGrid"                }
             }
             addCenteredEnemies(
                 enemies.take(BattleConstants.MAX_ROW * 2),
@@ -2006,6 +2044,9 @@ class BattleManager(
         roleIdOverride: Long? = null,
         nameOverride: String? = null,
         restoreFull: Boolean = false,
+        hairOverride: Int? = null,
+        color1Xor: Int = 0,
+        color2Xor: Int = 0,
     ): BattleFighter {
         val charId = session.roleId.toLong()
         val state = playerStateManager.getState(charId)
@@ -2105,9 +2146,9 @@ class BattleManager(
             weaponItemKind = weaponItemKind,
             sex = session.sex,
             face = session.face,
-            hair = session.hair,
-            color1 = session.color1,
-            color2 = session.color2,
+            hair = hairOverride ?: session.hair,
+            color1 = session.color1 xor color1Xor,
+            color2 = session.color2 xor color2Xor,
             equipItemIds = equipIds
         )
     }

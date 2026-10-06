@@ -159,4 +159,14 @@ class DvtPvpBotTest {
         assertFalse(BattleLifecyclePolicy.shouldResumeEve(tw.tsm.domain.constants.EWar.VS))
         assertTrue(BattleLifecyclePolicy.shouldResumeEve(tw.tsm.domain.constants.EWar.EVENT))
     }
+
+    @Test
+    fun `team dungeon bot profiles use distinct Three Kingdoms identities and companions`() {
+        val profiles = (0 until 4).map(TeamDungeonBotPolicy::profile)
+        assertEquals(4, profiles.map { it.name }.toSet().size)
+        assertEquals(setOf("Triệu Vân", "Quan Vũ", "Trương Phi", "Lữ Bố"), profiles.map { it.name }.toSet())
+        assertEquals(4, profiles.map { it.petNpcId }.toSet().size)
+        assertEquals(4, profiles.map { it.hairOffset }.toSet().size)
+    }
+
 }

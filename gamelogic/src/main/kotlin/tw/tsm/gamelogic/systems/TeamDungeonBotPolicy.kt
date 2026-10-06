@@ -2,6 +2,14 @@ package tw.tsm.gamelogic.systems
 
 import tw.tsm.domain.constants.BattleConstants
 
+data class TeamDungeonBotProfile(
+    val name: String,
+    val hairOffset: Int,
+    val color1Xor: Int,
+    val color2Xor: Int,
+    val petNpcId: Int,
+)
+
 /**
  * Offline fallback for normal DVT team dungeons.
  *
@@ -14,6 +22,13 @@ import tw.tsm.domain.constants.BattleConstants
 object TeamDungeonBotPolicy {
     const val BOT_FILL_DELAY_MS = 10_000L
 
+    private val PROFILES = listOf(
+        TeamDungeonBotProfile("Triệu Vân", 1, 0x00060C18, 0x00120804, 40428),
+        TeamDungeonBotProfile("Quan Vũ", 2, 0x00100408, 0x00081210, 40429),
+        TeamDungeonBotProfile("Trương Phi", 3, 0x000C1404, 0x00100414, 40430),
+        TeamDungeonBotProfile("Lữ Bố", 4, 0x0014080C, 0x000C1018, 40431),
+    )
+
     fun visibleBotCount(kind: Int, realCount: Int, roomMaxPlayers: Int): Int {
         if (kind != DungeonSystem.KIND_NORMAL_MULTIPLAYER) return 0
         if (realCount != 1 || roomMaxPlayers <= 1) return 0
@@ -21,4 +36,6 @@ object TeamDungeonBotPolicy {
             .coerceAtMost(BattleConstants.MAX_ROW - 1)
             .coerceAtLeast(0)
     }
+
+    fun profile(index: Int): TeamDungeonBotProfile = PROFILES[index.mod(PROFILES.size)]
 }
