@@ -390,10 +390,14 @@ class DungeonHandler(
                     return@launch
                 }
 
-                // DVT S47-020 exists for kind3; harmlessly close the same dungeon UI
-                // before Soul weekly style24 as well so battle scene owns focus.
+                // DVT client protocolTable[47][20] closes UIDungeon only when the
+                // packet dungeonId resolves to kind=3. Soul weekly is kind=5, so sending
+                // its own id is ignored by the client and leaves the room UI over battle.
+                // Use the authoritative first kind=3 weekly id only as a close-UI anchor;
+                // battle/progress still use started.dungeonId (kind=5) unchanged.
+                val closeUiDungeonId = closeUiDungeonId(def.kind, started.dungeonId)
                 for (member in started.members.values) {
-                    sendCloseDungeonUi(member.session, started.dungeonId)
+                    sendCloseDungeonUi(member.session, closeUiDungeonId)
                 }
 
                 if (!battle.createWeeklyDungeonBattle(
@@ -723,6 +727,12 @@ class DungeonHandler(
     }
 
     companion object {
+        /** Current DVT IOS_Dungeon_C.dat first kind=3 weekly node. */
+        const val SOUL_WEEKLY_CLOSE_UI_ANCHOR_ID = 18
+
+        fun closeUiDungeonId(kind: Int, dungeonId: Int): Int =
+            if (kind == DungeonSystem.KIND_SOUL_WEEKLY) SOUL_WEEKLY_CLOSE_UI_ANCHOR_ID else dungeonId
+
         private const val RESULT_ROOM_FULL = 6
         private const val RESULT_PASSWORD_WRONG = 9
         private const val CHANNEL_WORLD = 2

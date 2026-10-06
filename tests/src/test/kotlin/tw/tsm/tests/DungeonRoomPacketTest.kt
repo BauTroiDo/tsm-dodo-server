@@ -237,6 +237,22 @@ class DungeonRoomPacketTest {
     }
 
     @Test
+    fun soulWeeklyCloseUiUsesKind3CompatibilityAnchor() {
+        assertEquals(
+            18,
+            DungeonHandler.closeUiDungeonId(DungeonSystem.KIND_SOUL_WEEKLY, 63),
+        )
+        assertEquals(
+            18,
+            DungeonHandler.closeUiDungeonId(DungeonSystem.KIND_WEEKLY, 18),
+        )
+        assertEquals(
+            37,
+            DungeonHandler.closeUiDungeonId(DungeonSystem.KIND_WEEKLY, 37),
+        )
+    }
+
+    @Test
     fun worldRecruitPacketMatchesDvtReceiverOrder() = runBlocking {
         val system = mockk<DungeonSystem>()
         coEvery { system.refreshPeriodicProgress(any()) } just Runs

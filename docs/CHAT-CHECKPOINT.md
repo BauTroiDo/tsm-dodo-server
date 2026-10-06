@@ -3969,3 +3969,17 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
   - DungeonRoomRegistryTest reproduces started weekly room -> reset after battle -> owner can leave and ownership migrates.
   - DungeonRoomRegistryTest + DungeonWeeklyBattleV2Test targeted PASS.
   - full gradlew test build --rerun-tasks PASS 21/21.
+
+
+### 2026-10-06 — Soul weekly room UI close compatibility
+- Runtime screenshot: Soul weekly / "Cuồng ải 1" starts battle but UIDungeon remains visible behind battle/result.
+- Root cause is Lua DVT protocolTable[47][20]:
+  - S47-20 reads a dungeonId and only calls UI.Close(UIDungeon) when resolved dungeonData.kind == 3.
+  - Soul weekly nodes are kind=5, so sending their own dungeonId is ignored by client.
+- Server-only compatibility fix:
+  - kind3 weekly keeps sending its own dungeonId in S47-20.
+  - kind5 Soul weekly sends current DVT first kind3 weekly node id=18 only as the S47-20 close-UI anchor.
+  - Actual battle/progress/settlement dungeonId remains the real kind5 id unchanged.
+- Regression: DungeonRoomPacketTest locks kind5 id63 -> close anchor18, kind3 ids stay unchanged.
+- Targeted DungeonRoomPacketTest + DungeonWeeklyBattleV2Test PASS.
+- Full local gradlew test build --rerun-tasks PASS 21/21.
