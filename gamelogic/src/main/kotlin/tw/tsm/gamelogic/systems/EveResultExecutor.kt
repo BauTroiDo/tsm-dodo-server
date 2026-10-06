@@ -52,6 +52,9 @@ class EveResultExecutor(
     private val characterRepository: CharacterRepository? = null,
     private val markStepMissionIds: Set<Int> = emptySet(),
 ) {
+    /** Hook cho subsystem đăng ký arena từ mission marker Eve. */
+    var onMissionStarted: (suspend (GameSession, Int) -> Unit)? = null
+
     private companion object {
         // Chỉ dùng khi IOS_MarkStep_C.dat không khả dụng. Production bình thường dùng data-driven detection.
         val LEGACY_MARKER_MISSION_IDS = setOf(11804, 12283, 12285, 12396)
@@ -582,6 +585,7 @@ class EveResultExecutor(
                     }
                 responseSender.sendAddMissionStep(session, missionId, delta)
                 if (prevStep == 0) {
+                    onMissionStarted?.invoke(session, missionId)
                     // DVT marker mission: có MarkDef.bitId nhưng không hề có MarkStep.
                     // Eve vẫn ADD_STEP +1 rồi các event kế tiếp kiểm pStyle=3 flag==1.
                     // Nhận diện theo IOS_Mark_C + IOS_MarkStep_C thay vì danh sách ID cứng.

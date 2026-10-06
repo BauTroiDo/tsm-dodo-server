@@ -220,8 +220,9 @@ class BattleInstance(
                 val target = grid.getAt(action.targetCol, action.targetRow)
                 val npcDef = target?.let { t -> involvedNpcDefs.firstOrNull { it.first == t.npcId }?.second }
                 if (target == null || !target.isAlive || !target.isEnemySide ||
-                    target.kind == EHuman.PLAYER || target.kind == EHuman.PLAYERS ||
-                    target.kind == EHuman.FOLLOW_NPC || npcDef == null || npcDef.canBeCatch ||
+                    target.isHumanPlayer ||
+                    target.kind == EHuman.FOLLOW_NPC || target.kind == EHuman.AUTOMANUAL_NPC ||
+                    npcDef == null || npcDef.canBeCatch ||
                     npcDef.level - fighter.level > BattleConstants.MANUAL_CATCH_LEVEL_DIFF ||
                     target.npcId in MANUAL_CATCH_NPC_BLACKLIST ||
                     target.groupedStatuses.containsKey(SEAL_STATUS_GROUP) ||
@@ -312,6 +313,20 @@ class BattleInstance(
 
         for (npc in npcs) {
             if (npc.pendingAction != null) continue
+
+            if (npc.isAutomanual) {
+                val chosen = PvpBotAiPolicy.candidates(npc, grid, skillResolver)
+                    .firstOrNull { action ->
+                        setPlayerAction(npc.roleId, npc.col, npc.row, action)
+                    }
+                if (chosen != null) {
+                    logger.debug {
+                        "Trận $battleId: PvP bot ${npc.name} -> skill=${chosen.id} " +
+                            "target=(${chosen.targetCol},${chosen.targetRow})"
+                    }
+                }
+                continue
+            }
 
             val selectedSkillId = skillSelector(npc.skills)
             val skillId = NpcAiSkillRules.normalizeSelectedSkill(selectedSkillId)
@@ -747,7 +762,9 @@ class BattleInstance(
         private val SELF_ONLY_SKILLS = setOf(13008, 14002, 20006)
         private val BOW_SKILLS = setOf(14033, 14036, 14037, 14064)
         private val SPIRITUAL_BOW_ITEM_IDS = setOf(57601, 57602, 57603, 57604)
-        private val PLAYER_BOW_CHECK_KINDS = setOf(EHuman.PLAYER, EHuman.PLAYERS, EHuman.DIVIDE)
+        private val PLAYER_BOW_CHECK_KINDS = setOf(
+            EHuman.PLAYER, EHuman.PLAYERS, EHuman.DIVIDE, EHuman.AUTOMANUAL_PLAYER
+        )
         // Exact DVT FightField.SetConSkill list: these are non-battle skills.
         private val NON_BATTLE_SKILLS = setOf(
             14003, 14004, 14005,

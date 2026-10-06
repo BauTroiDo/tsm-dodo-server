@@ -42,6 +42,8 @@ class EveFlowController(
 ) {
     /** App-layer hook for terminal Eve completion (dungeon settlement, etc.). */
     var onEventCompleted: (suspend (GameSession) -> Unit)? = null
+    /** Exact Eve hook: scene12003/click10/result type2 class7 param8 = VS registration. */
+    var onVsRegistration: (suspend (GameSession) -> Unit)? = null
 
     /**
      * Bắt đầu phân phát result đầu tiên (được [EveTriggerRouter] gọi)
@@ -376,6 +378,12 @@ class EveFlowController(
                 // request; only class=2 carries a sceneInfo teleport target.
                 if (result.resultClass == 7 &&
                     !eveData[session.mapId]?.sceneInfos.orEmpty().containsKey(result.parameter)) {
+                    if (result.parameter == 8 &&
+                        pendingSession?.mapId == 12003 &&
+                        pendingSession.npcClickId == 10
+                    ) {
+                        onVsRegistration?.invoke(session)
+                    }
                     responseSender.sendCommonEvent(session, result)
                 } else {
                     doorWarpService.execute(session, result) {

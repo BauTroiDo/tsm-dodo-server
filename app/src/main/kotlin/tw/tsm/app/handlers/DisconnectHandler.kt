@@ -32,7 +32,8 @@ class DisconnectHandler(
     private val eveStateMachine: EveEventStateMachine,
     private val mountSystem: MountSystem,
     private val macroBoxSystem: MacroBoxSystem,
-    private val roleCountSystem: RoleCountSystem
+    private val roleCountSystem: RoleCountSystem,
+    private val pvpBotMatchmakingSystem: PvpBotMatchmakingSystem? = null,
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.DISCONNECT
@@ -43,6 +44,7 @@ class DisconnectHandler(
 
         // Dọn dẹp trạng thái trò chơi (giao dịch/chiến đấu/tổ đội/sự kiện/hộp cơ quan)
         tradeSystem.cancelTradeOnDisconnect(session.playerId)
+        pvpBotMatchmakingSystem?.cancel(session.playerId)
         battleManager.handleDisconnect(session.playerId)
         partySystem.handleDisconnect(session.playerId)
         eveStateMachine.clear(characterId)
