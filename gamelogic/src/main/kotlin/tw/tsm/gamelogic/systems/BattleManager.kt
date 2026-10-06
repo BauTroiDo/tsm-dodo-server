@@ -235,6 +235,7 @@ class BattleManager(
                         hairOverride = ((session.hair + profile.hairOffset - 1) % 8) + 1,
                         color1Xor = profile.color1Xor,
                         color2Xor = profile.color2Xor,
+                        equipItemIdsOverride = intArrayOf(),
                     )
                 )
                 if (petDef != null) {
@@ -265,7 +266,7 @@ class BattleManager(
                             col = BattleConstants.PLAYER_FRONT_COL,
                             row = index + 1,
                             kind = EHuman.AUTOMANUAL_NPC,
-                            roleIdOverride = nextBotRoleId.getAndDecrement(),
+                            roleIdOverride = profile.petNpcId.toLong(),
                             restoreFull = true,
                         )
                     )
@@ -2047,6 +2048,7 @@ class BattleManager(
         hairOverride: Int? = null,
         color1Xor: Int = 0,
         color2Xor: Int = 0,
+        equipItemIdsOverride: IntArray? = null,
     ): BattleFighter {
         val charId = session.roleId.toLong()
         val state = playerStateManager.getState(charId)
@@ -2149,7 +2151,7 @@ class BattleManager(
             hair = hairOverride ?: session.hair,
             color1 = session.color1 xor color1Xor,
             color2 = session.color2 xor color2Xor,
-            equipItemIds = equipIds
+            equipItemIds = equipItemIdsOverride ?: equipIds
         )
     }
 
