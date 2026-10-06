@@ -312,7 +312,20 @@ class DungeonHandler(
     }
 
     private fun leaveRoom(session: GameSession) {
-        val left = rooms.leave(session.playerId) ?: return
+        val left = rooms.leave(session.playerId)
+        if (left == null) {
+            // A server restart clears the in-memory room registry while the client can
+            // still keep UIDungeon open. C47-010 must remain idempotent: acknowledge
+            // the requester even when the room no longer exists so the client can
+            // close the stale room UI instead of becoming permanently trapped.
+            sendPlayerLeave(session, session.playerId, LEAVE_SELF)
+            dungeonHandlerLogger.info {
+                "C47-010 leave acknowledged for stale room player=" + session.characterName +
+                    " playerId=" + session.playerId
+            }
+            return
+        }
+
         val recipients = ArrayList<GameSession>(left.room.members.size + 1)
         recipients += left.removed.session
         recipients += left.room.members.values.map { it.session }
