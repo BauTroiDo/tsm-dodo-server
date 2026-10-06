@@ -638,7 +638,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { TradeHandler(get(), get<CollectionSystem>()) }
     single { BattleManageHandler(get(), get(), get()) }
     single { BattleCommandHandler(get()) }
-    single { PlayerStatusHandler(get(), get(), get(), get()) }
+    single { PlayerStatusHandler(get(), get(), get(), get(), get<GameDataManager>().titleDefs) }
     single { SkillUpgradeHandler(get(), get(), get(), get(), get<DailyProgressSystem>(), get<PetSystem>()) }
     single { PartyHandler(get(), get(), get(), get<DailyProgressSystem>(), get<DungeonSystem>(), get<DungeonRoomRegistry>()) }
     single { FollowNpcHandler(get(), get(), get()) }

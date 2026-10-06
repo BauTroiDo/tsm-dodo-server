@@ -67,6 +67,10 @@ class GameDataManager(
     var markStepMissionIds: Set<Int> = emptySet()
         private set
 
+    /** DVT danh hiệu từ IOS_TitleData_C.dat, key=titleId. */
+    var titleDefs: Map<Int, TitleDef> = emptyMap()
+        private set
+
     /** Định nghĩa túi phúc (key = ID vật phẩm túi phúc)*/
     var blissBagDefs: Map<Int, BlissBagDef> = emptyMap()
         private set
@@ -363,6 +367,15 @@ class GameDataManager(
             logger.info { "Nạp MarkStep xong: ${markStepMissionIds.size} mission có step thật" }
         } else {
             logger.warn { "Không tìm thấy IOS_MarkStep_C.dat; marker mission sẽ không được tự nhận diện từ data" }
+        }
+
+        // TitleData — Lua DVT DataManager đọc IOS_TitleData_C.dat.
+        val titleSource = dataIosDir.resolve("IOS_TitleData_C.dat")
+        if (Files.isRegularFile(titleSource)) {
+            titleDefs = TitleDataDatLoader.load(Files.readAllBytes(titleSource))
+            logger.info { "Nạp IOS_TitleData xong: ${titleDefs.size} danh hiệu source=$titleSource" }
+        } else {
+            logger.warn { "Không tìm thấy IOS_TitleData_C.dat; đổi danh hiệu sẽ bị từ chối an toàn" }
         }
 
         // TeachInfo — DVT client hiện tại đọc IOS_TeachInfo_C.dat.

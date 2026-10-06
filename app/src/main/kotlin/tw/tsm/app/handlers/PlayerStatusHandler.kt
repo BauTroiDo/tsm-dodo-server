@@ -2,12 +2,14 @@ package tw.tsm.app.handlers
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import tw.tsm.domain.constants.Opcodes
+import tw.tsm.domain.data.TitleDef
 import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.PacketHandler
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
 import tw.tsm.gamelogic.systems.BitFlagSystem
+import tw.tsm.gamelogic.systems.DvtTitlePolicy
 import tw.tsm.gamelogic.systems.WorldManager
 import tw.tsm.protocol.PacketReader
 
@@ -16,7 +18,6 @@ private val logger = KotlinLogging.logger {}
 /**
  * Bộ xử lý trạng thái người chơi (mainKind = 5)
  *
- * Xử lý các gói tin client gửi lên liên quan đến trạng thái người chơi.
  * Hiện hỗ trợ:
  * - C:005-008 xem xong hướng dẫn người mới
  * - C:005-012 đổi danh hiệu
@@ -25,7 +26,8 @@ class PlayerStatusHandler(
     private val bitFlagSystem: BitFlagSystem,
     private val responseSender: ResponseSender,
     private val characterRepository: CharacterRepository,
-    private val worldManager: WorldManager
+    private val worldManager: WorldManager,
+    private val titleDefs: Map<Int, TitleDef>,
 ) : PacketHandler {
     override val mainKind: Int = Opcodes.PLAYER_STATUS
 
@@ -37,13 +39,7 @@ class PlayerStatusHandler(
         }
     }
 
-    /**
-     * C:005-008 Xem xong hướng dẫn người mới
-     *
-     * Định dạng: +guideId(1B)
-     * Client UITeach.lua gửi khi hoàn thành hướng dẫn.
-     * Server tra bitFlagId tương ứng, ghi vào cơ sở dữ liệu và trả về S:081-001.
-     */
+    /** C:005-008 Xem xong hướng dẫn người mới: +guideId(1B). */
     private suspend fun handleTeachComplete(session: GameSession, data: ByteArray) {
         val reader = PacketReader(data)
         val guideId = reader.readUByte()
@@ -58,27 +54,35 @@ class PlayerStatusHandler(
     }
 
     /**
-     * C:005-012 Đổi danh hiệu
+     * C:005-012 Đổi danh hiệu: +titleId(UInt16 LE).
      *
-     * Định dạng: +titleId(2B UInt16 LE)
-     * titleId=0 có nghĩa là tháo danh hiệu.
-     * Cập nhật session + DB và phát rộng S:005-012 cho mọi người chơi cùng bản đồ.
+     * DVT UITitle only enables a title when TitleData.flagId == 0 or the
+     * player's BitFlag is set. Mirror that rule server-side so a forged client
+     * cannot equip a locked/non-existent title. titleId=0 always means remove.
      */
     private suspend fun handleChangeTitle(session: GameSession, data: ByteArray) {
         if (session.state != SessionState.IN_GAME) return
-        if (data.size < 2) return
-        if (session.battleId != 0L) return  // Đang chiến đấu không được đổi danh hiệu
+        if (data.size != 2) return
+        if (session.battleId != 0L) return
 
-        val reader = PacketReader(data)
-        val titleId = reader.readUShortLE()
+        val titleId = PacketReader(data).readUShortLE()
+        val charId = session.roleId.toLong()
+        if (charId <= 0) return
 
-        // Cập nhật trạng thái session
+        val ownedFlags = if (titleId == 0) emptySet() else bitFlagSystem.getSetFlagIds(charId)
+        if (!DvtTitlePolicy.canEquip(titleId, titleDefs, ownedFlags)) {
+            val flag = titleDefs[titleId]?.flagId
+            logger.warn {
+                "${session.characterName} thử mang danh hiệu không hợp lệ/chưa mở: title=$titleId flag=$flag"
+            }
+            return
+        }
+
+        if (session.titleId == titleId) return
+
         session.titleId = titleId
+        characterRepository.updateTitleId(charId, titleId)
 
-        // Lưu bền dữ liệu vào DB
-        characterRepository.updateTitleId(session.roleId.toLong(), titleId)
-
-        // Phát rộng S:005-012 cho mọi người chơi cùng bản đồ (gồm cả mình)
         val players = worldManager.getPlayersInMap(session.mapId, session.instanceId)
         for (player in players) {
             responseSender.sendTitleChange(player, session.playerId, titleId)

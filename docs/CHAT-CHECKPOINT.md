@@ -4059,3 +4059,29 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - EveStateBuilder now auto-reconciles stale data: if a marker mission already has step>0 but its flag is missing, it persists flag=1 and exposes it immediately to the same Eve evaluation. This repairs existing characters such as 11121=1/flag588=0 without reset.
 - Permanent DvtMarkerMissionRegressionTest locks: 11121 bitId588 + no MarkStep, ADD_STEP sets flag588, real-step mission11120 does not auto-flag, and stale marker step is backfilled before evaluation.
 - Targeted marker/comparator/door-chain tests PASS; full local gradlew test build --rerun-tasks PASS 21/21.
+
+
+## 2026-10-06 — Danh hiệu / Title backend DVT
+- User xác nhận Bình Trưởng / marker mission fix PASS, chuyển sang Danh hiệu.
+- Lua DVT authoritative contract:
+  - `UITitle.OnClick_Active()` gửi C:005-012 + titleId UInt16; gửi 0 để tháo.
+  - Client chỉ cho đeo khi `TitleData.flagId == 0 || BitFlag.Get(flagId)` và không cho đổi trong battle.
+  - S:005-012 = roleId Int64 + titleId UInt16; client gọi `Role:SetTitle`.
+  - DataManager hiện tại đọc `IOS_TitleData_C.dat`.
+- `IOS_TitleData_C.dat` hiện có 33 record, fixed 43 bytes/record. Server thêm `TitleDataDatLoader` và `TitleDef`; chỉ dùng id/nameStringId/flagId, presentation giữ phía client.
+- Root gap cũ: PlayerStatusHandler đã persist+broadcast C5-12 nhưng tin titleId do client gửi, không validate tồn tại/sở hữu. Có thể forged client đeo title chưa mở.
+- Fix generic:
+  - GameDataManager load `IOS_TitleData_C.dat` thành `titleDefs`.
+  - `DvtTitlePolicy` mirror đúng ownership gate của UITitle.
+  - PlayerStatusHandler chỉ cho titleId=0 hoặc title tồn tại và flag sở hữu; malformed packet/battle/invalid title bị từ chối; valid title vẫn persist Characters.titleId + broadcast S5-12 map-wide.
+  - LoginService restore `session.titleId = record.titleId`; trước đây DB/S3-0 có title nhưng session vẫn 0 sau relog, làm other-player/chat có thể mất title.
+- Data audit nguồn mở khóa:
+  - 18/33 TitleData.flagId trùng Achievement.completeFlag; title mở khi achievement hoàn thành, không phải lúc claim reward.
+  - 15 flag còn lại là event/special flags; không tự cấp hoặc đoán nguồn.
+- Regression `DvtTitleRegressionTest`:
+  - khóa current DVT count=33 và các flag mẫu 1=1558, 4=7151, 101=425, 124=7300;
+  - unknown/unowned bị chặn, owned/flag0/remove0 được phép.
+- Targeted DvtTitleRegressionTest: PASS 18 tasks.
+- Full local `gradlew test build --rerun-tasks`: PASS 21/21.
+- `git diff --check`: không có whitespace error; chỉ warning CRLF hiện hữu.
+- Next: commit/push/deploy production .69; runtime test đeo/tháo + chat/overhead + relog persistence.

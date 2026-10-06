@@ -155,6 +155,7 @@ class LoginService(
         session.turn = record.turn
         session.career = record.career
         session.turn3Element = turn3State.element
+        session.titleId = record.titleId
         val playerData = PlayerDataDto.fromCharacterRecord(
             record, statSystem, equipBonus, turn3State,
             astrolabePoint = astrolabeData.natalPoint,
