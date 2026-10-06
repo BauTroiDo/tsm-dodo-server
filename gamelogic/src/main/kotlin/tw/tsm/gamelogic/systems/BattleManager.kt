@@ -1569,10 +1569,7 @@ class BattleManager(
         }
 
         // Trận PVP và PK với NPC trên bản đồ không đi qua callback sự kiện
-        if (battle.warType == EWar.PK_PLAYERS ||
-            battle.warType == EWar.PK_MAP_NPC ||
-            battle.warType == EWar.VS
-        ) {
+        if (!BattleLifecyclePolicy.shouldResumeEve(battle.warType)) {
             logger.info { "Trận ${battle.battleId} không thuộc sự kiện đã kết thúc, không gọi callback sự kiện" }
             return
         }
