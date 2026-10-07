@@ -346,9 +346,9 @@ class WorldSimBotSystem(
             }
 
             val maxCells = when (bot.behavior) {
-                Behavior.FARMER -> 4
-                Behavior.SOCIAL -> 3
-                Behavior.IDLER -> 2
+                Behavior.FARMER -> 2
+                Behavior.SOCIAL -> 1
+                Behavior.IDLER -> 1
             }
             val candidates = bot.path.take(maxCells)
             var chosenIndex = 0
@@ -373,9 +373,9 @@ class WorldSimBotSystem(
             bot.y = next.second
             bot.direction = directionFromDelta(dx, dy)
             bot.nextMoveAt = now + when (bot.behavior) {
-                Behavior.FARMER -> Random.nextLong(300L, 520L)
-                Behavior.SOCIAL -> Random.nextLong(420L, 760L)
-                Behavior.IDLER -> Random.nextLong(650L, 1_050L)
+                Behavior.FARMER -> Random.nextLong(180L, 280L)
+                Behavior.SOCIAL -> Random.nextLong(240L, 380L)
+                Behavior.IDLER -> Random.nextLong(360L, 560L)
             }
             worldManager.broadcastToMap(key.mapId, buildMovePacket(bot), instanceId = key.instanceId)
 
@@ -422,13 +422,19 @@ class WorldSimBotSystem(
         // observers see the same battle cloud as a real player.
         worldManager.broadcastToMap(
             key.mapId,
-            buildWarStatePacket(bot.id, EWar.EVENT),
+            buildWarStatePacket(bot.id, WORLD_ENCOUNTER_WAR_KIND),
             instanceId = key.instanceId,
         )
 
         val profile = battleProfile(bot)
         scope.launch {
-            delay(SOLO_WAR_VISUAL_LEAD_MS)
+            delay(SOLO_WAR_STATE_RETRY_MS)
+            worldManager.broadcastToMap(
+                key.mapId,
+                buildWarStatePacket(bot.id, WORLD_ENCOUNTER_WAR_KIND),
+                instanceId = key.instanceId,
+            )
+            delay(SOLO_WAR_VISUAL_LEAD_MS - SOLO_WAR_STATE_RETRY_MS)
             val started = battleManager.createWorldSimBotPveBattle(
                 template = template,
                 profile = profile,
@@ -821,9 +827,11 @@ class WorldSimBotSystem(
             -180 to -560, 260 to 520, 720 to 80, -700 to 120,
             90 to -720, -80 to 680, 840 to 340, -820 to -320,
         )
-        private const val TICK_MS = 900L
+        private const val TICK_MS = 180L
         private const val SOLO_ENCOUNTER_DISTANCE_PX = 200
         private const val SOLO_ENCOUNTER_COOLDOWN_MS = 27_000L
+        private const val WORLD_ENCOUNTER_WAR_KIND = 23 // DVT EWar.DoingFight
+        private const val SOLO_WAR_STATE_RETRY_MS = 120L
         private const val SOLO_WAR_VISUAL_LEAD_MS = 650L
         private const val SOLO_RETURN_DELAY_MS = 1_200L
         private const val SOLO_RETRY_DELAY_MS = 5_000L
