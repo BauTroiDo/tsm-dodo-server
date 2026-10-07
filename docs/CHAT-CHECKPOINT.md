@@ -4482,3 +4482,36 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Gameplay commit: 478a76c Serialize_world_simbot_solo_encounters.
 - Production restarted; TCP 6613 PASS.
 - Runtime hitch confirmation pending user retest.
+
+
+### 2026-10-08 — Warrior EXP Slot / UIExpSlotMachine production baseline
+- User requested the Lò Bổ screen; authoritative client class is UIExpSlotMachine, mainKind 76.
+- Lua contract locked:
+  - C76-005 requests accumulated jackpot EXP; S76-005 returns Int32.
+  - S76-002 returns count(Byte), then count x [kind(Byte), exp(Int32), icons(3xByte)].
+  - x1/x10 are launched through UISell, not a direct current-Lua C76-002 request.
+  - normal pet: sellId 37=x1, 38=x10; turn >= 2: sellId 65=x1, 66=x10.
+  - CheckPull blocks current fight pet, canGrow 0/2, npc kind 53, and level >=180 only while turn <=2.
+- Authoritative data:
+  - IOS_FNpcSlot_C.dat = 400 records, each 9 bytes after count: index U16 + exp U32 + 3 icon U8.
+  - top EXP includes 5,000,000 / 4,000,000 / 2,500,000 / 1,000,000 etc.
+  - item 31207 = ThônLạpBá tệ; description says BDY coin used to pull warrior.
+  - item 29877 = Thôn Thực Lạp Phách Kim Tệ; description says BDY gold coin useful for 2-turn warrior.
+  - normal x1/x10 consumes 31207 x1/x10; turn>=2 x1/x10 consumes 29877 x1/x10.
+- Backend implemented:
+  - Opcodes.EXP_SLOT=76 and ExpSlotHandler.
+  - FNpcSlotDatLoader + GameDataManager loading from Data-ios.
+  - ExpSlotSystem validates target per Lua, picks authoritative rows, applies EXP through PetSystem.gainBattleExp, saves pet, and returns S76-002.
+  - UISellHandler integrates sell 37/38/65/66 with inventory item payment.
+  - global exp_slot_state persistence + ExpSlotRepository for jackpot pool; C76-005 query and jackpot reset are implemented.
+  - no invented jackpot-pool increment formula: authoritative accumulation rule is still evidence-blocked.
+  - S76-003 cross-player jackpot marquee is not yet implemented.
+- Validation:
+  - targeted app compile PASS: 13 tasks.
+  - ExpSlotSystem + FNpcSlot loader tests PASS: 18 tasks.
+  - ExpSlot UISell 37/38/65/66 tests PASS: 18 tasks.
+  - full test build PASS: 21/21 tasks.
+- Gameplay commit: 0b44b4c Implement DVT warrior EXP slot.
+- Production restart PASS after clean relaunch; TCP 6613 PASS.
+- Runtime startup: IOS_FNpcSlot loaded exactly 400 records; HEAD 0b44b4c.
+- Client gameplay confirmation x1/x10 pending. User needs an eligible pet and corresponding coin in bag.
