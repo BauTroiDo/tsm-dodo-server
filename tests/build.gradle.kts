@@ -8,6 +8,9 @@ dependencies {
     implementation(project(":network"))
     implementation(project(":app"))
 
+    testImplementation(libs.exposed.core)
+    testImplementation(libs.exposed.jdbc)
+    testImplementation("com.h2database:h2:2.3.232")
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.kotest.runner)
     testImplementation(libs.kotest.assertions)

@@ -420,6 +420,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<ExpSlotRepository>(),
             get<PetSystem>(),
             get<GameDataManager>().npcDefs,
+            get<InventorySystem>(),
         )
     }
     single {

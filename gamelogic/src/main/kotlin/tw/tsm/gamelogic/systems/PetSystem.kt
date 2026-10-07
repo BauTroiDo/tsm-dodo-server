@@ -424,11 +424,27 @@ class PetSystem(
      *   max    = Calc.GetUpExp(level + 1, turn)
      */
     fun gainBattleExp(characterId: Long, followSlot: Int, amount: Long): PetExpGain? {
+        val pc = cache[characterId] ?: return null
+        synchronized(pc) {
+            if (pc.follow[followSlot]?.canGrow != 1) return null
+            val gain = planExpSlotGain(characterId, followSlot, amount) ?: return null
+            pc.follow[followSlot] = gain.after
+            pc.dirty = true
+            logger.info {
+                "EXP võ tướng: charId=$characterId slot=$followSlot npcId=${gain.before.npcId} " +
+                    "exp=${gain.before.exp}+$amount->${gain.after.exp} lv=${gain.before.level}->${gain.after.level}"
+            }
+            return gain
+        }
+    }
+
+    /** EXP slot plans without publishing; coin/pet/jackpot persistence must commit first. */
+    fun planExpSlotGain(characterId: Long, followSlot: Int, amount: Long): PetExpGain? {
         if (amount <= 0) return null
         val pc = cache[characterId] ?: return null
         synchronized(pc) {
             val before = pc.follow[followSlot] ?: return null
-            if (before.canGrow != 1 || before.level >= PET_MAX_LEVEL) return null
+            if ((before.canGrow == 0 || before.canGrow == 2) || before.level >= PET_MAX_LEVEL) return null
 
             val turn = petExpTurn(before)
             var level = before.level.coerceAtLeast(1)
@@ -455,13 +471,15 @@ class PetSystem(
                 val (maxHp, maxSp) = petMaxHpSp(after)
                 after = after.copy(hp = maxHp, sp = maxSp)
             }
-            pc.follow[followSlot] = after
-            pc.dirty = true
-            logger.info {
-                "EXP võ tướng: charId=$characterId slot=$followSlot npcId=${before.npcId} " +
-                    "exp=${before.exp}+$amount->$exp lv=${before.level}->$level"
-            }
             return PetExpGain(followSlot, before, after)
+        }
+    }
+
+    fun publishExpSlotGain(characterId: Long, gain: PetExpGain) {
+        val pc = cache[characterId] ?: return
+        synchronized(pc) {
+            pc.follow[gain.slotIndex] = gain.after
+            // Keep any prior dirty state: this transaction persists only EXP-related fields.
         }
     }
 

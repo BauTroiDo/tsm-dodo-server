@@ -94,6 +94,10 @@ class UISellHandler(
         val reader = PacketReader(data)
         val sellId = reader.readUShortLE()
         val args = readArgs(reader)
+        if (sellId in ExpSlotSystem.SELL_IDS && reader.remaining != 0) {
+            responseSender.sendUiSellFail(session, 1, sellId, UISellSystem.REASON_NOT_USABLE)
+            return
+        }
 
         val charId = session.roleId.toLong()
 
@@ -167,6 +171,10 @@ class UISellHandler(
             -1
         }
         val args = readArgs(reader)
+        if (sellId in ExpSlotSystem.SELL_IDS && reader.remaining != 0) {
+            responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_NOT_USABLE)
+            return
+        }
 
         val charId = session.roleId.toLong()
 
@@ -182,8 +190,11 @@ class UISellHandler(
         }
 
         if (sellId in ExpSlotSystem.SELL_IDS) {
-            if (!processPayment(session, sellId, useKind, bagIndex, quote)) return
-            executeExpSlot(session, sellId, args)
+            if (useKind != USE_KIND_ITEM) {
+                responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_PRICE_ERROR)
+                return
+            }
+            executeExpSlot(session, sellId, args, bagIndex)
             return
         }
 
@@ -768,17 +779,18 @@ class UISellHandler(
         return UiSellQuote.Item(itemId, count)
     }
 
-    private suspend fun executeExpSlot(session: GameSession, sellId: Int, args: List<Int>) {
+    private suspend fun executeExpSlot(session: GameSession, sellId: Int, args: List<Int>, bagIndex: Int) {
         val system = expSlotSystem ?: run {
             responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_NOT_USABLE)
             return
         }
-        val result = system.spin(session.roleId.toLong(), sellId, args)
+        val result = system.spin(session.roleId.toLong(), sellId, args, bagIndex)
         if (result == null) {
             responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_NOT_USABLE)
             return
         }
 
+        responseSender.sendReduceBagItem(session, bagIndex, result.awards.size)
         val gain = result.gain
         responseSender.sendFollowNpcAttribute(
             session, gain.slotIndex, EAttribute.EXP,

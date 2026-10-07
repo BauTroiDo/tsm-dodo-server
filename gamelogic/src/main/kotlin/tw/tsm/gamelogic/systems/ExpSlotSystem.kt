@@ -6,6 +6,9 @@ import tw.tsm.domain.data.FNpcSlotDef
 import tw.tsm.domain.data.NpcDef
 import tw.tsm.domain.interfaces.repositories.ExpSlotRepository
 import kotlin.random.Random
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 
 data class ExpSlotAward(
     val kind: Int,
@@ -25,6 +28,8 @@ class ExpSlotSystem(
     private val repository: ExpSlotRepository,
     private val petSystem: PetSystem,
     private val npcDefs: Map<Int, NpcDef>,
+    private val inventorySystem: InventorySystem? = null,
+    private val chooseRow: (Int) -> Int = { Random.nextInt(it) },
 ) {
     private val rows = defs.values.sortedBy { it.index }
     private val jackpotMutex = Mutex()
@@ -40,7 +45,7 @@ class ExpSlotSystem(
     }
 
     fun validateTarget(characterId: Long, sellId: Int, args: List<Int>): Boolean {
-        if (args.size != 2) return false
+        if (!isSellId(sellId) || args.size != 2) return false
         val slot = args[0]
         val npcId = args[1]
         val pet = petSystem.getFollowPets(characterId)[slot] ?: return false
@@ -60,44 +65,50 @@ class ExpSlotSystem(
         repository.loadJackpotExp().coerceAtLeast(0L)
     }
 
-    suspend fun spin(characterId: Long, sellId: Int, args: List<Int>): ExpSlotSpinResult? {
-        if (!validateTarget(characterId, sellId, args)) return null
-        val spins = requirement(sellId)?.second ?: return null
-        val awards = List(spins) {
-            val row = rows[Random.nextInt(rows.size)]
-            ExpSlotAward(
-                kind = if (sellId == SELL_TURN2_ONE || sellId == SELL_TURN2_TEN) 1 else 0,
-                exp = row.exp,
-                icons = row.icons,
-            )
-        }
-
-        val jackpotIndex = awards.indexOfFirst { it.exp >= JACKPOT_BASE_EXP }
-        if (jackpotIndex >= 0) {
-            return jackpotMutex.withLock {
-                val pool = repository.loadJackpotExp()
-                    .coerceIn(0L, Int.MAX_VALUE.toLong() - awards[jackpotIndex].exp.toLong())
-                val adjusted = awards.toMutableList()
-                adjusted[jackpotIndex] = adjusted[jackpotIndex].copy(
-                    exp = (adjusted[jackpotIndex].exp.toLong() + pool).toInt()
+    suspend fun spin(characterId: Long, sellId: Int, args: List<Int>, bagSlot: Int): ExpSlotSpinResult? =
+        jackpotMutex.withLock {
+            if (!validateTarget(characterId, sellId, args)) return@withLock null
+            val inventory = inventorySystem ?: return@withLock null
+            val (itemId, spins) = requirement(sellId) ?: return@withLock null
+            val coin = inventory.getBagItem(characterId, bagSlot) ?: return@withLock null
+            if (coin.itemId != itemId || coin.quantity < spins) return@withLock null
+            val awards = List(spins) {
+                val row = rows[chooseRow(rows.size)]
+                ExpSlotAward(
+                    kind = if (sellId == SELL_TURN2_ONE || sellId == SELL_TURN2_TEN) 1 else 0,
+                    exp = row.exp, icons = row.icons,
                 )
-                val totalExp = adjusted.sumOf { it.exp.toLong() }
-                val gain = petSystem.gainBattleExp(characterId, args[0], totalExp)
+            }.toMutableList()
+            // Preserve deployed jackpot trigger. Lua/data do not expose an accumulation formula.
+            val jackpotIndex = awards.indexOfFirst { it.exp >= JACKPOT_BASE_EXP }
+            try {
+                val pool = repository.loadJackpotExp().coerceAtLeast(0L)
+                val extra = if (jackpotIndex >= 0)
+                    pool.coerceAtMost(Int.MAX_VALUE.toLong() - awards[jackpotIndex].exp) else 0L
+                if (jackpotIndex >= 0) {
+                    awards[jackpotIndex] = awards[jackpotIndex].copy(
+                        exp = (awards[jackpotIndex].exp.toLong() + extra).toInt()
+                    )
+                }
+                val gain = petSystem.planExpSlotGain(characterId, args[0], awards.sumOf { it.exp.toLong() })
                     ?: return@withLock null
-                petSystem.save(characterId)
-                repository.saveJackpotExp(0L)
-                ExpSlotSpinResult(adjusted, gain, pool, 0L)
+                val nextPool = pool - extra
+                // Finish persistence and publication together even if disconnect cancels the request.
+                withContext(NonCancellable) {
+                    repository.settleSpin(characterId, bagSlot, coin, spins, gain.before, gain.after,
+                        if (jackpotIndex >= 0) pool else null, nextPool)
+                    inventory.setBagItemSync(characterId, bagSlot,
+                        if (coin.quantity == spins) null else coin.copy(quantity = coin.quantity - spins))
+                    petSystem.publishExpSlotGain(characterId, gain)
+                }
+                ExpSlotSpinResult(awards, gain, extra, nextPool)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                io.github.oshai.kotlinlogging.KotlinLogging.logger {}.error(e) { "EXP slot settlement failed" }
+                null
             }
         }
-
-        val gain = petSystem.gainBattleExp(
-            characterId,
-            args[0],
-            awards.sumOf { it.exp.toLong() }
-        ) ?: return null
-        petSystem.save(characterId)
-        return ExpSlotSpinResult(awards, gain, 0L, jackpotExp())
-    }
 
     companion object {
         const val SELL_NORMAL_ONE = 37

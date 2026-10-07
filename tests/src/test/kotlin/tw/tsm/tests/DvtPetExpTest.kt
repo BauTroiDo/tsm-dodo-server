@@ -304,4 +304,19 @@ class DvtPetExpTest {
         assertEquals(listOf(1, 2, 3, 5), progressive.getBattleDeployableFollowPets(43).map { it.first })
     }
 
+    @Test fun `EXP slot planning does not mutate pets before durable commit`() = runTest {
+        coEvery { repo.findByCharacterId(42) } returns listOf(
+            FollowNpcData(1,100,level=21,exp=2100,canGrow=3,seedFixed=true))
+        pets.load(42)
+        val before = pets.getFollowPets(42).getValue(1)
+        val dirty = pets.getCache(42)!!.dirty
+        val gain = pets.planExpSlotGain(42,1,100)!!
+        assertEquals(before,pets.getFollowPets(42).getValue(1))
+        assertEquals(dirty,pets.getCache(42)!!.dirty)
+        assertEquals(2200L,gain.after.exp)
+        assertNull(pets.gainBattleExp(42,1,100)) // Existing battle growth rule is unchanged.
+        pets.publishExpSlotGain(42,gain)
+        assertEquals(gain.after,pets.getFollowPets(42).getValue(1))
+    }
+
 }

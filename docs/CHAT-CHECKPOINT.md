@@ -4515,3 +4515,50 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Production restart PASS after clean relaunch; TCP 6613 PASS.
 - Runtime startup: IOS_FNpcSlot loaded exactly 400 records; HEAD 0b44b4c.
 - Client gameplay confirmation x1/x10 pending. User needs an eligible pet and corresponding coin in bag.
+## 2026-10-07 PvP bot lobby bridge — production
+
+- User reported PvP bot v1 battle worked only at BattleInstance level; UIDungeon five-slot lobby still showed only the real player and empty '+' slots. User also hit stale-room leave after restart.
+- Client contract re-verified from decrypted DVT Lua:
+  - UIDungeon room member appears only after S47-013 DungeonPlayerData;
+  - readiness uses S47-011 RoleID + prepared flag;
+  - owner Start is enabled only when every non-owner room member has prepare=true;
+  - leave uses C47-010 / S47-010.
+- Lobby fix merged as gameplay commit 13304bf (PR #5), including prior fdcafbd idempotent stale-room leave fix.
+- PvPBotMatchmakingSystem.claimForLobby() transfers a queued VS/Chaos/Mix registration into UIDungeon staging and removes its background queue token to prevent duplicate battle start.
+- After the existing 10-second real-player preference window:
+  - VS with one real shows one AI placeholder;
+  - Mix/Chaos with one real show four AI placeholders in the five-slot room;
+  - lobby bots are sent with S47-013 and S47-011 ready=true;
+  - real joins replace visible bot placeholders and bot slots refill as needed.
+- Owner C47-012 Start now routes PvP lobby through PvpLobbyPolicy into existing BattleManager.createArenaBotBattle(kind28/29); the normal five-second DVT room countdown remains intact.
+- Staging room state is removed once battle init succeeds so lobby cannot resurrect after battle. C47-010 remains idempotent if registry state was lost by restart.
+- Validation:
+  - DvtPvpBotTest targeted PASS;
+  - local full test build --rerun-tasks PASS 21/21;
+  - production fast-forward 111877b -> 13304bf while preserving modified application.conf;
+  - production full test build --rerun-tasks PASS 21/21 in 4m20s;
+  - production restarted from _start_prod_detached.cmd;
+  - production HEAD=13304bf, TCP 6613 LISTENING PID 12988.
+- Runtime retest: reconnect/login, enter the same PvP room through normal event/NPC flow, wait up to 10 seconds. Bot placeholders named AI Fighter N should appear and show ready; Start should become enabled. Rời khỏi must now close the room even after a server restart.
+
+
+## 2026-10-08 — ExpSlot Lua gates + atomic coin/pet/jackpot hardening
+- Read the entire 4517-line production checkpoint before code changes; canonical dev checkout is stale at d442561 and has unrelated Eve edits. They and all untracked files were preserved. Audit/build uses an isolated clone under the current Codex chat work directory from production HEAD 89702b0 (gameplay 0b44b4c).
+- Reconciled origin/main a1e1b24: its only exclusive change is the PvP lobby checkpoint. Kept both histories through a normal merge; never force-push/reset the existing dev or production checkout.
+- Lua DVT UIExpSlotMachine.OnClick_One/Tenfold/CheckPull and Logic/UISell remain authoritative, unchanged. sell37/38 for turn<2; sell65/66 for turn>=2. Reject canGrow0/2, kind53, fightNpcId match, wrong slot/NPC/args, unknown sellId; Lv>=180 blocks only turn<=2. Full turn0..3/Lv179..181/sell37/38/65/66 matrix is regression-locked.
+- Direct IOS_Item_C.dat evidence:
+  - 31207 name exactly `ThônLạpBá tệ`; description `Đồng tiền BDY thần kỳ, dùng để rút võ tướng`.
+  - 29877 name exactly `Thôn Thực Lạp Phách Kim Tệ`; description `Đồng xu BDY vàng kỳ diệu có thể hữu ích cho võ tướng nhị chuyển`.
+  - Item DAT SHA256 51F93C59411105D4DE61F154BB29C0DB10CA41C36B40AB4B1C99F728ABC7845B; identical to production.
+  - FNpcSlot DAT SHA256 6444F8410B99381C3EFFB659C9A9B60D88F806B7FE25FE3716691C0879D53C6A; identical to production; 400 rows, max5000000, exactly three icons each.
+- Removed payment-before-effect from ExpSlot UISell only. ExpSlotRepository.settleSpin commits exact selected-bag coin debit, pet EXP/level/skillPoint (HP/SP only on level gain), and optional jackpot claim in ONE Exposed transaction with locked rows and stale coin/pet/jackpot checks. Cached dirty EXP may be ahead of DB; newer DB progress rejects instead of being overwritten.
+- PetSystem plans EXP without mutation; publishes only after DB commit. Battle EXP keeps its original canGrow==1 rule; slot mirrors Lua canGrow!=0/2. Retains prior pet dirty state. No per-spin full-roster delete/reinsert/save.
+- ExpSlot mutex serializes spin validation through settlement, preventing concurrent reuse of a coin stack and concurrent pool claims. NonCancellable encloses commit/cache publication. DB failure/no gain/wrong coin/insufficient stack causes no debit, no pet gain, no jackpot reset and no success packet.
+- Int32 jackpot overflow no longer discards the unpayable remainder: only extra represented in the award is consumed. x10 pays current pool once, never once per jackpot row.
+- C84-2 item payment and exact UInt16 args are preserved; odd trailing payload/wrong payment kind cannot spin. Success emits bag debit, pet attrs, S84-2 success, S76-2 count+8-byte rows, then S76-5 Int32 pool. Failure emits no debit/success.
+- Added H2-only TEST dependency for real repository integration: an SQL constraint failure AFTER jackpot/coin changes rolls back all three tables; stale replay/jackpot also reject. H2 is never used for production storage.
+- Targeted ExpSlot/FNpcSlot/DvtPetExp suite PASS: 30 tests, 0 failures/errors/skips. Includes pure-plan/no-publish, real DAT names, complete Lua gate matrix, malformed wire, failed payment, concurrent x10, jackpot Int32 overflow, byte-exact S76 packets, real multi-table commit/rollback.
+- Evidence boundaries: Lua/native bridge does NOT expose original server RNG, award.kind meaning, jackpot-trigger formula or accumulation formula. Existing deployed uniform-row RNG, branch kind0/1, >=5000000 trigger and item-only x1/x10 pricing are preserved baseline policies, NOT newly proven original DVT algorithms. Current IOS_UISell_Formula has sell37 kind1/value20 and sell38 kind1/value3, lacks65/66; this does not prove item coin pricing or a safe Point fallback. No new currency/probability/accumulation algorithm is invented. S76-3 marquee remains unimplemented. Turn3 pet progression beyond existing PET_MAX_LEVEL200 remains outside this patch; no-gain now consumes no coin.
+- Full build/diff/push/deploy results are appended after verification below. Client x1/x10 gameplay remains pending actual user test; startup PASS alone is never gameplay PASS.
+
+- Final local full gate: gradlew.bat test build --rerun-tasks BUILD SUCCESSFUL, 21/21 tasks in 1m10s; tests=759, failures=0, errors=0, skipped=5. git diff --check PASS (CRLF normalization warnings only). Production deployment pending the next verification entry.
