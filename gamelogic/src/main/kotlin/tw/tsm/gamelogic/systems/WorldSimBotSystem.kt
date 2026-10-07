@@ -78,6 +78,7 @@ class WorldSimBotSystem(
     private val nextId = AtomicLong(8_000_000_000L)
     private val populations = ConcurrentHashMap<ScopeKey, Population>()
     private val seen = ConcurrentHashMap<Long, MutableSet<Long>>()
+    private val activeSoloEncounterScopes = ConcurrentHashMap.newKeySet<ScopeKey>()
     private val outfits = buildOutfits(itemDefs)
     private val mountNpcIds = mountDefs.keys.filter { it in npcDefs }.sorted()
     private val commonPetNpcIds = validWorldPets(npcDefs, COMMON_WORLD_PETS)
@@ -411,6 +412,12 @@ class WorldSimBotSystem(
                 it.battleId == 0L
         } ?: return
 
+        // Serialize autonomous solo encounters per world scope. Reasserting a full
+        // player + pet appearance is required for the native DVT battle cloud, but
+        // overlapping encounters make the client rebuild several role models at once
+        // and causes visible ~1s hitches.
+        if (!activeSoloEncounterScopes.add(key)) return
+
         bot.encounterDistancePx = 0
         bot.inBattleUntil = Long.MAX_VALUE
         bot.path.clear()
@@ -478,6 +485,8 @@ class WorldSimBotSystem(
                             instanceId = key.instanceId,
                         )
                     }
+                    delay(SOLO_SCOPE_RELEASE_DELAY_MS)
+                    activeSoloEncounterScopes.remove(key)
                 }
                 simBotLogger.info {
                     "WorldSimBot solo PvE finished: bot=" + bot.name +
@@ -506,6 +515,7 @@ class WorldSimBotSystem(
                         instanceId = key.instanceId,
                     )
                 }
+                activeSoloEncounterScopes.remove(key)
                 simBotLogger.debug {
                     "WorldSimBot solo PvE skipped: bot=" + bot.name +
                         " map=" + key.mapId + " mine=" + mine.id
@@ -874,6 +884,7 @@ class WorldSimBotSystem(
         private const val SOLO_WAR_STATE_RETRY_MS = 120L
         private const val SOLO_WAR_VISUAL_LEAD_MS = 650L
         private const val SOLO_WORLD_REASSERT_MS = 80L
+        private const val SOLO_SCOPE_RELEASE_DELAY_MS = 650L
         private const val SOLO_RETURN_DELAY_MS = 1_200L
         private const val SOLO_RETRY_DELAY_MS = 5_000L
         private val PARTY_FOLLOW_OFFSETS = listOf(
