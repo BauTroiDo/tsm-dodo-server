@@ -32,7 +32,7 @@ class HouseBoardResponseSender {
         for (friend in friends) {
             writer.writeLongLE(friend.roleId)
                 .writeBig5WithByteLen(friend.name)
-                .writeIntLE(friend.friendly)
+                .writeShortLE(friend.friendly)
         }
         session.send(writer.toByteArray())
     }

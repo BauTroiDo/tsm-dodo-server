@@ -54,7 +54,7 @@ class HouseBoardGiftQ12Test {
     }
 
     @Test
-    fun `S105-001 profile uses 4-byte friendly exactly`() {
+    fun `S105-001 profile uses Lua Int16 friendly exactly`() {
         val packets = mutableListOf<ByteArray>()
         val session = mockk<SessionSender> {
             every { send(capture(packets)) } just Runs
@@ -83,7 +83,7 @@ class HouseBoardGiftQ12Test {
                     HouseBoardFriend(
                         roleId = 2002L,
                         name = "Friend",
-                        friendly = 70000,
+                        friendly = 9999,
                     ),
                 ),
             ),
@@ -107,7 +107,7 @@ class HouseBoardGiftQ12Test {
         assertEquals(1, r.readUByte())
         assertEquals(2002L, r.readULongLE())
         assertEquals("Friend", r.readBig5WithByteLen())
-        assertEquals(70000, r.readIntLE())
+        assertEquals(9999, r.readShortLE())
         assertEquals(0, r.remaining)
     }
 
