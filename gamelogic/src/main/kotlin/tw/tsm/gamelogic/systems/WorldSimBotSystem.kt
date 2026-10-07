@@ -347,7 +347,7 @@ class WorldSimBotSystem(
 
             val maxCells = when (bot.behavior) {
                 Behavior.FARMER -> 2
-                Behavior.SOCIAL -> 1
+                Behavior.SOCIAL -> 2
                 Behavior.IDLER -> 1
             }
             val candidates = bot.path.take(maxCells)
@@ -374,8 +374,8 @@ class WorldSimBotSystem(
             bot.direction = directionFromDelta(dx, dy)
             bot.nextMoveAt = now + when (bot.behavior) {
                 Behavior.FARMER -> Random.nextLong(180L, 280L)
-                Behavior.SOCIAL -> Random.nextLong(240L, 380L)
-                Behavior.IDLER -> Random.nextLong(360L, 560L)
+                Behavior.SOCIAL -> Random.nextLong(190L, 300L)
+                Behavior.IDLER -> Random.nextLong(220L, 340L)
             }
             worldManager.broadcastToMap(key.mapId, buildMovePacket(bot), instanceId = key.instanceId)
 
@@ -391,7 +391,6 @@ class WorldSimBotSystem(
         movedPx: Int,
         now: Long,
     ) {
-        if (bot.behavior != Behavior.FARMER) return
         if (partySystem.isInParty(bot.id)) return
         if (now < bot.encounterCooldownUntil || movedPx <= 0) return
         val scene = sceneData ?: return
