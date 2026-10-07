@@ -4345,3 +4345,20 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Gameplay commit: 6e61a95 Expand world simbot pet variety.
 - Production restarted and TCP 6613 reachable.
 - Runtime visual validation pending.
+
+
+### 2026-10-07 — WorldSimBot real headless solo PvE
+- User requested autonomous world bots to actually fight random encounter monsters instead of only disappearing for a fake 7-15s timer.
+- Authoritative encounter source remains Eve.emg MineData: MineData.events -> NpcEventData -> unconditional conditionClass=0 -> resultType=3 -> SceneEveData.fightDatas[resultMeanNo]. Bots skip mines without an unconditional fight result rather than guessing quest-specific combat.
+- Replaced simulated solo timer with BattleManager.createWorldSimBotPveBattle().
+- Headless battle uses the normal BattleInstance / BattleSkillResolver / resolveNpcActions / DVT Eve_FightData enemy placement pipeline.
+- World bot enters as EHuman.AUTOMANUAL_PLAYER kind 28; its pet enters as EHuman.AUTOMANUAL_NPC kind 29. Both act entirely through server AI.
+- A same-map real session is used only as the stat/learned-skill template for the bot fighter; it is never registered in battle.playerSessions, never receives battle packets, and its session.battleId is not changed.
+- Headless battle has suppressGenericRewards=true, capture disabled, no playerSessions, no EXP/gold/drop/KillNum/daily-progress/persistence/economy mutation.
+- On real battle completion, callback records win/loss + rounds, applies the normal 27s encounter cooldown, waits 1.2s, then allows the bot/pet to reappear in world. Failed battle creation retries after 5s; BattleManager exception path also releases the bot via fail-safe callback.
+- Existing party PvE, dungeon bots, player battles, movement and Ground.mmg pathing are unchanged.
+- Targeted gamelogic compile PASS: BUILD SUCCESSFUL, 5/5 tasks.
+- Full production gate PASS: BUILD SUCCESSFUL, 21/21 tasks.
+- Gameplay commit: 9ea2ec3 Run real headless PvE for world simbots.
+- Production restart clean: WorldSimBot started 2026-10-07 20:23:32; Netty 0.0.0.0:6613 ready; TCP 6613 PASS; HEAD 9ea2ec3.
+- Runtime encounter validation pending: while a real player stays on a MineData map, watch for `WorldSimBot solo PvE started`, `WorldSimBot headless PvE start/end`, and `WorldSimBot solo PvE finished` with fight id, win/loss and round count.
