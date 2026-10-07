@@ -4421,3 +4421,27 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - User-side PowerShell / Windows OpenSSH is healthy and should be preferred over typing the full `Administrator@192.168.1.69` target.
 - ChatGPT automation caveat: Windows `ssh.exe` launched from the Remote Desktop Commander non-interactive process exited code 1 with no output even though the same command works manually. For automated remote work, keep using the proven Git Bash SSH transport or upload/run Python scripts on production when quoting becomes complex.
 - Do not interpret the OpenSSH post-quantum key-exchange warning as a connection failure; it is only a warning.
+
+
+### 2026-10-07 — HouseBoard/Profile UI cleanup
+- User reported UIStatus -> Profile / Ca nhan tu van showing overlapping placeholder text, empty gift slots and 0-friendly fallback rows.
+- Authoritative client trace:
+  - UIStatus Profile opens HouseBoard through C:105-001.
+  - HouseBoard profile fields are signature/impression/favorite/area/hobby/sign/birth/charm.
+  - Empty profile fields use string.Get(23367).
+  - IOS_TextData_C.dat key 23367 was Vietnamese 'Ẩn chọn có thể thay đổi', too long for this layout and repeated across multiple fields, causing overlap.
+  - Gift wall intentionally has 8 slots; empty slots render the default blue placeholder.
+  - If the returned friend list is empty, HouseBoard.SetFriendList() intentionally inserts 4 random follow-NPC rows with friendly=0; this is DVT client fallback, not server corruption.
+- Client localization patch applied to the active testing client:
+  - C:\Users\QT\Downloads\TSNPCVN_9PET_STAGING\AssetBundles\Data\IOS_TextData_C.dat
+  - C:\Users\QT\Downloads\TSNPCVN_9PET_STAGING\tsnpc_Data\StreamingAssets\Data\TextData_C.dat
+  - key 23367 changed to 'Chưa thiết lập'; Lua code was not modified.
+- Server S:105-001 friend wire fixed to match actual Lua parser: Lua HouseBoard.SetProfileAndFriendData() reads friendly with ReadInt16(), so HouseBoardResponseSender now writes Int16/Short instead of Int32.
+- MAX_FRIENDLY is 9999, so Int16 is sufficient.
+- Existing regression test had been based on stale protocol comments and expected 4-byte friendly; updated to actual Lua wire using Int16 and value 9999.
+- Profile editing/persistence C:105-002 remains implemented for signature/impression/favorite/sign/birth/area/hobby; no fake profile, gifts, charm or friends are synthesized.
+- Targeted app compile PASS: 13/13 tasks.
+- Full production gate PASS: 21/21 tasks.
+- Gameplay/server commit: 20457e9 Fix HouseBoard friend wire for Lua client.
+- Production restarted; TCP 6613 PASS.
+- Client visual/runtime confirmation pending after fully restarting the client so TextData reloads.
