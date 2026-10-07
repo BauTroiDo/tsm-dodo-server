@@ -172,7 +172,7 @@ class DungeonHandler(
             dungeonHandlerLogger.info {
                 "PvP lobby claimed: room=${room.id} player=${session.characterName} mode=${pvpClaim.mode}"
             }
-        } else if (def.kind == DungeonSystem.KIND_NORMAL_MULTIPLAYER && def.maxPlayer > 1) {
+        } else if (TeamDungeonBotPolicy.supportsLobbyFill(def.kind) && def.maxPlayer > 1) {
             scheduleTeamDungeonLobbyFill(room.id)
         }
     }
