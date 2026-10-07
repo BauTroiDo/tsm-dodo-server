@@ -347,6 +347,7 @@ class BattleManager(
         room: DungeonRoomState,
         enemyIds: List<Int>,
         objective: DvtWeeklyRoundObjective.Objective,
+        botCount: Int = 0,
     ): Boolean {
         if (!room.started || room.members.isEmpty() || room.members.size > BattleConstants.MAX_ROW) return false
         if (enemyIds.size != BattleConstants.MAX_ROW * 2 || enemyIds.distinct().size != enemyIds.size) return false
@@ -398,6 +399,65 @@ class BattleManager(
                         row = row,
                     )
                 )
+            }
+        }
+
+        if (room.members.size == 1 && botCount > 0) {
+            val template = room.members.values.first().session
+            val charId = template.roleId.toLong()
+            repeat(botCount.coerceAtMost(BattleConstants.MAX_ROW - room.members.size)) { index ->
+                val row = room.members.size + index
+                val profile = TeamDungeonBotPolicy.profile(index)
+                val botRoleId = nextBotRoleId.getAndDecrement()
+                val petDef = npcDefs[profile.petNpcId]
+                battle.addFighter(
+                    createPlayerFighter(
+                        session = template,
+                        col = if (petDef == null) BattleConstants.PLAYER_FRONT_COL else BattleConstants.PLAYER_BACK_COL,
+                        row = row,
+                        kind = EHuman.AUTOMANUAL_PLAYER,
+                        roleIdOverride = botRoleId,
+                        nameOverride = profile.name,
+                        restoreFull = true,
+                        hairOverride = ((template.hair + profile.hairOffset - 1) % 8) + 1,
+                        color1Xor = profile.color1Xor,
+                        color2Xor = profile.color2Xor,
+                        equipItemIdsOverride = profile.outfitItemIds.takeIf { it.isNotEmpty() },
+                    )
+                )
+                if (petDef != null) {
+                    val npcProfile = NpcBattleProfileCalc.from(petDef, skillDefs)
+                    val petData = FollowNpcData(
+                        slotIndex = 0,
+                        npcId = profile.petNpcId,
+                        name = petDef.name,
+                        level = npcProfile.level,
+                        hp = npcProfile.maxHp,
+                        sp = npcProfile.maxSp.toInt(),
+                        atk = npcProfile.atk,
+                        def = npcProfile.def,
+                        agi = npcProfile.agi,
+                        intelligence = npcProfile.intelligence,
+                        skill1Lv = petDef.skills.getOrNull(0)?.let { npcProfile.skillLevels[it] } ?: 0,
+                        skill2Lv = petDef.skills.getOrNull(1)?.let { npcProfile.skillLevels[it] } ?: 0,
+                        skill3Lv = petDef.skills.getOrNull(2)?.let { npcProfile.skillLevels[it] } ?: 0,
+                    )
+                    battle.addFighter(
+                        createFollowNpcFighterInternal(
+                            npcDef = petDef,
+                            petData = petData,
+                            masterId = botRoleId,
+                            ownerCharacterId = charId,
+                            npcDataId = profile.petNpcId,
+                            followSlot = 0,
+                            col = BattleConstants.PLAYER_FRONT_COL,
+                            row = row,
+                            kind = EHuman.AUTOMANUAL_NPC,
+                            roleIdOverride = profile.petNpcId.toLong(),
+                            restoreFull = true,
+                        )
+                    )
+                }
             }
         }
 

@@ -697,17 +697,24 @@ class DungeonHandler(
             val started = rooms.commitStart(room.id, session.playerId) ?: return@launch
             val def = system.getDef(started.dungeonId) ?: return@launch
 
+            val teamBots = teamRoomBots[started.id].orEmpty()
             if (def.kind == DungeonSystem.KIND_NORMAL_MULTIPLAYER) {
-                val bots = teamRoomBots[started.id].orEmpty()
                 val battle = battleManager
-                if (started.members.size == 1 && bots.isNotEmpty() && battle != null) {
+                if (started.members.size == 1 && teamBots.isNotEmpty() && battle != null) {
                     val real = started.members.values.first().session
-                    battle.configureDungeonBotAssist(real.playerId, started.instanceId, bots.size)
+                    battle.configureDungeonBotAssist(real.playerId, started.instanceId, teamBots.size)
                 } else {
                     started.members.values.forEach { member ->
                         battle?.clearDungeonBotAssist(member.session.playerId)
                     }
                 }
+            }
+            if (def.kind in setOf(
+                    DungeonSystem.KIND_NORMAL_MULTIPLAYER,
+                    DungeonSystem.KIND_WEEKLY,
+                    DungeonSystem.KIND_SOUL_WEEKLY,
+                )
+            ) {
                 clearTeamDungeonLobby(started.id, notifyMembers = false)
             }
 
@@ -743,6 +750,7 @@ class DungeonHandler(
                         started,
                         formation,
                         DvtWeeklyDungeonFormation.objective(def),
+                        botCount = if (started.members.size == 1) teamBots.size else 0,
                     )
                 ) {
                     system.clearRoomRuns(started)

@@ -66,7 +66,12 @@ object TeamDungeonBotPolicy {
     }
 
     fun visibleBotCount(kind: Int, realCount: Int, roomMaxPlayers: Int): Int {
-        if (kind != DungeonSystem.KIND_NORMAL_MULTIPLAYER) return 0
+        if (kind !in setOf(
+                DungeonSystem.KIND_NORMAL_MULTIPLAYER,
+                DungeonSystem.KIND_WEEKLY,
+                DungeonSystem.KIND_SOUL_WEEKLY,
+            )
+        ) return 0
         if (realCount != 1 || roomMaxPlayers <= 1) return 0
         return (roomMaxPlayers - realCount)
             .coerceAtMost(BattleConstants.MAX_ROW - 1)

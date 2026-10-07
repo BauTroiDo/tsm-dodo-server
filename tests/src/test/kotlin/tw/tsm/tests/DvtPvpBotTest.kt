@@ -143,9 +143,17 @@ class DvtPvpBotTest {
             )
         )
         assertEquals(
-            0,
+            4,
             TeamDungeonBotPolicy.visibleBotCount(
                 DungeonSystem.KIND_WEEKLY,
+                realCount = 1,
+                roomMaxPlayers = 5,
+            )
+        )
+        assertEquals(
+            4,
+            TeamDungeonBotPolicy.visibleBotCount(
+                DungeonSystem.KIND_SOUL_WEEKLY,
                 realCount = 1,
                 roomMaxPlayers = 5,
             )
