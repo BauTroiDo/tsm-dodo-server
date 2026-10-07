@@ -4379,3 +4379,23 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Gameplay commit: 5773573 Show native battle cloud for world simbots.
 - Production restarted; HEAD 5773573; TCP 6613 PASS.
 - Runtime visual confirmation pending user observation on a MineData map.
+
+
+### 2026-10-07 — WorldSimBot cloud retry + smooth movement
+- User runtime feedback after 5773573: bot still disappeared instead of showing native battle cloud; world movement looked jerky/stuttered.
+- Movement root cause confirmed in code: WorldSimBot tick was 900ms while each update could skip 2-4 A* cells, so clients received large position jumps roughly once per second.
+- Movement fix:
+  - TICK_MS 900 -> 180ms;
+  - FARMER/SOCIAL/IDLER max path advance 4/3/2 cells -> 2/1/1;
+  - per-behavior move cadence tightened to 180-280 / 240-380 / 360-560ms.
+- Client contract rechecked: EHuman.Players=2 is correct; S:011-004 calls RoleController:SetWar(); UniversalJmp.GetFight() is the native battle-cloud texture; random triggered battle semantics use EWar.DoingFight=23.
+- Cloud hardening:
+  - solo encounter world war state now uses DoingFight=23 instead of Event=1;
+  - S:011-004 war-state is sent twice, 120ms apart, before starting headless BattleInstance;
+  - bot remains a world entity and is protected from retire/shrink while in battle.
+- Targeted gamelogic compile PASS: 5/5 tasks.
+- Full production gate PASS: 21/21 tasks.
+- Gameplay commit: 7cbaf48 Smooth world simbots and retry battle cloud.
+- Production restarted; HEAD 7cbaf48; TCP 6613 PASS.
+- Live runtime evidence after deploy: autonomous bot on map 63000 repeatedly ran real headless fights 14/24/32/36, winning in 1-3 rounds; server-side encounter lifecycle is healthy.
+- Client visual/movement confirmation pending user retest.
