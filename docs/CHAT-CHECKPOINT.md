@@ -4405,3 +4405,19 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Movement smoothness also confirmed improved.
 - Effective gameplay baseline: movement smoothing 7cbaf48 + role re-assert cloud fix 0bcc815.
 - Headless PvE remains real server-side BattleInstance using Eve.mmg/Eve.emg MineData fight resolution, with no bot economy rewards.
+
+
+### 2026-10-07 — Production SSH access — tsm-prod alias
+- Standard production SSH alias on the user PC: `tsm-prod`.
+- Local SSH config file: `C:\Users\QT\.ssh\config`.
+- Config:
+  - `Host tsm-prod`
+  - `HostName 192.168.1.69`
+  - `User Administrator`
+  - `ServerAliveInterval 30`
+  - `ServerAliveCountMax 3`
+- Verified manually with Windows OpenSSH 9.5p1: `ssh tsm-prod "whoami"` -> `win-33r6op5go1m\administrator`.
+- Preferred user-side commands: `ssh tsm-prod`, `ssh tsm-prod "git -C C:\Server-Game\tsm_dodo status"`, and `ssh tsm-prod "git -C C:\Server-Game\tsm_dodo rev-parse --short HEAD"`.
+- User-side PowerShell / Windows OpenSSH is healthy and should be preferred over typing the full `Administrator@192.168.1.69` target.
+- ChatGPT automation caveat: Windows `ssh.exe` launched from the Remote Desktop Commander non-interactive process exited code 1 with no output even though the same command works manually. For automated remote work, keep using the proven Git Bash SSH transport or upload/run Python scripts on production when quoting becomes complex.
+- Do not interpret the OpenSSH post-quantum key-exchange warning as a connection failure; it is only a warning.
