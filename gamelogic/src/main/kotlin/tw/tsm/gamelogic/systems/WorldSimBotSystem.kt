@@ -23,6 +23,7 @@ class WorldSimBotSystem(
     itemDefs: Map<Int, ItemDef>,
 ) {
     private data class ScopeKey(val mapId: Int, val instanceId: Int)
+    private enum class Behavior { FARMER, SOCIAL, IDLER }
     private data class SimBot(
         val id: Long,
         val name: String,
@@ -33,6 +34,8 @@ class WorldSimBotSystem(
         val color1: Int,
         val color2: Int,
         val equips: IntArray,
+        val petNpcId: Int,
+        val behavior: Behavior,
         val originX: Int,
         val originY: Int,
         var x: Int,
@@ -68,7 +71,7 @@ class WorldSimBotSystem(
 
     fun start() {
         scope.launch {
-            simBotLogger.info { "WorldSimBot tầng 1 khởi động" }
+            simBotLogger.info { "WorldSimBot tầng 2 khởi động: behavior + companion" }
             while (isActive) {
                 try {
                     tick()
@@ -101,7 +104,10 @@ class WorldSimBotSystem(
             for (session in sessions) {
                 val known = seen.computeIfAbsent(session.playerId) { ConcurrentHashMap.newKeySet<Long>() }
                 for (bot in population.bots) {
-                    if (known.add(bot.id)) session.send(buildAppearPacket(bot, key.mapId))
+                    if (known.add(bot.id)) {
+                        session.send(buildAppearPacket(bot, key.mapId))
+                        if (bot.petNpcId > 0) session.send(buildPetAppearPacket(bot))
+                    }
                 }
             }
 
@@ -120,6 +126,11 @@ class WorldSimBotSystem(
             val id = nextId.getAndIncrement()
             val nameIndex = ((id xor anchor.mapId.toLong()).absoluteValue % names.size).toInt()
             val profile = (id % 4).toInt()
+            val behavior = when (index % 5) {
+                0, 1 -> Behavior.FARMER
+                2 -> Behavior.SOCIAL
+                else -> Behavior.IDLER
+            }
             population.bots += SimBot(
                 id = id,
                 name = names[nameIndex],
@@ -130,6 +141,8 @@ class WorldSimBotSystem(
                 color1 = anchor.color1 xor (0x00040810 * (profile + 1)),
                 color2 = anchor.color2 xor (0x00100408 * (profile + 1)),
                 equips = outfits.getOrElse(profile) { intArrayOf() },
+                petNpcId = if (index % 3 == 0 || index % 5 == 1) WORLD_PETS[(profile + index) % WORLD_PETS.size] else 0,
+                behavior = behavior,
                 originX = x,
                 originY = y,
                 x = x,
@@ -140,6 +153,9 @@ class WorldSimBotSystem(
         while (population.bots.size > desired) {
             val removed = population.bots.removeLast()
             seen.values.forEach { it.remove(removed.id) }
+            if (removed.petNpcId > 0) {
+                worldManager.broadcastToMap(anchor.mapId, buildPetDisappearPacket(removed.id), instanceId = 0)
+            }
             worldManager.broadcastToMap(anchor.mapId, buildDisappearPacket(removed.id), instanceId = 0)
         }
     }
@@ -149,8 +165,11 @@ class WorldSimBotSystem(
         val count = minOf(2, population.bots.size)
         repeat(count) {
             val bot = population.bots[Random.nextInt(population.bots.size)]
-            val nx = (bot.x + Random.nextInt(-36, 37)).coerceIn(bot.originX - 140, bot.originX + 140).coerceAtLeast(0)
-            val ny = (bot.y + Random.nextInt(-36, 37)).coerceIn(bot.originY - 140, bot.originY + 140).coerceAtLeast(0)
+            if (bot.behavior == Behavior.IDLER && Random.nextInt(100) < 78) return@repeat
+            val radius = if (bot.behavior == Behavior.FARMER) 240 else 110
+            val step = if (bot.behavior == Behavior.FARMER) 62 else 28
+            val nx = (bot.x + Random.nextInt(-step, step + 1)).coerceIn(bot.originX - radius, bot.originX + radius).coerceAtLeast(0)
+            val ny = (bot.y + Random.nextInt(-step, step + 1)).coerceIn(bot.originY - radius, bot.originY + radius).coerceAtLeast(0)
             bot.x = nx
             bot.y = ny
             bot.direction = Random.nextInt(0, 8)
@@ -193,6 +212,19 @@ class WorldSimBotSystem(
         return w.toByteArray()
     }
 
+    private fun buildPetAppearPacket(bot: SimBot): ByteArray =
+        PacketWriter(15)
+            .writeByte(Opcodes.FOLLOW_NPC).writeByte(1).writeByte(0)
+            .writeLongLE(bot.id).writeByte(0)
+            .writeIntLE(bot.petNpcId).writeByte(0).writeBoolean(false)
+            .toByteArray()
+
+    private fun buildPetDisappearPacket(botId: Long): ByteArray =
+        PacketWriter(13)
+            .writeByte(Opcodes.FOLLOW_NPC).writeByte(2).writeByte(0)
+            .writeLongLE(botId).writeByte(0).writeBoolean(false)
+            .toByteArray()
+
     private fun buildMovePacket(bot: SimBot): ByteArray =
         PacketWriter(16)
             .writeByte(Opcodes.MOVE).writeByte(1).writeByte(0)
@@ -233,6 +265,7 @@ class WorldSimBotSystem(
     }
 
     companion object {
+        private val WORLD_PETS = intArrayOf(40428, 40429, 40430, 40431)
         const val TICK_MS = 4_000L
     }
 }
