@@ -5,6 +5,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import tw.tsm.domain.constants.EHuman
+import tw.tsm.domain.constants.EWar
 import tw.tsm.domain.constants.MountConstants
 import tw.tsm.domain.constants.Opcodes
 import tw.tsm.domain.data.ItemDef
@@ -266,7 +268,9 @@ class WorldSimBotSystem(
             ).also { bot -> if (walkGrid != null) chooseNextDestination(bot, population, sceneData, walkGrid) }
         }
         while (population.bots.size > desired) {
-            val removeIndex = population.bots.indexOfLast { !partySystem.isInParty(it.id) }
+            val removeIndex = population.bots.indexOfLast {
+                !partySystem.isInParty(it.id) && it.inBattleUntil <= System.currentTimeMillis()
+            }
             if (removeIndex < 0) break
             val removed = population.bots.removeAt(removeIndex)
             seen.values.forEach { it.remove(removed.id) }
@@ -283,6 +287,7 @@ class WorldSimBotSystem(
         while (iterator.hasNext()) {
             val bot = iterator.next()
             if (partySystem.isInParty(bot.id)) continue
+            if (bot.inBattleUntil > now) continue
             if (now < bot.retireAt) continue
             if (bot.petNpcId > 0) {
                 worldManager.broadcastToMap(key.mapId, buildPetDisappearPacket(bot.id), instanceId = key.instanceId)
@@ -410,14 +415,20 @@ class WorldSimBotSystem(
         bot.encounterDistancePx = 0
         bot.inBattleUntil = Long.MAX_VALUE
         bot.path.clear()
-        if (bot.petNpcId > 0) {
-            worldManager.broadcastToMap(key.mapId, buildPetDisappearPacket(bot.id), instanceId = key.instanceId)
-        }
-        worldManager.broadcastToMap(key.mapId, buildDisappearPacket(bot.id), instanceId = key.instanceId)
-        seen.values.forEach { it.remove(bot.id) }
+
+        // DVT native world battle visual: S:011-004 -> RoleController:SetWar().
+        // Client swaps the player body to UniversalJmp.GetFight() and automatically
+        // hides the follower while war != EWar.None. Keep the entity in world so
+        // observers see the same battle cloud as a real player.
+        worldManager.broadcastToMap(
+            key.mapId,
+            buildWarStatePacket(bot.id, EWar.EVENT),
+            instanceId = key.instanceId,
+        )
 
         val profile = battleProfile(bot)
         scope.launch {
+            delay(SOLO_WAR_VISUAL_LEAD_MS)
             val started = battleManager.createWorldSimBotPveBattle(
                 template = template,
                 profile = profile,
@@ -427,6 +438,14 @@ class WorldSimBotSystem(
                 bot.inBattleUntil = finishedAt + SOLO_RETURN_DELAY_MS
                 bot.encounterCooldownUntil = finishedAt + SOLO_ENCOUNTER_COOLDOWN_MS
                 bot.path.clear()
+                scope.launch {
+                    delay(SOLO_RETURN_DELAY_MS)
+                    worldManager.broadcastToMap(
+                        key.mapId,
+                        buildWarStatePacket(bot.id, EWar.NONE),
+                        instanceId = key.instanceId,
+                    )
+                }
                 simBotLogger.info {
                     "WorldSimBot solo PvE finished: bot=" + bot.name +
                         " id=" + bot.id + " map=" + key.mapId +
@@ -437,6 +456,11 @@ class WorldSimBotSystem(
             if (!started) {
                 bot.inBattleUntil = 0L
                 bot.encounterCooldownUntil = System.currentTimeMillis() + SOLO_RETRY_DELAY_MS
+                worldManager.broadcastToMap(
+                    key.mapId,
+                    buildWarStatePacket(bot.id, EWar.NONE),
+                    instanceId = key.instanceId,
+                )
                 simBotLogger.debug {
                     "WorldSimBot solo PvE skipped: bot=" + bot.name +
                         " map=" + key.mapId + " mine=" + mine.id
@@ -733,6 +757,15 @@ class WorldSimBotSystem(
             .writeShortLE(bot.x).writeShortLE(bot.y)
             .toByteArray()
 
+    private fun buildWarStatePacket(botId: Long, warKind: Int): ByteArray =
+        PacketWriter(15)
+            .writeByte(Opcodes.BATTLE_MANAGE).writeByte(4).writeByte(0)
+            .writeByte(EHuman.PLAYERS)
+            .writeLongLE(botId)
+            .writeShortLE(0)
+            .writeByte(warKind)
+            .toByteArray()
+
     private fun buildDisappearPacket(botId: Long): ByteArray =
         PacketWriter(11)
             .writeByte(Opcodes.LOGIN).writeByte(1).writeByte(0)
@@ -791,6 +824,7 @@ class WorldSimBotSystem(
         private const val TICK_MS = 900L
         private const val SOLO_ENCOUNTER_DISTANCE_PX = 200
         private const val SOLO_ENCOUNTER_COOLDOWN_MS = 27_000L
+        private const val SOLO_WAR_VISUAL_LEAD_MS = 650L
         private const val SOLO_RETURN_DELAY_MS = 1_200L
         private const val SOLO_RETRY_DELAY_MS = 5_000L
         private val PARTY_FOLLOW_OFFSETS = listOf(
