@@ -5,9 +5,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import tw.tsm.domain.constants.MountConstants
 import tw.tsm.domain.constants.Opcodes
 import tw.tsm.domain.data.ItemDef
 import tw.tsm.domain.data.MapWalkGrid
+import tw.tsm.domain.data.MountDef
+import tw.tsm.domain.data.NpcDef
 import tw.tsm.domain.data.SceneEveData
 import tw.tsm.domain.enums.ChatChannel
 import tw.tsm.domain.interfaces.GameSession
@@ -26,6 +29,8 @@ class WorldSimBotSystem(
     itemDefs: Map<Int, ItemDef>,
     private val eveData: Map<Int, SceneEveData>,
     private val mapWalkGrids: Map<Int, MapWalkGrid>,
+    mountDefs: Map<Int, MountDef>,
+    npcDefs: Map<Int, NpcDef>,
 ) {
     private data class ScopeKey(val mapId: Int, val instanceId: Int)
     private enum class Behavior { FARMER, SOCIAL, IDLER }
@@ -41,6 +46,8 @@ class WorldSimBotSystem(
         val color2: Int,
         val equips: IntArray,
         val petNpcId: Int,
+        val mountNpcId: Int,
+        val mountLevel: Int,
         val behavior: Behavior,
         val originX: Int,
         val originY: Int,
@@ -65,6 +72,7 @@ class WorldSimBotSystem(
     private val populations = ConcurrentHashMap<ScopeKey, Population>()
     private val seen = ConcurrentHashMap<Long, MutableSet<Long>>()
     private val outfits = buildOutfits(itemDefs)
+    private val mountNpcIds = mountDefs.keys.filter { it in npcDefs }.sorted()
 
     private val names = listOf(
         "Vân Mộng", "Dạ Phong", "Tử Yên", "Bạch Vũ", "Thiên Lam", "Hàn Nguyệt",
@@ -158,6 +166,7 @@ class WorldSimBotSystem(
                 2 -> Behavior.SOCIAL
                 else -> Behavior.IDLER
             }
+            val mountNpcId = chooseMountNpcId(id, index, behavior)
             population.bots += SimBot(
                 id = id,
                 name = names[nameIndex],
@@ -169,6 +178,8 @@ class WorldSimBotSystem(
                 color2 = anchor.color2 xor (0x00100408 * (profile + 1)),
                 equips = outfits.getOrElse(profile) { intArrayOf() },
                 petNpcId = if (index % 3 == 0 || index % 5 == 1) WORLD_PETS[(profile + index) % WORLD_PETS.size] else 0,
+                mountNpcId = mountNpcId,
+                mountLevel = if (mountNpcId > 0) 1 else 0,
                 behavior = behavior,
                 originX = x,
                 originY = y,
@@ -395,6 +406,28 @@ class WorldSimBotSystem(
         else -> 12
     }
 
+    private fun chooseMountNpcId(botId: Long, index: Int, behavior: Behavior): Int {
+        if (mountNpcIds.isEmpty()) return 0
+
+        val shouldMount = when (behavior) {
+            Behavior.FARMER -> index % 3 != 2
+            Behavior.SOCIAL -> index % 2 == 0
+            Behavior.IDLER -> index % 4 == 0
+        }
+        if (!shouldMount) return 0
+
+        val seed = (botId xor (index.toLong() shl 17)).absoluteValue
+        val defaultMount = MountConstants.DEFAULT_MOUNT_NPC_ID
+
+        // DVT tutorial uses the default white horse. Keep it common while still
+        // allowing other valid DVT mounts so the simulated population is varied.
+        if (defaultMount in mountNpcIds && seed % 100L < 45L) {
+            return defaultMount
+        }
+
+        return mountNpcIds[(seed % mountNpcIds.size.toLong()).toInt()]
+    }
+
     private fun buildAppearPacket(bot: SimBot, mapId: Int): ByteArray {
         val w = PacketWriter(128)
             .writeByte(Opcodes.CHARACTER).writeByte(0).writeByte(0)
@@ -407,7 +440,7 @@ class WorldSimBotSystem(
             .writeShortLE(0).writeByte(0).writeByte(1).writeByte(0).writeByte(1)
             .writeByte(0).writeByte(0)
             .writeBig5WithByteLen(bot.name)
-            .writeShortLE(0).writeShortLE(0).writeByte(0)
+            .writeShortLE(0).writeShortLE(bot.mountNpcId).writeByte(bot.mountLevel)
         w.writeByte(bot.equips.size)
         bot.equips.forEach { w.writeShortLE(it) }
         w.writeShortLE(0).writeUIntLE(0).writeByte(0)

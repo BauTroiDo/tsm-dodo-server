@@ -584,7 +584,8 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
         WorldSimBotSystem(
             get<WorldManager>(), get<CoroutineScope>(),
             get<GameDataManager>().itemDefs, get<GameDataManager>().eveData,
-            get<GameDataManager>().mapWalkGrids
+            get<GameDataManager>().mapWalkGrids,
+            get<GameDataManager>().mountDefs, get<GameDataManager>().npcDefs,
         )
     }
     single { LoginService(get(), get(), get(), get(), get(), get<PointSystem>(), get<PlayerCurrencySystem>(), get(), get(), get<EveEventStateMachine>(), get(), get(), get(), get(), get(), get<AstrolabeSystem>(), get<SoulSystem>(), get(), get<SkillRepository>(), get<RoleCountSystem>(), get<FlyPointSystem>(), get<MailSystem>(), get<FriendSystem>(), get<GameDataManager>().eveData, get<GameDataManager>().itemDefs, get<JiugonggeSystem>(), get<ActivityScheduleSystem>(), get<DailyProgressSystem>(), get<CollectionSystem>(), get<GameDataManager>().sacredEquipPrimaryDefs, get<MessageBoardRepository>()) }
