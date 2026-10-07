@@ -4273,3 +4273,26 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
   - 6613 LISTEN PID 2272.
 - GitHub note: HTTPS push/fetch from the production SSH session is blocked by Windows Git Credential Manager because the session has no TTY. Do not force-update GitHub history from a connector without reconciling remote main first.
 - Visual runtime status: pending user confirmation that mounts render naturally in the client.
+
+## 2026-10-07 — WorldSimBot PvE + real-player party production
+
+- User visually confirmed WorldSimBot mounts PASS, then requested autonomous monster encounters and partying with real players.
+- DVT evidence / reused server contracts:
+  - world encounter area comes from Eve.emg MineData through MineEncounterSystem.selectMine;
+  - party stays on existing mainKind 13 PartySystem/PartyHandler lifecycle;
+  - real party combat uses existing BattleManager fighter kinds AutomanualPlayer=28 and AutomanualNpc=29;
+  - BattleInstance already drives kind 28/29 through PvpBotAiPolicy, including server-side skill/target/support decisions.
+- WorldSimBot changes:
+  - FARMER bots accumulate movement only inside valid MineData and periodically enter a 7-15s solo encounter lifecycle, disappear from world, then return after cooldown;
+  - solo simulated encounters do not mint EXP/gold/drop or mutate economy;
+  - a real player can invite a same-map WorldSimBot; the bot auto-accepts through the existing PartySystem and follows the real leader using Ground.mmg A*;
+  - party bots are protected from normal simbot retire/shrink lifecycle while in a team;
+  - when the real player starts normal PvE, same-map party bots are injected into the actual BattleManager grid as kind 28, with optional kind 29 companion, and act through existing server AI;
+  - only real GameSessions are in battle.playerSessions, so rewards remain attached to real players and bots cannot receive/persist economic rewards.
+- Validation:
+  - compile gate PASS: BUILD SUCCESSFUL, 13/13 executed;
+  - full production gate PASS: BUILD SUCCESSFUL, 21/21 executed;
+  - gameplay commit: 6c4d207 Enable world simbot PvE and player parties;
+  - production restarted cleanly; HEAD 6c4d207; 6613 LISTEN PID 10548;
+  - runtime ready 2026-10-07 17:03:31, Eve 3797 scenes / IOS_Mounts 224 loaded, WorldSimBot service started.
+- Runtime/client validation pending: invite visible world bot -> party UI -> follow -> trigger normal PvE -> verify bot kind28/optional pet kind29 appears and auto-acts; verify kick/leave cleanup.
