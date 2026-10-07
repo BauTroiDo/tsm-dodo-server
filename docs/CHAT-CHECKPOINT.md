@@ -4330,3 +4330,18 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Gameplay commit: 6cbba63 Diversify simbot outfits pets and mounts.
 - Production ready 2026-10-07 18:30:31; Netty 0.0.0.0:6613 ready and TCP check PASS.
 - Visual runtime validation pending user confirmation after relog/map refresh.
+
+
+### 2026-10-07 — WorldSimBot expanded pet pool
+- User requested more pet variety after confirming outfit/mount/party behavior acceptable.
+- Audited IOS_Npc_C.dat (8427 records) using the same NpcDatLoader contract as the server.
+- Existing proven pets 40428..40431 are kind=31, canBeCatch=true, valid models, combat-ready.
+- Selected 29 high-level pet candidates from the same kind=31/catchable family, mostly level 150-200 and rarity 3-5.
+- Runtime validates every configured pet against npcDefs: kind=31, canBeCatch, picId>0, level>0, hpBase>0. Missing/invalid IDs are excluded safely.
+- Weighted distribution: 70% common high-grade pool, 22% rare pool, 8% legendary pool.
+- Common pool includes Hạ Hầu Đôn/Uyên, Trương Cáp, Bàng Đức, Tuân Úc, Hứa Chử, Điển Vi, Quách Gia, Triệu Vân, Trương Phi, Quan Vũ, Hoàng Trung, Mã Siêu, Lữ Mông, Chu Thái, Cam Ninh, Thái Sử Từ, Chu Du.
+- Rare/legendary pools include Lục Tốn, Tả Từ, Vu Cát, Gia Cát Lượng, Tư Mã Ý and higher-tier level-200 variants.
+- Compile PASS; full production test build PASS 21/21.
+- Gameplay commit: 6e61a95 Expand world simbot pet variety.
+- Production restarted and TCP 6613 reachable.
+- Runtime visual validation pending.
