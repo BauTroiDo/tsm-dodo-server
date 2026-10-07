@@ -94,6 +94,8 @@ class BattleManager(
     @Volatile
     var worldPartyBotProvider: ((GameSession) -> List<WorldSimBotBattleProfile>)? = null
 
+    private val headlessWorldBotCallbacks =
+        ConcurrentHashMap<Long, (Boolean, Int) -> Unit>()
 
     private data class DungeonBotAssist(val instanceId: Int, val botCount: Int)
     private val dungeonBotAssists = ConcurrentHashMap<Long, DungeonBotAssist>()
@@ -422,6 +424,112 @@ class BattleManager(
         scope.launch {
             runBattleLoop(battle)
         }
+    }
+
+    /**
+     * Headless PvE for autonomous WorldSimBot encounters.
+     * Uses the normal battle core but has no real GameSession participant,
+     * sends no battle packets, and grants no rewards/capture.
+     */
+    suspend fun createWorldSimBotPveBattle(
+        template: GameSession,
+        profile: WorldSimBotBattleProfile,
+        fightData: EveFightData,
+        terrain: Int = 101,
+        onFinished: (Boolean, Int) -> Unit,
+    ): Boolean {
+        val involvedNpcs = mutableListOf<Pair<Int, NpcDef>>()
+        val battleId = nextBattleId.getAndIncrement()
+        val battle = BattleInstance(
+            battleId = battleId,
+            warType = EWar.EVENT,
+            terrain = if (terrain == 0) 101 else terrain,
+            eventNo = fightData.eveNo,
+            grid = BattleGrid(),
+            skillResolver = BattleSkillResolver(skillDefs, exclusiveSkillDefs),
+            itemResolver = battleItemResolver,
+            involvedNpcDefs = involvedNpcs,
+            suppressGenericRewards = true,
+        )
+        battle.linkToResult = fightData.linkToResult
+
+        val petDef = npcDefs[profile.petNpcId]
+        battle.addFighter(
+            createPlayerFighter(
+                session = template,
+                col = if (petDef == null) BattleConstants.PLAYER_FRONT_COL else BattleConstants.PLAYER_BACK_COL,
+                row = 0,
+                kind = EHuman.AUTOMANUAL_PLAYER,
+                roleIdOverride = profile.roleId,
+                nameOverride = profile.name,
+                restoreFull = true,
+                hairOverride = profile.hair,
+                color1Xor = template.color1 xor profile.color1,
+                color2Xor = template.color2 xor profile.color2,
+                equipItemIdsOverride = profile.equipItemIds.takeIf { it.isNotEmpty() },
+            )
+        )
+
+        if (petDef != null) {
+            val npcProfile = NpcBattleProfileCalc.from(petDef, skillDefs)
+            val petData = FollowNpcData(
+                slotIndex = 0,
+                npcId = profile.petNpcId,
+                name = petDef.name,
+                level = npcProfile.level,
+                hp = npcProfile.maxHp,
+                sp = npcProfile.maxSp.toInt(),
+                atk = npcProfile.atk,
+                def = npcProfile.def,
+                agi = npcProfile.agi,
+                intelligence = npcProfile.intelligence,
+                skill1Lv = petDef.skills.getOrNull(0)?.let { npcProfile.skillLevels[it] } ?: 0,
+                skill2Lv = petDef.skills.getOrNull(1)?.let { npcProfile.skillLevels[it] } ?: 0,
+                skill3Lv = petDef.skills.getOrNull(2)?.let { npcProfile.skillLevels[it] } ?: 0,
+            )
+            battle.addFighter(
+                createFollowNpcFighterInternal(
+                    npcDef = petDef,
+                    petData = petData,
+                    masterId = profile.roleId,
+                    ownerCharacterId = template.roleId.toLong(),
+                    npcDataId = profile.petNpcId,
+                    followSlot = 0,
+                    col = BattleConstants.PLAYER_FRONT_COL,
+                    row = 0,
+                    kind = EHuman.AUTOMANUAL_NPC,
+                    roleIdOverride = nextBotRoleId.getAndDecrement(),
+                    restoreFull = true,
+                )
+            )
+        }
+
+        addEveEnemySide(
+            fightData.leftEnemies,
+            battle,
+            battleId,
+            involvedNpcs,
+            frontCol = BattleConstants.ENEMY_FRONT_COL,
+            backCol = BattleConstants.ENEMY_BACK_COL,
+        )
+        addEveEnemySide(
+            fightData.rightEnemies,
+            battle,
+            battleId,
+            involvedNpcs,
+            frontCol = BattleConstants.PLAYER_FRONT_COL,
+            backCol = BattleConstants.PLAYER_BACK_COL,
+        )
+        if (battle.grid.getAliveEnemySide().isEmpty()) return false
+
+        battle.catchOwnerValidator = { _, _ -> false }
+        battles[battleId] = battle
+        headlessWorldBotCallbacks[battleId] = onFinished
+        logger.info { "WorldSimBot headless PvE start battle=" + battleId +
+            " bot=" + profile.name + " fight=" + fightData.eveNo +
+            " enemies=" + involvedNpcs.size }
+        scope.launch { runBattleLoop(battle) }
+        return true
     }
 
     /**
@@ -1557,6 +1665,14 @@ class BattleManager(
      */
     private suspend fun handleBattleEnd(battle: BattleInstance, endResult: BattleEndResult) {
         battle.state = BattleInstance.State.FINISHED
+
+        headlessWorldBotCallbacks.remove(battle.battleId)?.let { callback ->
+            cleanupBattle(battle)
+            callback(endResult.playerWin, battle.currentRound)
+            logger.info { "WorldSimBot headless PvE end battle=" + battle.battleId +
+                " win=" + endResult.playerWin + " rounds=" + battle.currentRound }
+            return
+        }
         logger.info { "Trận ${battle.battleId} kết thúc: người chơi${if (endResult.playerWin) "勝利" else "失敗"}" }
 
         // Mobile DVT: Honor = Calc.GetHonor(KillNum), hiện công thức 1:1.
@@ -2067,6 +2183,12 @@ class BattleManager(
     /** Fail closed: release battle and event locks without granting a win. */
     private fun abortFailedBattle(battle: BattleInstance) {
         battle.state = BattleInstance.State.FINISHED
+        headlessWorldBotCallbacks.remove(battle.battleId)?.let { callback ->
+            cleanupBattle(battle)
+            callback(false, battle.currentRound)
+            logger.warn { "WorldSimBot headless PvE stopped battle=" + battle.battleId }
+            return
+        }
         cleanupBattle(battle)
         for ((playerId, session) in battle.playerSessions) {
             responseSender.sendBattleEnd(session, playerId, 0)

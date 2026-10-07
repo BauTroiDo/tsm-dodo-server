@@ -30,8 +30,9 @@ class WorldSimBotSystem(
     private val eveData: Map<Int, SceneEveData>,
     private val mapWalkGrids: Map<Int, MapWalkGrid>,
     mountDefs: Map<Int, MountDef>,
-    npcDefs: Map<Int, NpcDef>,
+    private val npcDefs: Map<Int, NpcDef>,
     private val partySystem: PartySystem,
+    private val battleManager: BattleManager,
 ) {
     private data class ScopeKey(val mapId: Int, val instanceId: Int)
     private enum class Behavior { FARMER, SOCIAL, IDLER }
@@ -398,19 +399,77 @@ class WorldSimBotSystem(
         bot.encounterDistancePx += movedPx.coerceAtMost(80)
         if (bot.encounterDistancePx < SOLO_ENCOUNTER_DISTANCE_PX) return
 
+        val fightData = resolveMineFight(scene, mine.events) ?: return
+        val template = worldManager.getOnlineSessions().firstOrNull {
+            it.loginFinished &&
+                it.mapId == key.mapId &&
+                it.instanceId == key.instanceId &&
+                it.battleId == 0L
+        } ?: return
+
         bot.encounterDistancePx = 0
-        bot.inBattleUntil = now + Random.nextLong(SOLO_BATTLE_MIN_MS, SOLO_BATTLE_MAX_MS + 1)
+        bot.inBattleUntil = Long.MAX_VALUE
         bot.path.clear()
         if (bot.petNpcId > 0) {
             worldManager.broadcastToMap(key.mapId, buildPetDisappearPacket(bot.id), instanceId = key.instanceId)
         }
         worldManager.broadcastToMap(key.mapId, buildDisappearPacket(bot.id), instanceId = key.instanceId)
         seen.values.forEach { it.remove(bot.id) }
-        simBotLogger.debug {
-            "WorldSimBot solo encounter: bot=" + bot.name + " id=" + bot.id +
-                " map=" + key.mapId + " mine=" + mine.id
+
+        val profile = battleProfile(bot)
+        scope.launch {
+            val started = battleManager.createWorldSimBotPveBattle(
+                template = template,
+                profile = profile,
+                fightData = fightData,
+            ) { win, rounds ->
+                val finishedAt = System.currentTimeMillis()
+                bot.inBattleUntil = finishedAt + SOLO_RETURN_DELAY_MS
+                bot.encounterCooldownUntil = finishedAt + SOLO_ENCOUNTER_COOLDOWN_MS
+                bot.path.clear()
+                simBotLogger.info {
+                    "WorldSimBot solo PvE finished: bot=" + bot.name +
+                        " id=" + bot.id + " map=" + key.mapId +
+                        " fight=" + fightData.eveNo + " win=" + win +
+                        " rounds=" + rounds
+                }
+            }
+            if (!started) {
+                bot.inBattleUntil = 0L
+                bot.encounterCooldownUntil = System.currentTimeMillis() + SOLO_RETRY_DELAY_MS
+                simBotLogger.debug {
+                    "WorldSimBot solo PvE skipped: bot=" + bot.name +
+                        " map=" + key.mapId + " mine=" + mine.id
+                }
+            } else {
+                simBotLogger.info {
+                    "WorldSimBot solo PvE started: bot=" + bot.name +
+                        " id=" + bot.id + " map=" + key.mapId +
+                        " mine=" + mine.id + " fight=" + fightData.eveNo
+                }
+            }
         }
     }
+
+    private fun resolveMineFight(scene: SceneEveData, eventIds: List<Int>) =
+        eventIds.asSequence()
+            .mapNotNull { scene.npcEvents[it] }
+            .flatMap { it.conditions.asSequence() }
+            .filter { it.conditionClass == 0 }
+            .flatMap { it.results.asSequence() }
+            .firstNotNullOfOrNull { result ->
+                if (result.resultType == 3) scene.fightDatas[result.resultMeanNo] else null
+            }
+
+    private fun battleProfile(bot: SimBot) = WorldSimBotBattleProfile(
+        roleId = bot.id,
+        name = bot.name,
+        hair = bot.hair,
+        color1 = bot.color1,
+        color2 = bot.color2,
+        equipItemIds = bot.equips,
+        petNpcId = bot.petNpcId,
+    )
 
     private fun chooseNextDestination(
         bot: SimBot,
@@ -732,8 +791,8 @@ class WorldSimBotSystem(
         private const val TICK_MS = 900L
         private const val SOLO_ENCOUNTER_DISTANCE_PX = 200
         private const val SOLO_ENCOUNTER_COOLDOWN_MS = 27_000L
-        private const val SOLO_BATTLE_MIN_MS = 7_000L
-        private const val SOLO_BATTLE_MAX_MS = 15_000L
+        private const val SOLO_RETURN_DELAY_MS = 1_200L
+        private const val SOLO_RETRY_DELAY_MS = 5_000L
         private val PARTY_FOLLOW_OFFSETS = listOf(
             -70 to 45, 70 to 45, -95 to 95, 95 to 95,
         )

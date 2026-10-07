@@ -586,7 +586,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<GameDataManager>().itemDefs, get<GameDataManager>().eveData,
             get<GameDataManager>().mapWalkGrids,
             get<GameDataManager>().mountDefs, get<GameDataManager>().npcDefs,
-            get<PartySystem>(),
+            get<PartySystem>(), get<BattleManager>(),
         ).also { worldBots ->
             get<BattleManager>().worldPartyBotProvider = worldBots::battleProfilesFor
         }
