@@ -222,6 +222,7 @@ class WorldSimBotSystem(
             val id = nextId.getAndIncrement()
             val nameIndex = ((id xor anchor.mapId.toLong()).absoluteValue % names.size).toInt()
             val profile = (id % 4).toInt()
+            val outfitIndex = ((id xor (anchor.mapId.toLong() shl 11)).absoluteValue % outfits.size.toLong()).toInt()
             val behavior = when (index % 5) {
                 0, 1 -> Behavior.FARMER
                 2 -> Behavior.SOCIAL
@@ -237,8 +238,8 @@ class WorldSimBotSystem(
                 hair = (anchor.hair + profile + 1) and 0xFF,
                 color1 = anchor.color1 xor (0x00040810 * (profile + 1)),
                 color2 = anchor.color2 xor (0x00100408 * (profile + 1)),
-                equips = outfits.getOrElse(profile) { intArrayOf() },
-                petNpcId = if (index % 3 == 0 || index % 5 == 1) WORLD_PETS[(profile + index) % WORLD_PETS.size] else 0,
+                equips = outfits.getOrElse(outfitIndex) { intArrayOf() },
+                petNpcId = WORLD_PETS[((id + index).absoluteValue % WORLD_PETS.size.toLong()).toInt()],
                 mountNpcId = mountNpcId,
                 mountLevel = if (mountNpcId > 0) 1 else 0,
                 behavior = behavior,
@@ -588,14 +589,12 @@ class WorldSimBotSystem(
     private fun chooseMountNpcId(botId: Long, index: Int, behavior: Behavior): Int {
         if (mountNpcIds.isEmpty()) return 0
 
-        val shouldMount = when (behavior) {
-            Behavior.FARMER -> index % 3 != 2
-            Behavior.SOCIAL -> index % 2 == 0
-            Behavior.IDLER -> index % 4 == 0
+        val behaviorSalt = when (behavior) {
+            Behavior.FARMER -> 0x11L
+            Behavior.SOCIAL -> 0x2BL
+            Behavior.IDLER -> 0x45L
         }
-        if (!shouldMount) return 0
-
-        val seed = (botId xor (index.toLong() shl 17)).absoluteValue
+        val seed = (botId xor (index.toLong() shl 17) xor behaviorSalt).absoluteValue
         val defaultMount = MountConstants.DEFAULT_MOUNT_NPC_ID
 
         // DVT tutorial uses the default white horse. Keep it common while still
@@ -669,16 +668,21 @@ class WorldSimBotSystem(
                 .sorted()
                 .toList()
         }
-        if (bySlot.values.any { it.size < 4 }) return List(4) { intArrayOf() }
-        return List(4) { profile ->
+        if (bySlot.values.any { it.size < 4 }) return List(OUTFIT_PROFILE_COUNT) { intArrayOf() }
+        return List(OUTFIT_PROFILE_COUNT) { profile ->
             IntArray(5) { slot ->
                 val pool = bySlot.getValue(slot + 1)
-                pool[(profile * (pool.size / 4).coerceAtLeast(1) + slot * 7) % pool.size]
+                // Use different coprime-ish strides per equipment slot so profiles do not
+                // collapse into four repeated sets even when DAT pools have similar ordering.
+                val stride = intArrayOf(17, 23, 29, 31, 37)[slot]
+                val offset = intArrayOf(3, 11, 19, 7, 13)[slot]
+                pool[(profile * stride + offset) % pool.size]
             }
         }
     }
 
     companion object {
+        private const val OUTFIT_PROFILE_COUNT = 32
         private val WORLD_PETS = intArrayOf(40428, 40429, 40430, 40431)
         private val SPREAD_OFFSETS = listOf(
             -520 to -220, 460 to 180, -360 to 410, 580 to -360,
