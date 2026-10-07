@@ -110,12 +110,17 @@ class WorldSimBotSystem(
     }
 
     private fun tick() {
-        val realSessions = worldManager.getOnlineSessions()
-            .filter { it.loginFinished && it.mapId > 0 && it.instanceId == 0 && it.battleId == 0L }
+        val worldSessions = worldManager.getOnlineSessions()
+            .filter { it.loginFinished && it.mapId > 0 && it.instanceId == 0 }
+        val realSessions = worldSessions.filter { it.battleId == 0L }
 
+        // A player temporarily leaves the world view while a battle is running, but the
+        // map scope itself is still alive. Keep WorldSimBot population/party membership
+        // until the real session actually leaves that normal-world scope.
+        val retainedScopes = worldSessions.mapTo(hashSetOf()) { ScopeKey(it.mapId, it.instanceId) }
         val activeScopes = realSessions.groupBy { ScopeKey(it.mapId, it.instanceId) }
         migratePartyBotsToLeaders()
-        populations.keys.filter { it !in activeScopes.keys }.forEach { key ->
+        populations.keys.filter { it !in retainedScopes }.forEach { key ->
             val removed = populations.remove(key) ?: return@forEach
             removed.bots.filter { partySystem.isInParty(it.id) }.forEach { partySystem.leaveParty(it.id) }
         }
