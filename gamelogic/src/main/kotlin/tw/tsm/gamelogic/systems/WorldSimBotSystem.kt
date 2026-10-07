@@ -7,10 +7,12 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import tw.tsm.domain.constants.Opcodes
 import tw.tsm.domain.data.ItemDef
+import tw.tsm.domain.data.MapWalkGrid
 import tw.tsm.domain.data.SceneEveData
 import tw.tsm.domain.enums.ChatChannel
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.protocol.PacketWriter
+import java.util.ArrayDeque
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.absoluteValue
@@ -23,6 +25,7 @@ class WorldSimBotSystem(
     private val scope: CoroutineScope,
     itemDefs: Map<Int, ItemDef>,
     private val eveData: Map<Int, SceneEveData>,
+    private val mapWalkGrids: Map<Int, MapWalkGrid>,
 ) {
     private data class ScopeKey(val mapId: Int, val instanceId: Int)
     private enum class Behavior { FARMER, SOCIAL, IDLER }
@@ -49,6 +52,7 @@ class WorldSimBotSystem(
         var targetY: Int,
         var idleUntil: Long,
         var purpose: Purpose,
+        val path: ArrayDeque<Pair<Int, Int>>,
         var direction: Int,
     )
     private data class Population(
@@ -80,7 +84,7 @@ class WorldSimBotSystem(
 
     fun start() {
         scope.launch {
-            simBotLogger.info { "WorldSimBot tầng 2 khởi động: behavior + companion" }
+            simBotLogger.info { "WorldSimBot collision-safe khởi động: Ground.mmg A* + behavior + companion" }
             while (isActive) {
                 try {
                     tick()
@@ -105,12 +109,13 @@ class WorldSimBotSystem(
         for ((key, sessions) in activeScopes) {
             val anchor = sessions.first()
             val sceneData = eveData[key.mapId]
-            val desired = desiredCount(sessions.size)
+            val walkGrid = mapWalkGrids[key.mapId]
+            val desired = if (walkGrid != null) desiredCount(sessions.size) else 0
             val population = populations.computeIfAbsent(key) {
                 Population(mutableListOf(), System.currentTimeMillis() + Random.nextLong(35_000L, 70_000L))
             }
             reapExpiredBots(key, population)
-            ensurePopulation(population, anchor, desired, sceneData)
+            ensurePopulation(population, anchor, desired, sceneData, walkGrid)
 
             for (session in sessions) {
                 val known = seen.computeIfAbsent(session.playerId) { ConcurrentHashMap.newKeySet<Long>() }
@@ -122,17 +127,28 @@ class WorldSimBotSystem(
                 }
             }
 
-            moveSomeBots(key, population, sceneData)
+            if (walkGrid != null) moveSomeBots(key, population, sceneData, walkGrid)
             maybeChat(key, population)
         }
     }
 
-    private fun ensurePopulation(population: Population, anchor: GameSession, desired: Int, sceneData: SceneEveData?) {
+    private fun ensurePopulation(
+        population: Population,
+        anchor: GameSession,
+        desired: Int,
+        sceneData: SceneEveData?,
+        walkGrid: MapWalkGrid?
+    ) {
         while (population.bots.size < desired) {
             val index = population.bots.size
             val (dx, dy) = SPREAD_OFFSETS[index % SPREAD_OFFSETS.size]
-            val x = (anchor.x + dx).coerceIn(0, 65535)
-            val y = (anchor.y + dy).coerceIn(0, 65535)
+            val requestedX = (anchor.x + dx).coerceIn(0, 65535)
+            val requestedY = (anchor.y + dy).coerceIn(0, 65535)
+            val safeSpawn = walkGrid?.nearestWalkable(requestedX, requestedY)
+                ?: walkGrid?.nearestWalkable(anchor.x, anchor.y)
+                ?: (anchor.x to anchor.y)
+            val x = safeSpawn.first
+            val y = safeSpawn.second
             val id = nextId.getAndIncrement()
             val nameIndex = ((id xor anchor.mapId.toLong()).absoluteValue % names.size).toInt()
             val profile = (id % 4).toInt()
@@ -163,8 +179,9 @@ class WorldSimBotSystem(
                 targetY = (y + Random.nextInt(-260, 261)).coerceIn(0, 65535),
                 idleUntil = System.currentTimeMillis() + Random.nextLong(2_000L, 12_000L),
                 purpose = Purpose.ROAM,
+                path = ArrayDeque(),
                 direction = profile % 8,
-            ).also { bot -> chooseNextDestination(bot, population, sceneData) }
+            ).also { bot -> if (walkGrid != null) chooseNextDestination(bot, population, sceneData, walkGrid) }
         }
         while (population.bots.size > desired) {
             val removed = population.bots.removeLast()
@@ -191,34 +208,44 @@ class WorldSimBotSystem(
         }
     }
 
-    private fun moveSomeBots(key: ScopeKey, population: Population, sceneData: SceneEveData?) {
+    private fun moveSomeBots(
+        key: ScopeKey,
+        population: Population,
+        sceneData: SceneEveData?,
+        walkGrid: MapWalkGrid
+    ) {
         if (population.bots.isEmpty()) return
         val now = System.currentTimeMillis()
         val movers = population.bots.shuffled().take(minOf(5, population.bots.size))
         for (bot in movers) {
             if (now < bot.idleUntil) continue
 
-            val reached = kotlin.math.abs(bot.targetX - bot.x) <= 18 && kotlin.math.abs(bot.targetY - bot.y) <= 18
-            if (reached) {
-                chooseNextDestination(bot, population, sceneData)
+            if (bot.path.isEmpty()) {
+                chooseNextDestination(bot, population, sceneData, walkGrid)
                 continue
             }
 
-            val step = when (bot.behavior) {
-                Behavior.FARMER -> 72
-                Behavior.SOCIAL -> 42
-                Behavior.IDLER -> 28
+            val next = bot.path.removeFirst()
+            if (!walkGrid.isWalkablePixel(next.first, next.second)) {
+                bot.path.clear()
+                chooseNextDestination(bot, population, sceneData, walkGrid)
+                continue
             }
-            val dx = (bot.targetX - bot.x).coerceIn(-step, step)
-            val dy = (bot.targetY - bot.y).coerceIn(-step, step)
-            bot.x = (bot.x + dx).coerceIn(0, 65535)
-            bot.y = (bot.y + dy).coerceIn(0, 65535)
+            val dx = next.first - bot.x
+            val dy = next.second - bot.y
+            bot.x = next.first
+            bot.y = next.second
             bot.direction = directionFromDelta(dx, dy)
             worldManager.broadcastToMap(key.mapId, buildMovePacket(bot), instanceId = key.instanceId)
         }
     }
 
-    private fun chooseNextDestination(bot: SimBot, population: Population, sceneData: SceneEveData?) {
+    private fun chooseNextDestination(
+        bot: SimBot,
+        population: Population,
+        sceneData: SceneEveData?,
+        walkGrid: MapWalkGrid
+    ) {
         val now = System.currentTimeMillis()
         val npcPois = sceneData?.npcs?.values
             ?.filter { !it.close && !it.isHide && it.x > 0 && it.y > 0 }
@@ -294,6 +321,27 @@ class WorldSimBotSystem(
                 }
             }
         }
+
+        val safeTarget = walkGrid.nearestWalkable(bot.targetX, bot.targetY)
+        if (safeTarget == null) {
+            bot.path.clear()
+            bot.targetX = bot.x
+            bot.targetY = bot.y
+            bot.idleUntil = now + 2_000L
+            return
+        }
+
+        bot.targetX = safeTarget.first
+        bot.targetY = safeTarget.second
+        bot.path.clear()
+        val planned = walkGrid.findPathPixels(bot.x, bot.y, bot.targetX, bot.targetY)
+        if (planned.isEmpty() && (bot.x != bot.targetX || bot.y != bot.targetY)) {
+            bot.targetX = bot.x
+            bot.targetY = bot.y
+            bot.idleUntil = now + 2_000L
+            return
+        }
+        planned.forEach { bot.path.addLast(it) }
     }
 
     private fun directionFromDelta(dx: Int, dy: Int): Int = when {
@@ -403,6 +451,6 @@ class WorldSimBotSystem(
             -180 to -560, 260 to 520, 720 to 80, -700 to 120,
             90 to -720, -80 to 680, 840 to 340, -820 to -320,
         )
-        const val TICK_MS = 4_000L
+        const val TICK_MS = 1_200L
     }
 }
