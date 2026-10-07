@@ -4296,3 +4296,37 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
   - production restarted cleanly; HEAD 6c4d207; 6613 LISTEN PID 10548;
   - runtime ready 2026-10-07 17:03:31, Eve 3797 scenes / IOS_Mounts 224 loaded, WorldSimBot service started.
 - Runtime/client validation pending: invite visible world bot -> party UI -> follow -> trigger normal PvE -> verify bot kind28/optional pet kind29 appears and auto-acts; verify kick/leave cleanup.
+
+### 2026-10-07 — WorldSimBot party cross-map follow
+- Follow-up hardening after 6c4d207: party simbots now migrate with the real leader across normal-world map changes instead of becoming stale in the old population.
+- Old-map bot/pet disappear packets are emitted, the bot is placed on the nearest Ground.mmg walkable point around the leader, and normal A* following resumes on the destination map.
+- Deliberately limited to instanceId=0 so dungeon-specific bot systems remain isolated.
+- If a party bot cannot be migrated and its old scope is destroyed, PartySystem removes it to avoid a stale member entry.
+- Targeted gamelogic compile PASS; final full production gate PASS 21/21.
+- Gameplay commit: 5ef1e45 Keep party simbots across map changes.
+- Production ready 2026-10-07 17:15:08; 6613 LISTEN PID 10928.
+
+
+### 2026-10-07 — WorldSimBot party consecutive-battle lifecycle fix
+- User runtime symptom: bot joined the first PvE battle, then left/disappeared from party before the next battle.
+- Root cause: tick() built active scopes only from real sessions with battleId==0. If the party leader was the only real player on the map, entering battle made the scope look empty and called partySystem.leaveParty(bot.id).
+- Fix: logged-in normal-world sessions retain their map scope even while battleId!=0; only battleId==0 sessions receive world visibility/movement processing.
+- Disconnect/true normal-world scope exit still performs cleanup.
+- Compile PASS; full production test build PASS 21/21.
+- Gameplay commit: adc021a Keep simbot parties through battles.
+- Runtime validation from user: bot follows and enters subsequent battles OK.
+
+
+### 2026-10-07 — WorldSimBot visual variety / pet / mount
+- User confirmed party/combat lifecycle PASS and reported outfits too repetitive plus some bots had no pet and walked.
+- Root cause: only 4 outfit profiles; pet assignment was probabilistic; mount assignment intentionally left FARMER/SOCIAL/IDLER subsets on foot.
+- Fix:
+  - build 32 deterministic equipment combinations from DVT item pools fitType 1..5, only openUsed=0 items with both male/female pictures;
+  - keep original conservative sex/hair profile range; only outfit combinations are expanded;
+  - every WorldSimBot receives one of the already-proven world pet IDs 40428..40431;
+  - every WorldSimBot receives a DVT-valid mount from mountDefs∩npcDefs; default 18005 remains common, other valid mounts remain deterministic/varied.
+- Movement, Ground.mmg pathing, PvE AI and party lifecycle unchanged.
+- Compile PASS; full production test build PASS 21/21.
+- Gameplay commit: 6cbba63 Diversify simbot outfits pets and mounts.
+- Production ready 2026-10-07 18:30:31; Netty 0.0.0.0:6613 ready and TCP check PASS.
+- Visual runtime validation pending user confirmation after relog/map refresh.
