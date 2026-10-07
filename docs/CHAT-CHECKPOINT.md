@@ -4445,3 +4445,25 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Gameplay/server commit: 20457e9 Fix HouseBoard friend wire for Lua client.
 - Production restarted; TCP 6613 PASS.
 - Client visual/runtime confirmation pending after fully restarting the client so TextData reloads.
+
+
+### 2026-10-07 — WorldSimBot behavior unification
+- User observed what looked like two bot types: one smooth + battle cloud + fights, another jerky + no battle cloud/no fights, or bots only behaving correctly at first.
+- Root cause confirmed in WorldSimBotSystem, not two separate world bot systems:
+  - behaviors are FARMER / SOCIAL / IDLER;
+  - only FARMER was allowed to enter maybeStartSoloEncounter due to a hard gate;
+  - SOCIAL/IDLER also used slower movement cadence, so they visually looked like a different bot engine.
+- Fix:
+  - removed FARMER-only solo encounter gate so all WorldSimBot behaviors can trigger MineData PvE and native battle cloud;
+  - movement remains behavior-aware but all use the same smooth engine;
+  - SOCIAL max path advance 1 -> 2 cells;
+  - SOCIAL cadence 240-380ms -> 190-300ms;
+  - IDLER cadence 360-560ms -> 220-340ms;
+  - FARMER remains 180-280ms;
+  - personality differences remain only in destination/idle choices, not combat capability.
+- Existing battle-cloud role reassert and real headless BattleInstance lifecycle are unchanged.
+- Targeted gamelogic compile PASS: 5/5 tasks.
+- Full production gate PASS: 21/21 tasks.
+- Gameplay commit: 8a2e8d0 Unify world simbot movement and encounters.
+- Production restarted; TCP 6613 PASS.
+- Runtime user confirmation pending.
