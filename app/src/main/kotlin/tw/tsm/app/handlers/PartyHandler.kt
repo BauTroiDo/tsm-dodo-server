@@ -8,6 +8,7 @@ import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.gamelogic.systems.DailyProgressSystem
 import tw.tsm.gamelogic.systems.PartySystem
 import tw.tsm.gamelogic.systems.WorldManager
+import tw.tsm.gamelogic.systems.WorldSimBotSystem
 import tw.tsm.protocol.PacketReader
 
 private val logger = KotlinLogging.logger {}
@@ -25,6 +26,7 @@ class PartyHandler(
     private val dailyProgressSystem: DailyProgressSystem? = null,
     private val dungeonSystem: tw.tsm.gamelogic.systems.DungeonSystem? = null,
     private val dungeonRooms: tw.tsm.gamelogic.systems.DungeonRoomRegistry? = null,
+    private val worldSimBotSystem: WorldSimBotSystem? = null,
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.PARTY
@@ -223,9 +225,40 @@ class PartyHandler(
      *
      * Định dạng: +playerId(8)
      */
-    private fun handleInvite(session: GameSession, playerId: Long, data: ByteArray) {
+    private suspend fun handleInvite(session: GameSession, playerId: Long, data: ByteArray) {
         val reader = PacketReader(data)
         val targetId = reader.readULongLE()
+
+        val botName = worldSimBotSystem?.getBotName(targetId)
+        if (botName != null) {
+            if (!worldSimBotSystem.isBotOnSameMap(targetId, session)) {
+                responseSender.sendPartyInviteResult(session, 2, botName)
+                return
+            }
+            if (partySystem.isInParty(targetId)) {
+                responseSender.sendPartyInviteResult(session, 2, botName)
+                return
+            }
+            val currentLeaderId = partySystem.getLeaderId(playerId)
+            if (currentLeaderId > 0L && partySystem.getTeamSize(currentLeaderId) >= PartySystem.MAX_MEMBERS) {
+                responseSender.sendPartyMessage(session, 2)
+                return
+            }
+
+            val leaderId = currentLeaderId.takeIf { it > 0L } ?: playerId
+            val joined = if (currentLeaderId > 0L) {
+                partySystem.addMember(leaderId, targetId) == 0
+            } else {
+                partySystem.createParty(playerId, targetId)
+            }
+            if (!joined) return
+
+            responseSender.sendPartyInviteResult(session, 1, botName)
+            broadcastMemberJoin(leaderId, targetId)
+            dailyProgressSystem?.setConditionFlag(session, DailyProgressSystem.FLAG_FIRST_PARTY)
+            logger.info { session.characterName + " mời WorldSimBot " + botName + " vào tổ đội" }
+            return
+        }
 
         val targetSession = worldManager.getPlayerById(targetId)
         if (targetSession == null) {

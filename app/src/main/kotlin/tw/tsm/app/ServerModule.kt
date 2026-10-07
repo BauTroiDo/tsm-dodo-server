@@ -586,7 +586,10 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<GameDataManager>().itemDefs, get<GameDataManager>().eveData,
             get<GameDataManager>().mapWalkGrids,
             get<GameDataManager>().mountDefs, get<GameDataManager>().npcDefs,
-        )
+            get<PartySystem>(),
+        ).also { worldBots ->
+            get<BattleManager>().worldPartyBotProvider = worldBots::battleProfilesFor
+        }
     }
     single { LoginService(get(), get(), get(), get(), get(), get<PointSystem>(), get<PlayerCurrencySystem>(), get(), get(), get<EveEventStateMachine>(), get(), get(), get(), get(), get(), get<AstrolabeSystem>(), get<SoulSystem>(), get(), get<SkillRepository>(), get<RoleCountSystem>(), get<FlyPointSystem>(), get<MailSystem>(), get<FriendSystem>(), get<GameDataManager>().eveData, get<GameDataManager>().itemDefs, get<JiugonggeSystem>(), get<ActivityScheduleSystem>(), get<DailyProgressSystem>(), get<CollectionSystem>(), get<GameDataManager>().sacredEquipPrimaryDefs, get<MessageBoardRepository>()) }
 
@@ -684,7 +687,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { BattleCommandHandler(get()) }
     single { PlayerStatusHandler(get(), get(), get(), get(), get<GameDataManager>().titleDefs) }
     single { SkillUpgradeHandler(get(), get(), get(), get(), get<DailyProgressSystem>(), get<PetSystem>()) }
-    single { PartyHandler(get(), get(), get(), get<DailyProgressSystem>(), get<DungeonSystem>(), get<DungeonRoomRegistry>()) }
+    single { PartyHandler(get(), get(), get(), get<DailyProgressSystem>(), get<DungeonSystem>(), get<DungeonRoomRegistry>(), get<WorldSimBotSystem>()) }
     single { FollowNpcHandler(get(), get(), get()) }
     single { FollowNpcDeployHandler(get(), get(), get<CharacterRepository>(), get<DailyProgressSystem>()) }
     single { PkSettingHandler(get()) }

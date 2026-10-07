@@ -31,6 +31,7 @@ class WorldSimBotSystem(
     private val mapWalkGrids: Map<Int, MapWalkGrid>,
     mountDefs: Map<Int, MountDef>,
     npcDefs: Map<Int, NpcDef>,
+    private val partySystem: PartySystem,
 ) {
     private data class ScopeKey(val mapId: Int, val instanceId: Int)
     private enum class Behavior { FARMER, SOCIAL, IDLER }
@@ -62,6 +63,9 @@ class WorldSimBotSystem(
         val path: ArrayDeque<Pair<Int, Int>>,
         var nextMoveAt: Long,
         var direction: Int,
+        var encounterDistancePx: Int,
+        var encounterCooldownUntil: Long,
+        var inBattleUntil: Long,
     )
     private data class Population(
         val bots: MutableList<SimBot>,
@@ -128,7 +132,9 @@ class WorldSimBotSystem(
 
             for (session in sessions) {
                 val known = seen.computeIfAbsent(session.playerId) { ConcurrentHashMap.newKeySet<Long>() }
+                val now = System.currentTimeMillis()
                 for (bot in population.bots) {
+                    if (bot.inBattleUntil > now) continue
                     if (known.add(bot.id)) {
                         session.send(buildAppearPacket(bot, key.mapId))
                         if (bot.petNpcId > 0) session.send(buildPetAppearPacket(bot))
@@ -194,10 +200,15 @@ class WorldSimBotSystem(
                 path = ArrayDeque(),
                 nextMoveAt = System.currentTimeMillis() + Random.nextLong(250L, 900L),
                 direction = profile % 8,
+                encounterDistancePx = 0,
+                encounterCooldownUntil = 0L,
+                inBattleUntil = 0L,
             ).also { bot -> if (walkGrid != null) chooseNextDestination(bot, population, sceneData, walkGrid) }
         }
         while (population.bots.size > desired) {
-            val removed = population.bots.removeLast()
+            val removeIndex = population.bots.indexOfLast { !partySystem.isInParty(it.id) }
+            if (removeIndex < 0) break
+            val removed = population.bots.removeAt(removeIndex)
             seen.values.forEach { it.remove(removed.id) }
             if (removed.petNpcId > 0) {
                 worldManager.broadcastToMap(anchor.mapId, buildPetDisappearPacket(removed.id), instanceId = 0)
@@ -211,6 +222,7 @@ class WorldSimBotSystem(
         val iterator = population.bots.iterator()
         while (iterator.hasNext()) {
             val bot = iterator.next()
+            if (partySystem.isInParty(bot.id)) continue
             if (now < bot.retireAt) continue
             if (bot.petNpcId > 0) {
                 worldManager.broadcastToMap(key.mapId, buildPetDisappearPacket(bot.id), instanceId = key.instanceId)
@@ -230,6 +242,37 @@ class WorldSimBotSystem(
         if (population.bots.isEmpty()) return
         val now = System.currentTimeMillis()
         for (bot in population.bots) {
+            if (bot.inBattleUntil > 0L) {
+                if (now < bot.inBattleUntil) continue
+                bot.inBattleUntil = 0L
+                bot.encounterCooldownUntil = now + SOLO_ENCOUNTER_COOLDOWN_MS
+                bot.encounterDistancePx = 0
+                bot.idleUntil = now + Random.nextLong(800L, 2_200L)
+                continue
+            }
+
+            val leaderId = partySystem.getLeaderId(bot.id)
+            val partyLeader = if (leaderId > 0L && leaderId != bot.id) worldManager.getPlayerById(leaderId) else null
+            if (partyLeader != null && partyLeader.mapId == key.mapId && partyLeader.instanceId == key.instanceId) {
+                val offsetIndex = (bot.id.absoluteValue % PARTY_FOLLOW_OFFSETS.size).toInt()
+                val offset = PARTY_FOLLOW_OFFSETS[offsetIndex]
+                val followPoint = walkGrid.nearestWalkable(
+                    (partyLeader.x + offset.first).coerceIn(0, 65535),
+                    (partyLeader.y + offset.second).coerceIn(0, 65535),
+                )
+                if (followPoint != null) {
+                    val needsNewPath = bot.path.isEmpty() ||
+                        kotlin.math.abs(bot.targetX - followPoint.first) + kotlin.math.abs(bot.targetY - followPoint.second) > 80
+                    if (needsNewPath) {
+                        bot.targetX = followPoint.first
+                        bot.targetY = followPoint.second
+                        bot.purpose = Purpose.ROAM
+                        bot.path.clear()
+                        walkGrid.findPathPixels(bot.x, bot.y, bot.targetX, bot.targetY).forEach { bot.path.addLast(it) }
+                    }
+                }
+            }
+
             if (now < bot.idleUntil || now < bot.nextMoveAt) continue
 
             if (bot.path.isEmpty()) {
@@ -270,6 +313,43 @@ class WorldSimBotSystem(
                 Behavior.IDLER -> Random.nextLong(650L, 1_050L)
             }
             worldManager.broadcastToMap(key.mapId, buildMovePacket(bot), instanceId = key.instanceId)
+
+            val movedPx = kotlin.math.abs(dx) + kotlin.math.abs(dy)
+            maybeStartSoloEncounter(key, bot, sceneData, movedPx, now)
+        }
+    }
+
+    private fun maybeStartSoloEncounter(
+        key: ScopeKey,
+        bot: SimBot,
+        sceneData: SceneEveData?,
+        movedPx: Int,
+        now: Long,
+    ) {
+        if (bot.behavior != Behavior.FARMER) return
+        if (partySystem.isInParty(bot.id)) return
+        if (now < bot.encounterCooldownUntil || movedPx <= 0) return
+        val scene = sceneData ?: return
+        val mine = MineEncounterSystem.selectMine(scene, bot.x, bot.y) ?: run {
+            bot.encounterDistancePx = 0
+            return
+        }
+        if (mine.events.isEmpty()) return
+
+        bot.encounterDistancePx += movedPx.coerceAtMost(80)
+        if (bot.encounterDistancePx < SOLO_ENCOUNTER_DISTANCE_PX) return
+
+        bot.encounterDistancePx = 0
+        bot.inBattleUntil = now + Random.nextLong(SOLO_BATTLE_MIN_MS, SOLO_BATTLE_MAX_MS + 1)
+        bot.path.clear()
+        if (bot.petNpcId > 0) {
+            worldManager.broadcastToMap(key.mapId, buildPetDisappearPacket(bot.id), instanceId = key.instanceId)
+        }
+        worldManager.broadcastToMap(key.mapId, buildDisappearPacket(bot.id), instanceId = key.instanceId)
+        seen.values.forEach { it.remove(bot.id) }
+        simBotLogger.debug {
+            "WorldSimBot solo encounter: bot=" + bot.name + " id=" + bot.id +
+                " map=" + key.mapId + " mine=" + mine.id
         }
     }
 
@@ -406,6 +486,50 @@ class WorldSimBotSystem(
         else -> 12
     }
 
+    fun getBotName(botId: Long): String? = findBot(botId)?.name
+
+    fun isBotOnSameMap(botId: Long, session: GameSession): Boolean {
+        val located = findBotWithScope(botId) ?: return false
+        return located.first.mapId == session.mapId &&
+            located.first.instanceId == session.instanceId &&
+            located.second.inBattleUntil <= System.currentTimeMillis()
+    }
+
+    fun battleProfilesFor(session: GameSession): List<WorldSimBotBattleProfile> {
+        val leaderId = partySystem.getLeaderId(session.playerId)
+        if (leaderId <= 0L) return emptyList()
+        return partySystem.getTeamMembers(leaderId)
+            .asSequence()
+            .filter { it != session.playerId }
+            .mapNotNull { id ->
+                val located = findBotWithScope(id) ?: return@mapNotNull null
+                val (scopeKey, bot) = located
+                if (scopeKey.mapId != session.mapId || scopeKey.instanceId != session.instanceId) return@mapNotNull null
+                if (bot.inBattleUntil > System.currentTimeMillis()) return@mapNotNull null
+                WorldSimBotBattleProfile(
+                    roleId = bot.id,
+                    name = bot.name,
+                    hair = bot.hair,
+                    color1 = bot.color1,
+                    color2 = bot.color2,
+                    equipItemIds = bot.equips,
+                    petNpcId = bot.petNpcId,
+                )
+            }
+            .take(PartySystem.MAX_MEMBERS - 1)
+            .toList()
+    }
+
+    private fun findBot(botId: Long): SimBot? =
+        populations.values.asSequence().flatMap { it.bots.asSequence() }.firstOrNull { it.id == botId }
+
+    private fun findBotWithScope(botId: Long): Pair<ScopeKey, SimBot>? {
+        for ((key, population) in populations) {
+            population.bots.firstOrNull { it.id == botId }?.let { return key to it }
+        }
+        return null
+    }
+
     private fun chooseMountNpcId(botId: Long, index: Int, behavior: Behavior): Int {
         if (mountNpcIds.isEmpty()) return 0
 
@@ -506,6 +630,24 @@ class WorldSimBotSystem(
             -180 to -560, 260 to 520, 720 to 80, -700 to 120,
             90 to -720, -80 to 680, 840 to 340, -820 to -320,
         )
-        const val TICK_MS = 250L
+        private const val TICK_MS = 900L
+        private const val SOLO_ENCOUNTER_DISTANCE_PX = 200
+        private const val SOLO_ENCOUNTER_COOLDOWN_MS = 27_000L
+        private const val SOLO_BATTLE_MIN_MS = 7_000L
+        private const val SOLO_BATTLE_MAX_MS = 15_000L
+        private val PARTY_FOLLOW_OFFSETS = listOf(
+            -70 to 45, 70 to 45, -95 to 95, 95 to 95,
+        )
     }
 }
+
+
+data class WorldSimBotBattleProfile(
+    val roleId: Long,
+    val name: String,
+    val hair: Int,
+    val color1: Int,
+    val color2: Int,
+    val equipItemIds: IntArray,
+    val petNpcId: Int,
+)

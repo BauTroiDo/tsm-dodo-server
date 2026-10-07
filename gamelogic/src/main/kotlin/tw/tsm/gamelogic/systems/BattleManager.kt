@@ -91,6 +91,9 @@ class BattleManager(
     private val nextBattleId = AtomicLong(1)
     /** ID âm chỉ tồn tại trong battle, không bao giờ đụng characterId DB thật. */
     private val nextBotRoleId = AtomicLong(-1_000_000_000L)
+    @Volatile
+    var worldPartyBotProvider: ((GameSession) -> List<WorldSimBotBattleProfile>)? = null
+
 
     private data class DungeonBotAssist(val instanceId: Int, val botCount: Int)
     private val dungeonBotAssists = ConcurrentHashMap<Long, DungeonBotAssist>()
@@ -195,6 +198,11 @@ class BattleManager(
             dungeonBotAssists.remove(session.playerId, storedDungeonAssist)
         }
         val battlePets = petSystem.getBattleDeployableFollowPets(charId)
+        val worldPartyBots = if (dungeonAssist == null) {
+            worldPartyBotProvider?.invoke(session).orEmpty()
+        } else {
+            emptyList()
+        }
 
         if (dungeonAssist != null) {
             val selectedPet = battlePets.firstOrNull()
@@ -280,6 +288,85 @@ class BattleManager(
             logger.info {
                 "TeamDungeon bots attached battle=$battleId player=${session.characterName} " +
                     "instance=${session.instanceId} bots=${dungeonAssist.botCount}"
+            }
+        } else if (worldPartyBots.isNotEmpty()) {
+            val selectedPet = battlePets.firstOrNull()
+            val playerCol = if (selectedPet == null) BattleConstants.PLAYER_FRONT_COL else BattleConstants.PLAYER_BACK_COL
+            battle.addFighter(createPlayerFighter(session, col = playerCol, row = 0))
+            battle.playerSessions[session.playerId] = session
+
+            if (selectedPet != null) {
+                val (followSlot, petData) = selectedPet
+                npcDefs[petData.npcId]?.let { npcDef ->
+                    battle.addFighter(
+                        createFollowNpcFighter(
+                            npcDef = npcDef,
+                            petData = petData,
+                            masterId = session.playerId,
+                            ownerCharacterId = charId,
+                            npcDataId = petData.npcId,
+                            followSlot = followSlot,
+                            col = BattleConstants.PLAYER_FRONT_COL,
+                            row = 0,
+                        )
+                    )
+                }
+            }
+
+            worldPartyBots.take(BattleConstants.MAX_ROW - 1).forEachIndexed { index, profile ->
+                val petDef = npcDefs[profile.petNpcId]
+                battle.addFighter(
+                    createPlayerFighter(
+                        session = session,
+                        col = if (petDef == null) BattleConstants.PLAYER_FRONT_COL else BattleConstants.PLAYER_BACK_COL,
+                        row = index + 1,
+                        kind = EHuman.AUTOMANUAL_PLAYER,
+                        roleIdOverride = profile.roleId,
+                        nameOverride = profile.name,
+                        restoreFull = true,
+                        hairOverride = profile.hair,
+                        color1Xor = session.color1 xor profile.color1,
+                        color2Xor = session.color2 xor profile.color2,
+                        equipItemIdsOverride = profile.equipItemIds,
+                    )
+                )
+                if (petDef != null) {
+                    val npcProfile = NpcBattleProfileCalc.from(petDef, skillDefs)
+                    val petData = FollowNpcData(
+                        slotIndex = 0,
+                        npcId = profile.petNpcId,
+                        name = petDef.name,
+                        level = npcProfile.level,
+                        hp = npcProfile.maxHp,
+                        sp = npcProfile.maxSp.toInt(),
+                        atk = npcProfile.atk,
+                        def = npcProfile.def,
+                        agi = npcProfile.agi,
+                        intelligence = npcProfile.intelligence,
+                        skill1Lv = petDef.skills.getOrNull(0)?.let { npcProfile.skillLevels[it] } ?: 0,
+                        skill2Lv = petDef.skills.getOrNull(1)?.let { npcProfile.skillLevels[it] } ?: 0,
+                        skill3Lv = petDef.skills.getOrNull(2)?.let { npcProfile.skillLevels[it] } ?: 0,
+                    )
+                    battle.addFighter(
+                        createFollowNpcFighterInternal(
+                            npcDef = petDef,
+                            petData = petData,
+                            masterId = profile.roleId,
+                            ownerCharacterId = charId,
+                            npcDataId = profile.petNpcId,
+                            followSlot = 0,
+                            col = BattleConstants.PLAYER_FRONT_COL,
+                            row = index + 1,
+                            kind = EHuman.AUTOMANUAL_NPC,
+                            roleIdOverride = profile.petNpcId.toLong(),
+                            restoreFull = true,
+                        )
+                    )
+                }
+            }
+            logger.info {
+                "WorldSimBot party attached battle=" + battleId + " player=" + session.characterName +
+                    " bots=" + worldPartyBots.size
             }
         } else {
             val hasBattlePets = battlePets.isNotEmpty()
