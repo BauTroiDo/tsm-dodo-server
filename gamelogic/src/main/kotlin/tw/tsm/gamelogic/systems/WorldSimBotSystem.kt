@@ -114,7 +114,11 @@ class WorldSimBotSystem(
             .filter { it.loginFinished && it.mapId > 0 && it.instanceId == 0 && it.battleId == 0L }
 
         val activeScopes = realSessions.groupBy { ScopeKey(it.mapId, it.instanceId) }
-        populations.keys.filter { it !in activeScopes.keys }.forEach { populations.remove(it) }
+        migratePartyBotsToLeaders()
+        populations.keys.filter { it !in activeScopes.keys }.forEach { key ->
+            val removed = populations.remove(key) ?: return@forEach
+            removed.bots.filter { partySystem.isInParty(it.id) }.forEach { partySystem.leaveParty(it.id) }
+        }
 
         val activePlayerIds = realSessions.mapTo(hashSetOf()) { it.playerId }
         seen.keys.filter { it !in activePlayerIds }.forEach { seen.remove(it) }
@@ -144,6 +148,52 @@ class WorldSimBotSystem(
 
             if (walkGrid != null) moveSomeBots(key, population, sceneData, walkGrid)
             maybeChat(key, population)
+        }
+    }
+
+    private fun migratePartyBotsToLeaders() {
+        val moves = mutableListOf<Triple<ScopeKey, ScopeKey, SimBot>>()
+        for ((scope, population) in populations) {
+            for (bot in population.bots) {
+                if (!partySystem.isInParty(bot.id)) continue
+                val leaderId = partySystem.getLeaderId(bot.id)
+                if (leaderId <= 0L || leaderId == bot.id) continue
+                val leader = worldManager.getPlayerById(leaderId) ?: continue
+                if (!leader.loginFinished || leader.mapId <= 0 || leader.instanceId != 0) continue
+                val target = ScopeKey(leader.mapId, leader.instanceId)
+                if (target != scope) moves += Triple(scope, target, bot)
+            }
+        }
+
+        for ((from, to, bot) in moves) {
+            val source = populations[from] ?: continue
+            if (!source.bots.remove(bot)) continue
+            if (bot.petNpcId > 0) {
+                worldManager.broadcastToMap(from.mapId, buildPetDisappearPacket(bot.id), instanceId = from.instanceId)
+            }
+            worldManager.broadcastToMap(from.mapId, buildDisappearPacket(bot.id), instanceId = from.instanceId)
+            seen.values.forEach { it.remove(bot.id) }
+
+            val leaderId = partySystem.getLeaderId(bot.id)
+            val leader = worldManager.getPlayerById(leaderId) ?: continue
+            val walkGrid = mapWalkGrids[to.mapId]
+            val safe = walkGrid?.nearestWalkable(leader.x, leader.y) ?: (leader.x to leader.y)
+            bot.x = safe.first
+            bot.y = safe.second
+            bot.targetX = safe.first
+            bot.targetY = safe.second
+            bot.path.clear()
+            bot.inBattleUntil = 0L
+            bot.encounterDistancePx = 0
+            bot.idleUntil = System.currentTimeMillis() + 300L
+
+            populations.computeIfAbsent(to) {
+                Population(mutableListOf(), System.currentTimeMillis() + 60_000L)
+            }.bots += bot
+            simBotLogger.info {
+                "WorldSimBot party map-follow: bot=" + bot.name +
+                    " leader=" + leader.characterName + " map=" + to.mapId
+            }
         }
     }
 
