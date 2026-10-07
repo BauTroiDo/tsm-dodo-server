@@ -4467,3 +4467,18 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Gameplay commit: 8a2e8d0 Unify world simbot movement and encounters.
 - Production restarted; TCP 6613 PASS.
 - Runtime user confirmation pending.
+
+
+### 2026-10-07 — WorldSimBot solo encounter serialization
+- User reported occasional client hitch of about 1 second after all WorldSimBot behaviors were allowed to fight.
+- Live runtime log confirmed overlapping autonomous encounters on the same map, including two bots starting at the exact same timestamp (23:17:20.259) and finishing together.
+- Each encounter requires full player/pet role reassert plus native S11-004 battle-cloud state; overlapping starts/finishes create model/packet bursts on the client.
+- Fix: added activeSoloEncounterScopes and serialize autonomous solo PvE per normal-world ScopeKey (mapId, instanceId).
+- Only one WorldSimBot solo encounter can be active in a map scope at a time; other bots retain accumulated encounter distance and can fight after the scope is released.
+- Scope remains reserved through battle finish, War=None, appearance/pet reassert, plus a 650ms release delay to avoid back-to-back model rebuild bursts.
+- All FARMER/SOCIAL/IDLER behaviors still retain combat capability and native battle cloud.
+- Targeted gamelogic compile PASS: 5/5 tasks.
+- Full production gate PASS: 21/21 tasks.
+- Gameplay commit: 478a76c Serialize_world_simbot_solo_encounters.
+- Production restarted; TCP 6613 PASS.
+- Runtime hitch confirmation pending user retest.
