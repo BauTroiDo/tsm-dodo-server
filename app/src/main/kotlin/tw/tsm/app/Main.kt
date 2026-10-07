@@ -12,6 +12,7 @@ import tw.tsm.data.GameDataManager
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.gamelogic.systems.AutoSaveService
 import tw.tsm.gamelogic.systems.NpcPatrolSystem
+import tw.tsm.gamelogic.systems.WorldSimBotSystem
 import tw.tsm.network.NettyGameServer
 import tw.tsm.network.SessionManager
 import tw.tsm.persistence.DatabaseFactory
@@ -73,12 +74,15 @@ class Application : KoinComponent {
     private val npcPatrolSystem: NpcPatrolSystem by inject()
     @Suppress("unused") // Kích hoạt khởi tạo lười (lazy) của Koin, khởi động tự động lưu định kỳ
     private val autoSaveService: AutoSaveService by inject()
+    @Suppress("unused") // SimBot world population, không tạo session/DB player thật
+    private val worldSimBotSystem: WorldSimBotSystem by inject()
 
     /** Khởi động máy chủ */
     fun start(host: String, port: Int) {
         // Kích hoạt hệ thống tuần tra NPC + Khởi tạo tự động lưu (Koin lazy singleton)
         npcPatrolSystem
         autoSaveService
+        worldSimBotSystem.start()
         server.start(host, port)
         logger.info { "Máy chủ đã sẵn sàng, đang chờ kết nối..." }
     }
