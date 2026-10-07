@@ -4248,3 +4248,28 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
   - production full `test build --rerun-tasks` PASS 21/21 in 4m02s;
   - production runtime restarted; TCP `192.168.1.69:6613` reachable, listener PID 268.
 - Runtime test requested next: enter VS / Chaos / Mix through their normal NPC/event entry and verify after 10 seconds that bots appear, act, can heal/revive, battle closes cleanly, and no PvE reward/capture is granted.
+
+
+## 2026-10-07 — WorldSimBot mounts production
+
+- User confirmed world simbot movement from 9d9c612 feels more natural; mount rendering was the next blocker.
+- Authoritative DVT contract:
+  - Lua Role.PlayerAppear / S:003-000 reads instanceId UInt16, horseNpcId UInt16, then MountsLv Byte.
+  - RoleController:Ride(npcId) renders a mount only when both mountsDatas[npcId] and npcDatas[npcId] exist.
+  - IOS_Mounts_C.dat contains 224 mount records; server production loads the same DVT data.
+  - DEFAULT_MOUNT_NPC_ID=18005 is the existing tutorial/default white horse on server.
+- Root cause: WorldSimBotSystem buildAppearPacket hard-coded mountNpcId=0 and mountLevel=0 for every simbot.
+- Fix:
+  - WorldSimBotSystem now receives mountDefs + npcDefs and builds a valid pool from their intersection.
+  - Some bots remain on foot; FARMER mounts more often than SOCIAL/IDLER.
+  - Mounted bots get deterministic varied DVT-valid mounts, with the default tutorial mount kept common.
+  - S:003-000 simbot appearance now sends mountNpcId + mountLevel=1.
+  - Existing A*/Ground.mmg path safety and movement smoothing were not changed.
+- Validation:
+  - compile: BUILD SUCCESSFUL, 13/13 tasks executed.
+  - full production test build: BUILD SUCCESSFUL, 21/21 tasks executed.
+  - gameplay commit: b9d4470 Add DVT mounts to world simbots.
+  - production restart complete; server ready 2026-10-07 16:34:10.
+  - 6613 LISTEN PID 2272.
+- GitHub note: HTTPS push/fetch from the production SSH session is blocked by Windows Git Credential Manager because the session has no TTY. Do not force-update GitHub history from a connector without reconciling remote main first.
+- Visual runtime status: pending user confirmation that mounts render naturally in the client.
