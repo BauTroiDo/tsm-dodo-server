@@ -77,6 +77,9 @@ class WorldSimBotSystem(
     private val seen = ConcurrentHashMap<Long, MutableSet<Long>>()
     private val outfits = buildOutfits(itemDefs)
     private val mountNpcIds = mountDefs.keys.filter { it in npcDefs }.sorted()
+    private val commonPetNpcIds = validWorldPets(npcDefs, COMMON_WORLD_PETS)
+    private val rarePetNpcIds = validWorldPets(npcDefs, RARE_WORLD_PETS)
+    private val legendaryPetNpcIds = validWorldPets(npcDefs, LEGENDARY_WORLD_PETS)
 
     private val names = listOf(
         "Vân Mộng", "Dạ Phong", "Tử Yên", "Bạch Vũ", "Thiên Lam", "Hàn Nguyệt",
@@ -239,7 +242,7 @@ class WorldSimBotSystem(
                 color1 = anchor.color1 xor (0x00040810 * (profile + 1)),
                 color2 = anchor.color2 xor (0x00100408 * (profile + 1)),
                 equips = outfits.getOrElse(outfitIndex) { intArrayOf() },
-                petNpcId = WORLD_PETS[((id + index).absoluteValue % WORLD_PETS.size.toLong()).toInt()],
+                petNpcId = chooseWorldPetNpcId(id, index, behavior),
                 mountNpcId = mountNpcId,
                 mountLevel = if (mountNpcId > 0) 1 else 0,
                 behavior = behavior,
@@ -586,6 +589,32 @@ class WorldSimBotSystem(
         return null
     }
 
+    private fun chooseWorldPetNpcId(botId: Long, index: Int, behavior: Behavior): Int {
+        val salt = when (behavior) {
+            Behavior.FARMER -> 0x31L
+            Behavior.SOCIAL -> 0x53L
+            Behavior.IDLER -> 0x79L
+        }
+        val seed = (botId xor (index.toLong() shl 13) xor salt).absoluteValue
+        val roll = (seed % 100L).toInt()
+        val pool = when {
+            roll < 70 -> commonPetNpcIds
+            roll < 92 -> rarePetNpcIds
+            else -> legendaryPetNpcIds
+        }
+        val fallback = commonPetNpcIds + rarePetNpcIds + legendaryPetNpcIds
+        val selected = if (pool.isNotEmpty()) pool else fallback
+        if (selected.isEmpty()) return DEFAULT_WORLD_PETS[(seed % DEFAULT_WORLD_PETS.size).toInt()]
+        return selected[(seed % selected.size.toLong()).toInt()]
+    }
+
+    private fun validWorldPets(npcDefs: Map<Int, NpcDef>, ids: IntArray): List<Int> =
+        ids.filter { id ->
+            npcDefs[id]?.let { npc ->
+                npc.kind == 31 && npc.canBeCatch && npc.picId > 0 && npc.level > 0 && npc.hpBase > 0
+            } == true
+        }
+
     private fun chooseMountNpcId(botId: Long, index: Int, behavior: Behavior): Int {
         if (mountNpcIds.isEmpty()) return 0
 
@@ -683,7 +712,18 @@ class WorldSimBotSystem(
 
     companion object {
         private const val OUTFIT_PROFILE_COUNT = 32
-        private val WORLD_PETS = intArrayOf(40428, 40429, 40430, 40431)
+        private val DEFAULT_WORLD_PETS = intArrayOf(40428, 40429, 40430, 40431)
+        private val COMMON_WORLD_PETS = intArrayOf(
+            40390, 40391, 40392, 40393, 40394, 40395, 40396, 40397,
+            40398, 40399, 40400, 40401, 40402, 40403, 40404,
+            40410, 40411, 40412, 40414, 40415,
+        )
+        private val RARE_WORLD_PETS = intArrayOf(
+            40432, 40428, 40429, 40430, 40431,
+        )
+        private val LEGENDARY_WORLD_PETS = intArrayOf(
+            40607, 40608, 40609, 40610,
+        )
         private val SPREAD_OFFSETS = listOf(
             -520 to -220, 460 to 180, -360 to 410, 580 to -360,
             -180 to -560, 260 to 520, 720 to 80, -700 to 120,
