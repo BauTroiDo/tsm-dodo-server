@@ -38,8 +38,13 @@ class WorldSimBotSystem(
         val behavior: Behavior,
         val originX: Int,
         val originY: Int,
+        val bornAt: Long,
+        val retireAt: Long,
         var x: Int,
         var y: Int,
+        var targetX: Int,
+        var targetY: Int,
+        var idleUntil: Long,
         var direction: Int,
     )
     private data class Population(
@@ -99,6 +104,7 @@ class WorldSimBotSystem(
             val population = populations.computeIfAbsent(key) {
                 Population(mutableListOf(), System.currentTimeMillis() + Random.nextLong(35_000L, 70_000L))
             }
+            reapExpiredBots(key, population)
             ensurePopulation(population, anchor, desired)
 
             for (session in sessions) {
@@ -119,8 +125,7 @@ class WorldSimBotSystem(
     private fun ensurePopulation(population: Population, anchor: GameSession, desired: Int) {
         while (population.bots.size < desired) {
             val index = population.bots.size
-            val dx = ((index % 4) - 1) * 45
-            val dy = ((index / 4) * 55) + 30
+            val (dx, dy) = SPREAD_OFFSETS[index % SPREAD_OFFSETS.size]
             val x = (anchor.x + dx).coerceIn(0, 65535)
             val y = (anchor.y + dy).coerceIn(0, 65535)
             val id = nextId.getAndIncrement()
@@ -145,8 +150,13 @@ class WorldSimBotSystem(
                 behavior = behavior,
                 originX = x,
                 originY = y,
+                bornAt = System.currentTimeMillis(),
+                retireAt = System.currentTimeMillis() + Random.nextLong(180_000L, 420_000L),
                 x = x,
                 y = y,
+                targetX = (x + Random.nextInt(-260, 261)).coerceIn(0, 65535),
+                targetY = (y + Random.nextInt(-260, 261)).coerceIn(0, 65535),
+                idleUntil = System.currentTimeMillis() + Random.nextLong(2_000L, 12_000L),
                 direction = profile % 8,
             )
         }
@@ -160,21 +170,81 @@ class WorldSimBotSystem(
         }
     }
 
+    private fun reapExpiredBots(key: ScopeKey, population: Population) {
+        val now = System.currentTimeMillis()
+        val iterator = population.bots.iterator()
+        while (iterator.hasNext()) {
+            val bot = iterator.next()
+            if (now < bot.retireAt) continue
+            if (bot.petNpcId > 0) {
+                worldManager.broadcastToMap(key.mapId, buildPetDisappearPacket(bot.id), instanceId = key.instanceId)
+            }
+            worldManager.broadcastToMap(key.mapId, buildDisappearPacket(bot.id), instanceId = key.instanceId)
+            seen.values.forEach { it.remove(bot.id) }
+            iterator.remove()
+        }
+    }
+
     private fun moveSomeBots(key: ScopeKey, population: Population) {
         if (population.bots.isEmpty()) return
-        val count = minOf(2, population.bots.size)
-        repeat(count) {
-            val bot = population.bots[Random.nextInt(population.bots.size)]
-            if (bot.behavior == Behavior.IDLER && Random.nextInt(100) < 78) return@repeat
-            val radius = if (bot.behavior == Behavior.FARMER) 240 else 110
-            val step = if (bot.behavior == Behavior.FARMER) 62 else 28
-            val nx = (bot.x + Random.nextInt(-step, step + 1)).coerceIn(bot.originX - radius, bot.originX + radius).coerceAtLeast(0)
-            val ny = (bot.y + Random.nextInt(-step, step + 1)).coerceIn(bot.originY - radius, bot.originY + radius).coerceAtLeast(0)
-            bot.x = nx
-            bot.y = ny
-            bot.direction = Random.nextInt(0, 8)
+        val now = System.currentTimeMillis()
+        val movers = population.bots.shuffled().take(minOf(5, population.bots.size))
+        for (bot in movers) {
+            if (now < bot.idleUntil) continue
+
+            val reached = kotlin.math.abs(bot.targetX - bot.x) <= 18 && kotlin.math.abs(bot.targetY - bot.y) <= 18
+            if (reached) {
+                chooseNextDestination(bot, population)
+                continue
+            }
+
+            val step = when (bot.behavior) {
+                Behavior.FARMER -> 72
+                Behavior.SOCIAL -> 42
+                Behavior.IDLER -> 28
+            }
+            val dx = (bot.targetX - bot.x).coerceIn(-step, step)
+            val dy = (bot.targetY - bot.y).coerceIn(-step, step)
+            bot.x = (bot.x + dx).coerceIn(0, 65535)
+            bot.y = (bot.y + dy).coerceIn(0, 65535)
+            bot.direction = directionFromDelta(dx, dy)
             worldManager.broadcastToMap(key.mapId, buildMovePacket(bot), instanceId = key.instanceId)
         }
+    }
+
+    private fun chooseNextDestination(bot: SimBot, population: Population) {
+        val now = System.currentTimeMillis()
+        when (bot.behavior) {
+            Behavior.FARMER -> {
+                bot.targetX = (bot.originX + Random.nextInt(-560, 561)).coerceIn(0, 65535)
+                bot.targetY = (bot.originY + Random.nextInt(-560, 561)).coerceIn(0, 65535)
+                bot.idleUntil = now + Random.nextLong(1_000L, 5_000L)
+            }
+            Behavior.SOCIAL -> {
+                val other = population.bots.filter { it.id != bot.id }.randomOrNull()
+                if (other != null && Random.nextBoolean()) {
+                    bot.targetX = (other.x + Random.nextInt(-70, 71)).coerceIn(0, 65535)
+                    bot.targetY = (other.y + Random.nextInt(-70, 71)).coerceIn(0, 65535)
+                } else {
+                    bot.targetX = (bot.originX + Random.nextInt(-260, 261)).coerceIn(0, 65535)
+                    bot.targetY = (bot.originY + Random.nextInt(-260, 261)).coerceIn(0, 65535)
+                }
+                bot.idleUntil = now + Random.nextLong(4_000L, 14_000L)
+            }
+            Behavior.IDLER -> {
+                bot.targetX = (bot.originX + Random.nextInt(-120, 121)).coerceIn(0, 65535)
+                bot.targetY = (bot.originY + Random.nextInt(-120, 121)).coerceIn(0, 65535)
+                bot.idleUntil = now + Random.nextLong(14_000L, 38_000L)
+            }
+        }
+    }
+
+    private fun directionFromDelta(dx: Int, dy: Int): Int = when {
+        kotlin.math.abs(dx) > kotlin.math.abs(dy) && dx > 0 -> 2
+        kotlin.math.abs(dx) > kotlin.math.abs(dy) && dx < 0 -> 6
+        dy > 0 -> 4
+        dy < 0 -> 0
+        else -> 0
     }
 
     private fun maybeChat(key: ScopeKey, population: Population) {
@@ -266,6 +336,11 @@ class WorldSimBotSystem(
 
     companion object {
         private val WORLD_PETS = intArrayOf(40428, 40429, 40430, 40431)
+        private val SPREAD_OFFSETS = listOf(
+            -520 to -220, 460 to 180, -360 to 410, 580 to -360,
+            -180 to -560, 260 to 520, 720 to 80, -700 to 120,
+            90 to -720, -80 to 680, 840 to 340, -820 to -320,
+        )
         const val TICK_MS = 4_000L
     }
 }
