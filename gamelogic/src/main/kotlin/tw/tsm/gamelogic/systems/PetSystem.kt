@@ -934,12 +934,14 @@ class PetSystem(
      * Lưu võ tướng của nhân vật vào DB (Không dỡ khỏi bộ nhớ, dùng để tự động lưu định kỳ)
      */
     suspend fun save(characterId: Long) {
-        val pc = cache[characterId] ?: return
-        if (pc.dirty) {
-            val allPets = pc.follow.values.toList() + pc.cart.values.toList() +
-                    pc.inn.values.toList() + pc.warehouse.toList()
-            petRepository.saveAll(characterId, allPets)
-            pc.dirty = false
+        CharacterPersistenceGuard.withLock(characterId) {
+            val pc = cache[characterId] ?: return@withLock
+            if (pc.dirty) {
+                val allPets = pc.follow.values.toList() + pc.cart.values.toList() +
+                        pc.inn.values.toList() + pc.warehouse.toList()
+                petRepository.saveAll(characterId, allPets)
+                pc.dirty = false
+            }
         }
     }
 
@@ -947,12 +949,14 @@ class PetSystem(
      * Lưu võ tướng của nhân vật vào DB và dỡ khỏi bộ nhớ đệm (cache)
      */
     suspend fun saveAndUnload(characterId: Long) {
-        val pc = cache.remove(characterId) ?: return
-        if (pc.dirty) {
-            val allPets = pc.follow.values.toList() + pc.cart.values.toList() +
-                    pc.inn.values.toList() + pc.warehouse.toList()
-            petRepository.saveAll(characterId, allPets)
-            logger.info { "Lưu võ tướng: charId=$characterId Tổng cộng ${allPets.size} người" }
+        CharacterPersistenceGuard.withLock(characterId) {
+            val pc = cache.remove(characterId) ?: return@withLock
+            if (pc.dirty) {
+                val allPets = pc.follow.values.toList() + pc.cart.values.toList() +
+                        pc.inn.values.toList() + pc.warehouse.toList()
+                petRepository.saveAll(characterId, allPets)
+                logger.info { "Lưu võ tướng: charId=$characterId Tổng cộng ${allPets.size} người" }
+            }
         }
     }
 

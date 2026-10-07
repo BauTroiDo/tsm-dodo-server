@@ -66,21 +66,25 @@ class InventorySystem(
      * Lưu vật phẩm nhân vật (không gỡ khỏi bộ nhớ, dùng cho tự động lưu định kỳ)
      */
     suspend fun save(characterId: Long) {
-        bags[characterId]?.let { inventoryRepo.saveAllItems(characterId, EThings.BAG, it) }
-        equips[characterId]?.let { inventoryRepo.saveAllItems(characterId, EThings.EQUIP, it) }
-        banks[characterId]?.let { inventoryRepo.saveAllItems(characterId, EThings.BANK, it) }
-        storages[characterId]?.let { inventoryRepo.saveAllItems(characterId, EThings.STORAGE, it) }
+        CharacterPersistenceGuard.withLock(characterId) {
+            bags[characterId]?.let { inventoryRepo.saveAllItems(characterId, EThings.BAG, it) }
+            equips[characterId]?.let { inventoryRepo.saveAllItems(characterId, EThings.EQUIP, it) }
+            banks[characterId]?.let { inventoryRepo.saveAllItems(characterId, EThings.BANK, it) }
+            storages[characterId]?.let { inventoryRepo.saveAllItems(characterId, EThings.STORAGE, it) }
+        }
     }
 
     /**
      * Lưu và gỡ dữ liệu nhân vật khỏi bộ nhớ
      */
     suspend fun saveAndUnload(characterId: Long) {
-        bags.remove(characterId)?.let { inventoryRepo.saveAllItems(characterId, EThings.BAG, it) }
-        equips.remove(characterId)?.let { inventoryRepo.saveAllItems(characterId, EThings.EQUIP, it) }
-        banks.remove(characterId)?.let { inventoryRepo.saveAllItems(characterId, EThings.BANK, it) }
-        storages.remove(characterId)?.let { inventoryRepo.saveAllItems(characterId, EThings.STORAGE, it) }
-        logger.info { "Lưu và gỡ vật phẩm nhân vật: characterId=$characterId" }
+        CharacterPersistenceGuard.withLock(characterId) {
+            bags.remove(characterId)?.let { inventoryRepo.saveAllItems(characterId, EThings.BAG, it) }
+            equips.remove(characterId)?.let { inventoryRepo.saveAllItems(characterId, EThings.EQUIP, it) }
+            banks.remove(characterId)?.let { inventoryRepo.saveAllItems(characterId, EThings.BANK, it) }
+            storages.remove(characterId)?.let { inventoryRepo.saveAllItems(characterId, EThings.STORAGE, it) }
+            logger.info { "Lưu và gỡ vật phẩm nhân vật: characterId=$characterId" }
+        }
     }
 
     // ── Lấy trạng thái ──

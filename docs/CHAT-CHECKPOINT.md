@@ -4562,3 +4562,10 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Full build/diff/push/deploy results are appended after verification below. Client x1/x10 gameplay remains pending actual user test; startup PASS alone is never gameplay PASS.
 
 - Final local full gate: gradlew.bat test build --rerun-tasks BUILD SUCCESSFUL, 21/21 tasks in 1m10s; tests=759, failures=0, errors=0, skipped=5. git diff --check PASS (CRLF normalization warnings only). Production deployment pending the next verification entry.
+
+### ExpSlot autosave/disconnect follow-up before runtime restart
+- Final race review found whole-bag/whole-pet autosave snapshots could race ExpSlot transaction/cache publication. Added a bounded per-character persistence guard shared by ExpSlot, InventorySystem.save/saveAndUnload and PetSystem.save/saveAndUnload. Snapshot collection and commit/publication cannot interleave; disconnect cannot unload the bag during an in-flight spin.
+- Added two deterministic regressions: paused old autosave must finish before spin starts; paused spin commit must finish before disconnect saves/unloads. Both reproduce original race ordering and verify durable/cached coin count9 rather than restored10.
+- Updated targeted suite PASS: 32 tests, 0 failures/errors/skips. Production source3005abc was built while this follow-up was reviewed; runtime has NOT been restarted with the intermediate commit. Final full build and updated deployment follow.
+
+- Final autosave follow-up full local gradlew.bat test build --rerun-tasks PASS21/21 in1m07s: tests=761, failures=0, errors=0, skipped=5; diff check PASS. Intermediate production3005abc full build PASS21/21 in3m21s; no runtime restart yet.
