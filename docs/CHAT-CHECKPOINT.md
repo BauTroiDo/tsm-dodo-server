@@ -4362,3 +4362,20 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Gameplay commit: 9ea2ec3 Run real headless PvE for world simbots.
 - Production restart clean: WorldSimBot started 2026-10-07 20:23:32; Netty 0.0.0.0:6613 ready; TCP 6613 PASS; HEAD 9ea2ec3.
 - Runtime encounter validation pending: while a real player stays on a MineData map, watch for `WorldSimBot solo PvE started`, `WorldSimBot headless PvE start/end`, and `WorldSimBot solo PvE finished` with fight id, win/loss and round count.
+
+
+### 2026-10-07 — WorldSimBot native battle-cloud visual
+- User provided a screenshot of the normal DVT world battle/loading cloud and requested WorldSimBots to look the same when they encounter monsters.
+- Authoritative client evidence:
+  - S:011-004 parses kind + roleId + npcIndex + warKind and calls RoleController:SetWar(warKind).
+  - RoleController:UpdateViewTexture() uses UniversalJmp.GetFight() whenever Player/Players/ForeignNpc war != EWar.None; this is the native world battle cloud from the screenshot.
+  - SetWar propagates the war state to followers for non-party players, and FollowNpc UpdateViewVisible hides the pet while war != None.
+- WorldSimBot solo encounter now keeps the world entity present and sends S:011-004 with EHuman.Players + EWar.EVENT instead of despawning bot/pet.
+- A 650ms lead-in is kept before starting the real headless BattleInstance; the native cloud remains visible for the entire server-side fight.
+- After battle completion, the bot stays in war state for 1.2s, then receives S:011-004 EWar.NONE and returns to its normal appearance/pet.
+- Failed battle creation clears war state immediately. In-battle bots are protected from retire/population-shrink cleanup so the cloud cannot vanish mid-fight.
+- Targeted gamelogic compile PASS: BUILD SUCCESSFUL, 5/5 tasks.
+- Full production gate PASS: BUILD SUCCESSFUL, 21/21 tasks.
+- Gameplay commit: 5773573 Show native battle cloud for world simbots.
+- Production restarted; HEAD 5773573; TCP 6613 PASS.
+- Runtime visual confirmation pending user observation on a MineData map.
