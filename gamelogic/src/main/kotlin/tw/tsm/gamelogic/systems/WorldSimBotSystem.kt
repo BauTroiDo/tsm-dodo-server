@@ -53,6 +53,7 @@ class WorldSimBotSystem(
         var idleUntil: Long,
         var purpose: Purpose,
         val path: ArrayDeque<Pair<Int, Int>>,
+        var nextMoveAt: Long,
         var direction: Int,
     )
     private data class Population(
@@ -180,6 +181,7 @@ class WorldSimBotSystem(
                 idleUntil = System.currentTimeMillis() + Random.nextLong(2_000L, 12_000L),
                 purpose = Purpose.ROAM,
                 path = ArrayDeque(),
+                nextMoveAt = System.currentTimeMillis() + Random.nextLong(250L, 900L),
                 direction = profile % 8,
             ).also { bot -> if (walkGrid != null) chooseNextDestination(bot, population, sceneData, walkGrid) }
         }
@@ -216,16 +218,31 @@ class WorldSimBotSystem(
     ) {
         if (population.bots.isEmpty()) return
         val now = System.currentTimeMillis()
-        val movers = population.bots.shuffled().take(minOf(5, population.bots.size))
-        for (bot in movers) {
-            if (now < bot.idleUntil) continue
+        for (bot in population.bots) {
+            if (now < bot.idleUntil || now < bot.nextMoveAt) continue
 
             if (bot.path.isEmpty()) {
                 chooseNextDestination(bot, population, sceneData, walkGrid)
                 continue
             }
 
-            val next = bot.path.removeFirst()
+            val maxCells = when (bot.behavior) {
+                Behavior.FARMER -> 4
+                Behavior.SOCIAL -> 3
+                Behavior.IDLER -> 2
+            }
+            val candidates = bot.path.take(maxCells)
+            var chosenIndex = 0
+            for (i in candidates.indices.reversed()) {
+                val p = candidates[i]
+                if (walkGrid.isSegmentWalkablePixels(bot.x, bot.y, p.first, p.second)) {
+                    chosenIndex = i
+                    break
+                }
+            }
+            val next = candidates[chosenIndex]
+            repeat(chosenIndex + 1) { bot.path.removeFirst() }
+
             if (!walkGrid.isWalkablePixel(next.first, next.second)) {
                 bot.path.clear()
                 chooseNextDestination(bot, population, sceneData, walkGrid)
@@ -236,6 +253,11 @@ class WorldSimBotSystem(
             bot.x = next.first
             bot.y = next.second
             bot.direction = directionFromDelta(dx, dy)
+            bot.nextMoveAt = now + when (bot.behavior) {
+                Behavior.FARMER -> Random.nextLong(300L, 520L)
+                Behavior.SOCIAL -> Random.nextLong(420L, 760L)
+                Behavior.IDLER -> Random.nextLong(650L, 1_050L)
+            }
             worldManager.broadcastToMap(key.mapId, buildMovePacket(bot), instanceId = key.instanceId)
         }
     }
@@ -451,6 +473,6 @@ class WorldSimBotSystem(
             -180 to -560, 260 to 520, 720 to 80, -700 to 120,
             90 to -720, -80 to 680, 840 to 340, -820 to -320,
         )
-        const val TICK_MS = 1_200L
+        const val TICK_MS = 250L
     }
 }

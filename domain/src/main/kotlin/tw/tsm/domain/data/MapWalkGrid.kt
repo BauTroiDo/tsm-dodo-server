@@ -30,6 +30,39 @@ class MapWalkGrid(val width: Int, val height: Int, private val blocks: ByteArray
      * A* path trên Ground.mmg walk-grid. Trả về tâm pixel của từng ô sau ô bắt đầu.
      * Diagonal chỉ hợp lệ khi cả hai cạnh vuông góc đều đi được, tránh cắt xuyên góc tường.
      */
+    fun isSegmentWalkablePixels(startX: Int, startY: Int, endX: Int, endY: Int): Boolean {
+        val (sx, sy) = pixelToGrid(startX, startY)
+        val (ex, ey) = pixelToGrid(endX, endY)
+        var x = sx
+        var y = sy
+        val dx = abs(ex - sx)
+        val dy = abs(ey - sy)
+        val stepX = if (sx < ex) 1 else if (sx > ex) -1 else 0
+        val stepY = if (sy < ey) 1 else if (sy > ey) -1 else 0
+        var err = dx - dy
+
+        while (true) {
+            if (!isWalkable(x, y)) return false
+            if (x == ex && y == ey) return true
+
+            val e2 = err * 2
+            val oldX = x
+            val oldY = y
+            if (e2 > -dy) {
+                err -= dy
+                x += stepX
+            }
+            if (e2 < dx) {
+                err += dx
+                y += stepY
+            }
+
+            if (x != oldX && y != oldY) {
+                if (!isWalkable(x, oldY) || !isWalkable(oldX, y)) return false
+            }
+        }
+    }
+
     fun findPathPixels(
         startX: Int,
         startY: Int,

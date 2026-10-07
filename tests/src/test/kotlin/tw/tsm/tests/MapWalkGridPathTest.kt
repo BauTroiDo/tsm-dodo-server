@@ -40,6 +40,23 @@ class MapWalkGridPathTest {
     }
 
     @Test
+    fun `line of sight segment respects wall and open corridor`() {
+        val width = 5
+        val height = 5
+        val blocks = ByteArray(width * height)
+        fun block(gx: Int, gy: Int) {
+            blocks[(gx - 1) * height + gy - 1] = 1
+        }
+
+        block(3, 2)
+        block(3, 3)
+        val grid = MapWalkGrid(width, height, blocks)
+
+        assertFalse(grid.isSegmentWalkablePixels(10, 50, 90, 50), "straight shortcut through wall must fail")
+        assertTrue(grid.isSegmentWalkablePixels(10, 90, 90, 90), "open corridor should allow smoothing")
+    }
+
+    @Test
     fun `diagonal cannot cut through blocked corner`() {
         val width = 3
         val height = 3
