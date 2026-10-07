@@ -420,14 +420,29 @@ class WorldSimBotSystem(
         // Client swaps the player body to UniversalJmp.GetFight() and automatically
         // hides the follower while war != EWar.None. Keep the entity in world so
         // observers see the same battle cloud as a real player.
+        // Re-assert the bot world role first. Role.PlayerAppear() updates an existing
+        // Role.players entry in-place and recreates it if the client dropped it.
         worldManager.broadcastToMap(
             key.mapId,
-            buildWarStatePacket(bot.id, WORLD_ENCOUNTER_WAR_KIND),
+            buildAppearPacket(bot, key.mapId),
             instanceId = key.instanceId,
         )
+        if (bot.petNpcId > 0) {
+            worldManager.broadcastToMap(
+                key.mapId,
+                buildPetAppearPacket(bot),
+                instanceId = key.instanceId,
+            )
+        }
 
         val profile = battleProfile(bot)
         scope.launch {
+            delay(SOLO_WAR_ROLE_ASSERT_MS)
+            worldManager.broadcastToMap(
+                key.mapId,
+                buildWarStatePacket(bot.id, WORLD_ENCOUNTER_WAR_KIND),
+                instanceId = key.instanceId,
+            )
             delay(SOLO_WAR_STATE_RETRY_MS)
             worldManager.broadcastToMap(
                 key.mapId,
@@ -451,6 +466,19 @@ class WorldSimBotSystem(
                         buildWarStatePacket(bot.id, EWar.NONE),
                         instanceId = key.instanceId,
                     )
+                    delay(SOLO_WORLD_REASSERT_MS)
+                    worldManager.broadcastToMap(
+                        key.mapId,
+                        buildAppearPacket(bot, key.mapId),
+                        instanceId = key.instanceId,
+                    )
+                    if (bot.petNpcId > 0) {
+                        worldManager.broadcastToMap(
+                            key.mapId,
+                            buildPetAppearPacket(bot),
+                            instanceId = key.instanceId,
+                        )
+                    }
                 }
                 simBotLogger.info {
                     "WorldSimBot solo PvE finished: bot=" + bot.name +
@@ -467,6 +495,18 @@ class WorldSimBotSystem(
                     buildWarStatePacket(bot.id, EWar.NONE),
                     instanceId = key.instanceId,
                 )
+                worldManager.broadcastToMap(
+                    key.mapId,
+                    buildAppearPacket(bot, key.mapId),
+                    instanceId = key.instanceId,
+                )
+                if (bot.petNpcId > 0) {
+                    worldManager.broadcastToMap(
+                        key.mapId,
+                        buildPetAppearPacket(bot),
+                        instanceId = key.instanceId,
+                    )
+                }
                 simBotLogger.debug {
                     "WorldSimBot solo PvE skipped: bot=" + bot.name +
                         " map=" + key.mapId + " mine=" + mine.id
@@ -831,8 +871,10 @@ class WorldSimBotSystem(
         private const val SOLO_ENCOUNTER_DISTANCE_PX = 200
         private const val SOLO_ENCOUNTER_COOLDOWN_MS = 27_000L
         private const val WORLD_ENCOUNTER_WAR_KIND = 23 // DVT EWar.DoingFight
+        private const val SOLO_WAR_ROLE_ASSERT_MS = 80L
         private const val SOLO_WAR_STATE_RETRY_MS = 120L
         private const val SOLO_WAR_VISUAL_LEAD_MS = 650L
+        private const val SOLO_WORLD_REASSERT_MS = 80L
         private const val SOLO_RETURN_DELAY_MS = 1_200L
         private const val SOLO_RETRY_DELAY_MS = 5_000L
         private val PARTY_FOLLOW_OFFSETS = listOf(
