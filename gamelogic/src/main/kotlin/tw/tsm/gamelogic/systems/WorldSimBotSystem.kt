@@ -7,6 +7,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import tw.tsm.domain.constants.Opcodes
 import tw.tsm.domain.data.ItemDef
+import tw.tsm.domain.data.SceneEveData
 import tw.tsm.domain.enums.ChatChannel
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.protocol.PacketWriter
@@ -21,9 +22,11 @@ class WorldSimBotSystem(
     private val worldManager: WorldManager,
     private val scope: CoroutineScope,
     itemDefs: Map<Int, ItemDef>,
+    private val eveData: Map<Int, SceneEveData>,
 ) {
     private data class ScopeKey(val mapId: Int, val instanceId: Int)
     private enum class Behavior { FARMER, SOCIAL, IDLER }
+    private enum class Purpose { ROAM, NPC, DOOR, FARM }
     private data class SimBot(
         val id: Long,
         val name: String,
@@ -45,6 +48,7 @@ class WorldSimBotSystem(
         var targetX: Int,
         var targetY: Int,
         var idleUntil: Long,
+        var purpose: Purpose,
         var direction: Int,
     )
     private data class Population(
@@ -100,12 +104,13 @@ class WorldSimBotSystem(
 
         for ((key, sessions) in activeScopes) {
             val anchor = sessions.first()
+            val sceneData = eveData[key.mapId]
             val desired = desiredCount(sessions.size)
             val population = populations.computeIfAbsent(key) {
                 Population(mutableListOf(), System.currentTimeMillis() + Random.nextLong(35_000L, 70_000L))
             }
             reapExpiredBots(key, population)
-            ensurePopulation(population, anchor, desired)
+            ensurePopulation(population, anchor, desired, sceneData)
 
             for (session in sessions) {
                 val known = seen.computeIfAbsent(session.playerId) { ConcurrentHashMap.newKeySet<Long>() }
@@ -117,12 +122,12 @@ class WorldSimBotSystem(
                 }
             }
 
-            moveSomeBots(key, population)
+            moveSomeBots(key, population, sceneData)
             maybeChat(key, population)
         }
     }
 
-    private fun ensurePopulation(population: Population, anchor: GameSession, desired: Int) {
+    private fun ensurePopulation(population: Population, anchor: GameSession, desired: Int, sceneData: SceneEveData?) {
         while (population.bots.size < desired) {
             val index = population.bots.size
             val (dx, dy) = SPREAD_OFFSETS[index % SPREAD_OFFSETS.size]
@@ -157,8 +162,9 @@ class WorldSimBotSystem(
                 targetX = (x + Random.nextInt(-260, 261)).coerceIn(0, 65535),
                 targetY = (y + Random.nextInt(-260, 261)).coerceIn(0, 65535),
                 idleUntil = System.currentTimeMillis() + Random.nextLong(2_000L, 12_000L),
+                purpose = Purpose.ROAM,
                 direction = profile % 8,
-            )
+            ).also { bot -> chooseNextDestination(bot, population, sceneData) }
         }
         while (population.bots.size > desired) {
             val removed = population.bots.removeLast()
@@ -185,7 +191,7 @@ class WorldSimBotSystem(
         }
     }
 
-    private fun moveSomeBots(key: ScopeKey, population: Population) {
+    private fun moveSomeBots(key: ScopeKey, population: Population, sceneData: SceneEveData?) {
         if (population.bots.isEmpty()) return
         val now = System.currentTimeMillis()
         val movers = population.bots.shuffled().take(minOf(5, population.bots.size))
@@ -194,7 +200,7 @@ class WorldSimBotSystem(
 
             val reached = kotlin.math.abs(bot.targetX - bot.x) <= 18 && kotlin.math.abs(bot.targetY - bot.y) <= 18
             if (reached) {
-                chooseNextDestination(bot, population)
+                chooseNextDestination(bot, population, sceneData)
                 continue
             }
 
@@ -212,29 +218,80 @@ class WorldSimBotSystem(
         }
     }
 
-    private fun chooseNextDestination(bot: SimBot, population: Population) {
+    private fun chooseNextDestination(bot: SimBot, population: Population, sceneData: SceneEveData?) {
         val now = System.currentTimeMillis()
+        val npcPois = sceneData?.npcs?.values
+            ?.filter { !it.close && !it.isHide && it.x > 0 && it.y > 0 }
+            ?.map { it.x to it.y }
+            .orEmpty()
+        val doorPois = sceneData?.doors?.values
+            ?.filter { it.x > 0 && it.y > 0 }
+            ?.map { it.x to it.y }
+            .orEmpty()
+        val farmPois = buildList {
+            sceneData?.goods?.values?.filter { it.x > 0 && it.y > 0 }?.forEach { add(it.x to it.y) }
+            sceneData?.mines?.values
+                ?.filter { it.sizeKind == 0 && it.gridWidth > 0 && it.gridHeight > 0 }
+                ?.forEach {
+                    add(
+                        ((it.gridX + it.gridWidth / 2) * 20) to
+                            ((it.gridY + it.gridHeight / 2) * 20)
+                    )
+                }
+        }
+
+        fun setTarget(point: Pair<Int, Int>, purpose: Purpose, restMs: LongRange) {
+            bot.targetX = (point.first + Random.nextInt(-45, 46)).coerceIn(0, 65535)
+            bot.targetY = (point.second + Random.nextInt(-45, 46)).coerceIn(0, 65535)
+            bot.purpose = purpose
+            bot.idleUntil = now + Random.nextLong(restMs.first, restMs.last + 1)
+        }
+
         when (bot.behavior) {
             Behavior.FARMER -> {
-                bot.targetX = (bot.originX + Random.nextInt(-560, 561)).coerceIn(0, 65535)
-                bot.targetY = (bot.originY + Random.nextInt(-560, 561)).coerceIn(0, 65535)
-                bot.idleUntil = now + Random.nextLong(1_000L, 5_000L)
+                when {
+                    farmPois.isNotEmpty() && Random.nextInt(100) < 65 ->
+                        setTarget(farmPois.random(), Purpose.FARM, 2_000L..7_000L)
+                    doorPois.isNotEmpty() && Random.nextInt(100) < 35 ->
+                        setTarget(doorPois.random(), Purpose.DOOR, 1_000L..4_000L)
+                    else -> {
+                        bot.targetX = (bot.originX + Random.nextInt(-760, 761)).coerceIn(0, 65535)
+                        bot.targetY = (bot.originY + Random.nextInt(-760, 761)).coerceIn(0, 65535)
+                        bot.purpose = Purpose.ROAM
+                        bot.idleUntil = now + Random.nextLong(1_000L, 5_000L)
+                    }
+                }
             }
             Behavior.SOCIAL -> {
-                val other = population.bots.filter { it.id != bot.id }.randomOrNull()
-                if (other != null && Random.nextBoolean()) {
-                    bot.targetX = (other.x + Random.nextInt(-70, 71)).coerceIn(0, 65535)
-                    bot.targetY = (other.y + Random.nextInt(-70, 71)).coerceIn(0, 65535)
-                } else {
-                    bot.targetX = (bot.originX + Random.nextInt(-260, 261)).coerceIn(0, 65535)
-                    bot.targetY = (bot.originY + Random.nextInt(-260, 261)).coerceIn(0, 65535)
+                when {
+                    npcPois.isNotEmpty() && Random.nextInt(100) < 70 ->
+                        setTarget(npcPois.random(), Purpose.NPC, 6_000L..18_000L)
+                    else -> {
+                        val other = population.bots.filter { it.id != bot.id }.randomOrNull()
+                        if (other != null) {
+                            setTarget(other.x to other.y, Purpose.NPC, 4_000L..12_000L)
+                        } else {
+                            bot.targetX = (bot.originX + Random.nextInt(-320, 321)).coerceIn(0, 65535)
+                            bot.targetY = (bot.originY + Random.nextInt(-320, 321)).coerceIn(0, 65535)
+                            bot.purpose = Purpose.ROAM
+                            bot.idleUntil = now + Random.nextLong(4_000L, 12_000L)
+                        }
+                    }
                 }
-                bot.idleUntil = now + Random.nextLong(4_000L, 14_000L)
             }
             Behavior.IDLER -> {
-                bot.targetX = (bot.originX + Random.nextInt(-120, 121)).coerceIn(0, 65535)
-                bot.targetY = (bot.originY + Random.nextInt(-120, 121)).coerceIn(0, 65535)
-                bot.idleUntil = now + Random.nextLong(14_000L, 38_000L)
+                when {
+                    npcPois.isNotEmpty() && Random.nextInt(100) < 55 ->
+                        setTarget(npcPois.random(), Purpose.NPC, 15_000L..35_000L)
+                    doorPois.isNotEmpty() && Random.nextInt(100) < 20 ->
+                        setTarget(doorPois.random(), Purpose.DOOR, 8_000L..20_000L)
+                    else -> {
+                        bot.targetX = (bot.originX + Random.nextInt(-160, 161)).coerceIn(0, 65535)
+                        bot.targetY = (bot.originY + Random.nextInt(-160, 161)).coerceIn(0, 65535)
+                        bot.purpose = Purpose.ROAM
+                        bot.idleUntil = now + Random.nextLong(14_000L, 38_000L)
+                    }
+                }
             }
         }
     }
@@ -251,7 +308,12 @@ class WorldSimBotSystem(
         val now = System.currentTimeMillis()
         if (population.bots.isEmpty() || now < population.nextChatAt) return
         val bot = population.bots.random()
-        val line = chatLines.random()
+        val line = when (bot.purpose) {
+            Purpose.NPC -> listOf("Mua xong rồi, đi tiếp thôi.", "NPC này có nhiệm vụ à?", "Để xem có gì hữu ích.").random()
+            Purpose.DOOR -> listOf("Qua khu bên kia xem nào.", "Đổi bãi farm thôi.", "Đi tiếp nhé.").random()
+            Purpose.FARM -> listOf("Farm thêm chút nữa.", "Bãi này quái ổn đấy.", "Kiếm thêm ít đồ rồi về.").random()
+            Purpose.ROAM -> chatLines.random()
+        }
         worldManager.broadcastToMap(key.mapId, buildChatPacket(bot, line), instanceId = key.instanceId)
         population.nextChatAt = now + Random.nextLong(45_000L, 95_000L)
     }
