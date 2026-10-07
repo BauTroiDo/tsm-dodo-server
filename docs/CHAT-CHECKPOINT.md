@@ -4569,3 +4569,15 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Updated targeted suite PASS: 32 tests, 0 failures/errors/skips. Production source3005abc was built while this follow-up was reviewed; runtime has NOT been restarted with the intermediate commit. Final full build and updated deployment follow.
 
 - Final autosave follow-up full local gradlew.bat test build --rerun-tasks PASS21/21 in1m07s: tests=761, failures=0, errors=0, skipped=5; diff check PASS. Intermediate production3005abc full build PASS21/21 in3m21s; no runtime restart yet.
+
+
+### 2026-10-08 ExpSlot production runtime verification
+- Final deployed HEAD: ffae8db20d58d6adf18e2f24ac4a63eb18bae917.
+- Production full build PASS 21/21 before restart.
+- Runtime restart PASS via WMI launcher; java PID 9608, StartTime 2026-10-08 05:44:10 local.
+- TCP 6613 LISTENING on the new java process.
+- Startup log PASS: IOS_FNpcSlot loaded 400 rows, UISell loaded 70 rows, autosave and WorldSimBotSystem started, Netty bound 0.0.0.0:6613, server reported ready.
+- Post-restart runtime error scan found no application Exception/ERROR/FATAL/BindException/OutOfMemory entries; matches were only Gradle task names containing ConfigurationErrors SKIPPED from the build output captured in the same runtime log.
+- ExpSlot authoritative gates/items/atomic settlement and autosave/disconnect race regressions remain covered by the final 761-test local full gate and 32-test targeted suite documented above.
+- Client x1/x10 gameplay confirmation is still pending an actual in-game test; runtime/startup PASS is not marked as gameplay PASS.
+- Jackpot accumulation/original RNG/award.kind semantics and S76-3 marquee remain evidence-blocked and were not invented or changed.
