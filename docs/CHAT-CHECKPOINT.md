@@ -4399,3 +4399,9 @@ Exact stage1..15 boundaries are NOT yet locked and must not be hard-coded as DVT
 - Production restarted; HEAD 7cbaf48; TCP 6613 PASS.
 - Live runtime evidence after deploy: autonomous bot on map 63000 repeatedly ran real headless fights 14/24/32/36, winning in 1-3 rounds; server-side encounter lifecycle is healthy.
 - Client visual/movement confirmation pending user retest.
+
+### 2026-10-07 — WorldSimBot battle-cloud runtime PASS
+- User runtime confirmed battle cloud now appears correctly when autonomous bot encounters monsters.
+- Movement smoothness also confirmed improved.
+- Effective gameplay baseline: movement smoothing 7cbaf48 + role re-assert cloud fix 0bcc815.
+- Headless PvE remains real server-side BattleInstance using Eve.mmg/Eve.emg MineData fight resolution, with no bot economy rewards.
