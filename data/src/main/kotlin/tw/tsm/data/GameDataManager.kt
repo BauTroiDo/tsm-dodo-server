@@ -241,6 +241,10 @@ class GameDataManager(
     var uiSellDefs: Map<Int, UISellDef> = emptyMap()
         private set
 
+    /** DVT warrior EXP slot rows (IOS_FNpcSlot_C.dat). */
+    var fNpcSlotDefs: Map<Int, FNpcSlotDef> = emptyMap()
+        private set
+
     /** Định nghĩa tăng cường tướng (key = cấp sao đích 1~15)*/
     var npcUpgradeDefs: Map<Int, NpcUpgradeDef> = emptyMap()
         private set
@@ -887,6 +891,12 @@ class GameDataManager(
                 npcUpgradeDefs = NpcUpgradeDatLoader.load(bytes)
                 logger.warn { "IOS_NpcUpgrade_C.dat không tồn tại, fallback NpcUpgrade_C.dat: ${npcUpgradeDefs.size} bản ghi" }
             }
+        }
+
+        // Warrior EXP slot — Lua DVT DataManager đọc Data/IOS_FNpcSlot_C.dat.
+        loadFile(dataIosDir, "IOS_FNpcSlot_C.dat") { bytes ->
+            fNpcSlotDefs = FNpcSlotDatLoader.load(bytes)
+            logger.info { "Nạp IOS_FNpcSlot xong: ${fNpcSlotDefs.size} bản ghi" }
         }
 
         // UISell (Định nghĩa tiêu hao giao diện)

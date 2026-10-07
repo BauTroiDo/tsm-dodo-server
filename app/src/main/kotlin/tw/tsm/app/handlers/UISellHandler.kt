@@ -22,6 +22,7 @@ import tw.tsm.gamelogic.systems.RoleCountSystem
 import tw.tsm.gamelogic.systems.SkillSystem
 import tw.tsm.gamelogic.systems.SlotMachineSystem
 import tw.tsm.gamelogic.systems.PokeSystem
+import tw.tsm.gamelogic.systems.ExpSlotSystem
 import tw.tsm.gamelogic.systems.UISellSystem
 import tw.tsm.gamelogic.systems.UiSellQuote
 import tw.tsm.gamelogic.systems.WorldManager
@@ -68,6 +69,7 @@ class UISellHandler(
     private val furnaceSystem: FurnaceSystem? = null,
     private val furnaceResponse: FurnaceResponseSender? = null,
     private val pokeSystem: PokeSystem? = null,
+    private val expSlotSystem: ExpSlotSystem? = null,
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.UI_SELL
@@ -105,9 +107,10 @@ class UISellHandler(
             delay(POKE_UISELL_QUERY_DELAY_MS)
         }
 
-        val quote = when (sellId) {
-            UISellSystem.SELL_SLOT_COIN -> querySlotCoin(charId, args)
-            UISellSystem.SELL_POKE_COIN -> queryPokeCoin(charId, args)
+        val quote = when {
+            sellId == UISellSystem.SELL_SLOT_COIN -> querySlotCoin(charId, args)
+            sellId == UISellSystem.SELL_POKE_COIN -> queryPokeCoin(charId, args)
+            sellId in ExpSlotSystem.SELL_IDS -> queryExpSlot(charId, sellId, args)
             else -> uiSellSystem.query(charId, sellId)
         }
         when (quote) {
@@ -168,9 +171,19 @@ class UISellHandler(
         val charId = session.roleId.toLong()
 
         // kiểm tra hợp lệ lại báo giá (thiết kế vô trạng thái: lấy trạng thái hiện tại của server làm chuẩn, không tin client)
-        val quote = uiSellSystem.query(charId, sellId)
+        val quote = if (sellId in ExpSlotSystem.SELL_IDS) {
+            queryExpSlot(charId, sellId, args)
+        } else {
+            uiSellSystem.query(charId, sellId)
+        }
         if (quote is UiSellQuote.Fail) {
             responseSender.sendUiSellFail(session, 2, sellId, quote.reason, quote.value)
+            return
+        }
+
+        if (sellId in ExpSlotSystem.SELL_IDS) {
+            if (!processPayment(session, sellId, useKind, bagIndex, quote)) return
+            executeExpSlot(session, sellId, args)
             return
         }
 
@@ -743,6 +756,65 @@ class UISellHandler(
         responseSender.sendPointBalance(session, real, virtual)
         PokePackets.sendAwards(session, system, state)
         responseSender.sendUiSellSuccess(session, sellId)
+    }
+
+    private fun queryExpSlot(charId: Long, sellId: Int, args: List<Int>): UiSellQuote {
+        val system = expSlotSystem ?: return UiSellQuote.Fail(UISellSystem.REASON_NOT_USABLE)
+        if (!system.validateTarget(charId, sellId, args)) {
+            return UiSellQuote.Fail(UISellSystem.REASON_NOT_USABLE)
+        }
+        val (itemId, count) = system.requirement(sellId)
+            ?: return UiSellQuote.Fail(UISellSystem.REASON_NO_DATA)
+        return UiSellQuote.Item(itemId, count)
+    }
+
+    private suspend fun executeExpSlot(session: GameSession, sellId: Int, args: List<Int>) {
+        val system = expSlotSystem ?: run {
+            responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_NOT_USABLE)
+            return
+        }
+        val result = system.spin(session.roleId.toLong(), sellId, args)
+        if (result == null) {
+            responseSender.sendUiSellFail(session, 2, sellId, UISellSystem.REASON_NOT_USABLE)
+            return
+        }
+
+        val gain = result.gain
+        responseSender.sendFollowNpcAttribute(
+            session, gain.slotIndex, EAttribute.EXP,
+            gain.after.exp.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+        )
+        if (gain.levelGained > 0) {
+            responseSender.sendFollowNpcAttribute(session, gain.slotIndex, EAttribute.LV, gain.after.level)
+            responseSender.sendFollowNpcAttribute(session, gain.slotIndex, EAttribute.SKILL_POINT, gain.after.skillPoint)
+            responseSender.sendFollowNpcAttribute(session, gain.slotIndex, EAttribute.HP, gain.after.hp.toInt())
+            responseSender.sendFollowNpcAttribute(session, gain.slotIndex, EAttribute.SP, gain.after.sp)
+        }
+
+        responseSender.sendUiSellSuccess(session, sellId)
+
+        val writer = PacketWriter(4 + result.awards.size * 8)
+            .writeByte(Opcodes.EXP_SLOT).writeByte(2).writeByte(0)
+            .writeByte(result.awards.size)
+        result.awards.forEach { award ->
+            writer.writeByte(award.kind).writeIntLE(award.exp)
+            award.icons.take(3).forEach { writer.writeByte(it) }
+        }
+        session.send(writer.toByteArray())
+
+        session.send(
+            PacketWriter(7)
+                .writeByte(Opcodes.EXP_SLOT).writeByte(5).writeByte(0)
+                .writeIntLE(result.jackpotAfter.coerceIn(0L, Int.MAX_VALUE.toLong()).toInt())
+                .toByteArray()
+        )
+        logger.info {
+            session.characterName + " ExpSlot sellId=" + sellId +
+                " slot=" + gain.slotIndex + " npcId=" + gain.after.npcId +
+                " spins=" + result.awards.size +
+                " baseExp=" + result.awards.sumOf { it.exp.toLong() } +
+                " jackpotExtra=" + result.jackpotExtra
+        }
     }
 
     /** Refresh một category của UIFurnace sau khi UISell đã trừ phí thành công. */

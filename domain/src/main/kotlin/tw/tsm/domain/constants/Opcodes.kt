@@ -148,6 +148,9 @@ object Opcodes {
     @Deprecated("Use DUNGEON; DVT protocolTable[47] is Dungeon")
     const val MISSION = DUNGEON
 
+    /** Võ tướng EXP Slot / UIExpSlotMachine (protocolTable[76]) */
+    const val EXP_SLOT = 76
+
     /** Danh sách hoạt động / Sự kiện (protocolTable[77]) */
     const val ACTIVITY = 77
 

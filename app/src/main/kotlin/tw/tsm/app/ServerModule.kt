@@ -52,11 +52,13 @@ import tw.tsm.domain.interfaces.repositories.UiSellCountRepository
 import tw.tsm.domain.interfaces.repositories.CharacterCurrencyRepository
 import tw.tsm.domain.interfaces.repositories.CollectionBookRepository
 import tw.tsm.domain.interfaces.repositories.SlotMachineRepository
+import tw.tsm.domain.interfaces.repositories.ExpSlotRepository
 import tw.tsm.domain.interfaces.repositories.PokeRepository
 import tw.tsm.persistence.repositories.UiSellCountRepositoryImpl
 import tw.tsm.persistence.repositories.CharacterCurrencyRepositoryImpl
 import tw.tsm.persistence.repositories.CollectionBookRepositoryImpl
 import tw.tsm.persistence.repositories.SlotMachineRepositoryImpl
+import tw.tsm.persistence.repositories.ExpSlotRepositoryImpl
 import tw.tsm.persistence.repositories.PokeRepositoryImpl
 import tw.tsm.persistence.repositories.DispatchRepositoryImpl
 import tw.tsm.persistence.repositories.DungeonRunRepositoryImpl
@@ -146,6 +148,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             register(get<ActivityModelHandler>())
             register(get<MallHandler>())
             register(get<SlotMachineHandler>())
+            register(get<ExpSlotHandler>())
             register(get<PokeHandler>())
             register(get<MiningHandler>())
         }
@@ -276,6 +279,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single<CharacterCurrencyRepository> { CharacterCurrencyRepositoryImpl() }
     single<CollectionBookRepository> { CollectionBookRepositoryImpl() }
     single<SlotMachineRepository> { SlotMachineRepositoryImpl() }
+    single<ExpSlotRepository> { ExpSlotRepositoryImpl() }
     single<PokeRepository> { PokeRepositoryImpl() }
     single<DispatchRepository> { DispatchRepositoryImpl() }
     single<DungeonRunRepository> { DungeonRunRepositoryImpl() }
@@ -408,6 +412,14 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<PetRosterPolicy>(),
             get<PlayerStateManager>(),
             get<GameDataManager>().sacredEquipPrimaryDefs,
+        )
+    }
+    single {
+        ExpSlotSystem(
+            get<GameDataManager>().fNpcSlotDefs,
+            get<ExpSlotRepository>(),
+            get<PetSystem>(),
+            get<GameDataManager>().npcDefs,
         )
     }
     single {
@@ -779,8 +791,10 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<FurnaceSystem>(),
             get<FurnaceResponseSender>(),
             get<PokeSystem>(),
+            get<ExpSlotSystem>(),
         )
     }
+    single { ExpSlotHandler(get<ExpSlotSystem>()) }
     single { PetUpgradeHandler(get(), get()) }
     single { PetRebornHandler(get(), get(), get()) }
     single { JiugonggeHandler(get()) }
