@@ -220,6 +220,9 @@ object Opcodes {
     /** Hệ thống Thần Thoại/Godskin (DVT UIGodskin.lua / protocolTable[108]) */
     const val GODSKIN = 108
 
+    /** World Atlas custom UI — quyền GM + teleport trực tiếp từ bản đồ lớn */
+    const val WORLD_ATLAS = 250
+
     /** Gỡ lỗi/thử nghiệm*/
     const val DEBUG = 199
 }
