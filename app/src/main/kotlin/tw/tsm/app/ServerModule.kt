@@ -127,6 +127,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             register(get<WarriorRepositoryHandler>())
             register(get<MacroBoxHandler>())
             register(get<TeleportHandler>())
+            register(get<WorldAtlasHandler>())
             register(get<LimitTimeDungeonHandler>())
             register(get<DungeonHandler>())
             register(get<EternalDungeonHandler>())
@@ -724,6 +725,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<AdminBypassPolicy>()
         )
     }
+    single { WorldAtlasHandler(get(), get(), get()) }
     single {
         LimitTimeDungeonHandler(
             get<LimitTimeDungeonSystem>(), get<RoleCountSystem>(), get<PartySystem>(),
