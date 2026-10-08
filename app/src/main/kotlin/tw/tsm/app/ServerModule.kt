@@ -725,7 +725,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<AdminBypassPolicy>()
         )
     }
-    single { WorldAtlasHandler(get(), get(), get()) }
+    single { WorldAtlasHandler(get(), get(), get(), get<GameDataManager>().mapWalkGrids) }
     single {
         LimitTimeDungeonHandler(
             get<LimitTimeDungeonSystem>(), get<RoleCountSystem>(), get<PartySystem>(),

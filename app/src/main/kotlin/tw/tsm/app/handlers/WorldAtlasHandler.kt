@@ -7,6 +7,7 @@ import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.PacketHandler
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
+import tw.tsm.domain.data.MapWalkGrid
 import tw.tsm.gamelogic.systems.WorldManager
 import tw.tsm.protocol.PacketReader
 import tw.tsm.protocol.PacketWriter
@@ -28,6 +29,7 @@ class WorldAtlasHandler(
     private val responseSender: ResponseSender,
     private val worldManager: WorldManager,
     private val characterRepository: CharacterRepository,
+    private val mapWalkGrids: Map<Int, MapWalkGrid>,
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.WORLD_ATLAS
@@ -35,6 +37,7 @@ class WorldAtlasHandler(
     private val worldMapSizes = mapOf(
         11000 to (3136 to 1920),
         12000 to (2688 to 3264),
+        63000 to (2688 to 3264),
         13000 to (2432 to 1920),
         14000 to (1920 to 2688),
         15000 to (3264 to 2624),
@@ -95,29 +98,51 @@ class WorldAtlasHandler(
         val sceneId = reader.readUShortLE()
         val x = reader.readUShortLE()
         val y = reader.readUShortLE()
-        val size = worldMapSizes[sceneId]
-
-        if (size == null || x >= size.first || y >= size.second) {
+        val walkGrid = mapWalkGrids[sceneId]
+        if (walkGrid == null) {
             logger.warn {
-                "WorldAtlas invalid GM target " + session.characterName +
-                    ": scene=" + sceneId + " x=" + x + " y=" + y + " size=" + size
+                "WorldAtlas missing walk-grid for fixed GM target " + session.characterName +
+                    ": scene=" + sceneId + " x=" + x + " y=" + y
             }
             sendTeleportResult(session, 2)
             return
         }
 
+        val maxX = walkGrid.width * 20
+        val maxY = walkGrid.height * 20
+        if (x >= maxX || y >= maxY) {
+            logger.warn {
+                "WorldAtlas invalid fixed GM target " + session.characterName +
+                    ": scene=" + sceneId + " x=" + x + " y=" + y +
+                    " walkSize=(" + maxX + "," + maxY + ")"
+            }
+            sendTeleportResult(session, 2)
+            return
+        }
+
+        val safeTarget = walkGrid.nearestWalkable(x, y)
+        if (safeTarget == null) {
+            logger.warn {
+                "WorldAtlas no walkable GM target " + session.characterName +
+                    ": scene=" + sceneId + " x=" + x + " y=" + y
+            }
+            sendTeleportResult(session, 2)
+            return
+        }
+        val (safeX, safeY) = safeTarget
+
         val charId = session.roleId.toLong()
         worldManager.leaveMap(session)
-        worldManager.enterMap(session, sceneId, x, y)
-        characterRepository.updatePosition(charId, sceneId, x, y)
+        worldManager.enterMap(session, sceneId, safeX, safeY)
+        characterRepository.updatePosition(charId, sceneId, safeX, safeY)
 
-        responseSender.sendPlayerTeleport(session, session.playerId, sceneId, x, y)
+        responseSender.sendPlayerTeleport(session, session.playerId, sceneId, safeX, safeY)
         responseSender.sendSceneChange(
             session,
             session.playerId,
             sceneId,
-            x,
-            y,
+            safeX,
+            safeY,
             session.equipItemIds,
             session.titleId,
         )
@@ -125,7 +150,8 @@ class WorldAtlasHandler(
         sendTeleportResult(session, 0)
         logger.info {
             "WorldAtlas GM teleport " + session.characterName +
-                ": scene=" + sceneId + " x=" + x + " y=" + y
+                ": scene=" + sceneId + " requested=(" + x + "," + y + ")" +
+                " safe=(" + safeX + "," + safeY + ")"
         }
     }
 
