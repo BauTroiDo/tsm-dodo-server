@@ -23,6 +23,7 @@ class MallHandler(
     private val moneySystem: MoneySystem,
     private val currencySystem: PlayerCurrencySystem,
     private val responseSender: ResponseSender,
+    private val goodsSaleDefs: List<GoodsSaleDef> = emptyList(),
 ) : PacketHandler {
     override val mainKind: Int = Opcodes.MALL
 
@@ -51,6 +52,17 @@ class MallHandler(
         val clientPrice = reader.readUShortLE()
         val packageCount = reader.readUShortLE()
         val free = reader.readUByte()
+
+        // UIShop uses storeKind=1 for normal Tiệm items, including Elf gift bags.
+        // Prior implementation only handled Doro storeKind=5, so every ordinary
+        // purchase failed and the PC client displayed a misleading "not enough silver".
+        if (storeKind == STORE_STANDARD) {
+            purchaseStandard(
+                session, mainPage, showKind, pageIndex, itemId,
+                clientPrice, packageCount, free
+            )
+            return
+        }
 
         if (storeKind != DoroSystem.STORE_DORO || packageCount != 1 || free != 0) {
             mallLogger.warn {
@@ -141,6 +153,102 @@ class MallHandler(
                 " cost=" + packageDef.saleCredit +
                 " draws=" + rewards.size +
                 " rewards=" + rewards.joinToString { it.itemId.toString() + "x" + it.count }
+        }
+    }
+
+    /**
+     * C66-001 ordinary PC DVT Tiệm purchase.
+     *
+     * Always validate the server's exact GS_C row, price and page index. Only
+     * saleKind=0 without limited-use flags is accepted here: limited-time,
+     * daily-limit and event goods require separate counters/validation.
+     */
+    private suspend fun purchaseStandard(
+        session: GameSession,
+        mainPage: Int,
+        showKind: Int,
+        pageIndex: Int,
+        itemId: Int,
+        clientPrice: Int,
+        packageCount: Int,
+        free: Int,
+    ) {
+        fun reject() = responseSender.sendMallPurchaseResult(session, itemId, RESULT_FAIL)
+        if (free != 0 || packageCount !in 1..MAX_STANDARD_PURCHASE_COUNT) {
+            reject()
+            return
+        }
+        val offer = goodsSaleDefs.firstOrNull { row ->
+            row.storeKind == STORE_STANDARD &&
+                row.mainKind == mainPage &&
+                row.subKind == showKind &&
+                row.pageItemIndex == pageIndex &&
+                row.itemId == itemId &&
+                row.saleCredit == clientPrice &&
+                row.open &&
+                (row.bitFunction and NORMAL_CLIENT_BIT) == NORMAL_CLIENT_BIT &&
+                row.saleKind == 0 &&
+                row.flag == 0 &&
+                row.dayCount == 0 &&
+                row.buyLimitFlag == 0 &&
+                row.specialEvent == 0L &&
+                row.timeKind == 0 &&
+                row.value > 0
+        }
+        if (offer == null) {
+            mallLogger.warn {
+                "Reject normal Tiệm offer: store=1 page=$mainPage kind=$showKind " +
+                    "index=$pageIndex item=$itemId clientPrice=$clientPrice"
+            }
+            reject()
+            return
+        }
+        // Multiply in Long to avoid malicious C66 quantity/price integer overflow.
+        val costLong = offer.saleCredit.toLong() * packageCount
+        val amountLong = offer.value.toLong() * packageCount
+        if (costLong !in 1..Int.MAX_VALUE.toLong() ||
+            amountLong !in 1..MAX_STANDARD_TOTAL_ITEMS.toLong()
+        ) {
+            reject()
+            return
+        }
+        val cost = costLong.toInt()
+        val amount = amountLong.toInt()
+        val characterId = session.roleId.toLong()
+        val rewards = listOf(itemId to amount)
+        if (!inventorySystem.canAddRewardsToBag(characterId, rewards)) {
+            mallLogger.info { "Normal Tiệm bag full: charId=$characterId item=$itemId" }
+            reject()
+            return
+        }
+        val charge = offer.copy(saleCredit = cost)
+        if (!deductPayment(characterId, charge)) {
+            mallLogger.info {
+                "Normal Tiệm insufficient balance: charId=$characterId " +
+                    "kind=${offer.currencyKind} cost=$cost item=$itemId"
+            }
+            reject()
+            return
+        }
+        val changedSlots = try {
+            inventorySystem.addRewardsToBagExact(characterId, rewards)
+        } catch (e: Exception) {
+            mallLogger.error(e) { "Normal Tiệm item grant failed: charId=$characterId item=$itemId" }
+            null
+        }
+        if (changedSlots == null) {
+            refundPayment(characterId, charge)
+            reject()
+            return
+        }
+        changedSlots.forEach { (slot, thing) ->
+            responseSender.sendSetBagItem(session, slot, thing, showMsg = false)
+        }
+        syncCurrency(session, charge)
+        responseSender.sendMallPurchaseResult(session, itemId, RESULT_SUCCESS)
+        mallLogger.info {
+            "Normal Tiệm purchase succeeded: charId=$characterId item=$itemId " +
+                "amount=$amount currency=${offer.currencyKind} cost=$cost"
         }
     }
 
@@ -249,6 +357,10 @@ class MallHandler(
     }
 
     companion object {
+        private const val STORE_STANDARD = 1
+        private const val NORMAL_CLIENT_BIT = 2
+        private const val MAX_STANDARD_PURCHASE_COUNT = 99
+        private const val MAX_STANDARD_TOTAL_ITEMS = 999
         private const val REQUEST_SIZE = 11
         private const val RESULT_SUCCESS = 1
         private const val RESULT_FAIL = 2
