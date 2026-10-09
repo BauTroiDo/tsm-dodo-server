@@ -1,5 +1,8 @@
 # TS Đa Vũ Trụ PC — Túi Tinh Linh / vé mở khóa, 10/10/2026
 
+> **CẬP NHẬT TRIỂN KHAI 10/10/2026:** PR #11 đã được triển khai lên Windows server lúc 05:23 (UTC+7), cổng 6613 hoạt động (PID 1348 tại thời điểm kiểm tra). Kiểm thử trên server: **833 tests, 0 failures, 0 errors, 5 skipped**, gồm 6 test ElfTokenUnlockRegressionTest. Bản sao lưu: `C:\\Server-Game\\tsm_dodo\\backups\\ElfToken239_before_PR11_20261010`. Chi tiết: [báo cáo triển khai live PR #11](pc-dvt-elf-token-239-live-deploy-20261010.md). Các ghi chú "chưa deploy" bên dưới chỉ phản ánh trạng thái ban đầu trước đợt triển khai này. **Chưa kiểm chứng thao tác dùng vé trong client với nhân vật test.**
+
+
 ## Kết quả thực tế và nguồn gốc vấn đề
 
 Người chơi báo mua túi ở mục Tinh Linh, mở ra nhưng không thấy Tinh Linh. Đối chiếu `logs/runtime-production.log` của Windows server `192.168.1.69`, nhân vật `charId=31`:
