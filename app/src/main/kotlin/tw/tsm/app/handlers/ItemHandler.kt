@@ -607,6 +607,11 @@ class ItemHandler(
             handleDirectCurrencyItem(session, characterId, bagIndex, bagItem, itemDef, quantity)
             return
         }
+        if (itemDef != null && itemDef.specialAbility == EItemUseKind.ELF_TOKEN) {
+            // Duplicate/invalid Elf tickets must stay in bag, never consume as no-op.
+            elfTokenUnlock?.redeem(session, bagIndex, quantity, followIndex)
+            return
+        }
         if (itemDef != null && itemDef.specialAbility == EItemUseKind.SOUL) {
             handleSoulItem(session, characterId, bagIndex, bagItem)
             return
