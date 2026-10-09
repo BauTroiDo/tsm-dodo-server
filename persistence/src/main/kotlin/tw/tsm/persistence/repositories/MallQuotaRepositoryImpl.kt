@@ -26,15 +26,15 @@ class MallQuotaRepositoryImpl : MallQuotaRepository {
                 (CharacterMallQuotas.flag eq row.flag)
             if (CharacterMallQuotas.selectAll().where { filter }.firstOrNull() == null) {
                 CharacterMallQuotas.insert {
-                    it[characterId] = charId
-                    it[flag] = row.flag
-                    it[period] = row.period
-                    it[count] = row.count
+                    it[CharacterMallQuotas.characterId] = charId
+                    it[CharacterMallQuotas.flag] = row.flag
+                    it[CharacterMallQuotas.period] = row.period
+                    it[CharacterMallQuotas.count] = row.count
                 }
             } else {
                 CharacterMallQuotas.update({ filter }) {
-                    it[period] = row.period
-                    it[count] = row.count
+                    it[CharacterMallQuotas.period] = row.period
+                    it[CharacterMallQuotas.count] = row.count
                 }
             }
         }
