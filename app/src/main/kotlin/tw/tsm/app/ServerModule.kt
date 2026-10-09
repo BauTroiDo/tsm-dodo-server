@@ -451,7 +451,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single {
         LimitTimeDungeonSystem(
             get<GameDataManager>().limitTimeDungeonDefs,
-            get<RoleCountSystem>(), get<ResponseSender>(), get<SpecialSceneTeleportService>(), get<CoroutineScope>(), get<AdminBypassPolicy>()
+            get<RoleCountSystem>(), get<ResponseSender>(), get<SpecialSceneTeleportService>(), get<CoroutineScope>(), get<AdminBypassPolicy>(), get<QuestSystem>()
         )
     }
     single {
