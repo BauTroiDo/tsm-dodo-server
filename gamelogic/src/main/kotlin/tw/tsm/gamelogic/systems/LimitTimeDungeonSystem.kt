@@ -21,7 +21,7 @@ class LimitTimeDungeonSystem(
     private val specialTeleport: SpecialSceneTeleportService,
     private val scope: CoroutineScope,
     private val adminBypassPolicy: AdminBypassPolicy = AdminBypassPolicy(),
-    private val questSystem: QuestSystem? = null,
+    private val questSystem: QuestSystem,
 ) {
     private val jobs = ConcurrentHashMap<Long, Job>()
 
@@ -37,11 +37,8 @@ class LimitTimeDungeonSystem(
      */
     suspend fun ensureEncounterMission(session: GameSession, def: LimitTimeDungeonDef): Boolean {
         if (def.missionId <= 0) return true
-        // Legacy unit-test callers can omit this optional dependency; production
-        // Koin explicitly wires QuestSystem.
-        val quests = questSystem ?: return true
         return try {
-            val created = quests.ensureMissionStarted(session.roleId.toLong(), def.missionId)
+            val created = questSystem.ensureMissionStarted(session.roleId.toLong(), def.missionId)
             if (created) {
                 responseSender.sendAddMissionStep(session, def.missionId, 1)
                 limitDungeonLogger.info {
