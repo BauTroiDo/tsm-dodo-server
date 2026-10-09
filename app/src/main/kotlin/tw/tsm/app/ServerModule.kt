@@ -718,6 +718,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { AstrolabeHandler(get<AstrolabeSystem>(), get<ResponseSender>()) }
     single { SoulHandler(get<SoulSystem>(), get<PetSystem>(), get<GameDataManager>().npcDefs, get<ResponseSender>()) }
     single { ElfHandler(get<ElfRepository>(), get<BitFlagSystem>(), get<InventorySystem>(), get<ResponseSender>(), get<GameDataManager>().itemDefs, get<ElfCatalog>()) }
+    single { ElfTokenUnlockService(get<BitFlagSystem>(), get<InventorySystem>(), get<ElfCatalog>(), get<ResponseSender>(), get<GameDataManager>().itemDefs) }
     single { FurnaceResponseSender() }
     single { GodskinResponseSender() }
     single { GodskinHandler(get<MythEnchantSystem>(), get<MythUpgradeSystem>(), get<GodskinResponseSender>(), get<ResponseSender>()) }
