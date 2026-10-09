@@ -81,6 +81,7 @@ class ItemHandler(
     private val soulGenerationPolicy: OfflineSoulGenerationPolicy? = null,
     private val soulResponseSender: SoulResponseSender? = null,
     private val playerCurrencySystem: PlayerCurrencySystem? = null,
+    private val elfTokenUnlock: ElfTokenUnlockService? = null,
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.SHOP  // 23
