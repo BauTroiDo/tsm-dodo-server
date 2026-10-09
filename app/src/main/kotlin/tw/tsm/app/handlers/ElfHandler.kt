@@ -78,6 +78,9 @@ object ElfPackets {
         }
         session.send(w.toByteArray())
     }
+    fun acquired(session: SessionSender, elfNo: Int) {
+        session.send(header(1).writeShortLE(elfNo).toByteArray())
+    }
     fun teamResult(session: SessionSender, subKind: Int, elfNo: Int, success: Boolean) {
         require(subKind == 2 || subKind == 3)
         session.send(header(subKind).writeShortLE(elfNo).writeByte(if (success) 1 else 0).toByteArray())
