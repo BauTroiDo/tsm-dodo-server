@@ -818,7 +818,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
         get<GameDataManager>().activityTimeDefs, get<GameDataManager>().eveData, get<BattlePassSystem>(),
         get<RoleCountSystem>(), get<InventorySystem>(), get<ResponseSender>()) }
     single { ActivityModelHandler() }
-    single { MallHandler(get(), get(), get<PointSystem>(), get<MoneySystem>(), get<PlayerCurrencySystem>(), get<ResponseSender>()) }
+    single { MallHandler(get(), get(), get<PointSystem>(), get<MoneySystem>(), get<PlayerCurrencySystem>(), get<ResponseSender>(), get<GameDataManager>().goodsSaleDefs) }
     single { SlotMachineHandler(get<SlotMachineSystem>(), get<ResponseSender>()) }
     single { PokeHandler(get<PokeSystem>(), get<ResponseSender>()) }
     single {
