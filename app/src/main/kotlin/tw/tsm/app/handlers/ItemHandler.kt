@@ -81,6 +81,7 @@ class ItemHandler(
     private val soulGenerationPolicy: OfflineSoulGenerationPolicy? = null,
     private val soulResponseSender: SoulResponseSender? = null,
     private val playerCurrencySystem: PlayerCurrencySystem? = null,
+    private val elfTokenUnlock: ElfTokenUnlockService? = null,
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.SHOP  // 23
@@ -604,6 +605,11 @@ class ItemHandler(
         }
         if (itemDef != null && itemDef.directUse == 1 && itemDef.specialAbility == EItemUseKind.DIRECT_CURRENCY) {
             handleDirectCurrencyItem(session, characterId, bagIndex, bagItem, itemDef, quantity)
+            return
+        }
+        if (itemDef != null && itemDef.specialAbility == EItemUseKind.ELF_TOKEN) {
+            // Duplicate/invalid Elf tickets must stay in bag, never consume as no-op.
+            elfTokenUnlock?.redeem(session, bagIndex, quantity, followIndex)
             return
         }
         if (itemDef != null && itemDef.specialAbility == EItemUseKind.SOUL) {

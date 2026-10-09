@@ -100,6 +100,11 @@ class ItemUseProcessor(
             EItemUseKind.EXP_GOD -> processExpBuff(characterId, def.attr1Value.toDouble() / 100.0)
             EItemUseKind.NO_ENCOUNTER -> processNoEncounter(characterId)
             EItemUseKind.GIFT_BOX -> processGiftBox(itemId, quantity)
+            EItemUseKind.ELF_TOKEN -> {
+                // Must be handled by ElfTokenUnlockService; no generic consumption.
+                logger.warn { "Elf token rejected by generic item use: itemId=$itemId" }
+                ItemUseResult(success = false, consumed = false)
+            }
             EItemUseKind.SOUL -> {
                 // DVT item 240 is the Soul acquisition/use path. The client only deserializes
                 // a fully generated SoulThing; authoritative initial stat/skill generation is
