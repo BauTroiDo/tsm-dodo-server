@@ -84,4 +84,46 @@ class ElfProtocolDvtRegressionTest {
         h.handle(session, 5, byteArrayOf())
         assertArrayEquals(byteArrayOf(107, 5, 0, -25, 3, 0, 0, 0, 0, 0), frames.single())
     }
+
+    @Test
+    fun `PC C107-005 must return owned elf levels despite uncleared Lua sendBuffer`() = runBlocking {
+        val repo = mockk<ElfRepository>()
+        val bits = mockk<BitFlagSystem>()
+        val session = mockk<GameSession>(relaxed = true)
+        every { session.state } returns SessionState.IN_GAME
+        every { session.roleId } returns 41
+        every { session.battleId } returns 0L
+        val frames = mutableListOf<ByteArray>()
+        every { session.send(capture(frames)) } just Runs
+        coEvery { bits.getSetFlagIds(41L) } returns setOf(6089, 6118)
+        coEvery { repo.load(41L) } returns ElfSnapshotRecord(ElfProfileRecord(), emptyList())
+
+        val handler = ElfHandler(repo, bits, mockk(), mockk(), emptyMap(), catalog)
+        handler.handle(session, 5, byteArrayOf())
+        // UIElf.OnOpen uses a shared sendBuffer and can resend leftover bytes.
+        handler.handle(session, 5, byteArrayOf(11, 0, 7, 9))
+        assertEquals(2, frames.size, "Both empty and stale-buffer queries must receive S107-005")
+        assertArrayEquals(frames[0], frames[1])
+        val frame = java.nio.ByteBuffer.wrap(frames[1])
+            .order(java.nio.ByteOrder.LITTLE_ENDIAN)
+        assertEquals(107, frame.get(0).toInt() and 255)
+        assertEquals(5, frame.get(1).toInt() and 255)
+        assertEquals(2, frame.get(9).toInt() and 255)
+        assertEquals(11, frame.getShort(10).toInt() and 65535)
+        assertEquals(1, frame.getShort(12).toInt() and 65535)
+        assertEquals(23, frame.getShort(18).toInt() and 65535)
+        assertEquals(1, frame.getShort(20).toInt() and 65535)
+    }
+
+    @Test
+    fun `stale-buffer snapshot cannot be queried before gameplay`() = runBlocking {
+        val session = mockk<GameSession>(relaxed = true)
+        every { session.state } returns SessionState.LOGGED_IN
+        every { session.roleId } returns 41
+        every { session.battleId } returns 0L
+        val handler = ElfHandler(mockk(), mockk(), mockk(), mockk(), emptyMap(), catalog)
+        handler.handle(session, 5, byteArrayOf(11, 0))
+        verify(exactly = 0) { session.send(any()) }
+    }
+
 }
