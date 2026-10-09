@@ -21,10 +21,42 @@ class LimitTimeDungeonSystem(
     private val specialTeleport: SpecialSceneTeleportService,
     private val scope: CoroutineScope,
     private val adminBypassPolicy: AdminBypassPolicy = AdminBypassPolicy(),
+    private val questSystem: QuestSystem? = null,
 ) {
     private val jobs = ConcurrentHashMap<Long, Job>()
 
     fun getDef(index: Int): LimitTimeDungeonDef? = defs[index]
+
+    /**
+     * DVT scene 49942 has no static NPCs; its MineData fights require mission
+     * 13137 step 1..60. C97 entrance previously ignored LimitTimeDungeonDef.missionId,
+     * leaving fresh characters at step 0 where no fight condition can match.
+     *
+     * This is idempotent: reconnecting or entering again never resets existing
+     * mission stages, and the client is informed using the normal S024-001 packet.
+     */
+    suspend fun ensureEncounterMission(session: GameSession, def: LimitTimeDungeonDef): Boolean {
+        if (def.missionId <= 0) return true
+        // Legacy unit-test callers can omit this optional dependency; production
+        // Koin explicitly wires QuestSystem.
+        val quests = questSystem ?: return true
+        return try {
+            val created = quests.ensureMissionStarted(session.roleId.toLong(), def.missionId)
+            if (created) {
+                responseSender.sendAddMissionStep(session, def.missionId, 1)
+                limitDungeonLogger.info {
+                    "Initialized DVT training encounter stage: cid=${session.roleId} " +
+                        "scene=${def.sceneId} mission=${def.missionId} step=1"
+                }
+            }
+            true
+        } catch (e: Exception) {
+            limitDungeonLogger.error(e) {
+                "Cannot persist DVT training encounter stage cid=${session.roleId} scene=${def.sceneId}"
+            }
+            false
+        }
+    }
 
     /** Gọi sau C:012-001 để hỗ trợ cả vào mới lẫn relog/restart trong map giới hạn. */
     fun onSceneReady(session: GameSession) {
@@ -32,7 +64,10 @@ class LimitTimeDungeonSystem(
         stopTracking(charId)
 
         val def = defs.values.firstOrNull { it.sceneId == session.mapId } ?: return
-        if (adminBypassPolicy.bypassEntryLimit(session)) return
+        if (adminBypassPolicy.bypassEntryLimit(session)) {
+            scope.launch { ensureEncounterMission(session, def) }
+            return
+        }
         val used = roleCountSystem.getValue(charId, def.limitIndex)
         if (used >= def.limitTimeMinutes) {
             scope.launch {
@@ -43,7 +78,7 @@ class LimitTimeDungeonSystem(
 
         val job = scope.launch {
             try {
-                track(session, def)
+                if (ensureEncounterMission(session, def)) track(session, def)
             } finally {
                 val me = kotlin.coroutines.coroutineContext[Job]
                 if (me != null) jobs.remove(charId, me)
