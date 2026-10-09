@@ -60,6 +60,7 @@ class LoginService(
     private val collectionSystem: CollectionSystem? = null,
     private val sacredEquipPrimaryDefs: Map<Int, SacredEquipPrimaryDef> = emptyMap(),
     private val messageBoardRepository: MessageBoardRepository? = null,
+    private val mallQuotaSystem: MallQuotaSystem? = null,
 ) {
 
     /**
@@ -197,6 +198,7 @@ class LoginService(
                 roleCountSystem.setValue(record.id, index, defaultValue)
             }
         }
+        mallQuotaSystem?.refreshOnLogin(record.id)
         val mergedCounts = roleCountSystem.getAllCounts(record.id)
             .mapValues { (_, valuePair) -> valuePair.first }  // value (Không phải maxValue)
         responseSender.sendRoleCountData(session, mergedCounts)
