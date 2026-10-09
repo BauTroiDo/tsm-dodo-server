@@ -110,7 +110,18 @@ class ElfHandler(
         if (session.state != SessionState.IN_GAME || session.roleId <= 0 || session.battleId != 0L) return
         val cid = session.roleId.toLong()
         when (subKind) {
-            5 -> if (data.isEmpty()) query(session, cid)
+            5 -> {
+                // PC DVT UIElf.OnOpen sends its shared sendBuffer without calling
+                // Clear(). The C107-005 query has no arguments; stale bytes must
+                // not suppress S107-005 or the client loses elfSave[] and shows
+                // "Chưa nhận tinh linh này" despite a persisted ownership flag.
+                if (data.isNotEmpty()) {
+                    elfLogger.debug {
+                        "Ignore stale PC Elf C107-005 payload: cid=$cid bytes=${data.size}"
+                    }
+                }
+                query(session, cid)
+            }
             2, 3 -> if (data.size == 2) {
                 val no = (data[0].toInt() and 255) or ((data[1].toInt() and 255) shl 8)
                 locks.computeIfAbsent(cid) { Mutex() }.withLock { changeActive(session, cid, subKind, no) }
