@@ -24,6 +24,7 @@ object EItemUseKind {
     const val BLISS_BAG_VIEW = 223          // Mở rộng xem trước túi phúc
     const val LOCK_BLISS_BAG = 228          // Túi phúc rương báu cần chìa khoá
     const val BLISS_BAG_KEY = 229           // Chìa khoá rương báu
+    const val ELF_TOKEN = 239             // PC DVT ItemUse_239: vé Tinh Linh 31901..31924
     const val SOUL = 240                    // Vật phẩm Hồn (ĐVT EItemUseKind.Soul)
     const val CAREER_CHANGE = 208           // Phù chuyển nghề
     const val ASTROLABE = 211              // Vật phẩm tăng điểm Thất Tinh Mệnh Bàn
