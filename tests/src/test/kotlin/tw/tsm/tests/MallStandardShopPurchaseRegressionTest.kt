@@ -51,6 +51,7 @@ class MallStandardShopPurchaseRegressionTest {
             every { session.state } returns SessionState.IN_GAME
             every { session.roleId } returns 41
             every { inventory.canAddRewardsToBag(41L, listOf(34695 to 1)) } returns true
+            every { points.getPoints(41L) } returns (100 to 0)
             every { points.subtractRealPoint(41L, 19) } returns true
             coEvery { points.savePoints(41L) } just Runs
             coEvery { inventory.addRewardsToBagExact(41L, listOf(34695 to 1)) } returns emptyList()
