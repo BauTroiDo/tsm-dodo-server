@@ -1,6 +1,9 @@
 package tw.tsm.app.handlers
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import java.util.concurrent.ConcurrentHashMap
 import tw.tsm.domain.constants.Opcodes
 import tw.tsm.domain.data.GoodsSaleDef
 import tw.tsm.domain.enums.SessionState
@@ -10,6 +13,7 @@ import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.gamelogic.systems.DoroSystem
 import tw.tsm.gamelogic.systems.InventorySystem
 import tw.tsm.gamelogic.systems.MoneySystem
+import tw.tsm.gamelogic.systems.MallQuotaSystem
 import tw.tsm.gamelogic.systems.PlayerCurrencySystem
 import tw.tsm.gamelogic.systems.PointSystem
 import tw.tsm.protocol.PacketReader
@@ -24,13 +28,16 @@ class MallHandler(
     private val currencySystem: PlayerCurrencySystem,
     private val responseSender: ResponseSender,
     private val goodsSaleDefs: List<GoodsSaleDef> = emptyList(),
+    private val quotaSystem: MallQuotaSystem? = null,
 ) : PacketHandler {
     override val mainKind: Int = Opcodes.MALL
+    private val charLocks = ConcurrentHashMap<Long, Mutex>()
 
     override suspend fun handle(session: GameSession, subKind: Int, data: ByteArray) {
         if (session.state != SessionState.IN_GAME) return
         when (subKind) {
-            1 -> handlePurchase(session, data)
+            1 -> charLocks.computeIfAbsent(session.roleId.toLong()) { Mutex() }
+                .withLock { handlePurchase(session, data) }
             else -> mallLogger.warn {
                 "Mall chưa hỗ trợ subKind=" + subKind + " (" + data.size + " bytes)"
             }
@@ -112,7 +119,15 @@ class MallHandler(
             return
         }
 
+        val doroQuota = if (packageDef.saleKind != 0) {
+            quotaSystem?.reserve(charId, packageDef, 1) ?: run {
+                responseSender.sendMallPurchaseResult(session, itemId, RESULT_FAIL)
+                return
+            }
+        } else null
+
         if (!deductPayment(charId, packageDef)) {
+            if (doroQuota != null) quotaSystem?.cancel(doroQuota)
             mallLogger.info {
                 session.characterName + " Doro không đủ currency=" + packageDef.currencyKind +
                     " cost=" + packageDef.saleCredit + " package=" + itemId
@@ -132,6 +147,7 @@ class MallHandler(
 
         if (changedSlots == null) {
             refundPayment(charId, packageDef)
+            if (doroQuota != null) quotaSystem?.cancel(doroQuota)
             responseSender.sendMallPurchaseResult(session, itemId, RESULT_FAIL)
             return
         }
@@ -140,6 +156,16 @@ class MallHandler(
             responseSender.sendSetBagItem(session, slot, thing, showMsg = false)
         }
         syncCurrency(session, packageDef)
+        if (doroQuota != null) {
+            try {
+                quotaSystem?.complete(doroQuota)
+                responseSender.sendRoleCountUpdate(
+                    session, mapOf(doroQuota.flag to (doroQuota.nextCount to 0))
+                )
+            } catch (e: Exception) {
+                mallLogger.error(e) { "Doro quota UI sync failed after completed purchase" }
+            }
+        }
 
         // Ordering is required by DVT client:
         // S23-150 opens UIDoro while Mall.IsMallDoro()==true.
@@ -187,9 +213,9 @@ class MallHandler(
                 row.saleCredit == clientPrice &&
                 row.open &&
                 (row.bitFunction and NORMAL_CLIENT_BIT) == NORMAL_CLIENT_BIT &&
-                row.saleKind == 0 &&
-                row.flag == 0 &&
-                row.dayCount == 0 &&
+                row.saleKind in 0..4 &&
+                (if (row.saleKind == 0) row.dayCount == 0
+                 else row.flag > 0 && row.dayCount > 0) &&
                 row.buyLimitFlag == 0 &&
                 row.specialEvent == 0L &&
                 row.timeKind == 0 &&
@@ -222,7 +248,15 @@ class MallHandler(
             return
         }
         val charge = offer.copy(saleCredit = cost)
+        val reserved = if (offer.saleKind != 0) {
+            quotaSystem?.reserve(characterId, offer, packageCount) ?: run {
+                reject()
+                return
+            }
+        } else null
+
         if (!deductPayment(characterId, charge)) {
+            if (reserved != null) quotaSystem?.cancel(reserved)
             mallLogger.info {
                 "Normal Tiệm insufficient balance: charId=$characterId " +
                     "kind=${offer.currencyKind} cost=$cost item=$itemId"
@@ -238,6 +272,7 @@ class MallHandler(
         }
         if (changedSlots == null) {
             refundPayment(characterId, charge)
+            if (reserved != null) quotaSystem?.cancel(reserved)
             reject()
             return
         }
@@ -245,6 +280,16 @@ class MallHandler(
             responseSender.sendSetBagItem(session, slot, thing, showMsg = false)
         }
         syncCurrency(session, charge)
+        if (reserved != null) {
+            try {
+                quotaSystem?.complete(reserved)
+                responseSender.sendRoleCountUpdate(
+                    session, mapOf(reserved.flag to (reserved.nextCount to 0))
+                )
+            } catch (e: Exception) {
+                mallLogger.error(e) { "Mall quota UI sync failed after completed purchase" }
+            }
+        }
         responseSender.sendMallPurchaseResult(session, itemId, RESULT_SUCCESS)
         mallLogger.info {
             "Normal Tiệm purchase succeeded: charId=$characterId item=$itemId " +
