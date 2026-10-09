@@ -20,6 +20,7 @@ import tw.tsm.domain.interfaces.StatCalculator
 import tw.tsm.domain.interfaces.repositories.AccountRepository
 import tw.tsm.domain.interfaces.repositories.AstrolabeRepository
 import tw.tsm.domain.interfaces.repositories.SoulRepository
+import tw.tsm.domain.interfaces.repositories.ElfRepository
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
 import tw.tsm.domain.interfaces.repositories.InventoryRepository
 import tw.tsm.domain.interfaces.repositories.BitFlagRepository
@@ -31,6 +32,7 @@ import tw.tsm.network.SessionManager
 import tw.tsm.persistence.repositories.AccountRepositoryImpl
 import tw.tsm.persistence.repositories.AstrolabeRepositoryImpl
 import tw.tsm.persistence.repositories.SoulRepositoryImpl
+import tw.tsm.persistence.repositories.ElfRepositoryImpl
 import tw.tsm.persistence.repositories.CharacterRepositoryImpl
 import tw.tsm.persistence.repositories.InventoryRepositoryImpl
 import tw.tsm.persistence.repositories.BitFlagRepositoryImpl
@@ -119,6 +121,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             register(get<StatHandler>())
             register(get<AstrolabeHandler>())
             register(get<SoulHandler>())
+            register(get<ElfHandler>())
             register(get<HouseBoardHandler>())
             register(get<GodskinHandler>())
             register(get<MountHandler>())
@@ -266,6 +269,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single<AccountRepository> { AccountRepositoryImpl() }
     single<AstrolabeRepository> { AstrolabeRepositoryImpl() }
     single<SoulRepository> { SoulRepositoryImpl() }
+    single<ElfRepository> { ElfRepositoryImpl() }
     single<CharacterRepository> { CharacterRepositoryImpl() }
     single<InventoryRepository> { InventoryRepositoryImpl() }
     single<QuestRepository> { QuestRepositoryImpl() }
@@ -350,6 +354,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
         )
     }
     single { SoulSystem(get<SoulRepository>()) }
+    single { ElfCatalog.fromPcFiles() }
     single {
         OfflineSoulGenerationPolicy(
             soulDefs = get<GameDataManager>().soulDefs,
@@ -708,6 +713,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { StatHandler(get(), get(), get(), get<StatSystem>(), get(), get<SkillRepository>(), get<DailyProgressSystem>()) }
     single { AstrolabeHandler(get<AstrolabeSystem>(), get<ResponseSender>()) }
     single { SoulHandler(get<SoulSystem>(), get<PetSystem>(), get<GameDataManager>().npcDefs, get<ResponseSender>()) }
+    single { ElfHandler(get<ElfRepository>(), get<BitFlagSystem>(), get<InventorySystem>(), get<ResponseSender>(), get<GameDataManager>().itemDefs, get<ElfCatalog>()) }
     single { FurnaceResponseSender() }
     single { GodskinResponseSender() }
     single { GodskinHandler(get<MythEnchantSystem>(), get<MythUpgradeSystem>(), get<GodskinResponseSender>(), get<ResponseSender>()) }
