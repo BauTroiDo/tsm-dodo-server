@@ -53,6 +53,17 @@ class LimitTimeDungeonHandler(
             return
         }
 
+        // LimitTimeDungeon_C provides missionId=13137 for scene49942.
+        // Its MineData events only match mission stages 1..60; entering with
+        // an uninitialized mission would leave the training area without fights.
+        // Validate the entry point before touching quest progression.
+        if (specialTeleport.deriveEntryPoint(def.sceneId) == null ||
+            !system.ensureEncounterMission(session, def)
+        ) {
+            sendResult(session, 1)
+            return
+        }
+
         // Lua success branch của S:097-001 không làm gì; scene change là packet riêng.
         sendResult(session, 0)
         if (!specialTeleport.enterSpecialScene(session, def.sceneId)) {
