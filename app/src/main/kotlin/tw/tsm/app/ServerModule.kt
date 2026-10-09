@@ -21,6 +21,7 @@ import tw.tsm.domain.interfaces.repositories.AccountRepository
 import tw.tsm.domain.interfaces.repositories.AstrolabeRepository
 import tw.tsm.domain.interfaces.repositories.SoulRepository
 import tw.tsm.domain.interfaces.repositories.ElfRepository
+import tw.tsm.domain.interfaces.repositories.MallQuotaRepository
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
 import tw.tsm.domain.interfaces.repositories.InventoryRepository
 import tw.tsm.domain.interfaces.repositories.BitFlagRepository
@@ -33,6 +34,7 @@ import tw.tsm.persistence.repositories.AccountRepositoryImpl
 import tw.tsm.persistence.repositories.AstrolabeRepositoryImpl
 import tw.tsm.persistence.repositories.SoulRepositoryImpl
 import tw.tsm.persistence.repositories.ElfRepositoryImpl
+import tw.tsm.persistence.repositories.MallQuotaRepositoryImpl
 import tw.tsm.persistence.repositories.CharacterRepositoryImpl
 import tw.tsm.persistence.repositories.InventoryRepositoryImpl
 import tw.tsm.persistence.repositories.BitFlagRepositoryImpl
@@ -270,6 +272,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single<AstrolabeRepository> { AstrolabeRepositoryImpl() }
     single<SoulRepository> { SoulRepositoryImpl() }
     single<ElfRepository> { ElfRepositoryImpl() }
+    single<MallQuotaRepository> { MallQuotaRepositoryImpl() }
     single<CharacterRepository> { CharacterRepositoryImpl() }
     single<InventoryRepository> { InventoryRepositoryImpl() }
     single<QuestRepository> { QuestRepositoryImpl() }
@@ -355,6 +358,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     }
     single { SoulSystem(get<SoulRepository>()) }
     single { ElfCatalog.fromPcFiles() }
+    single { MallQuotaSystem(get<MallQuotaRepository>(), get<RoleCountSystem>(), get<GameDataManager>().goodsSaleDefs) }
     single {
         OfflineSoulGenerationPolicy(
             soulDefs = get<GameDataManager>().soulDefs,
@@ -610,7 +614,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<BattleManager>().worldPartyBotProvider = worldBots::battleProfilesFor
         }
     }
-    single { LoginService(get(), get(), get(), get(), get(), get<PointSystem>(), get<PlayerCurrencySystem>(), get(), get(), get<EveEventStateMachine>(), get(), get(), get(), get(), get(), get<AstrolabeSystem>(), get<SoulSystem>(), get(), get<SkillRepository>(), get<RoleCountSystem>(), get<FlyPointSystem>(), get<MailSystem>(), get<FriendSystem>(), get<GameDataManager>().eveData, get<GameDataManager>().itemDefs, get<JiugonggeSystem>(), get<ActivityScheduleSystem>(), get<DailyProgressSystem>(), get<CollectionSystem>(), get<GameDataManager>().sacredEquipPrimaryDefs, get<MessageBoardRepository>()) }
+    single { LoginService(get(), get(), get(), get(), get(), get<PointSystem>(), get<PlayerCurrencySystem>(), get(), get(), get<EveEventStateMachine>(), get(), get(), get(), get(), get(), get<AstrolabeSystem>(), get<SoulSystem>(), get(), get<SkillRepository>(), get<RoleCountSystem>(), get<FlyPointSystem>(), get<MailSystem>(), get<FriendSystem>(), get<GameDataManager>().eveData, get<GameDataManager>().itemDefs, get<JiugonggeSystem>(), get<ActivityScheduleSystem>(), get<DailyProgressSystem>(), get<CollectionSystem>(), get<GameDataManager>().sacredEquipPrimaryDefs, get<MessageBoardRepository>(), get<MallQuotaSystem>()) }
 
     // Hệ thống sự kiện Eve (9 dịch vụ con sau khi tách)
     single {
@@ -818,7 +822,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
         get<GameDataManager>().activityTimeDefs, get<GameDataManager>().eveData, get<BattlePassSystem>(),
         get<RoleCountSystem>(), get<InventorySystem>(), get<ResponseSender>()) }
     single { ActivityModelHandler() }
-    single { MallHandler(get(), get(), get<PointSystem>(), get<MoneySystem>(), get<PlayerCurrencySystem>(), get<ResponseSender>(), get<GameDataManager>().goodsSaleDefs) }
+    single { MallHandler(get(), get(), get<PointSystem>(), get<MoneySystem>(), get<PlayerCurrencySystem>(), get<ResponseSender>(), get<GameDataManager>().goodsSaleDefs, get<MallQuotaSystem>()) }
     single { SlotMachineHandler(get<SlotMachineSystem>(), get<ResponseSender>()) }
     single { PokeHandler(get<PokeSystem>(), get<ResponseSender>()) }
     single {
