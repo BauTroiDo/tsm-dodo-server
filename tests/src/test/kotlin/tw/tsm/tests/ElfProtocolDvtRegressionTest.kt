@@ -118,7 +118,7 @@ class ElfProtocolDvtRegressionTest {
     @Test
     fun `stale-buffer snapshot cannot be queried before gameplay`() = runBlocking {
         val session = mockk<GameSession>(relaxed = true)
-        every { session.state } returns SessionState.AUTHENTICATED
+        every { session.state } returns SessionState.LOGGED_IN
         every { session.roleId } returns 41
         every { session.battleId } returns 0L
         val handler = ElfHandler(mockk(), mockk(), mockk(), mockk(), emptyMap(), catalog)
