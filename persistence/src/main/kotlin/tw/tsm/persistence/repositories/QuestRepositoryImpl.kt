@@ -3,6 +3,7 @@ package tw.tsm.persistence.repositories
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.plus
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -182,32 +183,18 @@ class QuestRepositoryImpl : QuestRepository {
 
     override suspend fun insertCompletedEvent(charId: Long, mapId: Int, eveNo: Int) =
         suspendTransaction {
-            val existing = CharacterCompletedEvents.selectAll()
-                .where {
-                    (CharacterCompletedEvents.charId eq charId) and
-                    (CharacterCompletedEvents.mapId eq mapId) and
-                    (CharacterCompletedEvents.eveNo eq eveNo)
+            // Atomic SQL upsert. The composite primary key serializes duplicate
+            // event writes, and the DB increments the current stored value.
+            CharacterCompletedEvents.upsert(
+                onUpdate = {
+                    it[CharacterCompletedEvents.completionCount] =
+                        CharacterCompletedEvents.completionCount + 1
                 }
-                .singleOrNull()
-
-            if (existing != null) {
-                val newCount = existing[CharacterCompletedEvents.completionCount] + 1
-                CharacterCompletedEvents.update(
-                    where = {
-                        (CharacterCompletedEvents.charId eq charId) and
-                        (CharacterCompletedEvents.mapId eq mapId) and
-                        (CharacterCompletedEvents.eveNo eq eveNo)
-                    }
-                ) {
-                    it[completionCount] = newCount
-                }
-            } else {
-                CharacterCompletedEvents.insert {
-                    it[CharacterCompletedEvents.charId] = charId
-                    it[CharacterCompletedEvents.mapId] = mapId
-                    it[CharacterCompletedEvents.eveNo] = eveNo
-                    it[CharacterCompletedEvents.completionCount] = 1
-                }
+            ) {
+                it[CharacterCompletedEvents.charId] = charId
+                it[CharacterCompletedEvents.mapId] = mapId
+                it[CharacterCompletedEvents.eveNo] = eveNo
+                it[CharacterCompletedEvents.completionCount] = 1
             }
             Unit
         }
