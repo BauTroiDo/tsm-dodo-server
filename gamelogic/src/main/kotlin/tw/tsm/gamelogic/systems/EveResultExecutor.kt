@@ -78,22 +78,20 @@ class EveResultExecutor(
         }
         if (unsupported == null) {
             val missionResults = results.filter { it.resultType in setOf(0, 7) && it.resultClass == 2 }
-            if (missionResults.any { it.parameterStyle == 1 }) {
-                val steps = questSystem.getMissions(session.roleId.toLong()).associate { it.missionId to it.step }.toMutableMap()
-                for (r in missionResults) {
-                    val current = steps[r.parameter] ?: 0
-                    when (r.parameterStyle) {
-                        1 -> {
-                            val next = current.toLong() + r.resultValue
-                            if (current !in 0..255 || next !in 0L..255L) {
-                                responseSender.sendSystemMessage(session, "Tiến độ nhiệm vụ vượt giới hạn 255 bước. Đã dừng xử lý để tránh sai dữ liệu.")
-                                return false
-                            }
-                            steps[r.parameter] = next.toInt()
-                        }
-                        2 -> steps[r.parameter] = (current - r.resultValue).coerceAtLeast(0)
-                        3, 5 -> steps.remove(r.parameter)
+            if (missionResults.any { it.parameterStyle in setOf(1, 2) }) {
+                val steps = questSystem.getMissions(session.roleId.toLong())
+                    .associate { it.missionId to it.step }
+                val rejected = EveMissionPreflightPolicy.validate(missionResults, steps)
+                if (rejected != null) {
+                    logger.warn {
+                        "Refuse inconsistent quest chain before any effects: map=${session.mapId} " +
+                            "cid=${session.roleId} mission=${rejected.missionId} reason=${rejected.reason}"
                     }
+                    responseSender.sendSystemMessage(
+                        session,
+                        "Tiến độ nhiệm vụ không hợp lệ (ID ${rejected.missionId}). Đã dừng trước khi thay đổi nhiệm vụ hoặc phát thưởng."
+                    )
+                    return false
                 }
             }
             // Combat and choices may supply/change items; validate the current segment only.
