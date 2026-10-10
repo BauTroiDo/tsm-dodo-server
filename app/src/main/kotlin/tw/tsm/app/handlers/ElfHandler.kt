@@ -88,7 +88,8 @@ object ElfPackets {
     }
     /** DVT S:024-008: RoleController.SetGhost(kind, value) controls the directional
      * elf sprite attached to the player's world avatar (not the UIElf preview).
-     * 999 means no equipped elf; kind=0 and value=0 explicitly clear the sprite.
+     * 999 means no equipped elf. With godMission > 0 the original DVT Lua
+     * shows GodGhost; with 0 it hides the ghost. Do not manufacture a value.
      */
     fun followAppearance(playerId: Long, activeNo: Int, godMission: Int): ByteArray {
         require(godMission in 0..65535) { "DVT godMission must be between 0 and 65535" }
