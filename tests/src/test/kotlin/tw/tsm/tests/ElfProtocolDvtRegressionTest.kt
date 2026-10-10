@@ -12,6 +12,8 @@ import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.SessionSender
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.repositories.*
+import tw.tsm.domain.valueobjects.ThingData
+import tw.tsm.domain.data.ItemDef
 import tw.tsm.gamelogic.systems.BitFlagSystem
 import tw.tsm.gamelogic.systems.InventorySystem
 import tw.tsm.gamelogic.systems.WorldManager
@@ -129,16 +131,23 @@ class ElfProtocolDvtRegressionTest {
 
 
     @Test
-    fun `S024-008 follows PC DVT SetGhost wire layout and clears unequipped Elf`() {
+    fun `S024-008 carries persisted godMission even when elf is unequipped`() {
         val playerId = 0x0102030405060708L
         assertArrayEquals(
-            byteArrayOf(24, 8, 0, 8, 7, 6, 5, 4, 3, 2, 1, 1, 0, 1, 0, 0, 0),
-            ElfPackets.followAppearance(playerId, 1)
+            byteArrayOf(24, 8, 0, 8, 7, 6, 5, 4, 3, 2, 1, 1, 0, 19, 0, 0, 0),
+            ElfPackets.followAppearance(playerId, 1, 19)
+        )
+        assertArrayEquals(
+            byteArrayOf(24, 8, 0, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0, 19, 0, 0, 0),
+            ElfPackets.followAppearance(playerId, 999, 19)
         )
         assertArrayEquals(
             byteArrayOf(24, 8, 0, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0, 0, 0, 0, 0),
-            ElfPackets.followAppearance(playerId, 999)
+            ElfPackets.followAppearance(playerId, 999, 0)
         )
+        assertThrows(IllegalArgumentException::class.java) {
+            ElfPackets.followAppearance(playerId, 1, 65536)
+        }
     }
 
     @Test
@@ -155,7 +164,7 @@ class ElfProtocolDvtRegressionTest {
         every { session.mapId } returns 830
         every { session.instanceId } returns 7
         every { session.send(capture(frames)) } just Runs
-        coEvery { repo.load(41L) } returns ElfSnapshotRecord(ElfProfileRecord(), emptyList())
+        coEvery { repo.load(41L) } returns ElfSnapshotRecord(ElfProfileRecord(999, 27), emptyList())
         coEvery { bits.getSetFlagIds(41L) } returns setOf(6034)
         coEvery { repo.setActive(41L, 1) } just Runs
 
@@ -164,7 +173,7 @@ class ElfProtocolDvtRegressionTest {
 
         assertEquals(2, frames.size)
         assertArrayEquals(byteArrayOf(107, 2, 0, 1, 0, 1), frames[0])
-        assertArrayEquals(ElfPackets.followAppearance(1234L, 1), frames[1])
+        assertArrayEquals(ElfPackets.followAppearance(1234L, 1, 27), frames[1])
         verify(exactly = 1) { world.broadcastToMap(830, any(), session, 7) }
     }
 
@@ -186,17 +195,55 @@ class ElfProtocolDvtRegressionTest {
         every { other.playerId } returns 5678L
         every { other.loginFinished } returns true
         every { world.getPlayersInMap(830, 7) } returns setOf(session, other)
-        coEvery { repo.load(41L) } returns ElfSnapshotRecord(ElfProfileRecord(1, 0), emptyList())
-        coEvery { repo.load(42L) } returns ElfSnapshotRecord(ElfProfileRecord(1, 0), emptyList())
+        coEvery { repo.load(41L) } returns ElfSnapshotRecord(ElfProfileRecord(1, 42), emptyList())
+        coEvery { repo.load(42L) } returns ElfSnapshotRecord(ElfProfileRecord(1, 73), emptyList())
         coEvery { bits.getSetFlagIds(any()) } returns setOf(6034)
 
         ElfHandler(repo, bits, mockk(), mockk(), emptyMap(), catalog, world)
             .syncAppearanceForMap(session)
 
         assertEquals(2, frames.size)
-        assertArrayEquals(ElfPackets.followAppearance(1234L, 1), frames[0])
-        assertArrayEquals(ElfPackets.followAppearance(5678L, 1), frames[1])
+        assertArrayEquals(ElfPackets.followAppearance(1234L, 1, 42), frames[0])
+        assertArrayEquals(ElfPackets.followAppearance(5678L, 1, 73), frames[1])
         verify(exactly = 1) { world.broadcastToMap(830, any(), session, 7) }
+    }
+
+
+    @Test
+    fun `feeding an Elf refreshes the real godMission amount instead of a fake one`() = runBlocking {
+        val repo = mockk<ElfRepository>()
+        val bits = mockk<BitFlagSystem>()
+        val inv = mockk<InventorySystem>()
+        val resp = mockk<ResponseSender>()
+        val world = mockk<WorldManager>(relaxed = true)
+        val itemDef = mockk<ItemDef>()
+        val session = mockk<GameSession>(relaxed = true)
+        val frames = mutableListOf<ByteArray>()
+        every { session.state } returns SessionState.IN_GAME
+        every { session.battleId } returns 0L
+        every { session.roleId } returns 41
+        every { session.playerId } returns 1234L
+        every { session.mapId } returns 830
+        every { session.instanceId } returns 7
+        every { session.send(capture(frames)) } just Runs
+        every { itemDef.skillLink } returns 7
+        every { inv.getBagItem(41L, 2) } returns ThingData(itemId = 46037, quantity = 3)
+        coEvery { inv.removeBagItemsExact(41L, listOf(2 to 3)) } returns true
+        coEvery { bits.getSetFlagIds(41L) } returns setOf(6034)
+        coEvery { repo.load(41L) } returns ElfSnapshotRecord(
+            ElfProfileRecord(1, 11), listOf(ElfProgressRecord(1, 1, 0))
+        )
+        coEvery { repo.setProgress(41L, ElfProgressRecord(1, 2, 1), 32) } just Runs
+        every { resp.sendReduceBagItem(session, 2, 3) } just Runs
+
+        val feedPayload = byteArrayOf(1, 0, 1, 2, 0, 3, 0)
+        ElfHandler(repo, bits, inv, resp, mapOf(46037 to itemDef), catalog, world)
+            .handle(session, 4, feedPayload)
+
+        coVerify(exactly = 1) { repo.setProgress(41L, ElfProgressRecord(1, 2, 1), 32) }
+        assertArrayEquals(byteArrayOf(107, 4, 0, 1), frames[0])
+        assertArrayEquals(ElfPackets.followAppearance(1234L, 1, 32), frames.last())
+        verify(exactly = 1) { world.broadcastToMap(830, frames.last(), session, 7) }
     }
 
 }
