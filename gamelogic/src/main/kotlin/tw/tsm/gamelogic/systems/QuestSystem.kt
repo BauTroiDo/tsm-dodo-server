@@ -239,6 +239,25 @@ class QuestSystem(
      * @param charId ID nhân vật
      * @return Danh sách nhiệm vụ
      */
+    /**
+     * PC DVT LimitTimeDungeon_C: missionId controls random battles in MineData.
+     * Initialize only when absent; never reset a character's selected stage.
+     * Serialize with all other quest mutations for the same character.
+     *
+     * @return true only if this call actually created step 1.
+     */
+    suspend fun ensureMissionStarted(charId: Long, missionId: Int): Boolean =
+        mutationLock(charId).withLock {
+            require(missionId in 1..65535)
+            if (repo.getMissions(charId).any { it.missionId == missionId && it.step > 0 }) {
+                false
+            } else {
+                repo.upsertMission(charId, missionId, 1)
+                logger.info { "Initial encounter mission: charId=$charId missionId=$missionId step=1" }
+                true
+            }
+        }
+
     suspend fun getMissions(charId: Long): List<MissionRecord> = repo.getMissions(charId)
 
     /**
