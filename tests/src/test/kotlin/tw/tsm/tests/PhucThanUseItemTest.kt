@@ -37,9 +37,11 @@ class PhucThanUseItemTest {
         every { battleId } returns 0L
     }
 
-    private fun item(skillLink: Int): ItemDef = mockk {
-        every { specialAbility } returns 93
-        every { this@mockk.skillLink } returns skillLink
+    private fun item(gain: Int): ItemDef {
+        val def = mockk<ItemDef>()
+        every { def.specialAbility } returns 93
+        every { def.skillLink } returns gain
+        return def
     }
 
     /** DVT C023-015: bagSlot(2) + quantity(4) + followIndex(1) + useType(1). */
