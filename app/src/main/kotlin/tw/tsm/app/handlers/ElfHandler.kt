@@ -102,13 +102,15 @@ object ElfPackets {
     }
     /** DVT S:024-008: RoleController.SetGhost(kind, value) controls the directional
      * elf sprite attached to the player's world avatar (not the UIElf preview).
-     * 999 means no equipped elf; kind=0 and value=0 explicitly clear the sprite.
+     * 999 means no equipped Elf; godMission is the independent, persisted
+     * number of remaining Phuc Than battles, NOT the total Elf feeding points.
      */
-    fun followAppearance(playerId: Long, activeNo: Int): ByteArray {
+    fun followAppearance(playerId: Long, activeNo: Int, godMission: Int): ByteArray {
+        require(godMission in 0..65535)
         val kind = activeNo.takeIf { it in 1..65535 && it != DEFAULT_NO } ?: 0
         return PacketWriter().writeByte(24).writeByte(8).writeByte(0)
             .writeLongLE(playerId).writeShortLE(kind)
-            .writeIntLE(if (kind > 0) 1 else 0)
+            .writeIntLE(godMission)
             .toByteArray()
     }
     fun feedResult(session: SessionSender, success: Boolean) {
@@ -176,7 +178,8 @@ class ElfHandler(
         catalog.defs[no]?.let { it.no != 999 && it.ownershipFlag in flags } == true
 
     private suspend fun changeActive(session: GameSession, cid: Long, kind: Int, no: Int) {
-        val active = repo.load(cid).profile.activeNo
+        val profile = repo.load(cid).profile
+        val active = profile.activeNo
         val success = if (kind == 2) {
             no == ElfPackets.DEFAULT_NO || owned(no, bits.getSetFlagIds(cid))
         } else {
@@ -197,24 +200,33 @@ class ElfHandler(
         ElfPackets.teamResult(session, kind, no, true)
         // Visual-sync failures must never turn a persisted equip into a false ACK.
         try {
-            sendFollowAppearance(session, next)
+            sendFollowAppearance(session, next, profile.godMission)
         } catch (e: Exception) {
             elfLogger.warn(e) { "Equipped Elf but appearance sync failed cid=$cid no=$no" }
         }
     }
 
-    private fun sendFollowAppearance(session: GameSession, activeNo: Int) {
-        val packet = ElfPackets.followAppearance(session.playerId, activeNo)
+    private fun sendFollowAppearance(session: GameSession, activeNo: Int, godMission: Int) {
+        val packet = ElfPackets.followAppearance(session.playerId, activeNo, godMission)
         session.send(packet)
         if (session.mapId > 0) {
             worldManager?.broadcastToMap(session.mapId, packet, session, session.instanceId)
         }
     }
 
-    private suspend fun activeForRole(cid: Long): Int {
-        val active = repo.load(cid).profile.activeNo
-        if (active == ElfPackets.DEFAULT_NO) return active
-        return if (owned(active, bits.getSetFlagIds(cid))) active else ElfPackets.DEFAULT_NO
+    private suspend fun activeForRole(cid: Long): Pair<Int, Int> {
+        val profile = repo.load(cid).profile
+        val active = profile.activeNo
+        val no = if (active == ElfPackets.DEFAULT_NO || owned(active, bits.getSetFlagIds(cid))) active
+            else ElfPackets.DEFAULT_NO
+        return no to profile.godMission
+    }
+
+    /** Refresh S024-008 after a charge increase or battle settlement. */
+    suspend fun syncGodMission(session: GameSession) {
+        if (session.state != SessionState.IN_GAME || session.roleId <= 0) return
+        val (active, charges) = activeForRole(session.roleId.toLong())
+        sendFollowAppearance(session, active, charges)
     }
 
     /** Called after C012-001: the client has recreated world avatars for the scene.
@@ -229,11 +241,12 @@ class ElfHandler(
             elfLogger.warn(e) { "Unable to restore Elf appearance cid=${session.roleId}" }
             return
         }
-        sendFollowAppearance(session, ownActive)
+        sendFollowAppearance(session, ownActive.first, ownActive.second)
         for (other in world.getPlayersInMap(session.mapId, session.instanceId)) {
             if (other === session || !other.loginFinished || other.roleId <= 0) continue
             try {
-                session.send(ElfPackets.followAppearance(other.playerId, activeForRole(other.roleId.toLong())))
+                val (otherActive, charges) = activeForRole(other.roleId.toLong())
+                session.send(ElfPackets.followAppearance(other.playerId, otherActive, charges))
             } catch (e: Exception) {
                 elfLogger.warn(e) { "Unable to restore nearby Elf cid=${other.roleId}" }
             }
