@@ -97,7 +97,12 @@ class ItemUseProcessor(
             EItemUseKind.EXP_EQUIP_150 -> processExpBuff(characterId, 1.5)
             EItemUseKind.EXP_EQUIP_200 -> processExpBuff(characterId, 2.0)
             EItemUseKind.EXP_EQUIP_ARG -> processExpBuff(characterId, def.attr1Value.toDouble() / 100.0)
-            EItemUseKind.EXP_GOD -> processExpBuff(characterId, def.attr1Value.toDouble() / 100.0)
+            EItemUseKind.EXP_GOD -> {
+                // Explicit C023-015 path must commit persistent godMission before consuming.
+                // Never treat skillLink battle charges as a mutable runtime EXP multiplier.
+                logger.warn { "EXP_GOD needs ItemHandler persistent redemption: itemId=$itemId" }
+                ItemUseResult(success = false, consumed = false)
+            }
             EItemUseKind.NO_ENCOUNTER -> processNoEncounter(characterId)
             EItemUseKind.GIFT_BOX -> processGiftBox(itemId, quantity)
             EItemUseKind.ELF_TOKEN -> {

@@ -178,6 +178,18 @@ class DvtPetExpTest {
         assertEquals(210L, BattleRewardCalc.calculateExp(listOf(900 to enemy), actorLevel = 21))
     }
 
+    @Test fun `Phuc Than default Elf999 baseExp200 doubles both player and pet EXP`() {
+        val enemy = mockk<NpcDef> {
+            every { level } returns 21
+        }
+        val defeated = listOf(900 to enemy)
+        val base = BattleRewardCalc.calculateExp(defeated, actorLevel = 21)
+        assertEquals(210L, base)
+        assertEquals(420L, BattleRewardCalc.calculateExp(defeated, actorLevel = 21, expMultiplier = 2.0))
+        assertEquals(525L, BattleRewardCalc.calculateExp(defeated, actorLevel = 21, expMultiplier = 2.5))
+        assertEquals(base, BattleRewardCalc.calculateExp(defeated, actorLevel = 21, expMultiplier = 1.0))
+    }
+
     @Test
     fun progressionAllocatorUsesUnlockedCapacityButPreservesSupportedSlots() = runTest {
         val states = PlayerStateManager().also {

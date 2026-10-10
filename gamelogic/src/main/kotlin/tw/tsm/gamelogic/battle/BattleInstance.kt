@@ -725,8 +725,12 @@ class BattleInstance(
      * @param playerLevel cấp độ người chơi
      * @param npcDropTable bảng rơi đồ của NPC
      */
-    fun calculateRewards(playerLevel: Int, npcDropTable: Map<Int, List<NpcDropDef>> = emptyMap()): BattleReward {
-        return BattleRewardCalc.calculate(involvedNpcDefs, playerLevel, npcDropTable)
+    fun calculateRewards(
+        playerLevel: Int,
+        npcDropTable: Map<Int, List<NpcDropDef>> = emptyMap(),
+        expMultiplier: Double = 1.0,
+    ): BattleReward {
+        return BattleRewardCalc.calculate(involvedNpcDefs, playerLevel, npcDropTable, expMultiplier)
     }
     private fun canUseSummon(fighter: BattleFighter, skillId: Int): Boolean {
         if (skillId !in fighter.skills || fighter.specialEquipDamage >= 250) return false

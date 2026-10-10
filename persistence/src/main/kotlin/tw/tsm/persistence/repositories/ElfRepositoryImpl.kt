@@ -18,11 +18,44 @@ class ElfRepositoryImpl : ElfRepository {
         val p = CharacterElfProfiles.selectAll()
             .where { CharacterElfProfiles.characterId eq characterId }.firstOrNull()
         val profile = if (p == null) ElfProfileRecord() else
-            ElfProfileRecord(p[CharacterElfProfiles.activeNo], p[CharacterElfProfiles.feedTotal])
+            ElfProfileRecord(
+                p[CharacterElfProfiles.activeNo],
+                p[CharacterElfProfiles.feedTotal],
+                p[CharacterElfProfiles.godMission],
+            )
         val elves = CharacterElfProgress.selectAll()
             .where { CharacterElfProgress.characterId eq characterId }
             .map { ElfProgressRecord(it[CharacterElfProgress.elfNo], it[CharacterElfProgress.level], it[CharacterElfProgress.exp]) }
         ElfSnapshotRecord(profile, elves)
+    }
+
+    override suspend fun changeGodMission(characterId: Long, delta: Int): Int? {
+        if (delta == 0) return null
+        return suspendTransaction {
+            val row = CharacterElfProfiles.selectAll()
+                .where { CharacterElfProfiles.characterId eq characterId }
+                .forUpdate()
+                .firstOrNull()
+            if (row == null) {
+                if (delta !in 1..65535) null
+                else {
+                    CharacterElfProfiles.insert {
+                        it[CharacterElfProfiles.characterId] = characterId
+                        it[CharacterElfProfiles.godMission] = delta
+                    }
+                    delta
+                }
+            } else {
+                val next = row[CharacterElfProfiles.godMission].toLong() + delta
+                if (next !in 0L..65535L) null
+                else {
+                    CharacterElfProfiles.update({ CharacterElfProfiles.characterId eq characterId }) {
+                        it[CharacterElfProfiles.godMission] = next.toInt()
+                    }
+                    next.toInt()
+                }
+            }
+        }
     }
 
     override suspend fun setActive(characterId: Long, activeNo: Int) {

@@ -6,6 +6,8 @@ object CharacterElfProfiles : Table("character_elf_profiles") {
     val characterId = long("character_id")
     val activeNo = integer("active_no").default(999)
     val feedTotal = integer("feed_total").default(0)
+    /** Remaining Phuc Than battle charges, independent from lifetime Elf feeding points. */
+    val godMission = integer("god_mission").default(0)
     override val primaryKey = PrimaryKey(characterId)
 }
 

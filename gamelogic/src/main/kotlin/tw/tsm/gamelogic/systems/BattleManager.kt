@@ -20,6 +20,7 @@ import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.repositories.SkillRepository
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
+import tw.tsm.domain.interfaces.repositories.ElfRepository
 import tw.tsm.domain.valueobjects.FollowNpcData
 import tw.tsm.domain.util.DvtPercentMath
 import tw.tsm.gamelogic.battle.*
@@ -61,6 +62,8 @@ class BattleManager(
     private val sacredEquipPrimaryDefs: Map<Int, SacredEquipPrimaryDef> = emptyMap(),
     private val exclusiveSkillDefs: Map<Int, Map<Int, ExclusiveSkillDef>> = emptyMap(),
     private val soulSystem: SoulSystem? = null,
+    private val elfRepository: ElfRepository? = null,
+    private val elfBaseExpByNo: Map<Int, Int> = emptyMap(),
 ) {
     /** Trình phân tích vật phẩm chiến đấu (stateless, dùng chung cho toàn trận)*/
     private val battleItemResolver = BattleItemResolver(inventorySystem, itemDefs)
@@ -1699,7 +1702,24 @@ class BattleManager(
                     grantKillNum(session, battle.battleId, defeatedEnemyNpcCount)
                 }
 
-                val reward = battle.calculateRewards(session.level, npcDropTable)
+                // A Phuc Than charge is one eligible EXP-paying win, not a session EXP buff.
+                // Debit first: persistence failures must not award boosted EXP.
+                val charIdForGod = session.roleId.toLong()
+                val godMultiplier = if (defeatedEnemyNpcCount > 0 && elfRepository != null) {
+                    try {
+                        val profile = elfRepository.load(charIdForGod).profile
+                        if (profile.godMission <= 0 || elfRepository.changeGodMission(charIdForGod, -1) == null) {
+                            1.0
+                        } else {
+                            val baseExp = elfBaseExpByNo[profile.activeNo] ?: elfBaseExpByNo[999] ?: 100
+                            (baseExp.toDouble() / 100.0).coerceAtLeast(1.0)
+                        }
+                    } catch (e: Exception) {
+                        logger.error(e) { "Unable to debit Phuc Than charge cid=$charIdForGod" }
+                        1.0
+                    }
+                } else 1.0
+                val reward = battle.calculateRewards(session.level, npcDropTable, godMultiplier)
                 logger.info { "Trận ${battle.battleId}: người chơi $playerId nhận exp=${reward.exp} gold=${reward.gold} drops=${reward.drops.size}" }
 
                 // Hoạt ảnh rơi vật phẩm + thực tế phát ra
@@ -1749,7 +1769,8 @@ class BattleManager(
                     val petEntry = petSystem.getFollowPets(charId)[activePetFighter.followSlot] ?: continue
                     val petExp = BattleRewardCalc.calculateExp(
                         battle.involvedNpcDefs,
-                        petEntry.level
+                        petEntry.level,
+                        godMultiplier
                     )
                     val gain = petSystem.gainBattleExp(charId, activePetFighter.followSlot, petExp)
                     if (gain != null) {
