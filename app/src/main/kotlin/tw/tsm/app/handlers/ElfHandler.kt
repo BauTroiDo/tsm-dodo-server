@@ -286,7 +286,9 @@ class ElfHandler(
         }
         val state = repo.load(cid)
         val old = state.progress.firstOrNull { it.elfNo == no } ?: ElfProgressRecord(no, 1, 0)
-        if (old.level >= def.maxLevel || state.profile.feedTotal.toLong() + points > 65535L) {
+        if (old.level >= def.maxLevel ||
+            state.profile.godMission.toLong() + points > 65535L ||
+            state.profile.feedTotal.toLong() + points > Int.MAX_VALUE.toLong()) {
             ElfPackets.feedResult(session, false); return
         }
         var lv = old.level
@@ -297,24 +299,33 @@ class ElfHandler(
         }
         if (lv >= def.maxLevel) exp = 0
         val changed = ElfProgressRecord(no, lv, exp.coerceIn(0L, Int.MAX_VALUE.toLong()).toInt())
-        // Advance progress first, then consume items. If consuming fails,
-        // compensate database progress and deny the feeding acknowledgement.
+        // Feeding applies BOTH lifetime Elf EXP and the remaining God charges.
+        // They remain independent counters: battles spend charges, not feedTotal.
+        var progressed = false
+        var credited = false
         try {
             repo.setProgress(cid, changed, state.profile.feedTotal + points.toInt())
-            if (!inventory.removeBagItemsExact(cid, payload)) {
-                repo.setProgress(cid, old, state.profile.feedTotal)
-                ElfPackets.feedResult(session, false)
-                return
-            }
+            progressed = true
+            check(repo.changeGodMission(cid, points.toInt()) != null) { "God charge cap changed" }
+            credited = true
+            check(inventory.removeBagItemsExact(cid, payload)) { "Feed item removal failed" }
         } catch (e: Exception) {
             elfLogger.error(e) { "Elf feeding/persistence failed cid=$cid no=$no" }
-            try { repo.setProgress(cid, old, state.profile.feedTotal) }
-            catch (undo: Exception) { elfLogger.error(undo) { "CRITICAL Elf rollback failed cid=$cid" } }
+            if (credited) {
+                try { repo.changeGodMission(cid, -points.toInt()) }
+                catch (undo: Exception) { elfLogger.error(undo) { "CRITICAL God charge rollback failed cid=$cid" } }
+            }
+            if (progressed) {
+                try { repo.setProgress(cid, old, state.profile.feedTotal) }
+                catch (undo: Exception) { elfLogger.error(undo) { "CRITICAL Elf rollback failed cid=$cid" } }
+            }
             ElfPackets.feedResult(session, false)
             return
         }
         payload.forEach { (slot, qty) -> responses.sendReduceBagItem(session, slot, qty) }
         ElfPackets.feedResult(session, true)
         ElfPackets.progress(session, changed)
+        try { syncGodMission(session) }
+        catch (e: Exception) { elfLogger.warn(e) { "Elf feeding completed, visual sync failed cid=$cid" } }
     }
 }
