@@ -52,6 +52,9 @@ class EveResultExecutor(
     private val characterRepository: CharacterRepository? = null,
     private val markStepMissionIds: Set<Int> = emptySet(),
 ) {
+    private fun isDvtPackedMissionHint(result: EveResult): Boolean =
+        EvePackedMissionHintPolicy.isNonMutatingHint(result, markDefs.keys)
+
     /** Hook cho subsystem đăng ký arena từ mission marker Eve. */
     var onMissionStarted: (suspend (GameSession, Int) -> Unit)? = null
 
@@ -72,12 +75,16 @@ class EveResultExecutor(
                 r.resultClass in setOf(11, 13, 15) ||
                     (r.resultClass == 1 && EveResultClassPolicy.itemDelta(r.parameterStyle, r.resultValue) == null) ||
                     (r.resultClass == 2 && EveResultClassPolicy.missionOperation(r.parameterStyle, r.resultValue) == null) ||
-                    (r.resultClass == 2 && r.parameterStyle in setOf(1, 2) &&
+                    (r.resultClass == 2 && !isDvtPackedMissionHint(r) &&
+                        r.parameterStyle in setOf(1, 2) &&
                         (r.resultValue !in 0..255 || r.parameter <= 0))
                 )
         }
         if (unsupported == null) {
-            val missionResults = results.filter { it.resultType in setOf(0, 7) && it.resultClass == 2 }
+            val missionResults = results.filter {
+                it.resultType in setOf(0, 7) && it.resultClass == 2 &&
+                    !isDvtPackedMissionHint(it)
+            }
             if (missionResults.any { it.parameterStyle in setOf(1, 2) }) {
                 val steps = questSystem.getMissions(session.roleId.toLong())
                     .associate { it.missionId to it.step }
@@ -569,6 +576,17 @@ class EveResultExecutor(
      * - parameterStyle=1 (Thêm) / 2 (Giảm) / 3 (Hoàn thành: Xóa + Thiết lập cờ)
      */
     private suspend fun handleMissionResult(session: GameSession, result: EveResult): Boolean {
+        // DVT native Lua ignores an ADD_STEP whose delta cannot fit a mission byte.
+        // Packed mission-2 hint values encode a category and the real mission id.
+        // Neither persist a mission-2 step nor send a truncated S024 packet.
+        if (isDvtPackedMissionHint(result)) {
+            logger.debug {
+                "Eve DVT packed hint (no quest mutation): scene=" + session.mapId +
+                    " category=" + (result.resultValue / 100_000) +
+                    " mission=" + (result.resultValue % 100_000)
+            }
+            return true
+        }
         val charId    = session.roleId.toLong()
         val missionId = result.parameter
         val operation = EveResultClassPolicy.missionOperation(result.parameterStyle, result.resultValue)
