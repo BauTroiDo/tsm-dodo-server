@@ -10,6 +10,9 @@ import tw.tsm.domain.data.LimitTimeDungeonDef
 import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.ResponseSender
+import tw.tsm.domain.interfaces.repositories.LimitedAreaDailyRepository
+import java.time.Instant
+import java.time.ZoneId
 import java.util.concurrent.ConcurrentHashMap
 
 private val limitDungeonLogger = KotlinLogging.logger {}
@@ -28,11 +31,46 @@ class LimitTimeDungeonSystem(
     private val clockMillis: () -> Long = System::currentTimeMillis,
     private val minuteMillis: Long = MINUTE_MS,
     private val tickMillis: Long = 1_000L,
+    private val dailyRepository: LimitedAreaDailyRepository? = null,
 ) {
     private val jobs = ConcurrentHashMap<Long, Job>()
     private val jobSessions = ConcurrentHashMap<Long, GameSession>()
 
     fun getDef(index: Int): LimitTimeDungeonDef? = defs[index]
+
+    /** Vietnamese calendar midnight; one entry is permanently claimed before teleport. */
+    private fun dayKey(millis: Long): Int =
+        Instant.ofEpochMilli(millis).atZone(VIETNAM_TIME).toLocalDate().toEpochDay().toInt()
+
+    /** C097-001 admission: one 120-minute visit per character per Vietnam calendar day.
+     * An older pre-migration RoleCount 27 value counts as an already-used entry today.
+     */
+    suspend fun tryStartDailyVisit(session: GameSession, def: LimitTimeDungeonDef): Boolean {
+        if (session.roleId <= 0) return false
+        val charId = session.roleId.toLong()
+        val used = roleCountSystem.getValue(charId, def.limitIndex)
+        val repo = dailyRepository ?: return used < def.limitTimeMinutes // test-only legacy path
+        return try {
+            val accepted = repo.claim(
+                charId, def.sceneId, dayKey(clockMillis()), clockMillis(),
+                used, minuteMillis,
+            )
+            if (accepted) {
+                roleCountSystem.setValue(charId, def.limitIndex, 0, def.limitTimeMinutes)
+                roleCountSystem.saveCounts(charId)
+                responseSender.sendRoleCountUpdate(
+                    session, mapOf(def.limitIndex to (0 to def.limitTimeMinutes)),
+                )
+                limitDungeonLogger.info {
+                    "DVT daily entry claimed: cid=$charId scene=${def.sceneId} day=${dayKey(clockMillis())}"
+                }
+            }
+            accepted
+        } catch (e: Exception) {
+            limitDungeonLogger.error(e) { "Cannot persist daily otherworld admission cid=$charId" }
+            false // fail closed: DB outage must never grant an extra daily entry
+        }
+    }
 
     /**
      * DVT UIMain.OnDropChange_AnotherWorldLv:
@@ -119,10 +157,44 @@ class LimitTimeDungeonSystem(
         val charId = session.roleId.toLong()
         val def = defs.values.firstOrNull { it.sceneId == session.mapId }
         if (def == null) {
+            // A newly claimed entry may still be in the teleport handshake. Only
+            // an already tracked timed scene can be closed as a voluntary exit.
+            val wasTrackingInside = jobs[charId]?.isActive == true
             stopTracking(charId)
+            // A voluntary scene exit consumes today's entire entry; reconnect while
+            // still physically inside the map does NOT take this path.
+            if (dailyRepository != null) scope.launch {
+                for (dailyDef in defs.values) {
+                    try {
+                        if (session.mapId == dailyDef.sceneId ||
+                            session.state != SessionState.IN_GAME
+                        ) continue
+                        val run = dailyRepository.find(charId, dailyDef.sceneId) ?: continue
+                        if (wasTrackingInside && !run.closed) {
+                            dailyRepository.close(charId, dailyDef.sceneId)
+                        }
+                        val minutes = when {
+                            run.dayKey < dayKey(clockMillis()) -> 0 // new calendar day
+                            wasTrackingInside || run.closed -> dailyDef.limitTimeMinutes
+                            else -> continue // do not consume a pending C097 teleport
+                        }
+                        if (roleCountSystem.getValue(charId, dailyDef.limitIndex) != minutes) {
+                            roleCountSystem.setValue(
+                                charId, dailyDef.limitIndex, minutes, dailyDef.limitTimeMinutes,
+                            )
+                            roleCountSystem.saveCounts(charId)
+                            responseSender.sendRoleCountUpdate(
+                                session, mapOf(dailyDef.limitIndex to (minutes to dailyDef.limitTimeMinutes)),
+                            )
+                        }
+                    } catch (e: Exception) {
+                        limitDungeonLogger.error(e) { "Cannot reconcile daily visit cid=$charId" }
+                    }
+                }
+            }
             return
         }
-        if (adminBypassPolicy.bypassEntryLimit(session)) {
+        if (dailyRepository == null && adminBypassPolicy.bypassEntryLimit(session)) {
             stopTracking(charId)
             scope.launch { ensureEncounterMission(session, def) }
             return
@@ -134,10 +206,18 @@ class LimitTimeDungeonSystem(
         jobSessions[charId] = session
         val job = scope.launch {
             try {
-                if (roleCountSystem.getValue(charId, def.limitIndex) >= def.limitTimeMinutes) {
+                val run = dailyRepository?.let { repo ->
+                    repo.find(charId, def.sceneId) ?: repo.recover(
+                        charId, def.sceneId, dayKey(clockMillis()), clockMillis(),
+                        roleCountSystem.getValue(charId, def.limitIndex), minuteMillis,
+                    )
+                }
+                if (run?.closed == true ||
+                    roleCountSystem.getValue(charId, def.limitIndex) >= def.limitTimeMinutes
+                ) {
                     exitExpired(session, def)
                 } else if (ensureEncounterMission(session, def)) {
-                    track(session, def)
+                    track(session, def, run?.startedAtMillis)
                 }
             } finally {
                 val me = kotlin.coroutines.coroutineContext[Job]
@@ -159,11 +239,11 @@ class LimitTimeDungeonSystem(
      * delay(MINUTE_MS) returns on the exact deadline. Both the count update and
      * kick must still happen if the coroutine was suspended for extra time.
      */
-    private suspend fun track(session: GameSession, def: LimitTimeDungeonDef) {
+    private suspend fun track(session: GameSession, def: LimitTimeDungeonDef, startedAtMillis: Long?) {
         require(minuteMillis > 0 && tickMillis > 0)
         val charId = session.roleId.toLong()
-        val startUsed = roleCountSystem.getValue(charId, def.limitIndex)
-        val started = clockMillis()
+        val startUsed = if (startedAtMillis == null) roleCountSystem.getValue(charId, def.limitIndex) else 0
+        val started = startedAtMillis ?: clockMillis()
         while (session.state == SessionState.IN_GAME && session.mapId == def.sceneId) {
             val elapsed = (clockMillis() - started).coerceAtLeast(0L)
             val consumed = elapsed / minuteMillis
@@ -218,5 +298,6 @@ class LimitTimeDungeonSystem(
 
     companion object {
         const val MINUTE_MS = 60_000L
+        private val VIETNAM_TIME: ZoneId = ZoneId.of("Asia/Ho_Chi_Minh")
     }
 }
