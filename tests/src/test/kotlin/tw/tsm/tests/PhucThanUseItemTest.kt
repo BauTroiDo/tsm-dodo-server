@@ -39,6 +39,8 @@ class PhucThanUseItemTest {
 
     private fun item(gain: Int): ItemDef {
         val def = mockk<ItemDef>()
+        every { def.kind } returns tw.tsm.domain.constants.EItemKind.SPECIAL_ABILITY
+        every { def.directUse } returns 0
         every { def.specialAbility } returns 93
         every { def.skillLink } returns gain
         return def
