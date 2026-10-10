@@ -1,0 +1,19 @@
+name: DVT data audit tools
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  markstep-parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Verify DVT MarkStep parity audit and original byte fixtures
+        run: python -m unittest discover -s tools -p test_dvt_markstep_parity.py -v
