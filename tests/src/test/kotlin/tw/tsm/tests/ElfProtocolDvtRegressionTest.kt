@@ -147,16 +147,26 @@ class ElfProtocolDvtRegressionTest {
 
 
     @Test
-    fun `S024-008 follows PC DVT SetGhost wire layout and clears unequipped Elf`() {
+    fun `S024-008 preserves Phuc Than charges with or without equipped Elf`() {
         val playerId = 0x0102030405060708L
         assertArrayEquals(
-            byteArrayOf(24, 8, 0, 8, 7, 6, 5, 4, 3, 2, 1, 1, 0, 1, 0, 0, 0),
-            ElfPackets.followAppearance(playerId, 1)
+            byteArrayOf(24, 8, 0, 8, 7, 6, 5, 4, 3, 2, 1, 1, 0, 25, 0, 0, 0),
+            ElfPackets.followAppearance(playerId, 1, 25)
         )
         assertArrayEquals(
-            byteArrayOf(24, 8, 0, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0, 0, 0, 0, 0),
-            ElfPackets.followAppearance(playerId, 999)
+            byteArrayOf(24, 8, 0, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0, 25, 0, 0, 0),
+            ElfPackets.followAppearance(playerId, 999, 25)
         )
+    }
+
+    @Test
+    fun `GodMission cannot wrap past client cap`() {
+        assertThrows(IllegalArgumentException::class.java) {
+            ElfPackets.followAppearance(1L, 999, 65536)
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            ElfPackets.followAppearance(1L, 1, -1)
+        }
     }
 
     @Test
@@ -182,7 +192,7 @@ class ElfProtocolDvtRegressionTest {
 
         assertEquals(2, frames.size)
         assertArrayEquals(byteArrayOf(107, 2, 0, 1, 0, 1), frames[0])
-        assertArrayEquals(ElfPackets.followAppearance(1234L, 1), frames[1])
+        assertArrayEquals(ElfPackets.followAppearance(1234L, 1, 0), frames[1])
         verify(exactly = 1) { world.broadcastToMap(830, any(), session, 7) }
     }
 
@@ -212,8 +222,8 @@ class ElfProtocolDvtRegressionTest {
             .syncAppearanceForMap(session)
 
         assertEquals(2, frames.size)
-        assertArrayEquals(ElfPackets.followAppearance(1234L, 1), frames[0])
-        assertArrayEquals(ElfPackets.followAppearance(5678L, 1), frames[1])
+        assertArrayEquals(ElfPackets.followAppearance(1234L, 1, 0), frames[0])
+        assertArrayEquals(ElfPackets.followAppearance(5678L, 1, 0), frames[1])
         verify(exactly = 1) { world.broadcastToMap(830, any(), session, 7) }
     }
 
