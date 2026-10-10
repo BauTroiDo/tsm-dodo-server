@@ -26,7 +26,15 @@ private val elfLogger = KotlinLogging.logger {}
 
 /** PC DVT Elf_C.dat and ElfExp_C.dat; not the Android CDN. */
 class ElfCatalog(val defs: Map<Int, ElfDefinition>, val expByLevel: Map<Int, Int>) {
-    data class ElfDefinition(val no: Int, val maxLevel: Int, val ownershipFlag: Int)
+    /** Original DVT ElfData.lua stores three level-gated flat/special bonuses. */
+    data class ElfBonus(val openLevel: Int, val attribute: Int, val value: Int)
+    data class ElfDefinition(
+        val no: Int,
+        val maxLevel: Int,
+        val ownershipFlag: Int,
+        val baseExp: Int,
+        val bonuses: List<ElfBonus>,
+    )
 
     companion object {
         fun fromPacked(elfBytes: ByteArray, expBytes: ByteArray): ElfCatalog {
@@ -41,9 +49,15 @@ class ElfCatalog(val defs: Map<Int, ElfDefinition>, val expByLevel: Map<Int, Int
                 val max = a.short.toInt() and 0xffff
                 val flag = a.short.toInt() and 0xffff
                 a.get() // location
-                a.short // base exp
-                repeat(9) { a.short } // 3 sets: openLv, attr, value
-                require(defs.put(no, ElfDefinition(no, max, flag)) == null)
+                val baseExp = a.short.toInt() and 0xffff
+                val bonuses = List(3) {
+                    ElfBonus(
+                        openLevel = a.short.toInt() and 0xffff,
+                        attribute = a.short.toInt() and 0xffff,
+                        value = a.short.toInt() and 0xffff,
+                    )
+                }
+                require(defs.put(no, ElfDefinition(no, max, flag, baseExp, bonuses)) == null)
             }
             require(a.position() == elfBytes.size && defs.containsKey(999))
             val b = ByteBuffer.wrap(expBytes).order(ByteOrder.LITTLE_ENDIAN)
