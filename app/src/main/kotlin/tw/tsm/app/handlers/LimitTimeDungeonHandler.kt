@@ -62,7 +62,7 @@ class LimitTimeDungeonHandler(
             return
         }
 
-        val result = validate(session, def.limitIndex, def.limitTimeMinutes, def.limitLevel, def.sceneId)
+        val result = validate(session, def.limitLevel, def.sceneId)
         if (result != 0) {
             sendResult(session, result)
             return
@@ -79,6 +79,11 @@ class LimitTimeDungeonHandler(
             return
         }
 
+        if (!system.tryStartDailyVisit(session, def)) {
+            sendResult(session, 2) // Today's only entry already used.
+            return
+        }
+
         // Lua success branch của S:097-001 không làm gì; scene change là packet riêng.
         sendResult(session, 0)
         if (!specialTeleport.enterSpecialScene(session, def.sceneId)) {
@@ -90,13 +95,10 @@ class LimitTimeDungeonHandler(
 
     private fun validate(
         session: GameSession,
-        limitIndex: Int,
-        limitMinutes: Int,
         limitLevel: Int,
         sceneId: Int,
     ): Int {
         if (session.level < limitLevel) return 1
-        if (roleCountSystem.getValue(session.roleId.toLong(), limitIndex) >= limitMinutes) return 2
         if (session.battleId != 0L) return 3
         if (stateMachine.getSession(session.roleId.toLong()) != null) return 4
         if (partySystem.isInParty(session.playerId)) return 5

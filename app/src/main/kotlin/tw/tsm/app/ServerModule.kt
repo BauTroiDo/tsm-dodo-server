@@ -43,6 +43,7 @@ import tw.tsm.domain.interfaces.repositories.MountRepository
 import tw.tsm.domain.interfaces.repositories.PetRepository
 import tw.tsm.domain.interfaces.repositories.FlyPointRepository
 import tw.tsm.domain.interfaces.repositories.RoleCountRepository
+import tw.tsm.domain.interfaces.repositories.LimitedAreaDailyRepository
 import tw.tsm.domain.interfaces.repositories.DispatchRepository
 import tw.tsm.domain.interfaces.repositories.DungeonRunRepository
 import tw.tsm.domain.interfaces.repositories.FriendRepository
@@ -78,6 +79,7 @@ import tw.tsm.persistence.repositories.FlyPointRepositoryImpl
 import tw.tsm.persistence.repositories.PetRepositoryImpl
 import tw.tsm.persistence.repositories.QuestRepositoryImpl
 import tw.tsm.persistence.repositories.RoleCountRepositoryImpl
+import tw.tsm.persistence.repositories.LimitedAreaDailyRepositoryImpl
 import tw.tsm.persistence.repositories.SkillRepositoryImpl
 
 private val serverLogger = KotlinLogging.logger {}
@@ -282,6 +284,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single<MountRepository> { MountRepositoryImpl() }
     single<HotkeyRepository> { HotkeyRepositoryImpl() }
     single<RoleCountRepository> { RoleCountRepositoryImpl() }
+    single<LimitedAreaDailyRepository> { LimitedAreaDailyRepositoryImpl() }
     single<FlyPointRepository> { FlyPointRepositoryImpl() }
     single<UiSellCountRepository> { UiSellCountRepositoryImpl() }
     single<CharacterCurrencyRepository> { CharacterCurrencyRepositoryImpl() }
@@ -452,7 +455,8 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
         LimitTimeDungeonSystem(
             get<GameDataManager>().limitTimeDungeonDefs,
             get<RoleCountSystem>(), get<ResponseSender>(), get<SpecialSceneTeleportService>(), get<CoroutineScope>(), get<AdminBypassPolicy>(), get<QuestSystem>(),
-            get<GameDataManager>().anotherWorldLvDefs
+            get<GameDataManager>().anotherWorldLvDefs,
+            dailyRepository = get<LimitedAreaDailyRepository>()
         )
     }
     single {
