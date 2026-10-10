@@ -30,6 +30,17 @@ class DungeonEntryRegressionTest {
         }
     }
 
+    @Test fun `DVT OtherWorld49942 has a usable exit from Eve doors`() {
+        val sceneId = 49942
+        val scene = scenes().getValue(sceneId)
+        val teleporter = SpecialSceneTeleportService(mockk(), mockk(), mockk(), scenes(), grids(), sceneSets())
+        val exit = teleporter.deriveSpecialSceneExit(sceneId)
+        println("DVT_OTHERWORLD_49942_EXIT doors=" + scene.doors.size +
+            " scenes=" + scene.sceneInfos.size + " exit=" + exit)
+        assertNotNull(exit, "Scene49942 must have a proven outdoor Eve exit or persisted origin fallback")
+        assertNotEquals(sceneId, exit!!.backgroundNo)
+    }
+
     @Test fun `Eve exit inventory proves scene62003 requires server persisted origin`() {
         val sets = sceneSets()
         val teleport = SpecialSceneTeleportService(
