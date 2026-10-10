@@ -579,10 +579,13 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
         )
     }
     single {
-        BattleManager(get(), get<GameDataManager>().skillDefs, get<GameDataManager>().npcDefs, get(), get(), get<PetSystem>(), get<MoneySystem>(), get<StatSystem>(), get(), get<GameDataManager>().npcDropTable, get<SkillSystem>(), get<MacroBoxSystem>(), get<GameDataManager>().itemDefs, get<SkillRepository>(), get<CharacterRepository>(), get<GameDataManager>().npcUpgradeDefs, get<GameDataManager>().sceneSetDefs, get<DailyProgressSystem>(), get<CollectionSystem>(), get<GameDataManager>().sacredEquipPrimaryDefs, get<GameDataManager>().exclusiveSkillDefs, get<SoulSystem>()).also { bm ->
+        BattleManager(get(), get<GameDataManager>().skillDefs, get<GameDataManager>().npcDefs, get(), get(), get<PetSystem>(), get<MoneySystem>(), get<StatSystem>(), get(), get<GameDataManager>().npcDropTable, get<SkillSystem>(), get<MacroBoxSystem>(), get<GameDataManager>().itemDefs, get<SkillRepository>(), get<CharacterRepository>(), get<GameDataManager>().npcUpgradeDefs, get<GameDataManager>().sceneSetDefs, get<DailyProgressSystem>(), get<CollectionSystem>(), get<GameDataManager>().sacredEquipPrimaryDefs, get<GameDataManager>().exclusiveSkillDefs, get<SoulSystem>(), get<ElfRepository>(), get<ElfCatalog>().defs.mapValues { it.value.baseExp }).also { bm ->
             // Callback kết thúc chiến đấu → EveFlowController khôi phục luồng sự kiện
             bm.onBattleAbortCallback = { session -> get<EveFlowController>().abortAfterBattle(session) }
             bm.onBattleEndCallback = { session, playerId, playerWin ->
+                // After reward settlement, refresh DVT S024-008 with remaining Phuc Than charges.
+                try { get<ElfHandler>().syncGodMission(session) }
+                catch (_: Exception) { /* DB result is already persistent; map reload will resync. */ }
                 // Mine cooldown phải bắt đầu từ lúc trận gặp ngẫu nhiên kết thúc,
                 // trước khi EveFlowController có thể complete/remove EventSession.
                 get<MineEncounterSystem>().onBattleEnd(playerId)
