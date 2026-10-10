@@ -408,15 +408,18 @@ class EveEventStateMachine {
         val eveMap = completedEvents
             .getOrPut(charId) { ConcurrentHashMap() }
             .getOrPut(mapId) { ConcurrentHashMap() }
-        var added = 0
-        for ((eveNo, count) in eveCounts) {
-            eveMap.putIfAbsent(eveNo, count)?.let {} ?: run { added++ }
-        }
-        if (added > 0) {
-            logger.debug { "Điền trước sự kiện hoàn thành: charId=$charId mapId=$mapId added=$added → total=${eveMap.size}" }
+
+        // DB can be ahead of a cached count after reconnect or rehydration.
+        // merge(max) is atomic with complete()'s increment and never
+        // rolls an observed count backwards. Explicit scene reset still
+        // uses clearSceneEvents() before reloading a new baseline.
+        for ((eveNo, persistedCount) in eveCounts) {
+            if (eveNo <= 0 || persistedCount <= 0) continue
+            eveMap.merge(eveNo, persistedCount) { cached, persisted ->
+                maxOf(cached, persisted)
+            }
         }
     }
-
     /**
      * Lấy map số lần hoàn thành sự kiện của nhân vật ở map chỉ định (dùng để xây dựng PlayerEventState)
      *
