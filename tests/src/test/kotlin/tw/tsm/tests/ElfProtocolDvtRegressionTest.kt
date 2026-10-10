@@ -12,6 +12,8 @@ import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.SessionSender
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.repositories.*
+import tw.tsm.domain.valueobjects.ThingData
+import tw.tsm.domain.data.ItemDef
 import tw.tsm.gamelogic.systems.BitFlagSystem
 import tw.tsm.gamelogic.systems.InventorySystem
 import tw.tsm.gamelogic.systems.WorldManager
@@ -204,6 +206,44 @@ class ElfProtocolDvtRegressionTest {
         assertArrayEquals(ElfPackets.followAppearance(1234L, 1, 42), frames[0])
         assertArrayEquals(ElfPackets.followAppearance(5678L, 1, 73), frames[1])
         verify(exactly = 1) { world.broadcastToMap(830, any(), session, 7) }
+    }
+
+
+    @Test
+    fun `feeding an Elf refreshes the real godMission amount instead of a fake one`() = runBlocking {
+        val repo = mockk<ElfRepository>()
+        val bits = mockk<BitFlagSystem>()
+        val inv = mockk<InventorySystem>()
+        val resp = mockk<ResponseSender>()
+        val world = mockk<WorldManager>(relaxed = true)
+        val itemDef = mockk<ItemDef>()
+        val session = mockk<GameSession>(relaxed = true)
+        val frames = mutableListOf<ByteArray>()
+        every { session.state } returns SessionState.IN_GAME
+        every { session.battleId } returns 0L
+        every { session.roleId } returns 41
+        every { session.playerId } returns 1234L
+        every { session.mapId } returns 830
+        every { session.instanceId } returns 7
+        every { session.send(capture(frames)) } just Runs
+        every { itemDef.skillLink } returns 7
+        every { inv.getBagItem(41L, 2) } returns ThingData(itemId = 46037, quantity = 3)
+        coEvery { inv.removeBagItemsExact(41L, listOf(2 to 3)) } returns true
+        coEvery { bits.getSetFlagIds(41L) } returns setOf(6034)
+        coEvery { repo.load(41L) } returns ElfSnapshotRecord(
+            ElfProfileRecord(1, 11), listOf(ElfProgressRecord(1, 1, 0))
+        )
+        coEvery { repo.setProgress(41L, ElfProgressRecord(1, 2, 1), 32) } just Runs
+        every { resp.sendReduceBagItem(session, 2, 3) } just Runs
+
+        val feedPayload = byteArrayOf(1, 0, 1, 2, 0, 3, 0)
+        ElfHandler(repo, bits, inv, resp, mapOf(46037 to itemDef), catalog, world)
+            .handle(session, 4, feedPayload)
+
+        coVerify(exactly = 1) { repo.setProgress(41L, ElfProgressRecord(1, 2, 1), 32) }
+        assertArrayEquals(byteArrayOf(107, 4, 0, 1), frames[0])
+        assertArrayEquals(ElfPackets.followAppearance(1234L, 1, 32), frames.last())
+        verify(exactly = 1) { world.broadcastToMap(830, frames.last(), session, 7) }
     }
 
 }
