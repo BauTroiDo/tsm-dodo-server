@@ -29,6 +29,7 @@ class RelocateHandler(
     private val limitTimeDungeonSystem: LimitTimeDungeonSystem? = null,
     private val dungeonSystem: DungeonSystem? = null,
     private val eveTriggerRouter: EveTriggerRouter? = null,
+    private val elfHandler: ElfHandler? = null,
 ) : PacketHandler {
 
     /** mainKind = 12 (0x0C) */
@@ -98,6 +99,10 @@ class RelocateHandler(
                 responseSender.sendOtherPlayerAppear(other, session)
             }
         }
+
+        // Client only creates the world sprite after RoleController exists.
+        // Restore equipped Elf sprites after scene loading, including nearby players.
+        elfHandler?.syncAppearanceForMap(session)
     }
 
     private fun sendDungeonStartTime(session: GameSession, startTime: Double, dungeonId: Int) {
