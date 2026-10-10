@@ -1,6 +1,9 @@
 package tw.tsm.app.handlers
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import java.util.concurrent.ConcurrentHashMap
 import tw.tsm.domain.constants.EAttribute
 import tw.tsm.domain.constants.EGdThing
 import tw.tsm.domain.constants.EItemKind
@@ -21,6 +24,7 @@ import tw.tsm.gamelogic.systems.AstrolabeSystem
 import tw.tsm.gamelogic.systems.DailyProgressSystem
 import tw.tsm.gamelogic.systems.EquipBonusCalculator
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
+import tw.tsm.domain.interfaces.repositories.ElfRepository
 import tw.tsm.gamelogic.systems.FlyPointSystem
 import tw.tsm.gamelogic.systems.GroundItemManager
 import tw.tsm.gamelogic.systems.InventorySystem
@@ -82,9 +86,12 @@ class ItemHandler(
     private val soulResponseSender: SoulResponseSender? = null,
     private val playerCurrencySystem: PlayerCurrencySystem? = null,
     private val elfTokenUnlock: ElfTokenUnlockService? = null,
+    private val elfRepository: ElfRepository? = null,
+    private val elfHandler: ElfHandler? = null,
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.SHOP  // 23
+    private val godItemLocks = ConcurrentHashMap<Long, Mutex>()
 
     override suspend fun handle(session: GameSession, subKind: Int, data: ByteArray) {
         if (session.state != SessionState.IN_GAME) return
@@ -549,6 +556,47 @@ class ItemHandler(
         }
     }
 
+    /** DVT specialAbility=93: consume an ExpGod item to add lasting Phuc Than battle charges.
+     * Its skillLink is the number of charges, not an EXP multiplier.
+     * Do not consume unknown zero-skillLink variants until their special rules are decoded.
+     */
+    private suspend fun handleGodItem(
+        session: GameSession, characterId: Long, slot: Int, itemId: Int,
+        def: ItemDef, quantity: Int, followIndex: Int,
+    ) {
+        val repository = elfRepository ?: return
+        if (session.battleId != 0L || followIndex != 0 || quantity <= 0 || def.skillLink <= 0) return
+        val item = inventorySystem.getBagItem(characterId, slot) ?: return
+        if (item.itemId != itemId || quantity > item.quantity) return
+        val increment = def.skillLink.toLong() * quantity
+        if (increment !in 1..65535L) return
+        val added = try { repository.changeGodMission(characterId, increment.toInt()) }
+            catch (e: Exception) {
+                logger.error(e) { "GodMission credit failure: cid=$characterId itemId=$itemId" }
+                null
+            }
+        if (added == null) {
+            responseSender.sendSystemMessage(session, "Phúc Thần đã đạt giới hạn hoặc không thể lưu, không trừ vật phẩm.")
+            return
+        }
+        val removed = try { inventorySystem.removeBagItemsExact(characterId, listOf(slot to quantity)) }
+            catch (e: Exception) {
+                logger.error(e) { "GodMission inventory failure: cid=$characterId itemId=$itemId" }
+                false
+            }
+        if (!removed) {
+            try { repository.changeGodMission(characterId, -increment.toInt()) }
+            catch (e: Exception) { logger.error(e) { "CRITICAL GodMission rollback failed cid=$characterId" } }
+            return
+        }
+        responseSender.sendReduceBagItem(session, slot, quantity)
+        responseSender.sendUseItemSuccess(session, itemId, quantity, showMsg = true)
+        try { elfHandler?.syncGodMission(session) }
+        catch (e: Exception) {
+            logger.warn(e) { "GodMission persisted but live S024-008 sync failed cid=$characterId" }
+        }
+    }
+
     /**
      * C:023-015 Dùng vật phẩm
      *
@@ -610,6 +658,12 @@ class ItemHandler(
         if (itemDef != null && itemDef.specialAbility == EItemUseKind.ELF_TOKEN) {
             // Duplicate/invalid Elf tickets must stay in bag, never consume as no-op.
             elfTokenUnlock?.redeem(session, bagIndex, quantity, followIndex)
+            return
+        }
+        if (itemDef != null && itemDef.specialAbility == EItemUseKind.EXP_GOD) {
+            godItemLocks.computeIfAbsent(characterId) { Mutex() }.withLock {
+                handleGodItem(session, characterId, bagIndex, bagItem.itemId, itemDef, quantity, followIndex)
+            }
             return
         }
         if (itemDef != null && itemDef.specialAbility == EItemUseKind.SOUL) {
