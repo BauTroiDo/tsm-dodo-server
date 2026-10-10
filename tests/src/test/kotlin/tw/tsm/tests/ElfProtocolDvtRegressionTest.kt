@@ -37,6 +37,24 @@ class ElfProtocolDvtRegressionTest {
     }
 
     @Test
+    fun `Elf_C parser retains DVT EXP multiplier and level-gated attribute triples`() {
+        // PC DVT ElfData.New: no(2), model(2), name(4), maxLevel(2), flag(2),
+        // location(1), baseExp(2), then 3 * [openLv(2), attr(2), value(2)].
+        val modified = Files.readAllBytes(Path.of("..", "File.dat", "Data", "elf_C.dat")).copyOf()
+        val buffer = java.nio.ByteBuffer.wrap(modified).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+        buffer.putShort(17, 135.toShort())
+        buffer.putShort(19, 4.toShort())
+        buffer.putShort(21, 23.toShort())
+        buffer.putShort(23, 87.toShort())
+        val exp = Files.readAllBytes(Path.of("..", "File.dat", "Data-ios", "IOS_ElfExp_C.dat"))
+        val parsed = ElfCatalog.fromPacked(modified, exp)
+        val first = parsed.defs.values.first()
+        assertEquals(135, first.baseExp)
+        assertEquals(3, first.bonuses.size)
+        assertEquals(ElfCatalog.ElfBonus(4, 23, 87), first.bonuses[0])
+    }
+
+    @Test
     fun `S107-005 and S107-006 respect client payload layout`() {
         val sender = mockk<SessionSender>(relaxed = true)
         val frames = mutableListOf<ByteArray>()
