@@ -178,11 +178,17 @@ class ElfHandler(
         val next = if (kind == 3) ElfPackets.DEFAULT_NO else no
         try {
             repo.setActive(cid, next)
-            ElfPackets.teamResult(session, kind, no, true)
-            sendFollowAppearance(session, next)
         } catch (e: Exception) {
             elfLogger.error(e) { "Unable to persist Elf equip cid=$cid no=$no" }
             ElfPackets.teamResult(session, kind, no, false)
+            return
+        }
+        ElfPackets.teamResult(session, kind, no, true)
+        // Visual-sync failures must never turn a persisted equip into a false ACK.
+        try {
+            sendFollowAppearance(session, next)
+        } catch (e: Exception) {
+            elfLogger.warn(e) { "Equipped Elf but appearance sync failed cid=$cid no=$no" }
         }
     }
 
