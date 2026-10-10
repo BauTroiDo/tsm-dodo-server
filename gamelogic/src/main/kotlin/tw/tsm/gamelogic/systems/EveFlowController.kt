@@ -58,6 +58,12 @@ class EveFlowController(
     suspend fun advanceEvent(session: GameSession) {
         val charId = session.roleId.toLong()
         val eventSession = stateMachine.getSession(charId)
+        // Duplicate or delayed C:020-006 after an event has been cleared must not
+        // send another event-end packet or affect a newly completed Eve.
+        if (eventSession == null) {
+            logger.debug { "Bỏ qua C:020-006 khi không có phiên Eve: charId=$charId" }
+            return
+        }
 
         // Surface phía DVT có thể phát C:020-006 gần như đồng thời với C:020-009.
         // Sau khi choice đã được claim nhưng chưa dispatch xong result đầu tiên, tuyệt đối
