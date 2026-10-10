@@ -157,9 +157,6 @@ class ElfHandler(
             it == ElfPackets.DEFAULT_NO || owned(it, flags)
         } ?: ElfPackets.DEFAULT_NO
         ElfPackets.snapshot(session, active, snapshot.profile.feedTotal, owned)
-        // C107-005 is also sent when reopening the Elf UI. Restore the avatar
-        // visual even if a prior S24-008 was lost during scene transition.
-        session.send(ElfPackets.followAppearance(session.playerId, active))
     }
     private fun owned(no: Int, flags: Set<Int>): Boolean =
         catalog.defs[no]?.let { it.no != 999 && it.ownershipFlag in flags } == true
