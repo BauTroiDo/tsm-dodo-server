@@ -154,6 +154,10 @@ class GameDataManager(
     var limitTimeDungeonDefs: Map<Int, LimitTimeDungeonDef> = emptyMap()
         private set
 
+    /** C97-002 selected monster level / rebirth, from IOS_AnotherWorldLv_C.dat. */
+    var anotherWorldLvDefs: Map<Int, AnotherWorldLvDef> = emptyMap()
+        private set
+
     /** Danh sách điều hướng luyện công/chuyển sinh DVT từ IOS_SceneFight_C.dat. */
     var sceneFightDefs: List<SceneFightDef> = emptyList()
         private set
@@ -581,6 +585,10 @@ class GameDataManager(
         loadFile(dataIosDir, "IOS_LimitTimeDungeon_C.dat") { bytes ->
             limitTimeDungeonDefs = LimitTimeDungeonDatLoader.load(bytes)
             logger.info { "Nạp IOS_LimitTimeDungeon xong: ${limitTimeDungeonDefs.size} bản ghi" }
+        }
+        loadFile(dataIosDir, "IOS_AnotherWorldLv_C.dat") { bytes ->
+            anotherWorldLvDefs = AnotherWorldLvDatLoader.load(bytes)
+            logger.info { "Nạp IOS_AnotherWorldLv xong: ${anotherWorldLvDefs.size} mốc cấp quái" }
         }
         loadFile(dataIosDir, "IOS_SceneFight_C.dat") { bytes ->
             sceneFightDefs = SceneFightDatLoader.load(bytes)

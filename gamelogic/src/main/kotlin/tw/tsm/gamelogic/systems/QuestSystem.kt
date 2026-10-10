@@ -258,6 +258,25 @@ class QuestSystem(
             }
         }
 
+    /**
+     * DVT C097-002 changes the *selected monster tier*, stored in mission 13137.
+     * Return the previous stage so the caller can send S024-001/002 as an
+     * incremental delta (client MarkManager does not accept an absolute delta).
+     * Serialized with NPC-driven quest changes and the initial step creation.
+     */
+    suspend fun selectTrainingMissionStage(charId: Long, missionId: Int, newStep: Int): Int =
+        mutationLock(charId).withLock {
+            require(missionId in 1..65535 && newStep in 1..255)
+            val old = repo.getMissions(charId)
+                .firstOrNull { it.missionId == missionId }?.step ?: 0
+            require(old in 0..255) { "Existing mission step does not fit packet" }
+            if (old != newStep) {
+                repo.upsertMission(charId, missionId, newStep)
+                logger.info { "Selected training mission stage: charId=$charId mission=$missionId $old -> $newStep" }
+            }
+            old
+        }
+
     suspend fun getMissions(charId: Long): List<MissionRecord> = repo.getMissions(charId)
 
     /**

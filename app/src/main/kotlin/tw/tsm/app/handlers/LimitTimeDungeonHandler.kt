@@ -29,11 +29,26 @@ class LimitTimeDungeonHandler(
         if (session.state != SessionState.IN_GAME) return
         when (subKind) {
             1 -> enter(session, data)
-            2 -> limitDungeonHandlerLogger.debug {
-                "C:097-002 chưa có sender trong DVT client hiện tại; bỏ qua an toàn"
-            }
+            2 -> selectMonsterLevel(session, data)
             else -> limitDungeonHandlerLogger.warn {
                 "Sub-protocol 97 chưa xử lý: " + subKind
+            }
+        }
+    }
+
+    /**
+     * Actual DVT UIMain.OnDropChange_AnotherWorldLv always emits C097-002
+     * with exactly one selected-tier byte; reject spoofed levels/turns/maps.
+     * No S097-002 response is declared in protocal.lua; send S024 step diff.
+     */
+    private suspend fun selectMonsterLevel(session: GameSession, data: ByteArray) {
+        if (data.size != 1 || session.roleId <= 0) return
+        if (session.battleId != 0L || stateMachine.getSession(session.roleId.toLong()) != null) return
+        val selectedId = PacketReader(data).readUByte()
+        if (!system.selectAnotherWorldLevel(session, selectedId)) {
+            limitDungeonHandlerLogger.warn {
+                "Reject C097-002 cid=${session.roleId} map=${session.mapId} " +
+                    "turn=${session.turn} choice=$selectedId"
             }
         }
     }
