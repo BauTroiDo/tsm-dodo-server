@@ -14,6 +14,7 @@ import tw.tsm.domain.interfaces.repositories.ElfRepository
 import tw.tsm.domain.interfaces.repositories.ElfProgressRecord
 import tw.tsm.gamelogic.systems.BitFlagSystem
 import tw.tsm.gamelogic.systems.InventorySystem
+import tw.tsm.gamelogic.systems.WorldManager
 import tw.tsm.protocol.PacketWriter
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -85,6 +86,17 @@ object ElfPackets {
         require(subKind == 2 || subKind == 3)
         session.send(header(subKind).writeShortLE(elfNo).writeByte(if (success) 1 else 0).toByteArray())
     }
+    /** DVT S:024-008: RoleController.SetGhost(kind, value) controls the directional
+     * elf sprite attached to the player's world avatar (not the UIElf preview).
+     * 999 means no equipped elf; kind=0 and value=0 explicitly clear the sprite.
+     */
+    fun followAppearance(playerId: Long, activeNo: Int): ByteArray {
+        val kind = activeNo.takeIf { it in 1..65535 && it != DEFAULT_NO } ?: 0
+        return PacketWriter().writeByte(24).writeByte(8).writeByte(0)
+            .writeLongLE(playerId).writeShortLE(kind)
+            .writeIntLE(if (kind > 0) 1 else 0)
+            .toByteArray()
+    }
     fun feedResult(session: SessionSender, success: Boolean) {
         session.send(header(4).writeByte(if (success) 1 else 0).toByteArray())
     }
@@ -103,6 +115,7 @@ class ElfHandler(
     private val responses: ResponseSender,
     private val itemDefs: Map<Int, ItemDef>,
     private val catalog: ElfCatalog,
+    private val worldManager: WorldManager? = null,
 ) : PacketHandler {
     override val mainKind = Opcodes.ELF
     private val locks = ConcurrentHashMap<Long, Mutex>()
@@ -162,10 +175,54 @@ class ElfHandler(
         val next = if (kind == 3) ElfPackets.DEFAULT_NO else no
         try {
             repo.setActive(cid, next)
-            ElfPackets.teamResult(session, kind, no, true)
         } catch (e: Exception) {
             elfLogger.error(e) { "Unable to persist Elf equip cid=$cid no=$no" }
             ElfPackets.teamResult(session, kind, no, false)
+            return
+        }
+        ElfPackets.teamResult(session, kind, no, true)
+        // Visual-sync failures must never turn a persisted equip into a false ACK.
+        try {
+            sendFollowAppearance(session, next)
+        } catch (e: Exception) {
+            elfLogger.warn(e) { "Equipped Elf but appearance sync failed cid=$cid no=$no" }
+        }
+    }
+
+    private fun sendFollowAppearance(session: GameSession, activeNo: Int) {
+        val packet = ElfPackets.followAppearance(session.playerId, activeNo)
+        session.send(packet)
+        if (session.mapId > 0) {
+            worldManager?.broadcastToMap(session.mapId, packet, session, session.instanceId)
+        }
+    }
+
+    private suspend fun activeForRole(cid: Long): Int {
+        val active = repo.load(cid).profile.activeNo
+        if (active == ElfPackets.DEFAULT_NO) return active
+        return if (owned(active, bits.getSetFlagIds(cid))) active else ElfPackets.DEFAULT_NO
+    }
+
+    /** Called after C012-001: the client has recreated world avatars for the scene.
+     * Re-send own sprite and sprites belonging to other players in this instance.
+     */
+    suspend fun syncAppearanceForMap(session: GameSession) {
+        if (session.state != SessionState.IN_GAME || session.roleId <= 0 || session.mapId <= 0) return
+        val world = worldManager ?: return
+        val ownActive = try {
+            activeForRole(session.roleId.toLong())
+        } catch (e: Exception) {
+            elfLogger.warn(e) { "Unable to restore Elf appearance cid=${session.roleId}" }
+            return
+        }
+        sendFollowAppearance(session, ownActive)
+        for (other in world.getPlayersInMap(session.mapId, session.instanceId)) {
+            if (other === session || !other.loginFinished || other.roleId <= 0) continue
+            try {
+                session.send(ElfPackets.followAppearance(other.playerId, activeForRole(other.roleId.toLong())))
+            } catch (e: Exception) {
+                elfLogger.warn(e) { "Unable to restore nearby Elf cid=${other.roleId}" }
+            }
         }
     }
 

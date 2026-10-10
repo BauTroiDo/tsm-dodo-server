@@ -700,7 +700,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { MoveHandler(get(), get(), get(), get<MineEncounterSystem>()) }
     single { ChatHandler(get(), get(), get()) }
     single { SceneHandler(get(), get()) }
-    single { RelocateHandler(get(), get(), get(), get<LimitTimeDungeonSystem>(), get<DungeonSystem>(), get<EveTriggerRouter>()) }
+    single { RelocateHandler(get(), get(), get(), get<LimitTimeDungeonSystem>(), get<DungeonSystem>(), get<EveTriggerRouter>(), get<ElfHandler>()) }
     single { NpcEventHandler(get<EveTriggerRouter>(), get<EveFlowController>()) }
     single { ItemHandler(get(), get(), get(), get(), get(), get<GameDataManager>().itemDefs, get(), get<PlayerStateManager>(), get<StatSystem>(), get(), get<FlyPointSystem>(), get<CharacterRepository>(), get<PetEquipSystem>(), get<QuestSystem>(), get<SkillSystem>(), get<DailyProgressSystem>(), get<PetSystem>(), get<GameDataManager>().npcDefs, get<RoleCountSystem>(), get<CollectionSystem>(), get<AstrolabeSystem>(), get<GameDataManager>().sacredEquipPrimaryDefs, get<CompoundSystem>(), get<SoulSystem>(), get<OfflineSoulGenerationPolicy>(), get<SoulResponseSender>(), get<PlayerCurrencySystem>(), get<ElfTokenUnlockService>()) }
     single { NpcTradeHandler(get(), get(), get(), get<GameDataManager>().itemDefs, get()) }
@@ -718,7 +718,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { StatHandler(get(), get(), get(), get<StatSystem>(), get(), get<SkillRepository>(), get<DailyProgressSystem>()) }
     single { AstrolabeHandler(get<AstrolabeSystem>(), get<ResponseSender>()) }
     single { SoulHandler(get<SoulSystem>(), get<PetSystem>(), get<GameDataManager>().npcDefs, get<ResponseSender>()) }
-    single { ElfHandler(get<ElfRepository>(), get<BitFlagSystem>(), get<InventorySystem>(), get<ResponseSender>(), get<GameDataManager>().itemDefs, get<ElfCatalog>()) }
+    single { ElfHandler(get<ElfRepository>(), get<BitFlagSystem>(), get<InventorySystem>(), get<ResponseSender>(), get<GameDataManager>().itemDefs, get<ElfCatalog>(), get<WorldManager>()) }
     single { ElfTokenUnlockService(get<BitFlagSystem>(), get<InventorySystem>(), get<ElfCatalog>(), get<ResponseSender>(), get<GameDataManager>().itemDefs) }
     single { FurnaceResponseSender() }
     single { GodskinResponseSender() }
