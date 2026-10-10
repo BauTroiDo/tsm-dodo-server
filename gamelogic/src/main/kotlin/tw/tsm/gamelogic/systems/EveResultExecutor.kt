@@ -101,6 +101,32 @@ class EveResultExecutor(
                     return false
                 }
             }
+            // Check gold balance and cap before making any item/quest changes.
+            // Type 3 battle or type 6 Surface starts an undecided future segment.
+            val hasMoneyEffect = results.takeWhile { it.resultType !in setOf(3, 6) }
+                .any { r ->
+                    r.resultType in setOf(0, 7) &&
+                        (r.resultClass == 5 ||
+                            (r.resultClass == 7 && r.parameterStyle == 6 && r.resultValue > 0))
+                }
+            if (hasMoneyEffect) {
+                val failure = EveQuestGoldPreflightPolicy.validate(
+                    results, moneySystem.getGold(session.roleId.toLong())
+                )
+                if (failure != null) {
+                    logger.warn {
+                        "DVT quest gold preflight rejected: map=${session.mapId} " +
+                            "cid=${session.roleId} reason=${failure.failure} " +
+                            "required=${failure.required} available=${failure.available}"
+                    }
+                    responseSender.sendSystemMessage(
+                        session,
+                        "Không đủ vàng hoặc đã vượt giới hạn vàng cho chuỗi nhiệm vụ. " +
+                            "Chưa thay đổi vật phẩm hay tiến độ."
+                    )
+                    return false
+                }
+            }
             // Combat and choices may supply/change items; validate the current segment only.
             val itemChanges = results.takeWhile { it.resultType !in setOf(3, 6) }
                 .filter { it.resultType in setOf(0, 7) && it.resultClass == 1 }
