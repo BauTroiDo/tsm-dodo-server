@@ -5,6 +5,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import tw.tsm.domain.data.AnotherWorldLvDef
 import tw.tsm.domain.data.LimitTimeDungeonDef
 import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.GameSession
@@ -22,10 +23,55 @@ class LimitTimeDungeonSystem(
     private val scope: CoroutineScope,
     private val adminBypassPolicy: AdminBypassPolicy = AdminBypassPolicy(),
     private val questSystem: QuestSystem,
+    private val anotherWorldLvDefs: Map<Int, AnotherWorldLvDef> = emptyMap(),
 ) {
     private val jobs = ConcurrentHashMap<Long, Job>()
 
     fun getDef(index: Int): LimitTimeDungeonDef? = defs[index]
+
+    /**
+     * DVT UIMain.OnDropChange_AnotherWorldLv:
+     * C097-002 contains one UInt8: selected id from IOS_AnotherWorldLv_C.dat.
+     * For each rebirth turn the client lists 15 levels; id 4 means Lv55 for
+     * turn0. MineData in scene49942 compares mission 13137 exactly with id.
+     *
+     * Only the currently authenticated character, in the matching scene and
+     * rebirth group, can change its own stage; battle/active Eve events are
+     * guarded by the packet handler before this method is reached.
+     */
+    suspend fun selectAnotherWorldLevel(session: GameSession, selectedId: Int): Boolean {
+        if (session.roleId <= 0 || session.battleId != 0L) return false
+        val def = defs.values.firstOrNull {
+            it.sceneId == session.mapId && it.missionId > 0
+        } ?: return false
+        val selected = anotherWorldLvDefs[selectedId] ?: return false
+        if (session.turn !in 0..3 || selected.turn != session.turn) return false
+        if (!adminBypassPolicy.bypassEntryLimit(session) &&
+            roleCountSystem.getValue(session.roleId.toLong(), def.limitIndex) >= def.limitTimeMinutes
+        ) return false
+
+        return try {
+            val previous = questSystem.selectTrainingMissionStage(
+                session.roleId.toLong(), def.missionId, selected.id
+            )
+            val delta = selected.id - previous
+            when {
+                delta > 0 -> responseSender.sendAddMissionStep(session, def.missionId, delta)
+                delta < 0 -> responseSender.sendDecMissionStep(session, def.missionId, -delta)
+            }
+            limitDungeonLogger.info {
+                "DVT training monster level: cid=${session.roleId} map=${def.sceneId} " +
+                    "turn=${session.turn} level=${selected.level} mission=${def.missionId} " +
+                    "step=$previous -> ${selected.id}"
+            }
+            true
+        } catch (e: Exception) {
+            limitDungeonLogger.error(e) {
+                "Failed DVT training level change cid=${session.roleId} selected=$selectedId"
+            }
+            false
+        }
+    }
 
     /**
      * DVT scene 49942 has no static NPCs; its MineData fights require mission
