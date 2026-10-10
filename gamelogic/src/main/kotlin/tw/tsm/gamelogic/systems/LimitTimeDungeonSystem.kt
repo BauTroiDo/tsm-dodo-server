@@ -24,8 +24,13 @@ class LimitTimeDungeonSystem(
     private val adminBypassPolicy: AdminBypassPolicy = AdminBypassPolicy(),
     private val questSystem: QuestSystem,
     private val anotherWorldLvDefs: Map<Int, AnotherWorldLvDef> = emptyMap(),
+    /** Injectable monotonic-ish wall clock for deterministic expiry tests. */
+    private val clockMillis: () -> Long = System::currentTimeMillis,
+    private val minuteMillis: Long = MINUTE_MS,
+    private val tickMillis: Long = 1_000L,
 ) {
     private val jobs = ConcurrentHashMap<Long, Job>()
+    private val jobSessions = ConcurrentHashMap<Long, GameSession>()
 
     fun getDef(index: Int): LimitTimeDungeonDef? = defs[index]
 
@@ -101,30 +106,43 @@ class LimitTimeDungeonSystem(
         }
     }
 
-    /** Gọi sau C:012-001 để hỗ trợ cả vào mới lẫn relog/restart trong map giới hạn. */
+    /**
+     * C012-001 can be sent repeatedly while the same character stays in a
+     * limited-area scene. Re-arming a 60s interval on each packet resets the
+     * last minute forever, so preserve the active job for the same session.
+     *
+     * A fresh session (relog) starts from the saved integer RoleCount minutes,
+     * as the original DVT client does in Dungeon.StartLimitTimeDungeonTime.
+     */
     fun onSceneReady(session: GameSession) {
+        if (session.roleId <= 0) return
         val charId = session.roleId.toLong()
-        stopTracking(charId)
-
-        val def = defs.values.firstOrNull { it.sceneId == session.mapId } ?: return
+        val def = defs.values.firstOrNull { it.sceneId == session.mapId }
+        if (def == null) {
+            stopTracking(charId)
+            return
+        }
         if (adminBypassPolicy.bypassEntryLimit(session)) {
+            stopTracking(charId)
             scope.launch { ensureEncounterMission(session, def) }
             return
         }
-        val used = roleCountSystem.getValue(charId, def.limitIndex)
-        if (used >= def.limitTimeMinutes) {
-            scope.launch {
-                specialTeleport.exitSpecialScene(session, def.sceneId)
-            }
-            return
-        }
+        val old = jobs[charId]
+        if (old?.isActive == true && jobSessions[charId] === session) return
+        stopTracking(charId)
 
+        jobSessions[charId] = session
         val job = scope.launch {
             try {
-                if (ensureEncounterMission(session, def)) track(session, def)
+                if (roleCountSystem.getValue(charId, def.limitIndex) >= def.limitTimeMinutes) {
+                    exitExpired(session, def)
+                } else if (ensureEncounterMission(session, def)) {
+                    track(session, def)
+                }
             } finally {
                 val me = kotlin.coroutines.coroutineContext[Job]
                 if (me != null) jobs.remove(charId, me)
+                jobSessions.remove(charId, session)
             }
         }
         jobs[charId] = job
@@ -132,33 +150,69 @@ class LimitTimeDungeonSystem(
 
     fun stopTracking(characterId: Long) {
         jobs.remove(characterId)?.cancel()
+        jobSessions.remove(characterId)
     }
 
+    /**
+     * DVT RoleCount index27 is an integer number of consumed training minutes.
+     * Sample the elapsed clock each second rather than assuming coroutine
+     * delay(MINUTE_MS) returns on the exact deadline. Both the count update and
+     * kick must still happen if the coroutine was suspended for extra time.
+     */
     private suspend fun track(session: GameSession, def: LimitTimeDungeonDef) {
+        require(minuteMillis > 0 && tickMillis > 0)
         val charId = session.roleId.toLong()
+        val startUsed = roleCountSystem.getValue(charId, def.limitIndex)
+        val started = clockMillis()
         while (session.state == SessionState.IN_GAME && session.mapId == def.sceneId) {
-            delay(MINUTE_MS)
-            if (session.state != SessionState.IN_GAME || session.mapId != def.sceneId) break
-
-            val current = roleCountSystem.getValue(charId, def.limitIndex)
-            if (current >= def.limitTimeMinutes) break
-
-            val next = roleCountSystem.increment(charId, def.limitIndex, 1)
-                .coerceAtMost(def.limitTimeMinutes)
-            roleCountSystem.setValue(charId, def.limitIndex, next, def.limitTimeMinutes)
-            responseSender.sendRoleCountUpdate(
-                session,
-                mapOf(def.limitIndex to (next to def.limitTimeMinutes)),
-            )
-            roleCountSystem.saveCounts(charId)
-
-            if (next >= def.limitTimeMinutes) {
-                specialTeleport.exitSpecialScene(session, def.sceneId)
-                limitDungeonLogger.info {
-                    session.characterName + " hết thời gian scene " + def.sceneId
-                }
-                break
+            val elapsed = (clockMillis() - started).coerceAtLeast(0L)
+            val consumed = elapsed / minuteMillis
+            val expected = (startUsed.toLong() + consumed)
+                .coerceAtMost(def.limitTimeMinutes.toLong()).toInt()
+            val recorded = roleCountSystem.getValue(charId, def.limitIndex)
+            if (expected > recorded) {
+                roleCountSystem.setValue(charId, def.limitIndex, expected, def.limitTimeMinutes)
+                responseSender.sendRoleCountUpdate(
+                    session,
+                    mapOf(def.limitIndex to (expected to def.limitTimeMinutes)),
+                )
+                roleCountSystem.saveCounts(charId)
             }
+            if (maxOf(expected, recorded) >= def.limitTimeMinutes) {
+                exitExpired(session, def)
+                return
+            }
+            delay(tickMillis)
+        }
+    }
+
+    /** Only the authoritative server teleports players; client timer only hides itself.
+     * Never send a warp during a battle. Retry failures on the same scene instead
+     * of silently leaving a character trapped at 0 minutes forever.
+     */
+    private suspend fun exitExpired(session: GameSession, def: LimitTimeDungeonDef) {
+        while (session.state == SessionState.IN_GAME && session.mapId == def.sceneId) {
+            if (session.battleId == 0L) {
+                try {
+                    if (specialTeleport.exitSpecialScene(session, def.sceneId)) {
+                        limitDungeonLogger.info {
+                            session.characterName + " hết thời gian scene " + def.sceneId +
+                                ", đã dịch chuyển ra ngoài"
+                        }
+                        return
+                    }
+                    limitDungeonLogger.error {
+                        "Không thể xác định cửa thoát map giới hạn " + def.sceneId +
+                            " cid=" + session.roleId + "; sẽ thử lại"
+                    }
+                } catch (e: Exception) {
+                    limitDungeonLogger.error(e) {
+                        "Lỗi dịch chuyển khỏi scene giới hạn " + def.sceneId +
+                            " cid=" + session.roleId + "; sẽ thử lại"
+                    }
+                }
+            }
+            delay(tickMillis)
         }
     }
 
