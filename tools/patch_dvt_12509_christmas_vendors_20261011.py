@@ -32,7 +32,11 @@ def patch(path:Path,eve_path:Path,apply=False):
  steps={(row["mission"],row["step"]):row for row in read_steps(path)}
  if (12509,8) not in steps:raise ValueError("Mission12509 stage8 does not exist")
  st=steps[(12509,8)]
- if st["end"]!=(0,0,0,0,0):raise ValueError("The original Christmas stage8 return waypoint changed")
+ # The separately audited Christmas chef return point can safely fill END.
+ if st["end"]!=(0,0,0,0,0):
+  from patch_dvt_12509_food_turnin_20261012 import verify_receiver
+  if st["end"]!=verify_receiver(eve_path):
+   raise ValueError("Christmas stage8 END differs from source-verified chef NPC")
  assert len([c for c in st["conditions"] if c[0]!=0])==3
  eve=EveArchive(eve_path)
  new=bytearray(original)

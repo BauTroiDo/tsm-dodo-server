@@ -1,7 +1,7 @@
 """DVT mission12509/8 multi-vendor item waypoint source parity.
 
 All three objectives have independent NPC Surface shops. Keep the
-Christmas quest END unset; only identify the three item acquisition NPCs.
+Christmas quest END points at genuine chef; verify all three merchants too.
 """
 import hashlib
 import unittest
@@ -26,9 +26,9 @@ class DvtChristmasMultiVendorNavigationTest(unittest.TestCase):
     def test_three_independent_shop_sources_match_exact_required_items(self):
         self.assertEqual(
             hashlib.sha256(STEP_PATH.read_bytes()).hexdigest(),
-            "c06c8f2179b78033faac137cd7803d4c054f5f151a8f54df1f013f321972739e")
+            "6272d35367a8fda2c389380ce4f3aec0c9d1d5c65ddffc542e3cb240da1ac2c3")
         self.assertEqual(len(SOURCES),3)
-        self.assertEqual(self.row["end"],(0,0,0,0,0))
+        self.assertEqual(self.row["end"],(49944,330,360,1,5))
         for i,(item,qty,scene,npc_id,placement,x,y,surface_no) in SOURCES.items():
             self.assertEqual(self.row["conditions"][i-1],
                              (3,item,qty,(scene,x,y,1,placement)))
