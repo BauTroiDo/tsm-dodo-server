@@ -73,7 +73,9 @@ class EveResultExecutor(
         // The DVT second-generation general lifecycle is not implemented.
         // Guard the WHOLE remaining Eve chain so mission 11980 cannot advance
         // before its required child generation/management action silently skips.
-        val childAction = DvtChildLifecycleGate.firstUnavailable(session.mapId, results)
+        val childAction = if (DvtChildLifecycleGate.hasCandidateShape(results)) {
+            DvtChildLifecycleGate.firstUnavailable(session.mapId, results)
+        } else null
         if (childAction != null) {
             logger.warn {
                 "Block unsupported DVT child lifecycle: map=${session.mapId} cid=${session.roleId} " +
