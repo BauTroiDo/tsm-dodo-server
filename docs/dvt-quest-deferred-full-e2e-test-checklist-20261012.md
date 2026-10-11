@@ -18,7 +18,8 @@ Source of truth for each change: GitHub PR #41 and commit-specific docs, origina
 | 12162 turn-in | Obtain actual 30 item32043 from real chance-based bag46285 via quest10120, click mission → scene12808 NPC15050; atomic item consumption and quest progress | Not tested |
 | 12509/8 | Three original merchants: item26106×1,26013×5,26016×5; click mission after collection → true chef NPC15421 scene49944; verify consume/progress | Not tested |
 | 12509/10 | Click with fewer than 10 rods → source NPC24005 scene49946; receive item29454 until 10; next click → receiver NPC15422 same scene, consumes10 and advances | Not tested; stage10 fix in progress as of file creation |
-| 12509/14 | Click → original Khảm Bộc Từ question NPC22092 scene49946 placement11; correct answer advances, wrong does not; no fabricated rewards | Not tested; stage14 fix in progress |
+| 12509/12 | Click → map49946 original source-opened cave door2→scene49947, confirm original scene-entry; door3→scene49948 remains possible; verify branch with/without follower38287 | Not tested; route fixed in next commit |
+| 12509/14 | Click → original Khảm Bộc Từ question NPC22092 scene49946 placement11; correct answer advances, wrong does not; no fabricated rewards | Not tested; source navigation fixed (commit85d0ae2) |
 | 12509/16 | Capture follower38136 in scene49946; click after capture → enter scene49945 Santa and Eve9 should finish; alternate scenes49947/49948 completion remains possible | Not tested |
 | 13221/2; 13306/1 | Kill NPC-specific monsters in map49991/map54974; auto-navigation remains pending until original battle victory advances quests | Not tested |
 | Quest window mission-click / map unlock | UI mission click launches correct native path, scene/door auto path and gated map visibility; no classic-versus-DVT fallback; test across beginner/mainline/side quests | Not tested |

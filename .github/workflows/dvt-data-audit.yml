@@ -39,6 +39,8 @@ jobs:
         run: python -m unittest discover -s tools -p test_dvt_12509_santa_final_return_20261012.py -v
       - name: Verify original quest12509 ten-rods acquisition and correct-answer quiz NPCs
         run: python -m unittest discover -s tools -p test_dvt_12509_rod_collection_and_riddle_20261012.py -v
+      - name: Verify quest12509 cave step12 original Eve unlocked door2 and alternative door3
+        run: python -m unittest discover -s tools -p test_dvt_12509_cave_step12_door_20261012.py -v
       - name: Verify original DVT Moon Rabbit mission entrance and nearest real battle NPC
         run: python -m unittest discover -s tools -p test_dvt_10852_rabbit_cave_navigation_20261012.py -v
       - name: Verify quest10852 source-backed return to original Ngô Cương NPC
