@@ -51,15 +51,12 @@ object MarkStepDatLoader {
             val teleport = reader.readByte()
             val checkTeam = reader.readByte() == 1
 
-            require(missionId > 0 && stepNo > 0) {
-                "Bad MarkStep mission=$missionId step=$stepNo"
-            }
+            require(missionId > 0) { "Bad MarkStep mission=$missionId" }
             val byStep = steps.getOrPut(missionId) { linkedMapOf() }
-            val previous = byStep.put(
-                stepNo,
-                MarkStepDef(missionId, stepNo, description, conditions, endGuide, endTarget, teleport, checkTeam),
-            )
-            require(previous == null) { "Duplicate MarkStep mission=$missionId step=$stepNo" }
+            // Match Lua DataManager: a repeated (missionId, step) overwrites
+            // the earlier value. Do not crash startup on a duplicate source row.
+            byStep[stepNo] =
+                MarkStepDef(missionId, stepNo, description, conditions, endGuide, endTarget, teleport, checkTeam)
         }
         require(reader.position() == data.size) {
             "MarkStep cursor=${reader.position()} does not match file=${data.size}"
