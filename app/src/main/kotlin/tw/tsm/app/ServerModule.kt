@@ -705,7 +705,8 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get(), get(), get(), get(), get<PointSystem>(), get(), get(), get(), get(),
             get<GameDataManager>().itemDefs, get<GameDataManager>().eveData,
             get(), get<GameDataManager>().npcDefs, get(), get(), get(), get(), get(),
-            get<GameDataManager>().warpDefs, get<GameDataManager>().markDefs, get<CollectionSystem>()
+            get<GameDataManager>().warpDefs, get<GameDataManager>().markDefs, get<CollectionSystem>(),
+            get<EveEffectClaimRepository>(), get<RewardLedgerRepository>()
         )
     }
 
