@@ -19,9 +19,9 @@ class EveCompletionPersistenceFailureRegressionTest {
             every { roleId } returns 31
             every { characterName } returns "TestQuest"
         }
-        every { machine.getSession(31L) } returns EventSession(12001, 1, 1)
+        every { machine.getSession(31L) } returns EventSession(12001, 1, 1, results = emptyList())
         every { machine.advance(31L) } returns null
-        every { machine.complete(31L) } returns EventSession(12001, 1, 1)
+        every { machine.complete(31L) } returns EventSession(12001, 1, 1, results = emptyList())
         coEvery { repository.insertCompletedEvent(31L, 12001, 1) } throws IllegalStateException("database unavailable")
 
         val flow = EveFlowController(
