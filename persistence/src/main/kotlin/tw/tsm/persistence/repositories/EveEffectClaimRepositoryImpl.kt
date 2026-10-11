@@ -1,5 +1,7 @@
 package tw.tsm.persistence.repositories
 
+import tw.tsm.domain.interfaces.repositories.EveEffectClaimRepository
+import tw.tsm.domain.interfaces.repositories.UnresolvedEveEffectClaim
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.plus
@@ -13,15 +15,6 @@ import tw.tsm.persistence.tables.CharacterCompletedEvents
 import tw.tsm.persistence.tables.CharacterEveEffectClaims
 import tw.tsm.persistence.tables.CharacterEveEffectSettlements
 
-/** A claim requiring manual investigation if the process exits before settlement. */
-data class UnresolvedEveEffectClaim(
-    val charId: Long,
-    val mapId: Int,
-    val eveNo: Int,
-    val runToken: String,
-    val reservedAtEpochMs: Long,
-)
-
 /**
  * Storage primitive for an eventual durable Eve side-effect fence.
  *
@@ -29,7 +22,7 @@ data class UnresolvedEveEffectClaim(
  * mission, pet or other non-idempotent effect. A reservation that survives a
  * crash is never reclaimed merely because it is old.
  */
-class EveEffectClaimRepositoryImpl {
+class EveEffectClaimRepositoryImpl : EveEffectClaimRepository {
     private fun validate(charId: Long, mapId: Int, eveNo: Int, runToken: String) {
         require(charId > 0 && mapId > 0 && eveNo > 0)
         require(runToken.length in 1..64)
@@ -40,7 +33,7 @@ class EveEffectClaimRepositoryImpl {
      * (multi-result chain), but a different run cannot steal a pending claim.
      * The unique DB primary key resolves cross-process and concurrent races.
      */
-    suspend fun reserve(
+    override suspend fun reserve(
         charId: Long,
         mapId: Int,
         eveNo: Int,
@@ -89,7 +82,7 @@ class EveEffectClaimRepositoryImpl {
     }
 
     /** List claims for audit/reconciliation; never auto-clear on reconnect. */
-    suspend fun unresolvedForCharacter(charId: Long): List<UnresolvedEveEffectClaim> =
+    override suspend fun unresolvedForCharacter(charId: Long): List<UnresolvedEveEffectClaim> =
         suspendTransaction {
             CharacterEveEffectClaims.selectAll()
                 .where { CharacterEveEffectClaims.charId eq charId }
@@ -111,7 +104,7 @@ class EveEffectClaimRepositoryImpl {
      * This must ONLY be called after every gameplay effect was acknowledged;
      * it cannot make pre-existing independent reward DB mutations atomic.
      */
-    suspend fun settle(
+    override suspend fun settle(
         charId: Long,
         mapId: Int,
         eveNo: Int,
