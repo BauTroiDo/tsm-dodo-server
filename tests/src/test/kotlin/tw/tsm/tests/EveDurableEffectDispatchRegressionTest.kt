@@ -87,6 +87,50 @@ class EveDurableEffectDispatchRegressionTest {
     }
 
     @Test
+    fun crashAfterReservationDoesNotPermitNewAttemptToReplayReward() = runTest {
+        val sender = mockk<ResponseSender>(relaxed = true)
+        val executor = mockk<EveResultExecutor>(relaxed = true)
+        val claims = mockk<EveEffectClaimRepository>(relaxed = true)
+        val questRepo = mockk<QuestRepository>(relaxed = true)
+        val item = reward()
+        val game = gameSession()
+
+        var pendingToken: String? = null
+        coEvery { executor.canExecuteResults(any(), any()) } returns true
+        coEvery { claims.reserve(eq(31L), eq(12001), eq(5), any(), any()) } coAnswers {
+            val requestedToken = fourthArg<String>()
+            if (pendingToken == null) {
+                pendingToken = requestedToken
+                true
+            } else {
+                requestedToken == pendingToken
+            }
+        }
+        coEvery { executor.executeResultClass(game, item) } throws IllegalStateException("simulated JVM crash after reservation")
+
+        val machineBeforeCrash = EveEventStateMachine()
+        machineBeforeCrash.activate(31L, EventSession(12001, 5, 12, results = listOf(item), currentIndex = 1))
+        try {
+            flow(machineBeforeCrash, claims, executor, questRepo, sender).startEvent(game, item)
+            fail<Unit>("Expected crash injection")
+        } catch (_: IllegalStateException) {
+            // The reservation is still in the mocked durable repository.
+        }
+        assertNotNull(pendingToken)
+        coVerify(exactly = 1) { executor.executeResultClass(game, item) }
+
+        // New JVM and fresh EventSession will use a different run token.
+        val afterRestart = EveEventStateMachine()
+        afterRestart.activate(31L, EventSession(12001, 5, 12, results = listOf(item), currentIndex = 1))
+        flow(afterRestart, claims, executor, questRepo, sender).startEvent(game, item)
+
+        coVerify(exactly = 2) { claims.reserve(31L, 12001, 5, any(), any()) }
+        coVerify(exactly = 1) { executor.executeResultClass(game, item) }
+        coVerify(exactly = 0) { claims.settle(any(), any(), any(), any()) }
+        assertTrue(afterRestart.getCompletedEveCounts(31L, 12001).isEmpty())
+    }
+
+    @Test
     fun validTalkOnlyEveCompletesWithoutCreatingARewardClaim() = runTest {
         val machine = EveEventStateMachine()
         val effect = EveResult(0, 1, 1, 0, 10166, 0, 0, 0)
