@@ -27,6 +27,13 @@ Bảo vệ theo `source_key` **chưa đủ**: nếu một phần thưởng cũ c
 
 Không tự coi pending nghĩa là đã nhận phần thưởng; cũng không tự xóa để mở khóa. Phải ghi đủ loại nguồn thưởng, chu kỳ reset và run identifier trong báo cáo đối soát. Mọi hành động quản trị (hoàn tiền, trao bù, release) cần được audit để không nhân đôi.
 
+## UUID dungeon bền vững (bản cập nhật)
+
+- `ActiveDungeonRun.runToken` là UUID ngẫu nhiên được sinh **một lần khi tạo lượt**, lưu ở `CharacterDungeonRuns.run_token`, nạp lại qua `DungeonRunRepositoryImpl.load` và giữ nguyên khi `copy(settled=true)`.
+- `RewardLedgerSourceKeys.dungeon` dùng UUID đã lưu, không chỉ dựa trên `startedAtMillis` và `instanceId`. Lượt chơi mới vẫn có khóa riêng dù bắt đầu cùng mili-giây.
+- Cột `run_token` có mặc định chuỗi rỗng để migration không giả mạo UUID cho hàng cũ. `DungeonSystem` kiểm tra token của phiên RAM và phiên DB giống nhau, khác rỗng và có nguồn dungeon hợp lệ trước khi cho payout. Hàng cũ cần admin xác minh, không tự phát UUID thay thế khi đọc.
+- Trước khi ghi claim, hệ thống kiểm tra read-only túi còn đủ chỗ cho batch vật phẩm hợp lệ. Từ chối túi đầy khi chưa có claim để tránh giữ `PENDING` vô ích; nhưng nếu sức chứa đổi giữa preflight và ghi item thì claim vẫn có thể bị treo và phải đối soát.
+
 ## Thử nghiệm tích hợp dungeon thường (PR #38, chưa phát hành)
 
 - `ServerModule` đã inject `RewardLedgerRepositoryImpl` vào `DungeonSystem` trên nhánh PR này (không áp dụng live). Với `settleAfterBattle(playerWin=true)`, trước khi tăng dailyFlag, cập nhật inventory hoặc đánh dấu settled trong RAM/DB, hệ thống kiểm tra `DungeonRunRepository.load` khớp **dungeonId + startedAtMillis + instanceId** với lượt hiện tại và có điểm gốc được lưu. Lượt legacy dựng lại từ scene nhưng không xác minh được nguồn sẽ fail closed.
