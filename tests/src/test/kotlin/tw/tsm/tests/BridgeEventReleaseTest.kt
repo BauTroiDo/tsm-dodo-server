@@ -30,6 +30,7 @@ class BridgeEventReleaseTest {
         assertEquals(0, state.getCompletedEveCounts(31, 63000)[4] ?: 0)
     }
     @Test fun terminalNonBattleEventInvokesCompletionHookOnce() = runTest {
+        coEvery { quests.insertCompletedEventAndGetCount(31L, 63000, 4) } returns 1
         val f = flow()
         var completed = 0
         f.onEventCompleted = { completed++ }

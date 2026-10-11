@@ -105,6 +105,39 @@ class EveEventStateMachine {
      */
     private val completedConditions = ConcurrentHashMap<Long, ConcurrentHashMap<Int, ConcurrentHashMap<Int, MutableSet<Int>>>>()
 
+    /**
+     * State-changing Eve may have already delivered items/gold/mission progress
+     * before the terminal DB EveCount write failed. Quarantine that exact
+     * condition in RAM to avoid replaying those effects on another NPC click.
+     * This is NOT a durable reward ledger and intentionally survives scene
+     * EveCount resets until an administrator reconciles the failed event.
+     */
+    private val uncertainCompletionConditions =
+        ConcurrentHashMap<Long, ConcurrentHashMap<Int, ConcurrentHashMap<Int, MutableSet<Int>>>>()
+    /** Fallback when no matching conditionNo was captured; block the entire Eve. */
+    private val uncertainCompletionEves =
+        ConcurrentHashMap<Long, ConcurrentHashMap<Int, MutableSet<Int>>>()
+
+    fun quarantineUncommittedCompletion(charId: Long, session: EventSession) {
+        if (!session.hasStateChangingResults()) return
+        if (session.matchedConditionNo > 0) {
+            uncertainCompletionConditions
+                .getOrPut(charId) { ConcurrentHashMap() }
+                .getOrPut(session.mapId) { ConcurrentHashMap() }
+                .getOrPut(session.eveNo) { ConcurrentHashMap.newKeySet() }
+                .add(session.matchedConditionNo)
+        } else {
+            uncertainCompletionEves
+                .getOrPut(charId) { ConcurrentHashMap() }
+                .getOrPut(session.mapId) { ConcurrentHashMap.newKeySet() }
+                .add(session.eveNo)
+        }
+        logger.error {
+            "Eve result may have been delivered but EveCount is unconfirmed: " +
+                "charId=$charId mapId=${session.mapId} eveNo=${session.eveNo} condNo=${session.matchedConditionNo}"
+        }
+    }
+
     // ══════════════════════════════════════════════
     //  Công cụ cập nhật CAS
     // ══════════════════════════════════════════════
@@ -363,27 +396,55 @@ class EveEventStateMachine {
      *
      * @return EventSession đã hoàn thành, null = Không có sự kiện đang diễn ra
      */
+    /**
+     * Legacy in-memory completion. Persistence-backed callers should use
+     * takeCompletion() then recordPersistedCompletion() only after DB success.
+     */
     fun complete(charId: Long): EventSession? {
-        val ref = sessions.remove(charId) ?: return null
-        val session = ref.get() ?: return null
-        if (session.eveNo != 0) {
-            val eveMap = completedEvents
+        val completed = takeCompletion(charId) ?: return null
+        recordPersistedCompletion(charId, completed)
+        return completed
+    }
+
+    /**
+     * Atomically claim and remove the active event without changing RAM EveCount
+     * or the completed-condition flags. Once consumed, delayed packets cannot
+     * replay its rewards while the persistence write is in progress.
+     */
+    fun takeCompletion(charId: Long): EventSession? {
+        val ref = sessions[charId] ?: return null
+        if (!sessions.remove(charId, ref)) return null
+        return ref.get()
+    }
+
+    /** Publish completion to RAM only after its EveCount write committed. */
+    fun recordPersistedCompletion(charId: Long, session: EventSession, persistedCount: Int? = null) {
+        if (session.eveNo == 0) return
+
+        val eveMap = completedEvents
+            .getOrPut(charId) { ConcurrentHashMap() }
+            .getOrPut(session.mapId) { ConcurrentHashMap() }
+        if (persistedCount != null) {
+            require(persistedCount > 0) { "Persisted EveCount must be positive" }
+            // A reconnect may already have hydrated the just-committed count.
+            // Merge absolute DB value, never increment that same event twice.
+            eveMap.merge(session.eveNo, persistedCount) { cached, stored ->
+                maxOf(cached, stored)
+            }
+        } else {
+            // Legacy in-memory-only complete() retains atomic +1 semantics.
+            eveMap.merge(session.eveNo, 1, Int::plus)
+        }
+
+        if (session.hasStateChangingResults()) {
+            completedConditions
                 .getOrPut(charId) { ConcurrentHashMap() }
                 .getOrPut(session.mapId) { ConcurrentHashMap() }
-            eveMap.merge(session.eveNo, 1, Int::plus)
-
-            // Theo dõi cấp condNo — Chỉ các sự kiện dạng thay đổi trạng thái mới cần chống trùng lặp, Talk-only có thể kích hoạt nhiều lần
-            if (session.hasStateChangingResults()) {
-                completedConditions
-                    .getOrPut(charId) { ConcurrentHashMap() }
-                    .getOrPut(session.mapId) { ConcurrentHashMap() }
-                    .getOrPut(session.eveNo) { ConcurrentHashMap.newKeySet() }
-                    .add(session.matchedConditionNo)
-            }
-
-            logger.debug { "Sự kiện hoàn thành: charId=$charId mapId=${session.mapId} eveNo=${session.eveNo} condNo=${session.matchedConditionNo} → count=${eveMap[session.eveNo]}" }
+                .getOrPut(session.eveNo) { ConcurrentHashMap.newKeySet() }
+                .add(session.matchedConditionNo)
         }
-        return session
+
+        logger.debug { "Sự kiện đã lưu và hoàn thành: charId=$charId mapId=${session.mapId} eveNo=${session.eveNo} condNo=${session.matchedConditionNo} → count=${eveMap[session.eveNo]}" }
     }
 
     /** Xóa sự kiện đang diễn ra (mất kết nối/buộc chấm dứt, không tính vào log hoàn thành) */
@@ -436,6 +497,8 @@ class EveEventStateMachine {
      * đồng thời cho phép các chuỗi điều kiện khác nhau (các bước nhiệm vụ khác nhau) của cùng một eveNo hoạt động bình thường.
      */
     fun isConditionCompleted(charId: Long, mapId: Int, eveNo: Int, condNo: Int): Boolean {
-        return completedConditions[charId]?.get(mapId)?.get(eveNo)?.contains(condNo) ?: false
+        return (completedConditions[charId]?.get(mapId)?.get(eveNo)?.contains(condNo) == true) ||
+            (uncertainCompletionConditions[charId]?.get(mapId)?.get(eveNo)?.contains(condNo) == true) ||
+            (uncertainCompletionEves[charId]?.get(mapId)?.contains(eveNo) == true)
     }
 }

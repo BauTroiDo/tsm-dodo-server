@@ -639,17 +639,23 @@ class EveFlowController(
      * Logic nội bộ hoàn thành sự kiện — ghi nhận hoàn thành + lưu bền
      */
     private suspend fun completeEventInternal(session: GameSession, charId: Long): EventSession? {
-        val completedSession = stateMachine.complete(charId)
+        // Consume the event exactly once, but do not publish a completed EveCount
+        // or completed-condition bit until the repository confirms its write.
+        val completedSession = stateMachine.takeCompletion(charId)
 
         // Sự kiện kết thúc → xóa trạng thái cửa hàng
         npcShopManager.clearShop(charId)
 
         // Lưu bền bản ghi hoàn thành sự kiện (điều kiện class=12 phụ thuộc số lần hoàn thành, sự kiện chỉ Talk cũng phải tính)
+        var persistedCount: Int? = null
         if (completedSession != null && completedSession.eveNo != 0) {
             try {
-                questRepository.insertCompletedEvent(charId, completedSession.mapId, completedSession.eveNo)
+                val count = questRepository.insertCompletedEventAndGetCount(charId, completedSession.mapId, completedSession.eveNo)
+                check(count > 0) { "Persisted EveCount is invalid: $count" }
+                persistedCount = count
             } catch (e: Exception) {
                 logger.error(e) { "Lưu hoàn thành sự kiện xuống DB thất bại: charId=$charId mapId=${completedSession.mapId} eveNo=${completedSession.eveNo}" }
+                stateMachine.quarantineUncommittedCompletion(charId, completedSession)
                 // The in-memory session was already consumed; never fire terminal
                 // settlement hooks or auto-chain after an uncommitted Eve count.
                 // Do not replay earlier reward effects on this error path.
@@ -658,6 +664,9 @@ class EveFlowController(
             }
         }
 
+        if (completedSession != null) {
+            stateMachine.recordPersistedCompletion(charId, completedSession, persistedCount)
+        }
         return completedSession
     }
 }
