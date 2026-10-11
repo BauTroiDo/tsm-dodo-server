@@ -647,9 +647,12 @@ class EveFlowController(
         npcShopManager.clearShop(charId)
 
         // Lưu bền bản ghi hoàn thành sự kiện (điều kiện class=12 phụ thuộc số lần hoàn thành, sự kiện chỉ Talk cũng phải tính)
+        var persistedCount: Int? = null
         if (completedSession != null && completedSession.eveNo != 0) {
             try {
-                questRepository.insertCompletedEvent(charId, completedSession.mapId, completedSession.eveNo)
+                val count = questRepository.insertCompletedEventAndGetCount(charId, completedSession.mapId, completedSession.eveNo)
+                check(count > 0) { "Persisted EveCount is invalid: $count" }
+                persistedCount = count
             } catch (e: Exception) {
                 logger.error(e) { "Lưu hoàn thành sự kiện xuống DB thất bại: charId=$charId mapId=${completedSession.mapId} eveNo=${completedSession.eveNo}" }
                 // The in-memory session was already consumed; never fire terminal
@@ -661,7 +664,7 @@ class EveFlowController(
         }
 
         if (completedSession != null) {
-            stateMachine.recordPersistedCompletion(charId, completedSession)
+            stateMachine.recordPersistedCompletion(charId, completedSession, persistedCount)
         }
         return completedSession
     }
