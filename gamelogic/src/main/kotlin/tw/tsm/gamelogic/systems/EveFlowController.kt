@@ -58,6 +58,7 @@ class EveFlowController(
         val charId = session.roleId.toLong()
         val event = stateMachine.getSession(charId) ?: return false
         if (event.eveNo == 0 || event.effectClaimed) return true
+        if (!stateMachine.beginEffectReservation(charId, event.runToken)) return false
         val reserved = try {
             repository.reserve(
                 charId, event.mapId, event.eveNo, event.runToken,
@@ -104,6 +105,10 @@ class EveFlowController(
         // send another event-end packet or affect a newly completed Eve.
         if (eventSession == null) {
             logger.debug { "Bỏ qua C:020-006 khi không có phiên Eve: charId=$charId" }
+            return
+        }
+        if (eventSession.effectReservationInProgress) {
+            logger.debug { "Bỏ qua 020-006 khi đang giữ quyền phát thưởng Eve trong MySQL" }
             return
         }
 
