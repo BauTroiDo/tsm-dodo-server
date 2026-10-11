@@ -40,7 +40,7 @@ class EveDurableEffectDispatchRegressionTest {
         val executor = mockk<EveResultExecutor>(relaxed = true)
         val questRepo = mockk<QuestRepository>(relaxed = true)
         val claims = mockk<EveEffectClaimRepository>(relaxed = true)
-        every { executor.canExecuteResults(any(), any()) } returns true
+        coEvery { executor.canExecuteResults(any(), any()) } returns true
         coEvery { executor.executeResultClass(any(), effect) } returns true
         coEvery { claims.reserve(eq(31L), eq(12001), eq(5), any(), any()) } returns true
         coEvery { claims.settle(eq(31L), eq(12001), eq(5), any()) } coAnswers {
@@ -72,7 +72,7 @@ class EveDurableEffectDispatchRegressionTest {
         val sender = mockk<ResponseSender>(relaxed = true)
         val executor = mockk<EveResultExecutor>(relaxed = true)
         val claims = mockk<EveEffectClaimRepository>(relaxed = true)
-        every { executor.canExecuteResults(any(), any()) } returns true
+        coEvery { executor.canExecuteResults(any(), any()) } returns true
         coEvery { claims.reserve(eq(31L), eq(12001), eq(5), any(), any()) } returns false
 
         val game = gameSession()
