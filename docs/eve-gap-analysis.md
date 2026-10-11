@@ -19,7 +19,7 @@
 |------:|-----:|------:|---------|------|
 | **13** | 99 | 17 | Trạng thái thành trì quân đoàn: param=1 đối chiếu quyền sở hữu thành (val = số hiệu thành 1~5), param=2 người chơi có phải chính/phó đoàn trưởng không (nhánh pStyle=1/2/3) | Cao (sự kiện xây cơ sở tại lữ quán năm thành lớn 11031/11041/12071/12081/19031) |
 | **14** | 291 | 47 | Hiện là stub (đồng loạt trả false); param=0 hình dạng nghi là bộ đếm giai đoạn hoạt động/trạng thái đã nhận, ngữ nghĩa chờ xác minh | Thấp |
-| **17** | 16 | 2 | Trạng thái con nuôi (tướng thế hệ hai): tiến độ cho ăn/giáo dục (tất cả ở thôn ẩn thế 12721), param=0/3 | Trung |
+| **17** | 16 | 2 | Trạng thái tướng thế hệ hai (con nhân vật), thực tế ở **12721 và 12722**, param=0/2/3 với 6 dạng; cần ChildData 93 byte, S:069, trạng thái ra trận/cấp 10. Chưa có subsystem nên giữ fail-closed. Xem `docs/dvt-child-quest-11980-20261011.md`. | Cao đối với nhiệm vụ 11980/11981 |
 
 > Cải chính: class=16 (đối chiếu số lượng vật phẩm ký gửi storedItems) server **đã hỗ trợ**, bản đầu liệt kê nhầm là chưa hỗ trợ.
 
