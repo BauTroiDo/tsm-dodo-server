@@ -533,7 +533,8 @@ class DungeonSystem(
                 responseSender?.sendSystemMessage(session, "Không xác minh được lượt phụ bản; hãy liên hệ quản trị viên.")
                 return DungeonSettlement(def.id, result = 1)
             }
-            val sourceKey = RewardLedgerSourceKeys.dungeon(run, "TERMINAL")
+            val sourceKey = RewardLedgerSourceKeys.verifiedDungeonOrNull(run, "TERMINAL")
+                ?: return DungeonSettlement(def.id, result = 1)
             val attemptToken = UUID.randomUUID().toString()
             val acquired = try {
                 ledger.reserve(charId, "DUNGEON_NORMAL", sourceKey, attemptToken, clockMillis())
@@ -715,7 +716,8 @@ class DungeonSystem(
                 )
                 return DungeonSettlement(dungeonId, result = 1)
             }
-            val sourceKey = RewardLedgerSourceKeys.dungeon(run, "WEEKLY_TERMINAL")
+            val sourceKey = RewardLedgerSourceKeys.verifiedDungeonOrNull(run, "WEEKLY_TERMINAL")
+                ?: return DungeonSettlement(dungeonId, result = 1)
             val attemptToken = UUID.randomUUID().toString()
             val acquired = try {
                 ledger.reserve(charId, rewardKind, sourceKey, attemptToken, clockMillis())
