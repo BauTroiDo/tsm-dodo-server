@@ -30,7 +30,29 @@ class ChildDataSnapshot private constructor(
     /** Make defensive copies; database and packet senders must never mutate the snapshot. */
     fun toBytes(): ByteArray = raw.copyOf()
 
+    /**
+     * Apply an authoritative S069-008 child item-use total without rewriting
+     * unrelated skills, timestamps, attributes or the 18 reserved bytes.
+     *
+     * DVT Common/protocal.lua protocolTable[69][8] makes an existing child
+     * an adult once childItemCount reaches 400; 399 must not mature it.
+     * This is deliberately NOT a client-controlled update operation.
+     */
+    fun withItemCount(newTotal: Int): ChildDataSnapshot {
+        require(kind != 0) { "Cannot update item-use count when no child exists" }
+        require(newTotal in childItemCount..65535) {
+            "Child item-use total must never decrease or exceed UInt16"
+        }
+        val copy = raw.copyOf()
+        copy[72] = newTotal.toByte()
+        copy[73] = (newTotal ushr 8).toByte()
+        if (newTotal >= ADULT_ITEM_USE_THRESHOLD) copy[0] = ADULT_KIND.toByte()
+        return decode(copy)
+    }
+
     companion object {
+        const val ADULT_KIND = 3
+        const val ADULT_ITEM_USE_THRESHOLD = 400
         const val SIZE = 93
 
         fun decode(payload: ByteArray): ChildDataSnapshot {
@@ -56,7 +78,7 @@ class ChildDataSnapshot private constructor(
             b.get(reserved)
 
             require(b.position() == SIZE)
-            require(kind in 0..4) { "Unknown DVT EChild kind=$kind" }
+            require(kind in 0..3) { "Unknown DVT EChild kind=$kind" }
             require(sex in 0..2) { "Invalid child sex=$sex" }
             require(feedTime.isFinite() && satiationTime.isFinite()) {
                 "Invalid stored ChildData timestamp"
