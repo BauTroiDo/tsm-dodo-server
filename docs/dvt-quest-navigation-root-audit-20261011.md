@@ -63,6 +63,18 @@ Eve.emg client/server both index **3,823 scenes**, of which **27 scene blocks di
 
 Read-only server NPC/door cross-reference scan (`tools/audit_dvt_quest_navigation.py`) checked **5,716 located target references** against `Eve.emg`, across 1,626 scene blocks: 3,644 NPC targets, 1,244 door targets, and **11 unresolvable references** (1 NPC, 10 doors). These involve `11190, 11908, 12438, 12682`; they have not been auto-corrected, because the original DVT scripts may route some triggers differently. Full report: `C:\\Server-Game\\tsm_dodo\\backups\\quest_nav_audit_20261011\\targets.json`.
 
+## 6. Kotlin C:068 Thiên Hành Dị Năng kiểm tra sai bảng cờ mở khóa
+
+DVT `UITeleport.SetupSkyPointData` dùng `CheckFlag(MarkManager.flags, markDatas[warp.mark].bitId)`. Client `MarkManager.flags` được đồng bộ bằng S:024 và lưu trong Kotlin `character_mission_flags`, thông qua `QuestRepository` / `QuestSystem.hasMissionFlag(charId, missionId)`.
+
+Trước sửa, `TeleportHandler.validateWarpMark` lại truy vấn `BitFlagSystem.getSetFlagIds`, tức `character_bit_flags` — cờ vĩnh viễn `foreverFlags` dành cho hướng dẫn/card/mount, **không phải** cờ hoàn thành nhiệm vụ. Người chơi hoàn thành quest nhưng không có foreverFlag tương ứng sẽ bị từ chối C:068-001 dù client đã mở mốc.
+
+PR sửa `TeleportHandler` inject `QuestSystem` và `WarpMarkUnlockPolicy.isUnlocked` dùng đúng `QuestSystem.hasMissionFlag` cho Mark bitId>0. Giữ nguyên mốc không có mark, điều kiện chống teleport trong battle/party, map 10701 và GM bypass có chủ đích. Regression test xác minh có/không có MissionFlag, mốc miễn điều kiện và Mark ID không tồn tại. Không được đánh đồng tính năng unlock điểm teleport (C:068) với điều kiện mở cửa Eve (C:020) hoặc overlay minimap trong client.
+
+## 7. Nhiệm vụ trong ảnh: NPC và Eve resultClass=2 đã đối chiếu
+
+`gamedata/Eve.emg` scene 11012 NPC event-id 1 là NPC 11002 (tại 590,520), chứa event list [8,12,15]. Nhánh scene11012 event8 có điều kiện nhiệm vụ thực 10074 pStyle1/step1 và kết quả `resultClass=2,param=10074,pStyle=1,value=1` (ADD_STEP). Scene 11101 NPC-id1 là NPC 15083, event2 có các điều kiện 10074/10075 và chuỗi complete/return. Đây là bằng chứng đường NPC→Eve→tăng bước đã có trong dữ liệu; chưa thể khẳng định từng nhánh lựa chọn thông qua đủ điều kiện thời gian/nghề/pet/party nếu chưa đối chiếu state người chơi. Không tự thêm gói packet hoặc tự cấp phần thưởng vào đường NPC này.
+
 ## Giới hạn xác nhận
 
 - Đây là đối chiếu mã nguồn gốc, phân tích dữ liệu đường đi và kiểm tra mã hóa sau patch, **chưa có kiểm thử tương tác client thật** sau khi vá.
