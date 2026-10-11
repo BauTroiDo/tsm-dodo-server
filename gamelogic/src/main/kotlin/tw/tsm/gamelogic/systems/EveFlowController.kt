@@ -5,6 +5,7 @@ import tw.tsm.domain.data.EveResult
 import tw.tsm.domain.data.SceneEveData
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.ResponseSender
+import tw.tsm.domain.interfaces.repositories.EveEffectClaimRepository
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
 import tw.tsm.domain.interfaces.repositories.QuestRepository
 
@@ -38,12 +39,52 @@ class EveFlowController(
     private val questRepository: QuestRepository,
     private val characterRepository: CharacterRepository,
     private val eveData: Map<Int, SceneEveData>,
-    private val npcShopManager: NpcShopManager
+    private val npcShopManager: NpcShopManager,
+    /** Optional for legacy unit fixtures; production DI must bind this. */
+    private val effectClaimRepository: EveEffectClaimRepository? = null,
 ) {
     /** App-layer hook for terminal Eve completion (dungeon settlement, etc.). */
     var onEventCompleted: (suspend (GameSession) -> Unit)? = null
     /** Exact Eve hook: scene12003/click10/result type2 class7 param8 = VS registration. */
     var onVsRegistration: (suspend (GameSession) -> Unit)? = null
+
+    /**
+     * Persist a fail-closed reservation BEFORE the first non-idempotent result.
+     * Never drop a pending DB claim on cancellation/disconnect or a timeout:
+     * effects already dispatched before the interruption cannot be rolled back.
+     */
+    private suspend fun ensureDurableEffectClaim(session: GameSession): Boolean {
+        val charId = session.roleId.toLong()
+        val event = stateMachine.getSession(charId) ?: return false
+        if (event.eveNo == 0 || event.effectClaimed) return true
+        val repository = effectClaimRepository ?: return true // Legacy tests only.
+        val reserved = try {
+            repository.reserve(
+                charId, event.mapId, event.eveNo, event.runToken,
+                System.currentTimeMillis()
+            )
+        } catch (e: Exception) {
+            logger.error(e) {
+                "Eve reward reservation failed: charId=$charId mapId=${event.mapId} eveNo=${event.eveNo}"
+            }
+            false
+        }
+        if (!reserved || !stateMachine.markEffectClaimed(charId, event.runToken)) {
+            // The DB reservation may have succeeded but a concurrent event
+            // replaced this session. Its unresolved claim must remain fenced.
+            logger.error {
+                "Eve reward blocked or displaced: charId=$charId mapId=${event.mapId} " +
+                    "eveNo=${event.eveNo} token=${event.runToken}"
+            }
+            stateMachine.clear(charId)
+            responseSender.sendSystemMessage(
+                session, "Nhiệm vụ có phần thưởng đang chờ xác minh. Hãy liên hệ quản trị viên."
+            )
+            responseSender.sendEventEnd(session)
+            return false
+        }
+        return true
+    }
 
     /**
      * Bắt đầu phân phát result đầu tiên (được [EveTriggerRouter] gọi)
@@ -101,6 +142,7 @@ class EveFlowController(
                             it.parameterStyle == 1
                     }
                 if (unlockResult != null) {
+                    if (!ensureDurableEffectClaim(session)) return
                     resultExecutor.executeResultClass(session, unlockResult)
                 } else {
                     logger.error { "Map tân thủ không tìm thấy kết quả Eve mở mission $BEGINNER_UNLOCK_MISSION_ID" }
@@ -278,6 +320,14 @@ class EveFlowController(
             }
         } else {
             if (playerWin) {
+                // Auto-capture can grant a warrior outside dispatchResult().
+                // Fence it first, but do not reserve if there is no capture
+                // instruction at all in the DVT event conditions.
+                val hasCapture = eventData.conditions.any {
+                    it.conditionClass == 9 && it.conditionParameter == 0 &&
+                        it.conditionParameterStyle == 1 && it.conditionValue > 0
+                }
+                if (hasCapture && !ensureDurableEffectClaim(session)) return
                 resultExecutor.autoCaptureFromEvent(session, charId, eventData)
                 advanceEvent(session)
             } else {
@@ -340,6 +390,10 @@ class EveFlowController(
                 return
             }
         }
+
+        if (EveEffectClaimPolicy.requiresReservation(result) &&
+            !ensureDurableEffectClaim(session)
+        ) return
 
         when (result.resultType) {
             0 -> {
@@ -650,7 +704,20 @@ class EveFlowController(
         var persistedCount: Int? = null
         if (completedSession != null && completedSession.eveNo != 0) {
             try {
-                val count = questRepository.insertCompletedEventAndGetCount(charId, completedSession.mapId, completedSession.eveNo)
+                val count = if (completedSession.effectClaimed) {
+                    // Atomic EveCount + permanent run receipt + claim release.
+                    val claimRepository = checkNotNull(effectClaimRepository) {
+                        "Claimed Eve has no durable settlement repository"
+                    }
+                    claimRepository.settle(
+                        charId, completedSession.mapId, completedSession.eveNo,
+                        completedSession.runToken
+                    ) ?: error("Eve claim not owned during settlement: token=${completedSession.runToken}")
+                } else {
+                    questRepository.insertCompletedEventAndGetCount(
+                        charId, completedSession.mapId, completedSession.eveNo
+                    )
+                }
                 check(count > 0) { "Persisted EveCount is invalid: $count" }
                 persistedCount = count
             } catch (e: Exception) {
