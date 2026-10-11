@@ -363,27 +363,45 @@ class EveEventStateMachine {
      *
      * @return EventSession đã hoàn thành, null = Không có sự kiện đang diễn ra
      */
+    /**
+     * Legacy in-memory completion. Persistence-backed callers should use
+     * takeCompletion() then recordPersistedCompletion() only after DB success.
+     */
     fun complete(charId: Long): EventSession? {
-        val ref = sessions.remove(charId) ?: return null
-        val session = ref.get() ?: return null
-        if (session.eveNo != 0) {
-            val eveMap = completedEvents
+        val completed = takeCompletion(charId) ?: return null
+        recordPersistedCompletion(charId, completed)
+        return completed
+    }
+
+    /**
+     * Atomically claim and remove the active event without changing RAM EveCount
+     * or the completed-condition flags. Once consumed, delayed packets cannot
+     * replay its rewards while the persistence write is in progress.
+     */
+    fun takeCompletion(charId: Long): EventSession? {
+        val ref = sessions[charId] ?: return null
+        if (!sessions.remove(charId, ref)) return null
+        return ref.get()
+    }
+
+    /** Publish completion to RAM only after its EveCount write committed. */
+    fun recordPersistedCompletion(charId: Long, session: EventSession) {
+        if (session.eveNo == 0) return
+
+        val eveMap = completedEvents
+            .getOrPut(charId) { ConcurrentHashMap() }
+            .getOrPut(session.mapId) { ConcurrentHashMap() }
+        eveMap.merge(session.eveNo, 1, Int::plus)
+
+        if (session.hasStateChangingResults()) {
+            completedConditions
                 .getOrPut(charId) { ConcurrentHashMap() }
                 .getOrPut(session.mapId) { ConcurrentHashMap() }
-            eveMap.merge(session.eveNo, 1, Int::plus)
-
-            // Theo dõi cấp condNo — Chỉ các sự kiện dạng thay đổi trạng thái mới cần chống trùng lặp, Talk-only có thể kích hoạt nhiều lần
-            if (session.hasStateChangingResults()) {
-                completedConditions
-                    .getOrPut(charId) { ConcurrentHashMap() }
-                    .getOrPut(session.mapId) { ConcurrentHashMap() }
-                    .getOrPut(session.eveNo) { ConcurrentHashMap.newKeySet() }
-                    .add(session.matchedConditionNo)
-            }
-
-            logger.debug { "Sự kiện hoàn thành: charId=$charId mapId=${session.mapId} eveNo=${session.eveNo} condNo=${session.matchedConditionNo} → count=${eveMap[session.eveNo]}" }
+                .getOrPut(session.eveNo) { ConcurrentHashMap.newKeySet() }
+                .add(session.matchedConditionNo)
         }
-        return session
+
+        logger.debug { "Sự kiện đã lưu và hoàn thành: charId=$charId mapId=${session.mapId} eveNo=${session.eveNo} condNo=${session.matchedConditionNo} → count=${eveMap[session.eveNo]}" }
     }
 
     /** Xóa sự kiện đang diễn ra (mất kết nối/buộc chấm dứt, không tính vào log hoàn thành) */
