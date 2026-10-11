@@ -56,9 +56,9 @@ class ActiveDvtQuestBlockerCensusTest(unittest.TestCase):
                          {x for scene in a["scene_coverage"].values()
                           for x in scene})
 
-    def test_unlocated_objectives_and_one_step_without_any_path(self):
+    def test_quest_turnin_routable_but_item_acquisition_still_unlocated(self):
         a = self.audit
-        self.assertEqual(len(a["missing_end_targets"]), 269)
+        self.assertEqual(len(a["missing_end_targets"]), 268)
         self.assertEqual(len(a["unlocated_condition_targets"]), 87)
         count_by_kind = {}
         for row in a["unlocated_condition_targets"]:
@@ -69,9 +69,13 @@ class ActiveDvtQuestBlockerCensusTest(unittest.TestCase):
             for r in a["missing_end_targets"]
             if r["conditions"] and not r["located_conditions"]
         }
-        self.assertEqual(no_route, {
-            (12162, 1),
-        })
+        self.assertEqual(no_route, set())
+        # This is ONLY a proven return NPC; collection source still has no target.
+        self.assertIn(
+            (12162, 1, 1),
+            {(r["mission"],r["step"],r["condition_index"])
+             for r in a["unlocated_condition_targets"]}
+        )
 
     def test_linked_missions_are_potential_not_confirmed_blocked(self):
         # This is a *candidate* list: an Eve event can contain multiple
@@ -91,7 +95,7 @@ class ActiveDvtQuestBlockerCensusTest(unittest.TestCase):
             ROOT / "gamedata" / "Eve.emg",
         )
         self.assertEqual(result["markstep_rows"], 4505)
-        self.assertEqual(result["targets"]["located"], 5725)
+        self.assertEqual(result["targets"]["located"], 5726)
         self.assertEqual(result["missing_scenes"], [],
             "Quest target references a scene absent from active Eve")
         self.assertEqual(result["missing_doors"], [],
@@ -106,7 +110,7 @@ class ActiveDvtQuestBlockerCensusTest(unittest.TestCase):
         path = ROOT / "File.dat" / "Data-ios" / "IOS_MarkStep_C.dat"
         sha = hashlib.sha256(path.read_bytes()).hexdigest()
         self.assertEqual(sha,
-            "6e01ccb0fc06944911bfe5ee159bc6e261fbd794af081cfe5fb868d489388958",
+            "e0278071b4f12f75d058d51661e743ad0c42c83ab6a08af2bc610ba4f7e02074",
             "A subsequent deployment must not restore the ten broken door IDs")
 
 if __name__ == "__main__":

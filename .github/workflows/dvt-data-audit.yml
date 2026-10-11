@@ -29,3 +29,5 @@ jobs:
         run: python -m unittest discover -s tools -p test_dvt_12509_christmas_vendors_20261011.py -v
       - name: Verify original DVT Moon Rabbit mission entrance and nearest real battle NPC
         run: python -m unittest discover -s tools -p test_dvt_10852_rabbit_cave_navigation_20261012.py -v
+      - name: Verify source-proven quest12162 30-pot return route without invented collection
+        run: python -m unittest discover -s tools -p test_dvt_12162_clay_pot_turnin_20261012.py -v
