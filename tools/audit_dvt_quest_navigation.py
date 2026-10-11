@@ -60,8 +60,11 @@ def audit(markstep, eve, only_mission=None):
     missing_scenes = []
     missing_npcs = []
     missing_doors = []
+    # Capture/killing areas can legitimately have no STATIC scene NPC: the
+    # monster is produced by field encounters. Do not invent an NPC ID.
+    nonstatic_hunt_targets = []
     target_counts = Counter()
-    def validate(mission, step, target, location):
+    def validate(mission, step, target, location, requirement_kind=0, requirement_npc_id=0):
         scene_id, x, y, kind, event_id = target
         if scene_id <= 0 or (x == 0 and y == 0):
             target_counts["unlocated"] += 1
@@ -79,7 +82,12 @@ def audit(markstep, eve, only_mission=None):
         if kind == 1 and event_id:
             target_counts["npc_targets"] += 1
             if event_id not in {n["id"] for n in scene["npcs"]}:
-                missing_npcs.append((mission, step, location, scene_id, event_id))
+                if requirement_kind in (1, 2):
+                    nonstatic_hunt_targets.append(
+                        (mission, step, location, scene_id, event_id, requirement_kind, requirement_npc_id)
+                    )
+                else:
+                    missing_npcs.append((mission, step, location, scene_id, event_id))
         elif kind == 2 and event_id:
             target_counts["door_targets"] += 1
             if event_id not in {d["id"] for d in scene["doors"]}:
@@ -94,7 +102,7 @@ def audit(markstep, eve, only_mission=None):
         validate(mid, st["step"], st["end"], "END")
         for index, (kind, iid, qty, target) in enumerate(st["conditions"]):
             if kind:
-                validate(mid, st["step"], target, f"CONDITION_{index+1}")
+                validate(mid, st["step"], target, f"CONDITION_{index+1}", kind, iid)
 
     report = {
         "markstep_file": str(markstep),
@@ -105,6 +113,7 @@ def audit(markstep, eve, only_mission=None):
         "missing_scenes":missing_scenes,
         "missing_npcs":missing_npcs,
         "missing_doors":missing_doors,
+        "nonstatic_hunt_targets":nonstatic_hunt_targets,
     }
     return report
 
@@ -125,6 +134,7 @@ def main():
     short["total_missing_scenes"]=len(result["missing_scenes"])
     short["total_missing_npcs"]=len(result["missing_npcs"])
     short["total_missing_doors"]=len(result["missing_doors"])
+    short["nonstatic_hunt_target_count"]=len(result["nonstatic_hunt_targets"])
     print(json.dumps(short,indent=2,ensure_ascii=False))
     # Read-only auditor deliberately returns 0 for missing refs: classify
     # intentional scripted doors before changing the client navigation data.
