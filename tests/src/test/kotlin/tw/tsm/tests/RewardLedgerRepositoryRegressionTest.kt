@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test
 import tw.tsm.domain.interfaces.repositories.RewardLedgerRepository
 import tw.tsm.persistence.repositories.RewardLedgerRepositoryImpl
 import tw.tsm.persistence.tables.CharacterRewardLedger
+import tw.tsm.persistence.tables.CharacterRewardPendingScopes
 
 /** All tests use isolated in-memory H2. They NEVER connect to production. */
 class RewardLedgerRepositoryRegressionTest {
@@ -25,7 +26,7 @@ class RewardLedgerRepositoryRegressionTest {
         )
         TransactionManager.defaultDatabase = database
         try {
-            transaction(database) { SchemaUtils.create(CharacterRewardLedger) }
+            transaction(database) { SchemaUtils.create(CharacterRewardLedger, CharacterRewardPendingScopes) }
             runBlocking { block(RewardLedgerRepositoryImpl()) }
         } finally {
             TransactionManager.defaultDatabase = previous
@@ -59,10 +60,14 @@ class RewardLedgerRepositoryRegressionTest {
 
     @Test fun repeatableDungeonGetsDistinctRunKeyAndPlayersRemainIndependent() = withRepository { repo ->
         assertTrue(repo.reserve(104L, "DUNGEON_NORMAL", "run-1:terminal", "a", 1000L))
-        assertTrue(repo.reserve(104L, "DUNGEON_NORMAL", "run-2:terminal", "b", 2000L))
+        // New source key must NOT evade an unresolved earlier payout.
+        assertFalse(repo.reserve(104L, "DUNGEON_NORMAL", "run-2:terminal", "b", 2000L))
+        assertTrue(repo.settle(104L, "DUNGEON_NORMAL", "run-1:terminal", "a", 3000L))
+        // Once the earlier run is fully settled, a new dungeon run is valid.
+        assertTrue(repo.reserve(104L, "DUNGEON_NORMAL", "run-2:terminal", "b", 4000L))
         assertTrue(repo.reserve(105L, "DUNGEON_NORMAL", "run-1:terminal", "c", 2000L))
         assertTrue(repo.reserve(104L, "BATTLE_GENERIC", "run-1:terminal", "d", 2000L))
-        assertEquals(3, repo.unresolvedForCharacter(104L).size)
+        assertEquals(2, repo.unresolvedForCharacter(104L).size)
         assertEquals(1, repo.unresolvedForCharacter(105L).size)
     }
 
@@ -76,6 +81,33 @@ class RewardLedgerRepositoryRegressionTest {
         }
         assertEquals(1, results.count { it.second })
         assertEquals(1, repo.unresolvedForCharacter(106L).size)
+    }
+
+    @Test fun differentPendingSourceKeysWithinSameKindAreSerialized() = withRepository { repo ->
+        val contenders = coroutineScope {
+            (1..12).map { n ->
+                async(Dispatchers.IO) {
+                    n to repo.reserve(108L, "DUNGEON_NORMAL", "different-run-$n", "token-$n", n * 1000L)
+                }
+            }.awaitAll()
+        }
+        val winner = contenders.single { it.second }.first
+        assertEquals(1, repo.unresolvedForCharacter(108L).size)
+        assertFalse(repo.reserve(108L, "DUNGEON_NORMAL", "another-run", "other", 20_000L))
+        assertFalse(repo.settle(108L, "DUNGEON_NORMAL", "different-run-$winner", "other", 21_000L))
+        assertTrue(repo.settle(108L, "DUNGEON_NORMAL", "different-run-$winner", "token-$winner", 22_000L))
+        assertTrue(repo.reserve(108L, "DUNGEON_NORMAL", "another-run", "other", 23_000L))
+        assertEquals(1, repo.unresolvedForCharacter(108L).size)
+    }
+
+    @Test fun settledReplayMustNotPoisonNewPendingScope() = withRepository { repo ->
+        assertTrue(repo.reserve(109L, "DUNGEON_WEEKLY", "week-1", "a", 1000L))
+        assertTrue(repo.settle(109L, "DUNGEON_WEEKLY", "week-1", "a", 2000L))
+        assertFalse(repo.reserve(109L, "DUNGEON_WEEKLY", "week-1", "a", 3000L))
+        assertTrue(repo.reserve(109L, "DUNGEON_WEEKLY", "week-2", "b", 4000L))
+        assertFalse(repo.reserve(109L, "DUNGEON_WEEKLY", "week-3", "c", 5000L))
+        assertFalse(repo.settle(109L, "DUNGEON_WEEKLY", "week-1", "a", 6000L))
+        assertTrue(repo.settle(109L, "DUNGEON_WEEKLY", "week-2", "b", 7000L))
     }
 
     @Test fun rejectedIdentifiersCannotPoisonTheLedger() = withRepository { repo ->
