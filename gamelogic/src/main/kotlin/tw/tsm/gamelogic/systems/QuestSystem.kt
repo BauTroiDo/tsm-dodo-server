@@ -226,6 +226,12 @@ class QuestSystem(
         }
     }
 
+    /** Pure preflight for a weekly all-pass claim Mark: no database mutation. */
+    fun completionBitId(missionId: Int): Int = markDefs[missionId]?.bitId ?: 0
+
+    /** Same Asia/Taipei Monday period key used by refreshDungeonWeekly. */
+    fun dungeonWeekKey(): Int = thisWeek()
+
     /** Kiểm tra nhiệm vụ đã hoàn thành theo missionId, giống MarkManager.GetMissionFlag(). */
     suspend fun hasMissionFlag(charId: Long, missionId: Int): Boolean {
         val bitId = markDefs[missionId]?.bitId ?: return false

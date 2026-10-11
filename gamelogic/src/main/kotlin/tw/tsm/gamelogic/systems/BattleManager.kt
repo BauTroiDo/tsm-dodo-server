@@ -21,6 +21,7 @@ import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.repositories.SkillRepository
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
 import tw.tsm.domain.interfaces.repositories.ElfRepository
+import tw.tsm.domain.interfaces.repositories.RewardLedgerRepository
 import tw.tsm.domain.valueobjects.FollowNpcData
 import tw.tsm.domain.util.DvtPercentMath
 import tw.tsm.gamelogic.battle.*
@@ -64,9 +65,14 @@ class BattleManager(
     private val soulSystem: SoulSystem? = null,
     private val elfRepository: ElfRepository? = null,
     private val elfBaseExpByNo: Map<Int, Int> = emptyMap(),
+    /** Injected on dev/production; null only for legacy fixtures. */
+    private val rewardLedgerRepository: RewardLedgerRepository? = null,
 ) {
     /** Trình phân tích vật phẩm chiến đấu (stateless, dùng chung cho toàn trận)*/
     private val battleItemResolver = BattleItemResolver(inventorySystem, itemDefs)
+    private val battlePayoutLedger by lazy {
+        rewardLedgerRepository?.let { BattleRewardLedgerCoordinator(it) }
+    }
 
     /**
      * Callback khi kết thúc trận — do ServerModule thiết lập, gọi NpcEventHandler.resumeAfterBattle()
@@ -1695,9 +1701,29 @@ class BattleManager(
             0
         }
 
+        val deniedBattlePayouts = mutableSetOf<Long>()
         for ((playerId, session) in battle.playerSessions) {
-            // Thưởng (chỉ khi thắng)
-            if (endResult.playerWin && !battle.suppressGenericRewards) {
+            // Each real party member gets a separate DB claim. The battle
+            // UUID becomes durable when reserve() inserts its ledger row;
+            // a crash survivor blocks a different battle via pending scope.
+            val eligibleGenericWin = endResult.playerWin && !battle.suppressGenericRewards
+            val payoutClaim = if (eligibleGenericWin) {
+                battlePayoutLedger?.reserve(session.roleId.toLong(), battle.rewardAttemptUuid)
+            } else null
+            val payoutAllowed = !eligibleGenericWin ||
+                battlePayoutLedger == null || payoutClaim != null
+            if (!payoutAllowed) {
+                deniedBattlePayouts.add(playerId)
+                logger.error {
+                    "Battle generic payout blocked: battle=${battle.battleId} playerId=$playerId " +
+                        "uuid=${battle.rewardAttemptUuid}"
+                }
+                responseSender.sendSystemMessage(
+                    session, "Thưởng trận chiến đang chờ xác minh; không phát thưởng lại."
+                )
+            }
+            // Generic rewards are never dispatched after a rejected ledger.
+            if (eligibleGenericWin && payoutAllowed) {
                 if (defeatedEnemyNpcCount > 0) {
                     grantKillNum(session, battle.battleId, defeatedEnemyNpcCount)
                 }
@@ -1818,7 +1844,8 @@ class BattleManager(
             }
 
             // NPC bắt thành công → thêm vào PetSystem + gửi gói tin cho client
-            if (endResult.playerWin && !battle.suppressGenericRewards && battle.capturedNpcs.isNotEmpty()) {
+            if (endResult.playerWin && !battle.suppressGenericRewards &&
+                payoutAllowed && battle.capturedNpcs.isNotEmpty()) {
                 val charId = session.roleId.toLong()
                 for ((capturerPlayerId, npcId) in battle.capturedNpcs) {
                     if (capturerPlayerId != playerId) continue
@@ -1903,7 +1930,7 @@ class BattleManager(
             // Autosave vẫn chạy nền, nhưng battle checkpoint này loại bỏ cửa sổ mất
             // EXP/vàng/vật phẩm/pet khi máy chủ bị reset ngay sau trận.
             val checkpointCharId = session.roleId.toLong()
-            try {
+            val checkpointSaved = try {
                 val checkpointState = playerStateManager.getState(checkpointCharId)
                 if (checkpointState != null) {
                     characterRepository?.updatePlayerState(
@@ -1923,8 +1950,26 @@ class BattleManager(
                 inventorySystem.save(checkpointCharId)
                 moneySystem.saveMoney(checkpointCharId)
                 petSystem.save(checkpointCharId)
+                true
             } catch (e: Exception) {
                 logger.error(e) { "Trận ${battle.battleId}: lưu checkpoint thất bại charId=$checkpointCharId" }
+                false
+            }
+            if (payoutClaim != null) {
+                val committed = checkpointSaved &&
+                    battlePayoutLedger?.settle(payoutClaim) == true
+                if (!committed) {
+                    // Some effects may already have been applied. Keep a
+                    // PENDING ledger; skip Eve continuation for this player.
+                    deniedBattlePayouts.add(playerId)
+                    logger.error {
+                        "Battle payout receipt unresolved: battle=${battle.battleId} player=$playerId " +
+                            "source=${payoutClaim.sourceKey}"
+                    }
+                    responseSender.sendSystemMessage(
+                        session, "Thưởng trận đã xử lý nhưng chưa được MySQL xác nhận; liên hệ quản trị viên."
+                    )
+                }
             }
 
             // S:011-000 kết thúc chiến đấu
@@ -1981,6 +2026,10 @@ class BattleManager(
         val callback = onBattleEndCallback
         if (callback != null) {
             for ((playerId, session) in battle.playerSessions) {
+                if (playerId in deniedBattlePayouts) {
+                    onBattleAbortCallback?.invoke(session) ?: responseSender.sendEventEnd(session)
+                    continue
+                }
                 BattleEventContinuation.run(
                     resume = { callback(session, playerId, endResult.playerWin) },
                     abort = {

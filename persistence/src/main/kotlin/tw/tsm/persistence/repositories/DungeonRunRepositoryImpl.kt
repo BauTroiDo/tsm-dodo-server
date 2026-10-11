@@ -27,6 +27,7 @@ class DungeonRunRepositoryImpl : DungeonRunRepository {
                         originY = row[CharacterDungeonRuns.originY],
                         originInstanceId = row[CharacterDungeonRuns.originInstanceId],
                         settled = row[CharacterDungeonRuns.settled],
+                        runToken = row[CharacterDungeonRuns.runToken],
                     )
                 }
         }
@@ -44,6 +45,7 @@ class DungeonRunRepositoryImpl : DungeonRunRepository {
                 it[CharacterDungeonRuns.originY] = record.originY
                 it[CharacterDungeonRuns.originInstanceId] = record.originInstanceId
                 it[CharacterDungeonRuns.settled] = record.settled
+                it[CharacterDungeonRuns.runToken] = record.runToken
             }
         }
     }

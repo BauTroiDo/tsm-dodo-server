@@ -46,6 +46,7 @@ import tw.tsm.domain.interfaces.repositories.RoleCountRepository
 import tw.tsm.domain.interfaces.repositories.LimitedAreaDailyRepository
 import tw.tsm.domain.interfaces.repositories.DispatchRepository
 import tw.tsm.domain.interfaces.repositories.DungeonRunRepository
+import tw.tsm.domain.interfaces.repositories.RewardLedgerRepository
 import tw.tsm.domain.interfaces.repositories.FriendRepository
 import tw.tsm.domain.interfaces.repositories.HouseBoardRepository
 import tw.tsm.domain.interfaces.repositories.WelfareStateRepository
@@ -67,6 +68,7 @@ import tw.tsm.persistence.repositories.ExpSlotRepositoryImpl
 import tw.tsm.persistence.repositories.PokeRepositoryImpl
 import tw.tsm.persistence.repositories.DispatchRepositoryImpl
 import tw.tsm.persistence.repositories.DungeonRunRepositoryImpl
+import tw.tsm.persistence.repositories.RewardLedgerRepositoryImpl
 import tw.tsm.persistence.repositories.FriendRepositoryImpl
 import tw.tsm.persistence.repositories.HouseBoardRepositoryImpl
 import tw.tsm.persistence.repositories.WelfareStateRepositoryImpl
@@ -294,6 +296,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single<PokeRepository> { PokeRepositoryImpl() }
     single<DispatchRepository> { DispatchRepositoryImpl() }
     single<DungeonRunRepository> { DungeonRunRepositoryImpl() }
+    single<RewardLedgerRepository> { RewardLedgerRepositoryImpl() }
     single<MailRepository> { MailRepositoryImpl() }
     single<MessageBoardRepository> { MessageBoardRepositoryImpl() }
     single<FriendRepository> { FriendRepositoryImpl() }
@@ -479,6 +482,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             itemDefs = get<GameDataManager>().itemDefs,
             exclusiveWeaponDefs = get<GameDataManager>().exclusiveWeaponDefs,
             collectWarriorSortDefs = get<GameDataManager>().collectWarriorSortDefs,
+            rewardLedgerRepository = get<RewardLedgerRepository>(),
         )
     }
     single { DungeonRoomRegistry() }
@@ -583,7 +587,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
         )
     }
     single {
-        BattleManager(get(), get<GameDataManager>().skillDefs, get<GameDataManager>().npcDefs, get(), get(), get<PetSystem>(), get<MoneySystem>(), get<StatSystem>(), get(), get<GameDataManager>().npcDropTable, get<SkillSystem>(), get<MacroBoxSystem>(), get<GameDataManager>().itemDefs, get<SkillRepository>(), get<CharacterRepository>(), get<GameDataManager>().npcUpgradeDefs, get<GameDataManager>().sceneSetDefs, get<DailyProgressSystem>(), get<CollectionSystem>(), get<GameDataManager>().sacredEquipPrimaryDefs, get<GameDataManager>().exclusiveSkillDefs, get<SoulSystem>(), get<ElfRepository>(), get<ElfCatalog>().defs.mapValues { it.value.baseExp }).also { bm ->
+        BattleManager(get(), get<GameDataManager>().skillDefs, get<GameDataManager>().npcDefs, get(), get(), get<PetSystem>(), get<MoneySystem>(), get<StatSystem>(), get(), get<GameDataManager>().npcDropTable, get<SkillSystem>(), get<MacroBoxSystem>(), get<GameDataManager>().itemDefs, get<SkillRepository>(), get<CharacterRepository>(), get<GameDataManager>().npcUpgradeDefs, get<GameDataManager>().sceneSetDefs, get<DailyProgressSystem>(), get<CollectionSystem>(), get<GameDataManager>().sacredEquipPrimaryDefs, get<GameDataManager>().exclusiveSkillDefs, get<SoulSystem>(), get<ElfRepository>(), get<ElfCatalog>().defs.mapValues { it.value.baseExp }, get<RewardLedgerRepository>()).also { bm ->
             // Callback kết thúc chiến đấu → EveFlowController khôi phục luồng sự kiện
             bm.onBattleAbortCallback = { session -> get<EveFlowController>().abortAfterBattle(session) }
             bm.onBattleEndCallback = { session, playerId, playerWin ->
