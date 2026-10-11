@@ -119,6 +119,8 @@ class PetRebornSystem(
         val maxHp = statCalculator.calculateMaxHp(level = 1, hpx = targetDef.hpx, turn = targetDef.turn)
         val maxSp = statCalculator.calculateMaxSp(level = 1, spx = targetDef.spx, turn = targetDef.turn)
         val newPet = FollowNpcData(
+            // Rebirth transforms the SAME owned individual, not a new capture.
+            instanceId = pet.instanceId,
             slotIndex = followSlot,
             npcId = targetNpcId,
             storageType = PetSystem.STORAGE_FOLLOW,
