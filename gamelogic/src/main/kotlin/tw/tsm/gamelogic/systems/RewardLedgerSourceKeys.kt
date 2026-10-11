@@ -22,6 +22,13 @@ object RewardLedgerSourceKeys {
     }
 
     /**
+     * DB records can contain malformed legacy strings. A settlement handler
+     * should fail closed (rather than throw mid-battle) before touching rewards.
+     */
+    fun verifiedDungeonOrNull(run: ActiveDungeonRun, rewardStep: String): String? =
+        runCatching { dungeon(run, rewardStep) }.getOrNull()
+
+    /**
      * A battle payout identity MUST come from a persisted attempt UUID,
      * not BattleManager's reset-on-restart numerical battleId.
      */
