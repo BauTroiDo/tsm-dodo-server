@@ -2,6 +2,7 @@ package tw.tsm.gamelogic.systems
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import tw.tsm.domain.data.EveResult
+import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
 
@@ -65,7 +66,11 @@ data class EventSession(
     val choiceResolutionInProgress: Boolean = false,
     val battleResult: Int = 0,
     val fightDataKey: Int = 0,
-    val matchedConditionNo: Int = 0
+    val matchedConditionNo: Int = 0,
+    /** Unique attempt ID; immutable across copy/choice/battle/warp continuation. */
+    val runToken: String = UUID.randomUUID().toString(),
+    /** True ONLY after the pending reward fence was persisted in MySQL. */
+    val effectClaimed: Boolean = false,
 ) {
     /** Có chứa kết quả dạng thay đổi trạng thái hay không, dùng để quyết định xem có ghi lại log hoàn thành để chống trùng lặp hay không */
     fun hasStateChangingResults(): Boolean = results.any {
@@ -185,6 +190,20 @@ class EveEventStateMachine {
             }
         }
         return inserted
+    }
+
+    /**
+     * Commit the runtime fence marker only for the SAME active Eve attempt.
+     * The database reservation must have succeeded before calling this.
+     */
+    fun markEffectClaimed(charId: Long, runToken: String): Boolean {
+        val ref = sessions[charId] ?: return false
+        while (true) {
+            val current = ref.get() ?: return false
+            if (current.runToken != runToken) return false
+            if (current.effectClaimed) return true
+            if (ref.compareAndSet(current, current.copy(effectClaimed = true))) return true
+        }
     }
 
     /**
