@@ -10,4 +10,9 @@ import tw.tsm.domain.valueobjects.ChildDataSnapshot
 interface ChildRepository {
     suspend fun load(characterId: Long): ChildDataSnapshot?
     suspend fun save(characterId: Long, snapshot: ChildDataSnapshot)
+    /**
+     * Atomically persist a trusted server-side item-use total. Does NOT create a
+     * child or accept a client-supplied counter. Null means absent/invalid state.
+     */
+    suspend fun setItemUseTotal(characterId: Long, newTotal: Int): ChildDataSnapshot?
 }
