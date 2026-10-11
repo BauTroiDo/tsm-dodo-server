@@ -28,7 +28,7 @@ class EveCompletionPersistenceFailureRegressionTest {
             every { roleId } returns 31
             every { characterName } returns "TestQuest"
         }
-        coEvery { repository.insertCompletedEvent(31L, 12001, 1) } throws IllegalStateException("database unavailable")
+        coEvery { repository.insertCompletedEventAndGetCount(31L, 12001, 1) } throws IllegalStateException("database unavailable")
         val flow = EveFlowController(
             sender, machine, mockk(relaxed = true), mockk(relaxed = true),
             mockk(relaxed = true), mockk(relaxed = true), mockk(relaxed = true),
@@ -41,7 +41,7 @@ class EveCompletionPersistenceFailureRegressionTest {
         // A late duplicate C020-006 must not repeat the persistence attempt.
         flow.advanceEvent(session)
 
-        coVerify(exactly = 1) { repository.insertCompletedEvent(31L, 12001, 1) }
+        coVerify(exactly = 1) { repository.insertCompletedEventAndGetCount(31L, 12001, 1) }
         assertNull(machine.getSession(31L))
         assertTrue(machine.getCompletedEveCounts(31L, 12001).isEmpty())
         assertFalse(machine.isConditionCompleted(31L, 12001, 1, 12))
@@ -61,9 +61,12 @@ class EveCompletionPersistenceFailureRegressionTest {
             every { roleId } returns 31
             every { characterName } returns "TestQuest"
         }
-        coEvery { repository.insertCompletedEvent(31L, 12001, 1) } coAnswers {
+        coEvery { repository.insertCompletedEventAndGetCount(31L, 12001, 1) } coAnswers {
             assertTrue(machine.getCompletedEveCounts(31L, 12001).isEmpty())
             assertFalse(machine.isConditionCompleted(31L, 12001, 1, 12))
+            // Simulate a concurrent reconnect loading the just-committed DB count.
+            machine.prePopulateCompleted(31L, 12001, mapOf(1 to 1))
+            1
         }
         val flow = EveFlowController(
             sender, machine, mockk(relaxed = true), mockk(relaxed = true),
@@ -77,6 +80,6 @@ class EveCompletionPersistenceFailureRegressionTest {
 
         assertEquals(1, machine.getCompletedEveCounts(31L, 12001)[1])
         assertTrue(machine.isConditionCompleted(31L, 12001, 1, 12))
-        coVerify(exactly = 1) { repository.insertCompletedEvent(31L, 12001, 1) }
+        coVerify(exactly = 1) { repository.insertCompletedEventAndGetCount(31L, 12001, 1) }
     }
 }
