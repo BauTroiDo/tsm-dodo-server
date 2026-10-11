@@ -54,10 +54,10 @@ class EveFlowController(
      * effects already dispatched before the interruption cannot be rolled back.
      */
     private suspend fun ensureDurableEffectClaim(session: GameSession): Boolean {
+        val repository = effectClaimRepository ?: return true // Legacy tests only.
         val charId = session.roleId.toLong()
         val event = stateMachine.getSession(charId) ?: return false
         if (event.eveNo == 0 || event.effectClaimed) return true
-        val repository = effectClaimRepository ?: return true // Legacy tests only.
         val reserved = try {
             repository.reserve(
                 charId, event.mapId, event.eveNo, event.runToken,
@@ -76,7 +76,7 @@ class EveFlowController(
                 "Eve reward blocked or displaced: charId=$charId mapId=${event.mapId} " +
                     "eveNo=${event.eveNo} token=${event.runToken}"
             }
-            stateMachine.clear(charId)
+            stateMachine.clearIfCurrentRun(charId, event.runToken)
             responseSender.sendSystemMessage(
                 session, "Nhiệm vụ có phần thưởng đang chờ xác minh. Hãy liên hệ quản trị viên."
             )
