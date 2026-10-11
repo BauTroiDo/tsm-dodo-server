@@ -18,6 +18,8 @@ data class DungeonRunRecord(
     val originY: Int,
     val originInstanceId: Int,
     val settled: Boolean = false,
+    /** Empty for pre-migration rows: those runs cannot claim protected rewards. */
+    val runToken: String = "",
 )
 
 interface DungeonRunRepository {
