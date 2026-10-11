@@ -17,6 +17,31 @@ class ChildRepositoryImpl : ChildRepository {
         ChildDataSnapshot.decode(row[CharacterChildStates.payload])
     }
 
+    override suspend fun setItemUseTotal(characterId: Long, newTotal: Int): ChildDataSnapshot? {
+        if (characterId <= 0L || newTotal !in 0..65535) return null
+        return suspendTransaction {
+            // Per-character row lock prevents concurrent item use from silently
+            // regressing ChildData or losing the 399->400 adulthood transition.
+            val row = CharacterChildStates.selectAll()
+                .where { CharacterChildStates.characterId eq characterId }
+                .forUpdate()
+                .firstOrNull() ?: return@suspendTransaction null
+            val current = ChildDataSnapshot.decode(row[CharacterChildStates.payload])
+            if (current.kind == 0 || newTotal < current.childItemCount) {
+                return@suspendTransaction null
+            }
+            val updated = current.withItemCount(newTotal)
+            if (updated.childItemCount != current.childItemCount ||
+                updated.kind != current.kind
+            ) {
+                CharacterChildStates.update({ CharacterChildStates.characterId eq characterId }) {
+                    it[CharacterChildStates.payload] = updated.toBytes()
+                }
+            }
+            updated
+        }
+    }
+
     override suspend fun save(characterId: Long, snapshot: ChildDataSnapshot) {
         require(characterId > 0L)
         val bytes = snapshot.toBytes()
