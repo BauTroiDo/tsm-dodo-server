@@ -10,10 +10,12 @@
 
 `character_eve_effect_claims` giữ một bản ghi cho bộ khóa `(char_id, map_id, eve_no)`, gồm `run_token` (duy nhất trong lượt Eve) và `reserved_at_epoch_ms`.
 
+`character_eve_effect_settlements` giữ **biên nhận vĩnh viễn** theo khóa `(char_id, run_token)` sau khi chốt xong, kèm map/Eve/count/thời điểm. Không được dùng lại một `run_token` đã xuất hiện trong bảng này, kể cả sau khi bản ghi claim được xóa.
+
 - `reserve`: insert-if-absent qua khóa chính MySQL/H2; **cùng token** có thể tiếp tục nhiều result; token khác không được “cướp” claim còn mở.
 - `unresolvedForCharacter`: đọc để kiểm toán hoặc đối soát, không tự dọn theo ngày/đăng nhập.
-- `settle`: kiểm tra đúng token dưới khóa `SELECT ... FOR UPDATE`, tăng EveCount bằng SQL UPSERT, đọc count và xóa claim trong **cùng transaction**. Gọi lại bằng token cũ không tăng lần thứ hai.
-- Nếu JVM chết sau khi phần thưởng đã được trao nhưng trước settlement, claim còn nguyên để không khởi chạy một run khác và phát thưởng lại.
+- `settle`: kiểm tra đúng token dưới khóa `SELECT ... FOR UPDATE`, tăng EveCount bằng SQL UPSERT, đọc count, ghi biên nhận settled token và xóa claim trong **cùng transaction**. Gọi lại bằng token cũ không tăng lần thứ hai. Trường hợp commit đã thành công nhưng mất ACK vẫn bị chặn tái chạy bằng token cũ.
+- Nếu JVM chết sau khi phần thưởng đã được trao nhưng trước settlement, claim còn nguyên để không khởi chạy một run khác và phát thưởng lại. Nếu JVM chết ngay sau settlement, biên nhận còn nguyên dù claim đã xóa.
 - Nếu crash ngay sau reserve nhưng trước reward, claim vẫn giữ: đây là cố ý **fail closed**, cần xác minh trước khi cho thử lại.
 
 ## Việc bắt buộc trước khi bật cho người chơi
@@ -28,6 +30,6 @@
 
 ## Giới hạn
 
-PR này mới bổ sung *database schema, storage API, H2 integration tests*. Chưa thay đổi luồng phát thưởng. Không merge/deploy live như một bản “sửa xong chống double reward” khi chưa có phần (1–7). Bảng mới được đăng ký trong DatabaseFactory nhưng chưa có đường gọi ở gameplay.
+PR này mới bổ sung *hai database schema, storage API, H2 integration tests*. Chưa thay đổi luồng phát thưởng. Không merge/deploy live như một bản “sửa xong chống double reward” khi chưa có phần (1–7). Bảng mới được đăng ký trong DatabaseFactory nhưng chưa có đường gọi ở gameplay.
 
 Khả năng tái chạy các Eve được phép lặp lại (farm, phục vụ NPC, hoạt động theo ngày) phải được chứng minh trước khi kích hoạt reservation. Nếu một quy trình bị đóng băng bởi claim tồn đọng, cần đối soát, không cho phát lại tự động.
