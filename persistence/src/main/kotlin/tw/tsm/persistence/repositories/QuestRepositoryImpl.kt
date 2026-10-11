@@ -181,10 +181,15 @@ class QuestRepositoryImpl : QuestRepository {
                 .associate { it[CharacterCompletedEvents.eveNo] to it[CharacterCompletedEvents.completionCount] }
         }
 
-    override suspend fun insertCompletedEvent(charId: Long, mapId: Int, eveNo: Int) =
+    override suspend fun insertCompletedEvent(charId: Long, mapId: Int, eveNo: Int) {
+        insertCompletedEventAndGetCount(charId, mapId, eveNo)
+    }
+
+    override suspend fun insertCompletedEventAndGetCount(charId: Long, mapId: Int, eveNo: Int): Int =
         suspendTransaction {
-            // Atomic SQL upsert. The composite primary key serializes duplicate
-            // event writes, and the DB increments the current stored value.
+            // Keep the increment and absolute-count read in the same DB transaction.
+            // A successful return is a committed EveCount acknowledgement; the
+            // caller uses this absolute value rather than blindly +1'ing RAM.
             CharacterCompletedEvents.upsert(
                 onUpdate = {
                     it[CharacterCompletedEvents.completionCount] =
@@ -196,7 +201,13 @@ class QuestRepositoryImpl : QuestRepository {
                 it[CharacterCompletedEvents.eveNo] = eveNo
                 it[CharacterCompletedEvents.completionCount] = 1
             }
-            Unit
+            CharacterCompletedEvents.selectAll()
+                .where {
+                    (CharacterCompletedEvents.charId eq charId) and
+                    (CharacterCompletedEvents.mapId eq mapId) and
+                    (CharacterCompletedEvents.eveNo eq eveNo)
+                }
+                .single()[CharacterCompletedEvents.completionCount]
         }
 
     override suspend fun clearCompletedEvents(charId: Long, mapId: Int) =
