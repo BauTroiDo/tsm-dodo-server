@@ -206,6 +206,14 @@ class EveEventStateMachine {
         }
     }
 
+    /** Never clear an unrelated session that replaced a pending DB-claimed Eve. */
+    fun clearIfCurrentRun(charId: Long, runToken: String): Boolean {
+        val ref = sessions[charId] ?: return false
+        val snapshot = ref.get() ?: return false
+        if (snapshot.runToken != runToken) return false
+        return sessions.remove(charId, ref)
+    }
+
     /**
      * Lấy result hiện tại theo cách nguyên tử (atomic) và tăng index
      *
