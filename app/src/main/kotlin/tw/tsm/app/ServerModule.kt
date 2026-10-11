@@ -21,6 +21,7 @@ import tw.tsm.domain.interfaces.repositories.AccountRepository
 import tw.tsm.domain.interfaces.repositories.AstrolabeRepository
 import tw.tsm.domain.interfaces.repositories.SoulRepository
 import tw.tsm.domain.interfaces.repositories.ElfRepository
+import tw.tsm.domain.interfaces.repositories.ChildRepository
 import tw.tsm.domain.interfaces.repositories.MallQuotaRepository
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
 import tw.tsm.domain.interfaces.repositories.InventoryRepository
@@ -35,6 +36,7 @@ import tw.tsm.persistence.repositories.AccountRepositoryImpl
 import tw.tsm.persistence.repositories.AstrolabeRepositoryImpl
 import tw.tsm.persistence.repositories.SoulRepositoryImpl
 import tw.tsm.persistence.repositories.ElfRepositoryImpl
+import tw.tsm.persistence.repositories.ChildRepositoryImpl
 import tw.tsm.persistence.repositories.MallQuotaRepositoryImpl
 import tw.tsm.persistence.repositories.CharacterRepositoryImpl
 import tw.tsm.persistence.repositories.InventoryRepositoryImpl
@@ -278,6 +280,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single<AstrolabeRepository> { AstrolabeRepositoryImpl() }
     single<SoulRepository> { SoulRepositoryImpl() }
     single<ElfRepository> { ElfRepositoryImpl() }
+    single<ChildRepository> { ChildRepositoryImpl() }
     single<MallQuotaRepository> { MallQuotaRepositoryImpl() }
     single<CharacterRepository> { CharacterRepositoryImpl() }
     single<InventoryRepository> { InventoryRepositoryImpl() }
@@ -714,7 +717,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { KeepaliveHandler() }
     single { LoginHandler(get(), get(), get(), get(), get()) }
     single { CreateCharHandler(get(), get()) }
-    single { SelectCharHandler(get(), get(), get<PokeSystem>()) }
+    single { SelectCharHandler(get(), get(), get<PokeSystem>(), get<ChildRepository>()) }
     single { DisconnectHandler(get(), get(), get(), get(), get<PlayerCurrencySystem>(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get<PvpBotMatchmakingSystem>()) }
     single { MoveHandler(get(), get(), get(), get<MineEncounterSystem>()) }
     single { ChatHandler(get(), get(), get()) }

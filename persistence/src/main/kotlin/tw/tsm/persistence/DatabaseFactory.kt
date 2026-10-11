@@ -11,6 +11,7 @@ import tw.tsm.persistence.tables.CharacterAstrolabes
 import tw.tsm.persistence.tables.CharacterSouls
 import tw.tsm.persistence.tables.CharacterElfProfiles
 import tw.tsm.persistence.tables.CharacterElfProgress
+import tw.tsm.persistence.tables.CharacterChildStates
 import tw.tsm.persistence.tables.CharacterMallQuotas
 import tw.tsm.persistence.tables.CharacterHouseProfiles
 import tw.tsm.persistence.tables.CharacterGiftRecords
@@ -91,7 +92,7 @@ object DatabaseFactory {
         transaction {
             SchemaUtils.createMissingTablesAndColumns(
                 Accounts, Characters, Inventories, CharacterMoney, CharacterCurrencies,
-                CharacterAstrolabes, CharacterSouls, CharacterElfProfiles, CharacterElfProgress, CharacterMallQuotas,
+                CharacterAstrolabes, CharacterSouls, CharacterElfProfiles, CharacterElfProgress, CharacterChildStates, CharacterMallQuotas,
                 CharacterHouseProfiles, CharacterGiftRecords,
                 CharacterMissions, CharacterMissionFlags, CharacterCompletedEvents, CharacterEveEffectClaims, CharacterEveEffectSettlements, CharacterBitFlags,
                 CharacterDungeonDays, CharacterDungeonRuns, CharacterDungeonWeeks, CharacterRewardLedger, CharacterRewardPendingScopes, CharacterWelfareState,

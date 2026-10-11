@@ -7,6 +7,7 @@ import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.PacketHandler
 import tw.tsm.domain.interfaces.loadFromRecord
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
+import tw.tsm.domain.interfaces.repositories.ChildRepository
 import tw.tsm.gamelogic.systems.LoginService
 import tw.tsm.gamelogic.systems.PokeSystem
 
@@ -27,6 +28,7 @@ class SelectCharHandler(
     private val characterRepository: CharacterRepository,
     private val loginService: LoginService,
     private val pokeSystem: PokeSystem? = null,
+    private val childRepository: ChildRepository? = null,
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.CHARACTER
@@ -71,6 +73,12 @@ class SelectCharHandler(
         pokeSystem?.let { system ->
             val state = system.open(record.id)
             PokePackets.sendSnapshot(session, system, state)
+        }
+
+        // S069-007 is a server-owned, exact 93-byte second-generation child snapshot.
+        // Never invent one for ordinary characters; null/None must stay unpopulated.
+        childRepository?.load(record.id)?.let { child ->
+            if (child.kind != 0) session.send(ChildPackets.snapshot(child))
         }
 
         session.loginFinished = true
