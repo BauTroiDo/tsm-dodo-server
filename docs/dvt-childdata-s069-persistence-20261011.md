@@ -6,7 +6,7 @@ Lossless, defensive Kotlin codec ChildDataSnapshot follows Data/HumanData.lua Ch
 
 Wire layout (all numbers little-endian): kind UInt8, sex UInt8, turn UInt8, element UInt8, 10 skills of (ID UInt16 and level UInt8), stodgeOldTime Double, stodge UInt16, satiationOldTime Double, satiation UInt16, six attribute UInt16 values, six attribute experience UInt8 values, childItemCount UInt16, career UInt8 and 18 reserved bytes.
 
-Database: one optional character_child_states record per character, with the original BINARY(93) payload. ChildRepositoryImpl can load/save a validated record transactionally; no default child row is created and no client opcode is accepted as a profile upload. No existing game database rows are modified by this source commit.
+Database: one optional character_child_states record per character, with the original VARBINARY(93) payload (verified from DEV information_schema after migration). ChildRepositoryImpl can load/save a validated record transactionally; no default child row is created and no client opcode is accepted as a profile upload. No existing game database rows are modified by this source commit.
 
 Outbound S069 packet encoders:
 - S:069-007: main=69, sub=7, reserved=0, UInt16(93), raw 93-byte snapshot. SelectCharHandler sends this only when a valid, non-None character child record exists after completing the normal character login sequence.
