@@ -139,6 +139,15 @@ class DungeonWeeklyRewardLedgerRegressionTest {
         }
     }
 
+    @Test fun weeklyLossDoesNotReserveOrDeliverAnyReward() = runTest {
+        val f = fixture()
+        f.dungeon.markSingleStarted(f.game, 6401, 46000.0)
+        assertEquals(1, f.dungeon.settleWeeklyBattle(f.game, 6401, false)?.result)
+        coVerify(exactly = 0) { f.ledger.reserve(any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { f.inventory.addRewardsToBagExact(any(), any()) }
+        coVerify(exactly = 0) { f.quest.setMissionStep(any(), any(), any()) }
+    }
+
     @Test fun lostAckAfterAwardLeavesPendingWithoutSecondPayout() = runTest {
         val f = fixture(lostAck = true)
         f.dungeon.markSingleStarted(f.game, 6401, 46000.0)
