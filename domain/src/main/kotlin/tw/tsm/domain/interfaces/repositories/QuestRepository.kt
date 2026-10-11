@@ -125,6 +125,20 @@ interface QuestRepository {
     suspend fun insertCompletedEvent(charId: Long, mapId: Int, eveNo: Int)
 
     /**
+     * Record one completion and return its committed absolute count.
+     *
+     * Implementations should increment and read the new value within the same
+     * database transaction so RAM hydration cannot count the same write twice.
+     * Default retains compatibility with alternative repositories; production
+     * QuestRepositoryImpl overrides this with an atomic transaction.
+     */
+    suspend fun insertCompletedEventAndGetCount(charId: Long, mapId: Int, eveNo: Int): Int {
+        insertCompletedEvent(charId, mapId, eveNo)
+        return getCompletedEventCounts(charId, mapId)[eveNo]
+            ?: error("Completed Eve count missing after insert: charId=$charId mapId=$mapId eveNo=$eveNo")
+    }
+
+    /**
      * Xoá mọi bản ghi hoàn thành của nhân vật trên bản đồ chỉ định (gọi khi vào cảnh)
      *
      * @param charId ID nhân vật
