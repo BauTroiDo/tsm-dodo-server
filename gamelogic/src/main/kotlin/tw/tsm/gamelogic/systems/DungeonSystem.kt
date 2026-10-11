@@ -796,9 +796,46 @@ class DungeonSystem(
         if (!adminBypassPolicy.rewardRepeatTest(session) && questSystem.hasMissionFlag(charId, anchor.costPoint)) return false
 
         val inventory = inventorySystem ?: return false
+        val ledger = rewardLedgerRepository
+        var claim: Pair<String, String>? = null
+
+        if (ledger != null) {
+            // Refuse an invalid Mark or a full bag before creating an
+            // irreversible claim that would otherwise require manual review.
+            if (questSystem.completionBitId(anchor.costPoint) <= 0 ||
+                !inventory.canAddItemToBag(charId, anchor.allPassPrize, 1)
+            ) return false
+
+            // Same period authority as QuestSystem.refreshDungeonWeekly:
+            // Monday 00:00 in DVT's Asia/Taipei calendar.
+            val weekKey = questSystem.dungeonWeekKey()
+            if (weekKey <= 0) return false
+            val sourceKey = RewardLedgerSourceKeys.weeklyAllPass(weekKey.toString(), page)
+            val token = UUID.randomUUID().toString()
+            val reserved = try {
+                ledger.reserve(charId, "DUNGEON_ALL_PASS", sourceKey, token, clockMillis())
+            } catch (e: Exception) {
+                dungeonLogger.error(e) { "Weekly all-pass reservation failed: charId=$charId page=$page key=$sourceKey" }
+                false
+            }
+            if (!reserved) {
+                responseSender?.sendSystemMessage(
+                    session, "Quà vượt ải tuần đang chờ xác minh hoặc đã nhận trong tuần này."
+                )
+                return false
+            }
+            claim = sourceKey to token
+        }
+
+        // Any failure after reserve leaves the claim PENDING. Never clear or
+        // reissue it on a retry: an item or quest flag might already exist.
         val changed = inventory.addItemsToBagExact(charId, anchor.allPassPrize, 1) ?: return false
         val completed = questSystem.completeMission(charId, anchor.costPoint)
         if (completed.bitId <= 0) return false
+
+        if (!settleDungeonRewardClaim(session, ledger, claim, "DUNGEON_ALL_PASS")) {
+            return false
+        }
 
         for ((slot, thing) in changed) responseSender?.sendSetBagItem(session, slot, thing, showMsg = true)
         responseSender?.sendSetMissionFlags(
