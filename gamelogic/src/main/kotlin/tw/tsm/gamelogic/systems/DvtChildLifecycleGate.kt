@@ -20,16 +20,22 @@ import tw.tsm.domain.data.EveResult
 object DvtChildLifecycleGate {
     const val CHILD_QUEST_SCENE = 12721
 
-    fun requiresUnavailableChildAction(mapId: Int, result: EveResult): Boolean {
-        if (mapId != CHILD_QUEST_SCENE || result.resultClass != 7 ||
-            result.resultValue != 0 || result.resultMeanNo != 0
+    /** Pure cheap filter; avoid reading a mocked/current session mapId for unrelated Eve. */
+    fun isCandidateShape(result: EveResult): Boolean {
+        if (result.resultClass != 7 || result.resultValue != 0 ||
+            result.resultMeanNo != 0
         ) return false
-
         return (result.resultType == 7 && result.parameter == 0 &&
             result.parameterStyle == 36) ||
             (result.resultType == 10 && result.parameter == 1 &&
                 result.parameterStyle in 22..24)
     }
+
+    fun hasCandidateShape(results: List<EveResult>): Boolean =
+        results.any(::isCandidateShape)
+
+    fun requiresUnavailableChildAction(mapId: Int, result: EveResult): Boolean =
+        mapId == CHILD_QUEST_SCENE && isCandidateShape(result)
 
     /** Evaluate the WHOLE pending chain before applying even its first mission/item effect. */
     fun firstUnavailable(mapId: Int, pendingResults: List<EveResult>): EveResult? =
