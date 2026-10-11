@@ -17,6 +17,9 @@ object EveEffectClaimPolicy {
 
     fun requiresReservation(result: EveResult): Boolean {
         if (result.resultType != 0 && result.resultType != 7) return false
+        // DVT cls3/pStyle1 adds a follow NPC (persistent pet roster).
+        // Other cls3 variants only affect the client/world NPC view.
+        if (result.resultClass == 3) return result.parameterStyle == 1
         if (result.resultClass !in mutatingResultClasses) return false
         if (result.resultClass == 7 &&
             EveResultClassPolicy.isRepeatableServicePlayerOperation(
