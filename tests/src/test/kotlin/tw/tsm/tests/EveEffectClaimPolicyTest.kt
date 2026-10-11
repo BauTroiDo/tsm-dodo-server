@@ -22,7 +22,8 @@ class EveEffectClaimPolicyTest {
             assertFalse(EveEffectClaimPolicy.requiresReservation(effect(type, 2)), "type=$type")
         }
         assertFalse(EveEffectClaimPolicy.requiresReservation(effect(0, 0)))
-        assertFalse(EveEffectClaimPolicy.requiresReservation(effect(0, 3)))
+        assertTrue(EveEffectClaimPolicy.requiresReservation(effect(0, 3, style = 1)))
+        assertFalse(EveEffectClaimPolicy.requiresReservation(effect(0, 3, style = 3)))
     }
 
     @Test fun eventAttemptTokenSurvivesCopiesButNewAttemptGetsNewToken() {
