@@ -26,6 +26,7 @@ import tw.tsm.domain.interfaces.repositories.CharacterRepository
 import tw.tsm.domain.interfaces.repositories.InventoryRepository
 import tw.tsm.domain.interfaces.repositories.BitFlagRepository
 import tw.tsm.domain.interfaces.repositories.QuestRepository
+import tw.tsm.domain.interfaces.repositories.EveEffectClaimRepository
 import tw.tsm.gamelogic.systems.*
 import tw.tsm.network.NettyGameServer
 import tw.tsm.network.PacketDispatcher
@@ -78,6 +79,7 @@ import tw.tsm.persistence.repositories.MountRepositoryImpl
 import tw.tsm.persistence.repositories.FlyPointRepositoryImpl
 import tw.tsm.persistence.repositories.PetRepositoryImpl
 import tw.tsm.persistence.repositories.QuestRepositoryImpl
+import tw.tsm.persistence.repositories.EveEffectClaimRepositoryImpl
 import tw.tsm.persistence.repositories.RoleCountRepositoryImpl
 import tw.tsm.persistence.repositories.LimitedAreaDailyRepositoryImpl
 import tw.tsm.persistence.repositories.SkillRepositoryImpl
@@ -278,6 +280,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single<CharacterRepository> { CharacterRepositoryImpl() }
     single<InventoryRepository> { InventoryRepositoryImpl() }
     single<QuestRepository> { QuestRepositoryImpl() }
+    single<EveEffectClaimRepository> { EveEffectClaimRepositoryImpl() }
     single<BitFlagRepository> { BitFlagRepositoryImpl() }
     single<SkillRepository> { SkillRepositoryImpl() }
     single<PetRepository> { PetRepositoryImpl() }
@@ -659,7 +662,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { EveBattleService(get(), get<EveEventStateMachine>(), get(), get<GameDataManager>().mapTerrains, get<GameDataManager>().eveData) }
     single { NpcShopManager() }
     single {
-        EveFlowController(get(), get<EveEventStateMachine>(), get(), get(), get(), get(), get(), get(), get(), get(), get<GameDataManager>().eveData, get()).also { flow ->
+        EveFlowController(get(), get<EveEventStateMachine>(), get(), get(), get(), get(), get(), get(), get(), get(), get<GameDataManager>().eveData, get(), get<EveEffectClaimRepository>()).also { flow ->
             flow.onEventCompleted = { session ->
                 get<DungeonSystem>().settleAfterEvent(session)?.let { settlement ->
                     get<DungeonHandler>().sendDungeonResult(session, settlement)
