@@ -135,7 +135,7 @@ class EveDurableEffectDispatchRegressionTest {
         var pendingToken: String? = null
         coEvery { executor.canExecuteResults(any(), any()) } returns true
         coEvery { claims.reserve(eq(31L), eq(12001), eq(5), any(), any()) } coAnswers {
-            val requestedToken = fourthArg<String>()
+            val requestedToken = invocation.args[3] as String
             if (pendingToken == null) {
                 pendingToken = requestedToken
                 true
