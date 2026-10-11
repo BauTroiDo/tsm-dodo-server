@@ -65,6 +65,56 @@ class DvtChildLifecycleActionPreflightTest {
         assertEquals(36, blocked.parameterStyle)
     }
 
+    @Test fun careUiFeeIsNeverDebitedWithoutTheOriginalClientAction() {
+        // Actual DVT Eve 12721, NPC event15 cond3:
+        // type0/class5/pStyle2/value60000 reduces gold BEFORE
+        // type10/class7/pStyle24. This would steal 60,000 gold if
+        // unsupported type10 were silently skipped.
+        val event = scenes.getValue(12721).npcEvents.getValue(15)
+        val condition = event.conditions.single { it.conditionNo == 3 }
+        val goldDebitIndex = condition.results.indexOfFirst {
+            it.resultType == 0 && it.resultClass == 5 &&
+                it.parameter == 0 && it.parameterStyle == 2 &&
+                it.resultValue == 60000
+        }
+        val disabledCareIndex = condition.results.indexOfFirst {
+            it.resultType == 10 && it.resultClass == 7 &&
+                it.parameter == 1 && it.parameterStyle == 24
+        }
+        assertTrue(goldDebitIndex >= 0, "Must cover the authentic 60,000 gold charge")
+        assertTrue(disabledCareIndex > goldDebitIndex,
+            "The disabled care action occurs after the gold debit")
+        assertNotNull(DvtChildLifecycleGate.firstUnavailable(12721, condition.results),
+            "Preflight must refuse the entire chain BEFORE deducting any gold")
+    }
+
+    @Test fun dvtLuaHasNoRegisteredChildRaisingFormToOpen() {
+        val source = listOf(
+            Path.of("lua", "Common", "protocal.lua"),
+            Path.of("..", "lua", "Common", "protocal.lua"),
+        ).first { Files.isRegularFile(it) }.let(Files::readString)
+        val callback = Regex(
+            """protocolTable\[36\]\[23\] = function\(data\)(.*?)\nend""",
+            RegexOption.DOT_MATCHES_ALL,
+        ).find(source)?.groupValues?.get(1)
+        assertNotNull(callback, "DVT S036-023 client handler must exist")
+        assertTrue(callback!!.contains("--Se_ChildForm.appear"))
+        assertFalse(
+            Regex("""(?m)^\s*Se_ChildForm\.appear\s*\(""").containsMatchIn(callback),
+            "Never treat a disabled, undefined UI callback as functional"
+        )
+
+        // The DVT client repository has no Se_ChildForm module. The
+        // IL2CPP dump and other client copies are audited separately in docs.
+        val uiRoot = listOf(Path.of("lua", "UI"), Path.of("..", "lua", "UI"))
+            .first { Files.isDirectory(it) }
+        Files.list(uiRoot).use { files ->
+            assertFalse(files.anyMatch {
+                it.fileName.toString().contains("ChildForm", ignoreCase = true)
+            }, "Do not blindly uncomment S036-023 without implementing its UI")
+        }
+    }
+
     @Test fun originalLuaConfirmsTheChildFormIsNotOpenable() {
         val lua = listOf(Path.of("lua", "Common", "protocal.lua"),
             Path.of("..", "lua", "Common", "protocal.lua"))
