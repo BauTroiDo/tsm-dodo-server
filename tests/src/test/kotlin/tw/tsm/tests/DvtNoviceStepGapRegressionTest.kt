@@ -81,7 +81,7 @@ class DvtNoviceStepGapRegressionTest {
         assertNull(EveMissionPreflightPolicy.validate(listOf(add(12280, 11)), emptyMap()))
         assertNull(EveMissionPreflightPolicy.validate(listOf(add(12280, 1)), mapOf(12280 to 11)))
         assertNull(EveMissionPreflightPolicy.validate(listOf(add(12280, 1)), mapOf(12280 to 14)))
-        assertNull(EveMissionPreflightPolicy.validate(listOf(add(10120, 1)), mapOf(10120 to 5)))
+        assertNull(EveMissionPreflightPolicy.validate(listOf(add(10122, 1)), mapOf(10122 to 5)))
     }
 
     @Test fun atomicAddRefusesStaleReplayEvenIfPreflightSawStep4() = runBlocking {
