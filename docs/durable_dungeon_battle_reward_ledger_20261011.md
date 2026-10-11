@@ -43,6 +43,16 @@ Không tự coi pending nghĩa là đã nhận phần thưởng; cũng không t�
 - Đã bổ sung MockK regression với mã `DungeonSystem` thật: đúng thứ tự reserve/counter/item/receipt/packet, claim bị từ chối, lỗi khi chốt sau khi item đã trao, và run không thể xác minh.
 - **Giới hạn:** đây là fail-closed, không phải giao dịch toàn bộ bag/dailyCount/receipt. Nếu server chết sau khi reserve hoặc đang ghi item, claim sẽ khóa lượt tiếp đến khi admin xác minh. Chưa có quy trình bù thưởng/rollback tự động và chưa có client acceptance test. Việc ghép PR #38 với PR #36 (chưa merge) cần xử lý xung đột GameModule/DatabaseFactory sau này.
 
+## Thử nghiệm tích hợp dungeon tuần và Soul Dungeon (PR #38, chưa phát hành)
+
+- `settleWeeklyBattle` giữ nguyên nhánh thua và nhánh nhiệm vụ đã đủ lượt. Với lượt thắng có thưởng, repository được kiểm tra trước khi có hiệu ứng tiền/vật phẩm/cờ; dùng UUID bền vững đã khớp `DungeonRunRepository.load` và khóa `WEEKLY_TERMINAL`.
+- Quyền thưởng được phân loại theo `DUNGEON_WEEKLY` và `DUNGEON_SOUL`, để không vô tình khóa lẫn hai nhóm dungeon độc lập. Mỗi loại vẫn chỉ có tối đa một claim `PENDING` trên một nhân vật.
+- Đọc trước sức chứa túi, rồi `reserve`; sau đó mới đánh dấu run settled, thêm vật phẩm, cập nhật dailyFlag. Chỉ sau khi `settle` trả thành công mới gửi packet thưởng và `finishWeeklyRun`.
+- Lỗi từ chối claim, túi đầy hoặc dữ liệu run không xác minh được trả lỗi mà chưa ghi thưởng. Lỗi xảy ra sau reserve giữ `PENDING`; không gửi thông báo thành công hoặc tự phát lại.
+- Regression tests mới cho phép kiểm tra thứ tự DB claim / reward / mission / receipt / client, claim trùng, túi đầy và mất ACK. Riêng thưởng `claimWeeklyAllPass` **chưa được bảo vệ**: phải thiết kế khóa chu kỳ tuần chuẩn DVT trước khi nối.
+
+**Lưu ý:** Ledger không làm các cập nhật vật phẩm, nhiệm vụ và receipt trở thành một transaction nguyên tử. Trường hợp crash giữa các bước phải được đối soát thủ công. Không merge hay triển khai live khi chưa có quy trình giải quyết claim tồn đọng.
+
 ## Chưa hoàn thiện để triển khai
 
 1. Lưu UUID định danh trận chiến vào DB từ lúc tạo battle, và lấy lại được qua reconnect/crash; cần tương thích nhiều người tham gia và DVT battle scene.
