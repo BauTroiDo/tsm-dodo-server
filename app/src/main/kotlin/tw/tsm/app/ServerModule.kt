@@ -717,7 +717,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { KeepaliveHandler() }
     single { LoginHandler(get(), get(), get(), get(), get()) }
     single { CreateCharHandler(get(), get()) }
-    single { SelectCharHandler(get(), get(), get<PokeSystem>(), get<ChildRepository>()) }
+    single { SelectCharHandler(get(), get(), get<PokeSystem>(), get<ChildRepository>(), get<PetSystem>()) }
     single { DisconnectHandler(get(), get(), get(), get(), get<PlayerCurrencySystem>(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get<PvpBotMatchmakingSystem>()) }
     single { MoveHandler(get(), get(), get(), get<MineEncounterSystem>()) }
     single { ChatHandler(get(), get(), get()) }

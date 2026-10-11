@@ -10,6 +10,7 @@ import tw.tsm.domain.interfaces.repositories.CharacterRepository
 import tw.tsm.domain.interfaces.repositories.ChildRepository
 import tw.tsm.gamelogic.systems.LoginService
 import tw.tsm.gamelogic.systems.PokeSystem
+import tw.tsm.gamelogic.systems.PetSystem
 
 private val logger = KotlinLogging.logger {}
 
@@ -29,6 +30,7 @@ class SelectCharHandler(
     private val loginService: LoginService,
     private val pokeSystem: PokeSystem? = null,
     private val childRepository: ChildRepository? = null,
+    private val petSystem: PetSystem? = null,
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.CHARACTER
@@ -75,10 +77,28 @@ class SelectCharHandler(
             PokePackets.sendSnapshot(session, system, state)
         }
 
-        // S069-007 is a server-owned, exact 93-byte second-generation child snapshot.
-        // Never invent one for ordinary characters; null/None must stay unpopulated.
-        childRepository?.load(record.id)?.let { child ->
-            if (child.kind != 0) session.send(ChildPackets.snapshot(child))
+        // LoginService has already sent S015-008 (the actual carried general list).
+        // Only after that may S069-009 reference an existing client follow slot.
+        // Absent/legacy/unbound/nonadult/corrupt profiles keep S069-007 only.
+        childRepository?.loadState(record.id)?.let { childState ->
+            val child = childState.snapshot
+            if (child.kind != 0) {
+                val cache = petSystem?.getCache(record.id)
+                val followSlot = if (cache != null) {
+                    ChildFollowerBindingPolicy.followIndex(
+                        child = child,
+                        boundPetInstanceId = childState.petInstanceId,
+                        follow = cache.follow,
+                        owned = cache.follow.values + cache.cart.values +
+                            cache.inn.values + cache.warehouse,
+                        maxFollowSlot = petSystem?.getFollowCapacity(record.id) ?: 0,
+                    )
+                } else null
+                session.send(
+                    if (followSlot != null) ChildPackets.deployed(followSlot, child)
+                    else ChildPackets.snapshot(child)
+                )
+            }
         }
 
         session.loginFinished = true
