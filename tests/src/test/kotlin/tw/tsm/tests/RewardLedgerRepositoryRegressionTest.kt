@@ -110,6 +110,19 @@ class RewardLedgerRepositoryRegressionTest {
         assertTrue(repo.settle(109L, "DUNGEON_WEEKLY", "week-2", "b", 7000L))
     }
 
+    @Test fun weeklyAllPassReceiptPreventsSameWeekReplayButAllowsNextCalendarWeek() = withRepository { repo ->
+        val current = "w:20261005:0"
+        val next = "w:20261012:0"
+        assertTrue(repo.reserve(110L, "DUNGEON_ALL_PASS", current, "claim-1", 1000L))
+        assertFalse(repo.reserve(110L, "DUNGEON_ALL_PASS", current, "claim-replay", 2000L))
+        assertFalse(repo.reserve(110L, "DUNGEON_ALL_PASS", next, "new-week", 3000L))
+        assertTrue(repo.settle(110L, "DUNGEON_ALL_PASS", current, "claim-1", 4000L))
+        assertFalse(repo.reserve(110L, "DUNGEON_ALL_PASS", current, "claim-replay", 5000L))
+        assertTrue(repo.reserve(110L, "DUNGEON_ALL_PASS", next, "new-week", 6000L))
+        assertTrue(repo.settle(110L, "DUNGEON_ALL_PASS", next, "new-week", 7000L))
+        assertTrue(repo.unresolvedForCharacter(110L).isEmpty())
+    }
+
     @Test fun rejectedIdentifiersCannotPoisonTheLedger() = withRepository { repo ->
         assertThrows(IllegalArgumentException::class.java) {
             runBlocking { repo.reserve(0L, "BATTLE_GENERIC", "run", "a", 1L) }
