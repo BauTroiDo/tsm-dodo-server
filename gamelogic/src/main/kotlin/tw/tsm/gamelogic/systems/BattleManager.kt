@@ -1706,8 +1706,9 @@ class BattleManager(
             // Generic Eve battle rewards are non-transactional (drops, EXP,
             // gold, pets, charge debits). Fence the attempt before ANY one of
             // those mutations, not merely when returning to EveFlowController.
-            val eventRewardAllowed = if (endResult.playerWin &&
-                !battle.suppressGenericRewards && battle.warType == EWar.EVENT
+            val eventRewardAllowed = if (EveBattleRewardFencePolicy.needsReservation(
+                    battle.warType, endResult.playerWin, battle.suppressGenericRewards
+                )
             ) {
                 try {
                     onBeforeEveBattleRewards?.invoke(session) ?: true
