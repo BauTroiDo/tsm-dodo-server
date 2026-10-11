@@ -110,6 +110,22 @@ class RewardLedgerRepositoryRegressionTest {
         assertTrue(repo.settle(109L, "DUNGEON_WEEKLY", "week-2", "b", 7000L))
     }
 
+    @Test fun partyMembersHaveIndependentBattleReceiptsAfterRestart() = withRepository { repo ->
+        val previousBattle = "b:adcdbcc9-a2e1-4268-ac6e-e601be73b27f:GENERIC"
+        val nextBattle = "b:37ff4e2f-f389-4b0b-b651-d3e2daf45d55:GENERIC"
+        assertTrue(repo.reserve(211L, "BATTLE_GENERIC", previousBattle, "a", 1000L))
+        assertTrue(repo.reserve(212L, "BATTLE_GENERIC", previousBattle, "b", 1000L))
+        val afterCrash = RewardLedgerRepositoryImpl()
+        assertFalse(afterCrash.reserve(211L, "BATTLE_GENERIC", nextBattle, "a2", 2000L))
+        assertTrue(afterCrash.settle(212L, "BATTLE_GENERIC", previousBattle, "b", 3000L))
+        // Another member's finished award does not unblock the pending member.
+        assertFalse(afterCrash.reserve(211L, "BATTLE_GENERIC", nextBattle, "a2", 4000L))
+        assertTrue(afterCrash.reserve(212L, "BATTLE_GENERIC", nextBattle, "b2", 4000L))
+        assertFalse(afterCrash.reserve(212L, "BATTLE_GENERIC", previousBattle, "replay", 5000L))
+        assertEquals(1, afterCrash.unresolvedForCharacter(211L).size)
+        assertEquals(1, afterCrash.unresolvedForCharacter(212L).size)
+    }
+
     @Test fun weeklyAllPassReceiptPreventsSameWeekReplayButAllowsNextCalendarWeek() = withRepository { repo ->
         val current = "w:20261005:0"
         val next = "w:20261012:0"
