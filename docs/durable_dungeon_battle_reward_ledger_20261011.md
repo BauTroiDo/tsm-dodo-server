@@ -49,9 +49,18 @@ Không tự coi pending nghĩa là đã nhận phần thưởng; cũng không t�
 - Quyền thưởng được phân loại theo `DUNGEON_WEEKLY` và `DUNGEON_SOUL`, để không vô tình khóa lẫn hai nhóm dungeon độc lập. Mỗi loại vẫn chỉ có tối đa một claim `PENDING` trên một nhân vật.
 - Đọc trước sức chứa túi, rồi `reserve`; sau đó mới đánh dấu run settled, thêm vật phẩm, cập nhật dailyFlag. Chỉ sau khi `settle` trả thành công mới gửi packet thưởng và `finishWeeklyRun`.
 - Lỗi từ chối claim, túi đầy hoặc dữ liệu run không xác minh được trả lỗi mà chưa ghi thưởng. Lỗi xảy ra sau reserve giữ `PENDING`; không gửi thông báo thành công hoặc tự phát lại.
-- Regression tests mới cho phép kiểm tra thứ tự DB claim / reward / mission / receipt / client, claim trùng, túi đầy và mất ACK. Riêng thưởng `claimWeeklyAllPass` **chưa được bảo vệ**: phải thiết kế khóa chu kỳ tuần chuẩn DVT trước khi nối.
+- Regression tests mới cho phép kiểm tra thứ tự DB claim / reward / mission / receipt / client, claim trùng, túi đầy và mất ACK. Thưởng `claimWeeklyAllPass` nay đã dùng `QuestSystem.dungeonWeekKey()` cùng timezone/chu kỳ với reset DVT và có ledger riêng; vẫn cần kiểm thử ngoài thực tế trước live.
 
 **Lưu ý:** Ledger không làm các cập nhật vật phẩm, nhiệm vụ và receipt trở thành một transaction nguyên tử. Trường hợp crash giữa các bước phải được đối soát thủ công. Không merge hay triển khai live khi chưa có quy trình giải quyết claim tồn đọng.
+
+## Thưởng vượt ải tuần: claimWeeklyAllPass (đã nối ở PR #38, chưa live)
+
+- Sau `refreshPeriodicProgress`, `QuestSystem.dungeonWeekKey()` lấy **cùng khóa thứ Hai 00:00 theo Asia/Taipei** với `QuestSystem.refreshDungeonWeekly` (và `CharacterDungeonWeeks.week_key`). `RewardLedgerSourceKeys.weeklyAllPass(weekKey, page)` tạo khóa độc lập theo kỳ và trang thưởng; không dùng giờ tùy ý lúc trao item.
+- Chỉ nhận nếu cả 20 node trong trang hợp lệ, đủ tiến độ theo cơ chế DVT và chưa có cờ thưởng; `completionBitId(costPoint)` kiểm tra cờ Mark tồn tại mà không ghi dữ liệu, `InventorySystem.canAddItemToBag` kiểm tra sức chứa túi trước khi reserve.
+- Ledger `DUNGEON_ALL_PASS` được giữ **trước** khi `addItemsToBagExact` và `questSystem.completeMission`; chỉ `settle` thành công mới gửi item/Mark packets. Claim bị từ chối, MySQL unavailable hoặc túi đầy không cấp phần thưởng; sau reserve lỗi vẫn để `PENDING` đối soát.
+- Không tự retry sau khi item/Mark có thể đã ghi. Một claim `PENDING` trong kỳ sẽ khóa loại thưởng này cho cùng nhân vật đến khi giải quyết bằng quy trình quản trị. Các trang trong cùng kỳ có `source_key` khác nhau, nhưng khóa pending-scope vẫn serialize.
+- Regression test `DungeonWeeklyAllPassLedgerRegressionTest`: thứ tự reserve → item → Mark → receipt → client, bị từ chối, túi đầy, mất ACK và khóa tuần mới. Admin reward-repeat-test cũng không được dùng để vượt qua biên nhận bền vững.
+- **Giới hạn:** code trao item, ghi Mark và receipt vẫn là các giao dịch riêng. Rollover giữa thao tác có thể cần chính sách hòa giải theo kỳ; chưa có validation client và chưa mở công cụ admin release. Không được quảng bá đã giải quyết exactly-once trọn gói.
 
 ## Chưa hoàn thiện để triển khai
 
