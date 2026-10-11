@@ -62,6 +62,16 @@ Không tự coi pending nghĩa là đã nhận phần thưởng; cũng không t�
 - Regression test `DungeonWeeklyAllPassLedgerRegressionTest`: thứ tự reserve → item → Mark → receipt → client, bị từ chối, túi đầy, mất ACK và khóa tuần mới. Admin reward-repeat-test cũng không được dùng để vượt qua biên nhận bền vững.
 - **Giới hạn:** code trao item, ghi Mark và receipt vẫn là các giao dịch riêng. Rollover giữa thao tác có thể cần chính sách hòa giải theo kỳ; chưa có validation client và chưa mở công cụ admin release. Không được quảng bá đã giải quyết exactly-once trọn gói.
 
+## Thử nghiệm tích hợp thưởng chiến đấu theo từng nhân vật (PR #38)
+
+- `BattleInstance.rewardAttemptUuid` sinh UUID **một lần khi trận được tạo**. Khi trận thắng có `!suppressGenericRewards`, `BattleManager.handleBattleEnd` tạo claim `BATTLE_GENERIC` độc lập cho từng `session.roleId`. UUID trở thành bền vững trong chính giao dịch `RewardLedgerRepository.reserve`, *trước* KillNum, Phúc Thần, rơi vật phẩm, EXP người chơi/võ tướng, vàng và bắt NPC. Không dùng `nextBattleId` RAM làm khóa.
+- Bảng `character_reward_pending_scopes` vẫn chặn cùng người chơi mở trận thưởng mới có UUID khác khi có `BATTLE_GENERIC` pending từ trận cũ. Hai thành viên trong party dùng `characterId` khác nhau và không khóa lẫn nhau.
+- Nếu reserve false hoặc MySQL unavailable, không chạy khối thưởng generic/capture của người đó. Vẫn cho battle kết thúc, cập nhật HP/SP, nhưng chặn callback tiếp tục Eve của nhân vật bị từ chối. Các trận thua hoặc `suppressGenericRewards` không cần claim mới.
+- Sau quá trình cấp thưởng, gọi checkpoint hiện hữu: lưu trạng thái nhân vật, túi, tiền và pet. Chỉ khi checkpoint hoàn tất thành công mới `settle(BATTLE_GENERIC)`. Nếu bất kỳ bước lưu/settle thất bại, claim để `PENDING`, cảnh báo người chơi và không gọi tiếp Eve callback.
+- Regression tests kiểm tra khác người chơi có source UUID giống nhưng token/receipt riêng, từ chối claim, DB unavailable, lost ACK, và không nhận số `battleId` tạm làm UUID.
+- **Giới hạn:** một số packet hiển thị phần thưởng có thể đã gửi trước khi biên nhận được chốt; KillNum và RoleCount FIGHT vẫn dùng cơ chế ghi riêng và có thể cần chống lặp bổ sung. Một crash sau khi reserve có thể cấp một phần EXP/item/gold/pet rồi ngắt, không có rollback nguyên tử. Không tự clear pending hoặc cấp lại; đối soát từ log+DB. Cần kiểm thử client thực tế trước khi coi là hoàn chỉnh.
+- Đây là phiên bản thử nghiệm trên PR #38; server dev cần backup source và chạy đầy đủ test trước khi hot-deploy chọn lọc.
+
 ## Chưa hoàn thiện để triển khai
 
 1. Lưu UUID định danh trận chiến vào DB từ lúc tạo battle, và lấy lại được qua reconnect/crash; cần tương thích nhiều người tham gia và DVT battle scene.
