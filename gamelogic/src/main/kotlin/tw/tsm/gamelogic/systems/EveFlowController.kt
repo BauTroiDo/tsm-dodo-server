@@ -149,7 +149,7 @@ class EveFlowController(
                     }
                 if (unlockResult != null) {
                     if (!ensureDurableEffectClaim(session)) return
-                    resultExecutor.executeResultClass(session, unlockResult)
+                    if (!executeResultOrAbort(session, unlockResult)) return
                 } else {
                     logger.error { "Map tân thủ không tìm thấy kết quả Eve mở mission $BEGINNER_UNLOCK_MISSION_ID" }
                 }
