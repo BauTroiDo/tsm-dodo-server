@@ -73,11 +73,47 @@ class DvtChildDataWirePersistenceContractTest {
         assertThrows(IllegalArgumentException::class.java) { ChildPackets.deployed(0, snapshot) }
     }
 
+    @Test fun authentic399To400AdulthoodTransitionAndS069Updates() {
+        val foster = ChildDataSnapshot.decode(childBytes())
+        val before = foster.toBytes()
+        assertEquals(399, foster.childItemCount)
+        assertEquals(1, foster.kind)
+        assertArrayEquals(before, foster.withItemCount(399).toBytes())
+        assertThrows(IllegalArgumentException::class.java) { foster.withItemCount(398) }
+
+        val adult = foster.withItemCount(400)
+        assertEquals(3, adult.kind)
+        assertEquals(400, adult.childItemCount)
+        assertEquals(399, foster.childItemCount)
+        assertEquals(1, foster.kind) // immutable original
+        assertEquals(3, adult.toBytes()[0].toInt() and 0xff)
+        assertEquals(0x90, adult.toBytes()[72].toInt() and 0xff)
+        assertEquals(0x01, adult.toBytes()[73].toInt() and 0xff)
+        assertArrayEquals(before.copyOfRange(1, 72), adult.toBytes().copyOfRange(1, 72))
+        assertArrayEquals(before.copyOfRange(74, 93), adult.toBytes().copyOfRange(74, 93))
+        assertArrayEquals(byteArrayOf(69, 8, 0, 0x90.toByte(), 1),
+            ChildPackets.itemUseTotal(adult))
+        assertArrayEquals(byteArrayOf(69, 11, 0, 3),
+            ChildPackets.lifecycleKind(adult))
+
+        val max = adult.withItemCount(65535)
+        assertEquals(65535, max.childItemCount)
+        assertEquals(3, max.kind)
+        assertArrayEquals(byteArrayOf(69, 8, 0, 0xff.toByte(), 0xff.toByte()),
+            ChildPackets.itemUseTotal(max))
+        assertThrows(IllegalArgumentException::class.java) { adult.withItemCount(65536) }
+
+        val absentBytes = childBytes()
+        absentBytes[0] = 0
+        val absent = ChildDataSnapshot.decode(absentBytes)
+        assertThrows(IllegalArgumentException::class.java) { absent.withItemCount(400) }
+    }
+
     @Test fun invalidPayloadNeverCreatesOrUnlocksAChild() {
         assertThrows(IllegalArgumentException::class.java) { ChildDataSnapshot.decode(ByteArray(92)) }
         assertThrows(IllegalArgumentException::class.java) { ChildDataSnapshot.decode(ByteArray(94)) }
         val unknown = childBytes()
-        unknown[0] = 5
+        unknown[0] = 4
         assertThrows(IllegalArgumentException::class.java) { ChildDataSnapshot.decode(unknown) }
         val malformed = childBytes()
         ByteBuffer.wrap(malformed).order(ByteOrder.LITTLE_ENDIAN).putDouble(34, Double.NaN)
