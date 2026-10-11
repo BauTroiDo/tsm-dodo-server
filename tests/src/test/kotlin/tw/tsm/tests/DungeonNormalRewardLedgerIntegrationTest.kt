@@ -69,6 +69,7 @@ class DungeonNormalRewardLedgerIntegrationTest {
         coEvery { quest.addMissionStep(31L, 201, 1) } returns 0
 
         val inventory = mockk<InventorySystem>(relaxed = true)
+        every { inventory.canAddRewardsToBag(31L, listOf(29124 to 1)) } returns true
         coEvery { inventory.addRewardsToBagExact(31L, listOf(29124 to 1)) } returns listOf(5 to mockk<ThingData>(relaxed = true))
 
         val runs = mockk<DungeonRunRepository>(relaxed = true)
@@ -127,6 +128,18 @@ class DungeonNormalRewardLedgerIntegrationTest {
         assertTrue(f.dungeon.getActiveRun(31L)?.settled == true)
         coVerify(exactly = 1) { f.inventory.addRewardsToBagExact(any(), any()) }
         coVerify(exactly = 1) { f.ledger.settle(31L, "DUNGEON_NORMAL", any(), any(), any()) }
+    }
+
+    @Test fun fullBagIsRejectedBeforeInsertingAnyIrreversibleClaim() = runTest {
+        val f = fixture()
+        every { f.inventory.canAddRewardsToBag(31L, listOf(29124 to 1)) } returns false
+        f.dungeon.markSingleStarted(f.game, 6001, 46000.0)
+
+        assertEquals(1, f.dungeon.settleAfterBattle(f.game, playerWin = true)?.result)
+        assertFalse(f.dungeon.getActiveRun(31L)?.settled == true)
+        coVerify(exactly = 0) { f.ledger.reserve(any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { f.quest.addMissionStep(any(), any(), any()) }
+        coVerify(exactly = 0) { f.inventory.addRewardsToBagExact(any(), any()) }
     }
 
     @Test fun pendingOrConflictingClaimBlocksDailyCounterAndItems() = runTest {
