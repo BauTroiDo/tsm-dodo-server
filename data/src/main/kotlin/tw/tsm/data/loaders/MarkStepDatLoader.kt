@@ -1,43 +1,72 @@
 package tw.tsm.data.loaders
 
 import tw.tsm.data.DatReader
+import tw.tsm.domain.data.MarkNavigationTarget
+import tw.tsm.domain.data.MarkStepDef
+import tw.tsm.domain.data.MarkStepRequirement
 
 /**
- * Minimal parser for IOS_MarkStep_C.dat.
+ * DVT IOS_MarkStep_C.dat parser.
  *
- * Server-side Eve only needs to know whether a Mark mission owns real step
- * records. Missions with MarkDef.bitId > 0 but no MarkStep records are DVT
- * marker missions: Eve may ADD_STEP +1 to them and later gate on pStyle=3 flag.
+ * MarkData.ReadStep in the native DVT Lua client is the wire source of truth.
+ * Every MarkStep contains 5 condition targets and a distinct completion target;
+ * dropping those fields previously prevented server-side parity diagnostics.
+ *
+ * The file stores NO areaId. Lua initializes it to 0 and the client must derive
+ * a navigable area from DoorGroupData; do NOT fabricate area IDs in this parser.
  */
 object MarkStepDatLoader {
-    fun loadMissionIds(data: ByteArray): Set<Int> {
+    fun loadSteps(data: ByteArray): Map<Int, Map<Int, MarkStepDef>> {
         val reader = DatReader(data)
+        require(data.size >= 4) { "Invalid MarkStep header" }
         val count = reader.readInt32()
-        val ids = LinkedHashSet<Int>()
+        require(count in 0..100_000) { "Invalid MarkStep count $count" }
+        val steps = LinkedHashMap<Int, MutableMap<Int, MarkStepDef>>()
+
         repeat(count) {
             val missionId = reader.readUInt16()
-            ids += missionId
-            reader.readByte() // step
-            reader.readUnicodeString() // description
-            repeat(5) {
-                reader.readByte()   // kind
-                reader.readUInt16() // id
-                reader.readByte()   // count
-                reader.readUInt16() // sceneId
-                reader.readUInt16() // x
-                reader.readUInt16() // y
-                reader.readByte()   // eventKind
-                reader.readByte()   // eventId
+            val stepNo = reader.readByte()
+            val description = reader.readUnicodeString()
+            val conditions = List(5) {
+                val kind = reader.readByte()
+                val id = reader.readUInt16()
+                val required = reader.readByte()
+                val target = MarkNavigationTarget(
+                    sceneId = reader.readUInt16(),
+                    x = reader.readUInt16(),
+                    y = reader.readUInt16(),
+                    eventKind = reader.readByte(),
+                    eventId = reader.readByte(),
+                )
+                MarkStepRequirement(kind, id, required, target)
             }
-            reader.readUnicodeString() // endGuide
-            reader.readUInt16() // endSceneId
-            reader.readUInt16() // endX
-            reader.readUInt16() // endY
-            reader.readByte() // endEventKind
-            reader.readByte() // endEventId
-            reader.readByte() // teleport
-            reader.readByte() // checkTeam/bool
+            val endGuide = reader.readUnicodeString()
+            val endTarget = MarkNavigationTarget(
+                sceneId = reader.readUInt16(),
+                x = reader.readUInt16(),
+                y = reader.readUInt16(),
+                eventKind = reader.readByte(),
+                eventId = reader.readByte(),
+            )
+            val teleport = reader.readByte()
+            val checkTeam = reader.readByte() == 1
+
+            require(missionId > 0 && stepNo > 0) {
+                "Bad MarkStep mission=$missionId step=$stepNo"
+            }
+            val byStep = steps.getOrPut(missionId) { linkedMapOf() }
+            val previous = byStep.put(
+                stepNo,
+                MarkStepDef(missionId, stepNo, description, conditions, endGuide, endTarget, teleport, checkTeam),
+            )
+            require(previous == null) { "Duplicate MarkStep mission=$missionId step=$stepNo" }
         }
-        return ids
+        require(reader.position() == data.size) {
+            "MarkStep cursor=${reader.position()} does not match file=${data.size}"
+        }
+        return steps
     }
+
+    /** Compatibility for Eve marker missions with bitId but no real step. */
+    fun loadMissionIds(data: ByteArray): Set<Int> = loadSteps(data).keys
 }
