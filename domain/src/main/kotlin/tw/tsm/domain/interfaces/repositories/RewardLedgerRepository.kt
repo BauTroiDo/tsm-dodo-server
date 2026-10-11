@@ -22,8 +22,9 @@ interface RewardLedgerRepository {
     /**
      * True ONLY if a brand-new row was inserted by this call.
      *
-     * False for ANY existing key, even the same token in PENDING state:
-     * the first attempt may already have delivered some reward effects.
+     * False for ANY existing source key, even the same token in PENDING state,
+     * OR whenever another PENDING source exists for this character/rewardKind.
+     * The first attempt may already have delivered some reward effects.
      * Never execute payouts after a false result.
      */
     suspend fun reserve(
