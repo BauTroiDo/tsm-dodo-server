@@ -19,3 +19,5 @@ jobs:
         run: python -m unittest discover -s tools -p test_dvt_markstep_parity.py -v
       - name: Audit all active quest blockers, mission step coordinates, and pending effects
         run: python -m unittest discover -s tools -p test_dvt_quest_blockers_20261011.py -v
+      - name: Verify unsupported class13 reward code provenance and DAT mismatch
+        run: python -m unittest discover -s tools -p test_dvt_class13_award_sources_20261011.py -v
