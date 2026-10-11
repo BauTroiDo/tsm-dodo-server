@@ -21,11 +21,24 @@ object EveEffectClaimPolicy {
         // Other cls3 variants only affect the client/world NPC view.
         if (result.resultClass == 3) return result.parameterStyle == 1
         if (result.resultClass !in mutatingResultClasses) return false
-        if (result.resultClass == 7 &&
-            EveResultClassPolicy.isRepeatableServicePlayerOperation(
-                result.parameterStyle, result.resultValue
-            )
-        ) return false
+        if (result.resultClass == 7) {
+            // DVT class7 can change Moral (pStyle 1..5, parameter 2)
+            // even though these pStyle numbers also represent service UI.
+            if (EveResultClassPolicy.moralDelta(
+                    result.resultType, result.parameter,
+                    result.parameterStyle, result.resultValue
+                ) != null
+            ) return true
+            if (EveResultClassPolicy.directPointPurchase(
+                    result.parameterStyle, result.parameter,
+                    result.resultValue, result.resultMeanNo
+                ) != null
+            ) return true
+            if (EveResultClassPolicy.isRepeatableServicePlayerOperation(
+                    result.parameterStyle, result.resultValue
+                )
+            ) return false
+        }
         return true
     }
 }
