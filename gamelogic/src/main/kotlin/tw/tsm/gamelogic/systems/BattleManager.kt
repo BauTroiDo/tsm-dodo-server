@@ -81,6 +81,7 @@ class BattleManager(
      */
     var onBattleAbortCallback: ((GameSession) -> Unit)? = null
     var onBattleEndCallback: (suspend (GameSession, Long, Boolean) -> Unit)? = null
+    var onBeforeEveBattleRewards: (suspend (GameSession) -> Boolean)? = null
     var onWeeklyDungeonBattleEndCallback:
         (suspend (GameSession, Int, Boolean, Int) -> Unit)? = null
     /** Mọi trận đấu đang diễn ra (battleId → BattleInstance)*/
@@ -1707,11 +1708,21 @@ class BattleManager(
             // UUID becomes durable when reserve() inserts its ledger row;
             // a crash survivor blocks a different battle via pending scope.
             val eligibleGenericWin = endResult.playerWin && !battle.suppressGenericRewards
-            val payoutClaim = if (eligibleGenericWin) {
+            val eventFenceRequired = EveBattleRewardFencePolicy.needsReservation(
+                battle.warType, endResult.playerWin, battle.suppressGenericRewards
+            )
+            val eventRewardAllowed = if (eventFenceRequired) {
+                try { onBeforeEveBattleRewards?.invoke(session) ?: true }
+                catch (e: Exception) {
+                    logger.error(e) { "Eve battle reward claim failed before generic payout" }
+                    false
+                }
+            } else true
+            val payoutClaim = if (eligibleGenericWin && eventRewardAllowed) {
                 battlePayoutLedger?.reserve(session.roleId.toLong(), battle.rewardAttemptUuid)
             } else null
             val payoutAllowed = !eligibleGenericWin ||
-                battlePayoutLedger == null || payoutClaim != null
+                (eventRewardAllowed && (battlePayoutLedger == null || payoutClaim != null))
             if (!payoutAllowed) {
                 deniedBattlePayouts.add(playerId)
                 logger.error {
