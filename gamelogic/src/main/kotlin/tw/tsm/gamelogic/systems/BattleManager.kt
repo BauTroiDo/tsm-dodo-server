@@ -75,6 +75,12 @@ class BattleManager(
      */
     var onBattleAbortCallback: ((GameSession) -> Unit)? = null
     var onBattleEndCallback: (suspend (GameSession, Long, Boolean) -> Unit)? = null
+    /**
+     * Called BEFORE generic EXP, gold, drops, kill counts, Phuc Than charge
+     * and captured pets are granted in a winning Eve battle.
+     * False means the DB could not fence this Eve attempt: never pay or resume.
+     */
+    var onBeforeEveBattleRewards: (suspend (GameSession) -> Boolean)? = null
     var onWeeklyDungeonBattleEndCallback:
         (suspend (GameSession, Int, Boolean, Int) -> Unit)? = null
     /** Mọi trận đấu đang diễn ra (battleId → BattleInstance)*/
@@ -1695,9 +1701,35 @@ class BattleManager(
             0
         }
 
+        val deniedEveRewardPlayers = mutableSetOf<Long>()
         for ((playerId, session) in battle.playerSessions) {
-            // Thưởng (chỉ khi thắng)
-            if (endResult.playerWin && !battle.suppressGenericRewards) {
+            // Generic Eve battle rewards are non-transactional (drops, EXP,
+            // gold, pets, charge debits). Fence the attempt before ANY one of
+            // those mutations, not merely when returning to EveFlowController.
+            val eventRewardAllowed = if (endResult.playerWin &&
+                !battle.suppressGenericRewards && battle.warType == EWar.EVENT
+            ) {
+                try {
+                    onBeforeEveBattleRewards?.invoke(session) ?: true
+                } catch (e: Exception) {
+                    logger.error(e) {
+                        "Eve battle reward fence failed: battle=${battle.battleId} playerId=$playerId"
+                    }
+                    false
+                }
+            } else true
+            if (!eventRewardAllowed) {
+                deniedEveRewardPlayers.add(playerId)
+                logger.error {
+                    "Suppressing unreserved Eve battle rewards: battle=${battle.battleId} playerId=$playerId"
+                }
+                responseSender.sendSystemMessage(
+                    session, "Phần thưởng chiến đấu đang chờ xác minh. Hãy liên hệ quản trị viên."
+                )
+            }
+
+            // Thưởng (chỉ khi thắng và quyền nhận thưởng đã được xác nhận)
+            if (endResult.playerWin && !battle.suppressGenericRewards && eventRewardAllowed) {
                 if (defeatedEnemyNpcCount > 0) {
                     grantKillNum(session, battle.battleId, defeatedEnemyNpcCount)
                 }
@@ -1818,7 +1850,8 @@ class BattleManager(
             }
 
             // NPC bắt thành công → thêm vào PetSystem + gửi gói tin cho client
-            if (endResult.playerWin && !battle.suppressGenericRewards && battle.capturedNpcs.isNotEmpty()) {
+            if (endResult.playerWin && !battle.suppressGenericRewards &&
+                eventRewardAllowed && battle.capturedNpcs.isNotEmpty()) {
                 val charId = session.roleId.toLong()
                 for ((capturerPlayerId, npcId) in battle.capturedNpcs) {
                     if (capturerPlayerId != playerId) continue
@@ -1981,6 +2014,10 @@ class BattleManager(
         val callback = onBattleEndCallback
         if (callback != null) {
             for ((playerId, session) in battle.playerSessions) {
+                if (playerId in deniedEveRewardPlayers) {
+                    onBattleAbortCallback?.invoke(session) ?: responseSender.sendEventEnd(session)
+                    continue
+                }
                 BattleEventContinuation.run(
                     resume = { callback(session, playerId, endResult.playerWin) },
                     abort = {
