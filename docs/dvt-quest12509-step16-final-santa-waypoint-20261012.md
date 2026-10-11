@@ -1,5 +1,7 @@
 # DVT quest12509 step16 — guided stolen-thief return to original Santa completion (2026-10-12)
 
+**SOURCE CORRECTION (2026-10-12):** The claim below that scene49945 Eve9 is an automatic scene-entry trigger is **incorrect**. Eve9 is actually bound to **Door2 (280,540)**. The stage12509/16 endpoint was corrected from Santa NPC1 to **(49945,280,540,2,2)**. See `docs/dvt-door-trigger-parity-correction-12936-12509-12938-20261012.md`; earlier historical offsets and SHAs below document the prior edition only. Do not reapply that historical patcher.
+
 ## Root cause
 
 Original `File.dat/Data-ios/IOS_MarkStep_C.dat` quest12509 stage16 "Cùng tên trộm đến tìm ông già Noel hoặc Khảm Bộc Từ" has one `kind1` follow/capture objective, **NPC38136**, at original `(49946,590,310,1,12)`, and a **blank END**. The original client `lua/Logic/MarkManager.lua` switches to END once `Role.GetFollowNpc(Role.playerId, condition.id) ~= nil`, so after capturing the thief tapping the mission cannot automatically route to any completion scene.

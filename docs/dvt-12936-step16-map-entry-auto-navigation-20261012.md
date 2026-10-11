@@ -2,6 +2,8 @@
 
 2026-10-12 VN. Follow-on to commit1bcd8d4, source-proof of originally blank END. Actual gameplay E2E deferred until user-requested consolidated test.
 
+**SOURCE CORRECTION (2026-10-12):** The older claim below that scene12403 Eve10 activates automatically on map entry is **incorrect**. Eve10 is bound to **Door7 (100,400)**. The stage12936/16 endpoint was corrected from the stage17 NPC8 to **(12403,100,400,2,7)**. See `docs/dvt-door-trigger-parity-correction-12936-12509-12938-20261012.md`. Preserve the older patch SHA/offset history for auditing, but never reapply the superseded route.
+
 ## Original source chain and root cause
 
 Original `IOS_MarkStep_C.dat` quest12936/16 narrative "Đến Từ Vô Sơn giúp Hoàng Nguyệt Anh tìm Gia Cát Lượng" contains zero item/follower objectives and END=(0,0,0,0,0). The client `lua/Logic/MarkManager.lua` cannot auto-navigate without an END despite the real DVT world already having the correct transition.

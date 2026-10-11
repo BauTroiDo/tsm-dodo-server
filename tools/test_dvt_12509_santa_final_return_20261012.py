@@ -5,18 +5,21 @@ from pathlib import Path
 from audit_dvt_quest_navigation import read_steps,audit
 from eve_tool import EveArchive
 from patch_dvt_12509_final_santa_return_20261012 import (
- MISSION,STEP,FOLLOW,SANTA,ORIGINAL_CAPTURE,verify_eve,patch,effect
+ MISSION,STEP,FOLLOW,SANTA,ORIGINAL_CAPTURE,verify_eve,effect
 )
+from patch_dvt_quest_door_trigger_corrections_20261012 import TARGETS, patch as corrected_patch
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE=ROOT/"gamedata/Eve.emg"
-SHA="382540766e75528bacbb40792188dfa7c210a930bc9bcb82250ccfbea11eb280"
+SHA="363cb99326302577ca26b432716c4a9862fa16c8d164a5d592e11faf4959308a"
 class DvtChristmasThiefFinalReturnTest(unittest.TestCase):
- def test_real_santa_scene_entry_ends_mission_with_follower_gate(self):
+ def test_real_santa_door2_completes_mission_with_follower_gate(self):
   self.assertEqual(verify_eve(EVE),SANTA)
   a=EveArchive(EVE)
   outer=a.parse_scene(49945)
   e=outer["events"][9]
+  self.assertIn(9,next(d for d in outer["doors"] if d["id"]==2)["events"])
+  self.assertFalse(any(9 in n["events"] for n in outer["npcs"]))
   self.assertEqual(e["when_happen"],[False,True,False,False])
   self.assertTrue(any(c["class"]==9 and c["val"]==FOLLOW for c in e["conditions"]))
   final=next(c for c in e["conditions"] if c["class"]==2 and c["param"]==MISSION and c["val"]==STEP)
@@ -32,9 +35,9 @@ class DvtChristmasThiefFinalReturnTest(unittest.TestCase):
   stages={s["step"]:s for s in read_steps(DATA) if s["mission"]==MISSION}
   self.assertEqual(stages[15]["end"],ORIGINAL_CAPTURE)
   self.assertEqual(stages[16]["conditions"][0],(1,FOLLOW,1,ORIGINAL_CAPTURE))
-  self.assertEqual(stages[16]["end"],stages[1]["end"])
-  self.assertEqual(stages[16]["end"],stages[2]["end"])
-  self.assertEqual(stages[16]["end"],SANTA)
+  self.assertNotEqual(stages[16]["end"],stages[1]["end"])
+  self.assertNotEqual(stages[16]["end"],stages[2]["end"])
+  self.assertEqual(stages[16]["end"],TARGETS[(MISSION,STEP)])
   self.assertEqual(audit(DATA,EVE,only_mission=MISSION)["missing_npcs"],[])
  def test_lua_automatically_switches_to_original_return_when_thief_follows(self):
   lua=(ROOT/"lua/Logic/MarkManager.lua").read_text(encoding="utf8")
@@ -43,6 +46,6 @@ class DvtChristmasThiefFinalReturnTest(unittest.TestCase):
  def test_patch_is_idempotent_and_exact_data_checksum(self):
   before=DATA.read_bytes()
   self.assertEqual(hashlib.sha256(before).hexdigest(),SHA)
-  self.assertEqual(patch(DATA,EVE,False),SHA)
+  self.assertEqual(corrected_patch(DATA,EVE,False),SHA)
   self.assertEqual(DATA.read_bytes(),before)
 if __name__=="__main__":unittest.main()

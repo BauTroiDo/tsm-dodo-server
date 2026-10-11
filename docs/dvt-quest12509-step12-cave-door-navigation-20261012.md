@@ -2,6 +2,8 @@
 
 Date 2026-10-12 (VN). **Manual in-game validation deliberately deferred as requested.**
 
+**SOURCE CLARIFICATION (2026-10-12):** `when_happen=[False,True,False,False]` at scene49946 Eve2 refers to the actual **Door2 event**, not automatic map-entry firing. The step12509/12 END already correctly points to Door2 and is **unchanged**. See `docs/dvt-door-trigger-parity-correction-12936-12509-12938-20261012.md` for the revised trigger classification.
+
 ## Root cause and verified DVT event
 
 Quest12509 step12 "Đến sơn động của Khảm Bộc Từ tìm con trai cô hàng rong" originally has no acquisition condition and **END=(0,0,0,0,0)**. Mission click in original `lua/Logic/MarkManager.lua` uses END but has no destination.
