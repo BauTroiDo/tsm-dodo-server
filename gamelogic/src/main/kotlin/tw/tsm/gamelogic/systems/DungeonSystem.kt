@@ -1,6 +1,7 @@
 package tw.tsm.gamelogic.systems
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -21,6 +22,7 @@ import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.repositories.DungeonRunRecord
 import tw.tsm.domain.interfaces.repositories.DungeonRunRepository
+import tw.tsm.domain.interfaces.repositories.RewardLedgerRepository
 import tw.tsm.domain.interfaces.repositories.MissionFlagRecord
 
 private val dungeonLogger = KotlinLogging.logger {}
@@ -79,6 +81,8 @@ class DungeonSystem(
     private val itemDefs: Map<Int, ItemDef> = emptyMap(),
     private val exclusiveWeaponDefs: Map<Int, Map<Int, ExclusiveWeaponDef>> = emptyMap(),
     private val collectWarriorSortDefs: List<CollectWarriorSortDef> = emptyList(),
+    /** Optional for isolated legacy fixtures; production DI must pass this. */
+    private val rewardLedgerRepository: RewardLedgerRepository? = null,
 ) {
     private val activeRuns = ConcurrentHashMap<Long, ActiveDungeonRun>()
     private val timeoutJobs = ConcurrentHashMap<Long, Job>()
@@ -492,6 +496,43 @@ class DungeonSystem(
             .any { it.missionId == def.missionFlag }
         if (missionStillActive) return null
 
+        val charId = session.roleId.toLong()
+        val ledger = rewardLedgerRepository
+        var rewardClaim: Pair<String, String>? = null
+        if (playerWin && ledger != null) {
+            // Fail closed for legacy scene-reconstruction with no authoritative
+            // run origin, or a run that was never durably saved.
+            val stored = try { dungeonRunRepository?.load(charId) } catch (e: Exception) {
+                dungeonLogger.error(e) { "Cannot load dungeon run before payout: charId=$charId" }
+                null
+            }
+            if (run.originMapId <= 0 || stored == null || stored.settled ||
+                stored.dungeonId != run.dungeonId ||
+                stored.startedAtMillis != run.startedAtMillis ||
+                stored.instanceId != run.instanceId
+            ) {
+                dungeonLogger.error { "Ambiguous dungeon payout run: charId=$charId dungeon=${run.dungeonId}" }
+                responseSender?.sendSystemMessage(session, "Không xác minh được lượt phụ bản; hãy liên hệ quản trị viên.")
+                return DungeonSettlement(def.id, result = 1)
+            }
+            val sourceKey = RewardLedgerSourceKeys.dungeon(run, "TERMINAL")
+            val attemptToken = UUID.randomUUID().toString()
+            val acquired = try {
+                ledger.reserve(charId, "DUNGEON_NORMAL", sourceKey, attemptToken, clockMillis())
+            } catch (e: Exception) {
+                dungeonLogger.error(e) { "Cannot reserve dungeon payout: charId=$charId key=$sourceKey" }
+                false
+            }
+            if (!acquired) {
+                // Never replay after a previous attempt may have issued rewards.
+                // A pending claim must be reconciled by an operator.
+                dungeonLogger.error { "Dungeon payout already reserved or unconfirmed: charId=$charId key=$sourceKey" }
+                responseSender?.sendSystemMessage(session, "Phần thưởng phụ bản đang chờ xác minh; không thể phát lại.")
+                return DungeonSettlement(def.id, result = 1)
+            }
+            rewardClaim = sourceKey to attemptToken
+        }
+
         val settledRun = run.copy(settled = true)
         if (!activeRuns.replace(playerId, run, settledRun)) return null
         persistRun(session, settledRun)
@@ -501,7 +542,6 @@ class DungeonSystem(
         val elapsedSeconds = ((clockMillis() - run.startedAtMillis).coerceAtLeast(0L) / 1000L)
             .coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
         val remainingSeconds = (def.timeMinutes * 60 - elapsedSeconds).coerceAtLeast(0)
-        val charId = session.roleId.toLong()
 
         // DVT UIDungeon shows remaining attempts as dayilyCount - MarkManager.missions[dayilyFlag].step.
         // Record a successful completion independently from reward resolution. GM/admin accounts may
@@ -525,6 +565,9 @@ class DungeonSystem(
                 "Dungeon ${def.id} terminal win has no supported DVT reward row " +
                     "lootTable=${def.lootTable} remaining=$remainingSeconds"
             }
+            if (!settleNormalDungeonClaim(session, ledger, rewardClaim)) {
+                return DungeonSettlement(def.id, result = 1)
+            }
             return DungeonSettlement(def.id, result = 0)
         }
 
@@ -541,10 +584,41 @@ class DungeonSystem(
         }
 
         for ((slot, thing) in changed) responseSender?.sendSetBagItem(session, slot, thing, showMsg = true)
+        if (!settleNormalDungeonClaim(session, ledger, rewardClaim)) {
+            // The items may already exist in DB/RAM: report unresolved, NEVER retry.
+            return DungeonSettlement(def.id, result = 1)
+        }
         dungeonLogger.info {
             "Dungeon ${def.id} settled: remaining=${remainingSeconds}s turn=${session.turn} rewards=$rewards dailyFlag=${def.dailyFlag}"
         }
         return DungeonSettlement(def.id, result = 0, rewards = rewards)
+    }
+
+    /**
+     * Receipt only after all supported normal-dungeon mutations completed.
+     * A failed acknowledgement leaves a PENDING claim to inspect, not a second
+     * attempt to grant the same items or increment the daily counter.
+     */
+    private suspend fun settleNormalDungeonClaim(
+        session: GameSession,
+        ledger: RewardLedgerRepository?,
+        claim: Pair<String, String>?,
+    ): Boolean {
+        if (ledger == null || claim == null) return true // Legacy fixture only.
+        val (sourceKey, attemptToken) = claim
+        val charId = session.roleId.toLong()
+        val settled = try {
+            ledger.settle(charId, "DUNGEON_NORMAL", sourceKey, attemptToken, clockMillis())
+        } catch (e: Exception) {
+            dungeonLogger.error(e) { "Dungeon payout receipt unresolved: charId=$charId key=$sourceKey" }
+            false
+        }
+        if (!settled) {
+            responseSender?.sendSystemMessage(
+                session, "Phần thưởng đã xử lý nhưng chưa xác nhận được biên nhận; hãy liên hệ quản trị viên."
+            )
+        }
+        return settled
     }
 
     /**
