@@ -1,0 +1,93 @@
+package tw.tsm.tests
+
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.runBlocking
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
+import tw.tsm.domain.interfaces.repositories.RewardLedgerRepository
+import tw.tsm.persistence.repositories.RewardLedgerRepositoryImpl
+import tw.tsm.persistence.tables.CharacterRewardLedger
+
+/** All tests use isolated in-memory H2. They NEVER connect to production. */
+class RewardLedgerRepositoryRegressionTest {
+    private fun withRepository(block: suspend (RewardLedgerRepository) -> Unit) {
+        val previous = TransactionManager.defaultDatabase
+        val database = Database.connect(
+            url = "jdbc:h2:mem:reward_ledger_${System.nanoTime()};DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=30000;MODE=MySQL",
+            driver = "org.h2.Driver",
+        )
+        TransactionManager.defaultDatabase = database
+        try {
+            transaction(database) { SchemaUtils.create(CharacterRewardLedger) }
+            runBlocking { block(RewardLedgerRepositoryImpl()) }
+        } finally {
+            TransactionManager.defaultDatabase = previous
+        }
+    }
+
+    @Test fun aPendingRewardNeverGrantsAgainEvenWhenTokenIsIdentical() = withRepository { repo ->
+        assertTrue(repo.reserve(101L, "DUNGEON_NORMAL", "run-1:terminal", "attempt-1", 1000L))
+        assertFalse(repo.reserve(101L, "DUNGEON_NORMAL", "run-1:terminal", "attempt-1", 1000L))
+        assertFalse(repo.reserve(101L, "DUNGEON_NORMAL", "run-1:terminal", "attempt-2", 2000L))
+        assertEquals("attempt-1", repo.unresolvedForCharacter(101L).single().attemptToken)
+        assertFalse(repo.unresolvedForCharacter(101L).single().isSettled)
+    }
+
+    @Test fun pendingClaimSurvivesSimulatedJvmRestart() = withRepository { repo ->
+        assertTrue(repo.reserve(102L, "BATTLE_GENERIC", "battle-stable-uuid:player-1", "first", 1000L))
+        val afterRestart = RewardLedgerRepositoryImpl()
+        assertFalse(afterRestart.reserve(102L, "BATTLE_GENERIC", "battle-stable-uuid:player-1", "second", 9000L))
+        assertEquals(1, afterRestart.unresolvedForCharacter(102L).size)
+    }
+
+    @Test fun settlingPreservesPermanentReceiptAndCannotRepeatGrant() = withRepository { repo ->
+        assertTrue(repo.reserve(103L, "DUNGEON_WEEKLY", "run-7:terminal", "claim-1", 1000L))
+        assertFalse(repo.settle(103L, "DUNGEON_WEEKLY", "run-7:terminal", "wrong", 2000L))
+        assertTrue(repo.settle(103L, "DUNGEON_WEEKLY", "run-7:terminal", "claim-1", 2000L))
+        assertFalse(repo.settle(103L, "DUNGEON_WEEKLY", "run-7:terminal", "claim-1", 3000L))
+        assertFalse(repo.reserve(103L, "DUNGEON_WEEKLY", "run-7:terminal", "claim-2", 4000L))
+        assertTrue(repo.unresolvedForCharacter(103L).isEmpty())
+        assertEquals(2000L, repo.find(103L, "DUNGEON_WEEKLY", "run-7:terminal")?.settledAtEpochMs)
+    }
+
+    @Test fun repeatableDungeonGetsDistinctRunKeyAndPlayersRemainIndependent() = withRepository { repo ->
+        assertTrue(repo.reserve(104L, "DUNGEON_NORMAL", "run-1:terminal", "a", 1000L))
+        assertTrue(repo.reserve(104L, "DUNGEON_NORMAL", "run-2:terminal", "b", 2000L))
+        assertTrue(repo.reserve(105L, "DUNGEON_NORMAL", "run-1:terminal", "c", 2000L))
+        assertTrue(repo.reserve(104L, "BATTLE_GENERIC", "run-1:terminal", "d", 2000L))
+        assertEquals(3, repo.unresolvedForCharacter(104L).size)
+        assertEquals(1, repo.unresolvedForCharacter(105L).size)
+    }
+
+    @Test fun concurrentParticipantsCompeteForOneSourceKey() = withRepository { repo ->
+        val results = coroutineScope {
+            (1..8).map { n ->
+                async(Dispatchers.IO) {
+                    n to repo.reserve(106L, "BATTLE_GENERIC", "stable-battle-1:pay", "a-$n", n * 1000L)
+                }
+            }.awaitAll()
+        }
+        assertEquals(1, results.count { it.second })
+        assertEquals(1, repo.unresolvedForCharacter(106L).size)
+    }
+
+    @Test fun rejectedIdentifiersCannotPoisonTheLedger() = withRepository { repo ->
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking { repo.reserve(0L, "BATTLE_GENERIC", "run", "a", 1L) }
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking { repo.reserve(107L, "invalid-type", "run", "a", 1L) }
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking { repo.reserve(107L, "BATTLE_GENERIC", "", "a", 1L) }
+        }
+        assertTrue(repo.unresolvedForCharacter(107L).isEmpty())
+    }
+}
