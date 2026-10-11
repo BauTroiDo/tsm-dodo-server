@@ -5,11 +5,13 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.plus
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
+import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.jdbc.upsert
 import tw.tsm.persistence.tables.CharacterCompletedEvents
 import tw.tsm.persistence.tables.CharacterEveEffectClaims
+import tw.tsm.persistence.tables.CharacterEveEffectSettlements
 
 /** A claim requiring manual investigation if the process exits before settlement. */
 data class UnresolvedEveEffectClaim(
@@ -55,6 +57,27 @@ class EveEffectClaimRepositoryImpl {
                 it[CharacterEveEffectClaims.runToken] = runToken
                 it[CharacterEveEffectClaims.reservedAtEpochMs] = nowEpochMs
             }
+            // Locking read sees a newly committed receipt even under MySQL's
+            // REPEATABLE READ if settlement raced with insertIgnore. A settled
+            // token must never be able to reserve again after the old claim is
+            // deleted to support intentionally repeatable Eve events.
+            val alreadySettled = CharacterEveEffectSettlements.selectAll()
+                .where {
+                    (CharacterEveEffectSettlements.charId eq charId) and
+                    (CharacterEveEffectSettlements.runToken eq runToken)
+                }
+                .forUpdate()
+                .singleOrNull() != null
+            if (alreadySettled) {
+                CharacterEveEffectClaims.deleteWhere {
+                    (CharacterEveEffectClaims.charId eq charId) and
+                    (CharacterEveEffectClaims.mapId eq mapId) and
+                    (CharacterEveEffectClaims.eveNo eq eveNo) and
+                    (CharacterEveEffectClaims.runToken eq runToken)
+                }
+                return@suspendTransaction false
+            }
+
             CharacterEveEffectClaims.selectAll()
                 .where {
                     (CharacterEveEffectClaims.charId eq charId) and
@@ -126,6 +149,17 @@ class EveEffectClaimRepositoryImpl {
                     (CharacterCompletedEvents.eveNo eq eveNo)
                 }
                 .single()[CharacterCompletedEvents.completionCount]
+            // Permanent receipt in the same transaction as count increment
+            // and claim deletion. A duplicate old run token cannot re-reserve
+            // and receive rewards a second time after an ACK is lost.
+            CharacterEveEffectSettlements.insert {
+                it[CharacterEveEffectSettlements.charId] = charId
+                it[CharacterEveEffectSettlements.runToken] = runToken
+                it[CharacterEveEffectSettlements.mapId] = mapId
+                it[CharacterEveEffectSettlements.eveNo] = eveNo
+                it[CharacterEveEffectSettlements.completionCount] = committedCount
+                it[CharacterEveEffectSettlements.settledAtEpochMs] = System.currentTimeMillis()
+            }
             val deleted = CharacterEveEffectClaims.deleteWhere {
                 (CharacterEveEffectClaims.charId eq charId) and
                 (CharacterEveEffectClaims.mapId eq mapId) and
