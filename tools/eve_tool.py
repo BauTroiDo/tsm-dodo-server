@@ -211,7 +211,7 @@ class EveArchive:
                     c_pstyle = read_u8()
                     c_ops = read_u8()
                     c_val = read_i32()
-                    read_bytes(8) # cTimeValue
+                    c_time_value = struct.unpack("<d", read_bytes(8))[0] # DVT ReadDouble()
                     to_res = read_u8()
                     and_num = read_u8()
                     sub_item = read_u16()
@@ -236,6 +236,7 @@ class EveArchive:
                         "no": c_no, "class": c_class, "param": c_param,
                         "pstyle": c_pstyle, "ops": c_ops, "val": c_val,
                         "to_result": to_res, "and_num": and_num,
+                        "time_value": c_time_value, "sub_item": sub_item,
                         "results": results
                     })
 

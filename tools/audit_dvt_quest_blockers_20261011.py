@@ -12,7 +12,29 @@ from eve_tool import EveArchive
 from audit_dvt_quest_navigation import read_steps
 
 UNSUPPORTED_EFFECTS = {11: "city_resource", 13: "activity_reward"}
-UNSUPPORTED_CONDITIONS = {13: "city_identity", 14: "unverified_activity_state", 17: "child_lifecycle"}
+UNSUPPORTED_CONDITIONS = {13: "city_identity", 17: "child_lifecycle"}
+
+
+def classify_dvt_class14(condition: dict) -> str:
+    """Classify exact original time shape, not all 279 as unsupported.
+
+    Original DVT Lua Data/Eve/Eve_NpcEventData.lua reads CTimeValue as
+    ReadDouble(); EveConditionEvaluator handles only param0/style0 and
+    OLE calendar operations 1..4 with a finite positive cutoff.
+    The remaining param2/style1..4/ops0 are friend-delivery NPC22063
+    (12001/Eve64), NOT regular event clock comparisons.
+    """
+    import math
+    if (
+        condition["param"] == 0 and condition["pstyle"] == 0
+        and condition["ops"] in (1, 2, 3, 4)
+        and condition["val"] == 0 and condition["sub_item"] == 0
+        and math.isfinite(condition["time_value"])
+        and condition["time_value"] > 0.0
+    ):
+        return "supported_ole_time"
+    return "unverified_special_time"
+
 
 
 def scan(eve_file: Path, markstep_file: Path) -> dict:
@@ -41,14 +63,25 @@ def scan(eve_file: Path, markstep_file: Path) -> dict:
             for cond in ev["conditions"]:
                 cno = cond["no"]
                 linked = sorted(involved)
-                if cond["class"] in UNSUPPORTED_CONDITIONS:
-                    name = UNSUPPORTED_CONDITIONS[cond["class"]]
-                    count["cond_"+str(cond["class"])] += 1
+                if cond["class"] == 14:
+                    classification = classify_dvt_class14(cond)
+                    count["cond_14"] += 1  # complete source census, not blocked count
+                    count["cond_14_" + classification] += 1
+                if (cond["class"] in UNSUPPORTED_CONDITIONS or
+                        (cond["class"] == 14 and
+                         classification == "unverified_special_time")):
+                    name = ("unverified_special_time" if cond["class"] == 14
+                            else UNSUPPORTED_CONDITIONS[cond["class"]])
+                    if cond["class"] != 14:
+                        count["cond_"+str(cond["class"])] += 1
                     row = {
                         "scene": sid, "event": event_no, "condition": cno,
                         "class": cond["class"], "param": cond["param"],
                         "style": cond["pstyle"], "ops": cond["ops"],
-                        "value": cond["val"], "linked_markstep_missions": linked}
+                        "value": cond["val"],
+                        "time_value": cond["time_value"],
+                        "sub_item": cond["sub_item"],
+                        "linked_markstep_missions": linked}
                     markers["condition"].append(row)
                     for mid in linked:
                         by_mission[mid]["blocked_conditions"].add(name)

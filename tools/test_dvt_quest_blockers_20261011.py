@@ -31,7 +31,30 @@ class ActiveDvtQuestBlockerCensusTest(unittest.TestCase):
         self.assertEqual(a["result_13"], 89)
         self.assertEqual(a["cond_13"], 99)
         self.assertEqual(a["cond_14"], 279)
+        self.assertEqual(a["cond_14_supported_ole_time"], 274)
+        self.assertEqual(a["cond_14_unverified_special_time"], 5)
         self.assertEqual(a["cond_17"], 16)
+
+    def test_only_five_special_class14_social_conditions_remain_unverified(self):
+        # Client Data/Eve/Eve_NpcEventData.lua calls ReadDouble for CTimeValue,
+        # not an opaque eight-byte blob. The ordinary 274 time comparisons
+        # are source-verified by Kotlin EveConditionEvaluator.
+        a = self.audit
+        special = [r for r in a["blockers"]["condition"] if r["class"] == 14]
+        self.assertEqual(5, len(special))
+        self.assertEqual(
+            {(r["scene"], r["event"]) for r in special}, {(12001, 64)})
+        self.assertEqual(
+            sorted((r["condition"], r["param"], r["style"], r["ops"])
+                   for r in special),
+            [(3, 2, 2, 0), (5, 2, 1, 0), (7, 2, 3, 0),
+             (9, 2, 4, 0), (13, 2, 4, 0)])
+        self.assertTrue(all(
+            r["time_value"] == 37931.6033664236 and
+            r["sub_item"] == 0 for r in special))
+        self.assertNotIn("unverified_activity_state",
+                         {x for scene in a["scene_coverage"].values()
+                          for x in scene})
 
     def test_unlocated_objectives_and_eight_steps_without_any_path(self):
         a = self.audit
@@ -54,8 +77,10 @@ class ActiveDvtQuestBlockerCensusTest(unittest.TestCase):
     def test_linked_missions_are_potential_not_confirmed_blocked(self):
         # This is a *candidate* list: an Eve event can contain multiple
         # mutually exclusive conditions. Do not flag every mission as broken.
-        self.assertEqual(len(self.audit["potentially_blocked_missions"]), 82)
-        self.assertEqual(len(self.audit["scene_coverage"]), 85)
+        # Correct classification matters: 274 already-supported class14 clock
+        # checks must not make ~80 unrelated missions appear broken.
+        self.assertEqual(len(self.audit["potentially_blocked_missions"]), 2)
+        self.assertEqual(len(self.audit["scene_coverage"]), 47)
         self.assertEqual(
             self.audit["potentially_blocked_missions"]["10852"]["blocked_effects"],
             ["activity_reward"],
