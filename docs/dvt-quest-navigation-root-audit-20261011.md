@@ -75,6 +75,28 @@ PR sửa `TeleportHandler` inject `QuestSystem` và `WarpMarkUnlockPolicy.isUnlo
 
 `gamedata/Eve.emg` scene 11012 NPC event-id 1 là NPC 11002 (tại 590,520), chứa event list [8,12,15]. Nhánh scene11012 event8 có điều kiện nhiệm vụ thực 10074 pStyle1/step1 và kết quả `resultClass=2,param=10074,pStyle=1,value=1` (ADD_STEP). Scene 11101 NPC-id1 là NPC 15083, event2 có các điều kiện 10074/10075 và chuỗi complete/return. Đây là bằng chứng đường NPC→Eve→tăng bước đã có trong dữ liệu; chưa thể khẳng định từng nhánh lựa chọn thông qua đủ điều kiện thời gian/nghề/pet/party nếu chưa đối chiếu state người chơi. Không tự thêm gói packet hoặc tự cấp phần thưởng vào đường NPC này.
 
+## 8. Rà soát tiếp 11 đích bất thường — 2026-10-11
+
+Dùng `tools/audit_dvt_quest_navigation.py` đối chiếu toàn bộ 5.716 chỉ dẫn có tọa độ với `Eve.emg` (3.823 scene), và kiểm tra thủ công trực tiếp `SceneEveData.doors[].events`, tọa độ thực tế, `MarkManager.CheckNavigationDoor` của Lua DVT. **10 tham chiếu dùng sai door ID** dù `eventKind=2` yêu cầu ID trong `DoorManager.doors`.
+
+| Nhiệm vụ/bước | Scene | Event ID cũ -> Door ID đúng | Bằng chứng |
+|---|---|---|---|
+| 11908/1,2,3 | 23872 | 8->3, 9->4, 10->5 | Event 8,9,10 lần lượt nằm ở cửa 3,4,5; cách target 10–36 đơn vị |
+| 11908/4,5 | 23873 | 6->2, 7->3 | Event 6/7 nằm ở cửa 2/3; cách target 28/10 đơn vị |
+| 12438/2,3 | 11431 | 5->3 | Event 5 nằm ở cửa 3; cách target ~22 đơn vị |
+| 12438/4,5-condition1 | 11520 | 4->2 | Event 4 nằm ở cửa 2; cách target 10 đơn vị |
+| 12682/1 | 27802 | 5->2 | Target (1290,593) ngay sát cửa 2 (1320,580); cửa 2 gắn Eve7 có `conditionClass=2, mission=12682`; 12682/2 đã hướng đến đúng cửa 2 |
+
+Thực hiện thay đúng **10 byte eventId** (KHÔNG sửa eventKind/scene/toạ độ/condition/quest progress) trên cả ba bản `IOS_MarkStep_C.dat` server, `AssetBundles/Data/IOS_MarkStep_C.dat` client và `StreamingAssets/Data/MarkStep_C.dat` client, với `tools/repair_dvt_mission_door_refs_20261011.py`. Script từ chối phiên bản khác, xác nhận từng tuple scene/x/y/kind/oldEventId, sao lưu tự động, ghi tạm rồi atomic replace, xác nhận sau sửa và hỗ trợ chạy lại idempotent. Server SHA-256 sau sửa: `cd5d4dfe175ae12fb71a4ad6c52f17d447335944d6efdfb269652534dbf3815f`; cả hai bản client SHA-256 `d239860783645d1e966346f5685a39442207b08ebdd09794b453219c91d89218`.
+
+Bản server trước sửa và kết quả audit tại `C:\Server-Game\tsm_dodo\backups\pr41_doorrefs_20261011`; mỗi file đã được sao lưu thêm bằng đuôi `.pre-dvt-10-doors-<timestamp>.bak`. Backup client nằm cạnh từng file đã sửa. Bảng (đích cuối) và (đích điều kiện) được bảo toàn ngoại trừ 10 ID trên.
+
+**Kết quả audit lại:** 0 scene đích thiếu, **0 door ID thiếu, 0 static NPC ID thiếu**. Một đích `11190/step2/CONDITION_2`, map 18000, `eventKind=1,eventId=11` vẫn không có *static* NPC ID11 trong Eve. Đây là **điểm săn/bắt** theo `MarkData.ReadStep`: `kind=1, npcId=17603` (bắt Sơn Việt đầu mục), nên tách thành `nonstatic_hunt_targets` để không nhận nhầm động vật chiến đấu/encounter thành NPC đứng yên. **Chưa xác minh hoàn toàn** vị trí hoặc cơ chế spawn của NPC17603; giữ nguyên dữ liệu, không tự đổi eventId. Quét sửa đổi: `tools/audit_dvt_quest_navigation.py`.
+
+### Tiếp tục điều tra nhiệm vụ không qua bước
+
+Eve `conditionClass=17` còn **16 nhánh trong 2 scene**: 12721/event16 (8 điều kiện với pStyle 1,2,3) và 12722/event2..5 (8 điều kiện với pStyle1/2). `EveConditionEvaluator` Kotlin hiện chưa xử lý class17; không được xem như đã sửa. Chưa có đủ bằng chứng giải mã semantics gốc để đặt comparator/dữ liệu state, nên vẫn giữ fail-closed. `resultClass` 11,13,15 và active-time cần nghiên cứu theo DVT Lua/native và mã sự kiện trước khi triển khai.
+
 ## Giới hạn xác nhận
 
 - Đây là đối chiếu mã nguồn gốc, phân tích dữ liệu đường đi và kiểm tra mã hóa sau patch, **chưa có kiểm thử tương tác client thật** sau khi vá.
