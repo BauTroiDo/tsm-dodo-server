@@ -7,6 +7,7 @@ import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.PacketHandler
 import tw.tsm.domain.interfaces.ResponseSender
+import tw.tsm.domain.interfaces.repositories.ChildRepository
 import tw.tsm.gamelogic.systems.PetSystem
 import tw.tsm.protocol.PacketReader
 
@@ -22,7 +23,8 @@ private val logger = KotlinLogging.logger {}
 class WarriorRepositoryHandler(
     private val petSystem: PetSystem,
     private val responseSender: ResponseSender,
-    private val innResponseSender: InnResponseSender
+    private val innResponseSender: InnResponseSender,
+    private val childRepository: ChildRepository? = null,
 ) : PacketHandler {
     override val mainKind: Int = Opcodes.WARRIOR_REPO
 
@@ -90,7 +92,7 @@ class WarriorRepositoryHandler(
      * Định dạng: followSlot(1B) + npcId(2B LE)
      * Lưu ý: followSlot là ô đích mà client mong muốn (server tự phân bổ)
      */
-    private fun handleRetrieve(session: GameSession, data: ByteArray) {
+    private suspend fun handleRetrieve(session: GameSession, data: ByteArray) {
         if (data.size < 3) return
         val reader = PacketReader(data)
         val _followSlot = reader.readUByte()  // client cung cấp, server bỏ qua
@@ -114,6 +116,9 @@ class WarriorRepositoryHandler(
         val pet = petSystem.getFollowNpc(charId, followSlot)
         if (pet != null) {
             responseSender.sendFollowNpcFullData(session, listOf(pet))
+            DvtChildFollowerLiveSync.afterCarriedPetAppeared(
+                session, charId, pet, petSystem, childRepository,
+            )
         }
         // Cùng contract với chiều cất: S:122-003 chỉ UpdateUI(), không tự xoá
         // Inn.warriorRepository. Refresh S:122-001 để cột kho không giữ dữ liệu cũ.

@@ -8,6 +8,7 @@ import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.PacketHandler
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
+import tw.tsm.domain.interfaces.repositories.ChildRepository
 import tw.tsm.gamelogic.systems.MoneySystem
 import tw.tsm.gamelogic.systems.PetSystem
 import tw.tsm.protocol.PacketReader
@@ -30,6 +31,7 @@ class InnHandler(
     private val innResponseSender: InnResponseSender,
     private val characterRepository: CharacterRepository,
     private val dispatchSystem: tw.tsm.gamelogic.systems.DispatchSystem? = null,
+    private val childRepository: ChildRepository? = null,
 ) : PacketHandler {
     override val mainKind: Int = Opcodes.INN
 
@@ -121,6 +123,9 @@ class InnHandler(
         val pet = petSystem.getFollowNpc(charId, followSlot)
         if (pet != null) {
             responseSender.sendFollowNpcFullData(session, listOf(pet))
+            DvtChildFollowerLiveSync.afterCarriedPetAppeared(
+                session, charId, pet, petSystem, childRepository,
+            )
         }
 
         logger.info { "${session.characterName} nhận tướng từ quán trọ: inn=$innSlot → follow=$followSlot" }
@@ -188,10 +193,15 @@ class InnHandler(
         val innPets = petSystem.getInnPets(charId)
         innResponseSender.sendInnNpcData(session, innPets, dispatchSystem?.queryDispatches(charId)?.map { it.innPetIndex }?.toSet().orEmpty())
 
+        // Remove old slot first so Lua Role.FollowNpcDisappear clears childNpc.
+        responseSender.sendFollowNpcRemove(session, session.playerId, followSlot, false)
         // Cập nhật phía theo người
         val pet = petSystem.getFollowNpc(charId, followSlot)
         if (pet != null) {
             responseSender.sendFollowNpcFullData(session, listOf(pet))
+            DvtChildFollowerLiveSync.afterCarriedPetAppeared(
+                session, charId, pet, petSystem, childRepository,
+            )
         }
 
         logger.info { "${session.characterName} trao đổi với quán trọ: inn=$innSlot ↔ follow=$followSlot" }

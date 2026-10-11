@@ -734,7 +734,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { PlayerStatusHandler(get(), get(), get(), get(), get<GameDataManager>().titleDefs) }
     single { SkillUpgradeHandler(get(), get(), get(), get(), get<DailyProgressSystem>(), get<PetSystem>()) }
     single { PartyHandler(get(), get(), get(), get<DailyProgressSystem>(), get<DungeonSystem>(), get<DungeonRoomRegistry>(), get<WorldSimBotSystem>()) }
-    single { FollowNpcHandler(get(), get(), get()) }
+    single { FollowNpcHandler(get(), get(), get(), get<ChildRepository>()) }
     single { FollowNpcDeployHandler(get(), get(), get<CharacterRepository>(), get<DailyProgressSystem>()) }
     single { PkSettingHandler(get()) }
     single { StatHandler(get(), get(), get(), get<StatSystem>(), get(), get<SkillRepository>(), get<DailyProgressSystem>()) }
@@ -748,8 +748,8 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { MountHandler(get(), get(), get()) }
     single { HotkeyHandler(get(), get()) }
     single { InnResponseSender() }
-    single { InnHandler(get(), get(), get(), get(), get(), get()) }
-    single { WarriorRepositoryHandler(get(), get(), get()) }
+    single { InnHandler(get(), get(), get(), get(), get(), get(), get<ChildRepository>()) }
+    single { WarriorRepositoryHandler(get(), get(), get(), get<ChildRepository>()) }
     single { MacroBoxHandler(get(), get(), get(), get()) }
     single {
         TeleportHandler(
