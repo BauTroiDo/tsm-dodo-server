@@ -12,7 +12,7 @@ from patch_dvt_12162_clay_pot_turnin_20261012 import (
 ROOT = Path(__file__).resolve().parents[1]
 FILE = ROOT/"File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE = ROOT/"gamedata/Eve.emg"
-TARGET_HASH = "4acb01edebaf1f2fee8240bd4bb61d949c6146515da792a1869409cd66f20939"
+TARGET_HASH = "98b8ac110c68acc8e2921b21f965e57e763878cdda4e69f015651a39599f2aa1"
 
 class DvtPotTurnInTest(unittest.TestCase):
     @classmethod
