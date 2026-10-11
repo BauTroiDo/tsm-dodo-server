@@ -26,6 +26,15 @@ class EveEffectClaimPolicyTest {
         assertFalse(EveEffectClaimPolicy.requiresReservation(effect(0, 3, style = 3)))
     }
 
+    @Test fun moralChangeAndDirectPointPurchaseCannotMasqueradeAsRepeatableService() {
+        val moral = EveResult(0, 1, 0, 7, 2, 4, 3, 0)
+        val pointPurchase = EveResult(0, 1, 0, 7, 0, 3, 100_000 + 29124, 25)
+        val storeUi = EveResult(0, 1, 7, 7, 0, 3, 0, 0)
+        assertTrue(EveEffectClaimPolicy.requiresReservation(moral))
+        assertTrue(EveEffectClaimPolicy.requiresReservation(pointPurchase))
+        assertFalse(EveEffectClaimPolicy.requiresReservation(storeUi))
+    }
+
     @Test fun eventAttemptTokenSurvivesCopiesButNewAttemptGetsNewToken() {
         val first = EventSession(12001, 5, 12, results = listOf(effect(0, 2)))
         assertEquals(first.runToken, first.copy(currentIndex = 1).runToken)
