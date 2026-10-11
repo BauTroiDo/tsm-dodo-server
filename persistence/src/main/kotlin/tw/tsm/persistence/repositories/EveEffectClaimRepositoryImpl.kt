@@ -18,7 +18,7 @@ import tw.tsm.persistence.tables.CharacterEveEffectSettlements
 /**
  * Storage primitive for an eventual durable Eve side-effect fence.
  *
- * Not wired into gameplay yet. A caller MUST reserve before any item, gold,
+ * Wired to EveFlowController in this experimental PR branch. Callers MUST\n * reserve before any item, gold,
  * mission, pet or other non-idempotent effect. A reservation that survives a
  * crash is never reclaimed merely because it is old.
  */
