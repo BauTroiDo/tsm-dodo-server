@@ -70,6 +70,24 @@ class EveResultExecutor(
      */
     /** Check the selected chain before any exchanges or quest mutations occur. */
     suspend fun canExecuteResults(session: GameSession, results: List<EveResult>): Boolean {
+        // The DVT second-generation general lifecycle is not implemented.
+        // Guard the WHOLE remaining Eve chain so mission 11980 cannot advance
+        // before its required child generation/management action silently skips.
+        val childAction = DvtChildLifecycleGate.firstUnavailable(session.mapId, results)
+        if (childAction != null) {
+            logger.warn {
+                "Block unsupported DVT child lifecycle: map=${session.mapId} cid=${session.roleId} " +
+                    "type=${childAction.resultType} class=${childAction.resultClass} " +
+                    "style=${childAction.parameterStyle}"
+            }
+            responseSender.sendSystemMessage(
+                session,
+                "Chức năng nuôi dưỡng tướng thế hệ hai hiện chưa khả dụng. " +
+                    "Nhiệm vụ 11980 được giữ nguyên, không tự tạo con hay phát thưởng."
+            )
+            return false
+        }
+
         val unsupported = results.firstOrNull { r ->
             r.resultType in setOf(0, 7) && (
                 r.resultClass in setOf(11, 13, 15) ||
