@@ -616,12 +616,19 @@ class DungeonSystem(
         session: GameSession,
         ledger: RewardLedgerRepository?,
         claim: Pair<String, String>?,
+    ): Boolean = settleDungeonRewardClaim(session, ledger, claim, "DUNGEON_NORMAL")
+
+    private suspend fun settleDungeonRewardClaim(
+        session: GameSession,
+        ledger: RewardLedgerRepository?,
+        claim: Pair<String, String>?,
+        rewardKind: String,
     ): Boolean {
         if (ledger == null || claim == null) return true // Legacy fixture only.
         val (sourceKey, attemptToken) = claim
         val charId = session.roleId.toLong()
         val settled = try {
-            ledger.settle(charId, "DUNGEON_NORMAL", sourceKey, attemptToken, clockMillis())
+            ledger.settle(charId, rewardKind, sourceKey, attemptToken, clockMillis())
         } catch (e: Exception) {
             dungeonLogger.error(e) { "Dungeon payout receipt unresolved: charId=$charId key=$sourceKey" }
             false
@@ -649,10 +656,11 @@ class DungeonSystem(
         val def = defs[dungeonId] ?: return null
         if (def.kind !in setOf(KIND_WEEKLY, KIND_SOUL_WEEKLY) || def.dailyFlag <= 0) return null
 
-        val settledRun = run.copy(settled = true)
-        if (!activeRuns.replace(playerId, run, settledRun)) return null
+        // Loss never distributes rewards; keep the original immediate cleanup.
         if (!playerWin) {
-            finishWeeklyRun(session, settledRun)
+            val lostRun = run.copy(settled = true)
+            if (!activeRuns.replace(playerId, run, lostRun)) return null
+            finishWeeklyRun(session, lostRun)
             return DungeonSettlement(dungeonId, result = 1)
         }
 
@@ -665,7 +673,9 @@ class DungeonSystem(
             ?.let { it >= requiredCount }
             ?: false
         if (alreadyCompleted) {
-            finishWeeklyRun(session, settledRun)
+            val doneRun = run.copy(settled = true)
+            if (!activeRuns.replace(playerId, run, doneRun)) return null
+            finishWeeklyRun(session, doneRun)
             return DungeonSettlement(dungeonId, result = 0)
         }
 
@@ -674,20 +684,76 @@ class DungeonSystem(
         val remainingSeconds = (def.timeMinutes * 60 - elapsedSeconds).coerceAtLeast(0)
         val rewards = resolveRewards(dungeonId, session.turn, remainingSeconds, playerWin = true)
 
+        val ledger = rewardLedgerRepository
+        val rewardKind = if (def.kind == KIND_SOUL_WEEKLY) "DUNGEON_SOUL" else "DUNGEON_WEEKLY"
+        var rewardClaim: Pair<String, String>? = null
+        if (ledger != null) {
+            // Do read-only checks BEFORE claiming a permanent payout key.
+            if (rewards.isNotEmpty()) {
+                val inventory = inventorySystem
+                if (inventory == null || !inventory.canAddRewardsToBag(charId, rewards)) {
+                    responseSender?.sendSystemMessage(
+                        session, "Túi đồ không đủ chỗ hoặc phần thưởng tuần không hợp lệ."
+                    )
+                    return DungeonSettlement(dungeonId, result = 1)
+                }
+            }
+            val persisted = try { dungeonRunRepository?.load(charId) } catch (e: Exception) {
+                dungeonLogger.error(e) { "Cannot read weekly dungeon run before payout: charId=$charId" }
+                null
+            }
+            if (run.runToken.isBlank() || run.originMapId <= 0 ||
+                persisted == null || persisted.settled ||
+                persisted.dungeonId != run.dungeonId ||
+                persisted.startedAtMillis != run.startedAtMillis ||
+                persisted.instanceId != run.instanceId ||
+                persisted.runToken != run.runToken
+            ) {
+                dungeonLogger.error { "Unverified weekly dungeon payout: charId=$charId dungeon=$dungeonId" }
+                responseSender?.sendSystemMessage(
+                    session, "Không xác minh được lượt phụ bản tuần. Hãy liên hệ quản trị viên."
+                )
+                return DungeonSettlement(dungeonId, result = 1)
+            }
+            val sourceKey = RewardLedgerSourceKeys.dungeon(run, "WEEKLY_TERMINAL")
+            val attemptToken = UUID.randomUUID().toString()
+            val acquired = try {
+                ledger.reserve(charId, rewardKind, sourceKey, attemptToken, clockMillis())
+            } catch (e: Exception) {
+                dungeonLogger.error(e) { "Weekly dungeon reward reservation failed: charId=$charId key=$sourceKey" }
+                false
+            }
+            if (!acquired) {
+                responseSender?.sendSystemMessage(
+                    session, "Phần thưởng tuần đang chờ xác minh; không thể phát lại."
+                )
+                return DungeonSettlement(dungeonId, result = 1)
+            }
+            rewardClaim = sourceKey to attemptToken
+        }
+
+        val settledRun = run.copy(settled = true)
+        if (!activeRuns.replace(playerId, run, settledRun)) {
+            // Do not erase the pending claim; a competing mutation may already
+            // have used part of this reward. Administrator must reconcile it.
+            return DungeonSettlement(dungeonId, result = 1)
+        }
+
         val changed = if (rewards.isNotEmpty()) {
-            val inventory = inventorySystem ?: run {
-                finishWeeklyRun(session, settledRun)
-                return DungeonSettlement(dungeonId, result = 1)
-            }
-            inventory.addRewardsToBagExact(charId, rewards) ?: run {
-                finishWeeklyRun(session, settledRun)
-                return DungeonSettlement(dungeonId, result = 1)
-            }
+            val inventory = inventorySystem ?: return DungeonSettlement(dungeonId, result = 1)
+            inventory.addRewardsToBagExact(charId, rewards)
+                ?: return DungeonSettlement(dungeonId, result = 1)
         } else {
             emptyList()
         }
 
+        // The mission counter and inventory are still independent writes. A
+        // failure leaves the ledger PENDING, never automatically retries.
         questSystem.setMissionStep(charId, def.dailyFlag, requiredCount)
+        if (!settleDungeonRewardClaim(session, ledger, rewardClaim, rewardKind)) {
+            return DungeonSettlement(dungeonId, result = 1)
+        }
+
         responseSender?.sendAddMissionStep(session, def.dailyFlag, requiredCount)
         for ((slot, thing) in changed) {
             responseSender?.sendSetBagItem(session, slot, thing, showMsg = true)
