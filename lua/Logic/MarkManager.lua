@@ -679,8 +679,56 @@ function MarkManager.Navigation(missionId)
   end
 end
 
+-- DVT: MarkData.ReadStep leaves all area IDs at zero, but
+-- SceneManager.GetPath rejects zero. Resolve the portal graph area first.
+-- Re-evaluate after loading the target scene for maps with multiple areas.
+local function ResolveMissionNavigationArea(sceneId, position, eventKind, eventId)
+  if SceneManager.sceneId == sceneId then
+    local goal = Vector2.New(
+      position.x + MapManager.centerLeft,
+      position.y + MapManager.centerTop
+    );
+    local area = DoorManager.GetArea(goal);
+    if area ~= nil and area > 0 then return area end
+  end
+  local candidates = {};
+  for fromCode, destinations in pairs(navigationDatas) do
+    if math.floor(fromCode / 1000) == sceneId then
+      local area = fromCode % 1000;
+      if area > 0 then
+        candidates[area] = true;
+        if eventKind == ENavigationEvent.Door then
+          for targetCode, encodedDoors in pairs(destinations) do
+            for _, encodedDoor in pairs(encodedDoors) do
+              if math.floor(encodedDoor / 1000) == eventId then
+                return area;
+              end
+            end
+          end
+        end
+      end
+    end
+    for targetCode, _ in pairs(destinations) do
+      if math.floor(targetCode / 1000) == sceneId then
+        local targetArea = targetCode % 1000;
+        if targetArea > 0 then candidates[targetArea] = true end
+      end
+    end
+  end
+  if candidates[1] then return 1 end
+  local selected = nil;
+  for area, _ in pairs(candidates) do
+    if selected == nil or area < selected then selected = area end
+  end
+  return selected or 1;
+end
+
 function MarkManager.StartNavigation(missionId, sceneId, areaId, position, eventKind, eventId)
   logWarn(string.Concat("Mission Auto Go To ", sceneId, "-", areaId, " (", position.x, ", ", position.y, ")"));
+
+  if areaId == nil or areaId == 0 then
+    areaId = ResolveMissionNavigationArea(sceneId, position, eventKind, eventId);
+  end
 
   this.navigationMissionId = missionId;
   this.navigationTarget = nil;
@@ -776,13 +824,27 @@ function MarkManager.ContinueNavigation()
   end
   if not Role.CanControl() then return false end
 
+  if SceneManager.sceneId == navigationSceneId then
+    local goal = Vector2.New(
+      navigationPosition.x + MapManager.centerLeft,
+      navigationPosition.y + MapManager.centerTop
+    );
+    local actualArea = DoorManager.GetArea(goal);
+    if actualArea ~= nil and actualArea > 0 then
+      navigationAreaId = actualArea;
+    end
+  end
+
   if SceneManager.sceneId == navigationSceneId and SceneManager.areaId == navigationAreaId and navigationEventKind == ENavigationEvent.Npc and Role.mapNpcs[navigationEventId] ~= nil then
     if TargetManager.Contains(Role.mapNpcs[navigationEventId]) then
       this.CheckNavigationNpc(Role.mapNpcs[navigationEventId]);
       return false;
     end
     
-    this.navigationTarget = navigationPosition;
+    this.navigationTarget = Vector2.New(
+      navigationPosition.x + MapManager.centerLeft,
+      navigationPosition.y + MapManager.centerTop
+    );
   else
     this.navigationTarget = SceneManager.GetPath(navigationSceneId, navigationAreaId, navigationPosition, Role.player.position);
   end
@@ -799,6 +861,11 @@ function MarkManager.ContinueNavigation()
       if SceneManager.sceneId ~= navigationSceneId then return end
       if SceneManager.areaId ~= navigationAreaId then return end
 
+      if navigationEventKind == ENavigationEvent.Npc
+        and Role.mapNpcs[navigationEventId] ~= nil then
+        this.CheckNavigationNpc(Role.mapNpcs[navigationEventId]);
+        return;
+      end
       this.StopNavigation();
     end
   );
