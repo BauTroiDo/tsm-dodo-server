@@ -1,6 +1,8 @@
 package tw.tsm.tests
 
 import io.mockk.*
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -84,6 +86,41 @@ class EveDurableEffectDispatchRegressionTest {
         coVerify(exactly = 0) { claims.settle(any(), any(), any(), any()) }
         verify(exactly = 1) { sender.sendSystemMessage(game, match { it.contains("đang chờ") }) }
         verify(exactly = 1) { sender.sendEventEnd(game) }
+    }
+
+    @Test
+    fun incomingNextPacketCannotCompleteEveWhileDatabaseReserveIsPending() = runTest {
+        val machine = EveEventStateMachine()
+        val item = reward()
+        machine.activate(31L, EventSession(12001, 5, 12, results = listOf(item), currentIndex = 1))
+        val sender = mockk<ResponseSender>(relaxed = true)
+        val executor = mockk<EveResultExecutor>(relaxed = true)
+        val claims = mockk<EveEffectClaimRepository>(relaxed = true)
+        val questRepo = mockk<QuestRepository>(relaxed = true)
+        val started = CompletableDeferred<Unit>()
+        val release = CompletableDeferred<Boolean>()
+        val game = gameSession()
+
+        coEvery { executor.canExecuteResults(any(), any()) } returns true
+        coEvery { executor.executeResultClass(game, item) } returns true
+        coEvery { claims.reserve(31L, 12001, 5, any(), any()) } coAnswers {
+            started.complete(Unit)
+            release.await()
+        }
+        coEvery { claims.settle(31L, 12001, 5, any()) } returns 1
+
+        val f = flow(machine, claims, executor, questRepo, sender)
+        val firstDispatch = async { f.startEvent(game, item) }
+        started.await()
+        assertTrue(machine.getSession(31L)?.effectReservationInProgress == true)
+        f.advanceEvent(game)
+        assertNotNull(machine.getSession(31L))
+        coVerify(exactly = 0) { executor.executeResultClass(any(), any()) }
+        release.complete(true)
+        firstDispatch.await()
+        coVerify(exactly = 1) { executor.executeResultClass(game, item) }
+        coVerify(exactly = 1) { claims.settle(31L, 12001, 5, any()) }
+        assertEquals(1, machine.getCompletedEveCounts(31L, 12001)[5])
     }
 
     @Test
