@@ -25,3 +25,5 @@ jobs:
         run: python -m unittest discover -s tools -p test_dvt_pstyle3_live_quest_parity_20261011.py -v
       - name: Verify five source-proven Qin Tomb quest NPC auto-navigation targets
         run: python -m unittest discover -s tools -p test_dvt_12158_npc_navigation_20261011.py -v
+      - name: Verify three source-proven Christmas quest merchant item waypoints
+        run: python -m unittest discover -s tools -p test_dvt_12509_christmas_vendors_20261011.py -v

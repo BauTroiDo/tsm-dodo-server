@@ -56,21 +56,21 @@ class ActiveDvtQuestBlockerCensusTest(unittest.TestCase):
                          {x for scene in a["scene_coverage"].values()
                           for x in scene})
 
-    def test_unlocated_objectives_and_three_steps_without_any_path(self):
+    def test_unlocated_objectives_and_two_steps_without_any_path(self):
         a = self.audit
         self.assertEqual(len(a["missing_end_targets"]), 269)
-        self.assertEqual(len(a["unlocated_condition_targets"]), 91)
+        self.assertEqual(len(a["unlocated_condition_targets"]), 88)
         count_by_kind = {}
         for row in a["unlocated_condition_targets"]:
             count_by_kind[row["kind"]] = count_by_kind.get(row["kind"], 0) + 1
-        self.assertEqual(count_by_kind, {3: 84, 1: 7})
+        self.assertEqual(count_by_kind, {3: 81, 1: 7})
         no_route = {
             (r["mission"], r["step"])
             for r in a["missing_end_targets"]
             if r["conditions"] and not r["located_conditions"]
         }
         self.assertEqual(no_route, {
-            (10852, 1), (12162, 1), (12509, 8),
+            (10852, 1), (12162, 1),
         })
 
     def test_linked_missions_are_potential_not_confirmed_blocked(self):
@@ -91,7 +91,7 @@ class ActiveDvtQuestBlockerCensusTest(unittest.TestCase):
             ROOT / "gamedata" / "Eve.emg",
         )
         self.assertEqual(result["markstep_rows"], 4505)
-        self.assertEqual(result["targets"]["located"], 5721)
+        self.assertEqual(result["targets"]["located"], 5724)
         self.assertEqual(result["missing_scenes"], [],
             "Quest target references a scene absent from active Eve")
         self.assertEqual(result["missing_doors"], [],
@@ -106,7 +106,7 @@ class ActiveDvtQuestBlockerCensusTest(unittest.TestCase):
         path = ROOT / "File.dat" / "Data-ios" / "IOS_MarkStep_C.dat"
         sha = hashlib.sha256(path.read_bytes()).hexdigest()
         self.assertEqual(sha,
-            "642a8e85c5ceabc9f4a59d97cefa96ed5c8839ff843322d234ef9768a24c2689",
+            "8f37189491c21ab6f59973ae9a86dbdb279b4276485ef420a85b0bcd0b7bc115",
             "A subsequent deployment must not restore the ten broken door IDs")
 
 if __name__ == "__main__":
