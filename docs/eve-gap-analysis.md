@@ -3,6 +3,8 @@
 > Ngày tạo: 2026-06-12. Công cụ phân tích: `tools/eve_analyze.py` (phản chiếu logic phân tích của EveDataLoader.kt).
 > Tỉ lệ phân tích thành công 3823/3823 cảnh (100%), tổng 25457 sự kiện / 77001 điều kiện / 164910 kết quả.
 
+> **Đính chính kiểm toán 2026-10-11:** archive Eve DVT chứa **3.823 mục chỉ mục**, nhưng Kotlin `EveDataLoader.load` chỉ trả về **3.797 cảnh có dữ liệu**. **26 mục còn lại là block rỗng 123 byte** (103 byte header + 20 byte đếm section đều bằng 0): `18281, 19510, 49993–49995, 54948–54967, 57537`. Đã xác minh bằng bản Eve SHA-256 `03c84cb565d4bdd10b7506a4d04a918ae590737f80a3e7e4fd37782b9c40b910` của client và server. Đây là lọc cảnh trống hợp lệ, **không phải 26 bản đồ bị mất**. Kiểm thử `DvtActiveEveUnsupportedResultCoverageTest` đối chiếu từng block và sẽ báo lỗi nếu sau này cảnh có dữ liệu thật bị loại.
+
 ## 1. Phương pháp phân tích
 
 1. Dùng Python tái hiện phân tích nhị phân của `EveDataLoader.kt`, quét toàn bộ Eve.emg
