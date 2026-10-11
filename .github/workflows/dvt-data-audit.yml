@@ -27,6 +27,8 @@ jobs:
         run: python -m unittest discover -s tools -p test_dvt_12158_npc_navigation_20261011.py -v
       - name: Verify DVT quest10126 step4 original Dong Quan spy and palace route
         run: python -m unittest discover -s tools -p test_dvt_10126_dongquan_spy_navigation_20261012.py -v
+      - name: Verify 20 poisoned-soldier 12106 medicine delivery NPC destinations
+        run: python -m unittest discover -s tools -p test_dvt_12106_poisoned_soldier_navigation_20261012.py -v
       - name: Verify three source-proven Christmas quest merchant item waypoints
         run: python -m unittest discover -s tools -p test_dvt_12509_christmas_vendors_20261011.py -v
       - name: Verify quest12509 three-food turn-in at the genuine chef NPC15421
