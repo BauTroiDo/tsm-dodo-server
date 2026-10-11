@@ -86,4 +86,15 @@ class EveCompletionPersistenceFailureRegressionTest {
         assertTrue(machine.isConditionCompleted(31L, 12001, 1, 12))
         coVerify(exactly = 1) { repository.insertCompletedEventAndGetCount(31L, 12001, 1) }
     }
+    @Test
+    fun failedCompletionWithoutResolvedConditionQuarantinesEntireEve() {
+        val machine = EveEventStateMachine()
+        machine.quarantineUncommittedCompletion(
+            31L, activeStateChangingEve().copy(matchedConditionNo = 0)
+        )
+        assertTrue(machine.isConditionCompleted(31L, 12001, 1, 2))
+        assertTrue(machine.isConditionCompleted(31L, 12001, 1, 12))
+        assertTrue(machine.getCompletedEveCounts(31L, 12001).isEmpty())
+    }
+
 }
