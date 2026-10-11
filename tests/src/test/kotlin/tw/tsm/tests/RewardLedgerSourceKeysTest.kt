@@ -17,10 +17,22 @@ class RewardLedgerSourceKeysTest {
             RewardLedgerSourceKeys.dungeon(before, "TERMINAL"),
             RewardLedgerSourceKeys.dungeon(afterRestore, "TERMINAL")
         )
-        assertNotEquals(
+        // A copy/relogin may re-read the clock but must keep the same UUID.
+        assertEquals(
             RewardLedgerSourceKeys.dungeon(before, "TERMINAL"),
             RewardLedgerSourceKeys.dungeon(before.copy(startedAtMillis = 1_760_000_000_100L), "TERMINAL")
         )
+        val newRun = ActiveDungeonRun(
+            dungeonId = 5001, startTime = 46280.3, instanceId = 7,
+            startedAtMillis = 1_760_000_000_000L,
+        )
+        assertNotEquals(
+            RewardLedgerSourceKeys.dungeon(before, "TERMINAL"),
+            RewardLedgerSourceKeys.dungeon(newRun, "TERMINAL")
+        )
+        assertThrows(IllegalArgumentException::class.java) {
+            RewardLedgerSourceKeys.dungeon(before.copy(runToken = ""), "TERMINAL")
+        }
         assertNotEquals(
             RewardLedgerSourceKeys.dungeon(before, "TERMINAL"),
             RewardLedgerSourceKeys.dungeon(before, "WEEKLY_TERMINAL")
