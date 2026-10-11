@@ -12,6 +12,7 @@ import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.repositories.DungeonRunRecord
 import tw.tsm.domain.interfaces.repositories.DungeonRunRepository
 import tw.tsm.domain.interfaces.repositories.RewardLedgerRepository
+import tw.tsm.domain.valueobjects.ThingData
 import tw.tsm.gamelogic.systems.*
 
 /**
@@ -68,7 +69,7 @@ class DungeonNormalRewardLedgerIntegrationTest {
         coEvery { quest.addMissionStep(31L, 201, 1) } returns 0
 
         val inventory = mockk<InventorySystem>(relaxed = true)
-        coEvery { inventory.addRewardsToBagExact(31L, listOf(29124 to 1)) } returns emptyList()
+        coEvery { inventory.addRewardsToBagExact(31L, listOf(29124 to 1)) } returns listOf(5 to mockk<ThingData>(relaxed = true))
 
         val runs = mockk<DungeonRunRepository>(relaxed = true)
         val saved = DungeonRunRecord(
@@ -121,6 +122,7 @@ class DungeonNormalRewardLedgerIntegrationTest {
             f.quest.addMissionStep(31L, 201, 1)
             f.inventory.addRewardsToBagExact(31L, listOf(29124 to 1))
             f.ledger.settle(31L, "DUNGEON_NORMAL", any(), any(), any())
+            f.sender.sendSetBagItem(f.game, 5, any(), true)
         }
         assertTrue(f.dungeon.getActiveRun(31L)?.settled == true)
         coVerify(exactly = 1) { f.inventory.addRewardsToBagExact(any(), any()) }
@@ -148,6 +150,7 @@ class DungeonNormalRewardLedgerIntegrationTest {
         coVerify(exactly = 1) { f.inventory.addRewardsToBagExact(any(), any()) }
         coVerify(exactly = 1) { f.quest.addMissionStep(31L, 201, 1) }
         coVerify(exactly = 1) { f.ledger.settle(any(), any(), any(), any(), any()) }
+        verify(exactly = 0) { f.sender.sendSetBagItem(any(), any(), any(), any()) }
     }
 
     @Test fun unrecoverableLegacyRunCannotCreateUnverifiablePayout() = runTest {
