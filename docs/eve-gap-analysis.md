@@ -51,7 +51,7 @@ Hiện hỗ trợ param=0(cấp độ)/2(chỗ trống túi đồ)/3(trang bị)
 | **12** | 21 | Toàn bộ gắn trên type=1 (Talk), server không cần thực thi | Cao | 12721/12722 |
 | **13** | 89 | **Phát gói thưởng hoạt động**: val = mã phần thưởng (12/13/40/49/52/69~78), thường gắn nhóm xác suất resultGroupNo. Đã bác bỏ giả thuyết bản đầu "介消 sellId" (val 78 > giới hạn trên UISell 69; hội thoại Talk đều thuộc loại NPC hoạt động kiểu "đây là phần thưởng cho bạn": thưởng ải quan 13096,đổi đèn lồng 34288,huy hiệu sử thi 52570,bài tập nghỉ hè 58400,Lễ hội Halloween 23419,ngọc thỏ 15361). **Chưa xác định được bảng thưởng ứng với mã phần thưởng** (đoán là dữ liệu phía server, client không có bảng này) | Cao (ngữ nghĩa)/ Thấp (bảng thưởng) | 12003 eve=24 bước nhiệm vụ N → thưởng 67+N |
 | **14** | 33 | **Tăng giảm bộ đếm RoleCount (đã cài đặt)**: param = chỉ mục bộ đếm, pStyle=1 cộng val / 2 trừ val / 3 đưa về 0; ghép cặp với conditionClass=18 (đọc bộ đếm). Ví dụ: 10951 lựa chọn hội thoại Đào Viên kết nghĩa ±RoleCount[1], 12002 hoạt động bài tập nghỉ hè RoleCount[189] đồng bộ số lượng quà +1/+10/+20 | Cao | 12002 eve=28 param=189 |
-| **15** | 1 | Ví dụ đơn lẻ (10821 eve=3 param=1) | Thấp | — |
+| **15** | 0 | Không có kết quả class15 trong bản Eve.emg hiện hành (đã quét toàn bộ 3.823 cảnh ở tất cả resultType). Ví dụ 10821/eve=3 trong bản báo cáo cũ không khớp dữ liệu. | Xác nhận bằng quét dữ liệu DVT 2026-10-11 | — |
 
 ## 4. Bảng giám định pStyle chưa ánh xạ của resultClass=7 (thao tác người chơi)
 
