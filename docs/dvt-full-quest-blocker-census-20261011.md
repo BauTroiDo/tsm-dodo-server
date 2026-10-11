@@ -44,6 +44,36 @@ Overall **96 individual objective conditions** lack a located waypoint: **89 ite
 
 Earlier navigation audit already repaired 10 wrong door references (in 11908/12438/12682) and 7 MarkStep target parity mismatches, and verified **zero missing static NPC IDs, zero missing door IDs, zero missing referenced target scenes**. One nonstatic hunt encounter in 11190 must remain classified separately. These facts do **not** prove client interactive autowalk in every route.
 
+## Repository root cause fixed: ten quest doors reverted on redeploy
+
+The first full navigation scan of the tracked repository assets, **before this
+fix**, returned 10 missing door references among 5,716 located targets.
+The already-running DEV server had the correct hotfixed
+\`IOS_MarkStep_C.dat\` (SHA-256
+\`cd5d4dfe175ae12fb71a4ad6c52f17d447335944d6efdfb269652534dbf3815f\`),
+but GitHub still tracked the old blob (SHA-256
+\`fa1729647758eda7c3565e148c9498fcc4775cc8d0d87a2be842bcf1fbe1f9a3\`).
+
+This is a genuine **deployment regression risk**: a later full data deploy
+from GitHub would silently undo the previous DEV fixes.
+
+Reapplied \`tools/repair_dvt_mission_door_refs_20261011.py\` to the tracked
+\`File.dat/Data-ios/IOS_MarkStep_C.dat\`. The tool checked exact original
+scene, coordinates, event kind and incorrect ID, changing **only ten
+eventId bytes**, at these missions/steps:
+
+- 11908/1–5: door IDs \`8→3, 9→4, 10→5, 6→2, 7→3\`.
+- 12438/2–5: \`5→3, 5→3, 4→2, 4→2\` (last is condition 1).
+- 12682/1: \`5→2\`.
+
+The resulting blob matches the **already deployed DEV server SHA exactly**.
+Re-running the repair found **zero remaining changes**, and the navigation
+audit returned **zero missing scenes, zero missing fixed NPCs, zero missing
+doors**, while preserving one legitimate nonstatic hunt objective.
+A CI test now enforces the fixed SHA and all actual Eve door/NPC links so a
+future repo checkout cannot silently reintroduce this regression. Client
+files were previously hotfixed and are not modified by this commit.
+
 ## Suggested fix order, with release gates
 
 1. **Mission return / next-step correctness:** verify active character progress, NPC/door event choice, Eve mission resultClass2 semantics, claims and client S024 synchronization. Use actual character trace or test fixtures, not merely static mission-ID counts.

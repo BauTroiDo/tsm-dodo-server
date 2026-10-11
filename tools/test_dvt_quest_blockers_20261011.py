@@ -2,6 +2,7 @@
 import unittest
 from pathlib import Path
 from audit_dvt_quest_blockers_20261011 import scan
+from audit_dvt_quest_navigation import audit as audit_navigation
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -60,6 +61,29 @@ class ActiveDvtQuestBlockerCensusTest(unittest.TestCase):
             ["activity_reward"],
         )
 
+    def test_all_navigable_dvt_destinations_point_to_actual_eve_places(self):
+        result = audit_navigation(
+            ROOT / "File.dat" / "Data-ios" / "IOS_MarkStep_C.dat",
+            ROOT / "gamedata" / "Eve.emg",
+        )
+        self.assertEqual(result["markstep_rows"], 4505)
+        self.assertEqual(result["targets"]["located"], 5716)
+        self.assertEqual(result["missing_scenes"], [],
+            "Quest target references a scene absent from active Eve")
+        self.assertEqual(result["missing_doors"], [],
+            "Quest target references a door ID not present in Eve")
+        self.assertEqual(result["missing_npcs"], [],
+            "Quest target references a nonexistent fixed NPC")
+        self.assertEqual(len(result["nonstatic_hunt_targets"]), 1,
+            "The one nonstatic NPC hunt must stay separately classified")
+
+    def test_github_markstep_binary_is_same_fixed_dvt_dev_version(self):
+        import hashlib
+        path = ROOT / "File.dat" / "Data-ios" / "IOS_MarkStep_C.dat"
+        sha = hashlib.sha256(path.read_bytes()).hexdigest()
+        self.assertEqual(sha,
+            "cd5d4dfe175ae12fb71a4ad6c52f17d447335944d6efdfb269652534dbf3815f",
+            "A subsequent deployment must not restore the ten broken door IDs")
 
 if __name__ == "__main__":
     unittest.main()
