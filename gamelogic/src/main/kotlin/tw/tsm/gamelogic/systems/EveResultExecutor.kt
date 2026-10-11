@@ -185,6 +185,31 @@ class EveResultExecutor(
                 "class=${unsupported.resultClass} param=${unsupported.parameter} " +
                 "style=${unsupported.parameterStyle} value=${unsupported.resultValue}"
         }
+        if (unsupported.resultClass == 11) {
+            // Source-verified DVT organization resource, NOT character gold.
+            // Keep the WHOLE chain stopped before item/quest rewards while
+            // organization ownership, treasury persistence and synchronization
+            // are unavailable. Do not grant the other results partially.
+            val resource = DvtOrgResourceResultPolicy.decode(
+                unsupported.resultType,
+                unsupported.resultClass,
+                unsupported.parameter,
+                unsupported.parameterStyle,
+                unsupported.resultValue
+            )
+            logger.warn {
+                "Chặn thưởng tài nguyên quân đoàn DVT do chưa có kho tổ chức: " +
+                    "map=${session.mapId} cid=${session.roleId} " +
+                    "resource=${resource?.kind} amount=${resource?.amount} " +
+                    "style=${unsupported.parameterStyle}"
+            }
+            responseSender.sendSystemMessage(
+                session,
+                "Nhiệm vụ này có thưởng tài nguyên quân đoàn nhưng hệ thống kho quân đoàn " +
+                    "chưa khả dụng. Đã dừng toàn bộ nhánh; không trừ vật phẩm, không chuyển bước hoặc phát thưởng thiếu."
+            )
+            return false
+        }
         responseSender.sendSystemMessage(session, "Nhánh nhiệm vụ này chưa có cấu hình xử lý đầy đủ. Đã dừng xử lý; vui lòng chọn nhiệm vụ khác.")
         return false
     }
