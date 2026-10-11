@@ -655,6 +655,7 @@ class EveFlowController(
                 persistedCount = count
             } catch (e: Exception) {
                 logger.error(e) { "Lưu hoàn thành sự kiện xuống DB thất bại: charId=$charId mapId=${completedSession.mapId} eveNo=${completedSession.eveNo}" }
+                stateMachine.quarantineUncommittedCompletion(charId, completedSession)
                 // The in-memory session was already consumed; never fire terminal
                 // settlement hooks or auto-chain after an uncommitted Eve count.
                 // Do not replay earlier reward effects on this error path.
