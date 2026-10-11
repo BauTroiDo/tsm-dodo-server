@@ -63,4 +63,25 @@ class EveCompletedEventAtomicRepositoryTest {
         repo.insertCompletedEvent(513L, 10821, 3)
         assertEquals(mapOf(3 to 1), repo.getCompletedEventCounts(513L, 10821))
     }
+
+    @Test fun returnsDurableAbsoluteCountsInTheSameTransaction() = withRepository { repo ->
+        val counts = (1..4).map {
+            repo.insertCompletedEventAndGetCount(515L, 10821, 3)
+        }
+        assertEquals(listOf(1, 2, 3, 4), counts)
+        assertEquals(mapOf(3 to 4), repo.getCompletedEventCounts(515L, 10821))
+    }
+
+    @Test fun parallelReturnedCountsRepresentUniqueSerializedIncrements() = withRepository { repo ->
+        val counts = coroutineScope {
+            (1..12).map {
+                async(Dispatchers.IO) {
+                    repo.insertCompletedEventAndGetCount(516L, 10821, 3)
+                }
+            }.awaitAll()
+        }
+        assertEquals((1..12).toList(), counts.sorted())
+        assertEquals(mapOf(3 to 12), repo.getCompletedEventCounts(516L, 10821))
+    }
+
 }
