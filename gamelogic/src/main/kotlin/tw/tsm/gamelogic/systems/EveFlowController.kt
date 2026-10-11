@@ -76,11 +76,12 @@ class EveFlowController(
                 "Eve reward blocked or displaced: charId=$charId mapId=${event.mapId} " +
                     "eveNo=${event.eveNo} token=${event.runToken}"
             }
-            stateMachine.clearIfCurrentRun(charId, event.runToken)
-            responseSender.sendSystemMessage(
-                session, "Nhiệm vụ có phần thưởng đang chờ xác minh. Hãy liên hệ quản trị viên."
-            )
-            responseSender.sendEventEnd(session)
+            if (stateMachine.clearIfCurrentRun(charId, event.runToken)) {
+                responseSender.sendSystemMessage(
+                    session, "Nhiệm vụ có phần thưởng đang chờ xác minh. Hãy liên hệ quản trị viên."
+                )
+                responseSender.sendEventEnd(session)
+            }
             return false
         }
         return true
