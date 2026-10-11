@@ -25,7 +25,6 @@ private val logger = KotlinLogging.logger {}
  * Tách logic đẩy tiến/hoàn thành khỏi EveFlowEngine, phối hợp
  * EveAutoChainEngine / EveResultExecutor / EveDoorWarpService / EveBattleService。
  */
-private const val BEGINNER_UNLOCK_MISSION_ID = 11804
 
 class EveFlowController(
     private val responseSender: ResponseSender,
@@ -142,44 +141,6 @@ class EveFlowController(
             return
         }
 
-        // Cổng rời map tân thủ: client chỉ gửi 020-006 sau hội thoại, không
-        // gửi gói cửa chuẩn. Eve.emg định nghĩa cổng này phải thêm mission
-        // 11804 ("Vào Trác Quận") trước khi truyền tống. Cờ hoàn thành của
-        // mission này là điều kiện hiển thị AI Tìm, Auto và Gợi Ý; nhánh thay
-        // thế cũ chỉ warp nên mọi nhân vật mới đều bị thiếu ba chức năng.
-        if (session.mapId == 10851 && eventSession?.eveNo == 1 &&
-            eventSession.triggerKind == 4) {
-            val alreadyStarted = stateBuilder.buildPlayerState(charId, session.mapId, session)
-                .missionSteps[BEGINNER_UNLOCK_MISSION_ID] ?: 0
-            if (alreadyStarted == 0) {
-                val unlockResult = eveData[10851]?.npcEvents?.get(1)?.conditions
-                    ?.asSequence()
-                    ?.flatMap { it.results.asSequence() }
-                    ?.firstOrNull {
-                        it.resultType == 0 &&
-                            it.resultClass == 2 &&
-                            it.parameter == BEGINNER_UNLOCK_MISSION_ID &&
-                            it.parameterStyle == 1
-                    }
-                if (unlockResult != null) {
-                    if (!ensureDurableEffectClaim(session)) return
-                    if (!executeResultOrAbort(session, unlockResult)) return
-                } else {
-                    logger.error { "Map tân thủ không tìm thấy kết quả Eve mở mission $BEGINNER_UNLOCK_MISSION_ID" }
-                }
-            }
-
-            val beginnerWarp = EveResult(
-                resultGroupNo = 0, resultNo = 1, resultType = 2,
-                resultClass = 2, parameter = BEGINNER_UNLOCK_MISSION_ID, parameterStyle = 1,
-                resultValue = 0, resultMeanNo = 0
-            )
-            doorWarpService.execute(session, beginnerWarp) {
-                finalCompleteAndEnd(session, charId)
-            }
-            return
-        }
-
         // Bạch Mã (map 12001, event 7): sau hội thoại 10166, client bản này
         // không phát tiếp C:020-006 ổn định. Chủ động chuyển sang Surface 11
         // được khai báo trong Eve.emg để người chơi có thể xác nhận nhận ngựa.
@@ -265,7 +226,7 @@ class EveFlowController(
         )
 
         if (resolved != null) {
-            stateMachine.replaceResultsAndResume(charId, resolved.results)
+            stateMachine.replaceResultsAndResume(charId, resolved.results, matchedConditionNo = resolved.matchedConditionNo)
             val first = stateMachine.advance(charId)
             if (first != null) {
                 logger.info { "${session.characterName} khớp lựa chọn: code=$code → ${resolved.results.size} result" }
@@ -327,7 +288,7 @@ class EveFlowController(
             )
             val postBattleResults = resolved.results + doorContinuation
 
-            stateMachine.replaceResultsAndResume(charId, postBattleResults)
+            stateMachine.replaceResultsAndResume(charId, postBattleResults, matchedConditionNo = resolved.matchedConditionNo)
             val first = stateMachine.advance(charId)
             if (first != null) {
                 logger.info {

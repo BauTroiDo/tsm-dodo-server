@@ -1458,7 +1458,12 @@ class BattleManager(
                 battle.state = BattleInstance.State.WAITING_COMMANDS
 
                 // 2. Chờ lệnh người chơi (tối đa 20 giây hoặc tất cả người chơi đã sẵn sàng)
-                waitForCommands(battle, BattleConstants.COUNTDOWN_NORMAL * 1000L)
+                // DVT ore event NPCs use a one-second fallback, never ordinary quest/PvP battles.
+                val commandWindowMs = OreBattlePacingPolicy.commandWindowMs(
+                    battle.warType, battle.playerSessions.size,
+                    battle.involvedNpcDefs.map { it.second.name }
+                )
+                waitForCommands(battle, commandWindowMs)
 
                 // 3. AI NPC ra quyết định
                 battle.resolveNpcActions()

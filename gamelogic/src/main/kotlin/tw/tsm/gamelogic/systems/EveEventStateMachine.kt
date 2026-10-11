@@ -414,9 +414,9 @@ class EveEventStateMachine {
      * Dùng để đánh giá lại (reEvaluate) sau khi chọn Surface hoặc sau trận chiến:
      * Giữ lại mapId/eveNo/npcClickId + ngữ cảnh lịch sử của session, thay thế results và reset index.
      */
-    fun replaceResultsAndResume(charId: Long, newResults: List<EveResult>) {
+    fun replaceResultsAndResume(charId: Long, newResults: List<EveResult>, matchedConditionNo: Int? = null) {
         val prev = updateSession(charId) {
-            it.copy(results = newResults, currentIndex = 0, phase = EventPhase.Executing)
+            it.copy(results = newResults, currentIndex = 0, phase = EventPhase.Executing, matchedConditionNo = matchedConditionNo ?: it.matchedConditionNo)
         }
         if (prev != null) {
             logger.debug { "Thay thế kết quả: charId=$charId eveNo=${prev.eveNo} newResults=${newResults.size} → Executing" }
