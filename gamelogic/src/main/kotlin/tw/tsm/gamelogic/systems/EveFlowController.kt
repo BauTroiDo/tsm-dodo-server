@@ -545,7 +545,7 @@ class EveFlowController(
      * Hoàn thành sự kiện hiện tại — lối vào thống nhất, thử auto-chain hoặc kết thúc
      */
     private suspend fun completeCurrentEvent(session: GameSession, charId: Long) {
-        val completedSession = completeEventInternal(charId)
+        val completedSession = completeEventInternal(session, charId)
 
         if (completedSession != null && autoChainEngine.shouldAttemptAutoChain(completedSession)) {
             when (val chainResult = autoChainEngine.tryAutoChain(session, charId, completedSession)) {
@@ -567,7 +567,7 @@ class EveFlowController(
      * Dùng cho các tình huống dịch chuyển Door, thua trận, hủy Surface, v.v.
      */
     private suspend fun finalCompleteAndEnd(session: GameSession, charId: Long) {
-        val completedSession = completeEventInternal(charId)
+        val completedSession = completeEventInternal(session, charId)
         if (completedSession != null) notifyEventCompleted(session)
         responseSender.sendEventEnd(session)
     }
@@ -638,7 +638,7 @@ class EveFlowController(
     /**
      * Logic nội bộ hoàn thành sự kiện — ghi nhận hoàn thành + lưu bền
      */
-    private suspend fun completeEventInternal(charId: Long): EventSession? {
+    private suspend fun completeEventInternal(session: GameSession, charId: Long): EventSession? {
         val completedSession = stateMachine.complete(charId)
 
         // Sự kiện kết thúc → xóa trạng thái cửa hàng
@@ -650,6 +650,11 @@ class EveFlowController(
                 questRepository.insertCompletedEvent(charId, completedSession.mapId, completedSession.eveNo)
             } catch (e: Exception) {
                 logger.error(e) { "Lưu hoàn thành sự kiện xuống DB thất bại: charId=$charId mapId=${completedSession.mapId} eveNo=${completedSession.eveNo}" }
+                // The in-memory session was already consumed; never fire terminal
+                // settlement hooks or auto-chain after an uncommitted Eve count.
+                // Do not replay earlier reward effects on this error path.
+                responseSender.sendSystemMessage(session, "Lỗi lưu hoàn thành nhiệm vụ. Vui lòng liên hệ quản trị viên; không nhận lại phần thưởng để tránh trùng.")
+                return null
             }
         }
 
