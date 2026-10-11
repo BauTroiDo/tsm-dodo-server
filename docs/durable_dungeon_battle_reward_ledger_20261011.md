@@ -27,6 +27,15 @@ Bảo vệ theo `source_key` **chưa đủ**: nếu một phần thưởng cũ c
 
 Không tự coi pending nghĩa là đã nhận phần thưởng; cũng không tự xóa để mở khóa. Phải ghi đủ loại nguồn thưởng, chu kỳ reset và run identifier trong báo cáo đối soát. Mọi hành động quản trị (hoàn tiền, trao bù, release) cần được audit để không nhân đôi.
 
+## Thử nghiệm tích hợp dungeon thường (PR #38, chưa phát hành)
+
+- `ServerModule` đã inject `RewardLedgerRepositoryImpl` vào `DungeonSystem` trên nhánh PR này (không áp dụng live). Với `settleAfterBattle(playerWin=true)`, trước khi tăng dailyFlag, cập nhật inventory hoặc đánh dấu settled trong RAM/DB, hệ thống kiểm tra `DungeonRunRepository.load` khớp **dungeonId + startedAtMillis + instanceId** với lượt hiện tại và có điểm gốc được lưu. Lượt legacy dựng lại từ scene nhưng không xác minh được nguồn sẽ fail closed.
+- Sau đó dùng `RewardLedgerSourceKeys.dungeon(run, "TERMINAL")` để `reserve` trong database, chặn source cũ và tất cả source mới cùng `DUNGEON_NORMAL` khi claim pending. Nếu MySQL unavailable hoặc claim đã tồn tại, trả trạng thái lỗi mà **không trao item và không tăng dailyFlag**.
+- Khi đã có claim, các bước settledRun, daily counter, xác định và thêm batch reward diễn ra như luồng cũ. Chỉ khi xong mới `settle` để viết biên nhận. Packet hiển thị item chỉ được gửi sau biên nhận thành công. Nếu lỗi ở bất kỳ bước nào sau reserve, claim pending vẫn tồn tại để đối soát, không tự retry.
+- Trường hợp dungeon không có dòng thưởng được hỗ trợ vẫn ghi dailyFlag và chốt biên nhận, giữ hành vi thành công của DVT nếu không có item hợp lệ. Nhánh thua trận không có payout không cần giữ claim và dùng hành vi cũ.
+- Đã bổ sung MockK regression với mã `DungeonSystem` thật: đúng thứ tự reserve/counter/item/receipt/packet, claim bị từ chối, lỗi khi chốt sau khi item đã trao, và run không thể xác minh.
+- **Giới hạn:** đây là fail-closed, không phải giao dịch toàn bộ bag/dailyCount/receipt. Nếu server chết sau khi reserve hoặc đang ghi item, claim sẽ khóa lượt tiếp đến khi admin xác minh. Chưa có quy trình bù thưởng/rollback tự động và chưa có client acceptance test. Việc ghép PR #38 với PR #36 (chưa merge) cần xử lý xung đột GameModule/DatabaseFactory sau này.
+
 ## Chưa hoàn thiện để triển khai
 
 1. Lưu UUID định danh trận chiến vào DB từ lúc tạo battle, và lấy lại được qua reconnect/crash; cần tương thích nhiều người tham gia và DVT battle scene.
@@ -36,4 +45,4 @@ Không tự coi pending nghĩa là đã nhận phần thưởng; cũng không t�
 5. Công cụ quản trị read-only đối chiếu claim với vật phẩm, pet, tiền, mission và log; cần quy trình xác nhận thủ công trước khi giải quyết `PENDING`, tuyệt đối không xóa tự động.
 6. Trước deployment: sao lưu MySQL/source dirty production, kiểm tra schema migration `SchemaUtils.createMissingTablesAndColumns` trên môi trường staging, test Gradle, và xác minh game-client.
 
-**Phạm vi đã được làm:** domain contract, bảng và repository transaction, chính sách khóa nguồn, H2 unit/integration tests, query audit. **Chưa sửa luồng trả thưởng live.** PR #38 phải giữ Draft cho đến khi các khóa nguồn và luồng payout được tích hợp/kiểm nghiệm.
+**Phạm vi đã được làm trên PR:** domain contract, bảng và repository transaction, chính sách khóa nguồn, H2 tests, query audit, và wiring thử nghiệm dungeon thường. **Chưa triển khai hay xác minh gameplay trên live.** PR #38 phải giữ Draft cho đến khi các khóa nguồn và luồng payout được tích hợp/kiểm nghiệm.
