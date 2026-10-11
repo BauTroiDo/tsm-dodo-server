@@ -89,6 +89,20 @@ class EveFlowController(
     }
 
     /**
+     * BattleManager calls this BEFORE giving generic Eve battle win rewards:
+     * KillNum, Phuc Than charge, EXP, gold, drops and captured NPC.
+     *
+     * A party member who is not running an Eve EventSession is outside this
+     * per-Eve claim ledger; do not fabricate or settle another player's claim.
+     * Such rewards require a separate per-battle ledger in a future change.
+     */
+    suspend fun reserveBeforeEventBattleRewards(session: GameSession): Boolean {
+        val active = stateMachine.getSession(session.roleId.toLong()) ?: return true
+        if (active.eveNo == 0) return true
+        return ensureDurableEffectClaim(session)
+    }
+
+    /**
      * Bắt đầu phân phát result đầu tiên (được [EveTriggerRouter] gọi)
      */
     suspend fun startEvent(session: GameSession, firstResult: EveResult) {
