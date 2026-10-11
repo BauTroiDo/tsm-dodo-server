@@ -71,6 +71,8 @@ data class EventSession(
     val runToken: String = UUID.randomUUID().toString(),
     /** True ONLY after the pending reward fence was persisted in MySQL. */
     val effectClaimed: Boolean = false,
+    /** Blocks premature C020-006 while MySQL reward claim is pending. */
+    val effectReservationInProgress: Boolean = false,
 ) {
     /** Có chứa kết quả dạng thay đổi trạng thái hay không, dùng để quyết định xem có ghi lại log hoàn thành để chống trùng lặp hay không */
     fun hasStateChangingResults(): Boolean = results.any {
@@ -192,6 +194,21 @@ class EveEventStateMachine {
         return inserted
     }
 
+    /** CAS claim before awaiting MySQL: only one dispatch can reserve this run. */
+    fun beginEffectReservation(charId: Long, runToken: String): Boolean {
+        val ref = sessions[charId] ?: return false
+        while (true) {
+            val current = ref.get() ?: return false
+            if (current.runToken != runToken || current.effectClaimed ||
+                current.effectReservationInProgress
+            ) return false
+            if (ref.compareAndSet(
+                    current, current.copy(effectReservationInProgress = true)
+                )
+            ) return true
+        }
+    }
+
     /**
      * Commit the runtime fence marker only for the SAME active Eve attempt.
      * The database reservation must have succeeded before calling this.
@@ -202,7 +219,9 @@ class EveEventStateMachine {
             val current = ref.get() ?: return false
             if (current.runToken != runToken) return false
             if (current.effectClaimed) return true
-            if (ref.compareAndSet(current, current.copy(effectClaimed = true))) return true
+            if (ref.compareAndSet(current, current.copy(
+                    effectClaimed = true, effectReservationInProgress = false
+                ))) return true
         }
     }
 
