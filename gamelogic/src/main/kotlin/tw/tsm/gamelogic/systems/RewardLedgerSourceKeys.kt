@@ -8,17 +8,17 @@ import java.util.UUID
  */
 object RewardLedgerSourceKeys {
     /**
-     * Dungeon runs currently persist dungeonId, startedAtMillis and instanceId
-     * in CharacterDungeonRuns. Reconnect/restart must reuse those exact values.
+     * Every newly persisted DungeonRunRecord has a stable UUID. Reconnects
+     * and crash recovery MUST reuse that runToken. Timestamp/instanceId alone
+     * are not collision-proof for fast repeated dungeon entries.
      *
-     * Do not create a fresh timestamp during reward handling.
-     * The fallback reconstruction of a legacy run cannot prove its identity;
-     * it must be reconciled separately before any reward ledger rollout.
+     * Pre-migration rows have an empty token and are NOT payout-eligible.
      */
     fun dungeon(run: ActiveDungeonRun, rewardStep: String): String {
         require(run.dungeonId > 0 && run.startedAtMillis > 0 && run.instanceId >= 0)
         require(rewardStep in setOf("TERMINAL", "WEEKLY_TERMINAL"))
-        return "d:${run.dungeonId}:${run.startedAtMillis}:${run.instanceId}:$rewardStep"
+        val persistedUuid = UUID.fromString(run.runToken)
+        return "d:${run.dungeonId}:$persistedUuid:$rewardStep"
     }
 
     /**
