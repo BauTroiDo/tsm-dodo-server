@@ -629,6 +629,37 @@ class InventorySystem(
         }
     }
 
+    /**
+     * Exchange a consumed BlissBag for its complete rolled bundle in ONE DB transaction.
+     * No item is consumed if the bag lacks space for any prize (including the clay pot
+     * item 32043 in Hương Dũng bag 46285). Cache updates only after atomic persistence.
+     */
+    suspend fun openGiftBagAtomic(
+        characterId: Long,
+        sourceSlot: Int,
+        sourceItemId: Int,
+        consumedQty: Int,
+        rewards: List<Pair<Int, Int>>,
+    ): Map<Int, ThingData?>? {
+        val before = bags[characterId]?.toMap() ?: return null
+        val changes = GiftBagAtomicPlanner.plan(
+            currentBag = before,
+            capacity = roleCountSystem.getBagCapacity(characterId),
+            sourceSlot = sourceSlot,
+            sourceItemId = sourceItemId,
+            consumedQty = consumedQty,
+            rewards = rewards,
+            itemDefs = itemDefs,
+        ) ?: return null
+        return try {
+            setBagItemsAtomic(characterId, changes)
+            changes
+        } catch (e: Exception) {
+            logger.error(e) { "Failed atomic BlissBag exchange characterId=$characterId itemId=$sourceItemId" }
+            null
+        }
+    }
+
     suspend fun commitBattlePassClaim(
         characterId: Long, seasonId: Int, changes: Map<Int, ThingData?>,
         expectedProgress: Map<Int, Int>, nextProgress: Map<Int, Pair<Int, Int>>,

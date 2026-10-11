@@ -683,6 +683,33 @@ class ItemHandler(
             return
         }
 
+        // BlissBag reward must be all-or-nothing with source consumption.
+        // The previous path removed the source FIRST and then silently lost
+        // rewards if any rolled item exceeded bag capacity.
+        if (itemDef?.specialAbility == EItemUseKind.GIFT_BOX) {
+            if (!result.success || useQty <= 0 || result.rewardItems.isEmpty()) return
+            val committed = inventorySystem.openGiftBagAtomic(
+                characterId = characterId,
+                sourceSlot = bagIndex,
+                sourceItemId = bagItem.itemId,
+                consumedQty = useQty,
+                rewards = result.rewardItems.map { it.itemId to it.count },
+            )
+            if (committed == null) {
+                logger.warn {
+                    "BlissBag rejected without consuming source; bag full or invalid reward: " +
+                        "characterId=$characterId bagId=${bagItem.itemId} qty=$useQty"
+                }
+                return
+            }
+            responseSender.sendReduceBagItem(session, bagIndex, useQty)
+            responseSender.sendUseItemSuccess(session, bagItem.itemId, useQty, showMsg = true)
+            for ((slot, thing) in committed) {
+                if (thing != null) responseSender.sendSetBagItem(session, slot, thing, showMsg = true)
+            }
+            return
+        }
+
         // khấu trừ vật phẩm
         inventorySystem.removeFromBag(characterId, bagIndex, useQty)
         responseSender.sendReduceBagItem(session, bagIndex, useQty)

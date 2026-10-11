@@ -31,3 +31,5 @@ jobs:
         run: python -m unittest discover -s tools -p test_dvt_10852_rabbit_cave_navigation_20261012.py -v
       - name: Verify source-proven quest12162 30-pot return route without invented collection
         run: python -m unittest discover -s tools -p test_dvt_12162_clay_pot_turnin_20261012.py -v
+      - name: Verify DVT 32043 exists in real BlissBag rewards and quest grants
+        run: python -m unittest discover -s tools -p test_dvt_clay_pot_bag_sources_20261012.py -v
