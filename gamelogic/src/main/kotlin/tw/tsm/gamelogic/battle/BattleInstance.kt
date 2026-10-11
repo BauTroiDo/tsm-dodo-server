@@ -11,6 +11,7 @@ import tw.tsm.domain.data.NpcDef
 import tw.tsm.domain.data.NpcDropDef
 import tw.tsm.domain.enums.BattleStatus
 import tw.tsm.domain.interfaces.GameSession
+import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.random.Random
 
@@ -49,6 +50,8 @@ class BattleInstance(
     val weeklySurviveRound: Int = 0,
     /** Weekly/Soul rewards are protocol47 rewards, not generic NPC exp/gold/drop. */
     val suppressGenericRewards: Boolean = false,
+    /** Durable payout identity: written by RewardLedger.reserve before rewards. */
+    val rewardAttemptUuid: String = UUID.randomUUID().toString(),
 ) {
     /** Máy trạng thái trận chiến*/
     enum class State {

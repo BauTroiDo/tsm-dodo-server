@@ -5,6 +5,7 @@ import tw.tsm.domain.data.EveResult
 import tw.tsm.domain.data.SceneEveData
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.ResponseSender
+import tw.tsm.domain.interfaces.repositories.EveEffectClaimRepository
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
 import tw.tsm.domain.interfaces.repositories.QuestRepository
 
@@ -24,7 +25,6 @@ private val logger = KotlinLogging.logger {}
  * Tách logic đẩy tiến/hoàn thành khỏi EveFlowEngine, phối hợp
  * EveAutoChainEngine / EveResultExecutor / EveDoorWarpService / EveBattleService。
  */
-private const val BEGINNER_UNLOCK_MISSION_ID = 11804
 
 class EveFlowController(
     private val responseSender: ResponseSender,
@@ -38,12 +38,68 @@ class EveFlowController(
     private val questRepository: QuestRepository,
     private val characterRepository: CharacterRepository,
     private val eveData: Map<Int, SceneEveData>,
-    private val npcShopManager: NpcShopManager
+    private val npcShopManager: NpcShopManager,
+    /** Optional for legacy unit fixtures; production DI must bind this. */
+    private val effectClaimRepository: EveEffectClaimRepository? = null,
 ) {
     /** App-layer hook for terminal Eve completion (dungeon settlement, etc.). */
     var onEventCompleted: (suspend (GameSession) -> Unit)? = null
     /** Exact Eve hook: scene12003/click10/result type2 class7 param8 = VS registration. */
     var onVsRegistration: (suspend (GameSession) -> Unit)? = null
+
+    /**
+     * Persist a fail-closed reservation BEFORE the first non-idempotent result.
+     * Never drop a pending DB claim on cancellation/disconnect or a timeout:
+     * effects already dispatched before the interruption cannot be rolled back.
+     */
+    private suspend fun ensureDurableEffectClaim(session: GameSession): Boolean {
+        val repository = effectClaimRepository ?: return true // Legacy tests only.
+        val charId = session.roleId.toLong()
+        val event = stateMachine.getSession(charId) ?: return false
+        if (event.eveNo == 0 || event.effectClaimed) return true
+        if (!stateMachine.beginEffectReservation(charId, event.runToken)) return false
+        val reserved = try {
+            repository.reserve(
+                charId, event.mapId, event.eveNo, event.runToken,
+                System.currentTimeMillis()
+            )
+        } catch (e: Exception) {
+            logger.error(e) {
+                "Eve reward reservation failed: charId=$charId mapId=${event.mapId} eveNo=${event.eveNo}"
+            }
+            false
+        }
+        if (!reserved || !stateMachine.markEffectClaimed(charId, event.runToken)) {
+            // The DB reservation may have succeeded but a concurrent event
+            // replaced this session. Its unresolved claim must remain fenced.
+            logger.error {
+                "Eve reward blocked or displaced: charId=$charId mapId=${event.mapId} " +
+                    "eveNo=${event.eveNo} token=${event.runToken}"
+            }
+            if (stateMachine.clearIfCurrentRun(charId, event.runToken)) {
+                responseSender.sendSystemMessage(
+                    session, "Nhiệm vụ có phần thưởng đang chờ xác minh. Hãy liên hệ quản trị viên."
+                )
+                responseSender.sendEventEnd(session)
+            }
+            return false
+        }
+        return true
+    }
+
+    /**
+     * BattleManager calls this BEFORE giving generic Eve battle win rewards:
+     * KillNum, Phuc Than charge, EXP, gold, drops and captured NPC.
+     *
+     * A party member who is not running an Eve EventSession is outside this
+     * per-Eve claim ledger; do not fabricate or settle another player's claim.
+     * Such rewards require a separate per-battle ledger in a future change.
+     */
+    suspend fun reserveBeforeEventBattleRewards(session: GameSession): Boolean {
+        val active = stateMachine.getSession(session.roleId.toLong()) ?: return true
+        if (active.eveNo == 0) return true
+        return ensureDurableEffectClaim(session)
+    }
 
     /**
      * Bắt đầu phân phát result đầu tiên (được [EveTriggerRouter] gọi)
@@ -64,6 +120,10 @@ class EveFlowController(
             logger.debug { "Bỏ qua C:020-006 khi không có phiên Eve: charId=$charId" }
             return
         }
+        if (eventSession.effectReservationInProgress) {
+            logger.debug { "Bỏ qua 020-006 khi đang giữ quyền phát thưởng Eve trong MySQL" }
+            return
+        }
 
         // Surface phía DVT có thể phát C:020-006 gần như đồng thời với C:020-009.
         // Sau khi choice đã được claim nhưng chưa dispatch xong result đầu tiên, tuyệt đối
@@ -78,43 +138,6 @@ class EveFlowController(
         // tuyệt đối không advance/complete event từ gói next đến sớm.
         if (eventSession?.phase is EventPhase.AwaitingWarp) {
             logger.debug { "Nhận 020-006 nhưng đang chuyển cảnh Door, bỏ qua" }
-            return
-        }
-
-        // Cổng rời map tân thủ: client chỉ gửi 020-006 sau hội thoại, không
-        // gửi gói cửa chuẩn. Eve.emg định nghĩa cổng này phải thêm mission
-        // 11804 ("Vào Trác Quận") trước khi truyền tống. Cờ hoàn thành của
-        // mission này là điều kiện hiển thị AI Tìm, Auto và Gợi Ý; nhánh thay
-        // thế cũ chỉ warp nên mọi nhân vật mới đều bị thiếu ba chức năng.
-        if (session.mapId == 10851 && eventSession?.eveNo == 1 &&
-            eventSession.triggerKind == 4) {
-            val alreadyStarted = stateBuilder.buildPlayerState(charId, session.mapId, session)
-                .missionSteps[BEGINNER_UNLOCK_MISSION_ID] ?: 0
-            if (alreadyStarted == 0) {
-                val unlockResult = eveData[10851]?.npcEvents?.get(1)?.conditions
-                    ?.asSequence()
-                    ?.flatMap { it.results.asSequence() }
-                    ?.firstOrNull {
-                        it.resultType == 0 &&
-                            it.resultClass == 2 &&
-                            it.parameter == BEGINNER_UNLOCK_MISSION_ID &&
-                            it.parameterStyle == 1
-                    }
-                if (unlockResult != null) {
-                    resultExecutor.executeResultClass(session, unlockResult)
-                } else {
-                    logger.error { "Map tân thủ không tìm thấy kết quả Eve mở mission $BEGINNER_UNLOCK_MISSION_ID" }
-                }
-            }
-
-            val beginnerWarp = EveResult(
-                resultGroupNo = 0, resultNo = 1, resultType = 2,
-                resultClass = 2, parameter = BEGINNER_UNLOCK_MISSION_ID, parameterStyle = 1,
-                resultValue = 0, resultMeanNo = 0
-            )
-            doorWarpService.execute(session, beginnerWarp) {
-                finalCompleteAndEnd(session, charId)
-            }
             return
         }
 
@@ -203,7 +226,7 @@ class EveFlowController(
         )
 
         if (resolved != null) {
-            stateMachine.replaceResultsAndResume(charId, resolved.results)
+            stateMachine.replaceResultsAndResume(charId, resolved.results, matchedConditionNo = resolved.matchedConditionNo)
             val first = stateMachine.advance(charId)
             if (first != null) {
                 logger.info { "${session.characterName} khớp lựa chọn: code=$code → ${resolved.results.size} result" }
@@ -265,7 +288,7 @@ class EveFlowController(
             )
             val postBattleResults = resolved.results + doorContinuation
 
-            stateMachine.replaceResultsAndResume(charId, postBattleResults)
+            stateMachine.replaceResultsAndResume(charId, postBattleResults, matchedConditionNo = resolved.matchedConditionNo)
             val first = stateMachine.advance(charId)
             if (first != null) {
                 logger.info {
@@ -278,6 +301,14 @@ class EveFlowController(
             }
         } else {
             if (playerWin) {
+                // Auto-capture can grant a warrior outside dispatchResult().
+                // Fence it first, but do not reserve if there is no capture
+                // instruction at all in the DVT event conditions.
+                val hasCapture = eventData.conditions.any {
+                    it.conditionClass == 9 && it.conditionParameter == 0 &&
+                        it.conditionParameterStyle == 1 && it.conditionValue > 0
+                }
+                if (hasCapture && !ensureDurableEffectClaim(session)) return
                 resultExecutor.autoCaptureFromEvent(session, charId, eventData)
                 advanceEvent(session)
             } else {
@@ -331,6 +362,7 @@ class EveFlowController(
         // cls=7 pStyle 1~5 là UI của NPC phục vụ (kho báu/Tiền Trang/cửa hàng/lữ quán/lưu trú)
         // Căn cứ xác định: chuỗi kết quả chứa cls 1~3 (vật phẩm/nhiệm vụ/NPC) = chuỗi nhiệm vụ → bỏ qua
         if (result.resultClass == 7 &&
+            !EveEffectClaimPolicy.requiresReservation(result) &&
             EveResultClassPolicy.isRepeatableServicePlayerOperation(result.parameterStyle, result.resultValue)) {
             val es = stateMachine.getSession(session.roleId.toLong())
             val isQuestChain = es?.results?.any { it.resultClass in 1..3 } == true
@@ -340,6 +372,10 @@ class EveFlowController(
                 return
             }
         }
+
+        if (EveEffectClaimPolicy.requiresReservation(result) &&
+            !ensureDurableEffectClaim(session)
+        ) return
 
         when (result.resultType) {
             0 -> {
@@ -362,6 +398,7 @@ class EveFlowController(
                         // Thao tác hình ảnh NPC (tàng hình/hiện ra/biến hình/truy kích) → gửi client
                         responseSender.sendCommonEvent(session, result)
                     } else if (result.resultClass == 7 &&
+                        !EveEffectClaimPolicy.requiresReservation(result) &&
                         EveResultClassPolicy.isRepeatableServicePlayerOperation(result.parameterStyle, result.resultValue)) {
                         // NPC phục vụ (Tiền Trang/cửa hàng/lữ quán/lưu trú) → không ghi nhận hoàn thành, đảm bảo dùng lại được
                         serviceAdvanceOrEnd(session)
@@ -650,7 +687,20 @@ class EveFlowController(
         var persistedCount: Int? = null
         if (completedSession != null && completedSession.eveNo != 0) {
             try {
-                val count = questRepository.insertCompletedEventAndGetCount(charId, completedSession.mapId, completedSession.eveNo)
+                val count = if (completedSession.effectClaimed) {
+                    // Atomic EveCount + permanent run receipt + claim release.
+                    val claimRepository = checkNotNull(effectClaimRepository) {
+                        "Claimed Eve has no durable settlement repository"
+                    }
+                    claimRepository.settle(
+                        charId, completedSession.mapId, completedSession.eveNo,
+                        completedSession.runToken
+                    ) ?: error("Eve claim not owned during settlement: token=${completedSession.runToken}")
+                } else {
+                    questRepository.insertCompletedEventAndGetCount(
+                        charId, completedSession.mapId, completedSession.eveNo
+                    )
+                }
                 check(count > 0) { "Persisted EveCount is invalid: $count" }
                 persistedCount = count
             } catch (e: Exception) {

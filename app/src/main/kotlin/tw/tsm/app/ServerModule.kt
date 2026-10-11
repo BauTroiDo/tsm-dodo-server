@@ -26,6 +26,7 @@ import tw.tsm.domain.interfaces.repositories.CharacterRepository
 import tw.tsm.domain.interfaces.repositories.InventoryRepository
 import tw.tsm.domain.interfaces.repositories.BitFlagRepository
 import tw.tsm.domain.interfaces.repositories.QuestRepository
+import tw.tsm.domain.interfaces.repositories.EveEffectClaimRepository
 import tw.tsm.gamelogic.systems.*
 import tw.tsm.network.NettyGameServer
 import tw.tsm.network.PacketDispatcher
@@ -46,6 +47,7 @@ import tw.tsm.domain.interfaces.repositories.RoleCountRepository
 import tw.tsm.domain.interfaces.repositories.LimitedAreaDailyRepository
 import tw.tsm.domain.interfaces.repositories.DispatchRepository
 import tw.tsm.domain.interfaces.repositories.DungeonRunRepository
+import tw.tsm.domain.interfaces.repositories.RewardLedgerRepository
 import tw.tsm.domain.interfaces.repositories.FriendRepository
 import tw.tsm.domain.interfaces.repositories.HouseBoardRepository
 import tw.tsm.domain.interfaces.repositories.WelfareStateRepository
@@ -67,6 +69,7 @@ import tw.tsm.persistence.repositories.ExpSlotRepositoryImpl
 import tw.tsm.persistence.repositories.PokeRepositoryImpl
 import tw.tsm.persistence.repositories.DispatchRepositoryImpl
 import tw.tsm.persistence.repositories.DungeonRunRepositoryImpl
+import tw.tsm.persistence.repositories.RewardLedgerRepositoryImpl
 import tw.tsm.persistence.repositories.FriendRepositoryImpl
 import tw.tsm.persistence.repositories.HouseBoardRepositoryImpl
 import tw.tsm.persistence.repositories.WelfareStateRepositoryImpl
@@ -78,6 +81,7 @@ import tw.tsm.persistence.repositories.MountRepositoryImpl
 import tw.tsm.persistence.repositories.FlyPointRepositoryImpl
 import tw.tsm.persistence.repositories.PetRepositoryImpl
 import tw.tsm.persistence.repositories.QuestRepositoryImpl
+import tw.tsm.persistence.repositories.EveEffectClaimRepositoryImpl
 import tw.tsm.persistence.repositories.RoleCountRepositoryImpl
 import tw.tsm.persistence.repositories.LimitedAreaDailyRepositoryImpl
 import tw.tsm.persistence.repositories.SkillRepositoryImpl
@@ -278,6 +282,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single<CharacterRepository> { CharacterRepositoryImpl() }
     single<InventoryRepository> { InventoryRepositoryImpl() }
     single<QuestRepository> { QuestRepositoryImpl() }
+    single<EveEffectClaimRepository> { EveEffectClaimRepositoryImpl() }
     single<BitFlagRepository> { BitFlagRepositoryImpl() }
     single<SkillRepository> { SkillRepositoryImpl() }
     single<PetRepository> { PetRepositoryImpl() }
@@ -294,6 +299,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single<PokeRepository> { PokeRepositoryImpl() }
     single<DispatchRepository> { DispatchRepositoryImpl() }
     single<DungeonRunRepository> { DungeonRunRepositoryImpl() }
+    single<RewardLedgerRepository> { RewardLedgerRepositoryImpl() }
     single<MailRepository> { MailRepositoryImpl() }
     single<MessageBoardRepository> { MessageBoardRepositoryImpl() }
     single<FriendRepository> { FriendRepositoryImpl() }
@@ -479,6 +485,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             itemDefs = get<GameDataManager>().itemDefs,
             exclusiveWeaponDefs = get<GameDataManager>().exclusiveWeaponDefs,
             collectWarriorSortDefs = get<GameDataManager>().collectWarriorSortDefs,
+            rewardLedgerRepository = get<RewardLedgerRepository>(),
         )
     }
     single { DungeonRoomRegistry() }
@@ -583,9 +590,13 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
         )
     }
     single {
-        BattleManager(get(), get<GameDataManager>().skillDefs, get<GameDataManager>().npcDefs, get(), get(), get<PetSystem>(), get<MoneySystem>(), get<StatSystem>(), get(), get<GameDataManager>().npcDropTable, get<SkillSystem>(), get<MacroBoxSystem>(), get<GameDataManager>().itemDefs, get<SkillRepository>(), get<CharacterRepository>(), get<GameDataManager>().npcUpgradeDefs, get<GameDataManager>().sceneSetDefs, get<DailyProgressSystem>(), get<CollectionSystem>(), get<GameDataManager>().sacredEquipPrimaryDefs, get<GameDataManager>().exclusiveSkillDefs, get<SoulSystem>(), get<ElfRepository>(), get<ElfCatalog>().defs.mapValues { it.value.baseExp }).also { bm ->
+        BattleManager(get(), get<GameDataManager>().skillDefs, get<GameDataManager>().npcDefs, get(), get(), get<PetSystem>(), get<MoneySystem>(), get<StatSystem>(), get(), get<GameDataManager>().npcDropTable, get<SkillSystem>(), get<MacroBoxSystem>(), get<GameDataManager>().itemDefs, get<SkillRepository>(), get<CharacterRepository>(), get<GameDataManager>().npcUpgradeDefs, get<GameDataManager>().sceneSetDefs, get<DailyProgressSystem>(), get<CollectionSystem>(), get<GameDataManager>().sacredEquipPrimaryDefs, get<GameDataManager>().exclusiveSkillDefs, get<SoulSystem>(), get<ElfRepository>(), get<ElfCatalog>().defs.mapValues { it.value.baseExp }, get<RewardLedgerRepository>()).also { bm ->
             // Callback kết thúc chiến đấu → EveFlowController khôi phục luồng sự kiện
             bm.onBattleAbortCallback = { session -> get<EveFlowController>().abortAfterBattle(session) }
+            // Must run before BattleManager grants any generic Eve win reward.
+            bm.onBeforeEveBattleRewards = { session ->
+                get<EveFlowController>().reserveBeforeEventBattleRewards(session)
+            }
             bm.onBattleEndCallback = { session, playerId, playerWin ->
                 // After reward settlement, refresh DVT S024-008 with remaining Phuc Than charges.
                 try { get<ElfHandler>().syncGodMission(session) }
@@ -659,7 +670,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { EveBattleService(get(), get<EveEventStateMachine>(), get(), get<GameDataManager>().mapTerrains, get<GameDataManager>().eveData) }
     single { NpcShopManager() }
     single {
-        EveFlowController(get(), get<EveEventStateMachine>(), get(), get(), get(), get(), get(), get(), get(), get(), get<GameDataManager>().eveData, get()).also { flow ->
+        EveFlowController(get(), get<EveEventStateMachine>(), get(), get(), get(), get(), get(), get(), get(), get(), get<GameDataManager>().eveData, get(), get<EveEffectClaimRepository>()).also { flow ->
             flow.onEventCompleted = { session ->
                 get<DungeonSystem>().settleAfterEvent(session)?.let { settlement ->
                     get<DungeonHandler>().sendDungeonResult(session, settlement)
@@ -694,7 +705,8 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get(), get(), get(), get(), get<PointSystem>(), get(), get(), get(), get(),
             get<GameDataManager>().itemDefs, get<GameDataManager>().eveData,
             get(), get<GameDataManager>().npcDefs, get(), get(), get(), get(), get(),
-            get<GameDataManager>().warpDefs, get<GameDataManager>().markDefs, get<CollectionSystem>()
+            get<GameDataManager>().warpDefs, get<GameDataManager>().markDefs, get<CollectionSystem>(),
+            get<EveEffectClaimRepository>(), get<RewardLedgerRepository>()
         )
     }
 

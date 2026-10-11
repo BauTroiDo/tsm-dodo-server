@@ -16,6 +16,8 @@ object CharacterDungeonRuns : Table("character_dungeon_runs") {
     val originY = integer("origin_y")
     val originInstanceId = integer("origin_instance_id").default(0)
     val settled = bool("settled").default(false)
+    /** Legacy persisted runs migrate as blank and must be reconciled before payout. */
+    val runToken = varchar("run_token", 64).default("")
 
     override val primaryKey = PrimaryKey(characterId)
 }
