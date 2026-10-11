@@ -44,7 +44,11 @@ class EveCompletionPersistenceFailureRegressionTest {
         coVerify(exactly = 1) { repository.insertCompletedEventAndGetCount(31L, 12001, 1) }
         assertNull(machine.getSession(31L))
         assertTrue(machine.getCompletedEveCounts(31L, 12001).isEmpty())
-        assertFalse(machine.isConditionCompleted(31L, 12001, 1, 12))
+        // The condition is quarantined to prevent duplicate reward execution,
+        // not counted as a successfully persisted Eve completion.
+        assertTrue(machine.isConditionCompleted(31L, 12001, 1, 12))
+        machine.clearSceneEvents(31L, 12001)
+        assertTrue(machine.isConditionCompleted(31L, 12001, 1, 12))
         coVerify(exactly = 0) { completion(any()) }
         coVerify(exactly = 0) { autoChain.tryAutoChain(any(), any(), any()) }
         verify(exactly = 1) { sender.sendEventEnd(session) }
