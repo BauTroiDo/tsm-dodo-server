@@ -49,6 +49,20 @@ Server hiện có **3.448 Mark_C records và 4.505 MarkStep records (984 nhiệm
 4. Kiểm tra sự khác biệt **client MarkStep** và **server IOS_MarkStep** cho toàn bộ 4.505 record, chứ không dựa vào text mô tả; đặc biệt có hai byte MarkStep đã chỉnh ở bản dev từ ngày 10/10.
 5. Nếu xử lý đa bước trong Eve fail closed sau khi đã giữ claim, kiểm tra `/claims` trước khi thử lại; không tự xóa claim hoặc cấp bù từ phỏng đoán.
 
+## 5. Full client/server binary parity (checked byte-by-byte)
+
+Two distinct 4,505-row `MarkStep_C.dat` sources were parsed independently, preserving strings and all navigation/condition fields:
+
+- 306 rows differ **before client repair**: 299 changed *description/endGuide* text only (Vietnamese data localization), 7 changed *end navigation targets*; **no rows differed in condition kinds, required item/NPC quantities, or teleport/checkTeam flags**.
+- Two real door mismatches were previously corrected on the Kotlin server but not in staging client: `11566/step2` points at Door 7 in scene 25021 (actual Door IDs only 1/2/3), and `11934/step4` points at Door 5 in scene 12431 (actual doors only 1/2/3). Their correct target is Door 3; **2 bytes were patched** in staging client MarkStep.
+- Five `11900` rescue-Trương-Bảo steps (1,2,3,4,12) had **no destination in the original client**, but the server already contains valid per-step scene coordinates and NPC/door IDs in scenes 12861, 12581, 12584, 12589, 12242. Each referenced scene exists and its **client/server Eve block is identical**; the server-side read-only target audit found none missing. **39 nonzero bytes** across these five end targets were filled in client only.
+- After this **7-target** surgical client fix, *all navigation end targets* match the server's 4,505 rows, while the 299 translated text rows remain untouched. The patch script checks expected targets and refuses unknown differences: `tools/repair_dvt_client_markstep_20261011.py`.
+- Original client MarkStep backup: `D:\\Games\\Ts-Offline\\TSNPCVN_9PET_STAGING\\_quest_navigation_backup_20261011\\tsnpc_Data\\StreamingAssets\\Data\\MarkStep_C.dat`. An intermediate backup preserves the state after the two door IDs. Latest client MarkStep SHA-256: `e17ac359391fdaf0d4c57a51876acfb106749768a2e21dfbb1326e732c85f33f`.
+
+Eve.emg client/server both index **3,823 scenes**, of which **27 scene blocks differ**, but **10 differ only in 103-byte header** and 17 have changes in the payload. In particular quest target **scene 11012 has identical NPC/event payload** and only differs in header bytes; scene 11101 is completely identical. There is **no basis to overwrite this Eve data** for mission 10074/10075. The 17 payload variants need a separate event-effect-level audit before any change.
+
+Read-only server NPC/door cross-reference scan (`tools/audit_dvt_quest_navigation.py`) checked **5,716 located target references** against `Eve.emg`, across 1,626 scene blocks: 3,644 NPC targets, 1,244 door targets, and **11 unresolvable references** (1 NPC, 10 doors). These involve `11190, 11908, 12438, 12682`; they have not been auto-corrected, because the original DVT scripts may route some triggers differently. Full report: `C:\\Server-Game\\tsm_dodo\\backups\\quest_nav_audit_20261011\\targets.json`.
+
 ## Giới hạn xác nhận
 
 - Đây là đối chiếu mã nguồn gốc, phân tích dữ liệu đường đi và kiểm tra mã hóa sau patch, **chưa có kiểm thử tương tác client thật** sau khi vá.
