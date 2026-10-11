@@ -116,6 +116,23 @@ class DungeonWeeklyAllPassLedgerRegressionTest {
         coVerify(exactly = 0) { f.inventory.addItemsToBagExact(any(), any(), any()) }
     }
 
+    @Test fun invalidClaimMarkIsRejectedWithoutHoldingARewardScope() = runTest {
+        val f = fixture()
+        every { f.quest.completionBitId(8800) } returns 0
+        assertFalse(f.dungeon.claimWeeklyAllPass(f.game, 0))
+        coVerify(exactly = 0) { f.claims.reserve(any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { f.inventory.addItemsToBagExact(any(), any(), any()) }
+    }
+
+    @Test fun incompleteWeeklyPageCannotCreateClaimOrDeliverItem() = runTest {
+        val f = fixture()
+        coEvery { f.quest.getMissions(31L) } returns
+            weekDefs.values.drop(1).map { MissionRecord(it.dailyFlag, 1) }
+        assertFalse(f.dungeon.claimWeeklyAllPass(f.game, 0))
+        coVerify(exactly = 0) { f.claims.reserve(any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { f.inventory.addItemsToBagExact(any(), any(), any()) }
+    }
+
     @Test fun lostSettlementAckDoesNotConfirmSuccessToClientOrRetryPayout() = runTest {
         val f = fixture(settlementAckLost = true)
         assertFalse(f.dungeon.claimWeeklyAllPass(f.game, 0))
