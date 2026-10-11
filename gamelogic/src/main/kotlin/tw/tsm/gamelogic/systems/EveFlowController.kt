@@ -639,7 +639,9 @@ class EveFlowController(
      * Logic nội bộ hoàn thành sự kiện — ghi nhận hoàn thành + lưu bền
      */
     private suspend fun completeEventInternal(session: GameSession, charId: Long): EventSession? {
-        val completedSession = stateMachine.complete(charId)
+        // Consume the event exactly once, but do not publish a completed EveCount
+        // or completed-condition bit until the repository confirms its write.
+        val completedSession = stateMachine.takeCompletion(charId)
 
         // Sự kiện kết thúc → xóa trạng thái cửa hàng
         npcShopManager.clearShop(charId)
@@ -658,6 +660,9 @@ class EveFlowController(
             }
         }
 
+        if (completedSession != null) {
+            stateMachine.recordPersistedCompletion(charId, completedSession)
+        }
         return completedSession
     }
 }
