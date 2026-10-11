@@ -750,7 +750,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { MacroBoxHandler(get(), get(), get(), get()) }
     single {
         TeleportHandler(
-            get(), get(), get(), get(), get(),
+            get(), get(), get(), get<QuestSystem>(), get(),
             get<GameDataManager>().warpDefs,
             get<GameDataManager>().markDefs,
             get<AdminBypassPolicy>()
