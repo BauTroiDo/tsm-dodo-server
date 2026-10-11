@@ -40,7 +40,12 @@ class DungeonWeeklyRewardLedgerRegressionTest {
         val inventory: InventorySystem, val ledger: RewardLedgerRepository,
         val dungeon: DungeonSystem, val sender: ResponseSender
     )
-    private fun fixture(reserved: Boolean = true, lostAck: Boolean = false): Fixture {
+    private fun fixture(
+        reserved: Boolean = true,
+        lostAck: Boolean = false,
+        dungeonKind: Int = DungeonSystem.KIND_WEEKLY,
+    ): Fixture {
+        val rewardKind = if (dungeonKind == DungeonSystem.KIND_SOUL_WEEKLY) "DUNGEON_SOUL" else "DUNGEON_WEEKLY"
         val game = mockk<GameSession>(relaxed = true) {
             every { roleId } returns 31
             every { playerId } returns 31L
@@ -67,16 +72,16 @@ class DungeonWeeklyRewardLedgerRegressionTest {
         coEvery { runs.load(31L) } coAnswers { stored }
 
         val ledger = mockk<RewardLedgerRepository>(relaxed = true)
-        coEvery { ledger.reserve(31L, "DUNGEON_WEEKLY", any(), any(), any()) } returns reserved
+        coEvery { ledger.reserve(31L, rewardKind, any(), any(), any()) } returns reserved
         if (lostAck) {
-            coEvery { ledger.settle(31L, "DUNGEON_WEEKLY", any(), any(), any()) } throws
+            coEvery { ledger.settle(31L, rewardKind, any(), any(), any()) } throws
                 IllegalStateException("simulated lost settlement ACK")
         } else {
-            coEvery { ledger.settle(31L, "DUNGEON_WEEKLY", any(), any(), any()) } returns true
+            coEvery { ledger.settle(31L, rewardKind, any(), any(), any()) } returns true
         }
         val sender = mockk<ResponseSender>(relaxed = true)
         val dungeon = DungeonSystem(
-            defs = mapOf(6401 to dungeonDef), questSystem = quest,
+            defs = mapOf(6401 to dungeonDef.copy(kind = dungeonKind)), questSystem = quest,
             partySystem = mockk(relaxed = true),
             specialTeleport = mockk(relaxed = true),
             responseSender = sender,
@@ -120,6 +125,18 @@ class DungeonWeeklyRewardLedgerRegressionTest {
         assertEquals(1, f.dungeon.settleWeeklyBattle(f.game, 6401, true)?.result)
         coVerify(exactly = 0) { f.ledger.reserve(any(), any(), any(), any(), any()) }
         coVerify(exactly = 0) { f.quest.setMissionStep(any(), any(), any()) }
+    }
+
+    @Test fun soulDungeonWinUsesIndependentSoulRewardScope() = runTest {
+        val f = fixture(dungeonKind = DungeonSystem.KIND_SOUL_WEEKLY)
+        f.dungeon.markSingleStarted(f.game, 6401, 46000.0)
+        assertEquals(0, f.dungeon.settleWeeklyBattle(f.game, 6401, true)?.result)
+        coVerifyOrder {
+            f.ledger.reserve(31L, "DUNGEON_SOUL", any(), any(), any())
+            f.inventory.addRewardsToBagExact(31L, listOf(29124 to 1))
+            f.quest.setMissionStep(31L, 7401, 1)
+            f.ledger.settle(31L, "DUNGEON_SOUL", any(), any(), any())
+        }
     }
 
     @Test fun lostAckAfterAwardLeavesPendingWithoutSecondPayout() = runTest {
