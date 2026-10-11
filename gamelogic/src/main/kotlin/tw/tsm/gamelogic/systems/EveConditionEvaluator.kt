@@ -55,7 +55,7 @@ data class PlayerEventState(
     val moral: IntArray = intArrayOf(0, 0, 0, 0, 0),
     /** Điểm diệt địch; Mobile DVT tính Honor = Calc.GetHonor(KillNum) và hiện công thức là 1:1. */
     val killNum: Int = 0,
-    /** Trạng thái mở hoạt động; offline mặc định mở khi scheduler gốc không có. */
+    /** Legacy service state; class14 now uses its serialized CTimeValue, not this flag. */
     val activityOpen: Boolean? = null,
     /** ID quân đoàn hiện tại; server offline chưa có subsystem Quân đoàn nên mặc định 0. */
     val organizationId: Long = 0L,
@@ -112,6 +112,8 @@ data class PlayerEventState(
     val skillLevels: Map<Int, Int> = emptyMap(),
     val gold: Int = 0,
     val npcSecondReincarnationStatus: Int = -1,
+    /** Current DVT server-local clock as OLE Automation date. Null means unknown/fail closed. */
+    val eveNowOaDate: Double? = null,
 )
 
 /**
@@ -590,32 +592,33 @@ object EveConditionEvaluator {
             13 -> evaluateOrganizationCondition(cond, state)
 
             14 -> {
-                // DVT class14 = trạng thái mở hoạt động của scene.
-                // Talk 52514 = "Sự kiện chưa mở.".
-                // Dữ liệu Eve dùng ops=1 cho nhánh hoạt động/reward và ops=2 cho nhánh chưa mở.
-                // Chỉ scene có ActivityTime ID ánh xạ chắc chắn mới có activityOpen != null.
-                val open = state.activityOpen
+                // DVT CTimeValue is OLE Automation local datetime (1899-12-30 epoch).
+                // 10852/eve8 pairs ops2/start43320 with ops1/end43325.
+                // 11411/eve4 pairs ops4/start43376 with ops3/end43383.
+                // class14 param2/pStyle1..4 in 12001/eve64 remains unverified.
+                val now = state.eveNowOaDate
+                val cutoff = cond.conditionTimeValue
                 if (
-                    open == null ||
                     cond.conditionParameter != 0 ||
                     cond.conditionParameterStyle != 0 ||
                     cond.conditionValue != 0 ||
-                    cond.conditionSubItem != 0
+                    cond.conditionSubItem != 0 ||
+                    cond.conditionOps !in 1..4 ||
+                    now == null || !now.isFinite() || !cutoff.isFinite() || cutoff <= 0.0
                 ) {
                     logger.warn {
-                        "conditionClass=14 chưa có mapping ActivityTime chắc chắn " +
-                            "param=${cond.conditionParameter} pStyle=${cond.conditionParameterStyle} " +
-                            "ops=${cond.conditionOps} val=${cond.conditionValue} → false"
+                        "conditionClass=14 unknown time shape param=" +
+                            cond.conditionParameter + " style=" + cond.conditionParameterStyle +
+                            " ops=" + cond.conditionOps + " cutoff=" + cutoff
                     }
                     false
                 } else {
                     when (cond.conditionOps) {
-                        1 -> open
-                        2 -> !open
-                        else -> {
-                            logger.warn { "conditionClass=14 ops=${cond.conditionOps} chưa xác minh → false" }
-                            false
-                        }
+                        1 -> now < cutoff
+                        2 -> now > cutoff
+                        3 -> now <= cutoff
+                        4 -> now >= cutoff
+                        else -> false
                     }
                 }
             }
