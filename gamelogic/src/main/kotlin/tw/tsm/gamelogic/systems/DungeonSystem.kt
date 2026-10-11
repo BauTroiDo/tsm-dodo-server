@@ -583,11 +583,12 @@ class DungeonSystem(
             return DungeonSettlement(def.id, result = 1)
         }
 
-        for ((slot, thing) in changed) responseSender?.sendSetBagItem(session, slot, thing, showMsg = true)
         if (!settleNormalDungeonClaim(session, ledger, rewardClaim)) {
             // The items may already exist in DB/RAM: report unresolved, NEVER retry.
+            // Defer UI reward success packets until the ledger receipt commits.
             return DungeonSettlement(def.id, result = 1)
         }
+        for ((slot, thing) in changed) responseSender?.sendSetBagItem(session, slot, thing, showMsg = true)
         dungeonLogger.info {
             "Dungeon ${def.id} settled: remaining=${remainingSeconds}s turn=${session.turn} rewards=$rewards dailyFlag=${def.dailyFlag}"
         }
