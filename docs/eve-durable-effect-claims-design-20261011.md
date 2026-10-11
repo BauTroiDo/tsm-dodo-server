@@ -34,7 +34,7 @@
 4. **Đã có nhưng cần thêm test:** `settle` của event có claim đi sau các hiệu ứng được dispatch; Talk-only/NPC dịch vụ/eveNo=0 tiếp tục dùng luồng cũ. Cần kiểm tra nhánh hủy, dịch chuyển, thưởng battle/dungeon riêng.
 5. Xác minh hành vi khi disconnect, scene reset, hủy Surface, thua battle, quà đã trao nhưng người chơi chưa bấm Next, và MySQL unavailable.
 6. Viết test fault injection cho từng ranh giới: crash sau reserve, sau gold/item/quest effect, trước settlement, commit mất ACK, đăng nhập lại, nhiều gói 020-006/009 và double callback battle.
-7. Có công cụ admin đối soát read-only, ghi rõ người chơi/scene/Eve/claim age và snapshot vật phẩm, tiền, nhiệm vụ, EveCount; chỉ giải phóng claim sau xác minh. **Tuyệt đối không tự xóa claim sau timeout**.
+7. Đã có bộ SQL đối soát read-only: `SQL/dvt_eve_effect_claims_audit_readonly_20261011.sql`, gồm pending claim, biên nhận, EveCount, mission và flags. Vẫn thiếu UI và snapshot vật phẩm/tiền/NPC cùng hành động release có xác nhận. Tuyệt đối không tự xóa claim sau timeout., ghi rõ người chơi/scene/Eve/claim age và snapshot vật phẩm, tiền, nhiệm vụ, EveCount; chỉ giải phóng claim sau xác minh. **Tuyệt đối không tự xóa claim sau timeout**.
 
 ## Giới hạn
 
