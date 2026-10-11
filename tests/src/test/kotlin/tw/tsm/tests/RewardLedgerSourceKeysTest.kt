@@ -33,6 +33,9 @@ class RewardLedgerSourceKeysTest {
         assertThrows(IllegalArgumentException::class.java) {
             RewardLedgerSourceKeys.dungeon(before.copy(runToken = ""), "TERMINAL")
         }
+        assertNull(RewardLedgerSourceKeys.verifiedDungeonOrNull(
+            before.copy(runToken = "legacy-unknown"), "TERMINAL"
+        ))
         assertNotEquals(
             RewardLedgerSourceKeys.dungeon(before, "TERMINAL"),
             RewardLedgerSourceKeys.dungeon(before, "WEEKLY_TERMINAL")
