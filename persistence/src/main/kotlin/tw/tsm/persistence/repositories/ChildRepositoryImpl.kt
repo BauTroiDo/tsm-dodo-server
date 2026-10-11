@@ -42,6 +42,32 @@ class ChildRepositoryImpl : ChildRepository {
         }
     }
 
+    override suspend fun updateCare(
+        characterId: Long,
+        stodge: Int?,
+        satiation: Int?,
+    ): ChildDataSnapshot? {
+        if (characterId <= 0 || (stodge == null && satiation == null) ||
+            (stodge != null && stodge !in 0..65535) ||
+            (satiation != null && satiation !in 0..65535)
+        ) return null
+        return suspendTransaction {
+            val row = CharacterChildStates.selectAll()
+                .where { CharacterChildStates.characterId eq characterId }
+                .forUpdate()
+                .firstOrNull() ?: return@suspendTransaction null
+            val old = ChildDataSnapshot.decode(row[CharacterChildStates.payload])
+            if (old.kind == 0) return@suspendTransaction null
+            val updated = old.withCare(stodge = stodge, satiation = satiation)
+            if (!updated.toBytes().contentEquals(old.toBytes())) {
+                CharacterChildStates.update({ CharacterChildStates.characterId eq characterId }) {
+                    it[CharacterChildStates.payload] = updated.toBytes()
+                }
+            }
+            updated
+        }
+    }
+
     override suspend fun save(characterId: Long, snapshot: ChildDataSnapshot) {
         require(characterId > 0L)
         val bytes = snapshot.toBytes()

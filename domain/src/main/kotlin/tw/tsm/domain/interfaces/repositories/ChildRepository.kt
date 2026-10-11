@@ -15,4 +15,7 @@ interface ChildRepository {
      * child or accept a client-supplied counter. Null means absent/invalid state.
      */
     suspend fun setItemUseTotal(characterId: Long, newTotal: Int): ChildDataSnapshot?
+
+    /** No child creation / inventory spending; validated, locked care mutation. */
+    suspend fun updateCare(characterId: Long, stodge: Int?, satiation: Int?): ChildDataSnapshot?
 }

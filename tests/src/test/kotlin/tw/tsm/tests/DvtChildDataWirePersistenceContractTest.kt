@@ -109,6 +109,53 @@ class DvtChildDataWirePersistenceContractTest {
         assertThrows(IllegalArgumentException::class.java) { absent.withItemCount(400) }
     }
 
+    @Test fun originalDvtS069CareUpdatesPreserve93BytesAndZeroFullnessCausesDeath() {
+        val foster = ChildDataSnapshot.decode(childBytes())
+        val original = foster.toBytes()
+        assertArrayEquals(byteArrayOf(69, 3, 0, 48, 0), ChildPackets.stodge(foster))
+        assertArrayEquals(byteArrayOf(69, 4, 0, 47, 0), ChildPackets.satiation(foster))
+        assertArrayEquals(original, foster.withCare(stodge = 48, satiation = 47).toBytes())
+
+        val dead = foster.withCare(stodge = 0)
+        assertEquals(2, dead.kind)
+        assertEquals(0, dead.stodge)
+        assertEquals(47, dead.satiation)
+        assertArrayEquals(byteArrayOf(69, 3, 0, 0, 0), ChildPackets.stodge(dead))
+        assertArrayEquals(byteArrayOf(69, 11, 0, 2), ChildPackets.lifecycleKind(dead))
+        assertArrayEquals(original.copyOfRange(1, 42), dead.toBytes().copyOfRange(1, 42))
+        assertArrayEquals(original.copyOfRange(44, 93), dead.toBytes().copyOfRange(44, 93))
+        assertEquals(2, dead.withCare(stodge = 48).kind,
+            "Fullness alone cannot revive a dead child")
+
+        val onlySatisfaction = foster.withCare(satiation = 0)
+        assertEquals(1, onlySatisfaction.kind,
+            "DVT S069-004 does not kill a child when satisfaction reaches zero")
+        assertEquals(48, onlySatisfaction.stodge)
+        assertEquals(0, onlySatisfaction.satiation)
+        assertArrayEquals(original.copyOfRange(0, 52),
+            onlySatisfaction.toBytes().copyOfRange(0, 52))
+        assertArrayEquals(original.copyOfRange(54, 93),
+            onlySatisfaction.toBytes().copyOfRange(54, 93))
+
+        val changed = foster.withCare(stodge = 300, satiation = 500)
+        assertEquals(300, changed.stodge)
+        assertEquals(500, changed.satiation)
+        assertArrayEquals(byteArrayOf(69, 3, 0, 44, 1), ChildPackets.stodge(changed))
+        assertArrayEquals(byteArrayOf(69, 4, 0, -12, 1), ChildPackets.satiation(changed))
+        assertArrayEquals(original.copyOfRange(54, 93),
+            changed.toBytes().copyOfRange(54, 93))
+        assertEquals(48, foster.stodge)
+        assertEquals(47, foster.satiation)
+
+        assertThrows(IllegalArgumentException::class.java) { foster.withCare() }
+        assertThrows(IllegalArgumentException::class.java) { foster.withCare(stodge = -1) }
+        assertThrows(IllegalArgumentException::class.java) { foster.withCare(satiation = 65536) }
+        val none = childBytes().also { it[0] = 0 }
+        assertThrows(IllegalArgumentException::class.java) {
+            ChildDataSnapshot.decode(none).withCare(stodge = 0)
+        }
+    }
+
     @Test fun invalidPayloadNeverCreatesOrUnlocksAChild() {
         assertThrows(IllegalArgumentException::class.java) { ChildDataSnapshot.decode(ByteArray(92)) }
         assertThrows(IllegalArgumentException::class.java) { ChildDataSnapshot.decode(ByteArray(94)) }

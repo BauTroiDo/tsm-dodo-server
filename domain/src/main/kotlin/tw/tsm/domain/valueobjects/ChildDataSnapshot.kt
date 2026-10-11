@@ -38,6 +38,28 @@ class ChildDataSnapshot private constructor(
      * an adult once childItemCount reaches 400; 399 must not mature it.
      * This is deliberately NOT a client-controlled update operation.
      */
+    /**
+     * DVT S069-003/004: authenticated server-side care status. Zero fullness
+     * makes a child Died; adding fullness alone does NOT revive the child.
+     */
+    fun withCare(stodge: Int? = null, satiation: Int? = null): ChildDataSnapshot {
+        require(kind != 0) { "Cannot change care status without a child" }
+        require(stodge != null || satiation != null) { "Empty care update" }
+        require(stodge == null || stodge in 0..65535) { "stodge must be UInt16" }
+        require(satiation == null || satiation in 0..65535) { "satiation must be UInt16" }
+        val copy = raw.copyOf()
+        if (stodge != null) {
+            copy[42] = stodge.toByte()
+            copy[43] = (stodge ushr 8).toByte()
+            if (stodge == 0) copy[0] = DEAD_KIND.toByte()
+        }
+        if (satiation != null) {
+            copy[52] = satiation.toByte()
+            copy[53] = (satiation ushr 8).toByte()
+        }
+        return decode(copy)
+    }
+
     fun withItemCount(newTotal: Int): ChildDataSnapshot {
         require(kind != 0) { "Cannot update item-use count when no child exists" }
         require(newTotal in childItemCount..65535) {
@@ -51,6 +73,7 @@ class ChildDataSnapshot private constructor(
     }
 
     companion object {
+        const val DEAD_KIND = 2
         const val ADULT_KIND = 3
         const val ADULT_ITEM_USE_THRESHOLD = 400
         const val SIZE = 93

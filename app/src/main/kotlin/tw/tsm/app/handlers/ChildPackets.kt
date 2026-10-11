@@ -12,6 +12,16 @@ object ChildPackets {
         PacketWriter(98).writeByte(69).writeByte(7).writeByte(0)
             .writeShortLE(ChildDataSnapshot.SIZE).writeBytes(child.toBytes()).toByteArray()
 
+    /** DVT S069-003: UInt16 fullness, 0 means the child dies. */
+    fun stodge(child: ChildDataSnapshot): ByteArray =
+        PacketWriter(5).writeByte(69).writeByte(3).writeByte(0)
+            .writeShortLE(child.stodge).toByteArray()
+
+    /** DVT S069-004: UInt16 satisfaction, 0 does not cause death. */
+    fun satiation(child: ChildDataSnapshot): ByteArray =
+        PacketWriter(5).writeByte(69).writeByte(4).writeByte(0)
+            .writeShortLE(child.satiation).toByteArray()
+
     /** DVT S069-008: authoritative item-use total (UInt16 LE).
      * The client applies kind=Adults when this value reaches 400.
      */
