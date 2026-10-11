@@ -10,7 +10,7 @@ import tw.tsm.domain.interfaces.PacketHandler
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
 import tw.tsm.gamelogic.systems.AdminBypassPolicy
-import tw.tsm.gamelogic.systems.BitFlagSystem
+import tw.tsm.gamelogic.systems.QuestSystem
 import tw.tsm.gamelogic.systems.PartySystem
 import tw.tsm.gamelogic.systems.WorldManager
 import tw.tsm.protocol.PacketReader
@@ -33,7 +33,7 @@ class TeleportHandler(
     private val responseSender: ResponseSender,
     private val worldManager: WorldManager,
     private val characterRepository: CharacterRepository,
-    private val bitFlagSystem: BitFlagSystem,
+    private val questSystem: QuestSystem,
     private val partySystem: PartySystem,
     private val warpDefs: Map<Int, WarpDef>,
     private val markDefs: Map<Int, MarkDef>,
@@ -146,8 +146,8 @@ class TeleportHandler(
         if (warpDef.mark == 0) return true
         val markDef = markDefs[warpDef.mark] ?: return false
         if (markDef.bitId == 0) return true
-        val flags = bitFlagSystem.getSetFlagIds(charId)
-        return flags.contains(markDef.bitId)
+        // MarkManager.flags (character_mission_flags), never BitFlag.foreverFlags.
+        return WarpMarkUnlockPolicy.isUnlocked(charId, warpDef, markDefs, questSystem)
     }
 
     /**
