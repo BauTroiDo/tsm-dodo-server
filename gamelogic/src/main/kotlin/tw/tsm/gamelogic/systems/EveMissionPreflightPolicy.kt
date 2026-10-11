@@ -7,7 +7,12 @@ import tw.tsm.domain.data.EveResult
  * that the server does not have, or applying following quest/reward results after an error.
  */
 object EveMissionPreflightPolicy {
-    enum class Failure { MISSING_MISSION, INVALID_STEP, UNDEFINED_DVT_TUTORIAL_STEP }
+    enum class Failure {
+        MISSING_MISSION,
+        INVALID_STEP,
+        UNDEFINED_DVT_TUTORIAL_STEP,
+        UNDEFINED_DVT_QUEST_STEP,
+    }
 
     data class Rejection(val missionId: Int, val reason: Failure)
 
@@ -32,8 +37,11 @@ object EveMissionPreflightPolicy {
                     // Reject the entire Eve result chain before item, gold,
                     // follower or quest mutation if a stale novice ADD would
                     // persist a tutorial stage absent from active DVT data.
-                    if (DvtNoviceStepGapPolicy.isUnsupportedAddDestination(missionId, nextStep)) {
-                        return Rejection(missionId, Failure.UNDEFINED_DVT_TUTORIAL_STEP)
+                    if (DvtQuestStepBoundaryPolicy.isUnsupportedAddDestination(missionId, nextStep)) {
+                        val failure = if (
+                            DvtNoviceStepGapPolicy.isUnsupportedAddDestination(missionId, nextStep)
+                        ) Failure.UNDEFINED_DVT_TUTORIAL_STEP else Failure.UNDEFINED_DVT_QUEST_STEP
+                        return Rejection(missionId, failure)
                     }
                     simulated[missionId] = nextStep
                 }
