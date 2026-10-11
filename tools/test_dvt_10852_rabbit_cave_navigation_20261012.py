@@ -14,7 +14,7 @@ from patch_dvt_10852_rabbit_cave_waypoint_20261012 import (
 ROOT=Path(__file__).resolve().parents[1]
 MARKSTEP=ROOT/"File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE=ROOT/"gamedata/Eve.emg"
-TARGET_SHA="e0278071b4f12f75d058d51661e743ad0c42c83ab6a08af2bc610ba4f7e02074"
+TARGET_SHA="c06c8f2179b78033faac137cd7803d4c054f5f151a8f54df1f013f321972739e"
 
 
 class DvtMoonRabbitQuestNavigationTest(unittest.TestCase):
@@ -28,7 +28,7 @@ class DvtMoonRabbitQuestNavigationTest(unittest.TestCase):
         self.assertEqual(hashlib.sha256(MARKSTEP.read_bytes()).hexdigest(),TARGET_SHA)
         self.assertEqual(self.row["conditions"][0],
             (1,RABBIT_NPC_ID,1,(CAVE,*RABBIT,1,RABBIT_PLACEMENT)))
-        self.assertEqual(self.row["end"],(0,0,0,0,0))
+        self.assertEqual(self.row["end"],(11021,190,180,1,7))
         self.assertIn("Ngô Cương",self.row["guide"])
         self.assertEqual(verified_target(self.archive),
                          (CAVE,*RABBIT,1,RABBIT_PLACEMENT))

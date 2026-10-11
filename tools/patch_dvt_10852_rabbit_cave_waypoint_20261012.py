@@ -77,8 +77,15 @@ def patch(path:Path,eve:Path,apply=False):
     steps=[s for s in read_steps(path) if (s["mission"],s["step"])==(MISSION,STEP)]
     if len(steps)!=1:raise ValueError(f"Expected one MarkStep, found {len(steps)}")
     st=steps[0]
-    if st["end"]!=(0,0,0,0,0) or st["conditions"][0][:3]!=(1,RABBIT_NPC_ID,1):
+    if st["conditions"][0][:3]!=(1,RABBIT_NPC_ID,1):
         raise ValueError("Original rabbit capture stage differs")
+    # The separately source-verified quest10852 RETURN patch may now set END.
+    # Allow ONLY the exact Ngô Cương NPC when the active Eve event still
+    # verifies possession of the rabbit and the original completion chain.
+    if st["end"] != (0,0,0,0,0):
+        from patch_dvt_10852_rabbit_return_waypoint_20261012 import source_verified
+        if st["end"] != source_verified(eve):
+            raise ValueError("Unknown changed rabbit return target")
     target=verified_target(EveArchive(eve))
     ref=scan(old)[(MISSION,STEP,"CONDITION_1")]
     if ref[:5]==target:
