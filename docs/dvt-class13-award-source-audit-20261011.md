@@ -45,6 +45,28 @@ Bảy mã có `pStyle=2` chỉ nằm trong một số scene muộn
 12926,12928,12933,12934,12936,12937,12939, nên không được mặc định
 rằng pStyle2 là thưởng cùng hình dạng pStyle1.
 
+## Truy thêm ngữ cảnh các mã ở map12003
+
+Đối chiếu `File.dat/Data-ios/IOS_Mark_C.dat` xác nhận các nhiệm vụ
+**10714** và **10715** đều mang tên **“Thách Thức đấu Lôi đài”**,
+lần lượt là mark đang tiến hành và mark theo dõi khiêu chiến. Nhánh
+`resultClass13` các giá trị 69–101 thuộc các Eve24–26 và Eve42 ở scene
+**12003**, do **NPC16027**, `npc index14`, tại vị trí `530,840`
+thực thi. Trong cùng chuỗi, hiệu ứng class13 đi trước thao tác tăng
+`10715`. Điều này cho thấy mã class13 có liên hệ với tiến độ/thưởng
+**đấu trường**, không có chứng cứ rằng chúng là khóa trực tiếp vào
+`IOS_ActivityAward_C.dat`.
+
+Các hiệu ứng `pStyle=2` ở scene12926/12928/12933/12934/12936/
+12937/12939 liên quan tới `10690` (“Tháp Thử Luyện”) và các nhiệm vụ
+phụ bản tương ứng. Không được mặc định `pStyle=2` có cùng tác dụng với
+`pStyle=1`, hoặc sửa tất cả class13 bằng một hàm cộng vật phẩm.
+
+Tại scene11021/Eve11, mã `class13/pStyle1/value40` đứng trong chuỗi
+nhận/trả nhiệm vụ bắt thỏ ngọc `10852`, kèm kết quả thay đổi tướng theo
+người. Như vậy class13 có mặt cả trong nhiệm vụ phụ tuyến, không chỉ
+đấu trường. **Chưa khẳng định ngữ nghĩa thực thi** từ ngữ cảnh riêng lẻ.
+
 ## Thay đổi trong PR #41
 
 - `tools/audit_dvt_class13_award_sources_20261011.py`: công cụ
