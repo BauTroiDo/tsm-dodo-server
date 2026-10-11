@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test
 import tw.tsm.persistence.repositories.EveEffectClaimRepositoryImpl
 import tw.tsm.persistence.tables.CharacterCompletedEvents
 import tw.tsm.persistence.tables.CharacterEveEffectClaims
+import tw.tsm.persistence.tables.CharacterEveEffectSettlements
 
 /**
  * Isolated in-memory H2 integration tests; never connect to production MySQL.
@@ -29,7 +30,7 @@ class EveEffectClaimRepositoryTest {
         TransactionManager.defaultDatabase = database
         try {
             transaction(database) {
-                SchemaUtils.create(CharacterEveEffectClaims, CharacterCompletedEvents)
+                SchemaUtils.create(CharacterEveEffectClaims, CharacterCompletedEvents, CharacterEveEffectSettlements)
             }
             runBlocking { block(EveEffectClaimRepositoryImpl()) }
         } finally {
@@ -67,6 +68,9 @@ class EveEffectClaimRepositoryTest {
         assertEquals(1, repo.settle(503L, 10821, 3, "run-one"))
         assertTrue(repo.unresolvedForCharacter(503L).isEmpty())
         assertNull(repo.settle(503L, 10821, 3, "run-one"))
+        // A lost success ACK must NOT permit a replay of the same run token.
+        assertFalse(repo.reserve(503L, 10821, 3, "run-one", 2000L))
+        assertFalse(repo.reserve(503L, 10853, 9, "run-one", 2000L))
         assertTrue(repo.reserve(503L, 10821, 3, "run-two", 2000L))
         assertEquals(2, repo.settle(503L, 10821, 3, "run-two"))
         assertTrue(repo.unresolvedForCharacter(503L).isEmpty())
