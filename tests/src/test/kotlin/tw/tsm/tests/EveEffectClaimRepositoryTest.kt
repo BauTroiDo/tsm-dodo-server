@@ -24,7 +24,7 @@ class EveEffectClaimRepositoryTest {
     private fun withRepository(block: suspend (EveEffectClaimRepositoryImpl) -> Unit) {
         val previous = TransactionManager.defaultDatabase
         val database = Database.connect(
-            url = "jdbc:h2:mem:quest_effect_claim_${System.nanoTime()};DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=30000",
+            url = "jdbc:h2:mem:quest_effect_claim_${System.nanoTime()};DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=30000;MODE=MySQL",
             driver = "org.h2.Driver",
         )
         TransactionManager.defaultDatabase = database
