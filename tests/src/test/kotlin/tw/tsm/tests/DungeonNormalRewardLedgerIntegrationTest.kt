@@ -73,13 +73,13 @@ class DungeonNormalRewardLedgerIntegrationTest {
         coEvery { inventory.addRewardsToBagExact(31L, listOf(29124 to 1)) } returns listOf(5 to mockk<ThingData>(relaxed = true))
 
         val runs = mockk<DungeonRunRepository>(relaxed = true)
-        val saved = DungeonRunRecord(
-            characterId = 31L, dungeonId = 6001, startTime = 46000.0,
-            startedAtMillis = 1000L, instanceId = 0,
-            originMapId = originScene, originX = 10, originY = 11,
-            originInstanceId = 0, settled = false,
-        )
-        coEvery { runs.load(31L) } returns if (persisted) saved else null
+        var stored: DungeonRunRecord? = null
+        coEvery { runs.save(any()) } coAnswers {
+            stored = firstArg<DungeonRunRecord>()
+        }
+        coEvery { runs.load(31L) } coAnswers {
+            if (persisted) stored else null
+        }
 
         val ledger = mockk<RewardLedgerRepository>(relaxed = true)
         coEvery {
