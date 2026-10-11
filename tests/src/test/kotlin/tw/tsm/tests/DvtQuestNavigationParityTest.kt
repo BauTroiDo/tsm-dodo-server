@@ -4,6 +4,9 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import tw.tsm.data.loaders.MarkStepDatLoader
 import tw.tsm.domain.data.MarkDef
+import tw.tsm.domain.data.MarkNavigationTarget
+import tw.tsm.domain.data.MarkStepDef
+import tw.tsm.domain.data.MarkStepRequirement
 import tw.tsm.gamelogic.systems.QuestNavigationPolicy
 import java.io.ByteArrayOutputStream
 
@@ -79,5 +82,44 @@ class DvtQuestNavigationParityTest {
         assertEquals(11101, target.target.sceneId)
         assertEquals(310, target.target.x)
         assertNull(QuestNavigationPolicy.resolve(10075, emptyMap(), marks, parsed, emptyMap()))
+    }
+
+    @Test fun killObjectiveNavigatesToEncounterUntilEveAdvancesTheMissionStep() {
+        // The only DVT MarkStep kill objectives are 13221/2 and 13306/1.
+        // Their successful battle Eve chains advance the active mission step.
+        // Simulate 13306/1: a collect target comes first, then a kill target,
+        // then a DIFFERENT return NPC in scene 54975.
+        val itemTarget = MarkNavigationTarget(54974, 200, 300, 1, 11)
+        val killTarget = MarkNavigationTarget(54974, 1200, 320, 1, 11)
+        val turnInTarget = MarkNavigationTarget(54975, 280, 380, 1, 2)
+        val stepOne = MarkStepDef(
+            missionId = 13306, step = 1, description = "Collect and kill",
+            conditions = listOf(
+                MarkStepRequirement(3, 29826, 1, itemTarget),
+                MarkStepRequirement(2, 38136, 1, killTarget),
+            ),
+            endGuide = "Return", endTarget = turnInTarget, teleport = 0, checkTeam = false,
+        )
+        val stepTwo = stepOne.copy(step = 2, conditions = emptyList())
+        val sampleMarks = mapOf(13306 to MarkDef("DVT encounter", 1, 0, 0, ""))
+        val sampleSteps = mapOf(13306 to mapOf(1 to stepOne, 2 to stepTwo))
+
+        val needItem = QuestNavigationPolicy.resolve(
+            13306, mapOf(13306 to 1), sampleMarks, sampleSteps, emptyMap()
+        )!!
+        assertEquals(itemTarget, needItem.target)
+        assertFalse(needItem.readyToTurnIn)
+
+        val itemReadyButKillPending = QuestNavigationPolicy.resolve(
+            13306, mapOf(13306 to 1), sampleMarks, sampleSteps, mapOf(29826 to 1)
+        )!!
+        assertEquals(killTarget, itemReadyButKillPending.target)
+        assertFalse(itemReadyButKillPending.readyToTurnIn)
+
+        val afterEveStepAdvance = QuestNavigationPolicy.resolve(
+            13306, mapOf(13306 to 2), sampleMarks, sampleSteps, mapOf(29826 to 1)
+        )!!
+        assertEquals(turnInTarget, afterEveStepAdvance.target)
+        assertTrue(afterEveStepAdvance.readyToTurnIn)
     }
 }
