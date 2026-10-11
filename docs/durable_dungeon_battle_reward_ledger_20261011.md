@@ -19,6 +19,12 @@ Bảng `character_reward_ledger` khóa duy nhất `(character_id,reward_kind,sou
 - `RewardLedgerSourceKeys.battle`: yêu cầu UUID **được lưu bền trước khi vào trận**, không chấp nhận battleId số nguyên tạm. Mỗi nhân vật dùng primary key riêng.
 - `RewardLedgerSourceKeys.weeklyAllPass`: tuần/chu kỳ theo chính sách DVT và trang thưởng; chu kỳ phải tính từ dữ liệu ngày reset chính xác, không dùng `System.currentTimeMillis()` tại điểm phát thưởng.
 
+## Điều kiện ngăn lách ledger bằng lượt mới
+
+Bảo vệ theo `source_key` **chưa đủ**: nếu một phần thưởng cũ có trạng thái `PENDING`, một lượt dungeon hoặc trận chiến được tạo mới với UUID khác có thể vẫn phát thưởng tương đương. Trước khi cho người chơi bắt đầu một run mới, điều phối phải tra `unresolvedForCharacter` và áp dụng chính sách chặn đúng phạm vi (dungeon/weekly/nguồn thưởng tương ứng) cho đến khi đối soát. Việc tra rồi thêm bản ghi không nguyên tử có thể bị request song song vượt qua: cần một transaction/khóa cấp nhân vật hoặc unique guard riêng để serialize bước cấp quyền.
+
+Không tự coi pending nghĩa là đã nhận phần thưởng; cũng không tự xóa để mở khóa. Phải ghi đủ loại nguồn thưởng, chu kỳ reset và run identifier trong báo cáo đối soát. Mọi hành động quản trị (hoàn tiền, trao bù, release) cần được audit để không nhân đôi.
+
 ## Chưa hoàn thiện để triển khai
 
 1. Lưu UUID định danh trận chiến vào DB từ lúc tạo battle, và lấy lại được qua reconnect/crash; cần tương thích nhiều người tham gia và DVT battle scene.
