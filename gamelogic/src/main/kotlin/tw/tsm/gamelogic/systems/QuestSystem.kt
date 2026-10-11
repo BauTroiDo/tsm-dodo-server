@@ -113,6 +113,17 @@ class QuestSystem(
                 return@withLock null
             }
             val newStep = current + delta
+            // The active DVT novice MarkStep has no steps 6..10. A replayed
+            // stage-5 ADD must never persist step 6 and strand a new player.
+            // This is a narrow fail-closed guard; do not auto-complete or
+            // jump either DVT tutorial branch.
+            if (DvtNoviceStepGapPolicy.isUnsupportedAddDestination(missionId, newStep)) {
+                logger.warn {
+                    "Chặn nhiệm vụ tân thủ không có trong DVT: charId=$charId mission=$missionId " +
+                        "current=$current delta=$delta target=$newStep"
+                }
+                return@withLock null
+            }
             repo.upsertMission(charId, missionId, newStep)
             logger.info { "Thêm bước nhiệm vụ: charId=$charId missionId=$missionId step: $current → $newStep" }
             return@withLock current
