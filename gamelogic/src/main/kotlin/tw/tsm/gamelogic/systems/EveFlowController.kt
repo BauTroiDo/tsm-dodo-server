@@ -387,6 +387,7 @@ class EveFlowController(
         // cls=7 pStyle 1~5 là UI của NPC phục vụ (kho báu/Tiền Trang/cửa hàng/lữ quán/lưu trú)
         // Căn cứ xác định: chuỗi kết quả chứa cls 1~3 (vật phẩm/nhiệm vụ/NPC) = chuỗi nhiệm vụ → bỏ qua
         if (result.resultClass == 7 &&
+            !EveEffectClaimPolicy.requiresReservation(result) &&
             EveResultClassPolicy.isRepeatableServicePlayerOperation(result.parameterStyle, result.resultValue)) {
             val es = stateMachine.getSession(session.roleId.toLong())
             val isQuestChain = es?.results?.any { it.resultClass in 1..3 } == true
@@ -422,6 +423,7 @@ class EveFlowController(
                         // Thao tác hình ảnh NPC (tàng hình/hiện ra/biến hình/truy kích) → gửi client
                         responseSender.sendCommonEvent(session, result)
                     } else if (result.resultClass == 7 &&
+                        !EveEffectClaimPolicy.requiresReservation(result) &&
                         EveResultClassPolicy.isRepeatableServicePlayerOperation(result.parameterStyle, result.resultValue)) {
                         // NPC phục vụ (Tiền Trang/cửa hàng/lữ quán/lưu trú) → không ghi nhận hoàn thành, đảm bảo dùng lại được
                         serviceAdvanceOrEnd(session)
