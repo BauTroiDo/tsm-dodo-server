@@ -13,6 +13,8 @@
 Bảng `character_reward_ledger` khóa duy nhất `(character_id,reward_kind,source_key)` có `attempt_token`, thời điểm reserve, thời điểm settle nullable.
 
 - `reserve`: chỉ trả TRUE khi INSERT thật sự thêm hàng mới. Khi hàng `PENDING` hoặc `SETTLED` đã tồn tại, trả FALSE ngay cả cùng token. Đây là khác biệt cố ý so với ledger Eve; không cho tái phát item/gold/EXP sau crash giữa một phần các hiệu ứng.
+- `character_reward_pending_scopes`: khóa riêng `(character_id, reward_kind)` trỏ đến source + token duy nhất đang chờ. INSERT scope và INSERT ledger thực hiện **cùng transaction**. Vì vậy một run mới thay `source_key` cũng không thể nhận phần thưởng cùng loại khi người chơi vẫn còn `PENDING` cũ. `settle` đánh dấu biên nhận và xóa *chính xác scope hiện tại* trong một transaction; biên nhận cũ vẫn giữ vĩnh viễn.
+- Khóa scope này cố ý bảo thủ: một claim dungeon thường chưa giải quyết có thể chặn dungeon thường khác của cùng nhân vật. Không chặn các `reward_kind` độc lập như BATTLE_GENERIC; quy tắc gộp nhóm nguồn thưởng DVT cần xác minh riêng.
 - `settle`: khóa hàng, kiểm tra token, ghi `settled_at_epoch_ms` **một lần**, giữ biên nhận vĩnh viễn. Gọi lại không thành công, không xóa hàng.
 - `find` / `unresolvedForCharacter`: chỉ đọc, phục vụ quản trị viên đối soát. Không tự hủy `PENDING` vì không thể biết phần thưởng đã cấp được bao nhiêu.
 - `RewardLedgerSourceKeys.dungeon`: dùng `dungeonId`, `startedAtMillis`, `instanceId` đã được khôi phục, cộng với bước thưởng. Một lượt dungeon khác cần khóa khác.
@@ -21,7 +23,7 @@ Bảng `character_reward_ledger` khóa duy nhất `(character_id,reward_kind,sou
 
 ## Điều kiện ngăn lách ledger bằng lượt mới
 
-Bảo vệ theo `source_key` **chưa đủ**: nếu một phần thưởng cũ có trạng thái `PENDING`, một lượt dungeon hoặc trận chiến được tạo mới với UUID khác có thể vẫn phát thưởng tương đương. Trước khi cho người chơi bắt đầu một run mới, điều phối phải tra `unresolvedForCharacter` và áp dụng chính sách chặn đúng phạm vi (dungeon/weekly/nguồn thưởng tương ứng) cho đến khi đối soát. Việc tra rồi thêm bản ghi không nguyên tử có thể bị request song song vượt qua: cần một transaction/khóa cấp nhân vật hoặc unique guard riêng để serialize bước cấp quyền.
+Bảo vệ theo `source_key` **chưa đủ**: nếu một phần thưởng cũ có trạng thái `PENDING`, một lượt dungeon hoặc trận chiến được tạo mới với UUID khác có thể vẫn phát thưởng tương đương. Trước khi cho người chơi bắt đầu một run mới, điều phối phải tra `unresolvedForCharacter` và áp dụng chính sách chặn đúng phạm vi (dungeon/weekly/nguồn thưởng tương ứng) cho đến khi đối soát. Đã dùng bảng khóa scope riêng với khóa chính `(character_id, reward_kind)` để serialize đồng thời bước giữ quyền ngay trong DB. Còn cần kiểm tra chính sách `reward_kind` và game-client thực tế để không chặn nhầm các lượt thưởng không liên quan.
 
 Không tự coi pending nghĩa là đã nhận phần thưởng; cũng không tự xóa để mở khóa. Phải ghi đủ loại nguồn thưởng, chu kỳ reset và run identifier trong báo cáo đối soát. Mọi hành động quản trị (hoàn tiền, trao bù, release) cần được audit để không nhân đôi.
 
@@ -34,4 +36,4 @@ Không tự coi pending nghĩa là đã nhận phần thưởng; cũng không t�
 5. Công cụ quản trị read-only đối chiếu claim với vật phẩm, pet, tiền, mission và log; cần quy trình xác nhận thủ công trước khi giải quyết `PENDING`, tuyệt đối không xóa tự động.
 6. Trước deployment: sao lưu MySQL/source dirty production, kiểm tra schema migration `SchemaUtils.createMissingTablesAndColumns` trên môi trường staging, test Gradle, và xác minh game-client.
 
-**Phạm vi đã được làm:** domain contract, bảng và repository transaction, chính sách khóa nguồn, H2 unit/integration tests, query audit. **Chưa sửa luồng trả thưởng live.** PR #37 phải giữ Draft cho đến khi các khóa nguồn và luồng payout được tích hợp/kiểm nghiệm.
+**Phạm vi đã được làm:** domain contract, bảng và repository transaction, chính sách khóa nguồn, H2 unit/integration tests, query audit. **Chưa sửa luồng trả thưởng live.** PR #38 phải giữ Draft cho đến khi các khóa nguồn và luồng payout được tích hợp/kiểm nghiệm.
