@@ -497,7 +497,22 @@ class DungeonSystem(
         if (missionStillActive) return null
 
         val charId = session.roleId.toLong()
+        // Read-only preflight BEFORE the irreversible ledger claim. A full bag
+        // must not leave a PENDING receipt for an award we never attempted.
+        val elapsedSeconds = ((clockMillis() - run.startedAtMillis).coerceAtLeast(0L) / 1000L)
+            .coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+        val remainingSeconds = (def.timeMinutes * 60 - elapsedSeconds).coerceAtLeast(0)
+        val rewards = if (playerWin) {
+            resolveRewards(def.id, session.turn, remainingSeconds, playerWin = true)
+        } else emptyList()
         val ledger = rewardLedgerRepository
+        if (playerWin && ledger != null && rewards.isNotEmpty()) {
+            val inventory = inventorySystem
+            if (inventory == null || !inventory.canAddRewardsToBag(charId, rewards)) {
+                responseSender?.sendSystemMessage(session, "Túi đồ không đủ chỗ hoặc phần thưởng không hợp lệ; chưa giữ quyền nhận.")
+                return DungeonSettlement(def.id, result = 1)
+            }
+        }
         var rewardClaim: Pair<String, String>? = null
         if (playerWin && ledger != null) {
             // Fail closed for legacy scene-reconstruction with no authoritative
@@ -539,10 +554,6 @@ class DungeonSystem(
 
         if (!playerWin) return DungeonSettlement(def.id, result = 1)
 
-        val elapsedSeconds = ((clockMillis() - run.startedAtMillis).coerceAtLeast(0L) / 1000L)
-            .coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
-        val remainingSeconds = (def.timeMinutes * 60 - elapsedSeconds).coerceAtLeast(0)
-
         // DVT UIDungeon shows remaining attempts as dayilyCount - MarkManager.missions[dayilyFlag].step.
         // Record a successful completion independently from reward resolution. GM/admin accounts may
         // bypass the entry gate, but the client-visible daily counter must still advance normally.
@@ -557,8 +568,6 @@ class DungeonSystem(
                 }
             }
         }
-
-        val rewards = resolveRewards(def.id, session.turn, remainingSeconds, playerWin = true)
 
         if (rewards.isEmpty()) {
             dungeonLogger.warn {
