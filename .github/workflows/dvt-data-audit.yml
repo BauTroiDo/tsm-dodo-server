@@ -43,6 +43,8 @@ jobs:
         run: python -m unittest discover -s tools -p test_dvt_12509_cave_step12_door_20261012.py -v
       - name: Verify five original 12998 and 12936 festival relationship stage-gated NPC routes
         run: python -m unittest discover -s tools -p test_dvt_12998_12936_source_npc_navigation_20261012.py -v
+      - name: Verify quest12936 stage16 original scene12403 entry automatically advances to stage17
+        run: python -m unittest discover -s tools -p test_dvt_12936_stage16_scene_entry_navigation_20261012.py -v
       - name: Verify original DVT Moon Rabbit mission entrance and nearest real battle NPC
         run: python -m unittest discover -s tools -p test_dvt_10852_rabbit_cave_navigation_20261012.py -v
       - name: Verify quest10852 source-backed return to original Ngô Cương NPC

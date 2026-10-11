@@ -10,7 +10,7 @@ from patch_dvt_12998_12936_source_npc_routes_20261012 import (
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE=ROOT/"gamedata/Eve.emg"
-NEW_SHA="98b8ac110c68acc8e2921b21f965e57e763878cdda4e69f015651a39599f2aa1"
+NEW_SHA="382540766e75528bacbb40792188dfa7c210a930bc9bcb82250ccfbea11eb280"
 class OriginalHiddenFestivalNpcNavigation(unittest.TestCase):
  def test_five_stages_have_exact_original_source_npc_arrivals(self):
   rows={(s["mission"],s["step"]):s for s in read_steps(DATA)}
@@ -47,15 +47,15 @@ class OriginalHiddenFestivalNpcNavigation(unittest.TestCase):
   self.assertEqual(report["missing_scenes"],[])
   self.assertEqual(report["missing_npcs"],[])
   self.assertEqual(report["missing_doors"],[])
-  self.assertEqual(report["targets"]["located"],5761)
+  self.assertEqual(report["targets"]["located"],5762)
  def test_patch_is_idempotent_and_exact_checksum(self):
   before=DATA.read_bytes()
   self.assertEqual(sha(before),NEW_SHA)
   self.assertEqual(patch(DATA,EVE,False),NEW_SHA)
   self.assertEqual(DATA.read_bytes(),before)
- def test_previous_unedited_stage16_entry_script_kept_intact(self):
+ def test_stage16_entry_script_remains_original_after_route_repair(self):
   rows={(s["mission"],s["step"]):s for s in read_steps(DATA)}
-  self.assertEqual(rows[(12936,16)]["end"],(0,0,0,0,0))
+  self.assertEqual(rows[(12936,16)]["end"],rows[(12936,17)]["end"])
   ev=EveArchive(EVE).parse_scene(12403)["events"][10]
   self.assertEqual(ev["when_happen"],[False,True,False,False])
   self.assertTrue(any(c["class"]==2 and c["param"]==12936 and c["val"]==16 and

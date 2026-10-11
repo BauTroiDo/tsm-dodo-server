@@ -20,7 +20,7 @@ Every selected NPC is in its authoritative scene `npcs`, has its exact attached 
 
 **Important dynamic NPC semantics:** All five original scene NPC entries have **`close=true`** (quest-dependent/dynamic), preserved exactly. This fix does **not** force them open, spawn replacements, invent battle targets, or guarantee their visibility in game. Existing original MarkStep **12998/3** already routes to `close=true` NPC38411 in scene12003; **12936/5** already points to NPC11123, **12936/10** has a follower objective for NPC11074, and **12936/22** returns to a quest-conditional NPC. These original references corroborate waypoint use for stage-gated NPCs; actual dynamic display remains a *deferred E2E check*. If they stay invisible in game, inspect the separate client/server Eve spawn/display lifecycle without bypassing quest stage guards.
 
-Quest12936/16 is **not** changed: original scene12403 Eve10 advances the stage on **scene entry**, not by talking to a conventional NPC; needs separate source analysis. Quest12998 stage descriptions still contain original Chinese; this navigation patch intentionally does not rewrite UTF-16 text or modify later offsets.
+Quest12936/16 is a **separate map-entry-triggered objective** rather than a normal dialogue NPC. This stage was repaired in the subsequent independent data-only patch documented in `docs/dvt-12936-step16-map-entry-auto-navigation-20261012.md`; no new NPC was invented. Quest12998 stage descriptions still contain original Chinese; this navigation patch intentionally does not rewrite UTF-16 text or modify later offsets.
 
 ## Safe binary patch and test
 
