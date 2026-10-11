@@ -34,8 +34,10 @@ object QuestNavigationPolicy {
 
     /**
      * Matches DVT Lua precisely:
-     * 1 capture requires owned pet; 2 kill does not change doneCondition in
-     * MarkManager.Navigation; 3 item requires bag quantity.
+     * 1 capture requires owned pet; 2 kill remains unmet while on this step;
+     * 3 item requires bag quantity. In DVT's two kill-step records (13221/2,
+     * 13306/1), the battle's Eve result advances the mission to the next step.
+     * The original Lua leaves kind=2 empty and incorrectly routes to turn-in.
      * First unmet condition selects its target; otherwise use endTarget.
      */
     fun resolve(
@@ -52,8 +54,9 @@ object QuestNavigationPolicy {
         val unmet = entry.conditions.firstOrNull {
             when (it.kind) {
                 1 -> it.id !in followNpcIds
+                2 -> true // Kill is pending until the battle Eve advances the mission step.
                 3 -> (itemCounts[it.id] ?: 0) < it.requiredCount
-                else -> false // DVT ignores kill-counts in this navigation loop.
+                else -> false
             }
         }
         val target = unmet?.target ?: entry.endTarget
