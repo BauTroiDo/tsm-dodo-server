@@ -385,13 +385,23 @@ class EveEventStateMachine {
     }
 
     /** Publish completion to RAM only after its EveCount write committed. */
-    fun recordPersistedCompletion(charId: Long, session: EventSession) {
+    fun recordPersistedCompletion(charId: Long, session: EventSession, persistedCount: Int? = null) {
         if (session.eveNo == 0) return
 
         val eveMap = completedEvents
             .getOrPut(charId) { ConcurrentHashMap() }
             .getOrPut(session.mapId) { ConcurrentHashMap() }
-        eveMap.merge(session.eveNo, 1, Int::plus)
+        if (persistedCount != null) {
+            require(persistedCount > 0) { "Persisted EveCount must be positive" }
+            // A reconnect may already have hydrated the just-committed count.
+            // Merge absolute DB value, never increment that same event twice.
+            eveMap.merge(session.eveNo, persistedCount) { cached, stored ->
+                maxOf(cached, stored)
+            }
+        } else {
+            // Legacy in-memory-only complete() retains atomic +1 semantics.
+            eveMap.merge(session.eveNo, 1, Int::plus)
+        }
 
         if (session.hasStateChangingResults()) {
             completedConditions
