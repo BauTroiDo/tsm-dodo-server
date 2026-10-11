@@ -653,7 +653,11 @@ function MarkManager.Navigation(missionId)
         doneCondition = Role.GetFollowNpc(Role.playerId, condition.id) ~= nil;
 
       elseif condition.kind == 2 then
-        --擊殺npc
+        -- DVT MarkStep has two kill objectives (13221/2, 13306/1).
+        -- Their battle Eve advances the mission step on victory. Until then
+        -- the target remains the encounter, not the return-NPC destination.
+        -- The original empty branch incorrectly treated the kill as done.
+        doneCondition = false;
 
       elseif condition.kind == 3 then
         --收集道具
