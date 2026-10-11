@@ -68,9 +68,9 @@ class RewardLedgerRepositoryImpl : RewardLedgerRepository {
             ) return@suspendTransaction false
 
             CharacterRewardLedger.update({
+                // SELECT FOR UPDATE above holds the only pending row.
                 key(characterId, rewardKind, sourceKey) and
-                    (CharacterRewardLedger.attemptToken eq attemptToken) and
-                    CharacterRewardLedger.settledAtEpochMs.isNull()
+                    (CharacterRewardLedger.attemptToken eq attemptToken)
             }) {
                 it[CharacterRewardLedger.settledAtEpochMs] = nowEpochMs
             } == 1
@@ -101,10 +101,10 @@ class RewardLedgerRepositoryImpl : RewardLedgerRepository {
     override suspend fun unresolvedForCharacter(characterId: Long): List<RewardLedgerEntry> {
         require(characterId > 0)
         return suspendTransaction {
-            CharacterRewardLedger.selectAll().where {
-                (CharacterRewardLedger.characterId eq characterId) and
-                    CharacterRewardLedger.settledAtEpochMs.isNull()
-            }.map { row ->
+            CharacterRewardLedger.selectAll()
+                .where { CharacterRewardLedger.characterId eq characterId }
+                .filter { it[CharacterRewardLedger.settledAtEpochMs] == null }
+                .map { row ->
                 RewardLedgerEntry(
                     characterId = row[CharacterRewardLedger.characterId],
                     rewardKind = row[CharacterRewardLedger.rewardKind],
