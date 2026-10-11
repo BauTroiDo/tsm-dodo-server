@@ -105,6 +105,29 @@ class EveEventStateMachine {
      */
     private val completedConditions = ConcurrentHashMap<Long, ConcurrentHashMap<Int, ConcurrentHashMap<Int, MutableSet<Int>>>>()
 
+    /**
+     * State-changing Eve may have already delivered items/gold/mission progress
+     * before the terminal DB EveCount write failed. Quarantine that exact
+     * condition in RAM to avoid replaying those effects on another NPC click.
+     * This is NOT a durable reward ledger and intentionally survives scene
+     * EveCount resets until an administrator reconciles the failed event.
+     */
+    private val uncertainCompletionConditions =
+        ConcurrentHashMap<Long, ConcurrentHashMap<Int, ConcurrentHashMap<Int, MutableSet<Int>>>>()
+
+    fun quarantineUncommittedCompletion(charId: Long, session: EventSession) {
+        if (!session.hasStateChangingResults() || session.matchedConditionNo <= 0) return
+        uncertainCompletionConditions
+            .getOrPut(charId) { ConcurrentHashMap() }
+            .getOrPut(session.mapId) { ConcurrentHashMap() }
+            .getOrPut(session.eveNo) { ConcurrentHashMap.newKeySet() }
+            .add(session.matchedConditionNo)
+        logger.error {
+            "Eve result may have been delivered but EveCount is unconfirmed: " +
+                "charId=$charId mapId=${session.mapId} eveNo=${session.eveNo} condNo=${session.matchedConditionNo}"
+        }
+    }
+
     // ══════════════════════════════════════════════
     //  Công cụ cập nhật CAS
     // ══════════════════════════════════════════════
@@ -464,6 +487,7 @@ class EveEventStateMachine {
      * đồng thời cho phép các chuỗi điều kiện khác nhau (các bước nhiệm vụ khác nhau) của cùng một eveNo hoạt động bình thường.
      */
     fun isConditionCompleted(charId: Long, mapId: Int, eveNo: Int, condNo: Int): Boolean {
-        return completedConditions[charId]?.get(mapId)?.get(eveNo)?.contains(condNo) ?: false
+        return (completedConditions[charId]?.get(mapId)?.get(eveNo)?.contains(condNo) == true) ||
+            (uncertainCompletionConditions[charId]?.get(mapId)?.get(eveNo)?.contains(condNo) == true)
     }
 }
