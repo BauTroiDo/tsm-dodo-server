@@ -33,7 +33,10 @@ class DvtTreasureAcquisitionIsolation(unittest.TestCase):
   money=get("gamelogic/src/main/kotlin/tw/tsm/gamelogic/systems/MoneySystem.kt")
   repo=get("persistence/src/main/kotlin/tw/tsm/persistence/repositories/TreasureRepositoryImpl.kt")
   self.assertIn("bags[characterId]?.let { inventoryRepo.saveAllItems(characterId, EThings.BAG, it) }",inv)
-  self.assertIn("inventoryRepo.saveMoney(characterId, arr[0].toInt(), arr[1].toInt())",money)
+  # MoneySystem now captures a coherent locked snapshot, but its standalone
+  # save can still overwrite a raw TreasureRepository SQL debit if online
+  # cache publication is not integrated; banking remains unwired.
+  self.assertIn("inventoryRepo.saveMoney(characterId, snapshot.first, snapshot.second)",money)
   self.assertIn("CharacterMoney.update(",repo)
   self.assertIn("Inventories.update(",repo)
   # This is an explicit blocker, not a test endorsing stale cache behavior.
