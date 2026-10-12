@@ -306,20 +306,26 @@ class TradeSystem(
      * @param result 1=xác nhận, 2=hủy
      * @param expectedMode Chế độ tương ứng với sub protocol gốc (ngăn chặn giả mạo xác nhận chéo chế độ)
      */
-    fun confirmOrCancel(
+    suspend fun confirmOrCancel(
         playerId: Long,
         result: Int,
         expectedMode: Int = MODE_ITEM,
     ): List<PetOwnershipGrant> {
         val trade = activeTrades[playerId] ?: return emptyList()
+        // Acquire BOTH character fences before reading the final offer/BAG or
+        // performing direct cache mutations. This prevents a concurrently
+        // running character autosave/logout from persisting half of a trade.
+        val idA = getCharacterId(trade.playerA) ?: return emptyList()
+        val idB = getCharacterId(trade.playerB) ?: return emptyList()
+        return CharacterPersistenceGuard.withLocks(idA, idB) {
         var ownershipGrants: List<PetOwnershipGrant> = emptyList()
 
         synchronized(trade) {
-            if (trade.mode != expectedMode) return emptyList()
+            if (trade.mode != expectedMode) return@withLocks emptyList()
             if (result == 2) {
                 // Hủy: Chỉ cần thông báo cho đối phương (UI của mình đã đóng)
                 cancelTradeInternal(trade, playerId, REASON_PARTNER_CANCELLED, notifyInitiator = false)
-                return emptyList()
+                return@withLocks emptyList()
             }
 
             // result == 1: Xác nhận
@@ -327,7 +333,7 @@ class TradeSystem(
             val myState = if (isA) trade.stateA else trade.stateB
 
             // Chỉ có thể xác nhận ở trạng thái Uploaded
-            if (myState !is TradePlayerState.Uploaded) return emptyList()
+            if (myState !is TradePlayerState.Uploaded) return@withLocks emptyList()
 
             if (isA) {
                 trade.stateA = TradePlayerState.Confirmed
@@ -347,7 +353,8 @@ class TradeSystem(
             }
         }
 
-        return ownershipGrants
+        ownershipGrants
+        }
     }
 
     // ── Ngắt kết nối/Hủy từ bên ngoài ──

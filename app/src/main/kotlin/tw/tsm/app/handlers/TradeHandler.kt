@@ -80,7 +80,7 @@ class TradeHandler(
      *
      * Định dạng: +result(1) [1=xác nhận, 2=hủy]
      */
-    private fun handleConfirmTrade(session: GameSession, data: ByteArray) {
+    private suspend fun handleConfirmTrade(session: GameSession, data: ByteArray) {
         val reader = PacketReader(data)
         val result = reader.readUByte()
 

@@ -167,7 +167,7 @@ class CollectionBonusScopeTest {
             every { characterName } returns "Tester"
         }
         val recipient = mockk<GameSession>(relaxed = true)
-        every {
+        coEvery {
             tradeSystem.confirmOrCancel(900L, 1, TradeSystem.MODE_PET)
         } returns listOf(TradeSystem.PetOwnershipGrant(31L, 22113, recipient))
 

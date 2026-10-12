@@ -89,6 +89,8 @@ jobs:
         run: python -m unittest discover -s tools -p test_dvt_treasure_core_bag_writers_lock_20261013.py -v
       - name: Guard equipment bank storage and rewards during staged Treasure transfer
         run: python -m unittest discover -s tools -p test_dvt_treasure_equipment_bank_storage_lock_20261013.py -v
+      - name: Verify two-player trade and cached gold saves join the per-character persistence fences
+        run: python -m unittest discover -s tools -p test_dvt_trade_gold_fence_20261013.py -v
       - name: Verify unique genuine A Dou 12444 stage1 ghost-house follower route
         run: python -m unittest discover -s tools -p test_dvt_12444_unique_adou_route_20261012.py -v
       - name: Verify 10988 Sun Shangxiang two follower-dependent battle routes

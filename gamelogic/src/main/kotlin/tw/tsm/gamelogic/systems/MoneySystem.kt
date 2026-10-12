@@ -25,9 +25,11 @@ class MoneySystem(
      * Tải tiền của nhân vật từ DB
      */
     suspend fun loadMoney(characterId: Long) {
+        CharacterPersistenceGuard.withLock(characterId) {
         val (gold, auctionGold) = inventoryRepo.loadMoney(characterId)
         moneyMap[characterId] = longArrayOf(gold.toLong(), auctionGold.toLong())
         logger.info { "Tải tiền nhân vật: characterId=$characterId gold=$gold auctionGold=$auctionGold" }
+        }
     }
 
     /**
@@ -37,7 +39,7 @@ class MoneySystem(
      */
     fun getMoney(characterId: Long): Pair<Int, Int> {
         val arr = moneyMap[characterId] ?: return Pair(0, 0)
-        return Pair(arr[0].toInt(), arr[1].toInt())
+        return synchronized(arr) { Pair(arr[0].toInt(), arr[1].toInt()) }
     }
 
     /** Lấy số tiền vàng */
@@ -83,15 +85,26 @@ class MoneySystem(
      * Lưu tiền của nhân vật vào DB
      */
     suspend fun saveMoney(characterId: Long) {
+        CharacterPersistenceGuard.withLock(characterId) {
+            saveMoneyUnfenced(characterId)
+        }
+    }
+
+    private suspend fun saveMoneyUnfenced(characterId: Long) {
         val arr = moneyMap[characterId] ?: return
-        inventoryRepo.saveMoney(characterId, arr[0].toInt(), arr[1].toInt())
+        // Gold and auctionGold are mutated under this same array monitor;
+        // persist a coherent pair rather than two unprotected field reads.
+        val snapshot = synchronized(arr) { Pair(arr[0].toInt(), arr[1].toInt()) }
+        inventoryRepo.saveMoney(characterId, snapshot.first, snapshot.second)
     }
 
     /**
      * Lưu và gỡ khỏi bộ nhớ
      */
     suspend fun saveAndUnload(characterId: Long) {
-        saveMoney(characterId)
-        moneyMap.remove(characterId)
+        CharacterPersistenceGuard.withLock(characterId) {
+            saveMoneyUnfenced(characterId)
+            moneyMap.remove(characterId)
+        }
     }
 }
