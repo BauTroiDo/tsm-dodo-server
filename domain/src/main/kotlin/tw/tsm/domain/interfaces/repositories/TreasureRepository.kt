@@ -17,7 +17,10 @@ data class TreasureState(
     init {
         require(treasureId in 1..114)
         require(cardCopiesTotal >= 0 && level in 0..10 && star in 0..6)
-        require(starExp in 0..100 && version >= 0)
+        // DVT S123-001/003 carries StarExp as an unsigned byte. The UI uses
+        // a 100-point slider, but the server transition/carry rules are
+        // still unknown: do not truncate or reject an otherwise valid byte.
+        require(starExp in 0..255 && version >= 0)
     }
 }
 

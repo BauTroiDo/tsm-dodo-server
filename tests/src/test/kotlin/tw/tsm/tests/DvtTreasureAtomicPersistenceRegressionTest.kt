@@ -137,6 +137,21 @@ class DvtTreasureAtomicPersistenceRegressionTest {
     }
 
     @Test
+    fun originalStarExpWireByteIsPreservedWithoutAssumingHundredPointCap() {
+        val state = tw.tsm.domain.interfaces.repositories.TreasureState(
+            treasureId=1, cardCopiesTotal=0, level=0, star=0,
+            starExp=255, version=0,
+        )
+        assertEquals(255,state.starExp)
+        assertThrows(IllegalArgumentException::class.java) {
+            tw.tsm.domain.interfaces.repositories.TreasureState(
+                treasureId=1,cardCopiesTotal=0,level=0,star=0,
+                starExp=256,version=0,
+            )
+        }
+    }
+
+    @Test
     fun sourcesCannotBePassedThroughUntrustedCostMapKey() {
         assertThrows(IllegalArgumentException::class.java) {
             TreasureRepositoryImpl(mapOf((1 to 2) to TreasureLevelRequirement(1,1,1,20,100_000)))
