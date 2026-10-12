@@ -38,3 +38,19 @@ The rule intentionally matches item kind98 irrespective of specialAbility, so al
 - No ownership transfer from bag to TreasureState. Original C123 currently sends no verified explicit deposit packet. The old source S123-001 count still remains separate from bag quantity.
 - No level/star purchase enabled. In-session currency/bag caches are independently mutable and could overwrite direct SQL debits; `TreasureRepositoryImpl.purchaseLevel` remains unwired, and `C123-002/003` still reject.
 - End-to-end character test is reserved for the owner's final consolidated in-game run, as requested.
+
+## Verified DEV deployment — 2026-10-13 01:47 ICT
+
+- Fix commit `581b55d66186ec54eb048ed8da57c4cb85f93bc5`, pushed to PR#41 branch `fix/dvt-quest-nav-parity-20261011`.
+- [Server CI run `38292974716`](https://github.com/BauTroiDo/tsm-dodo-server/actions/runs/38292974716) **PASS**; [DVT data audit run `38292974755`](https://github.com/BauTroiDo/tsm-dodo-server/actions/runs/38292974755) **PASS**; local Python DVT suite **213/213 PASS**.
+- SHA-guarded remote `tsm-prod` DEPLOY. Original DEV `ItemUseProcessor.kt` SHA256 `d20e765a66c1abef6b73f6c166d6678ae1f2e84112f189cf0306cdde7dc4fae3` matched Git exact preimage; staged/post-deploy `68d9f8e8d32a1a09fd9884110d5ba0ba62300408a4e3e84b9bb8745d1209a601` matched Git candidate. No changes to other Kotlin, client Lua, original Eve, quest rewards or item files; **no git reset/checkout on DEV's dirty repository**.
+- Backup `C:\Server-Game\tsm_dodo\backups\dvt_treasure_card_use_581b55d_20261013_014707\ItemUseProcessor.kt`. Deploy script `C:\Users\Administrator\_deploy_dvt_treasure_card_use_581b55d.ps1` retains original preimage and backup SHA guard.
+- DEV Gradle `:app:classes` **BUILD SUCCESSFUL in 25s** before restart; verified compiled `gamelogic/build/classes/kotlin/main/tw/tsm/gamelogic/systems/ItemUseProcessor.class` contains `Treasure card use blocked before ownership transfer`. Old Java game PID `11040`; new PID `11072`, TCP `6613 LISTENING` on IPv4 and IPv6. Runtime startup log `C:\Server-Game\tsm_dodo\logs\runtime-production-dvt-treasure-card-use-581b55d.log` reports ready at 01:47:43 local ICT.
+- Independently verified original DEV `File.dat/Data/UiOpen_C.dat` SHA256 unchanged: `af759749cf6d33081df7de99f715cf682e324bb48fb0ff4c57edb932a78c8b4e`; quest-level feature unlock gates remain source-correct.
+- Manual card-use check through client still deferred for owner's final combined E2E; **only automation/source tests and active deployment are claimed**, not a manually clicked UI PASS.
+
+### Next real blockers
+
+1. DVT source `S123-001` bank-count changes are not explained by C123-001/002/003 alone. Even though original BlissBag and Exchange distribute card items, depositing/crediting them to TreasureState is **not source-decoded**. No card grant/automatic bank conversion was added.
+2. `InventorySystem` and `MoneySystem` still keep independent online caches that may overwrite TreasureRepository direct-SQL decrements on autosave. The dormant `purchaseLevel` remains unwired and production DB migration remains disabled.
+3. `StarExp` multiple-roll probability/carry rules are still not verified from native/server reference. C123-003 remains a safe rejection. Do not activate live level/star purchases until blockers are resolved and tested.
