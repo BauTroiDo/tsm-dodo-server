@@ -9,7 +9,7 @@ from patch_dvt_11900_timed_escort_source_routes_20261012 import TARGETS,proof_ev
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE=ROOT/"gamedata/Eve.emg"
-EXPECTED_SHA="8ee5a121997a2e1a1ab38338215da956e42ac86d51d1ca7b93bad2b607c65f0a"
+EXPECTED_SHA="7306310a6d8599f847c1c25d8db57356a9a15bf1d5e8c9e5a4dcd4b03e312f4c"
 
 class OriginalTimedEscortSourceRoutes(unittest.TestCase):
  def test_real_npc_and_six_original_stage_gated_door_routes(self):
@@ -73,12 +73,12 @@ class OriginalTimedEscortSourceRoutes(unittest.TestCase):
   self.assertEqual(DATA.read_bytes(),before)
   report=audit(DATA,EVE)
   self.assertEqual(report["markstep_rows"],4505)
-  self.assertEqual(report["targets"]["located"],5875)
+  self.assertEqual(report["targets"]["located"],5891)
   self.assertFalse(report["missing_scenes"])
   self.assertFalse(report["missing_npcs"])
   self.assertFalse(report["missing_doors"])
-  self.assertEqual(sum(1 for row in read_steps(DATA) if row["end"]==(0,0,0,0,0)),116)
+  self.assertEqual(sum(1 for row in read_steps(DATA) if row["end"]==(0,0,0,0,0)),100)
   raw=scan(EVE,DATA)
-  self.assertEqual(len(raw["missing_end_targets"]),120)
+  self.assertEqual(len(raw["missing_end_targets"]),104)
   self.assertEqual(len(raw["unlocated_condition_targets"]),87)
 if __name__=="__main__":unittest.main()

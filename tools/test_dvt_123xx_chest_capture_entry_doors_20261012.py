@@ -8,7 +8,7 @@ from patch_dvt_123xx_chest_capture_entry_doors_20261012 import TARGETS,source_pr
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE=ROOT/"gamedata/Eve.emg"
-SHA="8ee5a121997a2e1a1ab38338215da956e42ac86d51d1ca7b93bad2b607c65f0a"
+SHA="7306310a6d8599f847c1c25d8db57356a9a15bf1d5e8c9e5a4dcd4b03e312f4c"
 class ChestCaptureQuestStage1EveDoors(unittest.TestCase):
  def test_all_eight_genuine_original_door_eve_targets(self):
   self.assertEqual(len(TARGETS),8)
@@ -35,8 +35,13 @@ class ChestCaptureQuestStage1EveDoors(unittest.TestCase):
    with self.subTest(quest=q):
     self.assertEqual(rows[(q,1)]["end"],spec[:5])
     self.assertFalse(any(x[0] for x in rows[(q,1)]["conditions"]))
+    from patch_dvt_123xx_four_capture_battle_routes_20261012 import ARENAS
     for step in range(2,6):
-     self.assertEqual(rows[(q,step)]["end"],(0,0,0,0,0))
+     expected=(0,0,0,0,0)
+     if q in ARENAS:
+      sid,npcid,coords=ARENAS[q]
+      expected=(sid,*coords[step-2],1,step)
+     self.assertEqual(rows[(q,step)]["end"],expected)
  def test_original_later_chest_and_capture_eve_events_unmodified(self):
   arc=EveArchive(EVE)
   for q,(sid,x,y,k,did,eid,mode) in TARGETS.items():
@@ -57,8 +62,8 @@ class ChestCaptureQuestStage1EveDoors(unittest.TestCase):
  def test_valid_scene_door_and_static_census(self):
   report=audit(DATA,EVE)
   self.assertEqual(report["markstep_rows"],4505)
-  self.assertEqual(report["targets"]["located"],5875)
-  self.assertEqual(sum(1 for x in read_steps(DATA) if x["end"]==(0,0,0,0,0)),116)
+  self.assertEqual(report["targets"]["located"],5891)
+  self.assertEqual(sum(1 for x in read_steps(DATA) if x["end"]==(0,0,0,0,0)),100)
   self.assertFalse(report["missing_scenes"])
   self.assertFalse(report["missing_npcs"])
   self.assertFalse(report["missing_doors"])
