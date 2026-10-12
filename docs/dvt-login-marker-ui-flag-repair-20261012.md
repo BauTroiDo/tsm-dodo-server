@@ -37,3 +37,17 @@ Use a saved character whose real marker step exists but whose completion flag is
 ## Deployment safety
 
 Deploy source changes via a clean Git commit, wait for Server CI and DVT data audit PASS; build on the DEV server **without resetting its dirty worktree**; backup any changed production artifact before restart. The patched Kotlin requires game-server binary deployment; simply replacing the UiOpen data file would not implement this correction. No client data changes in this batch.
+
+## Deployment checkpoint — 2026-10-12 18:50 ICT
+
+- Source commit: `8021ab46e6c93fa02ab45900b38a2a4dd31f7f64`; test import correction: `7d80d1da395c382619da9f06709d934606bdba5d`.
+- GitHub Server CI run `38244708534` **PASS**. DVT data audit run `38244708310` **PASS**.
+- DEV host `tsm-prod`, installation `C:\Server-Game\tsm_dodo`. Three predeployment Kotlin file hashes matched commit `09dd474` exactly despite a dirty DEV worktree, so no Git reset/rebase/checkout was used. Exact file backup: `C:\Server-Game\tsm_dodo\backups\dvt_login_marker_7d80d1d_20261012_185011`.
+- First attempted Gradle compile was aborted by PowerShell 5.1 treating a harmless Java stderr startup banner as a terminating exception; deploy script automatically restored all three original Kotlin files and did not stop the Java game process. After SHA re-verification, a corrected script redirected Gradle's output in `cmd.exe`, resulting in **Gradle BUILD SUCCESSFUL** before restart.
+- Successful restart: Java game process PID **2728**, TCP **6613 LISTENING**, game ready in `C:\Server-Game\tsm_dodo\logs\runtime-production-dvt-login-marker-7d80d1d.log`. The new `QuestSystem.class` bytecode contains `reconcileStoredMarkerMissionFlags`; all three source SHA256 digests match the patched Git commit.
+- Original DVT UI table on DEV remains unchanged, SHA256 `af759749cf6d33081df7de99f715cf682e324bb48fb0ff4c57edb932a78c8b4e`. No client asset changes and no blanket icon unlock. Gameplay E2E by character remains deferred as requested.
+
+**Original source Kotlin SHA256 → deployed SHA256**:
+- `app/src/main/kotlin/tw/tsm/app/ServerModule.kt`: `19cec74c4a1b89f1eed082118bfd08c48ca4f50d958fa2c1428233eca7ba84ef` → `92abce86d5fb3894b45578582f6fc98a57e888db80f4c41c7c7863c073cc9efe`
+- `gamelogic/src/main/kotlin/tw/tsm/gamelogic/systems/LoginService.kt`: `2dcf67bf3c708d8bdfee7d6c4143a7a03172d30281cfcb019e7410ae5ae2d91b` → `6bbe3b6d58a239f7919758df10a8a07947d1c564194929bf506bf1e4b891ce72`
+- `gamelogic/src/main/kotlin/tw/tsm/gamelogic/systems/QuestSystem.kt`: `baaaafd2a6812e5717fc8b0a671e3535ce5ed56cff838d07b69f5b5fa95ea589` → `5a726485ddb31dd44350365d378d3017c9869bf20b10a1c293bfd259a2cbbc6c`.
