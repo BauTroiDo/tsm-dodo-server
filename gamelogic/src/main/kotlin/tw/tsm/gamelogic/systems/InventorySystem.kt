@@ -93,6 +93,10 @@ class InventorySystem(
     fun getBag(characterId: Long): Map<Int, ThingData> =
         bags[characterId] ?: emptyMap()
 
+    /** Unwired settlement only: null distinguishes unloaded BAG from empty BAG. */
+    fun getLoadedBagSnapshot(characterId: Long): Map<Int, ThingData>? =
+        bags[characterId]?.toMap()
+
     /** Lấy tất cả vật phẩm trong ô trang bị */
     fun getEquipment(characterId: Long): Map<Int, ThingData> =
         equips[characterId] ?: emptyMap()
@@ -1092,6 +1096,17 @@ class InventorySystem(
      * Dùng cho hệ thống giao dịch thao tác với túi đồ trong khối synchronized.
      * DB sẽ được lưu trữ thống nhất khi nhân vật đăng xuất qua saveAndUnload() hoặc ở thao tác suspend tiếp theo.
      */
+    /**
+     * STAGED, unwired TradeCacheSettlementCoordinator post-SQL cache update.
+     * Caller must already hold BOTH CharacterPersistenceGuard player locks.
+     * Replaces the BAG map reference in one operation; a failed SQL commit
+     * must NEVER call this. Other synchronous writers remain a blocker.
+     */
+    fun publishCommittedTradeBagSync(characterId: Long, afterBag: Map<Int, ThingData>) {
+        check(bags.containsKey(characterId)) { "Trade BAG cache unloaded: $characterId" }
+        bags[characterId] = ConcurrentHashMap(afterBag)
+    }
+
     fun setBagItemSync(characterId: Long, slot: Int, thing: ThingData?) {
         val bag = bags[characterId] ?: return
         if (thing == null || thing.isEmpty) {

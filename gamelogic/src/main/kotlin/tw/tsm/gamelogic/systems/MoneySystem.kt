@@ -42,6 +42,27 @@ class MoneySystem(
         return synchronized(arr) { Pair(arr[0].toInt(), arr[1].toInt()) }
     }
 
+    /** Staged trade only: distinguish an unloaded cache from a legitimate zero balance. */
+    fun getLoadedMoney(characterId: Long): Pair<Int, Int>? =
+        moneyMap[characterId]?.let { arr ->
+            synchronized(arr) { Pair(arr[0].toInt(), arr[1].toInt()) }
+        }
+
+    /**
+     * STAGED, unwired TradeCacheSettlementCoordinator post-DB publication.
+     * Caller must already own both per-character coroutine locks. All
+     * unrelated synchronous gold mutators must join a common fence before
+     * this can safely be activated in C025.
+     */
+    fun publishCommittedTradeGoldSync(characterId: Long, afterGold: Int, auctionGold: Int) {
+        require(afterGold in 0..ItemConstants.MAX_GOLD && auctionGold >= 0)
+        val arr = moneyMap[characterId] ?: error("Trade MONEY cache unloaded: $characterId")
+        synchronized(arr) {
+            arr[0] = afterGold.toLong()
+            arr[1] = auctionGold.toLong()
+        }
+    }
+
     /** Lấy số tiền vàng */
     fun getGold(characterId: Long): Int =
         moneyMap[characterId]?.get(0)?.toInt() ?: 0
