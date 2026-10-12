@@ -1,4 +1,6 @@
-# DEV icon menu early unlock, 2026-10-12
+# RETRACTED — DEV icon menu early unlock, 2026-10-12
+
+**This old DEV bypass was incorrect and has been fully reverted.** It is historical documentation only. All 84 original DVT icon rows are now restored in both staging client binaries and server PC table; see [corrective restoration](dvt-uiopen-original-level-quest-restoration-20261012.md). Do not apply the earlier patch or use its assertions for current unlock behavior.
 
 ## User request and scope
 

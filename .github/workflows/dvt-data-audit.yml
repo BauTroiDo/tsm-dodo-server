@@ -61,8 +61,8 @@ jobs:
         run: python -m unittest discover -s tools -p test_dvt_123xx_chest_capture_entry_doors_20261012.py -v
       - name: Verify quest12513 twelve source NPC routes and original item29465 checks
         run: python -m unittest discover -s tools -p test_dvt_12513_christmas_tree_source_npc_routes_20261012.py -v
-      - name: Verify DEV-only UI icon menu gates preserve map progression and active-event safety
-        run: python -m unittest discover -s tools -p test_dvt_dev_ui_icon_unlock_20261012.py -v
+      - name: Verify original DVT icon level and mission unlock requirements restored
+        run: python -m unittest discover -s tools -p test_dvt_uiopen_original_progression_20261012.py -v
       - name: Verify unique genuine A Dou 12444 stage1 ghost-house follower route
         run: python -m unittest discover -s tools -p test_dvt_12444_unique_adou_route_20261012.py -v
       - name: Verify 10988 Sun Shangxiang two follower-dependent battle routes
