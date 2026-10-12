@@ -75,6 +75,8 @@ jobs:
         run: python -m unittest discover -s tools -p test_dvt_treasure_six_table_source_20261012.py -v
       - name: Verify Treasure SQL transaction stays dormant until safe in-session cache integration
         run: python -m unittest discover -s tools -p test_dvt_treasure_dormant_transaction_20261012.py -v
+      - name: Verify Treasure card acquisition remains separate from ordinary bag and SQL caches
+        run: python -m unittest discover -s tools -p test_dvt_treasure_card_acquisition_isolation_20261013.py -v
       - name: Verify unique genuine A Dou 12444 stage1 ghost-house follower route
         run: python -m unittest discover -s tools -p test_dvt_12444_unique_adou_route_20261012.py -v
       - name: Verify 10988 Sun Shangxiang two follower-dependent battle routes
