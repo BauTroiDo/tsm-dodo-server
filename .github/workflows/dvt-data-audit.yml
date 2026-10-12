@@ -53,6 +53,8 @@ jobs:
         run: python -m unittest discover -s tools -p test_dvt_12138_qin_tomb_nine_door_puzzles_20261012.py -v
       - name: Verify DVT12080 Godstone stage4 and 7 original battle-gated Door triggers
         run: python -m unittest discover -s tools -p test_dvt_12080_godstone_two_door_routes_20261012.py -v
+      - name: Verify eight original DVT chest and capture arena entry Door stages
+        run: python -m unittest discover -s tools -p test_dvt_123xx_chest_capture_entry_doors_20261012.py -v
       - name: Verify original DVT Moon Rabbit mission entrance and nearest real battle NPC
         run: python -m unittest discover -s tools -p test_dvt_10852_rabbit_cave_navigation_20261012.py -v
       - name: Verify quest10852 source-backed return to original Ngô Cương NPC
