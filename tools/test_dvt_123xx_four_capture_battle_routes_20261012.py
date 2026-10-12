@@ -9,7 +9,7 @@ from patch_dvt_123xx_four_capture_battle_routes_20261012 import (
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE=ROOT/"gamedata/Eve.emg"
-SHA="ab39587a5dacbd65ca60490bf58c5c3da680e826b72b195fc69f80c388f4ec07"
+SHA="e48a4b7f50f6dfc4d3b902279bdda5efea0c783c3eb46f7c300a80db1bec13ad"
 class FourBattleCaptureRoutes(unittest.TestCase):
  def test_all_four_arena_scenes_and_four_distinct_original_npcs(self):
   targets=source_proof(EVE)
@@ -56,12 +56,12 @@ class FourBattleCaptureRoutes(unittest.TestCase):
  def test_global_source_integrity_census(self):
   a=audit(DATA,EVE)
   self.assertEqual(a["markstep_rows"],4505)
-  self.assertEqual(a["targets"]["located"],5928)
+  self.assertEqual(a["targets"]["located"],5932)
   self.assertFalse(a["missing_scenes"])
   self.assertFalse(a["missing_npcs"])
   self.assertFalse(a["missing_doors"])
   self.assertEqual(sum(r["end"]==(0,0,0,0,0) for r in read_steps(DATA)),63)
   b=scan(EVE,DATA)
-  self.assertEqual(len(b["missing_end_targets"]),67)
+  self.assertEqual(len(b["missing_end_targets"]),63)
   self.assertEqual(len(b["unlocated_condition_targets"]),87)
 if __name__=="__main__":unittest.main()

@@ -24,6 +24,9 @@ PREDECESSORS = {
 PATCHED_SHAS = {
     "ab39587a5dacbd65ca60490bf58c5c3da680e826b72b195fc69f80c388f4ec07",
     "8b7cbe97e8ec96a982adb2ed2011d7d816bd9b3648a56ae1e742ab8d55ad8b68",
+    # Future navigation-only commits preserve the two earlier socks routes.
+    "e48a4b7f50f6dfc4d3b902279bdda5efea0c783c3eb46f7c300a80db1bec13ad",
+    "93afa327618e1632b80bb0ddcd1fb1da73e3a6f0584da2046048d0be1ac35acc",
 }
 
 def sha(data):

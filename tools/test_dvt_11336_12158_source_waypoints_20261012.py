@@ -9,7 +9,7 @@ from patch_dvt_11336_12158_source_waypoints_20261012 import (
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE=ROOT/"gamedata/Eve.emg"
-SHA="ab39587a5dacbd65ca60490bf58c5c3da680e826b72b195fc69f80c388f4ec07"
+SHA="e48a4b7f50f6dfc4d3b902279bdda5efea0c783c3eb46f7c300a80db1bec13ad"
 class OriginalNaiheQinGuide(unittest.TestCase):
  def test_original_two_npc_eve_owners_and_source_gates(self):
   self.assertEqual(verify_source(EVE),TARGETS)
@@ -47,9 +47,9 @@ class OriginalNaiheQinGuide(unittest.TestCase):
   self.assertEqual(DATA.read_bytes(),original)
  def test_condition_target_guides_have_separate_limited_audit_classification(self):
   rep=scan(EVE,DATA)
-  self.assertEqual(len(rep["missing_end_targets"]),67)
+  self.assertEqual(len(rep["missing_end_targets"]),63)
   self.assertEqual(len(rep["pending_condition_guided_end_targets"]),8)
-  self.assertEqual(len(rep["missing_end_without_pending_condition_guidance"]),59)
+  self.assertEqual(len(rep["missing_end_without_pending_condition_guidance"]),55)
   special={(r["mission"],r["step"]) for r in rep["pending_condition_guided_end_targets"]}
   self.assertEqual(special,{(12158,s) for s in range(1,6)}|{(13047,s) for s in (1,3,5)})
   for row in rep["pending_condition_guided_end_targets"]:
@@ -59,7 +59,7 @@ class OriginalNaiheQinGuide(unittest.TestCase):
  def test_markstep_global_integrity(self):
   rep=audit(DATA,EVE)
   self.assertEqual(rep["markstep_rows"],4505)
-  self.assertEqual(rep["targets"]["located"],5928)
+  self.assertEqual(rep["targets"]["located"],5932)
   self.assertFalse(rep["missing_scenes"])
   self.assertFalse(rep["missing_npcs"])
   self.assertFalse(rep["missing_doors"])

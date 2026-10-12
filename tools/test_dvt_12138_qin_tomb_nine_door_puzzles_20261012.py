@@ -7,7 +7,7 @@ from patch_dvt_12138_qin_tomb_nine_door_puzzles_20261012 import PAIRS,target_row
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE=ROOT/"gamedata/Eve.emg"
-SHA="ab39587a5dacbd65ca60490bf58c5c3da680e826b72b195fc69f80c388f4ec07"
+SHA="e48a4b7f50f6dfc4d3b902279bdda5efea0c783c3eb46f7c300a80db1bec13ad"
 class QinTombNineTokenPuzzleDoorGuides(unittest.TestCase):
  def test_original_9_door_18_stage_source_puzzle_safeguards(self):
   self.assertEqual(len(PAIRS),9)
@@ -62,7 +62,7 @@ class QinTombNineTokenPuzzleDoorGuides(unittest.TestCase):
  def test_all_legitimate_original_scene_door_targets_and_census(self):
   report=audit(DATA,EVE)
   self.assertEqual(report["markstep_rows"],4505)
-  self.assertEqual(report["targets"]["located"],5928)
+  self.assertEqual(report["targets"]["located"],5932)
   self.assertEqual(sum(1 for row in read_steps(DATA) if row["end"]==(0,0,0,0,0)),63)
   self.assertFalse(report["missing_scenes"])
   self.assertFalse(report["missing_npcs"])

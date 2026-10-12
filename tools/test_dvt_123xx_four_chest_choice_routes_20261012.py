@@ -8,7 +8,7 @@ from patch_dvt_123xx_four_chest_choice_routes_20261012 import ARENAS,source_proo
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE=ROOT/"gamedata/Eve.emg"
-SHA="ab39587a5dacbd65ca60490bf58c5c3da680e826b72b195fc69f80c388f4ec07"
+SHA="e48a4b7f50f6dfc4d3b902279bdda5efea0c783c3eb46f7c300a80db1bec13ad"
 class SourceChestChoices(unittest.TestCase):
  def test_six_original_chest_choices_and_four_distinct_selected(self):
   verified=source_proof(EVE)
@@ -60,12 +60,12 @@ class SourceChestChoices(unittest.TestCase):
  def test_full_valid_scene_npc_door_census_and_remaining_blanks(self):
   report=audit(DATA,EVE)
   self.assertEqual(report["markstep_rows"],4505)
-  self.assertEqual(report["targets"]["located"],5928)
+  self.assertEqual(report["targets"]["located"],5932)
   self.assertFalse(report["missing_scenes"])
   self.assertFalse(report["missing_npcs"])
   self.assertFalse(report["missing_doors"])
   self.assertEqual(sum(x["end"]==(0,0,0,0,0) for x in read_steps(DATA)),63)
   blockers=scan(EVE,DATA)
-  self.assertEqual(len(blockers["missing_end_targets"]),67)
+  self.assertEqual(len(blockers["missing_end_targets"]),63)
   self.assertEqual(len(blockers["unlocated_condition_targets"]),87)
 if __name__=="__main__":unittest.main()

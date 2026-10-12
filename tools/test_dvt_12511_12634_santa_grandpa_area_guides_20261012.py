@@ -9,7 +9,7 @@ from patch_dvt_12511_12634_santa_grandpa_area_guides_20261012 import (
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE=ROOT/"gamedata/Eve.emg"
-SHA="ab39587a5dacbd65ca60490bf58c5c3da680e826b72b195fc69f80c388f4ec07"
+SHA="e48a4b7f50f6dfc4d3b902279bdda5efea0c783c3eb46f7c300a80db1bec13ad"
 class SantaGrandpaBulkGuidance(unittest.TestCase):
  def test_full_source_ownership_and_exact_30_only_area_guides(self):
   self.assertEqual(source_proof(EVE),DESTS)
@@ -32,7 +32,8 @@ class SantaGrandpaBulkGuidance(unittest.TestCase):
     self.assertNotIn("cách ngày",rows[stage]["description"])
   for stage in REWARD_STAGES:
    with self.subTest(stage=stage):
-    self.assertEqual(rows[stage]["end"],(0,0,0,1,1))
+    # Later source-verified next-day tree guidance; not a Santa helper stage.
+    self.assertEqual(rows[stage]["end"],(49944,850,700,1,1))
     self.assertIn("cách ngày",rows[stage]["description"])
  def test_grandpa_room_guide_is_not_misrepresented_as_all_stage_eve_solution(self):
   rows={r["step"]:r for r in read_steps(DATA) if r["mission"]==12634}
@@ -61,12 +62,12 @@ class SantaGrandpaBulkGuidance(unittest.TestCase):
  def test_global_markstep_and_mission_blocker_census(self):
   a=audit(DATA,EVE)
   self.assertEqual(a["markstep_rows"],4505)
-  self.assertEqual(a["targets"]["located"],5928)
+  self.assertEqual(a["targets"]["located"],5932)
   self.assertFalse(a["missing_scenes"])
   self.assertFalse(a["missing_npcs"])
   self.assertFalse(a["missing_doors"])
   self.assertEqual(sum(r["end"]==(0,0,0,0,0) for r in read_steps(DATA)),63)
   blockers=scan(EVE,DATA)
-  self.assertEqual(len(blockers["missing_end_targets"]),67)
+  self.assertEqual(len(blockers["missing_end_targets"]),63)
   self.assertEqual(len(blockers["unlocated_condition_targets"]),87)
 if __name__=="__main__":unittest.main()

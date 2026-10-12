@@ -7,7 +7,7 @@ from patch_dvt_12513_christmas_tree_source_npc_routes_20261012 import SOURCES,ta
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE=ROOT/"gamedata/Eve.emg"
-SHA="ab39587a5dacbd65ca60490bf58c5c3da680e826b72b195fc69f80c388f4ec07"
+SHA="e48a4b7f50f6dfc4d3b902279bdda5efea0c783c3eb46f7c300a80db1bec13ad"
 class ChristmasTreeDvtNpcGuides(unittest.TestCase):
  def test_original_twelve_source_stage_npc_gates(self):
   self.assertEqual(len(SOURCES),12)
@@ -54,7 +54,7 @@ class ChristmasTreeDvtNpcGuides(unittest.TestCase):
  def test_source_valid_no_missing_scene_npc_or_door_after_change(self):
   report=audit(DATA,EVE)
   self.assertEqual(report["markstep_rows"],4505)
-  self.assertEqual(report["targets"]["located"],5928)
+  self.assertEqual(report["targets"]["located"],5932)
   self.assertFalse(report["missing_scenes"])
   self.assertFalse(report["missing_npcs"])
   self.assertFalse(report["missing_doors"])

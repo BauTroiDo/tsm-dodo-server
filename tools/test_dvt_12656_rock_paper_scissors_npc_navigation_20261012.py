@@ -9,7 +9,7 @@ from patch_dvt_12656_rock_paper_scissors_npc_navigation_20261012 import (
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE=ROOT/"gamedata/Eve.emg"
-EXPECTED_SHA="ab39587a5dacbd65ca60490bf58c5c3da680e826b72b195fc69f80c388f4ec07"
+EXPECTED_SHA="e48a4b7f50f6dfc4d3b902279bdda5efea0c783c3eb46f7c300a80db1bec13ad"
 class PigMinigameOriginalNpcRoutes(unittest.TestCase):
  def test_authentic_49960_npc38093_owns_both_source_mission_eves(self):
   self.assertEqual(proof(EVE),{i:DEST for i in range(1,13)})
@@ -59,12 +59,12 @@ class PigMinigameOriginalNpcRoutes(unittest.TestCase):
   self.assertEqual(DATA.read_bytes(),before)
   a=audit(DATA,EVE)
   self.assertEqual(a["markstep_rows"],4505)
-  self.assertEqual(a["targets"]["located"],5928)
+  self.assertEqual(a["targets"]["located"],5932)
   self.assertFalse(a["missing_scenes"])
   self.assertFalse(a["missing_npcs"])
   self.assertFalse(a["missing_doors"])
   self.assertEqual(sum(x["end"]==(0,0,0,0,0) for x in read_steps(DATA)),63)
   blockers=scan(EVE,DATA)
-  self.assertEqual(len(blockers["missing_end_targets"]),67)
+  self.assertEqual(len(blockers["missing_end_targets"]),63)
   self.assertEqual(len(blockers["unlocated_condition_targets"]),87)
 if __name__=="__main__":unittest.main()

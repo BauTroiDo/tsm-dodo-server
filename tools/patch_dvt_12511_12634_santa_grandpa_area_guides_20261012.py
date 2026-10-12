@@ -84,8 +84,10 @@ def patch(file,eve,apply=False):
   raise ValueError("Grandpa stage17 source existing end changed")
  for st in REWARD_STAGES:
   row=rows[(12511,st)]
-  if row["end"]!=(0,0,0,1,1) or "cách ngày" not in row["description"]:
-   raise ValueError("Daily tree reward stage must be left unchanged")
+  # The later source-verified tree-navigation patch fills scene and XY,
+  # but does not alter these reward stages' original event kind/id or Eve results.
+  if row["end"] not in ((0,0,0,1,1),(49944,850,700,1,1)) or "cách ngày" not in row["description"]:
+   raise ValueError("Daily tree reward stage must retain original event kind and source")
  for key,dest in targets.items():
   row=rows[key]
   if row["end"] not in ((0,0,0,0,0),dest) or any(c[0] for c in row["conditions"]):
