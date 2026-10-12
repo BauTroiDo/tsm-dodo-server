@@ -33,6 +33,8 @@ jobs:
         run: python -m unittest discover -s tools -p test_dvt_12106_poisoned_soldier_navigation_20261012.py -v
       - name: Verify three source-proven Christmas quest merchant item waypoints
         run: python -m unittest discover -s tools -p test_dvt_12509_christmas_vendors_20261011.py -v
+      - name: Verify source Christmas socks quest12509 steps5/6 original NPC and guarded binary routes
+        run: python -m unittest discover -s tools -p test_dvt_12509_socks_source_routes_20261012.py -v
       - name: Verify quest12509 three-food turn-in at the genuine chef NPC15421
         run: python -m unittest discover -s tools -p test_dvt_12509_food_turnin_20261012.py -v
       - name: Verify quest12509 final stolen-thief return routes into original Santa scene-entry Eve9
