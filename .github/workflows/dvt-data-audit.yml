@@ -49,6 +49,8 @@ jobs:
         run: python -m unittest discover -s tools -p test_dvt_quest_door_trigger_corrections_20261012.py -v
       - name: Verify all 13 Chu-family oil-trail stage routes against original Door Eve sources
         run: python -m unittest discover -s tools -p test_dvt_12636_12650_oil_trace_door_routes_20261012.py -v
+      - name: Verify original Qin tomb nine real puzzle Doors and all 18 paired quest steps
+        run: python -m unittest discover -s tools -p test_dvt_12138_qin_tomb_nine_door_puzzles_20261012.py -v
       - name: Verify original DVT Moon Rabbit mission entrance and nearest real battle NPC
         run: python -m unittest discover -s tools -p test_dvt_10852_rabbit_cave_navigation_20261012.py -v
       - name: Verify quest10852 source-backed return to original Ngô Cương NPC

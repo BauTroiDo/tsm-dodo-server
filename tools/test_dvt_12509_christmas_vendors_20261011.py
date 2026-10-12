@@ -26,7 +26,7 @@ class DvtChristmasMultiVendorNavigationTest(unittest.TestCase):
     def test_three_independent_shop_sources_match_exact_required_items(self):
         self.assertEqual(
             hashlib.sha256(STEP_PATH.read_bytes()).hexdigest(),
-            "918133ebee509d28b964de93c0820e1eccc7c75557263e7ba20b735a8a1dc5f8")
+            "18291b043c1384d3cbc10305230d2e9798877c8dd5f6c89802bd677832273234")
         self.assertEqual(len(SOURCES),3)
         self.assertEqual(self.row["end"],(49944,330,360,1,5))
         for i,(item,qty,scene,npc_id,placement,x,y,surface_no) in SOURCES.items():

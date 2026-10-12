@@ -11,7 +11,7 @@ from patch_dvt_10126_palace_spy_route_20261012 import (
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE=ROOT/"gamedata/Eve.emg"
-SHA="918133ebee509d28b964de93c0820e1eccc7c75557263e7ba20b735a8a1dc5f8"
+SHA="18291b043c1384d3cbc10305230d2e9798877c8dd5f6c89802bd677832273234"
 
 class DvtDongQuanSpyAutoNavigationTest(unittest.TestCase):
     def test_original_spy_first_and_palace_dialogue_advances_step4(self):
