@@ -39,7 +39,12 @@ class MiningHandler(
 
     private suspend fun queryInfo(session: GameSession, data: ByteArray) {
         if (data.size != 1) return
-        val mineType = PacketReader(data).readUByte()
+        val requestedMineType = PacketReader(data).readUByte()
+        // DVT Function.Use(EFunction.Mine) sends C170-001 with type=0 on
+        // the initial icon click. UIMine's dropdown then sends type=1.
+        // Only the initial INFO query treats 0 as the first/only mine;
+        // entrance/refill/state requests keep their original strict gates.
+        val mineType = if (requestedMineType == 0) 1 else requestedMineType
         if (mineType != 1) {
             sendInfoDisabled(session)
             return
