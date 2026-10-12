@@ -15,7 +15,8 @@ class TreasureCacheCoherence(unittest.TestCase):
   src=read('gamelogic/src/main/kotlin/tw/tsm/gamelogic/systems/TreasureBankCacheCoordinator.kt')
   inv=read('gamelogic/src/main/kotlin/tw/tsm/gamelogic/systems/InventorySystem.kt')
   self.assertIn('CharacterPersistenceGuard.withLock(characterId)',src)
-  self.assertEqual(inv.count('CharacterPersistenceGuard.withLock(characterId)'),2)
+  # Two baseline saves plus nine new serialized BAG mutators.
+  self.assertGreaterEqual(inv.count('CharacterPersistenceGuard.withLock(characterId)'),11)
   self.assertIn('suspend fun save(characterId: Long)',inv)
   self.assertIn('suspend fun saveAndUnload(characterId: Long)',inv)
   self.assertIn('withContext(NonCancellable)',src)
