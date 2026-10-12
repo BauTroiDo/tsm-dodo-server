@@ -7,7 +7,7 @@ from patch_dvt_quest_door_trigger_corrections_20261012 import TARGETS,source_pro
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE=ROOT/"gamedata/Eve.emg"
-HASH="91684c0a287e24b31a5e251322e19a69e96f6961e28d4c90bbadcc40055162f0"
+HASH="8ee5a121997a2e1a1ab38338215da956e42ac86d51d1ca7b93bad2b607c65f0a"
 class StageSpecificOriginalDoorEveRoutes(unittest.TestCase):
  def test_all_four_targets_are_original_source_gated_interactions(self):
   self.assertEqual(source_proof(EVE),TARGETS)
@@ -63,7 +63,7 @@ class StageSpecificOriginalDoorEveRoutes(unittest.TestCase):
   self.assertEqual(DATA.read_bytes(),before)
   report=audit(DATA,EVE)
   self.assertEqual(report["markstep_rows"],4505)
-  self.assertEqual(report["targets"]["located"],5845)
+  self.assertEqual(report["targets"]["located"],5875)
   self.assertFalse(report["missing_scenes"])
   self.assertFalse(report["missing_npcs"])
   self.assertFalse(report["missing_doors"])

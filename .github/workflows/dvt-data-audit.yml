@@ -63,6 +63,8 @@ jobs:
         run: python -m unittest discover -s tools -p test_dvt_12763_13051_herb_ghost_source_routes_20261012.py -v
       - name: Verify original Golden Pig quest12656 12 NPC routes and three distinct Eve stage mechanisms
         run: python -m unittest discover -s tools -p test_dvt_12656_rock_paper_scissors_npc_navigation_20261012.py -v
+      - name: Verify 30 source-safe Santa daily helper and Grandpa house area waypoints
+        run: python -m unittest discover -s tools -p test_dvt_12511_12634_santa_grandpa_area_guides_20261012.py -v
       - name: Verify original DVT Moon Rabbit mission entrance and nearest real battle NPC
         run: python -m unittest discover -s tools -p test_dvt_10852_rabbit_cave_navigation_20261012.py -v
       - name: Verify quest10852 source-backed return to original Ngô Cương NPC
