@@ -12,7 +12,7 @@ Scope: restore *only the initial request/response UI handshake* for an originall
 
 ## Safe partial correction
 
-New `domain.constants.Opcodes.TREASURE=123`, register `TreasureHandler` in `ServerModule`.
+Register `TreasureHandler` in `ServerModule` using handler-local opcode `TREASURE_OPCODE=123`. This intentionally leaves the DEV `domain.constants.Opcodes.kt` file **untouched**: its current SHA differs from the Git checkout, and overwriting it would destroy unrelated DEV modifications.
 
 - C123-001, no payload, after valid bit936: S123-001 `[7B 01 00 00 00 00 00]` (7-byte packet, count0). This completes original client handshake; initializes its **static** treasure catalog, not owned treasure quantities.
 - C123-002, exact 8-byte body, after flag: original failure S123-002 kind255 `[7B 02 00 FF]`. No level advancement or inventory/currency reduction.

@@ -1,7 +1,6 @@
 package tw.tsm.app.handlers
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import tw.tsm.domain.constants.Opcodes
 import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.PacketHandler
@@ -25,7 +24,7 @@ private val treasureLogger = KotlinLogging.logger {}
  * bit936, sourced from IOS_Mark_C.dat.
  */
 class TreasureHandler(private val quests: QuestSystem) : PacketHandler {
-    override val mainKind: Int = Opcodes.TREASURE
+    override val mainKind: Int = TREASURE_OPCODE
 
     override suspend fun handle(session: GameSession, subKind: Int, data: ByteArray) {
         if (session.state != SessionState.IN_GAME || session.roleId <= 0) return
@@ -38,7 +37,7 @@ class TreasureHandler(private val quests: QuestSystem) : PacketHandler {
                 if (data.isNotEmpty()) return
                 session.send(
                     PacketWriter(7)
-                        .writeByte(Opcodes.TREASURE).writeByte(1).writeByte(0)
+                        .writeByte(TREASURE_OPCODE).writeByte(1).writeByte(0)
                         .writeIntLE(0) // No persistent Treasure holdings exist yet
                         .toByteArray()
                 )
@@ -48,7 +47,7 @@ class TreasureHandler(private val quests: QuestSystem) : PacketHandler {
                 if (data.size != 8) return
                 session.send(
                     PacketWriter(4)
-                        .writeByte(Opcodes.TREASURE).writeByte(2).writeByte(0)
+                        .writeByte(TREASURE_OPCODE).writeByte(2).writeByte(0)
                         .writeByte(255) // Unsupported: no currency/item mutation
                         .toByteArray()
                 )
@@ -59,7 +58,7 @@ class TreasureHandler(private val quests: QuestSystem) : PacketHandler {
                 val id = PacketReader(data).readUShortLE()
                 session.send(
                     PacketWriter(8)
-                        .writeByte(Opcodes.TREASURE).writeByte(3).writeByte(0)
+                        .writeByte(TREASURE_OPCODE).writeByte(3).writeByte(0)
                         .writeByte(255) // No star advancement or resource charge
                         .writeShortLE(id)
                         .writeByte(0).writeByte(0) // Original client always reads these if ID exists
@@ -71,6 +70,9 @@ class TreasureHandler(private val quests: QuestSystem) : PacketHandler {
     }
 
     companion object {
+        // Local to this handler so deployment never overwrites an unrelated
+        // DEV Opcodes.kt; the DVT client protocol header itself is 123.
+        private const val TREASURE_OPCODE = 123
         // Original Mark_C mission11804 -> bit936; no early unlock on login.
         private const val TREASURE_UNLOCK_BIT = 936
     }

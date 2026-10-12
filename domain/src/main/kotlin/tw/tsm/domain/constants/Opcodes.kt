@@ -208,9 +208,6 @@ object Opcodes {
     /** Kho tướng (protocolTable[122])*/
     const val WARRIOR_REPO = 122
 
-    /** Bí bảo (DVT UITreasure, C/S:123-001/002/003) */
-    const val TREASURE = 123
-
     /** Hệ thống mô hình tiệc hội/sự kiện (protocolTable[124])*/
     const val ACTIVITY_MODEL = 124
 
