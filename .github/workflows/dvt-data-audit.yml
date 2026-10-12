@@ -83,6 +83,8 @@ jobs:
         run: python -m unittest discover -s tools -p test_dvt_treasure_card_direct_use_safety_20261013.py -v
       - name: Guard staged atomic Treasure bank transfers against phantom credits and handler activation
         run: python -m unittest discover -s tools -p test_dvt_treasure_bank_staged_atomic_20261013.py -v
+      - name: Verify staged Treasure BAG cache synchronization with autosave and logout
+        run: python -m unittest discover -s tools -p test_dvt_treasure_cache_coherence_staged_20261013.py -v
       - name: Verify unique genuine A Dou 12444 stage1 ghost-house follower route
         run: python -m unittest discover -s tools -p test_dvt_12444_unique_adou_route_20261012.py -v
       - name: Verify 10988 Sun Shangxiang two follower-dependent battle routes
