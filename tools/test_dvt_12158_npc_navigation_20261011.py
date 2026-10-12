@@ -26,7 +26,7 @@ class RecoveredQinTombWaypointsTest(unittest.TestCase):
     def test_byte_hash_and_exact_original_five_npc_routes(self):
         self.assertEqual(
             hashlib.sha256(MARKSTEP.read_bytes()).hexdigest(),
-            "16b5a3430afcf0cc8cbf0115b3d4ca8d7035269537fef0a55e9b2db6a3845043"
+            "5d89bbc211ae6c1cbc9cf55e846cbb13634adc8b25cd081897ba7d11a28896f0"
         )
         self.assertEqual(len(TARGETS), 5)
         for key, (item_id, scene_id, x, y, npc_id, placement) in TARGETS.items():

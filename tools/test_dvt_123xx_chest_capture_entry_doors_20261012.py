@@ -8,7 +8,7 @@ from patch_dvt_123xx_chest_capture_entry_doors_20261012 import TARGETS,source_pr
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE=ROOT/"gamedata/Eve.emg"
-SHA="16b5a3430afcf0cc8cbf0115b3d4ca8d7035269537fef0a55e9b2db6a3845043"
+SHA="5d89bbc211ae6c1cbc9cf55e846cbb13634adc8b25cd081897ba7d11a28896f0"
 class ChestCaptureQuestStage1EveDoors(unittest.TestCase):
  def test_all_eight_genuine_original_door_eve_targets(self):
   self.assertEqual(len(TARGETS),8)
@@ -67,8 +67,8 @@ class ChestCaptureQuestStage1EveDoors(unittest.TestCase):
  def test_valid_scene_door_and_static_census(self):
   report=audit(DATA,EVE)
   self.assertEqual(report["markstep_rows"],4505)
-  self.assertEqual(report["targets"]["located"],5907)
-  self.assertEqual(sum(1 for x in read_steps(DATA) if x["end"]==(0,0,0,0,0)),84)
+  self.assertEqual(report["targets"]["located"],5921)
+  self.assertEqual(sum(1 for x in read_steps(DATA) if x["end"]==(0,0,0,0,0)),70)
   self.assertFalse(report["missing_scenes"])
   self.assertFalse(report["missing_npcs"])
   self.assertFalse(report["missing_doors"])

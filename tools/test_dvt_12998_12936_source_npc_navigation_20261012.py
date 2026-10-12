@@ -10,7 +10,7 @@ from patch_dvt_12998_12936_source_npc_routes_20261012 import (
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE=ROOT/"gamedata/Eve.emg"
-NEW_SHA="16b5a3430afcf0cc8cbf0115b3d4ca8d7035269537fef0a55e9b2db6a3845043"
+NEW_SHA="5d89bbc211ae6c1cbc9cf55e846cbb13634adc8b25cd081897ba7d11a28896f0"
 class OriginalHiddenFestivalNpcNavigation(unittest.TestCase):
  def test_five_stages_have_exact_original_source_npc_arrivals(self):
   rows={(s["mission"],s["step"]):s for s in read_steps(DATA)}
@@ -47,7 +47,7 @@ class OriginalHiddenFestivalNpcNavigation(unittest.TestCase):
   self.assertEqual(report["missing_scenes"],[])
   self.assertEqual(report["missing_npcs"],[])
   self.assertEqual(report["missing_doors"],[])
-  self.assertEqual(report["targets"]["located"],5907)
+  self.assertEqual(report["targets"]["located"],5921)
  def test_patch_is_idempotent_and_exact_checksum(self):
   before=DATA.read_bytes()
   self.assertEqual(sha(before),NEW_SHA)
