@@ -29,6 +29,7 @@ class DvtTreasureBankCacheCoordinatorTest {
     private val snapshots = mutableListOf<Map<Int, ThingData>>()
 
     private suspend fun loaded(quantity: Int = 5) {
+        every { roleCounts.getBagCapacity(charId) } returns 100
         coEvery { inventoryRepository.loadItems(charId, any()) } coAnswers {
             if (secondArg<Int>() == EThings.BAG) mapOf(slot to ThingData(25601, quantity))
             else emptyMap()
@@ -219,6 +220,57 @@ class DvtTreasureBankCacheCoordinatorTest {
         changed.await()
         assertEquals(3,system.getBagItem(charId,slot)?.quantity)
         assertEquals(4,system.getBagItem(charId,slot+1)?.quantity)
+    }
+
+    @Test
+    fun bankDepositCannotRaceTreasureBankSettlement() = runBlocking {
+        loaded()
+        val dbEntered=CompletableDeferred<Unit>()
+        val releaseSql=CompletableDeferred<Unit>()
+        coEvery { treasure.bankCard(charId,1,0,slot,2) } coAnswers {
+            dbEntered.complete(Unit)
+            releaseSql.await()
+            true
+        }
+        val transfer=async { coordinator.stageBank(charId,1,0,slot,2) }
+        dbEntered.await()
+        val deposit=async { system.depositToBank(charId,slot,2) }
+        repeat(12) { yield() }
+        assertFalse(deposit.isCompleted, "depositToBank cannot transfer the original 5 BAG cards mid-SQL")
+        releaseSql.complete(Unit)
+        assertEquals(3,transfer.await()?.remainingQuantity)
+        val result=deposit.await()
+        assertEquals(0,result.first)
+        assertEquals(1,system.getBagItem(charId,slot)?.quantity)
+        assertEquals(2,system.getBankItem(charId,result.second)?.quantity)
+        system.save(charId)
+        assertEquals(1,snapshots.single()[slot]?.quantity)
+    }
+
+    @Test
+    fun bankWithdrawalAndLogoutWaitUntilCardSettlementFinishes() = runBlocking {
+        loaded()
+        assertEquals(0,system.depositToBank(charId,slot,2).first)
+        val dbEntered=CompletableDeferred<Unit>()
+        val releaseSql=CompletableDeferred<Unit>()
+        coEvery { treasure.bankCard(charId,1,0,slot,2) } coAnswers {
+            dbEntered.complete(Unit)
+            releaseSql.await()
+            true
+        }
+        val transfer=async { coordinator.stageBank(charId,1,0,slot,2) }
+        dbEntered.await()
+        val withdrawal=async { system.withdrawFromBank(charId,0,1) }
+        val autosave=async { system.save(charId) }
+        repeat(12) { yield() }
+        assertFalse(withdrawal.isCompleted)
+        assertFalse(autosave.isCompleted)
+        releaseSql.complete(Unit)
+        assertEquals(1,transfer.await()?.remainingQuantity)
+        assertEquals(0,withdrawal.await().first)
+        autosave.await()
+        assertEquals(1,system.getBagItem(charId,slot)?.quantity)
+        assertEquals(1,system.getBankItem(charId,0)?.quantity)
     }
 
     @Test

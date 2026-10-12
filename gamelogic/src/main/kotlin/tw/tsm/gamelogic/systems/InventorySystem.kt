@@ -406,7 +406,11 @@ class InventorySystem(
      * Thêm toàn bộ batch reward hoặc rollback toàn bộ bag về snapshot trước giao dịch.
      * Trả về các slot cuối cùng đã thay đổi để caller sync client.
      */
-    suspend fun addRewardsToBagExact(
+    /** Character-serialized multi-container transfer; fenced with save/logout and Treasure settlement. */
+    suspend fun addRewardsToBagExact(characterId: Long, rewards: List<Pair<Int, Int>>): List<Pair<Int, ThingData>>? =
+        CharacterPersistenceGuard.withLock(characterId) { addRewardsToBagExactUnfenced(characterId, rewards) }
+
+    private suspend fun addRewardsToBagExactUnfenced(
         characterId: Long,
         rewards: List<Pair<Int, Int>>
     ): List<Pair<Int, ThingData>>? {
@@ -423,7 +427,7 @@ class InventorySystem(
 
         try {
             for ((itemId, qty) in expected) {
-                addItemsToBag(characterId, itemId, qty)
+                addItemsToBagUnfenced(characterId, itemId, qty)
             }
             val ok = expected.all { (itemId, qty) ->
                 val afterQty = bag.values.filter { it.itemId == itemId }.sumOf { it.quantity }
@@ -696,7 +700,11 @@ class InventorySystem(
         }
     }
 
-    suspend fun commitBattlePassClaim(
+    /** Character-serialized multi-container transfer; fenced with save/logout and Treasure settlement. */
+    suspend fun commitBattlePassClaim(characterId: Long, seasonId: Int, changes: Map<Int, ThingData?>, expectedProgress: Map<Int, Int>, nextProgress: Map<Int, Pair<Int, Int>>): Unit =
+        CharacterPersistenceGuard.withLock(characterId) { commitBattlePassClaimUnfenced(characterId, seasonId, changes, expectedProgress, nextProgress) }
+
+    private suspend fun commitBattlePassClaimUnfenced(
         characterId: Long, seasonId: Int, changes: Map<Int, ThingData?>,
         expectedProgress: Map<Int, Int>, nextProgress: Map<Int, Pair<Int, Int>>,
     ) {
@@ -718,7 +726,11 @@ class InventorySystem(
      *
      * @return Thành công trả về (fitType, trang bị cũ bị thay thế hoặc null)
      */
-    suspend fun equipItem(characterId: Long, bagSlot: Int, playerLevel: Int = 0): Pair<Int, ThingData?>? {
+    /** Character-serialized multi-container transfer; fenced with save/logout and Treasure settlement. */
+    suspend fun equipItem(characterId: Long, bagSlot: Int, playerLevel: Int = 0): Pair<Int, ThingData?>? =
+        CharacterPersistenceGuard.withLock(characterId) { equipItemUnfenced(characterId, bagSlot, playerLevel) }
+
+    private suspend fun equipItemUnfenced(characterId: Long, bagSlot: Int, playerLevel: Int = 0): Pair<Int, ThingData?>? {
         val bag = bags[characterId] ?: return null
         val equip = equips[characterId] ?: return null
         val bagItem = bag[bagSlot] ?: return null
@@ -762,7 +774,11 @@ class InventorySystem(
      *
      * @return Thành công trả về ô đích trong túi đồ, nếu túi đầy trả về -1
      */
-    suspend fun unequipItem(characterId: Long, fitType: Int): Int {
+    /** Character-serialized multi-container transfer; fenced with save/logout and Treasure settlement. */
+    suspend fun unequipItem(characterId: Long, fitType: Int): Int =
+        CharacterPersistenceGuard.withLock(characterId) { unequipItemUnfenced(characterId, fitType) }
+
+    private suspend fun unequipItemUnfenced(characterId: Long, fitType: Int): Int {
         val bag = bags[characterId] ?: return -1
         val equip = equips[characterId] ?: return -1
         val equipItem = equip[fitType] ?: return -1
@@ -791,7 +807,11 @@ class InventorySystem(
      * @param maxSlots Số ô mở rộng hiện tại của tiền trang (tính toán động theo cấp người chơi)
      * @return Triple(Mã lỗi, Ô đích trong tiền trang, Vật phẩm trong tiền trang). Mã lỗi: 0=Thành công, 3=Túi đồ không có vật phẩm này, 13=Tiền trang đầy
      */
-    suspend fun depositToBank(
+    /** Character-serialized multi-container transfer; fenced with save/logout and Treasure settlement. */
+    suspend fun depositToBank(characterId: Long, bagSlot: Int, quantity: Int, maxSlots: Int = ItemConstants.INIT_BANK_SLOTS): Triple<Int, Int, ThingData?> =
+        CharacterPersistenceGuard.withLock(characterId) { depositToBankUnfenced(characterId, bagSlot, quantity, maxSlots) }
+
+    private suspend fun depositToBankUnfenced(
         characterId: Long, bagSlot: Int, quantity: Int,
         maxSlots: Int = ItemConstants.INIT_BANK_SLOTS
     ): Triple<Int, Int, ThingData?> {
@@ -849,7 +869,11 @@ class InventorySystem(
      *
      * @return Triple(Mã lỗi, Ô đích trong túi đồ, Vật phẩm trong túi đồ). Mã lỗi: 0=Thành công, 3=Túi đồ đầy, 13=Tiền trang không có vật phẩm này
      */
-    suspend fun withdrawFromBank(characterId: Long, bankSlot: Int, quantity: Int): Triple<Int, Int, ThingData?> {
+    /** Character-serialized multi-container transfer; fenced with save/logout and Treasure settlement. */
+    suspend fun withdrawFromBank(characterId: Long, bankSlot: Int, quantity: Int): Triple<Int, Int, ThingData?> =
+        CharacterPersistenceGuard.withLock(characterId) { withdrawFromBankUnfenced(characterId, bankSlot, quantity) }
+
+    private suspend fun withdrawFromBankUnfenced(characterId: Long, bankSlot: Int, quantity: Int): Triple<Int, Int, ThingData?> {
         val bag = bags[characterId] ?: return Triple(BankResult.BAG_FULL, -1, null)
         val bank = banks[characterId] ?: return Triple(BankResult.BANK_FULL, -1, null)
         val bankItem = bank[bankSlot] ?: return Triple(BankResult.BANK_FULL, -1, null)
@@ -912,7 +936,11 @@ class InventorySystem(
      * @param maxSlots Số ô mở rộng hiện tại của bảo khố
      * @return Triple(Mã lỗi, Ô đích trong bảo khố, Vật phẩm trong bảo khố)
      */
-    suspend fun depositToStorage(
+    /** Character-serialized multi-container transfer; fenced with save/logout and Treasure settlement. */
+    suspend fun depositToStorage(characterId: Long, bagSlot: Int, quantity: Int, maxSlots: Int = ItemConstants.INIT_STORAGE_SLOTS): Triple<Int, Int, ThingData?> =
+        CharacterPersistenceGuard.withLock(characterId) { depositToStorageUnfenced(characterId, bagSlot, quantity, maxSlots) }
+
+    private suspend fun depositToStorageUnfenced(
         characterId: Long, bagSlot: Int, quantity: Int,
         maxSlots: Int = ItemConstants.INIT_STORAGE_SLOTS
     ): Triple<Int, Int, ThingData?> {
@@ -973,7 +1001,11 @@ class InventorySystem(
      *
      * @return Triple(Mã lỗi, Ô đích trong túi đồ, Vật phẩm trong túi đồ)
      */
-    suspend fun withdrawFromStorage(characterId: Long, storageSlot: Int, quantity: Int): Triple<Int, Int, ThingData?> {
+    /** Character-serialized multi-container transfer; fenced with save/logout and Treasure settlement. */
+    suspend fun withdrawFromStorage(characterId: Long, storageSlot: Int, quantity: Int): Triple<Int, Int, ThingData?> =
+        CharacterPersistenceGuard.withLock(characterId) { withdrawFromStorageUnfenced(characterId, storageSlot, quantity) }
+
+    private suspend fun withdrawFromStorageUnfenced(characterId: Long, storageSlot: Int, quantity: Int): Triple<Int, Int, ThingData?> {
         val bag = bags[characterId] ?: return Triple(BankResult.BAG_FULL, -1, null)
         val storage = storages[characterId] ?: return Triple(BankResult.BANK_FULL, -1, null)
         val storageItem = storage[storageSlot] ?: return Triple(BankResult.BANK_FULL, -1, null)
