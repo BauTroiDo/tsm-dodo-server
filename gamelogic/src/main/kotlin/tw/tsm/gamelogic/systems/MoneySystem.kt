@@ -4,6 +4,10 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import tw.tsm.domain.constants.ItemConstants
 import tw.tsm.domain.interfaces.repositories.InventoryRepository
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Semaphore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 
 private val logger = KotlinLogging.logger {}
 
@@ -20,6 +24,64 @@ class MoneySystem(
 ) {
     /** characterId → (gold, auctionGold) */
     private val moneyMap = ConcurrentHashMap<Long, LongArray>()
+
+    /**
+     * SYNC writer fence. Like CharacterPersistenceGuard it uses 256 bounded
+     * character stripes; acquiring by sorted stripe prevents two-player
+     * deadlocks. All existing addGold/subtractGold call sites keep their
+     * original non-suspending API and never drop legitimate combat rewards.
+     *
+     * Trade settlement is still staged/unwired: holding these permits around
+     * suspending SQL on a live Netty event loop could create unacceptable
+     * blocking. Do not register TradeCacheSettlementCoordinator until its
+     * completion protocol and caller dispatch are validated.
+     */
+    private val goldMutationFences = Array(256) { Semaphore(1, true) }
+
+    private fun goldStripe(characterId: Long): Int =
+        (characterId xor (characterId ushr 32)).toInt() and 255
+
+    private inline fun <T> withGoldMutationFence(characterId: Long, block: () -> T): T {
+        val permit = goldMutationFences[goldStripe(characterId)]
+        permit.acquireUninterruptibly()
+        try {
+            return block()
+        } finally {
+            permit.release()
+        }
+    }
+
+    /**
+     * Unwired two-player SQL window: synchronous gold rewards/payments wait
+     * until both committed SQL balances are safely published to RAM.
+     * NonCancellable IO permit acquisition cannot strand a semaphore when
+     * the caller is cancelled while switching back to its original dispatcher.
+     */
+    suspend fun <T> withTradeGoldMutationFence(
+        firstId: Long,
+        secondId: Long,
+        action: suspend () -> T,
+    ): T {
+        require(firstId > 0 && secondId > 0 && firstId != secondId)
+        val low = goldMutationFences[minOf(goldStripe(firstId), goldStripe(secondId))]
+        val high = goldMutationFences[maxOf(goldStripe(firstId), goldStripe(secondId))]
+        withContext(NonCancellable + Dispatchers.IO) {
+            low.acquire()
+            if (high !== low) {
+                try { high.acquire() } catch (ex: Throwable) {
+                    low.release()
+                    throw ex
+                }
+            }
+        }
+        try {
+            return action()
+        } finally {
+            if (high !== low) high.release()
+            low.release()
+        }
+    }
+
 
     /**
      * Tải tiền của nhân vật từ DB
@@ -65,11 +127,11 @@ class MoneySystem(
 
     /** Lấy số tiền vàng */
     fun getGold(characterId: Long): Int =
-        moneyMap[characterId]?.get(0)?.toInt() ?: 0
+        moneyMap[characterId]?.let { synchronized(it) { it[0].toInt() } } ?: 0
 
     /** Lấy số tiền đấu giá */
     fun getAuctionGold(characterId: Long): Int =
-        moneyMap[characterId]?.get(1)?.toInt() ?: 0
+        moneyMap[characterId]?.let { synchronized(it) { it[1].toInt() } } ?: 0
 
     /**
      * Thêm tiền vàng (synchronized bảo vệ tính nguyên tử của quá trình đọc-kiểm tra-ghi)
@@ -78,12 +140,14 @@ class MoneySystem(
      */
     fun addGold(characterId: Long, amount: Int): Boolean {
         if (amount <= 0) return false
-        val arr = moneyMap[characterId] ?: return false
-        synchronized(arr) {
+        return withGoldMutationFence(characterId) {
+            val arr = moneyMap[characterId] ?: return@withGoldMutationFence false
+            synchronized(arr) {
             val newGold = arr[0] + amount
-            if (newGold < 0 || newGold > ItemConstants.MAX_GOLD) return false
+            if (newGold < 0 || newGold > ItemConstants.MAX_GOLD) return@withGoldMutationFence false
             arr[0] = newGold
-            return true
+            true
+            }
         }
     }
 
@@ -94,11 +158,13 @@ class MoneySystem(
      */
     fun subtractGold(characterId: Long, amount: Int): Boolean {
         if (amount <= 0) return false
-        val arr = moneyMap[characterId] ?: return false
-        synchronized(arr) {
-            if (arr[0] < amount) return false
+        return withGoldMutationFence(characterId) {
+            val arr = moneyMap[characterId] ?: return@withGoldMutationFence false
+            synchronized(arr) {
+            if (arr[0] < amount) return@withGoldMutationFence false
             arr[0] -= amount
-            return true
+            true
+            }
         }
     }
 

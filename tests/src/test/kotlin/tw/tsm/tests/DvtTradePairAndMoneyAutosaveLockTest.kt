@@ -48,6 +48,43 @@ class DvtTradePairAndMoneyAutosaveLockTest {
     }
 
     @Test
+    fun goldStripeCollisionMustNotDeadlockPairFence() = runBlocking {
+        val inventory=mockk<InventoryRepository>(relaxed=true)
+        val money=MoneySystem(inventory)
+        // Both character IDs map to physical semaphore stripe 1.
+        withTimeout(3_000) {
+            assertEquals("same-stripe",
+                money.withTradeGoldMutationFence(1L,257L) { "same-stripe" })
+        }
+    }
+
+    @Test
+    fun reversedGoldStripeOrderMustNeverDeadlock() = runBlocking {
+        val inventory=mockk<InventoryRepository>(relaxed=true)
+        val money=MoneySystem(inventory)
+        val entered=CompletableDeferred<Unit>()
+        val release=CompletableDeferred<Unit>()
+        val first=async {
+            money.withTradeGoldMutationFence(1001L,1002L) {
+                entered.complete(Unit)
+                release.await()
+                true
+            }
+        }
+        entered.await()
+        val second=async {
+            money.withTradeGoldMutationFence(1002L,1001L) { true }
+        }
+        repeat(10) { yield() }
+        assertFalse(second.isCompleted)
+        release.complete(Unit)
+        withTimeout(3_000) {
+            assertTrue(first.await())
+            assertTrue(second.await())
+        }
+    }
+
+    @Test
     fun moneyAutosaveCannotPassActiveCharacterSettlementLock() = runBlocking {
         val inventory=mockk<InventoryRepository>(relaxed=true)
         coEvery { inventory.loadMoney(id) } returns (450_000 to 17)

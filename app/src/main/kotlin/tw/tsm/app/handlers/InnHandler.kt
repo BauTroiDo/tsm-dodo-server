@@ -9,6 +9,7 @@ import tw.tsm.domain.interfaces.PacketHandler
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
 import tw.tsm.domain.interfaces.repositories.ChildRepository
+import tw.tsm.gamelogic.systems.CharacterPersistenceGuard
 import tw.tsm.gamelogic.systems.MoneySystem
 import tw.tsm.gamelogic.systems.PetSystem
 import tw.tsm.protocol.PacketReader
@@ -61,15 +62,16 @@ class InnHandler(
         // Phí nghỉ trọ (tạm dùng giá trị cố định, thực tế nên tính từ cấp lữ quán)
         val cost = 100
 
-        // Khấu trừ tiền
-        val (gold, _) = moneySystem.getMoney(charId)
-        if (gold < cost) {
-            innResponseSender.sendInnRestResult(session, 1)  // Không đủ tiền
+        // Check-and-debit is ONE action, fenced against save/logout and
+        // staged cross-player trade settlement; addGold(-cost) always fails.
+        val paid = CharacterPersistenceGuard.withLock(charId) {
+            moneySystem.subtractGold(charId, cost)
+        }
+        if (!paid) {
+            innResponseSender.sendInnRestResult(session, 1)
             return
         }
-
-        moneySystem.addGold(charId, -cost)
-        responseSender.sendAddMoney(session, -cost)
+        responseSender.sendSubtractMoney(session, cost)
 
         // Hồi HP + SP toàn đội
         petSystem.restoreAllFollowHpSp(charId)

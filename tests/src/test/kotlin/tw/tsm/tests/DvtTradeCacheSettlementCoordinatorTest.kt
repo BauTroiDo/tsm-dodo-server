@@ -156,6 +156,56 @@ class DvtTradeCacheSettlementCoordinatorTest {
     }
 
     @Test
+    fun synchronousGoldAwardWaitsUntilBothPublishedBalancesAreReady()=runBlocking {
+        setup()
+        val (first,second)=plans()
+        val entered=CompletableDeferred<Unit>()
+        val release=CompletableDeferred<Unit>()
+        coEvery { repo.commitTwoCharacterTradeAtomic(first,second) } coAnswers {
+            entered.complete(Unit)
+            release.await()
+            true
+        }
+        val settlement=async { coordinator.stageCommit(first,second) }
+        entered.await()
+        // This is intentionally a synchronous MoneySystem API on a *different*
+        // worker thread. It must WAIT rather than lose the combat reward
+        // through post-SQL publication of the older committed gold value.
+        val reward=async(Dispatchers.Default) { money.addGold(a,50) }
+        repeat(20) { yield() }
+        assertFalse(reward.isCompleted, "combat gold writer crossed pending SQL cache publish")
+        release.complete(Unit)
+        assertTrue(settlement.await())
+        assertTrue(withTimeout(3_000) { reward.await() })
+        assertEquals(1250,money.getGold(a))
+        assertEquals(1800,money.getGold(b))
+        money.saveMoney(a)
+        assertTrue(savedMoney.contains(Triple(a,1250,9)))
+    }
+
+    @Test
+    fun synchronousGoldSpendRechecksNewlyCommittedBalance()=runBlocking {
+        setup()
+        val (first,second)=plans()
+        val entered=CompletableDeferred<Unit>()
+        val release=CompletableDeferred<Unit>()
+        coEvery { repo.commitTwoCharacterTradeAtomic(first,second) } coAnswers {
+            entered.complete(Unit)
+            release.await()
+            true
+        }
+        val settlement=async { coordinator.stageCommit(first,second) }
+        entered.await()
+        val spend=async(Dispatchers.Default) { money.subtractGold(b,1850) }
+        repeat(20) { yield() }
+        assertFalse(spend.isCompleted)
+        release.complete(Unit)
+        assertTrue(settlement.await())
+        assertFalse(withTimeout(3_000) { spend.await() })
+        assertEquals(1800,money.getGold(b))
+    }
+
+    @Test
     fun staleOrUnloadedCacheBlocksSqlDebitBeforeItStarts()=runBlocking {
         setup()
         val (first,second)=plans()

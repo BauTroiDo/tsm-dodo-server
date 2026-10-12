@@ -32,6 +32,10 @@ class TradeCacheSettlementCoordinator(
         ) return false
 
         return CharacterPersistenceGuard.withLocks(first.characterId, second.characterId) {
+            // Existing sync gold writers don't hold the coroutine mutex.
+            // Acquire both short-lived gold fences before pre-state reads,
+            // keep them until SQL commit and both RAM snapshots are published.
+            money.withTradeGoldMutationFence(first.characterId, second.characterId) {
             val sides = listOf(first, second)
             // The entire online BAG snapshot, not merely offered slots,
             // must equal the input to the optimistic SQL transaction.
@@ -40,7 +44,7 @@ class TradeCacheSettlementCoordinator(
                         money.getLoadedMoney(side.characterId) !=
                             (side.beforeGold to side.auctionGold)
                 }
-            ) return@withLocks false
+            ) return@withTradeGoldMutationFence false
 
             // Cancellation after the database commits must not interrupt
             // updating either character's RAM cache; otherwise autosave/
@@ -60,6 +64,7 @@ class TradeCacheSettlementCoordinator(
                     )
                 }
                 true
+            }
             }
         }
     }
