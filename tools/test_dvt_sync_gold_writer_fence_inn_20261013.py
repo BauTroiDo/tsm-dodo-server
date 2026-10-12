@@ -22,7 +22,8 @@ class DvtGoldWritersFence(unittest.TestCase):
   self.assertIn('suspend fun <T> withTradeGoldMutationFence(',s)
   self.assertIn('minOf(goldStripe(firstId), goldStripe(secondId))',s)
   self.assertIn('maxOf(goldStripe(firstId), goldStripe(secondId))',s)
-  self.assertIn('withContext(NonCancellable + Dispatchers.IO)',s)
+  self.assertIn('return withContext(NonCancellable + Dispatchers.IO)',s)
+  self.assertIn('callerJob?.ensureActive()',s)
   self.assertIn('if (high !== low)',s)
   self.assertIn('low.release()',s)
   self.assertIn('high.release()',s)
@@ -50,6 +51,7 @@ class DvtGoldWritersFence(unittest.TestCase):
   s=read('tests/src/test/kotlin/tw/tsm/tests/DvtTradePairAndMoneyAutosaveLockTest.kt')
   self.assertIn('goldStripeCollisionMustNotDeadlockPairFence',s)
   self.assertIn('reversedGoldStripeOrderMustNeverDeadlock',s)
+  self.assertIn('cancelledWaiterCannotLeakPermitsOrStartNewTrade',s)
  def test_inn_writes_are_only_fix_but_pet_trade_and_treasure_remain_unwired(self):
   s=read('gamelogic/src/main/kotlin/tw/tsm/gamelogic/systems/TradeSystem.kt')
   self.assertNotIn('commitTwoCharacterTradeAtomic(',s)

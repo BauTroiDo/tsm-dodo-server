@@ -34,3 +34,11 @@
 5. User requested final consolidated manual client-character E2E, after all repairs, not per-milestone.
 
 Working repo `D:\Games\Ts-Offline\_dvt_nav_batch_20261012`, DEV SSH `tsm-prod` / `C:\Server-Game\tsm_dodo`; branch `fix/dvt-quest-nav-parity-20261011` PR#41. Checkout has numerous unrelated untracked _working files; always stage exact changed files and do not overwrite diverged DEV sources.
+
+## Follow-up — cancelled permit waiter safeguard (2026-10-13)
+
+A source review found a narrow cancellation gap in the previous `withTradeGoldMutationFence`: permits were acquired inside `withContext(NonCancellable + Dispatchers.IO)`, then the coroutine switched back to its cancelled dispatcher **before** entering the `try/finally` that releases them. If cancelled at that transition, the semaphores could remain held and all gold writes for those stripes could stall.
+
+The additional patch keeps acquisition, SQL action and release inside **one** non-cancellable IO context, and explicitly checks the original caller's `Job.ensureActive` immediately after obtaining both permits. This prevents a cancelled queued request from starting a new SQL transfer after waiting for the permits, while still guaranteeing release. Kotlin regression `cancelledWaiterCannotLeakPermitsOrStartNewTrade` verifies this behavior and subsequent acquisition. The Python source audit pins both the unified context and pre-action cancellation check.
+
+**Deployment policy:** GitHub-only until the connected Windows/SSH tool is responsive again and the new CI passes. C025 two-player SQL/cache coordinator is still unwired; the current DEV C025 duplicate-slot patch stays active. In a future chat, sync the Windows checkout with the GitHub branch by fetching and verifying the new head rather than blindly forcing a push or resetting the divergent DEV worktree. Manual gameplay E2E remains deferred to the final combined test pass.

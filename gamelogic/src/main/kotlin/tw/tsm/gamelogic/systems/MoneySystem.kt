@@ -8,6 +8,9 @@ import java.util.concurrent.Semaphore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.Job
 
 private val logger = KotlinLogging.logger {}
 
@@ -65,7 +68,11 @@ class MoneySystem(
         require(firstId > 0 && secondId > 0 && firstId != secondId)
         val low = goldMutationFences[minOf(goldStripe(firstId), goldStripe(secondId))]
         val high = goldMutationFences[maxOf(goldStripe(firstId), goldStripe(secondId))]
-        withContext(NonCancellable + Dispatchers.IO) {
+        val callerJob = currentCoroutineContext()[Job]
+        // Keep acquisition, action, and release in one non-cancellable
+        // dispatcher context. Re-dispatching to a cancelled caller after
+        // acquiring permits would otherwise leak both semaphores.
+        return withContext(NonCancellable + Dispatchers.IO) {
             low.acquire()
             if (high !== low) {
                 try { high.acquire() } catch (ex: Throwable) {
@@ -73,12 +80,15 @@ class MoneySystem(
                     throw ex
                 }
             }
-        }
-        try {
-            return action()
-        } finally {
-            if (high !== low) high.release()
-            low.release()
+            try {
+                // A cancelled waiter must never start a fresh SQL trade after
+                // the permits finally become available.
+                callerJob?.ensureActive()
+                action()
+            } finally {
+                if (high !== low) high.release()
+                low.release()
+            }
         }
     }
 
