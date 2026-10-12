@@ -38,6 +38,9 @@ class QuestSystem(
     weeklyDungeonMissionIds: Set<Int> = emptySet(),
     weeklyClaimMissionIds: Set<Int> = emptySet(),
     private val thisWeek: () -> Int = { currentWeekKey() },
+    // Original IOS_MarkStep_C is required to distinguish one-shot DVT
+    // marker missions from genuine multi-step quests on login.
+    private val markStepMissionIds: Set<Int> = emptySet(),
 ) {
 
     // Only normal kind1/2 dungeon dailyFlag counters proven kind8/bitId0 may be cleared.
@@ -303,6 +306,44 @@ class QuestSystem(
      * @return Danh sách đánh dấu
      */
     suspend fun getFlags(charId: Long): List<MissionFlagRecord> = repo.getMissionFlags(charId)
+
+    /**
+     * Repair legacy DVT marker ADD_STEP rows before the login S024-007 flags
+     * snapshot. EveStateBuilder repairs these on event access, but login
+     * sends its flags earlier, potentially leaving finished tutorial icons
+     * locked on relog.
+     *
+     * Only an existing positive step for a source Mark with a positive bitId
+     * and NO real MarkStep qualifies. Never invent a new mission or grant
+     * a flag merely because an icon requires it.
+     */
+    suspend fun reconcileStoredMarkerMissionFlags(charId: Long): List<MissionFlagRecord> {
+        if (charId <= 0L || markStepMissionIds.isEmpty()) return emptyList()
+        return mutationLock(charId).withLock {
+            val missions = repo.getMissions(charId)
+            if (missions.isEmpty()) return@withLock emptyList()
+
+            val activeBits = repo.getMissionFlags(charId)
+                .filter { it.bitIndex > 0 && it.bitValue != 0 }
+                .mapTo(mutableSetOf()) { it.bitIndex }
+            val repaired = mutableListOf<MissionFlagRecord>()
+            for (mission in missions) {
+                if (mission.step <= 0 || mission.missionId in markStepMissionIds) continue
+                val bitId = markDefs[mission.missionId]?.bitId ?: continue
+                if (bitId !in 1..65535 || bitId in activeBits) continue
+
+                repo.upsertFlag(charId, bitId, 1)
+                activeBits += bitId
+                repaired += MissionFlagRecord(bitId, 1)
+                logger.info {
+                    "Repaired DVT marker before login: charId=" + charId +
+                        " mission=" + mission.missionId + " step=" + mission.step +
+                        " bitId=" + bitId
+                }
+            }
+            repaired
+        }
+    }
 
     companion object {
         private val GAME_ZONE: ZoneId = ZoneId.of("Asia/Taipei")

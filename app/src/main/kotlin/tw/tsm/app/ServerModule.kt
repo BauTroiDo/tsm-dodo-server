@@ -391,6 +391,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             dailyDungeonMissionIds = normalDungeonDefs.map { it.dailyFlag }.filter { it > 0 }.toSet(),
             weeklyDungeonMissionIds = weeklyDungeonDefs.map { it.dailyFlag }.filter { it > 0 }.toSet(),
             weeklyClaimMissionIds = weeklyDungeonDefs.map { it.costPoint }.filter { it > 0 }.toSet(),
+            markStepMissionIds = data.markStepMissionIds,
         )
     }
     single { BitFlagSystem(get(), get<GameDataManager>().guideLastBitFlagId) }
