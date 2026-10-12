@@ -31,3 +31,13 @@ This patch **does NOT** make *every* inventory operation atomic and does not jus
 - Original DVT `specialAbility=245` banking request/reply semantics and `StarExp` rules are not proven from native dump; protect all 114 physical cards from generic consumption, but never mint S123 entitlements on a guessed packet.
 
 The user's request for consolidated manual in-game testing remains deferred.
+
+## Guarded DEV rollout checkpoint — 2026-10-13 02:38 Asia/Ho_Chi_Minh
+
+- Final GitHub source: `eb9068409b84e9c0157788a374553c70473e6c82` (previous implementation `ecf12af9751e0d120d327c652f41c610afa933d7` + existing regression lock-count update). GitHub [Server CI 38298514492](https://github.com/BauTroiDo/tsm-dodo-server/actions/runs/38298514492) **PASS**; [DVT data audit 38298514493](https://github.com/BauTroiDo/tsm-dodo-server/actions/runs/38298514493) **PASS**. Local full DVT Python suite **227/227 PASS**.
+- DEV old `gamelogic/.../InventorySystem.kt` exact SHA256 `d20893eacd6736901aff0c8f67671d621a3ee240f332bb84fd7722a41477cff6`, verified before replacement. New source SHA256 `db0091b1529fca82c1daaf1b07ca8cc8a28bbd23ebc3cdd67033efd0c40a7031`, independently verified after replacement. The server's dirty worktree was **not reset or checked out**.
+- Backup: `C:\Server-Game\tsm_dodo\backups\dvt_nine_bag_mutex_eb90684_20261013_023719\InventorySystem.kt`.
+- DEV `:app:classes` **BUILD SUCCESSFUL in 59s** before JVM restart. Verified compiled `InventorySystem.class` contains `moveBagItemUnfenced`, `removeFromBagUnfenced`, `openGiftBagAtomicUnfenced` and `addItemBundleToBagExactUnfenced` names. Prior game PID `11072`, new JVM **PID11224** listening on TCP **6613**. Startup log `C:\Server-Game\tsm_dodo\logs\runtime-production-dvt-nine-bag-mutex-eb90684.log` reports ready at 02:38:27 local time.
+- Postdeploy original `File.dat/Data/UiOpen_C.dat` SHA256 `af759749cf6d33081df7de99f715cf682e324bb48fb0ff4c57edb932a78c8b4e` remains intact; no DVT UI level/quest gates bypassed, no new C023/C123 banking packet, no star/level upgrade, no Treasure migration or character account mutation.
+- **Coverage limitation:** synchronous `InventorySystem.setBagItemSync` and `addItemDirectSync`, equipment/bank/storage flows, and some multistep transactions remain outside this mutex. `MoneySystem` similarly lacks shared cache/SQL publication. Do not activate staged `TreasureBankCacheCoordinator` or C123 progression until *all* relevant writers and source-native ability245 semantics are source-verified and tested.
+- Actual player-click E2E remains deferred to owner's final combined game test; only build/tests/runtime listening are verified here.
