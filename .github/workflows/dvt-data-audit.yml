@@ -79,6 +79,8 @@ jobs:
         run: python -m unittest discover -s tools -p test_dvt_treasure_card_acquisition_isolation_20261013.py -v
       - name: Verify 114 DVT Treasure card reward sources in BlissBag and Exchange tables
         run: python -m unittest discover -s tools -p test_dvt_treasure_reward_sources_20261013.py -v
+      - name: Guard all 114 Treasure direct-use cards against generic consumption before banking support
+        run: python -m unittest discover -s tools -p test_dvt_treasure_card_direct_use_safety_20261013.py -v
       - name: Verify unique genuine A Dou 12444 stage1 ghost-house follower route
         run: python -m unittest discover -s tools -p test_dvt_12444_unique_adou_route_20261012.py -v
       - name: Verify 10988 Sun Shangxiang two follower-dependent battle routes
