@@ -71,6 +71,8 @@ jobs:
         run: python -m unittest discover -s tools -p test_dvt_123xx_four_chest_choice_routes_20261012.py -v
       - name: Verify Wu Gang quest13119 fourteen source chopper NPC routes and original callback progression
         run: python -m unittest discover -s tools -p test_dvt_13119_wugang_source_tree_routes_20261012.py -v
+      - name: Verify Halloween Su Xiao Mei quest13131 three authentic original candy Door routes
+        run: python -m unittest discover -s tools -p test_dvt_13131_three_candy_source_doors_20261012.py -v
       - name: Verify original DVT Moon Rabbit mission entrance and nearest real battle NPC
         run: python -m unittest discover -s tools -p test_dvt_10852_rabbit_cave_navigation_20261012.py -v
       - name: Verify quest10852 source-backed return to original Ngô Cương NPC
