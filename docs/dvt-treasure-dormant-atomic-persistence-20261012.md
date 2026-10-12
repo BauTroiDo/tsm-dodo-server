@@ -24,7 +24,9 @@ Previous checkpoint `docs/dvt-treasure-six-original-tables-and-persistence-desig
 4. A missing ownership row cannot be minted by clicking upgrade.
 5. Unknown source level/ID, wrong version and invalid slot fail closed.
 6. A fully exhausted material stack is deleted only when the transaction commits.
-7. Mismatched trusted source cost-map keys are rejected.
-8. No Treasure repository is wired to startup and no automatic schema migration is installed.
+7. H2 intentionally rejects the FINAL level UPDATE with a CHECK constraint, AFTER the inventory and gold UPDATEs have executed; all three state values and their version must roll back to their pre-transaction values.
+8. Full StarExp wire-byte validation (0..255) without falsely assuming a stored 100-point cap.
+9. Mismatched trusted source cost-map keys are rejected.
+10. No Treasure repository is wired to startup and no automatic schema migration is installed.
 
 This is a foundation for a source-complete implementation, not a claim that Treasure can already be leveled in the game. End-to-end testing with a real character remains deferred as previously requested.

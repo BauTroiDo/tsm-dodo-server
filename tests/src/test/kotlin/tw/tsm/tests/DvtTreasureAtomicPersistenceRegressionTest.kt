@@ -137,6 +137,22 @@ class DvtTreasureAtomicPersistenceRegressionTest {
     }
 
     @Test
+    fun sqlErrorAfterInventoryAndGoldMutationsRollsEverythingBack() = runBlocking {
+        seed()
+        // Deliberately reject the FINAL Treasure update, after the repository
+        // has attempted both the material and gold deductions. The Exposed
+        // transaction must restore all three original SQL values.
+        transaction(db) {
+            exec("ALTER TABLE character_treasures ADD CONSTRAINT ck_block_level_up CHECK (level = 0)")
+        }
+        assertThrows(Exception::class.java) {
+            runBlocking { repo.purchaseLevel(charId,1,0,0,7) }
+        }
+        assertEquals(Triple(0,500_000,100),snapshot())
+        assertEquals(0L,repo.load(charId).single().version)
+    }
+
+    @Test
     fun originalStarExpWireByteIsPreservedWithoutAssumingHundredPointCap() {
         val state = tw.tsm.domain.interfaces.repositories.TreasureState(
             treasureId=1, cardCopiesTotal=0, level=0, star=0,
