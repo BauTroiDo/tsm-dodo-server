@@ -10,7 +10,7 @@ from patch_dvt_12509_christmas_vendors_20261011 import SOURCES
 ROOT=Path(__file__).resolve().parents[1]
 MARKSTEP=ROOT/"File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE=ROOT/"gamedata/Eve.emg"
-EXPECTED_SHA="363cb99326302577ca26b432716c4a9862fa16c8d164a5d592e11faf4959308a"
+EXPECTED_SHA="918133ebee509d28b964de93c0820e1eccc7c75557263e7ba20b735a8a1dc5f8"
 
 class OriginalChristmasFoodTurninRegression(unittest.TestCase):
     def test_three_merchants_then_real_chef_and_exact_eve_exchange(self):
