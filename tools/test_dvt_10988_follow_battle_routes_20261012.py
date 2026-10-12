@@ -8,7 +8,7 @@ from patch_dvt_10988_follow_battle_routes_20261012 import KEYS,TARGET,sha,patch,
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE=ROOT/"gamedata/Eve.emg"
-SHA="a2ddb57f24debb314d2d5bc59b7721d99561717e6bad3252c35c1280150c80da"
+SHA="11bba0ad361ff96266be77db1a3b5d6fcac37f82cd0345fb0c44777e8dbc1df2"
 class SourceSunShangxiangFollowerRoutes(unittest.TestCase):
  def test_source_eve_npc_and_battle_objective(self):
   rows=read_steps(DATA)
@@ -42,7 +42,7 @@ class SourceSunShangxiangFollowerRoutes(unittest.TestCase):
  def test_census_and_no_false_target_issues(self):
   rep=audit(DATA,EVE)
   self.assertEqual(rep["markstep_rows"],4505)
-  self.assertEqual(rep["targets"]["located"],5934)
+  self.assertEqual(rep["targets"]["located"],5935)
   self.assertEqual(rep["missing_scenes"],[])
   self.assertEqual(rep["missing_npcs"],[])
   self.assertEqual(rep["missing_doors"],[])
@@ -50,5 +50,5 @@ class SourceSunShangxiangFollowerRoutes(unittest.TestCase):
   self.assertEqual(len(blockers["missing_end_targets"]),63)
   self.assertEqual(len(blockers["pending_condition_guided_end_targets"]),8)
   self.assertEqual(len(blockers["missing_end_without_pending_condition_guidance"]),55)
-  self.assertEqual(len(blockers["unlocated_condition_targets"]),85)
+  self.assertEqual(len(blockers["unlocated_condition_targets"]),84)
 if __name__=="__main__":unittest.main()

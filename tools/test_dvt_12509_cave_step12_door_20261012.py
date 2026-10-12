@@ -7,7 +7,7 @@ from patch_dvt_12509_cave_stage12_door_20261012 import END,patch,verify_source
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE=ROOT/"gamedata/Eve.emg"
-SHA="a2ddb57f24debb314d2d5bc59b7721d99561717e6bad3252c35c1280150c80da"
+SHA="11bba0ad361ff96266be77db1a3b5d6fcac37f82cd0345fb0c44777e8dbc1df2"
 class CaveReturnSteps(unittest.TestCase):
  def test_source_scene_entry_opens_both_genuine_quest_stage12_cave_doors(self):
   self.assertEqual(verify_source(EVE),END)

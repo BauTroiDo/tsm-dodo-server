@@ -9,7 +9,7 @@ from patch_dvt_12763_13051_herb_ghost_source_routes_20261012 import (
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE=ROOT/"gamedata/Eve.emg"
-EXPECTED_SHA="a2ddb57f24debb314d2d5bc59b7721d99561717e6bad3252c35c1280150c80da"
+EXPECTED_SHA="11bba0ad361ff96266be77db1a3b5d6fcac37f82cd0345fb0c44777e8dbc1df2"
 class HerbAndGhostSourceRoutes(unittest.TestCase):
  def test_all_seven_authentic_door_eves_and_nonlinear_herb_deltas(self):
   self.assertEqual(len(HERB),7)
@@ -66,12 +66,12 @@ class HerbAndGhostSourceRoutes(unittest.TestCase):
  def test_corpus_integrity_counts_and_valid_eve_targets(self):
   report=audit(DATA,EVE)
   self.assertEqual(report["markstep_rows"],4505)
-  self.assertEqual(report["targets"]["located"],5934)
+  self.assertEqual(report["targets"]["located"],5935)
   self.assertFalse(report["missing_scenes"])
   self.assertFalse(report["missing_npcs"])
   self.assertFalse(report["missing_doors"])
   self.assertEqual(sum(x["end"]==(0,0,0,0,0) for x in read_steps(DATA)),63)
   blockers=scan(EVE,DATA)
   self.assertEqual(len(blockers["missing_end_targets"]),63)
-  self.assertEqual(len(blockers["unlocated_condition_targets"]),85)
+  self.assertEqual(len(blockers["unlocated_condition_targets"]),84)
 if __name__=="__main__":unittest.main()

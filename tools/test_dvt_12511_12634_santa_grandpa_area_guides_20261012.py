@@ -9,7 +9,7 @@ from patch_dvt_12511_12634_santa_grandpa_area_guides_20261012 import (
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE=ROOT/"gamedata/Eve.emg"
-SHA="a2ddb57f24debb314d2d5bc59b7721d99561717e6bad3252c35c1280150c80da"
+SHA="11bba0ad361ff96266be77db1a3b5d6fcac37f82cd0345fb0c44777e8dbc1df2"
 class SantaGrandpaBulkGuidance(unittest.TestCase):
  def test_full_source_ownership_and_exact_30_only_area_guides(self):
   self.assertEqual(source_proof(EVE),DESTS)
@@ -62,12 +62,12 @@ class SantaGrandpaBulkGuidance(unittest.TestCase):
  def test_global_markstep_and_mission_blocker_census(self):
   a=audit(DATA,EVE)
   self.assertEqual(a["markstep_rows"],4505)
-  self.assertEqual(a["targets"]["located"],5934)
+  self.assertEqual(a["targets"]["located"],5935)
   self.assertFalse(a["missing_scenes"])
   self.assertFalse(a["missing_npcs"])
   self.assertFalse(a["missing_doors"])
   self.assertEqual(sum(r["end"]==(0,0,0,0,0) for r in read_steps(DATA)),63)
   blockers=scan(EVE,DATA)
   self.assertEqual(len(blockers["missing_end_targets"]),63)
-  self.assertEqual(len(blockers["unlocated_condition_targets"]),85)
+  self.assertEqual(len(blockers["unlocated_condition_targets"]),84)
 if __name__=="__main__":unittest.main()
