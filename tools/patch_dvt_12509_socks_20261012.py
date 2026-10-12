@@ -27,6 +27,8 @@ PATCHED_SHAS = {
     # Future navigation-only commits preserve the two earlier socks routes.
     "e48a4b7f50f6dfc4d3b902279bdda5efea0c783c3eb46f7c300a80db1bec13ad",
     "93afa327618e1632b80bb0ddcd1fb1da73e3a6f0584da2046048d0be1ac35acc",
+    "a2ddb57f24debb314d2d5bc59b7721d99561717e6bad3252c35c1280150c80da",
+    "511563050ea38ca86e8b85a9ec954fb1b8165ec12403b34521f3acf6b33e40f7",
 }
 
 def sha(data):

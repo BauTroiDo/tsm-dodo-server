@@ -102,7 +102,10 @@ def patch(path,eve,apply=False):
     return newsha
 
 # Populated once after two edition-specific dry-runs; safeguards rerun inputs.
-NEW={"e48a4b7f50f6dfc4d3b902279bdda5efea0c783c3eb46f7c300a80db1bec13ad", "93afa327618e1632b80bb0ddcd1fb1da73e3a6f0584da2046048d0be1ac35acc"}
+NEW={"e48a4b7f50f6dfc4d3b902279bdda5efea0c783c3eb46f7c300a80db1bec13ad", "93afa327618e1632b80bb0ddcd1fb1da73e3a6f0584da2046048d0be1ac35acc",
+     # Subsequent follower-condition-only patch preserves the four tree END fields.
+     "a2ddb57f24debb314d2d5bc59b7721d99561717e6bad3252c35c1280150c80da",
+     "511563050ea38ca86e8b85a9ec954fb1b8165ec12403b34521f3acf6b33e40f7"}
 if __name__=="__main__":
     ap=argparse.ArgumentParser()
     ap.add_argument("file",type=Path)

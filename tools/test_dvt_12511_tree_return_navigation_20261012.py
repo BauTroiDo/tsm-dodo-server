@@ -9,7 +9,7 @@ from patch_dvt_12511_tree_return_20261012 import TARGETS,verify_source,patch,sha
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE=ROOT/"gamedata/Eve.emg"
-SHA="e48a4b7f50f6dfc4d3b902279bdda5efea0c783c3eb46f7c300a80db1bec13ad"
+SHA="a2ddb57f24debb314d2d5bc59b7721d99561717e6bad3252c35c1280150c80da"
 class ChristmasTreeStageRoutes(unittest.TestCase):
  def test_unique_click_npc_and_four_source_reward_branches(self):
   self.assertEqual(verify_source(EVE),TARGETS)
@@ -44,7 +44,7 @@ class ChristmasTreeStageRoutes(unittest.TestCase):
  def test_audited_census(self):
   a=audit(DATA,EVE)
   self.assertEqual(a["markstep_rows"],4505)
-  self.assertEqual(a["targets"]["located"],5932)
+  self.assertEqual(a["targets"]["located"],5934)
   self.assertEqual(a["missing_scenes"],[])
   self.assertEqual(a["missing_npcs"],[])
   self.assertEqual(a["missing_doors"],[])
@@ -53,5 +53,5 @@ class ChristmasTreeStageRoutes(unittest.TestCase):
   self.assertEqual(len(b["missing_end_targets"]),63)
   self.assertEqual(len(b["pending_condition_guided_end_targets"]),8)
   self.assertEqual(len(b["missing_end_without_pending_condition_guidance"]),55)
-  self.assertEqual(len(b["unlocated_condition_targets"]),87)
+  self.assertEqual(len(b["unlocated_condition_targets"]),85)
 if __name__=="__main__":unittest.main()

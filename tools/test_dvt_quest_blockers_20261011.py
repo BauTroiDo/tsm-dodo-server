@@ -59,11 +59,11 @@ class ActiveDvtQuestBlockerCensusTest(unittest.TestCase):
     def test_quest_turnin_routable_but_item_acquisition_still_unlocated(self):
         a = self.audit
         self.assertEqual(len(a["missing_end_targets"]), 63)
-        self.assertEqual(len(a["unlocated_condition_targets"]), 87)
+        self.assertEqual(len(a["unlocated_condition_targets"]), 85)
         count_by_kind = {}
         for row in a["unlocated_condition_targets"]:
             count_by_kind[row["kind"]] = count_by_kind.get(row["kind"], 0) + 1
-        self.assertEqual(count_by_kind, {3: 81, 1: 6})
+        self.assertEqual(count_by_kind, {3: 81, 1: 4})
         no_route = {
             (r["mission"], r["step"])
             for r in a["missing_end_targets"]
@@ -95,7 +95,7 @@ class ActiveDvtQuestBlockerCensusTest(unittest.TestCase):
             ROOT / "gamedata" / "Eve.emg",
         )
         self.assertEqual(result["markstep_rows"], 4505)
-        self.assertEqual(result["targets"]["located"], 5932)
+        self.assertEqual(result["targets"]["located"], 5934)
         self.assertEqual(result["missing_scenes"], [],
             "Quest target references a scene absent from active Eve")
         self.assertEqual(result["missing_doors"], [],
@@ -110,7 +110,7 @@ class ActiveDvtQuestBlockerCensusTest(unittest.TestCase):
         path = ROOT / "File.dat" / "Data-ios" / "IOS_MarkStep_C.dat"
         sha = hashlib.sha256(path.read_bytes()).hexdigest()
         self.assertEqual(sha,
-            "e48a4b7f50f6dfc4d3b902279bdda5efea0c783c3eb46f7c300a80db1bec13ad",
+            "a2ddb57f24debb314d2d5bc59b7721d99561717e6bad3252c35c1280150c80da",
             "A subsequent deployment must not restore the ten broken door IDs")
 
 if __name__ == "__main__":

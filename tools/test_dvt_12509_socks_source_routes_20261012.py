@@ -11,7 +11,7 @@ from patch_dvt_12509_socks_20261012 import TARGETS, sha, patch, verify_source, h
 ROOT = Path(__file__).resolve().parents[1]
 MARK = ROOT / "File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE = ROOT / "gamedata/Eve.emg"
-SHA = "e48a4b7f50f6dfc4d3b902279bdda5efea0c783c3eb46f7c300a80db1bec13ad"
+SHA = "a2ddb57f24debb314d2d5bc59b7721d99561717e6bad3252c35c1280150c80da"
 
 class ChristmasSocksOriginalEvent(unittest.TestCase):
     def test_original_npc_and_stage_dependent_quests(self):
@@ -56,7 +56,7 @@ class ChristmasSocksOriginalEvent(unittest.TestCase):
     def test_full_audit_counts_and_zero_invalid_destinations(self):
         rep = audit(MARK,EVE)
         self.assertEqual(rep["markstep_rows"],4505)
-        self.assertEqual(rep["targets"]["located"],5932)
+        self.assertEqual(rep["targets"]["located"],5934)
         self.assertFalse(rep["missing_scenes"])
         self.assertFalse(rep["missing_npcs"])
         self.assertFalse(rep["missing_doors"])
@@ -65,7 +65,7 @@ class ChristmasSocksOriginalEvent(unittest.TestCase):
         self.assertEqual(len(blockers["missing_end_targets"]),63)
         self.assertEqual(len(blockers["pending_condition_guided_end_targets"]),8)
         self.assertEqual(len(blockers["missing_end_without_pending_condition_guidance"]),55)
-        self.assertEqual(len(blockers["unlocated_condition_targets"]),87)
+        self.assertEqual(len(blockers["unlocated_condition_targets"]),85)
 
 if __name__=="__main__":
     unittest.main()
