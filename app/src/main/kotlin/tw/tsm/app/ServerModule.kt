@@ -165,6 +165,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             register(get<ExpSlotHandler>())
             register(get<PokeHandler>())
             register(get<MiningHandler>())
+            register(get<TreasureHandler>())
         }
     }
     single {
@@ -847,6 +848,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
         get<GameDataManager>().activityTimeDefs, get<GameDataManager>().eveData, get<BattlePassSystem>(),
         get<RoleCountSystem>(), get<InventorySystem>(), get<ResponseSender>()) }
     single { ActivityModelHandler() }
+    single { TreasureHandler(get<QuestSystem>()) }
     single { MallHandler(get(), get(), get<PointSystem>(), get<MoneySystem>(), get<PlayerCurrencySystem>(), get<ResponseSender>(), get<GameDataManager>().goodsSaleDefs, get<MallQuotaSystem>()) }
     single { SlotMachineHandler(get<SlotMachineSystem>(), get<ResponseSender>()) }
     single { PokeHandler(get<PokeSystem>(), get<ResponseSender>()) }

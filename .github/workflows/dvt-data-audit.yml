@@ -69,6 +69,8 @@ jobs:
         run: python -m unittest discover -s tools -p test_dvt_live_icon_refresh_source_parity_20261012.py -v
       - name: Verify original mining icon C170-001 initial type-zero and safe Kotlin first-mine alias
         run: python -m unittest discover -s tools -p test_dvt_mine_icon_click_source_20261012.py -v
+      - name: Verify original DVT Treasure icon S123 handshake, mission gate, and no phantom rewards
+        run: python -m unittest discover -s tools -p test_dvt_treasure_icon_protocol_20261012.py -v
       - name: Verify unique genuine A Dou 12444 stage1 ghost-house follower route
         run: python -m unittest discover -s tools -p test_dvt_12444_unique_adou_route_20261012.py -v
       - name: Verify 10988 Sun Shangxiang two follower-dependent battle routes
