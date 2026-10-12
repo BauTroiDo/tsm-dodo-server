@@ -143,7 +143,7 @@ class DvtTreasureAtomicPersistenceRegressionTest {
         // has attempted both the material and gold deductions. The Exposed
         // transaction must restore all three original SQL values.
         transaction(db) {
-            exec("ALTER TABLE character_treasures ADD CONSTRAINT ck_block_level_up CHECK (level = 0)")
+            exec("ALTER TABLE character_treasures ADD CONSTRAINT ck_block_level_up CHECK (updated_at_ms = 0)")
         }
         assertThrows(Exception::class.java) {
             runBlocking { repo.purchaseLevel(charId,1,0,0,7) }
