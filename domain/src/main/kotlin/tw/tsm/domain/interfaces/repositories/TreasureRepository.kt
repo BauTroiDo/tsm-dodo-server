@@ -42,6 +42,20 @@ interface TreasureRepository {
     suspend fun load(characterId: Long): List<TreasureState>
 
     /**
+     * Future-only original kind98 physical BAG -> S123 entitlement transfer.
+     * Transactionally consumes physical card copies and credits banked count;
+     * NO handler calls it until the native ability245 rule and in-session
+     * inventory cache publication are independently verified.
+     */
+    suspend fun bankCard(
+        characterId: Long,
+        treasureId: Int,
+        expectedVersion: Long,
+        cardBagSlot: Int,
+        quantity: Int,
+    ): Boolean
+
+    /**
      * Future-only transaction primitive, not yet registered or called by C123.
      * Must fail closed if the character has no legitimately banked Treasure row,
      * the client slot is wrong, original source cost is unknown, gold/cards are

@@ -31,7 +31,10 @@ class DvtTreasureTransactionStage(unittest.TestCase):
   self.assertIn('CharacterTreasures.update(',repo)
   self.assertIn('Inventories.deleteWhere',repo)
   self.assertNotIn('StarExp',repo)
-  self.assertNotIn('insert {',repo)
+  # Only verified physical-card bankCard may create ownership; a read-only
+  # C123-001/open and purchaseLevel path must never mint a row.
+  self.assertIn('CharacterTreasures.insert {',repo)
+  self.assertNotIn('insert {',repo.split('override suspend fun purchaseLevel(',1)[1])
  def test_reference_data_is_original_not_fake_defaults(self):
   header=src('domain/src/main/kotlin/tw/tsm/domain/interfaces/repositories/TreasureRepository.kt')
   self.assertIn('cardCopiesTotal',header)

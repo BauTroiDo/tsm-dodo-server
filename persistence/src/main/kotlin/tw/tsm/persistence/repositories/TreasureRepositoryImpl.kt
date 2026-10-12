@@ -3,6 +3,7 @@ package tw.tsm.persistence.repositories
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.jdbc.update
@@ -26,8 +27,14 @@ import tw.tsm.persistence.tables.Inventories
  */
 class TreasureRepositoryImpl(
     private val originalLevelCosts: Map<Pair<Int, Int>, TreasureLevelRequirement>,
+    // Original Item_C.kind98.skillLink mapping, injected from trusted source.
+    // Defaults to empty so an unwired repository can NEVER bank a card.
+    private val originalCardItemIds: Map<Int, Int> = emptyMap(),
 ) : TreasureRepository {
     init {
+        require(originalCardItemIds.keys.all { it in 1..114 })
+        require(originalCardItemIds.values.all { it in 25601..25714 })
+        require(originalCardItemIds.values.size == originalCardItemIds.values.toSet().size)
         for ((key, cost) in originalLevelCosts) {
             require(key == (cost.treasureId to cost.targetLevel))
         }
@@ -48,6 +55,89 @@ class TreasureRepositoryImpl(
                         version = row[CharacterTreasures.version],
                     )
                 }
+        }
+    }
+
+    override suspend fun bankCard(
+        characterId: Long,
+        treasureId: Int,
+        expectedVersion: Long,
+        cardBagSlot: Int,
+        quantity: Int,
+    ): Boolean {
+        if (characterId <= 0 || treasureId !in 1..114 ||
+            expectedVersion < 0 || cardBagSlot !in 0..65535 || quantity <= 0
+        ) return false
+        // No trusted original definition => no card can be minted.
+        val expectedItemId = originalCardItemIds[treasureId] ?: return false
+
+        return suspendTransaction {
+            // Lock the actual BAG slot and verify the stored physical item.
+            // A forged client skillLink, item ID or stale slot cannot credit S123.
+            val storedItem = Inventories.selectAll().where {
+                (Inventories.characterId eq characterId) and
+                    (Inventories.storageType eq 1) and
+                    (Inventories.slot eq cardBagSlot)
+            }.forUpdate().singleOrNull() ?: return@suspendTransaction false
+            val beforeQty = storedItem[Inventories.quantity]
+            if (storedItem[Inventories.itemId] != expectedItemId ||
+                beforeQty < quantity
+            ) return@suspendTransaction false
+
+            val owned = CharacterTreasures.selectAll().where {
+                (CharacterTreasures.characterId eq characterId) and
+                    (CharacterTreasures.treasureId eq treasureId)
+            }.forUpdate().singleOrNull()
+
+            if ((owned?.get(CharacterTreasures.version) ?: 0L) != expectedVersion) {
+                return@suspendTransaction false
+            }
+            val beforeCards = owned?.get(CharacterTreasures.cardCopiesTotal) ?: 0
+            // Avoid integer overflow silently creating negative entitlements.
+            if (beforeCards.toLong() + quantity.toLong() > Int.MAX_VALUE) {
+                return@suspendTransaction false
+            }
+
+            val remainder = beforeQty - quantity
+            if (remainder == 0) {
+                check(Inventories.deleteWhere {
+                    (Inventories.characterId eq characterId) and
+                        (Inventories.storageType eq 1) and
+                        (Inventories.slot eq cardBagSlot)
+                } == 1)
+            } else {
+                check(Inventories.update({
+                    (Inventories.characterId eq characterId) and
+                        (Inventories.storageType eq 1) and
+                        (Inventories.slot eq cardBagSlot)
+                }) { it[Inventories.quantity] = remainder } == 1)
+            }
+            if (owned == null) {
+                check(expectedVersion == 0L)
+                // Crediting a new S123 row is allowed ONLY in this debit
+                // transaction, not on C123-001 read or character login.
+                CharacterTreasures.insert {
+                    it[CharacterTreasures.characterId] = characterId
+                    it[CharacterTreasures.treasureId] = treasureId
+                    it[CharacterTreasures.cardCopiesTotal] = quantity
+                    it[CharacterTreasures.level] = 0
+                    it[CharacterTreasures.star] = 0
+                    it[CharacterTreasures.starExp] = 0
+                    it[CharacterTreasures.version] = 1L
+                    it[CharacterTreasures.updatedAtMs] = System.currentTimeMillis()
+                }
+            } else {
+                check(CharacterTreasures.update({
+                    (CharacterTreasures.characterId eq characterId) and
+                        (CharacterTreasures.treasureId eq treasureId) and
+                        (CharacterTreasures.version eq expectedVersion)
+                }) {
+                    it[CharacterTreasures.cardCopiesTotal] = beforeCards + quantity
+                    it[CharacterTreasures.version] = expectedVersion + 1L
+                    it[CharacterTreasures.updatedAtMs] = System.currentTimeMillis()
+                } == 1)
+            }
+            true
         }
     }
 
