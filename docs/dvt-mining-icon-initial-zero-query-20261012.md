@@ -29,3 +29,13 @@ All 55 menu icons in original `UiOpen_C.dat` groups1,2,3 have an explicit `EFunc
 ## Deferred E2E
 
 With a character holding the authentic flag11804, open Mine icon ID77; the page should open without relog, show mine1 information and four machines. The dropdown request type1 must still succeed. Attempt to enter the mine while in a party/battle/forbidden map: game should still refuse. Confirm refill uses valid items and quantities, no duplicate charge, relog preserves mining state. Manual game tests remain deferred until the owner's final combined round.
+
+## Verified DEV rollout checkpoint — 2026-10-12 20:07 ICT
+
+- Git source commit: `19751117888bc7413509401551c94582899c59e7`.
+- GitHub Server CI `38253073820` **PASS**; DVT data audit `38253073760` **PASS**. Local DVT Python suite **180/180 PASS**.
+- DEV server preflight SHA before patch: `2e28bcded5d26a2bf4a50d155b13b94ff33a1ab3d0fbc034fd57851ae5c32b58`; new verified SHA `2cafee8a04d3f82d481e153ee260196236551c5615a94d919f1250459fbf74f8`.
+- Exact DEV backup `C:\Server-Game\tsm_dodo\backups\dvt_mining_icon_1975111_20261012_200630\MiningHandler.kt`. No `git reset`/`checkout` on dirty server repository.
+- DEV Gradle `:app:classes` **BUILD SUCCESSFUL in 23s**; post-build server restart from old Java PID2728 to **PID6148**, port **6613 LISTENING**; startup log `C:\Server-Game\tsm_dodo\logs\runtime-production-dvt-mining-icon-1975111.log` announces game ready at 20:07:02.
+- Independent post-deploy guard rechecked on-disk handler SHA, compiled `MiningHandler.class` containing `requestedMineType`, socket PID6148, and DEV original `UiOpen_C.dat` SHA `af759749cf6d33081df7de99f715cf682e324bb48fb0ff4c57edb932a78c8b4e` (unchanged).
+- Manual client E2E not run; deferred as user requested. All source-derived mining restrictions and all function-icon original level/mission gates remain preserved.
