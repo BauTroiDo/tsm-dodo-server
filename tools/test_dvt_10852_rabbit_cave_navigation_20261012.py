@@ -14,7 +14,7 @@ from patch_dvt_10852_rabbit_cave_waypoint_20261012 import (
 ROOT=Path(__file__).resolve().parents[1]
 MARKSTEP=ROOT/"File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE=ROOT/"gamedata/Eve.emg"
-TARGET_SHA="3128277213fd51bbf531a5b5b09f1558ab0265b638ddef680bc1211d00ce3788"
+TARGET_SHA="55f09d04eca91d488ab85113a33550e207db0943e5784093ae1b42dffa2ab867"
 
 
 class DvtMoonRabbitQuestNavigationTest(unittest.TestCase):

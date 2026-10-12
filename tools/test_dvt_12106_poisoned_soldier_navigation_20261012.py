@@ -10,7 +10,7 @@ from patch_dvt_12106_poisoned_soldier_delivery_20261012 import (
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE=ROOT/"gamedata/Eve.emg"
-SHA="3128277213fd51bbf531a5b5b09f1558ab0265b638ddef680bc1211d00ce3788"
+SHA="55f09d04eca91d488ab85113a33550e207db0943e5784093ae1b42dffa2ab867"
 
 class SourceProven12106PoisonedSoldierNavigation(unittest.TestCase):
  @classmethod
