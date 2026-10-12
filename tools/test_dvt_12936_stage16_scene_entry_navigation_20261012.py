@@ -9,7 +9,7 @@ from patch_dvt_quest_door_trigger_corrections_20261012 import TARGETS, patch as 
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE=ROOT/"gamedata/Eve.emg"
-SHA="b2bb1ae382f5c0e50efe49e8ec8b98ce3a44bbba97e8bed955d94a1fd9749753"
+SHA="3128277213fd51bbf531a5b5b09f1558ab0265b638ddef680bc1211d00ce3788"
 class Dvt12936SceneEntryContinuation(unittest.TestCase):
  def test_original_door_graph_has_door7_stage16_result_and_npc17(self):
   self.assertEqual(original_source_proof(EVE),TARGET)
