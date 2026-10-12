@@ -55,5 +55,25 @@ interface InventoryRepository {
     /**
      * Lưu tiền của nhân vật
      */
+    /**
+     * Source-only two-character BAG/gold settlement. Deliberately NOT used by
+     * TradeSystem yet: both online caches must be published after SQL commit.
+     */
+    suspend fun commitTwoCharacterTradeAtomic(
+        first: TradeAccountSnapshot,
+        second: TradeAccountSnapshot,
+    ): Boolean = error("Atomic trade integration is not enabled")
+
     suspend fun saveMoney(characterId: Long, gold: Int, auctionGold: Int)
 }
+
+
+/** Full BAG snapshot + paired money values, asserted against locked SQL rows. */
+data class TradeAccountSnapshot(
+    val characterId: Long,
+    val beforeBag: Map<Int, ThingData>,
+    val afterBag: Map<Int, ThingData>,
+    val beforeGold: Int,
+    val afterGold: Int,
+    val auctionGold: Int,
+)

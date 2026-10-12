@@ -9,6 +9,9 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.jdbc.upsert
+import org.jetbrains.exposed.v1.jdbc.update
+import tw.tsm.domain.constants.ItemConstants
+import tw.tsm.domain.interfaces.repositories.TradeAccountSnapshot
 import tw.tsm.domain.interfaces.repositories.InventoryRepository
 import tw.tsm.domain.valueobjects.MythAttribute
 import tw.tsm.domain.valueobjects.ThingData
@@ -160,6 +163,88 @@ class InventoryRepositoryImpl : InventoryRepository {
             }
             Unit
         }
+
+    /**
+     * STAGED ONLY: optimistic full-snapshot two-player BAG + GOLD transaction.
+     *
+     * The real TradeSystem currently uses synchronous RAM changes; enabling
+     * this method there without atomic cache publication would resurrect old
+     * objects at autosave/logout. Remain unwired until that is implemented.
+     */
+    override suspend fun commitTwoCharacterTradeAtomic(
+        first: TradeAccountSnapshot,
+        second: TradeAccountSnapshot,
+    ): Boolean {
+        if (first.characterId <= 0 || second.characterId <= 0 ||
+            first.characterId == second.characterId
+        ) return false
+        val sides = listOf(first, second).sortedBy { it.characterId }
+        if (sides.any { side ->
+                side.beforeGold < 0 || side.afterGold < 0 ||
+                    side.beforeGold > ItemConstants.MAX_GOLD ||
+                    side.afterGold > ItemConstants.MAX_GOLD ||
+                    side.auctionGold < 0 ||
+                    listOf(side.beforeBag, side.afterBag).any { bag ->
+                        bag.any { (slot, item) ->
+                            slot !in 0..65535 || item.isEmpty ||
+                                item.itemId !in 1..65535 || item.quantity <= 0
+                        }
+                    }
+            }
+        ) return false
+
+        // A cross-player trade cannot mint/destroy cards or gold. Compare
+        // entire ThingData, including all Myth, affix and expiration fields.
+        fun identities(bags: List<Map<Int, ThingData>>): Map<ThingData, Long> =
+            bags.flatMap { it.values }.groupingBy { it.copy(quantity = 1) }
+                .fold(0L) { acc, item -> acc + item.quantity.toLong() }
+        if (identities(sides.map { it.beforeBag }) != identities(sides.map { it.afterBag })) {
+            return false
+        }
+        if (sides.sumOf { it.beforeGold.toLong() } !=
+            sides.sumOf { it.afterGold.toLong() }
+        ) return false
+
+        return suspendTransaction {
+            // Stable character lock order, separate from coroutine cache
+            // fences. Re-validate the exact DB snapshots before any mutation.
+            for (side in sides) {
+                val persistedMoney = CharacterMoney.selectAll()
+                    .where { CharacterMoney.characterId eq side.characterId }
+                    .forUpdate().singleOrNull() ?: return@suspendTransaction false
+                if (persistedMoney[CharacterMoney.gold] != side.beforeGold ||
+                    persistedMoney[CharacterMoney.auctionGold] != side.auctionGold
+                ) return@suspendTransaction false
+                val persistedBag = Inventories.selectAll().where {
+                    (Inventories.characterId eq side.characterId) and
+                        (Inventories.storageType eq EThings.BAG)
+                }.forUpdate().associate { row ->
+                    row[Inventories.slot] to row.toThingData()
+                }
+                if (persistedBag != side.beforeBag) return@suspendTransaction false
+            }
+            for (side in sides) {
+                Inventories.deleteWhere {
+                    (Inventories.characterId eq side.characterId) and
+                        (Inventories.storageType eq EThings.BAG)
+                }
+                if (side.afterBag.isNotEmpty()) {
+                    Inventories.batchInsert(side.afterBag.entries.toList()) { (slot, thing) ->
+                        this[Inventories.characterId] = side.characterId
+                        this[Inventories.storageType] = EThings.BAG
+                        this[Inventories.slot] = slot
+                        this.setThingData(thing)
+                    }
+                }
+                check(CharacterMoney.update({
+                    CharacterMoney.characterId eq side.characterId
+                }) { it[CharacterMoney.gold] = side.afterGold } == 1) {
+                    "Missing trade-money row during atomic settlement"
+                }
+            }
+            true
+        }
+    }
 
     override suspend fun loadMoney(characterId: Long): Pair<Int, Int> =
         suspendTransaction {
