@@ -29,3 +29,12 @@ No new packet formats, original Lua modifications, Treasure bank credit, SQL mig
 4. The source-native DVT ability245 bank/transfer event and StarExp progression are still not proven; physical-card use for kind98 remains safe rejection, with no arbitrary ownership grants.
 
 Player-driven consolidated E2E remains deliberately deferred, as requested. No live DB migration or direct player-data mutation in this batch.
+
+## Verified DEV rollout — 2026-10-13 03:04 Asia/Ho_Chi_Minh
+
+- GitHub code commit `224fa6aa4446c6ab82fca9ed34af8e70843a48a5`, PR #41 branch `fix/dvt-quest-nav-parity-20261011`. Server CI run [38301421947](https://github.com/BauTroiDo/tsm-dodo-server/actions/runs/38301421947) **PASS**, DVT data audit run [38301422043](https://github.com/BauTroiDo/tsm-dodo-server/actions/runs/38301422043) **PASS**, Python DVT complete regression **233/233 PASS**.
+- Guarded SSH `tsm-prod` deployment patched only `gamelogic/src/main/kotlin/tw/tsm/gamelogic/systems/InventorySystem.kt`; source SHA before `db0091b1529fca82c1daaf1b07ca8cc8a28bbd23ebc3cdd67033efd0c40a7031`, after `502936573bcf18ac6f9bb55e0f1fd0ff482d97b911ec05f26142fe83781a1333`.
+- Original source backup `C:\Server-Game\tsm_dodo\backups\dvt_multi_container_lock_224fa6a_20261013_030325\InventorySystem.kt`. No remote git reset/checkout/pull of the divergent DEV source tree.
+- DEV `:app:classes` **BUILD SUCCESSFUL in 55s** before restarting the old game. Compiled `InventorySystem.class` confirmed `equipItemUnfenced`, `depositToBankUnfenced`, `withdrawFromStorageUnfenced`, and `addRewardsToBagExactUnfenced`. Old Java PID `11224`; new server Java **PID `12260`** on port `6613` listening, main process log ready at **03:04:30**. Runtime log `C:\Server-Game\tsm_dodo\logs\runtime-production-dvt-multi-container-224fa6a.log`.
+- Canonical `File.dat/Data/UiOpen_C.dat` SHA after deployment is still `af759749cf6d33081df7de99f715cf682e324bb48fb0ff4c57edb932a78c8b4e`. Original DVT level/mission-based icon gates untouched, game data and client files unchanged. No DB migration, no player resource adjustments and NO enablement of physical-card banking, C123 level/star purchases or StarExp updates.
+- Continuing limitations: synchronous `setBagItemSync`, `addItemDirectSync`, independent `MoneySystem` gold cache, multistep inventory SQL updates and missing original `specialAbility=245` server entitlement semantics still block live Treasure banking and upgrades. Manual in-game player E2E deferred to the requested consolidated final pass.
