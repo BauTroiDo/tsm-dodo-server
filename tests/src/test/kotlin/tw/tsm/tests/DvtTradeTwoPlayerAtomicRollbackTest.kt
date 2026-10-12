@@ -72,7 +72,7 @@ class DvtTradeTwoPlayerAtomicRollbackTest {
         CharacterMoney.selectAll().where { CharacterMoney.characterId eq id }
             .single()[CharacterMoney.gold]
     }
-    private fun items(id: Long): Map<Int,Pair<Int,Int>>=transaction(db) {
+    private fun items(id: Long): Map<Int, Pair<Int, Int>> = transaction(db) {
         Inventories.selectAll().where {
             (Inventories.characterId eq id) and (Inventories.storageType eq 1)
         }.associate { it[Inventories.slot] to (it[Inventories.itemId] to it[Inventories.quantity]) }

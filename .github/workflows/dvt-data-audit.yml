@@ -93,6 +93,8 @@ jobs:
         run: python -m unittest discover -s tools -p test_dvt_trade_gold_fence_20261013.py -v
       - name: Verify two-player SQL BAG and GOLD rollback is staged but not live
         run: python -m unittest discover -s tools -p test_dvt_trade_two_character_sql_atomic_staged_20261013.py -v
+      - name: Reject duplicated item trade BAG slots at upload and final settlement
+        run: python -m unittest discover -s tools -p test_dvt_trade_duplicate_bag_slot_guard_20261013.py -v
       - name: Verify unique genuine A Dou 12444 stage1 ghost-house follower route
         run: python -m unittest discover -s tools -p test_dvt_12444_unique_adou_route_20261012.py -v
       - name: Verify 10988 Sun Shangxiang two follower-dependent battle routes

@@ -76,6 +76,13 @@ class TradeSystem(
         /** Chế độ giao dịch: Võ tướng */
         const val MODE_PET = 2
 
+        /**
+         * C025-002 lists BAG slots as U8. Repeated indices could otherwise
+         * send one physical stack twice to the counterparty in executeTrade.
+         */
+        fun hasUniqueTradeBagSlots(slots: List<Int>): Boolean =
+            slots.size == slots.toSet().size && slots.all { it in 0..255 }
+
         // ── Mã lý do hủy (reason S:025-002 / S:025-011, đối chiếu nghiêm ngặt với protocal.lua:6189-6284) ──
 
         /** Hệ thống đang bận, vui lòng giao dịch sau (40010) */
@@ -203,6 +210,10 @@ class TradeSystem(
 
             // Chỉ có thể tải lên ở trạng thái WaitingUpload
             if (myState !is TradePlayerState.WaitingUpload) return
+            if (!hasUniqueTradeBagSlots(bagIndices)) {
+                cancelTradeInternal(trade, playerId, REASON_SYSTEM, notifyInitiator = true)
+                return
+            }
 
             // Xác thực tiền
             val characterId = getCharacterId(playerId) ?: return
@@ -492,6 +503,14 @@ class TradeSystem(
 
         val offerA = trade.offerA ?: return
         val offerB = trade.offerB ?: return
+        // Re-validate at the final commit boundary. Never make two copies of
+        // a stack even if TradeOffer is forged or stale after upload.
+        if (!hasUniqueTradeBagSlots(offerA.bagIndices) ||
+            !hasUniqueTradeBagSlots(offerB.bagIndices)
+        ) {
+            cancelTradeInternal(trade, trade.playerA, REASON_SYSTEM, notifyInitiator = true)
+            return
+        }
 
         val sessionA = worldManager.getPlayerById(trade.playerA)
         val sessionB = worldManager.getPlayerById(trade.playerB)
