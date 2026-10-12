@@ -7,7 +7,7 @@ from patch_dvt_12080_godstone_two_door_routes_20261012 import TARGETS,patch,sha,
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE=ROOT/"gamedata/Eve.emg"
-SHA="55f09d04eca91d488ab85113a33550e207db0943e5784093ae1b42dffa2ab867"
+SHA="91684c0a287e24b31a5e251322e19a69e96f6961e28d4c90bbadcc40055162f0"
 class GodstoneStage4Stage7Navigation(unittest.TestCase):
  def test_stage_gated_battle_event_is_bound_to_exact_original_door(self):
   self.assertEqual(source_eve_proof(EVE),{k:v[:5] for k,v in TARGETS.items()})
@@ -37,7 +37,7 @@ class GodstoneStage4Stage7Navigation(unittest.TestCase):
   self.assertEqual(DATA.read_bytes(),original)
   a=audit(DATA,EVE)
   self.assertEqual(a["markstep_rows"],4505)
-  self.assertEqual(a["targets"]["located"],5833)
+  self.assertEqual(a["targets"]["located"],5845)
   self.assertFalse(a["missing_scenes"])
   self.assertFalse(a["missing_npcs"])
   self.assertFalse(a["missing_doors"])

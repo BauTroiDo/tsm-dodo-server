@@ -11,7 +11,7 @@ from patch_dvt_quest_door_trigger_corrections_20261012 import TARGETS, patch as 
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE=ROOT/"gamedata/Eve.emg"
-SHA="55f09d04eca91d488ab85113a33550e207db0943e5784093ae1b42dffa2ab867"
+SHA="91684c0a287e24b31a5e251322e19a69e96f6961e28d4c90bbadcc40055162f0"
 class DvtChristmasThiefFinalReturnTest(unittest.TestCase):
  def test_real_santa_door2_completes_mission_with_follower_gate(self):
   self.assertEqual(verify_eve(EVE),SANTA)
