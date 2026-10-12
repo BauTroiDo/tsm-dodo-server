@@ -37,3 +37,15 @@ Regression: `tests/.../DvtTreasureCardAcquisitionIsolationTest.kt` validates the
 4. After these, load the source cost index through `TreasureDatLoader`, migrate `character_treasures` with an auditable schema migration, implement in-session economy synchronization, and then enable one C123 subkind at a time. Manual client E2E remains deferred to the owner's consolidated pass.
 
 All existing DEV data, original `IOS_UiOpen_C.dat` unlock gates, original Eve and the live Java PID are untouched by this source-only batch.
+
+## Source reward-origin follow-up: decoded actual BlissBag and Exchange tables
+
+Subsequent exact packed decoders `tools/audit_dvt_treasure_reward_sources_20261013.py` and tests `tools/test_dvt_treasure_reward_sources_20261013.py` identified *actual* distribution definitions outside the Eve items branch (the rough two-byte scan alone was not used as proof):
+
+- Original `BlissBagData.New` fixed record `<HHIIB`: bag containerId(U16), reward itemId(U16), quantity(U32), probability weight(U32), grouping kind(U8). `IOS_BlissBag_C.dat`: **37,257 records**, **175 valid Treasure kind98 card reward rows** from **27 distinct reward-container IDs**, covering **every one of the 114 Treasure item IDs**. Source example container **34617**, card item **25605**, quantity1, weight980, kind1. The probability weights have not yet been normalized or a specific player's bag-roll context verified; no reward probability was invented.
+- Original `ExchangeData.New` fixed record `<HHH`: exchangeGroupId(U16), itemId(U16), quantity(U16). `IOS_Exchange_C.dat`: **5,036 records**, **62 Treasure card rows**, **62 different item IDs**, across **12 exchange group IDs**; example exchange group **44238** maps to item **25604** ×1. Definition existence does not establish a currently reachable exchange NPC or unlocked shop.
+- Original `AchievementData.New` fixed row 37 bytes: **600 records**, with **zero original Treasure card itemId reward entries**. The earlier raw byte-pattern scan overestimated achievement matches because 16-bit matches can appear in unrelated fields, so these new parsed row results replace it.
+- Kotlin `ItemHandler.handleUseItem` already handles GIFT_BOX by calling `inventorySystem.openGiftBagAtomic` and sending `sendSetBagItem` on success. That is a legitimate **BAG item grant**, not a `TreasureState.cardCopiesTotal` bank grant. Existing handler guarantees all-or-nothing with container consumption; no gameplay change in this batch.
+- Conclusion: card **acquisition sources are now verified** in original static data; the remaining missing source evidence is the **bank/transfer mechanism** that turns an obtained bag item into the separate server S123 count. Never fabricate that transfer or mark a bag reward as automatically banked.
+
+Follow-up tests pin all three packed distributions and all sample/coverage assertions. No live player item count has been altered.
