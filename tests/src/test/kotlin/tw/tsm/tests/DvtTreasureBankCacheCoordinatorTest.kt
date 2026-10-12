@@ -142,6 +142,86 @@ class DvtTreasureBankCacheCoordinatorTest {
     }
 
     @Test
+    fun bagWriterCannotInterleaveWithStagedSqlCommit() = runBlocking {
+        loaded()
+        val dbEntered=CompletableDeferred<Unit>()
+        val releaseSql=CompletableDeferred<Unit>()
+        coEvery { treasure.bankCard(charId,1,0,slot,2) } coAnswers {
+            dbEntered.complete(Unit)
+            releaseSql.await()
+            true
+        }
+        val transfer=async { coordinator.stageBank(charId,1,0,slot,2) }
+        dbEntered.await()
+        val moveStarted=CompletableDeferred<Unit>()
+        val move=async {
+            moveStarted.complete(Unit)
+            system.moveBagItem(charId,slot,1,slot+1)
+        }
+        moveStarted.await()
+        repeat(10) { yield() }
+        assertFalse(move.isCompleted, "moveBagItem cannot read an old card slot during SQL commit")
+        assertEquals(5,system.getBagItem(charId,slot)?.quantity)
+        releaseSql.complete(Unit)
+        transfer.await()
+        assertTrue(move.await())
+        assertEquals(2,system.getBagItem(charId,slot)?.quantity)
+        assertEquals(1,system.getBagItem(charId,slot+1)?.quantity)
+        system.save(charId)
+        assertEquals(2,snapshots.single()[slot]?.quantity)
+        assertEquals(1,snapshots.single()[slot+1]?.quantity)
+    }
+
+    @Test
+    fun removeAndDirectSetCannotPassBankSettlementLock() = runBlocking {
+        loaded()
+        val dbEntered=CompletableDeferred<Unit>()
+        val releaseSql=CompletableDeferred<Unit>()
+        coEvery { treasure.bankCard(charId,1,0,slot,2) } coAnswers {
+            dbEntered.complete(Unit)
+            releaseSql.await()
+            true
+        }
+        val transfer=async { coordinator.stageBank(charId,1,0,slot,2) }
+        dbEntered.await()
+        val remover=async { system.removeFromBag(charId,slot,1) }
+        val setter=async { system.setBagItem(charId,slot+1,ThingData(itemId=25602,quantity=2)) }
+        repeat(10) { yield() }
+        assertFalse(remover.isCompleted)
+        assertFalse(setter.isCompleted)
+        releaseSql.complete(Unit)
+        transfer.await()
+        assertTrue(remover.await())
+        setter.await()
+        assertEquals(2,system.getBagItem(charId,slot)?.quantity)
+        assertEquals(2,system.getBagItem(charId,slot+1)?.quantity)
+    }
+
+    @Test
+    fun atomicBagChangeWaitsUntilTreasureBankAndCacheArePublished() = runBlocking {
+        loaded()
+        val dbEntered=CompletableDeferred<Unit>()
+        val releaseSql=CompletableDeferred<Unit>()
+        coEvery { treasure.bankCard(charId,1,0,slot,2) } coAnswers {
+            dbEntered.complete(Unit)
+            releaseSql.await()
+            true
+        }
+        val transfer=async { coordinator.stageBank(charId,1,0,slot,2) }
+        dbEntered.await()
+        val changed=async {
+            system.setBagItemsAtomic(charId,mapOf((slot+1) to ThingData(29869,4)))
+        }
+        repeat(10) { yield() }
+        assertFalse(changed.isCompleted)
+        releaseSql.complete(Unit)
+        transfer.await()
+        changed.await()
+        assertEquals(3,system.getBagItem(charId,slot)?.quantity)
+        assertEquals(4,system.getBagItem(charId,slot+1)?.quantity)
+    }
+
+    @Test
     fun trustedCardMapMustBeUniqueAndOriginal() {
         assertThrows(IllegalArgumentException::class.java) {
             TreasureBankCacheCoordinator(treasure,system,mapOf(1 to 25601,2 to 25601))

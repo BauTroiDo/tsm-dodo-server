@@ -184,7 +184,11 @@ class InventorySystem(
     /**
      * Thêm chính xác toàn bộ số lượng hoặc hoàn tác trạng thái vật phẩm cùng ID nếu có lỗi/race.
      */
-    suspend fun addItemsToBagExact(
+    /** Character-serialized BAG mutation; coordinates with autosave and staged Treasure commit. */
+    suspend fun addItemsToBagExact(characterId: Long, itemId: Int, totalQty: Int): List<Pair<Int, ThingData>>? =
+        CharacterPersistenceGuard.withLock(characterId) { addItemsToBagExactUnfenced(characterId, itemId, totalQty) }
+
+    private suspend fun addItemsToBagExactUnfenced(
         characterId: Long,
         itemId: Int,
         totalQty: Int
@@ -194,7 +198,7 @@ class InventorySystem(
         val before = bag.filterValues { it.itemId == itemId }.toMap()
         val beforeQty = before.values.sumOf { it.quantity }
 
-        val results = addItemsToBag(characterId, itemId, totalQty)
+        val results = addItemsToBagUnfenced(characterId, itemId, totalQty)
         val afterQty = bag.values.filter { it.itemId == itemId }.sumOf { it.quantity }
         if (afterQty - beforeQty == totalQty) return results
 
@@ -221,7 +225,11 @@ class InventorySystem(
      *
      * @return các slot cuối cùng cần đồng bộ về client; null nếu bundle không thể thêm trọn vẹn.
      */
-    suspend fun addItemBundleToBagExact(
+    /** Character-serialized BAG mutation; coordinates with autosave and staged Treasure commit. */
+    suspend fun addItemBundleToBagExact(characterId: Long, rewards: List<Pair<Int, Int>>): List<Pair<Int, ThingData>>? =
+        CharacterPersistenceGuard.withLock(characterId) { addItemBundleToBagExactUnfenced(characterId, rewards) }
+
+    private suspend fun addItemBundleToBagExactUnfenced(
         characterId: Long,
         rewards: List<Pair<Int, Int>>,
     ): List<Pair<Int, ThingData>>? {
@@ -309,7 +317,11 @@ class InventorySystem(
      * và gửi bagIndex(UInt16)+qty(UInt16) cho từng stack. Server validate toàn bộ
      * trước khi mutation; nếu bất kỳ save/remove nào thất bại thì khôi phục snapshot.
      */
-    suspend fun removeBagItemsExact(
+    /** Character-serialized BAG mutation; coordinates with autosave and staged Treasure commit. */
+    suspend fun removeBagItemsExact(characterId: Long, consumptions: List<Pair<Int, Int>>): Boolean =
+        CharacterPersistenceGuard.withLock(characterId) { removeBagItemsExactUnfenced(characterId, consumptions) }
+
+    private suspend fun removeBagItemsExactUnfenced(
         characterId: Long,
         consumptions: List<Pair<Int, Int>>
     ): Boolean {
@@ -494,7 +506,11 @@ class InventorySystem(
      * @param totalQty Tổng số lượng muốn thêm
      * @return Danh sách các vật phẩm đã được đưa vào thành công [(slot, ThingData)], có thể trống (nếu túi đồ đầy hoàn toàn)
      */
-    suspend fun addItemsToBag(characterId: Long, itemId: Int, totalQty: Int): List<Pair<Int, ThingData>> {
+    /** Character-serialized BAG mutation; coordinates with autosave and staged Treasure commit. */
+    suspend fun addItemsToBag(characterId: Long, itemId: Int, totalQty: Int): List<Pair<Int, ThingData>> =
+        CharacterPersistenceGuard.withLock(characterId) { addItemsToBagUnfenced(characterId, itemId, totalQty) }
+
+    private suspend fun addItemsToBagUnfenced(characterId: Long, itemId: Int, totalQty: Int): List<Pair<Int, ThingData>> {
         val bag = bags[characterId] ?: return emptyList()
         val def = itemDefs[itemId]
         val stackLimit = if (def != null && def.fitType == 0) {
@@ -544,7 +560,11 @@ class InventorySystem(
      *
      * @return Trả về true nếu thành công
      */
-    suspend fun removeFromBag(characterId: Long, slot: Int, quantity: Int): Boolean {
+    /** Character-serialized BAG mutation; coordinates with autosave and staged Treasure commit. */
+    suspend fun removeFromBag(characterId: Long, slot: Int, quantity: Int): Boolean =
+        CharacterPersistenceGuard.withLock(characterId) { removeFromBagUnfenced(characterId, slot, quantity) }
+
+    private suspend fun removeFromBagUnfenced(characterId: Long, slot: Int, quantity: Int): Boolean {
         val bag = bags[characterId] ?: return false
         val thing = bag[slot] ?: return false
 
@@ -562,7 +582,11 @@ class InventorySystem(
     /**
      * Di chuyển vật phẩm trong túi đồ (hoán đổi hoặc cộng dồn)
      */
-    suspend fun moveBagItem(characterId: Long, fromSlot: Int, quantity: Int, toSlot: Int): Boolean {
+    /** Character-serialized BAG mutation; coordinates with autosave and staged Treasure commit. */
+    suspend fun moveBagItem(characterId: Long, fromSlot: Int, quantity: Int, toSlot: Int): Boolean =
+        CharacterPersistenceGuard.withLock(characterId) { moveBagItemUnfenced(characterId, fromSlot, quantity, toSlot) }
+
+    private suspend fun moveBagItemUnfenced(characterId: Long, fromSlot: Int, quantity: Int, toSlot: Int): Boolean {
         val bag = bags[characterId] ?: return false
         val fromThing = bag[fromSlot] ?: return false
         val toThing = bag[toSlot]
@@ -603,7 +627,11 @@ class InventorySystem(
     /**
      * Thiết lập trực tiếp vật phẩm ở một ô cụ thể trong túi đồ
      */
-    suspend fun setBagItem(characterId: Long, slot: Int, thing: ThingData?) {
+    /** Character-serialized BAG mutation; coordinates with autosave and staged Treasure commit. */
+    suspend fun setBagItem(characterId: Long, slot: Int, thing: ThingData?): Unit =
+        CharacterPersistenceGuard.withLock(characterId) { setBagItemUnfenced(characterId, slot, thing) }
+
+    private suspend fun setBagItemUnfenced(characterId: Long, slot: Int, thing: ThingData?) {
         val bag = bags[characterId] ?: return
         if (thing == null || thing.isEmpty) {
             bag.remove(slot)
@@ -617,7 +645,11 @@ class InventorySystem(
      * Persist nhiều ô túi đồ atomically ở repository trước, chỉ cập nhật cache khi DB đã commit.
      * Dùng cho Myth Enchant để tránh trạng thái nửa cập nhật giữa trang bị và rune.
      */
-    suspend fun setBagItemsAtomic(characterId: Long, changes: Map<Int, ThingData?>) {
+    /** Character-serialized BAG mutation; coordinates with autosave and staged Treasure commit. */
+    suspend fun setBagItemsAtomic(characterId: Long, changes: Map<Int, ThingData?>): Unit =
+        CharacterPersistenceGuard.withLock(characterId) { setBagItemsAtomicUnfenced(characterId, changes) }
+
+    private suspend fun setBagItemsAtomicUnfenced(characterId: Long, changes: Map<Int, ThingData?>) {
         val bag = bags[characterId] ?: throw IllegalStateException("Bag chưa được load: $characterId")
         inventoryRepo.saveItemsAtomic(characterId, EThings.BAG, changes)
         for ((slot, thing) in changes) {
@@ -634,7 +666,11 @@ class InventorySystem(
      * No item is consumed if the bag lacks space for any prize (including the clay pot
      * item 32043 in Hương Dũng bag 46285). Cache updates only after atomic persistence.
      */
-    suspend fun openGiftBagAtomic(
+    /** Character-serialized BAG mutation; coordinates with autosave and staged Treasure commit. */
+    suspend fun openGiftBagAtomic(characterId: Long, sourceSlot: Int, sourceItemId: Int, consumedQty: Int, rewards: List<Pair<Int, Int>>): Map<Int, ThingData?>? =
+        CharacterPersistenceGuard.withLock(characterId) { openGiftBagAtomicUnfenced(characterId, sourceSlot, sourceItemId, consumedQty, rewards) }
+
+    private suspend fun openGiftBagAtomicUnfenced(
         characterId: Long,
         sourceSlot: Int,
         sourceItemId: Int,
@@ -652,7 +688,7 @@ class InventorySystem(
             itemDefs = itemDefs,
         ) ?: return null
         return try {
-            setBagItemsAtomic(characterId, changes)
+            setBagItemsAtomicUnfenced(characterId, changes)
             changes
         } catch (e: Exception) {
             logger.error(e) { "Failed atomic BlissBag exchange characterId=$characterId itemId=$sourceItemId" }
