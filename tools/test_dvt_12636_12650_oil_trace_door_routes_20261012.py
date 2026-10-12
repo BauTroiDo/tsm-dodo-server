@@ -8,7 +8,7 @@ from patch_dvt_12636_12650_oil_trace_door_routes_20261012 import PROOFS,check_ev
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE=ROOT/"gamedata/Eve.emg"
-SHA="18291b043c1384d3cbc10305230d2e9798877c8dd5f6c89802bd677832273234"
+SHA="91eee7bb0f02b1357c4c166a5b32467a71842a292e74d1d66057d0e706b7595e"
 
 class ChuOilFootprintOriginalDoorNavigation(unittest.TestCase):
  def test_exact_source_13_quest_stage_gated_door_triggers(self):
@@ -62,7 +62,7 @@ class ChuOilFootprintOriginalDoorNavigation(unittest.TestCase):
  def test_zero_invalid_scene_or_door_and_census(self):
   report=audit(DATA,EVE)
   self.assertEqual(report["markstep_rows"],4505)
-  self.assertEqual(report["targets"]["located"],5795)
+  self.assertEqual(report["targets"]["located"],5797)
   self.assertFalse(report["missing_scenes"])
   self.assertFalse(report["missing_npcs"])
   self.assertFalse(report["missing_doors"])
