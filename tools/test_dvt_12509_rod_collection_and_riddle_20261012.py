@@ -10,7 +10,7 @@ from patch_dvt_12509_rod_collection_and_riddle_20261012 import (
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE=ROOT/"gamedata/Eve.emg"
-SHA="e3ba70127cb69cfa9b51e47864015eca288fa91b56d6d5616b98a203cd793f5c"
+SHA="e0d5135b01ea5331c69384174a6ab0a0db05a7aa1189dfd1b3d7aa94cdbeca35"
 
 class DvtNoelRodAndRiddleNavigation(unittest.TestCase):
  def test_rod_collection_npc_original_eve_grants_and_turnin_consumes_ten(self):

@@ -106,6 +106,9 @@ def scan(eve_file: Path, markstep_file: Path) -> dict:
                             by_mission[mid]["scenes"].add(sid)
                             by_mission[mid]["events"].add(f"{sid}/{event_no}")
     blank_end = []
+    # DVT Lua selects an unmet follow-NPC or inventory condition before END.
+    # These locations work ONLY while the source condition is still unmet.
+    pending_condition_guided_end = []
     unlocated_objectives = []
     for step in steps:
         end = step["end"]
@@ -113,6 +116,14 @@ def scan(eve_file: Path, markstep_file: Path) -> dict:
             meaningful = [(i+1,kind,item_id,qty,tgt)
                           for i,(kind,item_id,qty,tgt) in enumerate(step["conditions"])
                           if kind != 0]
+            if meaningful and all(
+                    kind in (1, 3) and tgt[0] != 0 and (tgt[1] or tgt[2])
+                    for (_, kind, _, _, tgt) in meaningful):
+                pending_condition_guided_end.append({
+                    "mission": step["mission"], "step": step["step"],
+                    "condition_kinds": [kind for (_,kind,_,_,_) in meaningful],
+                    "targets": [tgt for (_,_,_,_,tgt) in meaningful],
+                    "scope": "only_while_a_source_condition_is_unmet"})
             blank_end.append({
                 "mission": step["mission"], "step": step["step"],
                 "conditions": len(meaningful),
@@ -144,6 +155,11 @@ def scan(eve_file: Path, markstep_file: Path) -> dict:
             for k,v in sorted(by_mission.items())
         },
         "missing_end_targets": blank_end,
+        "pending_condition_guided_end_targets": pending_condition_guided_end,
+        "missing_end_without_pending_condition_guidance": [
+            row for row in blank_end if
+            (row["mission"], row["step"]) not in {
+                (x["mission"], x["step"]) for x in pending_condition_guided_end}],
         "unlocated_condition_targets": unlocated_objectives,
         "blockers": markers,
     }
@@ -170,6 +186,8 @@ def main():
         "potentially_affected_missions": len(linked),
         "mission_id_sample": linked[:55],
         "blank_end_targets": len(r["missing_end_targets"]),
+        "blank_end_with_pending_conditional_navigation": len(r["pending_condition_guided_end_targets"]),
+        "blank_end_without_pending_condition_navigation": len(r["missing_end_without_pending_condition_guidance"]),
         "blank_end_no_objectives": sum(x["conditions"] == 0
             for x in r["missing_end_targets"]),
         "unlocated_objectives": len(r["unlocated_condition_targets"]),
