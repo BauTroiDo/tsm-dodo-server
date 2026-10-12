@@ -74,15 +74,19 @@ def patch(file,eve,apply=False):
   row=rows[(q,1)]
   if row["end"] not in ((0,0,0,0,0),t) or any(c[0] for c in row["conditions"]):
    raise ValueError(f"Original blank stage1 quest has other obligations {q}")
-  # Treasure chest multi-target stages remain blank. Capture arenas were
-  # subsequently given four DISTINCT source-valid but non-adaptive NPC
-  # choices in patch_dvt_123xx_four_capture_battle_routes_20261012.py.
-  from patch_dvt_123xx_four_capture_battle_routes_20261012 import ARENAS
+  # Arena sub-stages now have source-validated DISTINCT static NPC choices.
+  # Neither a dynamic nearest-available selection nor forced action completion.
+  from patch_dvt_123xx_four_capture_battle_routes_20261012 import ARENAS as CAPTURE_ARENAS
+  from patch_dvt_123xx_four_chest_choice_routes_20261012 import ARENAS as CHEST_ARENAS
   for st in (2,3,4,5):
    possible={(0,0,0,0,0)}
-   if q in ARENAS:
-    sid,npcid,coords=ARENAS[q]
+   if q in CAPTURE_ARENAS:
+    sid,npcid,coords=CAPTURE_ARENAS[q]
     possible.add((sid,*coords[st-2],1,st))
+   if q in CHEST_ARENAS:
+    sid,choices=CHEST_ARENAS[q]
+    npc,x,y,eid=choices[st-2]
+    possible.add((sid,x,y,1,npc))
    if rows[(q,st)]["end"] not in possible:
     raise ValueError(f"Existing arena sub-stage modified unexpectedly {q}/{st}")
  refs=scan(raw)

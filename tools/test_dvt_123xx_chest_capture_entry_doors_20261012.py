@@ -8,7 +8,7 @@ from patch_dvt_123xx_chest_capture_entry_doors_20261012 import TARGETS,source_pr
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE=ROOT/"gamedata/Eve.emg"
-SHA="7306310a6d8599f847c1c25d8db57356a9a15bf1d5e8c9e5a4dcd4b03e312f4c"
+SHA="16b5a3430afcf0cc8cbf0115b3d4ca8d7035269537fef0a55e9b2db6a3845043"
 class ChestCaptureQuestStage1EveDoors(unittest.TestCase):
  def test_all_eight_genuine_original_door_eve_targets(self):
   self.assertEqual(len(TARGETS),8)
@@ -35,12 +35,17 @@ class ChestCaptureQuestStage1EveDoors(unittest.TestCase):
    with self.subTest(quest=q):
     self.assertEqual(rows[(q,1)]["end"],spec[:5])
     self.assertFalse(any(x[0] for x in rows[(q,1)]["conditions"]))
-    from patch_dvt_123xx_four_capture_battle_routes_20261012 import ARENAS
+    from patch_dvt_123xx_four_capture_battle_routes_20261012 import ARENAS as CAPTURE_ARENAS
+    from patch_dvt_123xx_four_chest_choice_routes_20261012 import ARENAS as CHEST_ARENAS
     for step in range(2,6):
      expected=(0,0,0,0,0)
-     if q in ARENAS:
-      sid,npcid,coords=ARENAS[q]
+     if q in CAPTURE_ARENAS:
+      sid,npcid,coords=CAPTURE_ARENAS[q]
       expected=(sid,*coords[step-2],1,step)
+     if q in CHEST_ARENAS:
+      sid,choices=CHEST_ARENAS[q]
+      npc,x,y,eid=choices[step-2]
+      expected=(sid,x,y,1,npc)
      self.assertEqual(rows[(q,step)]["end"],expected)
  def test_original_later_chest_and_capture_eve_events_unmodified(self):
   arc=EveArchive(EVE)
@@ -62,8 +67,8 @@ class ChestCaptureQuestStage1EveDoors(unittest.TestCase):
  def test_valid_scene_door_and_static_census(self):
   report=audit(DATA,EVE)
   self.assertEqual(report["markstep_rows"],4505)
-  self.assertEqual(report["targets"]["located"],5891)
-  self.assertEqual(sum(1 for x in read_steps(DATA) if x["end"]==(0,0,0,0,0)),100)
+  self.assertEqual(report["targets"]["located"],5907)
+  self.assertEqual(sum(1 for x in read_steps(DATA) if x["end"]==(0,0,0,0,0)),84)
   self.assertFalse(report["missing_scenes"])
   self.assertFalse(report["missing_npcs"])
   self.assertFalse(report["missing_doors"])

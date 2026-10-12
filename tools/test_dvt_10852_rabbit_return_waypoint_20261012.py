@@ -10,7 +10,7 @@ from patch_dvt_10852_rabbit_return_waypoint_20261012 import (
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"File.dat/Data-ios/IOS_MarkStep_C.dat"
 EVE=ROOT/"gamedata/Eve.emg"
-TARGET_SHA="7306310a6d8599f847c1c25d8db57356a9a15bf1d5e8c9e5a4dcd4b03e312f4c"
+TARGET_SHA="16b5a3430afcf0cc8cbf0115b3d4ca8d7035269537fef0a55e9b2db6a3845043"
 
 class DvtRabbitReturnWaypointTest(unittest.TestCase):
     def test_capture_then_return_has_source_backed_target(self):
