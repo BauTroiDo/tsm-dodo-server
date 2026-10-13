@@ -11,6 +11,7 @@ import tw.tsm.domain.valueobjects.FollowNpcData
 import tw.tsm.domain.valueobjects.ThingData
 import tw.tsm.domain.util.DvtPercentMath
 import java.util.concurrent.ConcurrentHashMap
+import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
@@ -46,7 +47,9 @@ class TradeSystem(
     data class TradeOffer(
         val money: Int,
         val bagIndices: List<Int> = emptyList(),
-        val petSlot: Int = 0
+        val petSlot: Int = 0,
+        // Original BAG slot + whole ThingData frozen at item upload.
+        val expectedItems: Map<Int, ThingData> = emptyMap(),
     )
 
     /** Võ tướng vừa được một nhân vật sở hữu sau khi giao dịch hoàn tất. */
@@ -61,6 +64,8 @@ class TradeSystem(
         val playerA: Long,
         val playerB: Long,
         val mode: Int,
+        // Unique per server-side trade session; not sent in original DVT wire.
+        val operationId: String = UUID.randomUUID().toString(),
         @Volatile var stateA: TradePlayerState = TradePlayerState.WaitingUpload,
         @Volatile var stateB: TradePlayerState = TradePlayerState.WaitingUpload,
         @Volatile var offerA: TradeOffer? = null,
@@ -201,44 +206,57 @@ class TradeSystem(
      *
      * Xác thực tính khả thi giao dịch của vật phẩm, sau khi cả hai bên tải lên xong thì gửi S:025-003 cho cả hai để hiển thị giá đối phương đưa ra.
      */
-    fun uploadItems(playerId: Long, money: Int, bagIndices: List<Int>) {
+    suspend fun uploadItems(playerId: Long, money: Int, bagIndices: List<Int>) {
         val trade = activeTrades[playerId] ?: return
+        val characterId = getCharacterId(playerId) ?: return
+        // Confirm acquires both persistence locks BEFORE synchronized(trade).
+        // Follow the same order so no upload can replace a published offer
+        // between a guarded BAG snapshot and the final commit.
+        CharacterPersistenceGuard.withLock(characterId) {
         synchronized(trade) {
-            if (trade.mode != MODE_ITEM) return
+            val partnerId = if (playerId == trade.playerA) trade.playerB else trade.playerA
+            // A disconnect/cancel may have retired this session while we
+            // awaited the character BAG lock: never resurrect a stale trade.
+            if (activeTrades[playerId] !== trade || activeTrades[partnerId] !== trade) return@withLock
+            if (trade.mode != MODE_ITEM) return@withLock
             val isA = (playerId == trade.playerA)
             val myState = if (isA) trade.stateA else trade.stateB
 
             // Chỉ có thể tải lên ở trạng thái WaitingUpload
-            if (myState !is TradePlayerState.WaitingUpload) return
+            if (myState !is TradePlayerState.WaitingUpload) return@withLock
             if (!hasUniqueTradeBagSlots(bagIndices)) {
                 cancelTradeInternal(trade, playerId, REASON_SYSTEM, notifyInitiator = true)
-                return
+                return@withLock
             }
 
             // Xác thực tiền
-            val characterId = getCharacterId(playerId) ?: return
-            if (money < 0) return
+            if (money < 0) return@withLock
             if (money > 0 && moneySystem.getGold(characterId) < money) {
                 cancelTradeInternal(trade, playerId, REASON_GOLD_INSUFFICIENT, notifyInitiator = true)
-                return
+                return@withLock
             }
 
+            // Capture the exact BAG contents once, including NFT/Myth and
+            // metadata, while the character persistence lock is held.
+            val expectedItems = TradeItemOfferSnapshot.capture(bagIndices) { slot ->
+                inventorySystem.getBagItem(characterId, slot)
+            }
+            if (expectedItems == null) {
+                cancelTradeInternal(trade, playerId, REASON_SYSTEM, notifyInitiator = true)
+                return@withLock
+            }
             // Xác thực khả năng giao dịch của vật phẩm
             for (slot in bagIndices) {
-                val item = inventorySystem.getBagItem(characterId, slot)
-                if (item == null || item.isEmpty) {
-                    cancelTradeInternal(trade, playerId, REASON_SYSTEM, notifyInitiator = true)
-                    return
-                }
+                val item = expectedItems.getValue(slot)
                 if (!isItemTradeable(item)) {
                     // Client đã chặn trước (UITrade không thể tick chọn), Server dùng mã lỗi chung để ngắt
                     cancelTradeInternal(trade, playerId, REASON_SYSTEM, notifyInitiator = true)
-                    return
+                    return@withLock
                 }
             }
 
             // Lưu giá đưa ra và cập nhật trạng thái
-            val offer = TradeOffer(money = money, bagIndices = bagIndices)
+            val offer = TradeOffer(money = money, bagIndices = bagIndices.toList(), expectedItems = expectedItems)
             if (isA) {
                 trade.offerA = offer
                 trade.stateA = TradePlayerState.Uploaded
@@ -253,6 +271,7 @@ class TradeSystem(
             if (trade.stateA is TradePlayerState.Uploaded && trade.stateB is TradePlayerState.Uploaded) {
                 sendTradeOffers(trade)
             }
+        }
         }
     }
 
@@ -430,13 +449,13 @@ class TradeSystem(
         val offerA = trade.offerA ?: return
         val offerB = trade.offerB ?: return
 
-        // Thu thập vật phẩm A đưa ra → Gửi cho B
-        val itemsA = offerA.bagIndices.mapNotNull { slot ->
-            inventorySystem.getBagItem(charIdA, slot)
-        }
-        // Thu thập vật phẩm B đưa ra → Gửi cho A
-        val itemsB = offerB.bagIndices.mapNotNull { slot ->
-            inventorySystem.getBagItem(charIdB, slot)
+        // The partner MUST see the exact metadata frozen at C025-002.
+        // No late BAG read can silently replace an NFT/stack after upload.
+        val itemsA = TradeItemOfferSnapshot.orderedItems(offerA.bagIndices, offerA.expectedItems)
+        val itemsB = TradeItemOfferSnapshot.orderedItems(offerB.bagIndices, offerB.expectedItems)
+        if (itemsA == null || itemsB == null) {
+            cancelTradeInternal(trade, trade.playerA, REASON_SYSTEM, notifyInitiator = true)
+            return
         }
 
         responseSender.sendTradeConfirm(sessionA, offerB.money, itemsB)
@@ -516,6 +535,18 @@ class TradeSystem(
         val sessionB = worldManager.getPlayerById(trade.playerB)
         if (sessionA == null || sessionB == null) {
             cancelTradeInternal(trade, trade.playerA, REASON_OFFLINE, notifyInitiator = true)
+            return
+        }
+
+        if (!TradeItemOfferSnapshot.matches(offerA.bagIndices, offerA.expectedItems) { slot ->
+                inventorySystem.getBagItem(charIdA, slot)
+            } || !TradeItemOfferSnapshot.matches(offerB.bagIndices, offerB.expectedItems) { slot ->
+                inventorySystem.getBagItem(charIdB, slot)
+            }
+        ) {
+            // DVT UI sent an original item; changed quantity, damage, affix,
+            // Myth/NFT attr or replaced slot must never transfer a substitute.
+            cancelTradeInternal(trade, trade.playerA, REASON_SYSTEM, notifyInitiator = true)
             return
         }
 

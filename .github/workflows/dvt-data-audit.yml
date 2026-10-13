@@ -99,6 +99,8 @@ jobs:
         run: python -m unittest discover -s tools -p test_dvt_trade_two_player_cache_publish_staged_20261013.py -v
       - name: Guard staged C025 single-settler SQL confirmation and post-commit ACK
         run: python -m unittest discover -s tools -p test_dvt_trade_item_finalization_gate_20261013.py -v
+      - name: Guard C025 frozen item offers, UUID and stale-slot rejection before RAM mutation
+        run: python -m unittest discover -s tools -p test_dvt_trade_frozen_c025_offer_20261013.py -v
       - name: Guard permanent atomic SQL C025 trade receipts and lost ACK reconciliation
         run: python -m unittest discover -s tools -p test_dvt_trade_sql_durable_receipt_20261013.py -v
       - name: Guard staged C025 dynamic full BAG and GOLD conservation planner
