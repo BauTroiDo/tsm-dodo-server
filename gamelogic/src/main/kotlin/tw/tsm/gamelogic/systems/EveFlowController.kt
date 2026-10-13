@@ -72,7 +72,7 @@ class EveFlowController(
     }
 
     /** Native C020-006 from talk dismissal and each subsequent NPC hide. */
-    private fun advanceDvtDefeatTalk(session: GameSession, charId: Long, runToken: String) {
+    private suspend fun advanceDvtDefeatTalk(session: GameSession, charId: Long, runToken: String) {
         if (pendingDefeatTalks[charId] != runToken) return
         val next = stateMachine.advance(charId)
         if (next == null) {

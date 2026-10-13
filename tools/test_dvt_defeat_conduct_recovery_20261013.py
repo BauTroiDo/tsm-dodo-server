@@ -70,7 +70,7 @@ class BattleDefeatRecoveryAudit(unittest.TestCase):
 
         # The five hide packets must only be sent after the player's C020-006,
         # and the terminal step must use cancelAndEnd rather than quest completion.
-        continuation = text.split("private fun advanceDvtDefeatTalk(", 1)[1].split("    /**", 1)[0]
+        continuation = text.split("private suspend fun advanceDvtDefeatTalk(", 1)[1].split("    /**", 1)[0]
         self.assertIn("stateMachine.advance(charId)", continuation)
         self.assertIn("next.resultType != 0 || next.resultClass != 3", continuation)
         self.assertIn("next.parameterStyle != 3 || next.parameter !in 9..13", continuation)
