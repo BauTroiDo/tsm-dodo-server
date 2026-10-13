@@ -31,6 +31,8 @@ object DvtBattleDefeatRecoveryPolicy {
 
     /** Original DVT client: S020-008 endKind 45 stops navigation and raises death UI. */
     const val DEATH_STOP_NAV_END_KIND = 45
+    /** Native talk may await user input; 2min is a fail-safe, not scripted delay. */
+    const val TALK_WATCHDOG_MS = 120_000L
 
     /** Scoped grace for the exact scene that trapped CaoYenDao after a quest loss. */
     fun needsPostDefeatMineGrace(

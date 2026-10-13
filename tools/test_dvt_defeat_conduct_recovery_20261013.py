@@ -42,20 +42,52 @@ class BattleDefeatRecoveryAudit(unittest.TestCase):
         ):
             self.assertIn(marker, text)
 
-    def test_loss_path_closes_event_without_waiting_on_talk_advance(self):
+    def test_original_defeat_dialog_precedes_hides_and_native_45_end(self):
         text = EVE.read_text("utf-8")
-        a = text.index("if (DvtBattleDefeatRecoveryPolicy.isCosmeticDefeat(")
-        b = text.index("stateMachine.replaceResultsAndResume(", a)
-        chunk = text[a:b]
+        start = text.index("// Original DVT scene12861/Eve6/Fight28: TALK 41353 first")
+        end = text.index("            stateMachine.replaceResultsAndResume(charId, postBattleResults", start + 1)
+        branch = text[start:end]
         for marker in (
-            "resultExecutor.executeResultClass(session, hide)",
-            "responseSender.sendCommonEvent(session, hide)",
-            "cancelAndEnd(session, charId, DvtBattleDefeatRecoveryPolicy.DEATH_STOP_NAV_END_KIND)",
-            "return",
+            "DvtBattleDefeatRecoveryPolicy.isCosmeticDefeat(",
+            "val talk = stateMachine.advance(charId)",
+            "talk.resultType != 1",
+            "talk.resultClass != 3",
+            "talk.resultMeanNo != 41353",
+            "pendingDefeatTalks[charId] = runToken",
+            "responseSender.sendCommonEvent(session, talk)",
+            "watchDefeatTalk(session, charId, runToken)",
         ):
-            self.assertIn(marker, chunk)
-        self.assertNotIn("notifyEventCompleted(", chunk)
-        self.assertNotIn("dispatchResult(session, first)", chunk)
+            self.assertIn(marker, branch)
+        self.assertNotIn("resultExecutor.executeResultClass(session, hide)", branch)
+        self.assertNotIn("notifyEventCompleted(", branch)
+
+        handler = (R / "lua/Logic/Event/EventHandler.lua").read_text("utf-8")
+        dialog = handler.split("EventHandler[1] = function", 1)[1].split("EventHandler[2] =", 1)[0]
+        self.assertIn("eventManager.SetConduct(false)", dialog)
+        self.assertIn("ShowTalkMessage(", dialog)
+        self.assertIn("talkDatas[eventInfo.resultMeanNo]", dialog)
+        self.assertIn("eventManager.SetConduct(true)", dialog)
+
+        # The five hide packets must only be sent after the player's C020-006,
+        # and the terminal step must use cancelAndEnd rather than quest completion.
+        continuation = text.split("private fun advanceDvtDefeatTalk(", 1)[1].split("    /**", 1)[0]
+        self.assertIn("stateMachine.advance(charId)", continuation)
+        self.assertIn("next.resultType != 0 || next.resultClass != 3", continuation)
+        self.assertIn("next.parameterStyle != 3 || next.parameter !in 9..13", continuation)
+        self.assertIn("resultExecutor.executeResultClass(session, next)", continuation)
+        self.assertIn("responseSender.sendCommonEvent(session, next)", continuation)
+        self.assertIn("cancelAndEnd(session, charId, DvtBattleDefeatRecoveryPolicy.DEATH_STOP_NAV_END_KIND)", continuation)
+        self.assertNotIn("notifyEventCompleted(", continuation)
+        self.assertNotIn("completeCurrentEvent(", continuation)
+
+    def test_abandoned_talk_has_token_fenced_fail_safe(self):
+        text = EVE.read_text("utf-8")
+        policy = POLICY.read_text("utf-8")
+        self.assertIn("TALK_WATCHDOG_MS = 120_000L", policy)
+        self.assertIn("pendingDefeatTalks.remove(charId, runToken)", text)
+        self.assertIn("stateMachine.clearIfCurrentRun(charId, runToken)", text)
+        self.assertIn("delay(DvtBattleDefeatRecoveryPolicy.TALK_WATCHDOG_MS)", text)
+        self.assertIn("pendingDefeatTalks.remove(charId)", text)
 
     def test_native_death_end_stops_navigation_and_quest_loss_arms_mine_grace(self):
         lua = (R / "lua/Logic/Event/EventManager.lua").read_text("utf-8")

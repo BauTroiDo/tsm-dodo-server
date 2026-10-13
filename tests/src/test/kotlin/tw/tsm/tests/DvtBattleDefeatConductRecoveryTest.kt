@@ -103,6 +103,43 @@ class DvtBattleDefeatConductRecoveryTest {
     }
 
     @Test
+    fun originalDefeatTalkThenExactlyFiveTimeHidesAreSequencedWithTokenFence() {
+        val stateMachine = EveEventStateMachine()
+        val charId = 31L
+        val source = EventSession(
+            mapId = 12861, eveNo = 6, npcClickId = 5,
+            triggerKind = 8, results = emptyList(),
+            phase = EventPhase.AwaitingBattle, fightDataKey = 28,
+        )
+        stateMachine.activate(charId, source)
+        stateMachine.replaceResultsAndResume(charId, results, matchedConditionNo = 16)
+        assertEquals(source.runToken, stateMachine.getSession(charId)?.runToken)
+        assertEquals(16, stateMachine.getSession(charId)?.matchedConditionNo)
+        val talk = stateMachine.advance(charId)
+        assertEquals(1, talk?.resultType)
+        assertEquals(3, talk?.resultClass)
+        assertEquals(41353, talk?.resultMeanNo)
+        val hides = (0 until 5).map { stateMachine.advance(charId) }
+        assertEquals(listOf(9, 10, 11, 12, 13), hides.map { it?.parameter })
+        assertTrue(hides.all {
+            it?.resultType == 0 && it.resultClass == 3 &&
+            it.parameterStyle == 3 && it.resultValue == 2000
+        })
+        assertNull(stateMachine.advance(charId))
+
+        // Finishing a loss must clear the Eve, not persist its completion.
+        assertTrue(stateMachine.clearIfCurrentRun(charId, source.runToken))
+        assertNull(stateMachine.getSession(charId))
+        assertEquals(120_000L, DvtBattleDefeatRecoveryPolicy.TALK_WATCHDOG_MS)
+
+        // An old watchdog must never close a replacement Eve with a new token.
+        val replacement = source.copy(runToken = "new-dvt-attempt")
+        stateMachine.activate(charId, replacement)
+        assertFalse(stateMachine.clearIfCurrentRun(charId, source.runToken))
+        assertEquals(replacement.runToken, stateMachine.getSession(charId)?.runToken)
+    }
+
+    @Test
     fun lossAndEscapeAreNotConfusedWithVictoryRewards() {
         val victory = eve.conditions.single { it.conditionNo == 18 }.results
         assertFalse(DvtBattleDefeatRecoveryPolicy.isCosmeticDefeat(

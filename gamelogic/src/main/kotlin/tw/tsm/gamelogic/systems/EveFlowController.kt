@@ -1,6 +1,12 @@
 package tw.tsm.gamelogic.systems
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import java.util.concurrent.ConcurrentHashMap
 import tw.tsm.domain.data.EveResult
 import tw.tsm.domain.data.SceneEveData
 import tw.tsm.domain.interfaces.GameSession
@@ -46,6 +52,50 @@ class EveFlowController(
     var onEventCompleted: (suspend (GameSession) -> Unit)? = null
     /** Exact Eve hook: scene12003/click10/result type2 class7 param8 = VS registration. */
     var onVsRegistration: (suspend (GameSession) -> Unit)? = null
+
+    /**
+     * Original DVT Eve6/Fight28 loss is TALK 41353 followed by five NPC hides.
+     * Token-fenced, never recorded as quest completion or a win reward.
+     */
+    private val pendingDefeatTalks = ConcurrentHashMap<Long, String>()
+    private val defeatDialogWatchdog = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    private fun watchDefeatTalk(session: GameSession, charId: Long, runToken: String) {
+        defeatDialogWatchdog.launch {
+            delay(DvtBattleDefeatRecoveryPolicy.TALK_WATCHDOG_MS)
+            if (!pendingDefeatTalks.remove(charId, runToken)) return@launch
+            if (!stateMachine.clearIfCurrentRun(charId, runToken)) return@launch
+            npcShopManager.clearShop(charId)
+            logger.warn { "DVT boss defeat talk watchdog: charId=" + charId + " run=" + runToken }
+            responseSender.sendEventEnd(session, DvtBattleDefeatRecoveryPolicy.DEATH_STOP_NAV_END_KIND)
+        }
+    }
+
+    /** Native C020-006 from talk dismissal and each subsequent NPC hide. */
+    private fun advanceDvtDefeatTalk(session: GameSession, charId: Long, runToken: String) {
+        if (pendingDefeatTalks[charId] != runToken) return
+        val next = stateMachine.advance(charId)
+        if (next == null) {
+            logger.info { "DVT boss defeat talk and NPC hides complete: charId=" + charId }
+            cancelAndEnd(session, charId, DvtBattleDefeatRecoveryPolicy.DEATH_STOP_NAV_END_KIND)
+            return
+        }
+        // A surprising reward/mission/warp cannot become part of a loss chain.
+        if (next.resultType != 0 || next.resultClass != 3 ||
+            next.parameterStyle != 3 || next.parameter !in 9..13 ||
+            next.resultValue != 2000
+        ) {
+            logger.error { "DVT boss defeat unexpected follow-up charId=" + charId + " result=" + next }
+            cancelAndEnd(session, charId, DvtBattleDefeatRecoveryPolicy.DEATH_STOP_NAV_END_KIND)
+            return
+        }
+        if (!resultExecutor.executeResultClass(session, next)) {
+            logger.error { "DVT boss defeat hide failed charId=" + charId + " param=" + next.parameter }
+            cancelAndEnd(session, charId, DvtBattleDefeatRecoveryPolicy.DEATH_STOP_NAV_END_KIND)
+            return
+        }
+        responseSender.sendCommonEvent(session, next)
+    }
 
     /**
      * Persist a fail-closed reservation BEFORE the first non-idempotent result.
@@ -160,6 +210,15 @@ class EveFlowController(
         if (eventSession?.phase is EventPhase.AwaitingBattle) {
             logger.debug { "Nhận 020-006 nhưng đang chiến đấu, bỏ qua" }
             return
+        }
+
+        val pendingDefeatRun = pendingDefeatTalks[charId]
+        if (pendingDefeatRun != null) {
+            if (pendingDefeatRun == eventSession.runToken) {
+                advanceDvtDefeatTalk(session, charId, pendingDefeatRun)
+                return
+            }
+            pendingDefeatTalks.remove(charId, pendingDefeatRun)
         }
 
         val result = stateMachine.advance(charId)
@@ -288,32 +347,36 @@ class EveFlowController(
             )
             val postBattleResults = resolved.results + doorContinuation
 
-            // Scene12861/Eve6/Fight28 defeat only: the client can no longer
-            // display the first TALK (41353) after leaving the battle UI.
-            // An absent C020-006 would keep SetConduct(false) forever.
-            // Deliver original cosmetic NPC hides, then send S020 event-end.
-            // Never complete the Eve or mutate rewards/quests on a defeat.
+            // Original DVT scene12861/Eve6/Fight28: TALK 41353 first,
+            // followed by five TimeHide(2000ms) NPC actions. Previous
+            // hotfix skipped TALK, immediately hiding the NPCs.
             if (DvtBattleDefeatRecoveryPolicy.isCosmeticDefeat(
                     eventSession.mapId, eventSession.eveNo, eventSession.fightDataKey,
                     playerWin, postBattleResults
                 )
             ) {
-                logger.warn {
-                    "Recovering post-defeat NPC talk lock: charId=" + charId +
-                        " scene=" + eventSession.mapId + " eve=" + eventSession.eveNo +
-                        " fight=" + eventSession.fightDataKey
-                }
-                try {
-                    for (hide in postBattleResults.drop(1)) {
-                        if (!resultExecutor.executeResultClass(session, hide)) break
-                        responseSender.sendCommonEvent(session, hide)
-                    }
-                } finally {
-                    // Normal endKind=0 resumes mission navigation. Following
-                    // a story defeat this immediately enters MineData fights.
-                    // DVT endKind=45 stops navigation and raises death UI.
+                stateMachine.replaceResultsAndResume(
+                    charId, postBattleResults, matchedConditionNo = resolved.matchedConditionNo
+                )
+                val talk = stateMachine.advance(charId)
+                if (talk == null || talk.resultType != 1 ||
+                    talk.resultClass != 3 || talk.resultMeanNo != 41353
+                ) {
+                    logger.error { "DVT boss defeat original talk missing charId=" + charId }
                     cancelAndEnd(session, charId, DvtBattleDefeatRecoveryPolicy.DEATH_STOP_NAV_END_KIND)
+                    return
                 }
+                val runToken = stateMachine.getSession(charId)?.runToken
+                if (runToken == null || runToken != eventSession.runToken) {
+                    cancelAndEnd(session, charId, DvtBattleDefeatRecoveryPolicy.DEATH_STOP_NAV_END_KIND)
+                    return
+                }
+                pendingDefeatTalks[charId] = runToken
+                // Native EventHandler[1] opens UICheck. Clicking the dialogue
+                // sends C020-006, only then do the original NPC hides follow.
+                responseSender.sendCommonEvent(session, talk)
+                logger.info { "DVT boss defeat original TALK 41353 sent charId=" + charId }
+                watchDefeatTalk(session, charId, runToken)
                 return
             }
 
@@ -650,6 +713,7 @@ class EveFlowController(
     }
 
     private fun cancelAndEnd(session: GameSession, charId: Long, endKind: Int = 0) {
+        pendingDefeatTalks.remove(charId)
         npcShopManager.clearShop(charId)
         stateMachine.clear(charId)
         responseSender.sendEventEnd(session, endKind)
