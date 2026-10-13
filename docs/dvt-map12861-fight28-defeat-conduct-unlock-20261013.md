@@ -78,3 +78,16 @@ Source change: `DvtBattleDefeatRecoveryPolicy.exitPacing` selects shorter **100m
 Kotlin regression `DvtHoangPhuTungDefeatExitPacingTest` covers exact boss loss and unrelated wins/maps/war types/foe IDs. Python `tools/test_dvt_battle_defeat_exit_pacing_20261013.py` ensures DVT Lua exits on S011-000, packet ordering, scoped timing and cleanup sequencing. This **may reduce** (but is not guaranteed to eliminate) the remaining perceived freeze. No premature claim of end-to-end client recovery. If a longer stall persists, instrument client `Role.CanControl` + MoviePlayer/FightField/UILoading status rather than suppressing Unity asset cleanup indiscriminately.
 
 **Deployment:** staged in PR #41 first, await source-specific CI PASS and full audits. On DEV back up `BattleManager.kt` and `DvtBattleDefeatRecoveryPolicy.kt` by SHA, apply only the two-file delta to dirty working tree, run :app:classes; restart only if build succeeds; verify new process and TCP6613. Current user gameplay result remains unverified after this third-stage change.
+
+
+## Third-stage actual DEV deployment (2026-10-13 22:09 +07)
+
+Code commit [`d67058dcc89e4090f7d72c7efb38c250dc12204d`](https://github.com/BauTroiDo/tsm-dodo-server/commit/d67058dcc89e4090f7d72c7efb38c250dc12204d) **DEPLOYED**; [Server CI 38418914472](https://github.com/BauTroiDo/tsm-dodo-server/actions/runs/38418914472) **SUCCESS**, [DVT data audit 38418914087](https://github.com/BauTroiDo/tsm-dodo-server/actions/runs/38418914087) **SUCCESS**, complete local Python DVT audit **292/292 PASS** (60.430 seconds), diff checks PASS. Kotlin regression verifies exact NPC/map/war/outcome scoping; real client Unity `Player.log` confirms fight exit protocol and native S020-008 kind45.
+
+On DEV `C:\Server-Game\tsm_dodo`, **two SHA-verified source preimages** were copied into `backups\dvt_boss_exit_pacing_d67058d_20261013`. Used exact two-file `git diff` from `a727236` to `d67058d`, `git apply --check` PASS before applying surgically on top of dirty DEV source (other hotfixes retained). `:app:classes --offline --no-daemon --console plain`: **BUILD SUCCESSFUL in 51s**. Stopped previous JVM PID12076 and relaunched existing detached launcher (Win32 process returned 0). New `MainKt` JVM **PID3756** confirmed listening **TCP6613**; Netty bound at **22:08:44.876** in production launch log, no startup failure.
+
+Post-deployment source SHA256:
+- `BattleManager.kt`: `6294F6638533A392ED66C0BB62FC86905110E5CA0F9472E0DC4B39059BDD3BAE`
+- `DvtBattleDefeatRecoveryPolicy.kt`: `4F03D40753E5CBC83E9B348F5648564809644C741775206AF4CD9A08A9DDC9ED`
+
+The original DVT one-shot event result handling, 45 native death/stop-navigation and 27-second MineData grace remain in place; only S011 fighter-exit pacing is shortened for losing an EWar.EVENT battle in map12861 with NPC14671 (100ms startup/15ms between vs prior 500ms/100ms). Server now emits `Battle defeat exit pacing` to report actual time and roster on the next loss. **User has not yet retested this new JVM through a defeat**, so do not claim actual movement delay is gone. If pause persists significantly longer than observed exit-loop timing, inspect `Role.CanControl()` (EventManager.IsRunning, MoviePlayer.IsPlaying), `FightField.isInBattle`, Unity UI and network C006 move packets; no SQL/GM item/quest/HP changes performed.
