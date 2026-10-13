@@ -608,7 +608,11 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
                 catch (_: Exception) { /* DB result is already persistent; map reload will resync. */ }
                 // Mine cooldown phải bắt đầu từ lúc trận gặp ngẫu nhiên kết thúc,
                 // trước khi EveFlowController có thể complete/remove EventSession.
-                get<MineEncounterSystem>().onBattleEnd(playerId, playerWin)
+                // BattleManager's playerId is world roleId (13), not the DB
+                // characterId (31). EveEventStateMachine/MineWalkState are
+                // keyed by characterId: passing 13 silently skipped the
+                // exact DVT boss-defeat 27s cooldown.
+                get<MineEncounterSystem>().onBattleEnd(session.roleId.toLong(), playerWin)
                 get<EveFlowController>().resumeAfterBattle(session, playerId, playerWin)
                 get<DungeonSystem>().settleAfterBattle(session, playerWin)?.let { settlement ->
                     get<DungeonHandler>().sendDungeonResult(session, settlement)
