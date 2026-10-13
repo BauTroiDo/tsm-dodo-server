@@ -50,12 +50,36 @@ class BattleDefeatRecoveryAudit(unittest.TestCase):
         for marker in (
             "resultExecutor.executeResultClass(session, hide)",
             "responseSender.sendCommonEvent(session, hide)",
-            "cancelAndEnd(session, charId)",
+            "cancelAndEnd(session, charId, DvtBattleDefeatRecoveryPolicy.DEATH_STOP_NAV_END_KIND)",
             "return",
         ):
             self.assertIn(marker, chunk)
         self.assertNotIn("notifyEventCompleted(", chunk)
         self.assertNotIn("dispatchResult(session, first)", chunk)
+
+    def test_native_death_end_stops_navigation_and_quest_loss_arms_mine_grace(self):
+        lua = (R / "lua/Logic/Event/EventManager.lua").read_text("utf-8")
+        end = lua.split("function EventManager.ReceiveEndEvent(kind)", 1)[1].split(
+            "function EventManager.ClearEventState()", 1)[0]
+        self.assertIn("if kind == 45 then", end)
+        self.assertIn("MarkManager.StopNavigation();", end)
+        self.assertIn("MarkManager.ContinueNavigation();", end)
+        self.assertIn("Role.deadMsgData.show = true;", end)
+
+        policy = POLICY.read_text("utf-8")
+        self.assertIn("DEATH_STOP_NAV_END_KIND = 45", policy)
+        self.assertIn("needsPostDefeatMineGrace(", policy)
+        mine = (R / "gamelogic/src/main/kotlin/tw/tsm/gamelogic/systems/MineEncounterSystem.kt").read_text("utf-8")
+        self.assertIn("fun onBattleEnd(characterId: Long, playerWin: Boolean = true)", mine)
+        self.assertIn("DvtBattleDefeatRecoveryPolicy.needsPostDefeatMineGrace(", mine)
+        self.assertIn("states.compute(characterId)", mine)
+        self.assertIn("distancePx = 0", mine)
+        self.assertIn("cooldownUntil = maxOf(previous?.cooldownUntil ?: 0L, graceUntil)", mine)
+        server = (R / "app/src/main/kotlin/tw/tsm/app/ServerModule.kt").read_text("utf-8")
+        self.assertIn("get<MineEncounterSystem>().onBattleEnd(playerId, playerWin)", server)
+        flow = EVE.read_text("utf-8")
+        self.assertIn("private fun cancelAndEnd(session: GameSession, charId: Long, endKind: Int = 0)", flow)
+        self.assertIn("responseSender.sendEventEnd(session, endKind)", flow)
 
     def test_hp_resync_is_after_exit_and_battle_cleanup(self):
         s = BATTLE.read_text("utf-8")
@@ -79,6 +103,7 @@ class BattleDefeatRecoveryAudit(unittest.TestCase):
             "actualEveResolverSelectsDefeatBranchFromFight28Result2",
             "winOtherMapWrongFightAndUnexpectedRewardCannotAutoClose",
             "lossAndEscapeAreNotConfusedWithVictoryRewards",
+            "defeatStopsNavigationAndProvidesGraceOnlyForOriginalQuest",
         ):
             self.assertIn(name, kt)
 

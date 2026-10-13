@@ -107,8 +107,31 @@ class MineEncounterSystem(
      * bắt đầu trận nên một trận kéo dài >= cooldown khiến người chơi vừa đi vài bước
      * đã gặp tiếp.
      */
-    fun onBattleEnd(characterId: Long) {
+    fun onBattleEnd(characterId: Long, playerWin: Boolean = true) {
         val eventSession = stateMachine.getSession(characterId) ?: return
+        // The old grace only applied to Mine-triggered battles; losing the
+        // map12861/Eve6/Fight28 quest battle left immediate wild encounters
+        // enabled even while the client was exiting its defeat UI.
+        if (DvtBattleDefeatRecoveryPolicy.needsPostDefeatMineGrace(
+                eventSession.mapId, eventSession.eveNo, eventSession.fightDataKey, playerWin
+            )
+        ) {
+            val graceUntil = nowMs() + ENCOUNTER_COOLDOWN_MS
+            states.compute(characterId) { _, previous ->
+                MineWalkState(
+                    mapId = eventSession.mapId,
+                    mineId = previous?.mineId ?: -1,
+                    distancePx = 0,
+                    cooldownUntil = maxOf(previous?.cooldownUntil ?: 0L, graceUntil)
+                )
+            }
+            mineLogger.info {
+                "DVT quest defeat MineData grace: charId=$characterId " +
+                    "map=${eventSession.mapId} eve=${eventSession.eveNo} " +
+                    "fight=${eventSession.fightDataKey} until=$graceUntil"
+            }
+            return
+        }
         if (eventSession.triggerKind != MINE_TRIGGER_KIND) return
 
         states[characterId]?.let { state ->

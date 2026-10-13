@@ -309,7 +309,10 @@ class EveFlowController(
                         responseSender.sendCommonEvent(session, hide)
                     }
                 } finally {
-                    cancelAndEnd(session, charId)
+                    // Normal endKind=0 resumes mission navigation. Following
+                    // a story defeat this immediately enters MineData fights.
+                    // DVT endKind=45 stops navigation and raises death UI.
+                    cancelAndEnd(session, charId, DvtBattleDefeatRecoveryPolicy.DEATH_STOP_NAV_END_KIND)
                 }
                 return
             }
@@ -646,10 +649,10 @@ class EveFlowController(
         cancelAndEnd(session, session.roleId.toLong())
     }
 
-    private fun cancelAndEnd(session: GameSession, charId: Long) {
+    private fun cancelAndEnd(session: GameSession, charId: Long, endKind: Int = 0) {
         npcShopManager.clearShop(charId)
         stateMachine.clear(charId)
-        responseSender.sendEventEnd(session)
+        responseSender.sendEventEnd(session, endKind)
     }
 
     /**

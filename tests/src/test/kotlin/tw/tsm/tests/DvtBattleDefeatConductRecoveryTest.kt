@@ -85,6 +85,24 @@ class DvtBattleDefeatConductRecoveryTest {
     }
 
     @Test
+    fun defeatStopsNavigationAndProvidesGraceOnlyForOriginalQuest() {
+        assertEquals(45, DvtBattleDefeatRecoveryPolicy.DEATH_STOP_NAV_END_KIND)
+        assertTrue(DvtBattleDefeatRecoveryPolicy.needsPostDefeatMineGrace(
+            12861, 6, 28, false
+        ))
+        for ((map, eve, fight, win) in listOf(
+            listOf(12861, 6, 28, 1),
+            listOf(12861, 6, 24, 0),
+            listOf(12861, 7, 28, 0),
+            listOf(11012, 6, 28, 0),
+        )) {
+            assertFalse(DvtBattleDefeatRecoveryPolicy.needsPostDefeatMineGrace(
+                map, eve, fight, win != 0
+            ))
+        }
+    }
+
+    @Test
     fun lossAndEscapeAreNotConfusedWithVictoryRewards() {
         val victory = eve.conditions.single { it.conditionNo == 18 }.results
         assertFalse(DvtBattleDefeatRecoveryPolicy.isCosmeticDefeat(

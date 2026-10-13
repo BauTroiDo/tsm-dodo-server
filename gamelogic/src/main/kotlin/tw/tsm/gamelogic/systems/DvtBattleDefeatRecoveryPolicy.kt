@@ -12,6 +12,14 @@ import tw.tsm.domain.data.EveResult
  * mission mutation, or other Eve can enter this defeat recovery path.
  */
 object DvtBattleDefeatRecoveryPolicy {
+    /** Original DVT client: S020-008 endKind 45 stops navigation and raises death UI. */
+    const val DEATH_STOP_NAV_END_KIND = 45
+
+    /** Scoped grace for the exact scene that trapped CaoYenDao after a quest loss. */
+    fun needsPostDefeatMineGrace(
+        mapId: Int, eveNo: Int, fightDataKey: Int, playerWin: Boolean
+    ): Boolean = !playerWin && mapId == 12861 && eveNo == 6 && fightDataKey == 28
+
     fun isCosmeticDefeat(
         mapId: Int,
         eveNo: Int,
