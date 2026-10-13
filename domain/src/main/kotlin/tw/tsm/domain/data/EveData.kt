@@ -57,7 +57,9 @@ data class EveCondition(
     val conditionSubItem: Int,
     val toResult: Int,
     val andNum: Int,
-    val results: List<EveResult>
+    val results: List<EveResult>,
+    /** DVT CTimeValue: 8-byte Double in OLE Automation local date/time days. */
+    val conditionTimeValue: Double = 0.0
 )
 
 /**

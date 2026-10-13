@@ -69,11 +69,41 @@ class EveResultExecutor(
      * Chỉ gọi khi resultType=0.
      */
     /** Check the selected chain before any exchanges or quest mutations occur. */
+    /** Exact DVT item-operation shape: clear every bag stack of one event item. */
+    private fun isClearAllQuestItem(r: EveResult): Boolean =
+        r.resultClass == 1 && r.parameter > 0 && r.parameterStyle == 3 && r.resultValue == 0
+
+    // DVT 49984/49990: positive pStyle3 is a maximum amount to reclaim,
+    // while zero means reclaim all remaining stacks.
+    private fun isBoundedQuestItem(r: EveResult): Boolean =
+        r.resultClass == 1 && r.parameter > 0 && r.parameterStyle == 3 && r.resultValue > 0
+
     suspend fun canExecuteResults(session: GameSession, results: List<EveResult>): Boolean {
+        // The DVT second-generation general lifecycle is not implemented.
+        // Guard the WHOLE remaining Eve chain so mission 11980 cannot advance
+        // before its required child generation/management action silently skips.
+        val childAction = if (DvtChildLifecycleGate.hasCandidateShape(results)) {
+            DvtChildLifecycleGate.firstUnavailable(session.mapId, results)
+        } else null
+        if (childAction != null) {
+            logger.warn {
+                "Block unsupported DVT child lifecycle: map=${session.mapId} cid=${session.roleId} " +
+                    "type=${childAction.resultType} class=${childAction.resultClass} " +
+                    "style=${childAction.parameterStyle}"
+            }
+            responseSender.sendSystemMessage(
+                session,
+                "Chức năng nuôi dưỡng tướng thế hệ hai hiện chưa khả dụng. " +
+                    "Nhiệm vụ 11980 được giữ nguyên, không tự tạo con hay phát thưởng."
+            )
+            return false
+        }
+
         val unsupported = results.firstOrNull { r ->
             r.resultType in setOf(0, 7) && (
                 r.resultClass in setOf(11, 13, 15) ||
-                    (r.resultClass == 1 && EveResultClassPolicy.itemDelta(r.parameterStyle, r.resultValue) == null) ||
+                    (r.resultClass == 1 && !isClearAllQuestItem(r) && !isBoundedQuestItem(r) &&
+                        EveResultClassPolicy.itemDelta(r.parameterStyle, r.resultValue) == null) ||
                     (r.resultClass == 2 && EveResultClassPolicy.missionOperation(r.parameterStyle, r.resultValue) == null) ||
                     (r.resultClass == 2 && !isDvtPackedMissionHint(r) &&
                         r.parameterStyle in setOf(1, 2) &&
@@ -128,10 +158,40 @@ class EveResultExecutor(
                 }
             }
             // Combat and choices may supply/change items; validate the current segment only.
-            val itemChanges = results.takeWhile { it.resultType !in setOf(3, 6) }
-                .filter { it.resultType in setOf(0, 7) && it.resultClass == 1 }
-                .map { it.parameter to EveResultClassPolicy.itemDelta(it.parameterStyle, it.resultValue)!! }
-            if (itemChanges.size > 1 && !inventorySystem.canApplyQuestItemChanges(session.roleId.toLong(), itemChanges)) {
+            // Resolve clear-all quantities from a virtual bag in original result order.
+            // A preceding quest grant/consumption changes what the clear-all consumes.
+            val projectedBag = (if (results.takeWhile { it.resultType !in setOf(3, 6) }
+                    .any { it.resultType in setOf(0, 7) &&
+                        (isClearAllQuestItem(it) || isBoundedQuestItem(it)) })
+                inventorySystem.getBag(session.roleId.toLong()).values
+            else emptyList())
+                .groupBy { it.itemId }
+                .mapValues { (_, stacks) -> stacks.sumOf { it.quantity.toLong() } }
+                .toMutableMap()
+            val itemChanges = mutableListOf<Pair<Int, Int>>()
+            for (itemResult in results.takeWhile { it.resultType !in setOf(3, 6) }
+                .filter { it.resultType in setOf(0, 7) && it.resultClass == 1 }) {
+                val itemId = itemResult.parameter
+                val current = projectedBag[itemId] ?: 0L
+                if (isClearAllQuestItem(itemResult) && current > Int.MAX_VALUE) {
+                    responseSender.sendSystemMessage(session, "Số lượng vật phẩm sự kiện vượt giới hạn.")
+                    return false
+                }
+                val delta = when {
+                    isClearAllQuestItem(itemResult) -> -current.toInt()
+                    isBoundedQuestItem(itemResult) -> {
+                        if (current <= 0L) {
+                            responseSender.sendSystemMessage(session, "Chưa có vật phẩm cần nộp cho nhiệm vụ.")
+                            return false
+                        }
+                        -minOf(current, itemResult.resultValue.toLong()).toInt()
+                    }
+                    else -> EveResultClassPolicy.itemDelta(itemResult.parameterStyle, itemResult.resultValue)!!
+                }
+                if (delta != 0) itemChanges.add(itemId to delta)
+                projectedBag[itemId] = (current + delta.toLong()).coerceAtLeast(0L)
+            }
+            if (itemChanges.isNotEmpty() && !inventorySystem.canApplyQuestItemChanges(session.roleId.toLong(), itemChanges)) {
                 responseSender.sendSystemMessage(session, "Chưa đủ đồ nộp hoặc chỗ trống để nhận toàn bộ thưởng nhiệm vụ. Đã dừng trước khi đổi đồ.")
                 return false
             }
@@ -164,6 +224,31 @@ class EveResultExecutor(
             "Dừng nhánh nhiệm vụ chưa hỗ trợ: map=${session.mapId} " +
                 "class=${unsupported.resultClass} param=${unsupported.parameter} " +
                 "style=${unsupported.parameterStyle} value=${unsupported.resultValue}"
+        }
+        if (unsupported.resultClass == 11) {
+            // Source-verified DVT organization resource, NOT character gold.
+            // Keep the WHOLE chain stopped before item/quest rewards while
+            // organization ownership, treasury persistence and synchronization
+            // are unavailable. Do not grant the other results partially.
+            val resource = DvtOrgResourceResultPolicy.decode(
+                unsupported.resultType,
+                unsupported.resultClass,
+                unsupported.parameter,
+                unsupported.parameterStyle,
+                unsupported.resultValue
+            )
+            logger.warn {
+                "Chặn thưởng tài nguyên quân đoàn DVT do chưa có kho tổ chức: " +
+                    "map=${session.mapId} cid=${session.roleId} " +
+                    "resource=${resource?.kind} amount=${resource?.amount} " +
+                    "style=${unsupported.parameterStyle}"
+            }
+            responseSender.sendSystemMessage(
+                session,
+                "Nhiệm vụ này có thưởng tài nguyên quân đoàn nhưng hệ thống kho quân đoàn " +
+                    "chưa khả dụng. Đã dừng toàn bộ nhánh; không trừ vật phẩm, không chuyển bước hoặc phát thưởng thiếu."
+            )
+            return false
         }
         responseSender.sendSystemMessage(session, "Nhánh nhiệm vụ này chưa có cấu hình xử lý đầy đủ. Đã dừng xử lý; vui lòng chọn nhiệm vụ khác.")
         return false
@@ -737,6 +822,37 @@ class EveResultExecutor(
     private suspend fun handleItemResult(session: GameSession, result: EveResult): Boolean {
         val charId = session.roleId.toLong()
         val itemId = result.parameter
+        if (isClearAllQuestItem(result) || isBoundedQuestItem(result)) {
+            // 0: take all. >0: take up to the DVT resultValue cap.
+            // Keep the itemId guard for every stack; never touch unrelated items.
+            var remaining = if (isClearAllQuestItem(result)) Long.MAX_VALUE
+                else result.resultValue.toLong()
+            val consumptions = mutableListOf<Pair<Int, Int>>()
+            for ((slot, thing) in inventorySystem.getBag(charId).toSortedMap()) {
+                if (thing.itemId != itemId || thing.quantity <= 0 || remaining == 0L) continue
+                val qty = minOf(thing.quantity.toLong(), remaining).toInt()
+                if (qty > 0) {
+                    consumptions += slot to qty
+                    remaining -= qty.toLong()
+                }
+            }
+            if (isBoundedQuestItem(result) && consumptions.isEmpty()) {
+                responseSender.sendSystemMessage(session, "Chưa có vật phẩm cần nộp cho nhiệm vụ.")
+                return false
+            }
+            if (consumptions.isNotEmpty() && !inventorySystem.removeBagItemsExact(charId, consumptions)) {
+                responseSender.sendSystemMessage(session, "Không thể thu hồi vật phẩm nhiệm vụ. Đã dừng xử lý.")
+                return false
+            }
+            for ((slot, quantity) in consumptions) {
+                responseSender.sendReduceBagItem(session, slot, quantity)
+            }
+            logger.info {
+                "${session.characterName} Thu hồi vật phẩm nhiệm vụ itemId=$itemId " +
+                    "limit=${result.resultValue} slots=${consumptions.size}"
+            }
+            return true
+        }
         val delta = EveResultClassPolicy.itemDelta(result.parameterStyle, result.resultValue)
             ?: return false
         when {

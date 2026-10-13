@@ -499,7 +499,7 @@ object EveDataLoader {
                 val conditionParameterStyle = reader.readByte()  // ParameterStyle
                 val conditionOps = reader.readByte()
                 val conditionValue = reader.readInt32()
-                reader.readDouble()              // CTimeValue（8B Double）
+                val conditionTimeValue = reader.readDouble() // CTimeValue (8B OLE Automation Double)
                 val toResult = reader.readByte()  // ToResult (nếu điều kiện này thỏa thì nhảy đến kết quả nào)
                 val andNum = reader.readByte()    // AndNum (>0 có nghĩa là AND với N điều kiện phía sau)
                 val conditionSubItem = reader.readUInt16()  // ConditionSubItem
@@ -539,7 +539,8 @@ object EveDataLoader {
                     conditionSubItem = conditionSubItem,
                     toResult = toResult,
                     andNum = andNum,
-                    results = results
+                    results = results,
+                    conditionTimeValue = conditionTimeValue
                 ))
             }
 

@@ -10,6 +10,11 @@ import org.jetbrains.exposed.v1.core.Table
  */
 object CharacterPets : Table("character_pets") {
     val id = long("id").autoIncrement()
+    /**
+     * Durable pet-instance UUID. Legacy rows start blank and are backfilled
+     * atomically on first repository load (not inferred from row id or slot).
+     */
+    val instanceId = varchar("instance_id", 36).default("")
     val characterId = long("character_id").index()
     /** Loại lưu trữ: 1=mang theo người, 2=xe ngựa, 3=lữ quán, 4=kho tướng*/
     val storageType = integer("storage_type").default(1)

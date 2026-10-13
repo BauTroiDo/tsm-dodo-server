@@ -5,6 +5,8 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.update
+import java.util.UUID
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import tw.tsm.domain.interfaces.repositories.PetRepository
 import tw.tsm.domain.valueobjects.FollowNpcData
@@ -52,10 +54,32 @@ class PetRepositoryImpl : PetRepository {
                     )
                 }
 
+            // Lock and backfill missing/invalid/colliding instance UUIDs in the
+            // SAME transaction as loading the roster. Legacy rows must not get a
+            // new identity after each reconnect if autosave never runs.
+            // SELECT ... FOR UPDATE also serializes concurrent same-character login.
+            val seen = mutableSetOf<String>()
             CharacterPets.selectAll()
                 .where { CharacterPets.characterId eq characterId }
+                .forUpdate()
+                .toList()
                 .map { row ->
+                    val savedId = row[CharacterPets.instanceId]
+                    val canonical = runCatching {
+                        UUID.fromString(savedId).toString() == savedId
+                    }.getOrDefault(false)
+                    val instanceId = if (canonical && seen.add(savedId)) {
+                        savedId
+                    } else {
+                        val newId = generateSequence { UUID.randomUUID().toString() }
+                            .first { seen.add(it) }
+                        CharacterPets.update({ CharacterPets.id eq row[CharacterPets.id] }) {
+                            it[CharacterPets.instanceId] = newId
+                        }
+                        newId
+                    }
                     FollowNpcData(
+                        instanceId = instanceId,
                         slotIndex = row[CharacterPets.slotIndex],
                         npcId = row[CharacterPets.npcId],
                         storageType = row[CharacterPets.storageType],
@@ -96,11 +120,21 @@ class PetRepositoryImpl : PetRepository {
         }
 
     override suspend fun saveAll(characterId: Long, pets: List<FollowNpcData>) {
+        // Validate BEFORE deleteWhere: never destructively rewrite a roster
+        // with missing or duplicated identities (including across storages).
+        val ids = pets.map { it.instanceId }
+        require(ids.all { id ->
+            runCatching { UUID.fromString(id).toString() == id }.getOrDefault(false)
+        }) { "Each persisted general requires a canonical UUID instanceId" }
+        require(ids.size == ids.toSet().size) {
+            "One pet instance cannot occupy two roster/storage entries"
+        }
         suspendTransaction {
             CharacterPets.deleteWhere { CharacterPets.characterId eq characterId }
             if (pets.isNotEmpty()) {
                 CharacterPets.batchInsert(pets) { pet ->
                     this[CharacterPets.characterId] = characterId
+                    this[CharacterPets.instanceId] = pet.instanceId
                     this[CharacterPets.storageType] = pet.storageType
                     this[CharacterPets.slotIndex] = pet.slotIndex
                     this[CharacterPets.npcId] = pet.npcId

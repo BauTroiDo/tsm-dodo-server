@@ -1,5 +1,7 @@
 package tw.tsm.domain.valueobjects
 
+import java.util.UUID
+
 /**
  * Đối tượng giá trị dữ liệu tướng
  *
@@ -86,5 +88,12 @@ data class FollowNpcData(
      * Dùng chung mô hình trang bị 6 ô với người chơi (Item.lua MaxEquip=6, EItemFitType).
      * Trang bị đi theo bản thân tướng: vào xe ngựa/lữ quán/kho không cởi trang bị.
      */
-    val equips: Map<Int, ThingData> = emptyMap()
+    val equips: Map<Int, ThingData> = emptyMap(),
+    /**
+     * Server-only immutable identity of this *individual* general, independent
+     * of npcId (template), slotIndex (roster position) and database row id.
+     * New captures get a fresh UUID; all moves/rebirth/trade must retain it.
+     * Not sent as part of the original DVT S015 binary packet.
+     */
+    val instanceId: String = UUID.randomUUID().toString(),
 )

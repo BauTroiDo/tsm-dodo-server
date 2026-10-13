@@ -942,23 +942,15 @@ class EveConditionEvaluatorTest : DescribeSpec({
             ) shouldBe false
         }
 
-        it("class=14 dùng trạng thái activity open/closed đúng nhánh DVT") {
-            val open = PlayerEventState(activityOpen = true)
-            val closed = PlayerEventState(activityOpen = false)
-
-            EveConditionEvaluator.evaluate(
-                cond(cls = 14, param = 0, pStyle = 0, ops = 1, value = 0), open
-            ) shouldBe true
-            EveConditionEvaluator.evaluate(
-                cond(cls = 14, param = 0, pStyle = 0, ops = 2, value = 0), open
-            ) shouldBe false
-
-            EveConditionEvaluator.evaluate(
-                cond(cls = 14, param = 0, pStyle = 0, ops = 1, value = 0), closed
-            ) shouldBe false
-            EveConditionEvaluator.evaluate(
-                cond(cls = 14, param = 0, pStyle = 0, ops = 2, value = 0), closed
-            ) shouldBe true
+        it("class14 compares OLE time bounds, not an activityOpen flag") {
+            val start = cond(cls = 14, ops = 2).copy(conditionTimeValue = 43320.0)
+            val end = cond(cls = 14, ops = 1).copy(conditionTimeValue = 43325.0)
+            val inside = PlayerEventState(eveNowOaDate = 43322.0, activityOpen = false)
+            EveConditionEvaluator.evaluate(start, inside) shouldBe true
+            EveConditionEvaluator.evaluate(end, inside) shouldBe true
+            val after = PlayerEventState(eveNowOaDate = 43330.0, activityOpen = true)
+            EveConditionEvaluator.evaluate(start, after) shouldBe true
+            EveConditionEvaluator.evaluate(end, after) shouldBe false
         }
 
         it("class=18 tham số nhỏ chưa xác định sẽ không dùng nhầm RoleCount") {
@@ -969,38 +961,29 @@ class EveConditionEvaluatorTest : DescribeSpec({
             ) shouldBe false
         }
 
-        it("class=14 ops=1 chỉ khớp khi hoạt động đang mở") {
-            EveConditionEvaluator.evaluate(
-                cond(cls = 14, param = 0, pStyle = 0, ops = 1, value = 0),
-                PlayerEventState(activityOpen = true)
-            ) shouldBe true
-            EveConditionEvaluator.evaluate(
-                cond(cls = 14, param = 0, pStyle = 0, ops = 1, value = 0),
-                PlayerEventState(activityOpen = false)
-            ) shouldBe false
+        it("class14 ops3-4 inclusive bounds, unknown time fails closed") {
+            val lower = cond(cls = 14, ops = 4).copy(conditionTimeValue = 43376.0)
+            val upper = cond(cls = 14, ops = 3).copy(conditionTimeValue = 43383.0)
+            EveConditionEvaluator.evaluate(lower, PlayerEventState(eveNowOaDate = 43376.0)) shouldBe true
+            EveConditionEvaluator.evaluate(upper, PlayerEventState(eveNowOaDate = 43383.0)) shouldBe true
+            EveConditionEvaluator.evaluate(lower, PlayerEventState(eveNowOaDate = 43375.0)) shouldBe false
+            EveConditionEvaluator.evaluate(upper, PlayerEventState(eveNowOaDate = 43384.0)) shouldBe false
+            EveConditionEvaluator.evaluate(lower, PlayerEventState(eveNowOaDate = null)) shouldBe false
+            EveConditionEvaluator.evaluate(lower, PlayerEventState(eveNowOaDate = Double.NaN)) shouldBe false
+            EveConditionEvaluator.evaluate(lower.copy(conditionTimeValue = 0.0),
+                PlayerEventState(eveNowOaDate = 43376.0)) shouldBe false
         }
 
-        it("class=14 ops=2 là nhánh sự kiện chưa mở") {
-            EveConditionEvaluator.evaluate(
-                cond(cls = 14, param = 0, pStyle = 0, ops = 2, value = 0),
-                PlayerEventState(activityOpen = false)
-            ) shouldBe true
-            EveConditionEvaluator.evaluate(
-                cond(cls = 14, param = 0, pStyle = 0, ops = 2, value = 0),
-                PlayerEventState(activityOpen = true)
-            ) shouldBe false
+        it("class14 unknown param2 and pStyle1-4 do not auto-enable") {
+            for (style in 1..4) {
+                val c = cond(cls = 14, param = 2, pStyle = style)
+                    .copy(conditionTimeValue = 37931.6033664236)
+                EveConditionEvaluator.evaluate(
+                    c, PlayerEventState(eveNowOaDate = 37931.6033664236)
+                ) shouldBe false
+            }
         }
 
-        it("class=14 scene không có ActivityTime mapping giữ UNKNOWN và không tự mở") {
-            EveConditionEvaluator.evaluate(
-                cond(cls = 14, param = 0, pStyle = 0, ops = 1, value = 0),
-                PlayerEventState(activityOpen = null)
-            ) shouldBe false
-            EveConditionEvaluator.evaluate(
-                cond(cls = 14, param = 0, pStyle = 0, ops = 2, value = 0),
-                PlayerEventState(activityOpen = null)
-            ) shouldBe false
-        }
         it("class=14 không còn đánh dấu là RoleCount đã xác nhận") {
             val state = PlayerEventState(roleCountValues = mapOf(0 to 999))
 

@@ -63,7 +63,11 @@ class GameDataManager(
     var bitToMissionId: Map<Int, Int> = emptyMap()
         private set
 
-    /** Các mission có ít nhất một bản ghi thật trong IOS_MarkStep_C.dat. */
+    /** Full DVT MarkStep data for route/NPC/progression parity diagnostics. */
+    var markSteps: Map<Int, Map<Int, MarkStepDef>> = emptyMap()
+        private set
+
+    /** Missions with real MarkStep records (distinct from DVT marker missions). */
     var markStepMissionIds: Set<Int> = emptySet()
         private set
 
@@ -386,11 +390,20 @@ class GameDataManager(
             }
         }
 
-        // MarkStep — chỉ cần tập missionId để phân biệt marker mission với nhiệm vụ có tiến trình thật.
+        // Preserve the client DVT MarkStep condition and completion targets, not
+        // just mission IDs. Client auto-route and Eve mission state must agree.
         val markStepSource = dataIosDir.resolve("IOS_MarkStep_C.dat")
         if (Files.isRegularFile(markStepSource)) {
-            markStepMissionIds = MarkStepDatLoader.loadMissionIds(Files.readAllBytes(markStepSource))
-            logger.info { "Nạp MarkStep xong: ${markStepMissionIds.size} mission có step thật" }
+            markSteps = MarkStepDatLoader.loadSteps(Files.readAllBytes(markStepSource))
+            markStepMissionIds = markSteps.keys
+            val allSteps = markSteps.values.sumOf { it.size }
+            val endUnlocated = markSteps.values.sumOf { defs ->
+                defs.values.count { !it.endTarget.hasDestination }
+            }
+            logger.info {
+                "DVT MarkStep: ${markStepMissionIds.size} missions, $allSteps steps, " +
+                    "$endUnlocated without completion navigation (may be intentional)"
+            }
         } else {
             logger.warn { "Không tìm thấy IOS_MarkStep_C.dat; marker mission sẽ không được tự nhận diện từ data" }
         }

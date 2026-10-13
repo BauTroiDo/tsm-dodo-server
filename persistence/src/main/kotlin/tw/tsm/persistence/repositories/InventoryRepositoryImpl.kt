@@ -9,11 +9,19 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.jdbc.upsert
+import org.jetbrains.exposed.v1.jdbc.update
+import tw.tsm.domain.constants.ItemConstants
+import tw.tsm.domain.interfaces.repositories.TradeAccountSnapshot
+import tw.tsm.domain.interfaces.repositories.TradeReceiptCommit
+import tw.tsm.domain.interfaces.repositories.TradeReceiptLookup
+import tw.tsm.domain.interfaces.repositories.TradeObservedAccount
+import tw.tsm.domain.interfaces.repositories.TradeReceiptInspection
 import tw.tsm.domain.interfaces.repositories.InventoryRepository
 import tw.tsm.domain.valueobjects.MythAttribute
 import tw.tsm.domain.valueobjects.ThingData
 import tw.tsm.persistence.tables.CharacterMoney
 import tw.tsm.persistence.tables.Inventories
+import tw.tsm.persistence.tables.TradeSettlementReceipts
 import tw.tsm.persistence.tables.CharacterRoleCounts
 import tw.tsm.persistence.tables.CharacterBattlePassSeasons
 import tw.tsm.domain.constants.EThings
@@ -160,6 +168,220 @@ class InventoryRepositoryImpl : InventoryRepository {
             }
             Unit
         }
+
+    /**
+     * STAGED ONLY: optimistic full-snapshot two-player BAG + GOLD transaction.
+     *
+     * The real TradeSystem currently uses synchronous RAM changes; enabling
+     * this method there without atomic cache publication would resurrect old
+     * objects at autosave/logout. Remain unwired until that is implemented.
+     */
+    override suspend fun commitTwoCharacterTradeAtomic(
+        first: TradeAccountSnapshot,
+        second: TradeAccountSnapshot,
+    ): Boolean = commitTwoCharacterTradeInternal(null, first, second) == TradeReceiptCommit.COMMITTED_NOW
+
+    /** STAGED / UNWIRED: receipt and BAG+gold settlement share ONE SQL commit. */
+    override suspend fun commitTwoCharacterTradeWithReceiptAtomic(
+        operationId: String,
+        first: TradeAccountSnapshot,
+        second: TradeAccountSnapshot,
+    ): TradeReceiptCommit =
+        commitTwoCharacterTradeInternal(operationId, first, second)
+
+    override suspend fun findTwoCharacterTradeReceipt(
+        operationId: String,
+        first: TradeAccountSnapshot,
+        second: TradeAccountSnapshot,
+    ): TradeReceiptLookup {
+        if (!validOperationId(operationId) ||
+            first.characterId <= 0 || second.characterId <= 0 ||
+            first.characterId == second.characterId
+        ) return TradeReceiptLookup.TOKEN_CONFLICT
+        val digest = TradeSnapshotDigest.of(first, second)
+        return suspendTransaction {
+            val row = TradeSettlementReceipts.selectAll()
+                .where { TradeSettlementReceipts.operationId eq operationId }
+                .singleOrNull() ?: return@suspendTransaction TradeReceiptLookup.NOT_FOUND
+            if (row[TradeSettlementReceipts.firstCharacterId] == minOf(first.characterId, second.characterId) &&
+                row[TradeSettlementReceipts.secondCharacterId] == maxOf(first.characterId, second.characterId) &&
+                row[TradeSettlementReceipts.snapshotDigest] == digest
+            ) TradeReceiptLookup.MATCHED else TradeReceiptLookup.TOKEN_CONFLICT
+        }
+    }
+
+    /**
+     * STAGED ONLY: read the receipt + both accounts under one SQL transaction.
+     * Acquire gold row locks in canonical character order, the SAME lock order
+     * used by durable C025 settlement. A second same-pair SQL trade cannot
+     * commit halfway through this observation.
+     *
+     * Do not return just a matched receipt and then separately load balances:
+     * another committed transfer could alter the two players between reads.
+     */
+    override suspend fun inspectTwoCharacterTradeReceiptAtomic(
+        operationId: String,
+        first: TradeAccountSnapshot,
+        second: TradeAccountSnapshot,
+    ): TradeReceiptInspection {
+        if (!validOperationId(operationId) ||
+            first.characterId <= 0 || second.characterId <= 0 ||
+            first.characterId == second.characterId
+        ) return TradeReceiptInspection(TradeReceiptLookup.TOKEN_CONFLICT)
+
+        val ordered = listOf(first, second).sortedBy { it.characterId }
+        val digest = TradeSnapshotDigest.of(first, second)
+
+        return suspendTransaction {
+            val lockedMoney = ordered.map { side ->
+                CharacterMoney.selectAll()
+                    .where { CharacterMoney.characterId eq side.characterId }
+                    .forUpdate().singleOrNull()
+            }
+            val receipt = TradeSettlementReceipts.selectAll()
+                .where { TradeSettlementReceipts.operationId eq operationId }
+                .forUpdate().singleOrNull()
+            if (receipt == null) {
+                return@suspendTransaction TradeReceiptInspection(TradeReceiptLookup.NOT_FOUND)
+            }
+            if (receipt[TradeSettlementReceipts.firstCharacterId] != ordered[0].characterId ||
+                receipt[TradeSettlementReceipts.secondCharacterId] != ordered[1].characterId ||
+                receipt[TradeSettlementReceipts.snapshotDigest] != digest
+            ) return@suspendTransaction TradeReceiptInspection(TradeReceiptLookup.TOKEN_CONFLICT)
+
+            val byId = ordered.mapIndexed { index, side ->
+                val row = lockedMoney[index]
+                    ?: return@suspendTransaction TradeReceiptInspection(TradeReceiptLookup.MATCHED)
+                val bag = Inventories.selectAll().where {
+                    (Inventories.characterId eq side.characterId) and
+                        (Inventories.storageType eq EThings.BAG)
+                }.forUpdate().associate { item ->
+                    item[Inventories.slot] to item.toThingData()
+                }
+                TradeObservedAccount(
+                    side.characterId, bag,
+                    row[CharacterMoney.gold],
+                    row[CharacterMoney.auctionGold],
+                )
+            }.associateBy { it.characterId }
+            TradeReceiptInspection(
+                TradeReceiptLookup.MATCHED,
+                first = byId[first.characterId],
+                second = byId[second.characterId],
+            )
+        }
+    }
+
+    private fun validOperationId(value: String): Boolean =
+        runCatching { java.util.UUID.fromString(value).toString() == value }
+            .getOrDefault(false)
+
+    private suspend fun commitTwoCharacterTradeInternal(
+        operationId: String?,
+        first: TradeAccountSnapshot,
+        second: TradeAccountSnapshot,
+    ): TradeReceiptCommit {
+        if (operationId != null && !validOperationId(operationId)) return TradeReceiptCommit.REJECTED
+        if (first.characterId <= 0 || second.characterId <= 0 ||
+            first.characterId == second.characterId
+        ) return TradeReceiptCommit.REJECTED
+        val sides = listOf(first, second).sortedBy { it.characterId }
+        if (sides.any { side ->
+                side.beforeGold < 0 || side.afterGold < 0 ||
+                    side.beforeGold > ItemConstants.MAX_GOLD ||
+                    side.afterGold > ItemConstants.MAX_GOLD ||
+                    side.auctionGold < 0 ||
+                    listOf(side.beforeBag, side.afterBag).any { bag ->
+                        bag.any { (slot, item) ->
+                            slot !in 0..65535 || item.isEmpty ||
+                                item.itemId !in 1..65535 || item.quantity <= 0
+                        }
+                    }
+            }
+        ) return TradeReceiptCommit.REJECTED
+
+        // A cross-player trade cannot mint/destroy cards or gold. Compare
+        // entire ThingData, including all Myth, affix and expiration fields.
+        fun identities(bags: List<Map<Int, ThingData>>): Map<ThingData, Long> =
+            bags.flatMap { it.values }.groupingBy { it.copy(quantity = 1) }
+                .fold(0L) { acc, item -> acc + item.quantity.toLong() }
+        if (identities(sides.map { it.beforeBag }) != identities(sides.map { it.afterBag })) {
+            return TradeReceiptCommit.REJECTED
+        }
+        if (sides.sumOf { it.beforeGold.toLong() } !=
+            sides.sumOf { it.afterGold.toLong() }
+        ) return TradeReceiptCommit.REJECTED
+
+        return suspendTransaction {
+            // Lock both money rows in canonical order BEFORE consulting the
+            // receipt. A concurrent replay waits for the first SQL commit.
+            val lockedMoney = sides.map { side ->
+                CharacterMoney.selectAll()
+                    .where { CharacterMoney.characterId eq side.characterId }
+                    .forUpdate().singleOrNull()
+                    ?: return@suspendTransaction TradeReceiptCommit.REJECTED
+            }
+
+            if (operationId != null) {
+                val receipt = TradeSettlementReceipts.selectAll()
+                    .where { TradeSettlementReceipts.operationId eq operationId }
+                    .forUpdate().singleOrNull()
+                if (receipt != null) {
+                    val same = receipt[TradeSettlementReceipts.firstCharacterId] == sides[0].characterId &&
+                        receipt[TradeSettlementReceipts.secondCharacterId] == sides[1].characterId &&
+                        receipt[TradeSettlementReceipts.snapshotDigest] == TradeSnapshotDigest.of(first, second)
+                    return@suspendTransaction if (same) TradeReceiptCommit.ALREADY_COMMITTED
+                        else TradeReceiptCommit.TOKEN_CONFLICT
+                }
+            }
+
+            // Re-validate both stored snapshots after serialized row locks.
+            for ((index, side) in sides.withIndex()) {
+                val persistedMoney = lockedMoney[index]
+                if (persistedMoney[CharacterMoney.gold] != side.beforeGold ||
+                    persistedMoney[CharacterMoney.auctionGold] != side.auctionGold
+                ) return@suspendTransaction TradeReceiptCommit.REJECTED
+                val persistedBag = Inventories.selectAll().where {
+                    (Inventories.characterId eq side.characterId) and
+                        (Inventories.storageType eq EThings.BAG)
+                }.forUpdate().associate { row ->
+                    row[Inventories.slot] to row.toThingData()
+                }
+                if (persistedBag != side.beforeBag) return@suspendTransaction TradeReceiptCommit.REJECTED
+            }
+            for (side in sides) {
+                Inventories.deleteWhere {
+                    (Inventories.characterId eq side.characterId) and
+                        (Inventories.storageType eq EThings.BAG)
+                }
+                if (side.afterBag.isNotEmpty()) {
+                    Inventories.batchInsert(side.afterBag.entries.toList()) { (slot, thing) ->
+                        this[Inventories.characterId] = side.characterId
+                        this[Inventories.storageType] = EThings.BAG
+                        this[Inventories.slot] = slot
+                        this.setThingData(thing)
+                    }
+                }
+                check(CharacterMoney.update({
+                    CharacterMoney.characterId eq side.characterId
+                }) { it[CharacterMoney.gold] = side.afterGold } == 1) {
+                    "Missing trade-money row during atomic settlement"
+                }
+            }
+            // Receipt insert belongs to this SAME transaction. A duplicate
+            // UUID insert rolls back the entire BAG+gold transfer.
+            if (operationId != null) {
+                TradeSettlementReceipts.insert {
+                    it[TradeSettlementReceipts.operationId] = operationId
+                    it[TradeSettlementReceipts.firstCharacterId] = sides[0].characterId
+                    it[TradeSettlementReceipts.secondCharacterId] = sides[1].characterId
+                    it[TradeSettlementReceipts.snapshotDigest] = TradeSnapshotDigest.of(first, second)
+                    it[TradeSettlementReceipts.committedAtEpochMs] = System.currentTimeMillis()
+                }
+            }
+            TradeReceiptCommit.COMMITTED_NOW
+        }
+    }
 
     override suspend fun loadMoney(characterId: Long): Pair<Int, Int> =
         suspendTransaction {

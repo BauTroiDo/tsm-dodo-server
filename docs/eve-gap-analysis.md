@@ -3,6 +3,8 @@
 > Ngày tạo: 2026-06-12. Công cụ phân tích: `tools/eve_analyze.py` (phản chiếu logic phân tích của EveDataLoader.kt).
 > Tỉ lệ phân tích thành công 3823/3823 cảnh (100%), tổng 25457 sự kiện / 77001 điều kiện / 164910 kết quả.
 
+> **Đính chính kiểm toán 2026-10-11:** archive Eve DVT chứa **3.823 mục chỉ mục**, nhưng Kotlin `EveDataLoader.load` chỉ trả về **3.797 cảnh có dữ liệu**. **26 mục còn lại là block rỗng 123 byte** (103 byte header + 20 byte đếm section đều bằng 0): `18281, 19510, 49993–49995, 54948–54967, 57537`. Đã xác minh bằng bản Eve SHA-256 `03c84cb565d4bdd10b7506a4d04a918ae590737f80a3e7e4fd37782b9c40b910` của client và server. Đây là lọc cảnh trống hợp lệ, **không phải 26 bản đồ bị mất**. Kiểm thử `DvtActiveEveUnsupportedResultCoverageTest` đối chiếu từng block và sẽ báo lỗi nếu sau này cảnh có dữ liệu thật bị loại.
+
 ## 1. Phương pháp phân tích
 
 1. Dùng Python tái hiện phân tích nhị phân của `EveDataLoader.kt`, quét toàn bộ Eve.emg
@@ -19,7 +21,7 @@
 |------:|-----:|------:|---------|------|
 | **13** | 99 | 17 | Trạng thái thành trì quân đoàn: param=1 đối chiếu quyền sở hữu thành (val = số hiệu thành 1~5), param=2 người chơi có phải chính/phó đoàn trưởng không (nhánh pStyle=1/2/3) | Cao (sự kiện xây cơ sở tại lữ quán năm thành lớn 11031/11041/12071/12081/19031) |
 | **14** | 291 | 47 | Hiện là stub (đồng loạt trả false); param=0 hình dạng nghi là bộ đếm giai đoạn hoạt động/trạng thái đã nhận, ngữ nghĩa chờ xác minh | Thấp |
-| **17** | 16 | 2 | Trạng thái con nuôi (tướng thế hệ hai): tiến độ cho ăn/giáo dục (tất cả ở thôn ẩn thế 12721), param=0/3 | Trung |
+| **17** | 16 | 2 | Trạng thái tướng thế hệ hai (con nhân vật), thực tế ở **12721 và 12722**, param=0/2/3 với 6 dạng; cần ChildData 93 byte, S:069, trạng thái ra trận/cấp 10. Chưa có subsystem nên giữ fail-closed. Xem `docs/dvt-child-quest-11980-20261011.md`. | Cao đối với nhiệm vụ 11980/11981 |
 
 > Cải chính: class=16 (đối chiếu số lượng vật phẩm ký gửi storedItems) server **đã hỗ trợ**, bản đầu liệt kê nhầm là chưa hỗ trợ.
 
@@ -51,7 +53,7 @@ Hiện hỗ trợ param=0(cấp độ)/2(chỗ trống túi đồ)/3(trang bị)
 | **12** | 21 | Toàn bộ gắn trên type=1 (Talk), server không cần thực thi | Cao | 12721/12722 |
 | **13** | 89 | **Phát gói thưởng hoạt động**: val = mã phần thưởng (12/13/40/49/52/69~78), thường gắn nhóm xác suất resultGroupNo. Đã bác bỏ giả thuyết bản đầu "介消 sellId" (val 78 > giới hạn trên UISell 69; hội thoại Talk đều thuộc loại NPC hoạt động kiểu "đây là phần thưởng cho bạn": thưởng ải quan 13096,đổi đèn lồng 34288,huy hiệu sử thi 52570,bài tập nghỉ hè 58400,Lễ hội Halloween 23419,ngọc thỏ 15361). **Chưa xác định được bảng thưởng ứng với mã phần thưởng** (đoán là dữ liệu phía server, client không có bảng này) | Cao (ngữ nghĩa)/ Thấp (bảng thưởng) | 12003 eve=24 bước nhiệm vụ N → thưởng 67+N |
 | **14** | 33 | **Tăng giảm bộ đếm RoleCount (đã cài đặt)**: param = chỉ mục bộ đếm, pStyle=1 cộng val / 2 trừ val / 3 đưa về 0; ghép cặp với conditionClass=18 (đọc bộ đếm). Ví dụ: 10951 lựa chọn hội thoại Đào Viên kết nghĩa ±RoleCount[1], 12002 hoạt động bài tập nghỉ hè RoleCount[189] đồng bộ số lượng quà +1/+10/+20 | Cao | 12002 eve=28 param=189 |
-| **15** | 1 | Ví dụ đơn lẻ (10821 eve=3 param=1) | Thấp | — |
+| **15** | 0 | Không có kết quả class15 trong bản Eve.emg hiện hành (đã quét toàn bộ 3.823 cảnh ở tất cả resultType). Ví dụ 10821/eve=3 trong bản báo cáo cũ không khớp dữ liệu. | Xác nhận bằng quét dữ liệu DVT 2026-10-11 | — |
 
 ## 4. Bảng giám định pStyle chưa ánh xạ của resultClass=7 (thao tác người chơi)
 

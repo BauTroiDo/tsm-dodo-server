@@ -7,6 +7,8 @@ import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.repositories.AccountRepository
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
+import tw.tsm.domain.interfaces.repositories.EveEffectClaimRepository
+import tw.tsm.domain.interfaces.repositories.RewardLedgerRepository
 import tw.tsm.domain.valueobjects.PlayerDataDto
 import tw.tsm.gamelogic.systems.*
 import tw.tsm.protocol.PacketWriter
@@ -41,6 +43,8 @@ class GmCommandProcessor(
     private val warpDefs: Map<Int, WarpDef>,
     private val markDefs: Map<Int, MarkDef>,
     private val collectionSystem: CollectionSystem? = null,
+    private val eveEffectClaimRepository: EveEffectClaimRepository? = null,
+    private val rewardLedgerRepository: RewardLedgerRepository? = null,
 ) {
 
     /**
@@ -85,6 +89,7 @@ class GmCommandProcessor(
                 "/開旅館",   "/hotel"                  -> cmdOpenHotel(session)
                 "/戰鬥",     "/battle"                 -> cmdBattle(session, args)
                 "/任務",     "/quest"                  -> cmdQuest(session, args)
+                "/claims"                             -> cmdClaims(session, args)
                 "/設稱號",   "/settitle"               -> cmdSetTitle(session, args)
                 "/加永標",   "/setflag"                -> cmdSetBitFlag(session, args)
                 "/解鎖傳送", "/warpall"                -> cmdWarpAll(session)
@@ -100,6 +105,37 @@ class GmCommandProcessor(
         } catch (e: Exception) {
             logger.error(e) { "Lệnh GM thực thi thất bại: $input" }
             reply(session, "Lệnh thực thi lỗi: ${e.message}")
+        }
+    }
+
+    /** /claims [charId] — read-only. ChatHandler also requires GM rights. */
+    private suspend fun cmdClaims(session: GameSession, args: List<String>) {
+        if (session.gmLevel <= 0) {
+            reply(session, "Chỉ GM mới xem được dữ liệu claim.")
+            return
+        }
+        if (args.size > 1) {
+            reply(session, "Cách dùng: /claims [ID nhân vật]")
+            return
+        }
+        val charId = args.singleOrNull()?.toLongOrNull() ?: if (args.isEmpty()) {
+            session.roleId.toLong()
+        } else {
+            reply(session, "ID nhân vật không hợp lệ.")
+            return
+        }
+        if (charId <= 0) {
+            reply(session, "ID nhân vật phải là số dương.")
+            return
+        }
+        val eve = eveEffectClaimRepository
+        val reward = rewardLedgerRepository
+        if (eve == null || reward == null) {
+            reply(session, "Kho dữ liệu claim chưa được cấu hình.")
+            return
+        }
+        RewardClaimAuditService(eve, reward).inspect(charId).forEach {
+            reply(session, it)
         }
     }
 
@@ -887,6 +923,7 @@ class GmCommandProcessor(
             append("/開旅館 | /hotel - mở lữ quán\n")
             append("/戰鬥 | /battle <NPC ID> - thử chiến đấu\n")
             append("/任務 | /quest list|set|flag - quản lý nhiệm vụ\n")
+            append("/claims [ID nhân vật] - xem claim Eve/thưởng đang treo (chỉ đọc)\n")
             append("/設稱號 | /settitle <ID> - mang danh hiệu (0=tháo)\n")
             append("/加永標 | /setflag <flagId> - đặt cờ vĩnh viễn (mở khóa danh hiệu)\n")
             append("/解鎖傳送 | /warpall - mở khóa toàn bộ điểm dịch chuyển Thiên Hành\n")

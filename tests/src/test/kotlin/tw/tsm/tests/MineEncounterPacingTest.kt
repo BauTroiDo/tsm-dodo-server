@@ -212,4 +212,65 @@ class MineEncounterPacingTest {
 
         coVerify(exactly = 1) { router.triggerMine(session, 1) }
     }
+
+    @Test
+    fun defeatGraceUsesDatabaseCharacterIdRatherThanWorldPlayerId() = runTest {
+        // Live CaoYenDao has database charId=31 but world playerId=13.
+        // Eve state and MineWalkState are keyed by the DB character id.
+        val mapId = 12861
+        val mine = EveMinePlacement(
+            id = 1,
+            events = listOf(15),
+            gridX = 1,
+            gridY = 1,
+            gridWidth = 1,
+            gridHeight = 1,
+            sizeKind = 1,
+        )
+        var activeEvent: EventSession? = EventSession(
+            mapId = 12861,
+            eveNo = 6,
+            npcClickId = 5,
+            triggerKind = 8,
+            results = emptyList(),
+            fightDataKey = 28,
+        )
+        val stateMachine = mockk<EveEventStateMachine>()
+        every { stateMachine.getSession(42) } answers { activeEvent }
+        every { stateMachine.getSession(13) } returns null
+        val router = mockk<EveTriggerRouter>()
+        coEvery { router.triggerMine(any(), 1) } returns true
+        val now = longArrayOf(100_000L)
+        val system = MineEncounterSystem(
+            eveData = mapOf(mapId to scene(mine)),
+            stateMachine = stateMachine,
+            triggerRouter = router,
+            playerStateManager = playerStates(),
+            nowMs = { now[0] },
+        )
+        val session = session(mapId) // roleId=42 is the DB character id.
+
+        // Wrong world player id silently misses the source event.
+        system.onBattleEnd(13, playerWin = false)
+        io.mockk.verify(exactly = 1) { stateMachine.getSession(13) }
+
+        // Production callback MUST supply session.roleId.toLong().
+        system.onBattleEnd(session.roleId.toLong(), playerWin = false)
+        io.mockk.verify(exactly = 1) { stateMachine.getSession(42) }
+        activeEvent = null
+
+        // 21 seconds after defeat: previous code erroneously allowed Mine.
+        now[0] = 121_000L
+        system.onPlayerMove(session, 0, 0, 80, 0)
+        system.onPlayerMove(session, 80, 0, 160, 0)
+        system.onPlayerMove(session, 160, 0, 240, 0)
+        coVerify(exactly = 0) { router.triggerMine(any(), any()) }
+
+        now[0] = 128_000L
+        system.onPlayerMove(session, 240, 0, 320, 0)
+        system.onPlayerMove(session, 320, 0, 400, 0)
+        system.onPlayerMove(session, 400, 0, 440, 0)
+        coVerify(exactly = 1) { router.triggerMine(session, 1) }
+    }
+
 }

@@ -8,6 +8,8 @@ import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.PacketHandler
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
+import tw.tsm.domain.interfaces.repositories.ChildRepository
+import tw.tsm.gamelogic.systems.CharacterPersistenceGuard
 import tw.tsm.gamelogic.systems.MoneySystem
 import tw.tsm.gamelogic.systems.PetSystem
 import tw.tsm.protocol.PacketReader
@@ -30,6 +32,7 @@ class InnHandler(
     private val innResponseSender: InnResponseSender,
     private val characterRepository: CharacterRepository,
     private val dispatchSystem: tw.tsm.gamelogic.systems.DispatchSystem? = null,
+    private val childRepository: ChildRepository? = null,
 ) : PacketHandler {
     override val mainKind: Int = Opcodes.INN
 
@@ -59,15 +62,16 @@ class InnHandler(
         // Phí nghỉ trọ (tạm dùng giá trị cố định, thực tế nên tính từ cấp lữ quán)
         val cost = 100
 
-        // Khấu trừ tiền
-        val (gold, _) = moneySystem.getMoney(charId)
-        if (gold < cost) {
-            innResponseSender.sendInnRestResult(session, 1)  // Không đủ tiền
+        // Check-and-debit is ONE action, fenced against save/logout and
+        // staged cross-player trade settlement; addGold(-cost) always fails.
+        val paid = CharacterPersistenceGuard.withLock(charId) {
+            moneySystem.subtractGold(charId, cost)
+        }
+        if (!paid) {
+            innResponseSender.sendInnRestResult(session, 1)
             return
         }
-
-        moneySystem.addGold(charId, -cost)
-        responseSender.sendAddMoney(session, -cost)
+        responseSender.sendSubtractMoney(session, cost)
 
         // Hồi HP + SP toàn đội
         petSystem.restoreAllFollowHpSp(charId)
@@ -121,6 +125,9 @@ class InnHandler(
         val pet = petSystem.getFollowNpc(charId, followSlot)
         if (pet != null) {
             responseSender.sendFollowNpcFullData(session, listOf(pet))
+            DvtChildFollowerLiveSync.afterCarriedPetAppeared(
+                session, charId, pet, petSystem, childRepository,
+            )
         }
 
         logger.info { "${session.characterName} nhận tướng từ quán trọ: inn=$innSlot → follow=$followSlot" }
@@ -188,10 +195,15 @@ class InnHandler(
         val innPets = petSystem.getInnPets(charId)
         innResponseSender.sendInnNpcData(session, innPets, dispatchSystem?.queryDispatches(charId)?.map { it.innPetIndex }?.toSet().orEmpty())
 
+        // Remove old slot first so Lua Role.FollowNpcDisappear clears childNpc.
+        responseSender.sendFollowNpcRemove(session, session.playerId, followSlot, false)
         // Cập nhật phía theo người
         val pet = petSystem.getFollowNpc(charId, followSlot)
         if (pet != null) {
             responseSender.sendFollowNpcFullData(session, listOf(pet))
+            DvtChildFollowerLiveSync.afterCarriedPetAppeared(
+                session, charId, pet, petSystem, childRepository,
+            )
         }
 
         logger.info { "${session.characterName} trao đổi với quán trọ: inn=$innSlot ↔ follow=$followSlot" }
