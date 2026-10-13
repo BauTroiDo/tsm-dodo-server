@@ -10,13 +10,18 @@ def read(p): return (ROOT/p).read_text(encoding="utf8")
 class DvtTwoPlayerCacheStaged(unittest.TestCase):
  def test_commit_and_both_cache_publications_hold_two_char_locks(self):
   p=read("gamelogic/src/main/kotlin/tw/tsm/gamelogic/systems/TradeCacheSettlementCoordinator.kt")
-  self.assertIn("CharacterPersistenceGuard.withLocks(first.characterId, second.characterId)",p)
+  # Preserve original path constraints; new receipt method comes earlier.
+  original=p.split("    suspend fun stageCommit(",1)[1]
+  self.assertIn("CharacterPersistenceGuard.withLocks(first.characterId, second.characterId)",original)
   self.assertIn("withContext(NonCancellable)",p)
   self.assertIn("repository.commitTwoCharacterTradeAtomic(first, second)",p)
   self.assertIn("inventory.publishCommittedTradeBagSync(",p)
   self.assertIn("money.publishCommittedTradeGoldSync(",p)
-  self.assertLess(p.index("commitTwoCharacterTradeAtomic(first, second)"),p.index("publishCommittedTradeBagSync("))
-  self.assertLess(p.index("commitTwoCharacterTradeAtomic(first, second)"),p.index("publishCommittedTradeGoldSync("))
+  self.assertLess(original.index("commitTwoCharacterTradeAtomic(first, second)"),original.index("publishCommittedTradeBagSync("))
+  self.assertLess(original.index("commitTwoCharacterTradeAtomic(first, second)"),original.index("publishCommittedTradeGoldSync("))
+  receipt=p.split("    suspend fun stageCommitWithReceipt(",1)[1].split("    suspend fun stageCommit(",1)[0]
+  self.assertLess(receipt.index("commitTwoCharacterTradeWithReceiptAtomic("),receipt.index("publishCommittedTradeBagSync("))
+  self.assertLess(receipt.index("commitTwoCharacterTradeWithReceiptAtomic("),receipt.index("publishCommittedTradeGoldSync("))
  def test_unloaded_bag_and_unloaded_money_are_rejected_pre_sql(self):
   inv=read("gamelogic/src/main/kotlin/tw/tsm/gamelogic/systems/InventorySystem.kt")
   money=read("gamelogic/src/main/kotlin/tw/tsm/gamelogic/systems/MoneySystem.kt")

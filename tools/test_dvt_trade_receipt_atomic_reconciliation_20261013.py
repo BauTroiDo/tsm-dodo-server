@@ -85,7 +85,6 @@ class ReceiptReconciliationAudit(unittest.TestCase):
         for relative in (
             "app/src/main/kotlin/tw/tsm/app/handlers/TradeHandler.kt",
             "gamelogic/src/main/kotlin/tw/tsm/gamelogic/systems/TradeSystem.kt",
-            "gamelogic/src/main/kotlin/tw/tsm/gamelogic/systems/TradeCacheSettlementCoordinator.kt",
             "app/src/main/kotlin/tw/tsm/app/ServerModule.kt",
         ):
             s = (ROOT / relative).read_text("utf-8")

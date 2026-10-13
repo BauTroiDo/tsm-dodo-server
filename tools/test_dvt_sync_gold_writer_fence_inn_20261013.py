@@ -29,9 +29,17 @@ class DvtGoldWritersFence(unittest.TestCase):
   self.assertIn('high.release()',s)
  def test_cache_publication_holds_gold_fence_around_sql_and_ram(self):
   s=read('gamelogic/src/main/kotlin/tw/tsm/gamelogic/systems/TradeCacheSettlementCoordinator.kt')
-  self.assertIn('money.withTradeGoldMutationFence(first.characterId, second.characterId)',s)
-  self.assertLess(s.index('money.withTradeGoldMutationFence('),s.index('repository.commitTwoCharacterTradeAtomic('))
-  self.assertLess(s.index('repository.commitTwoCharacterTradeAtomic('),s.index('money.publishCommittedTradeGoldSync('))
+  # Check original unreceipted method separately; the new staged method
+  # must also retain both fences but has a different durable SQL call.
+  legacy=s.split('    suspend fun stageCommit(',1)[1]
+  self.assertIn('money.withTradeGoldMutationFence(first.characterId, second.characterId)',legacy)
+  self.assertLess(legacy.index('money.withTradeGoldMutationFence('),legacy.index('repository.commitTwoCharacterTradeAtomic('))
+  self.assertLess(legacy.index('repository.commitTwoCharacterTradeAtomic('),legacy.index('money.publishCommittedTradeGoldSync('))
+  received=s.split('    suspend fun stageCommitWithReceipt(',1)[1].split('    suspend fun stageCommit(',1)[0]
+  self.assertLess(received.index('money.withTradeGoldMutationFence('),
+                  received.index('repository.commitTwoCharacterTradeWithReceiptAtomic('))
+  self.assertLess(received.index('TradeReceiptCommit.COMMITTED_NOW'),
+                  received.index('money.publishCommittedTradeGoldSync('))
   self.assertNotIn('TradeCacheSettlementCoordinator(',read('app/src/main/kotlin/tw/tsm/app/ServerModule.kt'))
  def test_inn_rest_fee_deducts_one_positive_amount_and_denies_no_gold(self):
   s=read('app/src/main/kotlin/tw/tsm/app/handlers/InnHandler.kt')

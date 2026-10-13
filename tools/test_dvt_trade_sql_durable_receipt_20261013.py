@@ -62,7 +62,6 @@ class DvtTradeDurableReceiptAudit(unittest.TestCase):
             "app/src/main/kotlin/tw/tsm/app/handlers/TradeHandler.kt",
             "gamelogic/src/main/kotlin/tw/tsm/gamelogic/systems/TradeSystem.kt",
             "app/src/main/kotlin/tw/tsm/app/ServerModule.kt",
-            "gamelogic/src/main/kotlin/tw/tsm/gamelogic/systems/TradeCacheSettlementCoordinator.kt",
         ):
             src = (R / relative).read_text("utf-8")
             self.assertNotIn("commitTwoCharacterTradeWithReceiptAtomic", src)
