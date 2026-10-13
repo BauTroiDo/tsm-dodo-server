@@ -426,7 +426,7 @@ class BattleManager(
         logger.info { "Tạo trận $battleId: người chơi ${session.characterName} vs ${involvedNpcs.size} kẻ địch (sự kiện ${fightData.eveNo}) leftEnemies=${fightData.leftEnemies.size} rightEnemies=${fightData.rightEnemies.size}" }
 
         // Read-only DVT Eve6 battle roster for owner-vs-automanual flyout correlation.
-        if (session.mapId == 12861 && fightData.eveNo == 6) {
+        if (session.mapId == 12861 && fightData.eveNo == 28) {
             val owner = battle.getAllFighters().firstOrNull { it.roleId == session.playerId }
             val roster = battle.getAllFighters().filter { it.isPlayerSide }
                 .joinToString(";") { f ->
@@ -1447,6 +1447,36 @@ class BattleManager(
     }
 
     /**
+     * Native DVT exits the owner's battle UI when the real player flies out.
+     * Followers may still be alive; keeping the server fight open then delays
+     * Eve6's original loss dialogue until those followers also lose.
+     */
+    private suspend fun finishDvtBossOwnerFlyout(battle: BattleInstance): Boolean {
+        val (playerId, session) = battle.playerSessions.entries.singleOrNull() ?: return false
+        val owner = battle.getAllFighters().firstOrNull {
+            it.roleId == playerId && it.isPlayerSide &&
+                (it.kind == EHuman.PLAYER || it.kind == EHuman.PLAYERS)
+        }
+        if (!DvtBossOwnerExitPolicy.shouldEndAsDefeat(
+                mapId = session.mapId,
+                fightId = battle.eventNo,
+                warType = battle.warType,
+                playerSessionCount = battle.playerSessions.size,
+                ownerFlyOut = owner?.isFlyOut == true,
+                ownerAlive = owner?.isAlive == true,
+            )
+        ) return false
+
+        logger.info {
+            "DVT Eve6 real owner flyout ends Fight28: battle=${battle.battleId} " +
+                "charId=${session.roleId} ownerSlot=(${owner?.col},${owner?.row}) " +
+                "aliveAllies=${battle.grid.getAlivePlayerSide().count { it.roleId != playerId }}"
+        }
+        handleBattleEnd(battle, BattleEndResult(playerWin = false))
+        return true
+    }
+
+    /**
      * Coroutine vòng lặp hiệp đấu
      */
     private suspend fun runBattleLoop(battle: BattleInstance) {
@@ -1488,9 +1518,9 @@ class BattleManager(
                 // 5. Phát rộng kết quả hiệp
                 broadcastRoundResult(battle, roundResult)
 
-                // Observability only: after skill packets, correlate owner KO with
-                // still-alive AI allies. Do not alter the battle-end predicate.
-                if (battle.eventNo == 6) {
+                // After skill packets, correlate owner flyout with surviving allies.
+                // The event-specific owner-exit policy runs immediately below.
+                if (battle.eventNo == 28) {
                     for ((playerId, session) in battle.playerSessions) {
                         if (session.mapId != 12861) continue
                         val owner = battle.getAllFighters().firstOrNull { it.roleId == playerId }
@@ -1505,6 +1535,10 @@ class BattleManager(
                         }
                     }
                 }
+
+                // Native owner has already exited the fight after flyout: do not
+                // wait through another AI/follower command round before loss TALK.
+                if (finishDvtBossOwnerFlyout(battle)) break
 
                 // 5.5 Bỏ chạy thành công → kiểm tra liệu tất cả người chơi đã bỏ chạy chưa
                 if (roundResult.escapeResults.isNotEmpty()) {
@@ -1672,7 +1706,7 @@ class BattleManager(
                     responseSender.sendBattleFlyOut(session, col, row)
                 }
                 logger.info { "Trận ${battle.battleId}: nhân vật ($col,$row) bị đánh văng" }
-                if (battle.eventNo == 6 && battle.playerSessions.values.any { it.mapId == 12861 }) {
+                if (battle.eventNo == 28 && battle.playerSessions.values.any { it.mapId == 12861 }) {
                     val fighter = battle.getAllFighters().firstOrNull { it.col == col && it.row == row }
                     val realOwner = fighter != null && battle.playerSessions.containsKey(fighter.roleId)
                     logger.info {
