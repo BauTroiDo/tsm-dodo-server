@@ -2001,7 +2001,17 @@ class BattleManager(
 
         // S:011-001 drives per-fighter exit animation. The local player's own
         // fighter must be the last exit packet seen by that client.
-        delay(500)
+        // On the original map12861 boss defeat the client has already left
+        // combat on S011-000. Avoid ~1.6 seconds of unnecessary serial delay
+        // before the callback can send S020-008 and unlock conduct.
+        val exitPacing = DvtBattleDefeatRecoveryPolicy.exitPacing(
+            playerWin = endResult.playerWin,
+            mapId = battle.playerSessions.values.firstOrNull()?.mapId ?: 0,
+            warType = battle.warType,
+            opponentNpcIds = battle.involvedNpcDefs.map { it.first },
+        )
+        val exitStartedAt = System.currentTimeMillis()
+        delay(exitPacing.startupMs)
         val allExitFighters = battle.getAllFighters()
         for (session in battle.playerSessions.values) {
             val localPlayerId = session.playerId
@@ -2010,7 +2020,15 @@ class BattleManager(
             }
             for (fighter in exitOrder) {
                 responseSender.sendBattleExitFight(session, fighter.col, fighter.row)
-                delay(100)
+                delay(exitPacing.interFighterMs)
+            }
+        }
+        if (!endResult.playerWin) {
+            logger.info {
+                "Battle defeat exit pacing: battle=" + battle.battleId +
+                    " roster=" + allExitFighters.size + " gapMs=" + exitPacing.interFighterMs +
+                    " startupMs=" + exitPacing.startupMs +
+                    " elapsedMs=" + (System.currentTimeMillis() - exitStartedAt)
             }
         }
 
