@@ -64,8 +64,27 @@ interface InventoryRepository {
         second: TradeAccountSnapshot,
     ): Boolean = error("Atomic trade integration is not enabled")
 
+    /**
+     * STAGED ONLY: one permanent UUID per immutable two-character trade plan.
+     * ALREADY_COMMITTED means SQL completed earlier, NOT that RAM is fresh.
+     * Never republish stale caches on replay without DB reconciliation.
+     */
+    suspend fun commitTwoCharacterTradeWithReceiptAtomic(
+        operationId: String, first: TradeAccountSnapshot, second: TradeAccountSnapshot,
+    ): TradeReceiptCommit = error("Durable item trade is not enabled")
+
+    suspend fun findTwoCharacterTradeReceipt(
+        operationId: String, first: TradeAccountSnapshot, second: TradeAccountSnapshot,
+    ): TradeReceiptLookup = error("Durable item trade reconciliation is not enabled")
+
     suspend fun saveMoney(characterId: Long, gold: Int, auctionGold: Int)
 }
+
+/** Only COMMITTED_NOW allows the caller to publish both online caches. */
+enum class TradeReceiptCommit { COMMITTED_NOW, ALREADY_COMMITTED, REJECTED, TOKEN_CONFLICT }
+
+/** MATCHED proves the immutable plan committed atomically despite lost ACK. */
+enum class TradeReceiptLookup { NOT_FOUND, MATCHED, TOKEN_CONFLICT }
 
 
 /** Full BAG snapshot + paired money values, asserted against locked SQL rows. */
