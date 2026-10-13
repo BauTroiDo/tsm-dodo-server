@@ -99,6 +99,8 @@ jobs:
         run: python -m unittest discover -s tools -p test_dvt_trade_two_player_cache_publish_staged_20261013.py -v
       - name: Guard staged C025 single-settler SQL confirmation and post-commit ACK
         run: python -m unittest discover -s tools -p test_dvt_trade_item_finalization_gate_20261013.py -v
+      - name: Guard staged C025 dynamic full BAG and GOLD conservation planner
+        run: python -m unittest discover -s tools -p test_dvt_trade_item_full_bag_planner_20261013.py -v
       - name: Check all synchronous gold writer fencing and C031 Inn rest fee debit
         run: python -m unittest discover -s tools -p test_dvt_sync_gold_writer_fence_inn_20261013.py -v
       - name: Verify unique genuine A Dou 12444 stage1 ghost-house follower route
