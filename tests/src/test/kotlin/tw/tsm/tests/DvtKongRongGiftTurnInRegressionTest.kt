@@ -8,6 +8,8 @@ import tw.tsm.data.loaders.EveDataLoader
 import tw.tsm.domain.data.EveCondition
 import tw.tsm.gamelogic.systems.EveChainResolver
 import tw.tsm.gamelogic.systems.EveConditionEvaluator
+import tw.tsm.gamelogic.systems.EveConditionResolver
+import tw.tsm.gamelogic.systems.EveMissionPreflightPolicy
 import tw.tsm.gamelogic.systems.PlayerEventState
 
 /**
@@ -119,4 +121,59 @@ class DvtKongRongGiftTurnInRegressionTest {
         assertFalse(EveConditionEvaluator.evaluate(mission,
             PlayerEventState(missionSteps = mapOf(10074 to 2))))
     }
+    @Test
+    fun realEveResolverPicksGiftDeliveryInsteadOfGenericTalk() {
+        val state = PlayerEventState(
+            missionSteps = mapOf(10074 to 1),
+            bagItems = mapOf(30002 to 1),
+        )
+        val resolved = EveConditionResolver(scenes).resolveEvent(event, state, 11012)
+        assertNotNull(resolved)
+        assertEquals(16, resolved!!.matchedConditionNo)
+        assertEquals(9, resolved.results.size)
+        assertTrue(resolved.results.any {
+            it.resultClass == 1 && it.parameter == 30002 && it.resultValue == -1
+        })
+        assertTrue(resolved.results.any {
+            it.resultClass == 2 && it.parameter == 10074 && it.resultValue == 1
+        })
+        assertNull(EveMissionPreflightPolicy.validate(resolved.results, state.missionSteps))
+    }
+
+    @Test
+    fun afterDeliveryOriginalGiverCloses10074AndStartsVisible10075() {
+        val giver = scenes.getValue(11101).npcEvents.getValue(2)
+        val state = PlayerEventState(missionSteps = mapOf(10074 to 2))
+        val resolved = EveConditionResolver(scenes).resolveEvent(giver, state, 11101)
+        assertNotNull(resolved)
+        assertEquals(14, resolved!!.matchedConditionNo)
+        assertTrue(resolved.results.any {
+            it.resultClass == 1 && it.parameter == 22701 && it.resultValue == 1
+        })
+        assertTrue(resolved.results.any {
+            it.resultClass == 2 && it.parameter == 10075 &&
+                it.parameterStyle == 1 && it.resultValue == 1
+        })
+        assertTrue(resolved.results.any {
+            it.resultClass == 2 && it.parameter == 10074 && it.parameterStyle == 3
+        })
+        assertNull(EveMissionPreflightPolicy.validate(resolved.results, state.missionSteps))
+    }
+
+    @Test
+    fun returningBeforeDeliveryDoesNotPrematurelyCompleteVisibleAlias() {
+        val giver = scenes.getValue(11101).npcEvents.getValue(2)
+        val state = PlayerEventState(
+            missionSteps = mapOf(10074 to 1),
+            bagItems = mapOf(30002 to 1),
+        )
+        val resolved = EveConditionResolver(scenes).resolveEvent(giver, state, 11101)
+        assertNotNull(resolved)
+        assertNotEquals(14, resolved!!.matchedConditionNo)
+        assertFalse(resolved.results.any {
+            it.resultClass == 2 && it.parameter == 10075 &&
+                it.parameterStyle == 1 && it.resultValue > 0
+        })
+    }
+
 }

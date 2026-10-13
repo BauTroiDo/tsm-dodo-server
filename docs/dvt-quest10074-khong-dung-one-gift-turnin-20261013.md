@@ -20,3 +20,19 @@ Date: 2026-10-13. Source: DVT `gamedata/Eve.emg`, `IOS_MarkStep_C.dat`, `lua/Dat
 The DEV source `gamelogic/src/main/kotlin/tw/tsm/gamelogic/systems/EveConditionEvaluator.kt` is **already dirty with unrelated edits**, compared to git baseline. Pre-fix SHA256 recorded **B59417A95C85A16BD9398AB41D58F81ECBB5DD3FA82371880C9A3ED63C054475**. Preserve it exactly by copying one per-file backup under `C:\Server-Game\tsm_dodo\backups\` with timestamp and SHA. After both GitHub workflows PASS, apply only the unique four-line comparison switch to existing DEV file, compile/test carefully without checking out/resetting the dirty DEV worktree, then restart DEV service only after a successful build. Verify running port/process and matched UUID/mission data. If unable to compile or restart safely, leave the existing runtime and note deployment pending. **Do not change item inventory or quest step by GM/SQL**; the next genuine NPC interaction should consume item 30002 and move mission10074 to step2.
 
 The staged C025 SQL trade modules on PR #41 remain isolated/unwired. This fix is only Eve item-condition semantic parity.
+
+
+## DEV runtime rollout verified, 2026-10-13 16:44 +07
+
+- Old JVM PID12184 stopped. Existing DVT start-game launcher invoked in detached Windows process (Win32_Process.Create result=0).
+- Newly loaded JVM PID 6532 bound TCP port 6613. Startup logs show success loading DVT game data and NettyGameServer bound 0.0.0.0:6613 and waiting for clients. Repeated localhost probes returned connections.
+- DEV source SHA256 74267A0B4B5D480A2A69281DABDD67CB2D7307E4B9C74BDADFE7E46667559E0F; backed-up original SHA256 unchanged. DEV compile :gamelogic:compileKotlin 26s and :app:classes 17s both BUILD SUCCESSFUL with unrelated DEV hotfixes preserved.
+- No SQL or GM item/quest manipulation. Real click after restart is still necessary to demonstrate mission10074 step 1 to 2 and consumption of one item30002. Loaded server is NOT proof the quest was completed in the client.
+
+## Next-step regression gate for both mission stages
+
+Three new Kotlin tests use the real DVT EveConditionResolver and EveMissionPreflightPolicy with exact original Eve.emg:
+1. Item30002 x1 and mission10074 step1 resolve Khong Dung Eve8 condition16, nine results including exact one-item debit and one-step increment. Preflight accepts the chain.
+2. Returning to quest giver at mission10074 step2 resolves original scene11101/eve2 condition14, closes 10074, awards item22701 and starts visible mission10075 step1. Preflight accepts the chain.
+3. Premature return at mission10074 step1 does not start mission10075.
+No extra DEV deployment or character mutation is required for these tests.

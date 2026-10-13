@@ -60,5 +60,28 @@ class DvtKongRongDeliveryRegression(unittest.TestCase):
             self.assertIn(name, code)
 
 
+    def test_original_return_npc_closes_base_mission_then_starts_visible_alias(self):
+        giver = self.giver["events"][2]
+        step2 = next(c for c in giver["conditions"]
+                     if c["class"] == 2 and c["param"] == 10074
+                     and c["pstyle"] == 1 and c["val"] == 2)
+        self.assertEqual(step2["no"], 14)
+        results = step2["results"]
+        self.assertTrue(any(r["class"] == 2 and r["param"] == 10075
+                            and r["pstyle"] == 1 and r["val"] == 1
+                            for r in results))
+        self.assertTrue(any(r["class"] == 2 and r["param"] == 10074
+                            and r["pstyle"] == 3 for r in results))
+        self.assertTrue(any(r["class"] == 1 and r["param"] == 22701
+                            and r["val"] == 1 for r in results))
+        kt = KOTLIN_TEST.read_text("utf-8")
+        for name in (
+            "realEveResolverPicksGiftDeliveryInsteadOfGenericTalk",
+            "afterDeliveryOriginalGiverCloses10074AndStartsVisible10075",
+            "returningBeforeDeliveryDoesNotPrematurelyCompleteVisibleAlias",
+        ):
+            self.assertIn(name, kt)
+
+
 if __name__ == "__main__":
     unittest.main()
