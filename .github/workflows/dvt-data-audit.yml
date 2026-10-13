@@ -99,6 +99,8 @@ jobs:
         run: python -m unittest discover -s tools -p test_dvt_trade_two_player_cache_publish_staged_20261013.py -v
       - name: Guard staged C025 single-settler SQL confirmation and post-commit ACK
         run: python -m unittest discover -s tools -p test_dvt_trade_item_finalization_gate_20261013.py -v
+      - name: Guard DVT mission10074 Khong Dung one-gift delivery Eve result
+        run: python -m unittest discover -s tools -p test_dvt_khong_dung_gift_delivery_20261013.py -v
       - name: Guard staged C025 one-winner durable SQL and cache settlement orchestration
         run: python -m unittest discover -s tools -p test_dvt_trade_staged_durable_orchestrator_20261013.py -v
       - name: Guard C025 durable receipt atomic read and safe two-player cache reconciliation

@@ -150,6 +150,10 @@ object EveConditionEvaluator {
                     1 -> qty < cond.conditionValue
                     2 -> qty > cond.conditionValue
                     5 -> if (cond.conditionValue == 0) qty == 0 else qty >= cond.conditionValue
+                    // Eve item-quantity ops=4 is an inclusive threshold in
+                    // DVT mission10074 (one gift 30002, then turn-in 1).
+                    // DungeonCriteriaData ops=4 has different semantics.
+                    4 -> qty >= cond.conditionValue
                     6 -> qty != cond.conditionValue
                     else -> compareStep(qty, cond.conditionOps, cond.conditionValue)
                 }
