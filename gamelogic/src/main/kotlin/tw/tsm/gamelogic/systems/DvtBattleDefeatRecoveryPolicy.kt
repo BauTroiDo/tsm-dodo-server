@@ -1,0 +1,37 @@
+package tw.tsm.gamelogic.systems
+
+import tw.tsm.domain.data.EveResult
+
+/**
+ * Original DVT scene 12861/Eve6/Fight28 failed battle result contains only
+ * a talk (41353) and NPC hide commands (clickIds 9..13).
+ * When the client is no longer displaying a valid post-battle dialog,
+ * waiting indefinitely for a talk-advance C020-006 leaves player conduct locked.
+ *
+ * Deliberately require the complete original result shape: no rewards,
+ * mission mutation, or other Eve can enter this defeat recovery path.
+ */
+object DvtBattleDefeatRecoveryPolicy {
+    fun isCosmeticDefeat(
+        mapId: Int,
+        eveNo: Int,
+        fightDataKey: Int,
+        playerWin: Boolean,
+        results: List<EveResult>,
+    ): Boolean {
+        if (playerWin || mapId != 12861 || eveNo != 6 || fightDataKey != 28) return false
+        if (results.size != 6) return false
+        val first = results.first()
+        if (first.resultType != 1 || first.resultClass != 3 ||
+            first.parameter != 9 || first.resultMeanNo != 41353
+        ) return false
+        val hides = results.drop(1)
+        return hides.map { it.parameter } == listOf(9, 10, 11, 12, 13) &&
+            hides.all {
+                it.resultType == 0 &&
+                    it.resultClass == 3 &&
+                    it.parameterStyle == 3 &&
+                    it.resultValue == 2000
+            }
+    }
+}

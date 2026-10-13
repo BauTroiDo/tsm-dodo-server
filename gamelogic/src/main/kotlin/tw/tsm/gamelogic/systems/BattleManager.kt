@@ -2017,6 +2017,24 @@ class BattleManager(
         // Release battle ownership before a continuation can warp or start another fight.
         cleanupBattle(battle)
 
+        if (!endResult.playerWin) {
+            // Damage/round packets may have left the client at HP=0. The
+            // earlier >=1 HP update happened INSIDE battle, before its UI
+            // exited. Repeat the actual safe server value after S011 exits.
+            for (session in battle.playerSessions.values) {
+                val charId = session.roleId.toLong()
+                val hp = playerStateManager.getState(charId)?.hp?.coerceAtLeast(1L) ?: 1L
+                playerStateManager.setHp(charId, hp)
+                responseSender.sendSetAttribute(
+                    session, EAttribute.HP, hp.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(), true
+                )
+                logger.info {
+                    "Battle defeat post-exit HP resync: battle=" + battle.battleId +
+                        " charId=" + charId + " hp=" + hp
+                }
+            }
+        }
+
         if (battle.warStyle == EWarStyle.WEEK_DUNGEON && battle.dungeonId > 0) {
             val callback = onWeeklyDungeonBattleEndCallback
             if (callback != null) {

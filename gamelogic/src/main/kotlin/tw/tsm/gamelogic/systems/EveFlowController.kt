@@ -288,6 +288,32 @@ class EveFlowController(
             )
             val postBattleResults = resolved.results + doorContinuation
 
+            // Scene12861/Eve6/Fight28 defeat only: the client can no longer
+            // display the first TALK (41353) after leaving the battle UI.
+            // An absent C020-006 would keep SetConduct(false) forever.
+            // Deliver original cosmetic NPC hides, then send S020 event-end.
+            // Never complete the Eve or mutate rewards/quests on a defeat.
+            if (DvtBattleDefeatRecoveryPolicy.isCosmeticDefeat(
+                    eventSession.mapId, eventSession.eveNo, eventSession.fightDataKey,
+                    playerWin, postBattleResults
+                )
+            ) {
+                logger.warn {
+                    "Recovering post-defeat NPC talk lock: charId=" + charId +
+                        " scene=" + eventSession.mapId + " eve=" + eventSession.eveNo +
+                        " fight=" + eventSession.fightDataKey
+                }
+                try {
+                    for (hide in postBattleResults.drop(1)) {
+                        if (!resultExecutor.executeResultClass(session, hide)) break
+                        responseSender.sendCommonEvent(session, hide)
+                    }
+                } finally {
+                    cancelAndEnd(session, charId)
+                }
+                return
+            }
+
             stateMachine.replaceResultsAndResume(charId, postBattleResults, matchedConditionNo = resolved.matchedConditionNo)
             val first = stateMachine.advance(charId)
             if (first != null) {
