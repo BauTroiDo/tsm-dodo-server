@@ -44,3 +44,24 @@ The user reported the same freeze **after successful loading** of the initial po
 **Second, source-backed staged fix:** The exact scene12861/Eve6/Fight28 six-result cosmetic loss uses `cancelAndEnd(..., DEATH_STOP_NAV_END_KIND=45)`, leaving unrelated event endings at 0. The battle callback now passes `playerWin`; only this original quest defeat arms a full 27-second MineData grace, resetting distance budget while retaining any longer existing cooldown. No change to normal wins, unrelated Eves or item/reward grants. Added Kotlin source policy regression and Python audit validating original client Lua end-kind semantics, the full callback and grace.
 
 **Deployment status:** The authorized Windows Desktop Commander stopped responding during the follow-up; this staged GitHub commit requires Server CI and exact SHA verification, then selective DEV backup/build/JVM activation. **Not deployed or client-proven at this point.** Do not claim the live freeze has been resolved until tested on CaoYenDao. Never SQL/GM-edit HP, items, quests or other dirty DEV fixes to simulate success.
+
+
+## Actual second-fix DEV deployment — 2026-10-13 20:37 +07
+
+**Commit deployed:** `42547ab6547dcb88ea5c9fbeebd6fcd04fbd5ee8` (not this documentation-only checkpoint). GitHub Actions on that exact code SHA: **Server CI #38404457822 SUCCESS**, **DVT data audit #38404457869 SUCCESS**. Local Windows `python -m unittest discover -s tools -p test_dvt_*.py` exit 0 (40.58s), staged diff check PASS.
+
+Desktop Commander recovered; SSH `tsm-prod` connected to `C:\Server-Game\tsm_dodo`. Verified old game JVM **PID8204**, TCP **6613** prior to update. Saved SHA-256-verified individual copies of exactly four affected DEV Kotlin files in:
+
+`C:\Server-Game\tsm_dodo\backups\dvt_defeat_followup_42547ab_20261013_2030`
+
+The precise four-file Git diff from `c5740aa` to `42547ab` passed `git apply --check --ignore-space-change` against **dirty DEV** before applying; changes were selectively applied without reset, checkout, bulk pull, SQL, game inventory or mission mutation. Build `gradlew.bat :app:classes --offline --no-daemon --console plain` **BUILD SUCCESSFUL in 37s**. Kotlin warnings were non-blocking.
+
+**Patched DEV SHA256**:
+- `app/.../ServerModule.kt`: `155C5E3BA1E61F0DCB58E11B380D2360D535A9EDE0C0FA09C9ECEC3EED183CFE`
+- `gamelogic/.../DvtBattleDefeatRecoveryPolicy.kt`: `9411C8AF9E5F6359EC7270492155463F5FB9FA16F47BA4459BFB1E735B98A9A6`
+- `gamelogic/.../EveFlowController.kt`: `390EFB2A9FA49837F62C6B222F77C1E63C591C4C0D2AD28F11723578746A8544`
+- `gamelogic/.../MineEncounterSystem.kt`: `CD00227CA7688AE4060A73ADE09C97632C3216015309B8E02B024C1F17711FEA`
+
+Stopped old PID8204 after build; relaunched original DEV launcher with Win32_Process.Create return code 0. New **MainKt JVM PID12076** confirmed listening TCP **6613**, startup log `runtime-production-dvt-trade-dupguard-baf3c59.log` reports Netty server bound to `0.0.0.0:6613` at **20:37:31**. The previous Eve defeat remediation and unrelated hotfixes remain in place.
+
+**Remaining verification:** The user has not yet tested an actual new loss on this freshly started JVM. Confirm CaoYenDao relog, original map12861/Eve6/Fight28 defeat: S020-008 endKind45 closes event, `MarkManager.StopNavigation`, client death prompt, `DVT quest defeat MineData grace` log for charId31, no immediate random battle, movement after prompt, HP properly refreshed. A successful server build/start is NOT proof of client recovery. If still stuck, inspect client-side Lua/EventManager and FightManager fight-exit animation/message state, actual C006 move, and any other scene/MineData entry; do not assume resolved.
