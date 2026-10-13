@@ -2001,17 +2001,7 @@ class BattleManager(
 
         // S:011-001 drives per-fighter exit animation. The local player's own
         // fighter must be the last exit packet seen by that client.
-        // On the original map12861 boss defeat the client has already left
-        // combat on S011-000. Avoid ~1.6 seconds of unnecessary serial delay
-        // before the callback can send S020-008 and unlock conduct.
-        val exitPacing = DvtBattleDefeatRecoveryPolicy.exitPacing(
-            playerWin = endResult.playerWin,
-            mapId = battle.playerSessions.values.firstOrNull()?.mapId ?: 0,
-            warType = battle.warType,
-            opponentNpcIds = battle.involvedNpcDefs.map { it.first },
-        )
-        val exitStartedAt = System.currentTimeMillis()
-        delay(exitPacing.startupMs)
+        delay(500)
         val allExitFighters = battle.getAllFighters()
         for (session in battle.playerSessions.values) {
             val localPlayerId = session.playerId
@@ -2020,38 +2010,11 @@ class BattleManager(
             }
             for (fighter in exitOrder) {
                 responseSender.sendBattleExitFight(session, fighter.col, fighter.row)
-                delay(exitPacing.interFighterMs)
+                delay(100)
             }
         }
-        if (!endResult.playerWin) {
-            logger.info {
-                "Battle defeat exit pacing: battle=" + battle.battleId +
-                    " roster=" + allExitFighters.size + " gapMs=" + exitPacing.interFighterMs +
-                    " startupMs=" + exitPacing.startupMs +
-                    " elapsedMs=" + (System.currentTimeMillis() - exitStartedAt)
-            }
-        }
-
         // Release battle ownership before a continuation can warp or start another fight.
         cleanupBattle(battle)
-
-        if (!endResult.playerWin) {
-            // Damage/round packets may have left the client at HP=0. The
-            // earlier >=1 HP update happened INSIDE battle, before its UI
-            // exited. Repeat the actual safe server value after S011 exits.
-            for (session in battle.playerSessions.values) {
-                val charId = session.roleId.toLong()
-                val hp = playerStateManager.getState(charId)?.hp?.coerceAtLeast(1L) ?: 1L
-                playerStateManager.setHp(charId, hp)
-                responseSender.sendSetAttribute(
-                    session, EAttribute.HP, hp.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(), true
-                )
-                logger.info {
-                    "Battle defeat post-exit HP resync: battle=" + battle.battleId +
-                        " charId=" + charId + " hp=" + hp
-                }
-            }
-        }
 
         if (battle.warStyle == EWarStyle.WEEK_DUNGEON && battle.dungeonId > 0) {
             val callback = onWeeklyDungeonBattleEndCallback

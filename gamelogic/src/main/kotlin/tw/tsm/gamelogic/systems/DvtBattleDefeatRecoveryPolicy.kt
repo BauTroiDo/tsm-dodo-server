@@ -12,23 +12,6 @@ import tw.tsm.domain.data.EveResult
  * mission mutation, or other Eve can enter this defeat recovery path.
  */
 object DvtBattleDefeatRecoveryPolicy {
-    data class ExitPacing(val startupMs: Long, val interFighterMs: Long)
-
-    /** DVT scene12861 Hoang Phu Tung boss loss, and no other battle.
-     * FightManager.FightOver already exits client on S011-000; slow serialized
-     * S011-001 exits only delay S020-008 that releases event conduct.
-     */
-    fun exitPacing(
-        playerWin: Boolean, mapId: Int, warType: Int,
-        opponentNpcIds: Collection<Int>,
-    ): ExitPacing = if (!playerWin && mapId == 12861 &&
-        warType == tw.tsm.domain.constants.EWar.EVENT && 14671 in opponentNpcIds
-    ) {
-        ExitPacing(100L, 15L)
-    } else {
-        ExitPacing(500L, 100L)
-    }
-
     /** Original DVT client: S020-008 endKind 45 stops navigation and raises death UI. */
     const val DEATH_STOP_NAV_END_KIND = 45
     /** Native talk may await user input; 2min is a fail-safe, not scripted delay. */

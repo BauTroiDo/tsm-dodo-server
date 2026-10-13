@@ -115,20 +115,20 @@ class BattleDefeatRecoveryAudit(unittest.TestCase):
         self.assertIn("private fun cancelAndEnd(session: GameSession, charId: Long, endKind: Int = 0)", flow)
         self.assertIn("responseSender.sendEventEnd(session, endKind)", flow)
 
-    def test_hp_resync_is_after_exit_and_battle_cleanup(self):
+    def test_no_unconditional_post_exit_hp_overwrite_and_native_exit_order(self):
         s = BATTLE.read_text("utf-8")
-        a = s.index("// Release battle ownership before a continuation")
+        a = s.index("// S:011-001 drives per-fighter exit animation.")
         b = s.index("if (battle.warStyle == EWarStyle.WEEK_DUNGEON", a)
         chunk = s[a:b]
-        for marker in (
-            "cleanupBattle(battle)",
-            "if (!endResult.playerWin)",
-            "playerStateManager.getState(charId)?.hp?.coerceAtLeast(1L)",
-            "playerStateManager.setHp(charId, hp)",
-            "responseSender.sendSetAttribute(",
-        ):
-            self.assertIn(marker, chunk)
-        self.assertLess(chunk.index("cleanupBattle(battle)"), chunk.index("responseSender.sendSetAttribute("))
+        self.assertIn("delay(500)", chunk)
+        self.assertIn("delay(100)", chunk)
+        self.assertIn("val exitOrder = allExitFighters.sortedBy", chunk)
+        self.assertIn("responseSender.sendBattleExitFight(session, fighter.col, fighter.row)", chunk)
+        self.assertIn("cleanupBattle(battle)", chunk)
+        self.assertNotIn("exitPacing(", chunk)
+        self.assertNotIn("post-exit HP resync", chunk)
+        self.assertNotIn("playerStateManager.setHp(", chunk)
+        self.assertNotIn("responseSender.sendSetAttribute(", chunk)
 
     def test_kotlin_original_eve_regressions_are_registered(self):
         kt = KTEST.read_text("utf-8")

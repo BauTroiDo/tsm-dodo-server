@@ -99,8 +99,6 @@ jobs:
         run: python -m unittest discover -s tools -p test_dvt_trade_two_player_cache_publish_staged_20261013.py -v
       - name: Guard staged C025 single-settler SQL confirmation and post-commit ACK
         run: python -m unittest discover -s tools -p test_dvt_trade_item_finalization_gate_20261013.py -v
-      - name: Guard Hoang Phu Tung post-defeat exit pacing without changing other fights
-        run: python -m unittest discover -s tools -p test_dvt_battle_defeat_exit_pacing_20261013.py -v
       - name: Verify actual DVT UTF16 boss defeat talk 41353 in Talk_C.dat
         run: python -m unittest discover -s tools -p test_dvt_native_boss_talk_asset_20261014.py -v
       - name: Guard DVT scene12861 Fight28 defeat conduct recovery and post-exit HP sync
