@@ -108,6 +108,8 @@ class EveArchive:
             "scene_id": scene_id,
             "npcs": [],
             "doors": [],
+            "goods": [],
+            "surfaces": {},
             "scene_infos": {},
             "events": {},
             "raw_block": raw,
@@ -132,9 +134,19 @@ class EveArchive:
                         "id": nid, "npc_id": npcid, "events": evs, "x": px, "y": py, "close": close
                     })
 
-            # 2. GoodsData (13B each)
+            # 2. GoodsData (13B each), original Lua Data/Eve/Eve_GoodsData.lua
             goods_cnt = read_u16()
-            read_bytes(goods_cnt * 13)
+            for _ in range(goods_cnt):
+                good_no = read_u8()
+                good_id = read_u16()
+                good_x = read_i32()
+                good_y = read_i32()
+                good_hide_time = read_u16()
+                res["goods"].append({
+                    "no": good_no, "item_id": good_id,
+                    "x": good_x, "y": good_y,
+                    "hide_time": good_hide_time,
+                })
 
             # 3. DoorData
             door_cnt = read_u16()
@@ -158,12 +170,29 @@ class EveArchive:
                 mc = read_u16()
                 read_bytes(mc + 16 + 1)
 
-            # 5. SurfaceData
+            # 5. SurfaceData; original Lua Data/Eve/Eve_SurfaceData.lua
             surf_cnt = read_u16()
             for _ in range(surf_cnt):
-                read_bytes(4)
-                scnt = read_u8(); read_bytes(3)
-                read_bytes(scnt * 5)
+                surface_id = read_u16()
+                read_u16()  # reserved
+                scnt = read_u8()
+                option_index = read_u8()
+                option_count = read_u8()
+                option_mode = read_u8()
+                sentences = []
+                for _ in range(scnt):
+                    data_id = read_u16()
+                    data_kind = read_u8()
+                    style = read_u8()
+                    can_cut = read_u8() != 0
+                    sentences.append({
+                        "data_id": data_id, "data_kind": data_kind,
+                        "style": style, "can_cut": can_cut,
+                    })
+                res["surfaces"][surface_id] = {
+                    "option_index": option_index, "option_count": option_count,
+                    "option_mode": option_mode, "sentences": sentences,
+                }
 
             # 6. SceneInfoData (39B each) - Đích đến của Door Teleport
             sc_info_cnt = read_u16()
@@ -211,7 +240,7 @@ class EveArchive:
                     c_pstyle = read_u8()
                     c_ops = read_u8()
                     c_val = read_i32()
-                    read_bytes(8) # cTimeValue
+                    c_time_value = struct.unpack("<d", read_bytes(8))[0] # DVT ReadDouble()
                     to_res = read_u8()
                     and_num = read_u8()
                     sub_item = read_u16()
@@ -236,6 +265,7 @@ class EveArchive:
                         "no": c_no, "class": c_class, "param": c_param,
                         "pstyle": c_pstyle, "ops": c_ops, "val": c_val,
                         "to_result": to_res, "and_num": and_num,
+                        "time_value": c_time_value, "sub_item": sub_item,
                         "results": results
                     })
 

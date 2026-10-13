@@ -11,6 +11,7 @@ import tw.tsm.persistence.tables.CharacterAstrolabes
 import tw.tsm.persistence.tables.CharacterSouls
 import tw.tsm.persistence.tables.CharacterElfProfiles
 import tw.tsm.persistence.tables.CharacterElfProgress
+import tw.tsm.persistence.tables.CharacterChildStates
 import tw.tsm.persistence.tables.CharacterMallQuotas
 import tw.tsm.persistence.tables.CharacterHouseProfiles
 import tw.tsm.persistence.tables.CharacterGiftRecords
@@ -56,6 +57,7 @@ import tw.tsm.persistence.tables.CharacterTurn3Skills
 import tw.tsm.persistence.tables.FriendInvites
 import tw.tsm.persistence.tables.Friends
 import tw.tsm.persistence.tables.Inventories
+import tw.tsm.persistence.tables.TradeSettlementReceipts
 import tw.tsm.persistence.tables.MailAttachments
 import tw.tsm.persistence.tables.Mails
 import tw.tsm.persistence.tables.MessageBoardMessages
@@ -90,8 +92,8 @@ object DatabaseFactory {
         // Tự tạo bảng (kèm bổ sung các trường mới)
         transaction {
             SchemaUtils.createMissingTablesAndColumns(
-                Accounts, Characters, Inventories, CharacterMoney, CharacterCurrencies,
-                CharacterAstrolabes, CharacterSouls, CharacterElfProfiles, CharacterElfProgress, CharacterMallQuotas,
+                Accounts, Characters, Inventories, CharacterMoney, TradeSettlementReceipts, CharacterCurrencies,
+                CharacterAstrolabes, CharacterSouls, CharacterElfProfiles, CharacterElfProgress, CharacterChildStates, CharacterMallQuotas,
                 CharacterHouseProfiles, CharacterGiftRecords,
                 CharacterMissions, CharacterMissionFlags, CharacterCompletedEvents, CharacterEveEffectClaims, CharacterEveEffectSettlements, CharacterBitFlags,
                 CharacterDungeonDays, CharacterDungeonRuns, CharacterDungeonWeeks, CharacterRewardLedger, CharacterRewardPendingScopes, CharacterWelfareState,

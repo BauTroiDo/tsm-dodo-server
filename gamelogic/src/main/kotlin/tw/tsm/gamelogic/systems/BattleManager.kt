@@ -425,6 +425,20 @@ class BattleManager(
 
         logger.info { "Tạo trận $battleId: người chơi ${session.characterName} vs ${involvedNpcs.size} kẻ địch (sự kiện ${fightData.eveNo}) leftEnemies=${fightData.leftEnemies.size} rightEnemies=${fightData.rightEnemies.size}" }
 
+        // Read-only DVT Eve6 battle roster for owner-vs-automanual flyout correlation.
+        if (session.mapId == 12861 && fightData.eveNo == 6) {
+            val owner = battle.getAllFighters().firstOrNull { it.roleId == session.playerId }
+            val roster = battle.getAllFighters().filter { it.isPlayerSide }
+                .joinToString(";") { f ->
+                    "role=${f.roleId}:kind=${f.kind}:slot=(${f.col},${f.row}):owner=${f.roleId == session.playerId}"
+                }
+            logger.info {
+                "DVT Eve6 roster battle=$battleId charId=${session.roleId} " +
+                    "ownerWorldId=${session.playerId} ownerSlot=(${owner?.col},${owner?.row}) " +
+                    "alliedRoster=[$roster]"
+            }
+        }
+
         installCatchOwnerValidator(battle)
 
         // 4. Gửi gói tin khởi tạo chiến đấu
@@ -1474,6 +1488,24 @@ class BattleManager(
                 // 5. Phát rộng kết quả hiệp
                 broadcastRoundResult(battle, roundResult)
 
+                // Observability only: after skill packets, correlate owner KO with
+                // still-alive AI allies. Do not alter the battle-end predicate.
+                if (battle.eventNo == 6) {
+                    for ((playerId, session) in battle.playerSessions) {
+                        if (session.mapId != 12861) continue
+                        val owner = battle.getAllFighters().firstOrNull { it.roleId == playerId }
+                        val aliveParty = battle.grid.getAlivePlayerSide()
+                        logger.info {
+                            "DVT Eve6 round owner state: battle=${battle.battleId} " +
+                                "charId=${session.roleId} ownerSlot=(${owner?.col},${owner?.row}) " +
+                                "ownerHp=${owner?.hp} ownerDead=${owner?.isDead} " +
+                                "ownerFlyOut=${owner?.isFlyOut} ownerAlive=${owner?.isAlive} " +
+                                "aliveAllies=${aliveParty.count { it.roleId != playerId }} " +
+                                "aliveParty=${aliveParty.size}"
+                        }
+                    }
+                }
+
                 // 5.5 Bỏ chạy thành công → kiểm tra liệu tất cả người chơi đã bỏ chạy chưa
                 if (roundResult.escapeResults.isNotEmpty()) {
                     val escapedPlayerIds = roundResult.escapeResults
@@ -1640,6 +1672,15 @@ class BattleManager(
                     responseSender.sendBattleFlyOut(session, col, row)
                 }
                 logger.info { "Trận ${battle.battleId}: nhân vật ($col,$row) bị đánh văng" }
+                if (battle.eventNo == 6 && battle.playerSessions.values.any { it.mapId == 12861 }) {
+                    val fighter = battle.getAllFighters().firstOrNull { it.col == col && it.row == row }
+                    val realOwner = fighter != null && battle.playerSessions.containsKey(fighter.roleId)
+                    logger.info {
+                        "DVT Eve6 flyout identity: battle=${battle.battleId} " +
+                            "slot=($col,$row) roleId=${fighter?.roleId} kind=${fighter?.kind} " +
+                            "hp=${fighter?.hp} isRealOwner=$realOwner"
+                    }
+                }
             }
         }
 
@@ -2013,7 +2054,6 @@ class BattleManager(
                 delay(100)
             }
         }
-
         // Release battle ownership before a continuation can warp or start another fight.
         cleanupBattle(battle)
 

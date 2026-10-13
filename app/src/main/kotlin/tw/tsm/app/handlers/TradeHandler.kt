@@ -61,7 +61,7 @@ class TradeHandler(
      *
      * Định dạng: +money(4) <<+bagIndex(1)>>
      */
-    private fun handleUploadItems(session: GameSession, data: ByteArray) {
+    private suspend fun handleUploadItems(session: GameSession, data: ByteArray) {
         val reader = PacketReader(data)
         val money = reader.readIntLE()
         if (money < 0) return
@@ -80,7 +80,7 @@ class TradeHandler(
      *
      * Định dạng: +result(1) [1=xác nhận, 2=hủy]
      */
-    private fun handleConfirmTrade(session: GameSession, data: ByteArray) {
+    private suspend fun handleConfirmTrade(session: GameSession, data: ByteArray) {
         val reader = PacketReader(data)
         val result = reader.readUByte()
 

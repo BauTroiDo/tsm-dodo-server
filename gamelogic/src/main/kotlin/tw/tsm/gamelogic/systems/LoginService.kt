@@ -131,6 +131,10 @@ class LoginService(
         // cần MarkManager.flags đã được khởi tạo để có thể hiển thị đúng các nút chức năng
         questSystem.refreshDungeonDaily(record.id)
         questSystem.refreshDungeonWeekly(record.id)
+        // Prior DVT builds could persist an activated marker step without its
+        // one-shot bit. Restore only source-proven markers before S024-007
+        // and before PlayerAppear initializes the function icons.
+        questSystem.reconcileStoredMarkerMissionFlags(record.id)
         val missions = questSystem.getMissions(record.id)
         val flags    = questSystem.getFlags(record.id)
         responseSender.sendInitMissionSteps(session, missions)

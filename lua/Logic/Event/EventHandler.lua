@@ -165,7 +165,7 @@ EventHandler[1] = function(eventInfo, eventManager, surfaceDatas)
   elseif eventInfo.resultClass == 7 then
     --玩家
     showRole = Role.player;
-  elseif resultClass == 12 then
+  elseif eventInfo.resultClass == 12 then
     --二代武將
     showRole = Role.childNpc;
   end    

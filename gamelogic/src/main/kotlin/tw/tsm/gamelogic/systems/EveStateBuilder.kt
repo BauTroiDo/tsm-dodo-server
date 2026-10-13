@@ -132,7 +132,7 @@ class EveStateBuilder(
         val moral = playerStateManager.getMoral(charId)
         val killNum = playerStateManager.getKillNum(charId)
         val runtimeState = playerStateManager.getState(charId)
-        val activityOpen = resolveActivityOpen(mapId)
+        val eveNowOaDate = resolveEventNowOaDate()
         val leaderId = partySystem?.getLeaderId(charId) ?: 0L
         val teamMembers = if (leaderId == 0L) {
             listOf(charId)
@@ -167,7 +167,7 @@ class EveStateBuilder(
             storyFaction = DEFAULT_STORY_FACTION,
             moral = moral,
             killNum = killNum,
-            activityOpen = activityOpen,
+            eveNowOaDate = eveNowOaDate,
             teamSize = teamSize,
             teamState = teamState,
             romancePairValid = romancePairValid,
@@ -245,16 +245,16 @@ class EveStateBuilder(
     }
 
     /**
-     * class14 = trạng thái mở hoạt động của scene.
-     *
-     * DVT client data không có liên kết tĩnh scene -> ActivityTime trong SceneSet.
-     * SceneSet.limit1 là cờ hạn chế thao tác của map, KHÔNG phải activityId.
-     *
-     * Với server offline, policy mặc định là mở nội dung activity để tránh hard-block
-     * vĩnh viễn các cửa/NPC/Mine chỉ vì thiếu scheduler server gốc. Khi sau này tìm được
-     * nguồn schedule authoritative, chỉ cần thay implementation này.
+     * The original DVT event uses local server time, encoded as OLE Automation days
+     * since 1899-12-30. Preserve the calendar date and fractional day.
      */
-    private fun resolveActivityOpen(mapId: Int): Boolean = true
+    private fun resolveEventNowOaDate(): Double {
+        val origin = LocalDateTime.of(1899, 12, 30, 0, 0)
+        val now = LocalDateTime.now()
+        return java.time.Duration.between(origin, now).toNanos().toDouble() /
+            86_400_000_000_000.0
+    }
+
     private fun calculateNpcSecondReincarnationStatus(
         charId: Long,
         followPets: Collection<FollowNpcData>

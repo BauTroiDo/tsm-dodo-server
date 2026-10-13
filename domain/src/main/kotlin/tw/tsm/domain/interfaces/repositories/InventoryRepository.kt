@@ -55,5 +55,69 @@ interface InventoryRepository {
     /**
      * Lưu tiền của nhân vật
      */
+    /**
+     * Source-only two-character BAG/gold settlement. Deliberately NOT used by
+     * TradeSystem yet: both online caches must be published after SQL commit.
+     */
+    suspend fun commitTwoCharacterTradeAtomic(
+        first: TradeAccountSnapshot,
+        second: TradeAccountSnapshot,
+    ): Boolean = error("Atomic trade integration is not enabled")
+
+    /**
+     * STAGED ONLY: one permanent UUID per immutable two-character trade plan.
+     * ALREADY_COMMITTED means SQL completed earlier, NOT that RAM is fresh.
+     * Never republish stale caches on replay without DB reconciliation.
+     */
+    suspend fun commitTwoCharacterTradeWithReceiptAtomic(
+        operationId: String, first: TradeAccountSnapshot, second: TradeAccountSnapshot,
+    ): TradeReceiptCommit = error("Durable item trade is not enabled")
+
+    suspend fun findTwoCharacterTradeReceipt(
+        operationId: String, first: TradeAccountSnapshot, second: TradeAccountSnapshot,
+    ): TradeReceiptLookup = error("Durable item trade reconciliation is not enabled")
+
+    /**
+     * STAGED ONLY. Inspect one permanent receipt plus both authoritative
+     * BAG/gold records under one SQL transaction. No writes, no retry.
+     */
+    suspend fun inspectTwoCharacterTradeReceiptAtomic(
+        operationId: String,
+        first: TradeAccountSnapshot,
+        second: TradeAccountSnapshot,
+    ): TradeReceiptInspection =
+        error("Atomic C025 receipt reconciliation is not enabled")
+
     suspend fun saveMoney(characterId: Long, gold: Int, auctionGold: Int)
 }
+
+data class TradeObservedAccount(
+    val characterId: Long,
+    val bag: Map<Int, ThingData>,
+    val gold: Int,
+    val auctionGold: Int,
+)
+
+/** Receipt and authoritative player state read together within one SQL tx. */
+data class TradeReceiptInspection(
+    val receipt: TradeReceiptLookup,
+    val first: TradeObservedAccount? = null,
+    val second: TradeObservedAccount? = null,
+)
+
+/** Only COMMITTED_NOW allows the caller to publish both online caches. */
+enum class TradeReceiptCommit { COMMITTED_NOW, ALREADY_COMMITTED, REJECTED, TOKEN_CONFLICT }
+
+/** MATCHED proves the immutable plan committed atomically despite lost ACK. */
+enum class TradeReceiptLookup { NOT_FOUND, MATCHED, TOKEN_CONFLICT }
+
+
+/** Full BAG snapshot + paired money values, asserted against locked SQL rows. */
+data class TradeAccountSnapshot(
+    val characterId: Long,
+    val beforeBag: Map<Int, ThingData>,
+    val afterBag: Map<Int, ThingData>,
+    val beforeGold: Int,
+    val afterGold: Int,
+    val auctionGold: Int,
+)

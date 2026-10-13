@@ -6,6 +6,7 @@ import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.PacketHandler
 import tw.tsm.domain.interfaces.ResponseSender
+import tw.tsm.domain.interfaces.repositories.ChildRepository
 import tw.tsm.gamelogic.systems.PetSystem
 import tw.tsm.gamelogic.systems.PlayerStateManager
 import tw.tsm.protocol.PacketReader
@@ -21,7 +22,8 @@ private val logger = KotlinLogging.logger {}
 class FollowNpcHandler(
     private val petSystem: PetSystem,
     private val responseSender: ResponseSender,
-    private val playerStates: PlayerStateManager
+    private val playerStates: PlayerStateManager,
+    private val childRepository: ChildRepository? = null,
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.FOLLOW_NPC
@@ -112,7 +114,7 @@ class FollowNpcHandler(
      *
      * Äá»‹nh dáº¡ng: +chá»‰ sá»‘(1)
      */
-    private fun handleRetrieveFromCart(session: GameSession, characterId: Long, data: ByteArray) {
+    private suspend fun handleRetrieveFromCart(session: GameSession, characterId: Long, data: ByteArray) {
         val reader = PacketReader(data)
         val cartSlot = reader.readUByte()
 
@@ -137,6 +139,9 @@ class FollowNpcHandler(
             // S15:1 initializes level/skills to defaults in Role.FollowNpcAppear.
             // S15:8 restores the actual saved data, including equipment and points.
             responseSender.sendFollowNpcFullData(session, listOf(newPet))
+            DvtChildFollowerLiveSync.afterCarriedPetAppeared(
+                session, characterId, newPet, petSystem, childRepository,
+            )
         }
     }
 
@@ -145,7 +150,7 @@ class FollowNpcHandler(
      *
      * Äá»‹nh dáº¡ng: +chá»‰ sá»‘ theo sau(1) +chá»‰ sá»‘ xe ngá»±a(1)
      */
-    private fun handleSwap(session: GameSession, characterId: Long, data: ByteArray) {
+    private suspend fun handleSwap(session: GameSession, characterId: Long, data: ByteArray) {
         val reader = PacketReader(data)
         val followSlot = reader.readUByte()
         val cartSlot = reader.readUByte()
@@ -159,7 +164,11 @@ class FollowNpcHandler(
         val followPets = petSystem.getFollowPets(characterId)
         // Remove the replaced role first so transient state cannot survive the swap.
         responseSender.sendFollowNpcRemove(session, session.playerId, followSlot, showMsg = false)
-        responseSender.sendFollowNpcFullData(session, listOfNotNull(followPets[followSlot]))
+        val returned = followPets[followSlot]
+        responseSender.sendFollowNpcFullData(session, listOfNotNull(returned))
+        DvtChildFollowerLiveSync.afterCarriedPetAppeared(
+            session, characterId, returned, petSystem, childRepository,
+        )
         val cartPets = petSystem.getCartPets(characterId)
         responseSender.sendCartData(session, cartPets.values.toList())
     }

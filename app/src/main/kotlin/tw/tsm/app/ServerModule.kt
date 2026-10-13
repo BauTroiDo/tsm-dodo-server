@@ -21,6 +21,7 @@ import tw.tsm.domain.interfaces.repositories.AccountRepository
 import tw.tsm.domain.interfaces.repositories.AstrolabeRepository
 import tw.tsm.domain.interfaces.repositories.SoulRepository
 import tw.tsm.domain.interfaces.repositories.ElfRepository
+import tw.tsm.domain.interfaces.repositories.ChildRepository
 import tw.tsm.domain.interfaces.repositories.MallQuotaRepository
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
 import tw.tsm.domain.interfaces.repositories.InventoryRepository
@@ -35,6 +36,7 @@ import tw.tsm.persistence.repositories.AccountRepositoryImpl
 import tw.tsm.persistence.repositories.AstrolabeRepositoryImpl
 import tw.tsm.persistence.repositories.SoulRepositoryImpl
 import tw.tsm.persistence.repositories.ElfRepositoryImpl
+import tw.tsm.persistence.repositories.ChildRepositoryImpl
 import tw.tsm.persistence.repositories.MallQuotaRepositoryImpl
 import tw.tsm.persistence.repositories.CharacterRepositoryImpl
 import tw.tsm.persistence.repositories.InventoryRepositoryImpl
@@ -163,6 +165,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             register(get<ExpSlotHandler>())
             register(get<PokeHandler>())
             register(get<MiningHandler>())
+            register(get<TreasureHandler>())
         }
     }
     single {
@@ -278,6 +281,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single<AstrolabeRepository> { AstrolabeRepositoryImpl() }
     single<SoulRepository> { SoulRepositoryImpl() }
     single<ElfRepository> { ElfRepositoryImpl() }
+    single<ChildRepository> { ChildRepositoryImpl() }
     single<MallQuotaRepository> { MallQuotaRepositoryImpl() }
     single<CharacterRepository> { CharacterRepositoryImpl() }
     single<InventoryRepository> { InventoryRepositoryImpl() }
@@ -388,6 +392,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             dailyDungeonMissionIds = normalDungeonDefs.map { it.dailyFlag }.filter { it > 0 }.toSet(),
             weeklyDungeonMissionIds = weeklyDungeonDefs.map { it.dailyFlag }.filter { it > 0 }.toSet(),
             weeklyClaimMissionIds = weeklyDungeonDefs.map { it.costPoint }.filter { it > 0 }.toSet(),
+            markStepMissionIds = data.markStepMissionIds,
         )
     }
     single { BitFlagSystem(get(), get<GameDataManager>().guideLastBitFlagId) }
@@ -603,7 +608,11 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
                 catch (_: Exception) { /* DB result is already persistent; map reload will resync. */ }
                 // Mine cooldown phải bắt đầu từ lúc trận gặp ngẫu nhiên kết thúc,
                 // trước khi EveFlowController có thể complete/remove EventSession.
-                get<MineEncounterSystem>().onBattleEnd(playerId)
+                // BattleManager's playerId is world roleId (13), not the DB
+                // characterId (31). EveEventStateMachine/MineWalkState are
+                // keyed by characterId: passing 13 silently skipped the
+                // exact DVT boss-defeat 27s cooldown.
+                get<MineEncounterSystem>().onBattleEnd(session.roleId.toLong(), playerWin)
                 get<EveFlowController>().resumeAfterBattle(session, playerId, playerWin)
                 get<DungeonSystem>().settleAfterBattle(session, playerWin)?.let { settlement ->
                     get<DungeonHandler>().sendDungeonResult(session, settlement)
@@ -714,7 +723,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { KeepaliveHandler() }
     single { LoginHandler(get(), get(), get(), get(), get()) }
     single { CreateCharHandler(get(), get()) }
-    single { SelectCharHandler(get(), get(), get<PokeSystem>()) }
+    single { SelectCharHandler(get(), get(), get<PokeSystem>(), get<ChildRepository>(), get<PetSystem>()) }
     single { DisconnectHandler(get(), get(), get(), get(), get<PlayerCurrencySystem>(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get<PvpBotMatchmakingSystem>()) }
     single { MoveHandler(get(), get(), get(), get<MineEncounterSystem>()) }
     single { ChatHandler(get(), get(), get()) }
@@ -731,7 +740,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { PlayerStatusHandler(get(), get(), get(), get(), get<GameDataManager>().titleDefs) }
     single { SkillUpgradeHandler(get(), get(), get(), get(), get<DailyProgressSystem>(), get<PetSystem>()) }
     single { PartyHandler(get(), get(), get(), get<DailyProgressSystem>(), get<DungeonSystem>(), get<DungeonRoomRegistry>(), get<WorldSimBotSystem>()) }
-    single { FollowNpcHandler(get(), get(), get()) }
+    single { FollowNpcHandler(get(), get(), get(), get<ChildRepository>()) }
     single { FollowNpcDeployHandler(get(), get(), get<CharacterRepository>(), get<DailyProgressSystem>()) }
     single { PkSettingHandler(get()) }
     single { StatHandler(get(), get(), get(), get<StatSystem>(), get(), get<SkillRepository>(), get<DailyProgressSystem>()) }
@@ -745,12 +754,12 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { MountHandler(get(), get(), get()) }
     single { HotkeyHandler(get(), get()) }
     single { InnResponseSender() }
-    single { InnHandler(get(), get(), get(), get(), get(), get()) }
-    single { WarriorRepositoryHandler(get(), get(), get()) }
+    single { InnHandler(get(), get(), get(), get(), get(), get(), get<ChildRepository>()) }
+    single { WarriorRepositoryHandler(get(), get(), get(), get<ChildRepository>()) }
     single { MacroBoxHandler(get(), get(), get(), get()) }
     single {
         TeleportHandler(
-            get(), get(), get(), get(), get(),
+            get(), get(), get(), get<QuestSystem>(), get(),
             get<GameDataManager>().warpDefs,
             get<GameDataManager>().markDefs,
             get<AdminBypassPolicy>()
@@ -843,6 +852,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
         get<GameDataManager>().activityTimeDefs, get<GameDataManager>().eveData, get<BattlePassSystem>(),
         get<RoleCountSystem>(), get<InventorySystem>(), get<ResponseSender>()) }
     single { ActivityModelHandler() }
+    single { TreasureHandler(get<QuestSystem>()) }
     single { MallHandler(get(), get(), get<PointSystem>(), get<MoneySystem>(), get<PlayerCurrencySystem>(), get<ResponseSender>(), get<GameDataManager>().goodsSaleDefs, get<MallQuotaSystem>()) }
     single { SlotMachineHandler(get<SlotMachineSystem>(), get<ResponseSender>()) }
     single { PokeHandler(get<PokeSystem>(), get<ResponseSender>()) }
