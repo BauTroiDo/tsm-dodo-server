@@ -77,8 +77,33 @@ interface InventoryRepository {
         operationId: String, first: TradeAccountSnapshot, second: TradeAccountSnapshot,
     ): TradeReceiptLookup = error("Durable item trade reconciliation is not enabled")
 
+    /**
+     * STAGED ONLY. Inspect one permanent receipt plus both authoritative
+     * BAG/gold records under one SQL transaction. No writes, no retry.
+     */
+    suspend fun inspectTwoCharacterTradeReceiptAtomic(
+        operationId: String,
+        first: TradeAccountSnapshot,
+        second: TradeAccountSnapshot,
+    ): TradeReceiptInspection =
+        error("Atomic C025 receipt reconciliation is not enabled")
+
     suspend fun saveMoney(characterId: Long, gold: Int, auctionGold: Int)
 }
+
+data class TradeObservedAccount(
+    val characterId: Long,
+    val bag: Map<Int, ThingData>,
+    val gold: Int,
+    val auctionGold: Int,
+)
+
+/** Receipt and authoritative player state read together within one SQL tx. */
+data class TradeReceiptInspection(
+    val receipt: TradeReceiptLookup,
+    val first: TradeObservedAccount? = null,
+    val second: TradeObservedAccount? = null,
+)
 
 /** Only COMMITTED_NOW allows the caller to publish both online caches. */
 enum class TradeReceiptCommit { COMMITTED_NOW, ALREADY_COMMITTED, REJECTED, TOKEN_CONFLICT }

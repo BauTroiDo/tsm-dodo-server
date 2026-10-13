@@ -211,6 +211,68 @@ class DvtTradeDurableReceiptSqlTest {
     }
 
     @Test
+    fun atomicInspectionReadsMatchedReceiptAndBothRealDatabaseAfterStates() = runBlocking {
+        val id = UUID.randomUUID().toString()
+        val (first, second) = plans()
+        val none = repo.inspectTwoCharacterTradeReceiptAtomic(id, first, second)
+        assertEquals(TradeReceiptLookup.NOT_FOUND, none.receipt)
+        assertNull(none.first)
+        assertNull(none.second)
+
+        assertEquals(TradeReceiptCommit.COMMITTED_NOW,
+            repo.commitTwoCharacterTradeWithReceiptAtomic(id, first, second))
+        val observed = repo.inspectTwoCharacterTradeReceiptAtomic(id, first, second)
+        assertEquals(TradeReceiptLookup.MATCHED, observed.receipt)
+        assertEquals(first.afterBag, observed.first?.bag)
+        assertEquals(second.afterBag, observed.second?.bag)
+        assertEquals(1200, observed.first?.gold)
+        assertEquals(1800, observed.second?.gold)
+        assertEquals(first.auctionGold, observed.first?.auctionGold)
+        assertEquals(second.auctionGold, observed.second?.auctionGold)
+        val reversed = repo.inspectTwoCharacterTradeReceiptAtomic(id, second, first)
+        assertEquals(second.characterId, reversed.first?.characterId)
+        assertEquals(first.characterId, reversed.second?.characterId)
+        assertEquals(TradeReceiptLookup.MATCHED, reversed.receipt)
+    }
+
+    @Test
+    fun atomicInspectionDetectsLaterRealSqlWritesInsteadOfAssumingHistoricalAfter() = runBlocking {
+        val id = UUID.randomUUID().toString()
+        val (first, second) = plans()
+        assertEquals(TradeReceiptCommit.COMMITTED_NOW,
+            repo.commitTwoCharacterTradeWithReceiptAtomic(id, first, second))
+        transaction(db) {
+            exec("UPDATE character_money SET gold = 1250 WHERE character_id = $a")
+        }
+        val observed = repo.inspectTwoCharacterTradeReceiptAtomic(id, first, second)
+        assertEquals(TradeReceiptLookup.MATCHED, observed.receipt)
+        assertEquals(1250, observed.first?.gold)
+        assertEquals(1800, observed.second?.gold)
+        assertNotEquals(first.afterGold, observed.first?.gold)
+        assertEquals(1, receipts())
+    }
+
+    @Test
+    fun atomicInspectionForForgedPlanAndInvalidUuidReturnsNoAccountSnapshots() = runBlocking {
+        val id = UUID.randomUUID().toString()
+        val (first, second) = plans()
+        assertEquals(TradeReceiptCommit.COMMITTED_NOW,
+            repo.commitTwoCharacterTradeWithReceiptAtomic(id, first, second))
+        val mismatch = repo.inspectTwoCharacterTradeReceiptAtomic(
+            id, first.copy(afterGold = 1201), second
+        )
+        assertEquals(TradeReceiptLookup.TOKEN_CONFLICT, mismatch.receipt)
+        assertNull(mismatch.first)
+        assertNull(mismatch.second)
+        val malformed = repo.inspectTwoCharacterTradeReceiptAtomic("invalid", first, second)
+        assertEquals(TradeReceiptLookup.TOKEN_CONFLICT, malformed.receipt)
+        assertNull(malformed.first)
+        assertNull(malformed.second)
+        assertEquals(1200, gold(a))
+        assertEquals(1800, gold(b))
+    }
+
+    @Test
     fun originalUnreceiptedApiRetainsExactPreviousBehavior() = runBlocking {
         val (first, second) = plans()
         assertTrue(repo.commitTwoCharacterTradeAtomic(first, second))

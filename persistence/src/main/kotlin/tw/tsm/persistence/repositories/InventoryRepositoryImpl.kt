@@ -14,6 +14,8 @@ import tw.tsm.domain.constants.ItemConstants
 import tw.tsm.domain.interfaces.repositories.TradeAccountSnapshot
 import tw.tsm.domain.interfaces.repositories.TradeReceiptCommit
 import tw.tsm.domain.interfaces.repositories.TradeReceiptLookup
+import tw.tsm.domain.interfaces.repositories.TradeObservedAccount
+import tw.tsm.domain.interfaces.repositories.TradeReceiptInspection
 import tw.tsm.domain.interfaces.repositories.InventoryRepository
 import tw.tsm.domain.valueobjects.MythAttribute
 import tw.tsm.domain.valueobjects.ThingData
@@ -205,6 +207,68 @@ class InventoryRepositoryImpl : InventoryRepository {
                 row[TradeSettlementReceipts.secondCharacterId] == maxOf(first.characterId, second.characterId) &&
                 row[TradeSettlementReceipts.snapshotDigest] == digest
             ) TradeReceiptLookup.MATCHED else TradeReceiptLookup.TOKEN_CONFLICT
+        }
+    }
+
+    /**
+     * STAGED ONLY: read the receipt + both accounts under one SQL transaction.
+     * Acquire gold row locks in canonical character order, the SAME lock order
+     * used by durable C025 settlement. A second same-pair SQL trade cannot
+     * commit halfway through this observation.
+     *
+     * Do not return just a matched receipt and then separately load balances:
+     * another committed transfer could alter the two players between reads.
+     */
+    override suspend fun inspectTwoCharacterTradeReceiptAtomic(
+        operationId: String,
+        first: TradeAccountSnapshot,
+        second: TradeAccountSnapshot,
+    ): TradeReceiptInspection {
+        if (!validOperationId(operationId) ||
+            first.characterId <= 0 || second.characterId <= 0 ||
+            first.characterId == second.characterId
+        ) return TradeReceiptInspection(TradeReceiptLookup.TOKEN_CONFLICT)
+
+        val ordered = listOf(first, second).sortedBy { it.characterId }
+        val digest = TradeSnapshotDigest.of(first, second)
+
+        return suspendTransaction {
+            val lockedMoney = ordered.map { side ->
+                CharacterMoney.selectAll()
+                    .where { CharacterMoney.characterId eq side.characterId }
+                    .forUpdate().singleOrNull()
+            }
+            val receipt = TradeSettlementReceipts.selectAll()
+                .where { TradeSettlementReceipts.operationId eq operationId }
+                .forUpdate().singleOrNull()
+            if (receipt == null) {
+                return@suspendTransaction TradeReceiptInspection(TradeReceiptLookup.NOT_FOUND)
+            }
+            if (receipt[TradeSettlementReceipts.firstCharacterId] != ordered[0].characterId ||
+                receipt[TradeSettlementReceipts.secondCharacterId] != ordered[1].characterId ||
+                receipt[TradeSettlementReceipts.snapshotDigest] != digest
+            ) return@suspendTransaction TradeReceiptInspection(TradeReceiptLookup.TOKEN_CONFLICT)
+
+            val byId = ordered.mapIndexed { index, side ->
+                val row = lockedMoney[index]
+                    ?: return@suspendTransaction TradeReceiptInspection(TradeReceiptLookup.MATCHED)
+                val bag = Inventories.selectAll().where {
+                    (Inventories.characterId eq side.characterId) and
+                        (Inventories.storageType eq EThings.BAG)
+                }.forUpdate().associate { item ->
+                    item[Inventories.slot] to item.toThingData()
+                }
+                TradeObservedAccount(
+                    side.characterId, bag,
+                    row[CharacterMoney.gold],
+                    row[CharacterMoney.auctionGold],
+                )
+            }.associateBy { it.characterId }
+            TradeReceiptInspection(
+                TradeReceiptLookup.MATCHED,
+                first = byId[first.characterId],
+                second = byId[second.characterId],
+            )
         }
     }
 
