@@ -87,6 +87,15 @@ class ItemUseProcessor(
             return ItemUseResult(success = false, consumed = false)
         }
 
+        // DVT kind 89 is a Gia Vien furnishing entitlement, not a consumable
+        // attribute item. Its source-backed quantity is checked by C106-006.
+        // Generic direct-use must never destroy it, including forged pet-use
+        // packets. Kind-38 gift boxes (ability 48) remain redeemable normally.
+        if (def.kind == 89) {
+            logger.info { "Gia Vien furniture use blocked: itemId=$itemId characterId=$characterId" }
+            return ItemUseResult(success = false, consumed = false)
+        }
+
         val state = playerStateManager.getState(characterId) ?: run {
             logger.warn { "Sử dụng vật phẩm thất bại: Không tìm thấy trạng thái runtime của nhân vật $characterId" }
             return ItemUseResult(success = false, consumed = false)
