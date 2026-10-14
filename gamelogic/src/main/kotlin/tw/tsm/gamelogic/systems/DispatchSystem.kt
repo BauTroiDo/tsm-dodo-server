@@ -14,6 +14,7 @@ import tw.tsm.domain.data.DispatchDailyUsage
 import tw.tsm.domain.data.DispatchDef
 import tw.tsm.domain.data.DispatchSaveData
 import tw.tsm.domain.data.LuckyBagDef
+import tw.tsm.domain.data.NpcDef
 import tw.tsm.domain.interfaces.repositories.DispatchRepository
 import tw.tsm.domain.valueobjects.ThingData
 
@@ -36,6 +37,7 @@ class DispatchSystem(
     private val moneySystem: MoneySystem,
     private val pointSystem: PointSystem,
     private val roleCountSystem: RoleCountSystem,
+    private val npcDefs: Map<Int, NpcDef> = emptyMap(),
 ) {
     private val characterLocks = ConcurrentHashMap<Long, Mutex>()
 
@@ -398,10 +400,18 @@ class DispatchSystem(
             return@withLock DispatchStartResult.COUNT_FULL to null
         }
 
+        val template = npcDefs[innNpc.npcId]
+        val bonusMatches = DispatchBonusConditionPolicy.matchingEffects(
+            dispatchBonusDefs[saveData.effectIndex1], dispatchBonusDefs[saveData.effectIndex2],
+            template?.moral ?: -1, template?.element ?: -1,
+        )
         logger.info {
             "Bắt đầu Điều phái: charId=$characterId slot=$emptySlot innPet=$innPetIndex " +
                 "kind=$dispatchKind freeUsed=${newUsage.freeUsed} paidUsed=${newUsage.paidUsed} " +
-                "feeGold=${fee.gold} feePoint=${fee.points}"
+                "feeGold=${fee.gold} feePoint=${fee.points} " +
+                "bonusIndices=${saveData.effectIndex1},${saveData.effectIndex2} " +
+                "conditionMet=${bonusMatches.first},${bonusMatches.second} " +
+                "bonusRewardParity=pending"
         }
         return@withLock DispatchStartResult.SUCCESS to saveData
     }

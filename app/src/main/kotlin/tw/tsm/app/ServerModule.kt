@@ -562,6 +562,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<MoneySystem>(),
             get<PointSystem>(),
             get<RoleCountSystem>(),
+            get<GameDataManager>().npcDefs,
         )
     }
     single { MailSystem(get(), get(), get()) }
