@@ -8,6 +8,7 @@ import tw.tsm.domain.interfaces.PacketHandler
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
 import tw.tsm.gamelogic.systems.MineEncounterSystem
+import tw.tsm.gamelogic.systems.HouseVisitSystem
 import tw.tsm.gamelogic.systems.WorldManager
 import tw.tsm.protocol.PacketReader
 
@@ -25,7 +26,8 @@ class MoveHandler(
     private val worldManager: WorldManager,
     private val responseSender: ResponseSender,
     private val characterRepository: CharacterRepository,
-    private val mineEncounterSystem: MineEncounterSystem
+    private val mineEncounterSystem: MineEncounterSystem,
+    private val houseVisits: HouseVisitSystem? = null,
 ) : PacketHandler {
 
     companion object {
@@ -70,6 +72,7 @@ class MoveHandler(
         // lưu vị trí chống dội: mỗi 30 giây ghi DB tối đa một lần
         val now = System.currentTimeMillis()
         if (session.roleId > 0 && session.mapId > 0 &&
+            houseVisits?.isInsideOwnHouse(session) != true &&
             now - session.lastPositionSave >= POSITION_SAVE_INTERVAL_MS) {
             session.lastPositionSave = now
             characterRepository.updatePosition(session.roleId.toLong(), session.mapId, targetX, targetY)
