@@ -57,6 +57,10 @@ class HouseResidenceHandler(
     override val mainKind: Int = Opcodes.HOUSE_RESIDENCE
     /** Prevent duplicated C106-004 packets before the client requests level sync. */
     private val upgradesAwaitingLevelAck = ConcurrentHashMap<Long, Boolean>()
+    // C106-004 has no nonce and C106-013 automatically re-arms the client.
+    // Reject replayed upgrade packets for a short window even AFTER level ACK.
+    private val lastPaidExpansionNanos = ConcurrentHashMap<Long, Long>()
+    private val minimumUpgradeIntervalNanos = 5_000_000_000L
 
     override suspend fun handle(session: GameSession, subKind: Int, data: ByteArray) {
         if (session.state != SessionState.IN_GAME) return
@@ -106,10 +110,18 @@ class HouseResidenceHandler(
             val next = HouseExpansionPolicy.next(current, expansionDefs)
             if (next != null) {
                 committed = money.purchaseHouseExpansionGold(id, next.goldCost) { gold, auctionGold ->
-                    houseExpansion.purchaseNextLevel(
-                        id, current, gold, auctionGold,
-                        next.furnitureKindsRequired, next.goldCost,
-                    )
+                    // Executed under BOTH MoneySystem's character and gold
+                    // mutation fences, so check+publication are serialized.
+                    val last = lastPaidExpansionNanos[id]
+                    val now = System.nanoTime()
+                    if (last != null && now - last < minimumUpgradeIntervalNanos) {
+                        false
+                    } else {
+                        houseExpansion.purchaseNextLevel(
+                            id, current, gold, auctionGold,
+                            next.furnitureKindsRequired, next.goldCost,
+                        ).also { if (it) lastPaidExpansionNanos[id] = System.nanoTime() }
+                    }
                 }
                 if (committed) {
                     response.sendSubtractMoney(session, next.goldCost)
