@@ -19,7 +19,7 @@ internal object HouseResidencePackets {
         session.send(packet(2).writeByte(code).writeByte(building).writeByte(floor).toByteArray())
     }
 
-    fun starterRoom(session: GameSession, ownerId: Long, building: Int, floor: Int, settings: HouseResidenceSettings, placed: List<HouseFurniturePlacement>) {
+    fun starterRoom(session: GameSession, ownerId: Long, building: Int, floor: Int, settings: HouseResidenceSettings, placed: List<HouseFurniturePlacement>, warriors: List<Int>) {
         val w = packet(1)
             .writeLongLE(ownerId)
             .writeByte(building).writeByte(floor)
@@ -27,17 +27,17 @@ internal object HouseResidencePackets {
             .writeBig5WithByteLen(settings.signature)
             .writeByte(1) // HouseExpandCondition level 1: building 1, floor 1, unexpanded
             .writeByte(0).writeByte(0) // claimable welfare (disabled until persisted)
-        repeat(4) { w.writeShortLE(0) } // appointed warriors
+        repeat(4) { w.writeShortLE(warriors.getOrElse(it) { 0 }) } // appointed warriors
         w.writeIntLE(placed.size)
         for (f in placed) w.writeShortLE(f.furnitureId).writeByte(f.x).writeByte(f.y)
             .writeByte(f.z).writeByte(f.direction)
         session.send(w.toByteArray())
     }
 
-    fun starterScore(session: GameSession) {
-        val w = packet(7).writeByte(1)
-            .writeByte(1).writeByte(1).writeShortLE(0)
-        repeat(4) { w.writeShortLE(0) }
+    fun floorScore(session: GameSession, score: Int, warriors: List<Int>) {
+        val w = packet(7).writeByte(1).writeByte(1).writeByte(1)
+            .writeShortLE(score.coerceIn(0, 65535))
+        repeat(4) { w.writeShortLE(warriors.getOrElse(it) { 0 }) }
         session.send(w.toByteArray())
     }
 

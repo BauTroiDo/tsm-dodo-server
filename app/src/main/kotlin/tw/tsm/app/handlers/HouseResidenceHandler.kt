@@ -12,6 +12,10 @@ import tw.tsm.domain.interfaces.repositories.HouseResidenceSettings
 import tw.tsm.domain.interfaces.repositories.HouseFurnitureRepository
 import tw.tsm.domain.interfaces.repositories.HouseFurniturePlacement
 import tw.tsm.domain.data.ItemDef
+import tw.tsm.domain.data.NpcDef
+import tw.tsm.domain.data.HouseFurnitureDef
+import tw.tsm.domain.interfaces.repositories.HouseWarriorRepository
+import tw.tsm.gamelogic.systems.PetSystem
 import tw.tsm.gamelogic.systems.InventorySystem
 import tw.tsm.gamelogic.systems.HouseVisitSystem
 import tw.tsm.gamelogic.systems.PartySystem
@@ -35,6 +39,11 @@ class HouseResidenceHandler(
     private val houseFurniture: HouseFurnitureRepository,
     private val inventory: InventorySystem,
     private val itemDefs: Map<Int, ItemDef>,
+    private val houseWarriors: HouseWarriorRepository,
+    private val pets: PetSystem,
+    private val npcDefs: Map<Int, NpcDef>,
+    private val furnitureDefs: Map<Int, HouseFurnitureDef>,
+    private val warriorThresholds: Map<Int, Int>,
 ) : PacketHandler {
     override val mainKind: Int = Opcodes.HOUSE_RESIDENCE
 
@@ -42,8 +51,9 @@ class HouseResidenceHandler(
         if (session.state != SessionState.IN_GAME) return
         when (subKind) {
             1 -> sendHouseData(session, data)
+            3 -> assignHouseWarriors(session, data)
+            7 -> if (data.isEmpty()) sendFloorScore(session)
             2 -> enterHouse(session, data)
-            7 -> if (data.isEmpty()) HouseResidencePackets.starterScore(session)
             5 -> updateHouseSettings(session, data)
             6 -> saveFurniture(session, data)
             8 -> if (data.isEmpty()) sendFurnitureBag(session)
@@ -53,7 +63,7 @@ class HouseResidenceHandler(
                     PacketReader(data).readULongLE() == session.playerId
                 HouseResidencePackets.totalLevel(session, if (own) 1 else 0)
             }
-            3, 4, 11 -> {
+            4, 11 -> {
                 // Explicit failure instead of silent packet drops or phantom payment.
                 HouseResidencePackets.result(session, subKind, if (subKind == 11) 0 else 2)
                 houseLogger.info { "Gia Vien write disabled: charId=${session.roleId} request=$subKind" }
@@ -76,8 +86,72 @@ class HouseResidenceHandler(
             !visits.isInsideOwnHouse(session)
         ) return
         val settings = houseSettings.load(session.roleId.toLong())
-        HouseResidencePackets.starterRoom(session, owner, building, floor, settings,
-            HouseFurniturePolicy.visible(houseFurniture.load(session.roleId.toLong(), building, floor), ownedFurniture(session)))
+        val placed = HouseFurniturePolicy.visible(
+            houseFurniture.load(session.roleId.toLong(), building, floor), ownedFurniture(session)
+        )
+        val score = HouseWarriorPolicy.floorScore(placed, furnitureDefs)
+        val max = HouseWarriorPolicy.slots(score, warriorThresholds)
+        val visible = HouseWarriorPolicy.visible(
+            houseWarriors.load(session.roleId.toLong(), building, floor),
+            max, eligibleWarriors(session)
+        )
+        HouseResidencePackets.starterRoom(session, owner, building, floor, settings, placed, visible)
+    }
+
+    private fun eligibleWarriors(session: GameSession): Set<Int> {
+        val charId = session.roleId.toLong()
+        val eligible = ArrayList<tw.tsm.domain.valueobjects.FollowNpcData>()
+        eligible.addAll(pets.getFollowPets(charId).values.filter { it.canGrow != 0 && it.canGrow != 2 })
+        eligible.addAll(pets.getCartPets(charId).values)
+        eligible.addAll(pets.getInnPets(charId).values)
+        return eligible.asSequence()
+            .filter { it.level >= 120 && (npcDefs[it.npcId]?.turn ?: 0) >= 2 }
+            .map { it.npcId }.toSet()
+    }
+
+    private suspend fun currentFloorData(session: GameSession): Pair<Int, List<Int>> {
+        val charId = session.roleId.toLong()
+        val placed = HouseFurniturePolicy.visible(
+            houseFurniture.load(charId, 1, 1), ownedFurniture(session)
+        )
+        val score = HouseWarriorPolicy.floorScore(placed, furnitureDefs)
+        val capacity = HouseWarriorPolicy.slots(score, warriorThresholds)
+        val visible = HouseWarriorPolicy.visible(
+            houseWarriors.load(charId, 1, 1), capacity, eligibleWarriors(session)
+        )
+        return score to visible
+    }
+
+    private suspend fun sendFloorScore(session: GameSession) {
+        if (!visits.isInsideOwnHouse(session)) return
+        val (score, warriors) = currentFloorData(session)
+        HouseResidencePackets.floorScore(session, score, warriors)
+    }
+
+    private suspend fun assignHouseWarriors(session: GameSession, data: ByteArray) {
+        if (!visits.isInsideOwnHouse(session) || data.size != 10) {
+            HouseResidencePackets.result(session, 3, 2)
+            return
+        }
+        val packet = PacketReader(data)
+        val ids = List(4) { packet.readUShortLE() }
+        val building = packet.readUByte()
+        val floor = packet.readUByte()
+        if (building != 1 || floor != 1) {
+            HouseResidencePackets.result(session, 3, 2)
+            return
+        }
+        val (score, _) = currentFloorData(session)
+        val maxSlots = HouseWarriorPolicy.slots(score, warriorThresholds)
+        if (!HouseWarriorPolicy.valid(ids, maxSlots, eligibleWarriors(session))) {
+            HouseResidencePackets.result(session, 3, 5)
+            return
+        }
+        houseWarriors.replace(session.roleId.toLong(), building, floor, ids)
+        HouseResidencePackets.result(session, 3, 1)
+        houseLogger.info {
+            "Gia Vien warrior assignment charId=${session.roleId} score=$score slots=$maxSlots ids=$ids"
+        }
     }
 
     private fun ownedFurniture(session: GameSession): Map<Int, Int> {
