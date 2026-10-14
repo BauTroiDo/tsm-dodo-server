@@ -49,8 +49,14 @@ class HouseExpansionRepositoryImpl : HouseExpansionRepository {
             it[CharacterHouseExpansion.characterId] = characterId
             it[CharacterHouseExpansion.totalLevel] = expectedLevel + 1
         }
-        CharacterMoney.update({ CharacterMoney.characterId eq characterId }) {
+        val debitedRows = CharacterMoney.update({ CharacterMoney.characterId eq characterId }) {
             it[CharacterMoney.gold] = expectedGold - goldCost
+        }
+        // The level upsert is in the same SQL transaction. An unexpected
+        // missing/duplicate money update must throw and roll back both writes;
+        // never acknowledge a paid level with no actual gold debit.
+        check(debitedRows == 1) {
+            "Gia Vien upgrade money update affected $debitedRows rows for charId=$characterId"
         }
         true
     }
