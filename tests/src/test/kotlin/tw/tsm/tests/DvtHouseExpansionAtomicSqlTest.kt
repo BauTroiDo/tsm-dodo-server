@@ -2,6 +2,9 @@ package tw.tsm.tests
 
 import java.util.UUID
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
@@ -93,6 +96,23 @@ class DvtHouseExpansionAtomicSqlTest {
         }.isFailure)
         assertEquals(981414, balance())
         assertEquals(1, house.loadLevel(ownerId))
+    }
+
+    @Test
+    fun concurrentDuplicateRequestsPayExactlyOnce() = runBlocking {
+        val wallet = MoneySystem(InventoryRepositoryImpl())
+        wallet.loadMoney(ownerId)
+        val attempts = (1..12).map {
+            async(Dispatchers.Default) {
+                wallet.purchaseHouseExpansionGold(ownerId, 100000) { gold, auction ->
+                    house.purchaseNextLevel(ownerId, 1, gold, auction, 6, 100000)
+                }
+            }
+        }.awaitAll()
+        assertEquals(1, attempts.count { it })
+        assertEquals(2, house.loadLevel(ownerId))
+        assertEquals(881414, balance())
+        assertEquals(881414, wallet.getGold(ownerId))
     }
 
     @Test
