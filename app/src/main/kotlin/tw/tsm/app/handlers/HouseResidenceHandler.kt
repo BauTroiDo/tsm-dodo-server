@@ -96,10 +96,15 @@ class HouseResidenceHandler(
     private suspend fun purchaseHouseExpansion(session: GameSession, data: ByteArray) {
         if (data.isNotEmpty() || !visits.isInsideOwnHouse(session) ||
             expansionDefs.size != HouseExpansionPolicy.LAST_LEVEL) {
+            houseLogger.warn {
+                "Gia Vien expansion request rejected charId=${session.roleId} bytes=${data.size} " +
+                    "insideOwnHouse=${visits.isInsideOwnHouse(session)} DvtTiers=${expansionDefs.size}"
+            }
             HouseResidencePackets.result(session, 4, 2)
             return
         }
         if (upgradesAwaitingLevelAck.putIfAbsent(session.playerId, true) != null) {
+            houseLogger.info { "Gia Vien expansion duplicate suppressed charId=${session.roleId} pendingLevelAck=true" }
             HouseResidencePackets.result(session, 4, 2)
             return
         }
@@ -129,6 +134,15 @@ class HouseResidenceHandler(
                         "Gia Vien expansion committed charId=$id level=$current->${next.level} " +
                             "goldCost=${next.goldCost} requiredKinds=${next.furnitureKindsRequired}"
                     }
+                }
+            }
+            if (!committed) {
+                val snapshot = money.getMoney(id)
+                val actualKinds = ownedFurniture(session).count { it.value > 0 }
+                houseLogger.info {
+                    "Gia Vien expansion purchase denied charId=$id currentLevel=$current " +
+                        "requiredCost=${next?.goldCost ?: -1} requiredKinds=${next?.furnitureKindsRequired ?: -1} " +
+                        "cachedGold=${snapshot.first} actualKinds=$actualKinds"
                 }
             }
             HouseResidencePackets.result(session, 4, if (committed) 1 else 2)
