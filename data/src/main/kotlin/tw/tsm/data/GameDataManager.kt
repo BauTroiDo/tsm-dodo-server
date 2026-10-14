@@ -55,6 +55,10 @@ class GameDataManager(
     var houseFurnitureDefs: Map<Int, HouseFurnitureDef> = emptyMap()
         private set
 
+    /** Source-backed next-level house cost and furnishing-type gate. */
+    var houseExpansionDefs: Map<Int, HouseExpandConditionDef> = emptyMap()
+        private set
+
     /** DVT score threshold -> max warriors from IOS_NumberOfHouseWarrior_C.dat. */
     var houseWarriorThresholds: Map<Int, Int> = emptyMap()
         private set
@@ -347,6 +351,10 @@ class GameDataManager(
         loadFile(dataIosDir, "IOS_Furniture_C.dat") { bytes ->
             houseFurnitureDefs = HouseFurnitureDatLoader.loadFurniture(bytes)
             logger.info { "DVT Gia Vien furniture definitions: ${houseFurnitureDefs.size}" }
+        }
+        loadFile(dataIosDir, "IOS_HouseExpandCondition_C.dat") { bytes ->
+            houseExpansionDefs = HouseExpandConditionDatLoader.load(bytes)
+            logger.info { "DVT Gia Vien house expansion requirements: ${houseExpansionDefs.size}" }
         }
         loadFile(dataIosDir, "IOS_NumberOfHouseWarrior_C.dat") { bytes ->
             houseWarriorThresholds = HouseFurnitureDatLoader.loadWarriorThresholds(bytes)
