@@ -7,7 +7,17 @@ import tw.tsm.domain.valueobjects.ThingData
  *
  * storageType tương ứng [tw.tsm.domain.constants.EThings]: BAG=1, BANK=4, EQUIP=8
  */
+data class HouseFurnitureRedemption(val bagAfter: tw.tsm.domain.valueobjects.ThingData?, val ownedTotal: Int)
+
 interface InventoryRepository {
+    /** Persistent furniture wallet, kept separate from physical BAG item slots. */
+    suspend fun loadOwnedHouseFurniture(characterId: Long): Map<Int, Int> = emptyMap()
+
+    /** ONE SQL transaction: BAG decrement + persistent furniture wallet credit. */
+    suspend fun redeemHouseFurnitureAtomic(
+        characterId: Long, slot: Int, itemId: Int, furnitureId: Int, quantity: Int,
+    ): HouseFurnitureRedemption? = error("Atomic house furnishing conversion not supported")
+
 
     /**
      * Nạp toàn bộ vật phẩm của nhân vật chỉ định với loại lưu trữ chỉ định
