@@ -52,6 +52,10 @@ import tw.tsm.domain.interfaces.repositories.DungeonRunRepository
 import tw.tsm.domain.interfaces.repositories.RewardLedgerRepository
 import tw.tsm.domain.interfaces.repositories.FriendRepository
 import tw.tsm.domain.interfaces.repositories.HouseBoardRepository
+import tw.tsm.domain.interfaces.repositories.HouseResidenceRepository
+import tw.tsm.domain.interfaces.repositories.HouseFurnitureRepository
+import tw.tsm.persistence.repositories.HouseResidenceRepositoryImpl
+import tw.tsm.persistence.repositories.HouseFurnitureRepositoryImpl
 import tw.tsm.domain.interfaces.repositories.WelfareStateRepository
 import tw.tsm.domain.interfaces.repositories.MailRepository
 import tw.tsm.domain.interfaces.repositories.MiningRepository
@@ -311,6 +315,8 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single<MailRepository> { MailRepositoryImpl() }
     single<MessageBoardRepository> { MessageBoardRepositoryImpl() }
     single<FriendRepository> { FriendRepositoryImpl() }
+    single<HouseResidenceRepository> { HouseResidenceRepositoryImpl() }
+    single<HouseFurnitureRepository> { HouseFurnitureRepositoryImpl() }
     single<HouseBoardRepository> { HouseBoardRepositoryImpl() }
     single<WelfareStateRepository> { WelfareStateRepositoryImpl() }
     single<MiningRepository> { MiningRepositoryImpl() }
@@ -820,7 +826,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { MessageBoardHandler(get<RoleCountSystem>(), get<ResponseSender>(), get<MessageBoardRepository>(), get<SessionManager>()) }
     single { FriendHandler(get()) }
     single { HouseBoardHandler(get(), get(), get<ResponseSender>(), get<PointSystem>(), get<WorldManager>()) }
-    single { HouseResidenceHandler(get<HouseVisitSystem>(), get<WorldManager>(), get<ResponseSender>(), get<CharacterRepository>(), get<PartySystem>()) }
+    single { HouseResidenceHandler(get<HouseVisitSystem>(), get<WorldManager>(), get<ResponseSender>(), get<CharacterRepository>(), get<PartySystem>(), get<HouseResidenceRepository>(), get<HouseFurnitureRepository>(), get<InventorySystem>(), get<GameDataManager>().itemDefs) }
     single { CollectionHandler(get<CollectionSystem>(), get<ResponseSender>(), get<MountSystem>()) }
     single {
         UISellHandler(
