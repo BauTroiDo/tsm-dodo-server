@@ -120,9 +120,11 @@ class MoneySystem(
                         Pair(arr[0].toInt(), arr[1].toInt())
                     }
                     if (gold < cost || auctionGold < 0) return@withLock false
-                    // DB can lag in-memory combat rewards. Sync coherent balance
-                    // inside BOTH writer fences before atomic paid purchase.
-                    inventoryRepo.saveMoney(characterId, gold, auctionGold)
+                    // Never write a RAM snapshot outside the paid SQL transaction.
+                    // If DB and RAM balances disagree, the repository rejects
+                    // the upgrade: no currency or house-level mutation occurs.
+                    // This fails closed instead of overwriting another committed
+                    // DB change before a rejected purchase.
                     if (!commit(gold, auctionGold)) return@withLock false
                     synchronized(arr) { arr[0] = (gold - cost).toLong() }
                     true
