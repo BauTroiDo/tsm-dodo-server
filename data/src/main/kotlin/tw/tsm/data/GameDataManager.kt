@@ -51,6 +51,14 @@ class GameDataManager(
     var itemDefs: Map<Int, ItemDef> = emptyMap()
         private set
 
+    /** DVT decoration metadata (IOS_Furniture_C.dat). */
+    var houseFurnitureDefs: Map<Int, HouseFurnitureDef> = emptyMap()
+        private set
+
+    /** DVT score threshold -> max warriors from IOS_NumberOfHouseWarrior_C.dat. */
+    var houseWarriorThresholds: Map<Int, Int> = emptyMap()
+        private set
+
     /** Dữ liệu sự kiện NPC (key = ID cảnh)*/
     var eveData: Map<Int, SceneEveData> = emptyMap()
         private set
@@ -334,6 +342,15 @@ class GameDataManager(
         loadFile(dataIosDir, "IOS_Item_C.dat") { bytes ->
             itemDefs = ItemDatLoader.load(bytes)
             logger.info { "Nạp IOS_Item xong: ${itemDefs.size} bản ghi source=${dataIosDir.resolve("IOS_Item_C.dat")}" }
+        }
+
+        loadFile(dataIosDir, "IOS_Furniture_C.dat") { bytes ->
+            houseFurnitureDefs = HouseFurnitureDatLoader.loadFurniture(bytes)
+            logger.info { "DVT Gia Vien furniture definitions: ${houseFurnitureDefs.size}" }
+        }
+        loadFile(dataIosDir, "IOS_NumberOfHouseWarrior_C.dat") { bytes ->
+            houseWarriorThresholds = HouseFurnitureDatLoader.loadWarriorThresholds(bytes)
+            logger.info { "DVT Gia Vien warrior score thresholds: $houseWarriorThresholds" }
         }
 
         // SceneSet
