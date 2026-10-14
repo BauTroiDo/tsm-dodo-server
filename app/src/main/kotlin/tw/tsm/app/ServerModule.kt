@@ -133,6 +133,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             register(get<SoulHandler>())
             register(get<ElfHandler>())
             register(get<HouseBoardHandler>())
+            register(get<HouseResidenceHandler>())
             register(get<GodskinHandler>())
             register(get<MountHandler>())
             register(get<HotkeyHandler>())
@@ -184,6 +185,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
         val eveStateMachine = get<EveEventStateMachine>()
         val macroBoxSystem = get<MacroBoxSystem>()
         val roleCountSystem = get<RoleCountSystem>()
+        val houseVisits = get<HouseVisitSystem>()
         val collectionSystem = get<CollectionSystem>()
         val astrolabeSystem = get<AstrolabeSystem>()
         val soulSystem = get<SoulSystem>()
@@ -233,11 +235,13 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             }
 
             // Chụp snapshot vị trí trước, rồi loại bỏ (leaveMap sẽ đặt session.mapId về 0)
-            val mapId = session.mapId
-            val x = session.x
-            val y = session.y
+            val safe = houseVisits.persistedLocation(session)
+            val mapId = safe.mapId
+            val x = safe.x
+            val y = safe.y
 
             worldManager.removePlayer(session)
+            houseVisits.cleanup(session.playerId)
             // Khi mất kết nối bất thường lưu vị trí/vật phẩm/tiền của nhân vật (không suspend, dùng scope.launch)
             // Kiểm tra mapId > 0: tránh sau khi DisconnectHandler đã lưu, channelInactive dùng mapId=0 ghi đè
             if (session.roleId > 0) {
@@ -705,8 +709,11 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
         )
     }
 
-    // Lưu tự động định kỳ (mỗi 3 phút lưu dữ liệu tất cả người chơi trực tuyến)
-    single { AutoSaveService(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get<QuestSystem>(), get<ResponseSender>()) }
+    // Transient Gia Vien rooms must never become persisted character login locations.
+    single { HouseVisitSystem() }
+
+    // Lưu tự động định kỳ (mỗi 30 giây lưu dữ liệu tất cả người chơi trực tuyến)
+    single { AutoSaveService(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get<QuestSystem>(), get<ResponseSender>(), get<HouseVisitSystem>()) }
 
     // Bộ xử lý lệnh GM
     single {
@@ -724,8 +731,8 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { LoginHandler(get(), get(), get(), get(), get()) }
     single { CreateCharHandler(get(), get()) }
     single { SelectCharHandler(get(), get(), get<PokeSystem>(), get<ChildRepository>(), get<PetSystem>()) }
-    single { DisconnectHandler(get(), get(), get(), get(), get<PlayerCurrencySystem>(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get<PvpBotMatchmakingSystem>()) }
-    single { MoveHandler(get(), get(), get(), get<MineEncounterSystem>()) }
+    single { DisconnectHandler(get(), get(), get(), get(), get<PlayerCurrencySystem>(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get<PvpBotMatchmakingSystem>(), get<HouseVisitSystem>()) }
+    single { MoveHandler(get(), get(), get(), get<MineEncounterSystem>(), get<HouseVisitSystem>()) }
     single { ChatHandler(get(), get(), get()) }
     single { SceneHandler(get(), get()) }
     single { RelocateHandler(get(), get(), get(), get<LimitTimeDungeonSystem>(), get<DungeonSystem>(), get<EveTriggerRouter>(), get<ElfHandler>()) }
@@ -813,6 +820,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { MessageBoardHandler(get<RoleCountSystem>(), get<ResponseSender>(), get<MessageBoardRepository>(), get<SessionManager>()) }
     single { FriendHandler(get()) }
     single { HouseBoardHandler(get(), get(), get<ResponseSender>(), get<PointSystem>(), get<WorldManager>()) }
+    single { HouseResidenceHandler(get<HouseVisitSystem>(), get<WorldManager>(), get<ResponseSender>(), get<CharacterRepository>(), get<PartySystem>()) }
     single { CollectionHandler(get<CollectionSystem>(), get<ResponseSender>(), get<MountSystem>()) }
     single {
         UISellHandler(

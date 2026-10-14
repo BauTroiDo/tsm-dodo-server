@@ -202,6 +202,9 @@ object Opcodes {
     /** Hồ sơ / Quà / Gift Wall (protocolTable[105]) */
     const val HOUSE_BOARD = 105
 
+    /** Gia Vien residence protocol (client C/S:106-001..014). */
+    const val HOUSE_RESIDENCE = 106
+
     /** Linh Hồn (protocolTable[120]) */
     const val SOUL = 120
 

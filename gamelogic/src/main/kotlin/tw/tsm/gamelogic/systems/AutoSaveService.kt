@@ -31,6 +31,7 @@ class AutoSaveService(
     private val roleCountSystem: RoleCountSystem,
     private val questSystem: QuestSystem? = null,
     private val responseSender: tw.tsm.domain.interfaces.ResponseSender? = null,
+    private val houseVisits: HouseVisitSystem? = null,
 ) {
     companion object {
         /** Khoảng thời gian tự động lưu. 30 giây để giới hạn mất dữ liệu khi tiến trình/máy chủ bị reset đột ngột. */
@@ -72,8 +73,11 @@ class AutoSaveService(
                     responseSender?.sendRemoveMission(session, missionId)
                 }
                 // Vị trí
-                if (session.mapId > 0) {
-                    characterRepository.updatePosition(charId, session.mapId, session.x, session.y)
+                val stable = houseVisits?.persistedLocation(session)
+                val saveMap = stable?.mapId ?: session.mapId
+                if (saveMap > 0) {
+                    characterRepository.updatePosition(charId, saveMap,
+                        stable?.x ?: session.x, stable?.y ?: session.y)
                 }
 
                 // Trạng thái nhân vật (Cấp độ/EXP/Điểm thuộc tính/Điểm kỹ năng/Lục vi)
