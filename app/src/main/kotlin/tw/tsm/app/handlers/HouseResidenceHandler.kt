@@ -133,8 +133,13 @@ class HouseResidenceHandler(
             }
             HouseResidencePackets.result(session, 4, if (committed) 1 else 2)
         } catch (e: Exception) {
-            houseLogger.error(e) { "Gia Vien expansion failed charId=${session.roleId}; no success packet" }
-            HouseResidencePackets.result(session, 4, 2)
+            houseLogger.error(e) {
+                "Gia Vien expansion response/transaction error charId=${session.roleId} committed=$committed; " +
+                    "client must refresh authoritative level on reconnect"
+            }
+            // If payment committed but the socket fails while sending S026-002
+            // or S106-004, NEVER emit a false failure response after debit.
+            if (!committed) HouseResidencePackets.result(session, 4, 2)
         } finally {
             // A successful upgrade requires fresh C106-013 from the client to
             // re-arm; this also suppresses duplicate C106-004 on double click.
