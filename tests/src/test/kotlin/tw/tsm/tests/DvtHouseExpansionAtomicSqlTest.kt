@@ -21,7 +21,7 @@ import tw.tsm.persistence.tables.CharacterMoney
 
 /** Isolated H2 only: no DEV accounts, currency, or furniture are changed. */
 class DvtHouseExpansionAtomicSqlTest {
-    private val id = 710031L
+    private val ownerId = 710031L
     private val house = HouseExpansionRepositoryImpl()
     private lateinit var db: Database
 
@@ -34,13 +34,13 @@ class DvtHouseExpansionAtomicSqlTest {
         transaction(db) {
             SchemaUtils.create(CharacterMoney, CharacterHouseFurnitureOwned, CharacterHouseExpansion)
             CharacterMoney.insert {
-                it[characterId] = id
+                it[characterId] = ownerId
                 it[gold] = 981414
                 it[auctionGold] = 0
             }
             repeat(6) { n ->
                 CharacterHouseFurnitureOwned.insert {
-                    it[characterId] = id
+                    it[characterId] = ownerId
                     it[furnitureId] = 62001 + n
                     it[quantity] = 1
                 }
@@ -49,39 +49,39 @@ class DvtHouseExpansionAtomicSqlTest {
     }
 
     private fun balance(): Int = transaction(db) {
-        CharacterMoney.selectAll().where { CharacterMoney.characterId eq id }
+        CharacterMoney.selectAll().where { CharacterMoney.characterId eq ownerId }
             .single()[CharacterMoney.gold]
     }
 
     @Test
     fun twoUpgradesDebitExactlyOnceAndPersistAcrossRepositoryReload() = runBlocking {
         val wallet = MoneySystem(InventoryRepositoryImpl())
-        wallet.loadMoney(id)
-        assertTrue(wallet.purchaseHouseExpansionGold(id, 100000) { gold, auction ->
-            house.purchaseNextLevel(id, 1, gold, auction, 6, 100000)
+        wallet.loadMoney(ownerId)
+        assertTrue(wallet.purchaseHouseExpansionGold(ownerId, 100000) { gold, auction ->
+            house.purchaseNextLevel(ownerId, 1, gold, auction, 6, 100000)
         })
         assertEquals(881414, balance())
-        assertEquals(2, HouseExpansionRepositoryImpl().loadLevel(id))
-        assertFalse(wallet.purchaseHouseExpansionGold(id, 100000) { gold, auction ->
-            house.purchaseNextLevel(id, 1, gold, auction, 6, 100000)
+        assertEquals(2, HouseExpansionRepositoryImpl().loadLevel(ownerId))
+        assertFalse(wallet.purchaseHouseExpansionGold(ownerId, 100000) { gold, auction ->
+            house.purchaseNextLevel(ownerId, 1, gold, auction, 6, 100000)
         })
         assertEquals(881414, balance())
-        assertTrue(wallet.purchaseHouseExpansionGold(id, 500000) { gold, auction ->
-            house.purchaseNextLevel(id, 2, gold, auction, 6, 500000)
+        assertTrue(wallet.purchaseHouseExpansionGold(ownerId, 500000) { gold, auction ->
+            house.purchaseNextLevel(ownerId, 2, gold, auction, 6, 500000)
         })
         assertEquals(381414, balance())
-        assertEquals(381414, wallet.getGold(id))
-        assertEquals(3, HouseExpansionRepositoryImpl().loadLevel(id))
+        assertEquals(381414, wallet.getGold(ownerId))
+        assertEquals(3, HouseExpansionRepositoryImpl().loadLevel(ownerId))
     }
 
     @Test
     fun missingKindsOrStaleCashRejectWithoutAnyWrite() = runBlocking {
-        assertFalse(house.purchaseNextLevel(id, 1, 981414, 0, 7, 100000))
-        assertFalse(house.purchaseNextLevel(id, 1, 981413, 0, 6, 100000))
-        assertFalse(house.purchaseNextLevel(id, 1, 981414, 1, 6, 100000))
-        assertFalse(house.purchaseNextLevel(id, 1, 981414, 0, 6, 1000000))
+        assertFalse(house.purchaseNextLevel(ownerId, 1, 981414, 0, 7, 100000))
+        assertFalse(house.purchaseNextLevel(ownerId, 1, 981413, 0, 6, 100000))
+        assertFalse(house.purchaseNextLevel(ownerId, 1, 981414, 1, 6, 100000))
+        assertFalse(house.purchaseNextLevel(ownerId, 1, 981414, 0, 6, 1000000))
         assertEquals(981414, balance())
-        assertEquals(1, house.loadLevel(id))
+        assertEquals(1, house.loadLevel(ownerId))
     }
 
     @Test
@@ -90,21 +90,21 @@ class DvtHouseExpansionAtomicSqlTest {
             exec("ALTER TABLE character_money ADD CONSTRAINT dvt_guard_gold CHECK (gold >= 900000)")
         }
         assertTrue(runCatching {
-            house.purchaseNextLevel(id, 1, 981414, 0, 6, 100000)
+            house.purchaseNextLevel(ownerId, 1, 981414, 0, 6, 100000)
         }.isFailure)
         assertEquals(981414, balance())
-        assertEquals(1, house.loadLevel(id))
+        assertEquals(1, house.loadLevel(ownerId))
     }
 
     @Test
     fun rejectedPaymentLeavesMoneySystemCacheUnchanged() = runBlocking {
         val wallet = MoneySystem(InventoryRepositoryImpl())
-        wallet.loadMoney(id)
-        assertFalse(wallet.purchaseHouseExpansionGold(id, 100000) { gold, auction ->
-            house.purchaseNextLevel(id, 1, gold, auction, 7, 100000)
+        wallet.loadMoney(ownerId)
+        assertFalse(wallet.purchaseHouseExpansionGold(ownerId, 100000) { gold, auction ->
+            house.purchaseNextLevel(ownerId, 1, gold, auction, 7, 100000)
         })
-        assertEquals(981414, wallet.getGold(id))
+        assertEquals(981414, wallet.getGold(ownerId))
         assertEquals(981414, balance())
-        assertEquals(1, house.loadLevel(id))
+        assertEquals(1, house.loadLevel(ownerId))
     }
 }
