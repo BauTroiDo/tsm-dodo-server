@@ -96,6 +96,45 @@ class MoneySystem(
     /**
      * Tải tiền của nhân vật từ DB
      */
+    /**
+     * Paid Gia Viên expansion: all synchronous add/subtractGold writers share
+     * the same semaphore, while CharacterPersistenceGuard fences autosaves,
+     * logout, and furniture redemption. The callback commits gold + level in
+     * ONE transaction; RAM is only published after DB success.
+     */
+    suspend fun purchaseHouseExpansionGold(
+        characterId: Long,
+        cost: Int,
+        commit: suspend (gold: Int, auctionGold: Int) -> Boolean,
+    ): Boolean {
+        if (characterId <= 0 || cost <= 0) return false
+        val requestedBy = currentCoroutineContext()[Job]
+        return withContext(NonCancellable + Dispatchers.IO) {
+            CharacterPersistenceGuard.withLock(characterId) {
+                val fence = goldMutationFences[goldStripe(characterId)]
+                fence.acquire()
+                try {
+                    requestedBy?.ensureActive()
+                    val arr = moneyMap[characterId] ?: return@withLock false
+                    val (gold, auctionGold) = synchronized(arr) {
+                        Pair(arr[0].toInt(), arr[1].toInt())
+                    }
+                    if (gold < cost || auctionGold < 0) return@withLock false
+                    // Never write a RAM snapshot outside the paid SQL transaction.
+                    // If DB and RAM balances disagree, the repository rejects
+                    // the upgrade: no currency or house-level mutation occurs.
+                    // This fails closed instead of overwriting another committed
+                    // DB change before a rejected purchase.
+                    if (!commit(gold, auctionGold)) return@withLock false
+                    synchronized(arr) { arr[0] = (gold - cost).toLong() }
+                    true
+                } finally {
+                    fence.release()
+                }
+            }
+        }
+    }
+
     suspend fun loadMoney(characterId: Long) {
         CharacterPersistenceGuard.withLock(characterId) {
         val (gold, auctionGold) = inventoryRepo.loadMoney(characterId)

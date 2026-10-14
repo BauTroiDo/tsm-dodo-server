@@ -19,13 +19,13 @@ internal object HouseResidencePackets {
         session.send(packet(2).writeByte(code).writeByte(building).writeByte(floor).toByteArray())
     }
 
-    fun starterRoom(session: GameSession, ownerId: Long, building: Int, floor: Int, settings: HouseResidenceSettings, placed: List<HouseFurniturePlacement>, warriors: List<Int>) {
+    fun starterRoom(session: GameSession, ownerId: Long, building: Int, floor: Int, settings: HouseResidenceSettings, placed: List<HouseFurniturePlacement>, warriors: List<Int>, houseLevel: Int) {
         val w = packet(1)
             .writeLongLE(ownerId)
             .writeByte(building).writeByte(floor)
             .writeBig5WithByteLen(settings.name)
             .writeBig5WithByteLen(settings.signature)
-            .writeByte(1) // HouseExpandCondition level 1: building 1, floor 1, unexpanded
+            .writeByte(houseLevel) // source-backed, persisted DVT expansion level 1..12
             .writeByte(0).writeByte(0) // claimable welfare (disabled until persisted)
         repeat(4) { w.writeShortLE(warriors.getOrElse(it) { 0 }) } // appointed warriors
         w.writeIntLE(placed.size)
@@ -34,8 +34,8 @@ internal object HouseResidencePackets {
         session.send(w.toByteArray())
     }
 
-    fun floorScore(session: GameSession, score: Int, warriors: List<Int>) {
-        val w = packet(7).writeByte(1).writeByte(1).writeByte(1)
+    fun floorScore(session: GameSession, building: Int, floor: Int, score: Int, warriors: List<Int>) {
+        val w = packet(7).writeByte(1).writeByte(building).writeByte(floor)
             .writeShortLE(score.coerceIn(0, 65535))
         repeat(4) { w.writeShortLE(warriors.getOrElse(it) { 0 }) }
         session.send(w.toByteArray())
@@ -53,7 +53,7 @@ internal object HouseResidencePackets {
         session.send(w.toByteArray())
     }
 
-    fun totalLevel(session: GameSession, code: Int) {
-        session.send(packet(13).writeByte(code).writeByte(if (code == 1) 1 else 0).toByteArray())
+    fun totalLevel(session: GameSession, code: Int, level: Int) {
+        session.send(packet(13).writeByte(code).writeByte(if (code == 1) level else 0).toByteArray())
     }
 }

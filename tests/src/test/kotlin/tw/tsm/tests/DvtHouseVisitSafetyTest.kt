@@ -42,6 +42,46 @@ class DvtHouseVisitSafetyTest {
     }
 
     @Test
+    fun changingToSecondFloorRetainsOnePrivateRoomAndOriginalReturnPoint() {
+        val visits = HouseVisitSystem()
+        val player = session(42, 31)
+        val room = visits.beginOwnHouse(player)!!
+        val origin = room.origin
+        every { player.mapId } returns HouseVisitSystem.STARTER_MAP
+        every { player.instanceId } returns room.roomId
+        assertTrue(visits.isInsideOwnHouse(player))
+        assertTrue(visits.moveWithinHouse(player, 1, 2))
+        assertEquals(2, visits.getVisit(player.playerId)?.floor)
+        assertTrue(visits.isInsideOwnHouse(player))
+        assertEquals(origin, visits.persistedLocation(player))
+
+        // Buildings have separate scenes; a stale old scene cannot authorize
+        // house commands while the new map transition is in progress.
+        assertTrue(visits.moveWithinHouse(player, 2, 1))
+        assertFalse(visits.isInsideOwnHouse(player))
+        every { player.mapId } returns HouseVisitSystem.mapForBuilding(2)!!
+        assertTrue(visits.isInsideOwnHouse(player))
+        assertEquals(origin, visits.persistedLocation(player))
+        assertEquals(origin, visits.finish(player))
+        assertFalse(visits.isInsideOwnHouse(player))
+    }
+
+    @Test
+    fun lockedOrInvalidHouseTransitionCannotChangeVisitState() {
+        val visits = HouseVisitSystem()
+        val player = session(43, 31)
+        val room = visits.beginOwnHouse(player)!!
+        assertFalse(visits.moveWithinHouse(player, 1, 2)) // still outdoors
+        every { player.mapId } returns HouseVisitSystem.STARTER_MAP
+        every { player.instanceId } returns room.roomId
+        assertFalse(visits.moveWithinHouse(player, 5, 1))
+        assertFalse(visits.moveWithinHouse(player, 1, 0))
+        assertFalse(visits.moveWithinHouse(player, 1, 3))
+        assertEquals(1, visits.getVisit(player.playerId)?.building)
+        assertEquals(1, visits.getVisit(player.playerId)?.floor)
+    }
+
+    @Test
     fun invalidInstanceAndReentrantHouseEntryNeverEraseOutdoorOrigin() {
         val visits = HouseVisitSystem()
         assertNull(visits.beginOwnHouse(session(13, 31, instanceId = 7)))

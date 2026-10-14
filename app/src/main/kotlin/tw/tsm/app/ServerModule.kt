@@ -57,6 +57,8 @@ import tw.tsm.domain.interfaces.repositories.HouseFurnitureRepository
 import tw.tsm.domain.interfaces.repositories.HouseWarriorRepository
 import tw.tsm.persistence.repositories.HouseResidenceRepositoryImpl
 import tw.tsm.persistence.repositories.HouseFurnitureRepositoryImpl
+import tw.tsm.persistence.repositories.HouseExpansionRepositoryImpl
+import tw.tsm.domain.interfaces.repositories.HouseExpansionRepository
 import tw.tsm.persistence.repositories.HouseWarriorRepositoryImpl
 import tw.tsm.domain.interfaces.repositories.WelfareStateRepository
 import tw.tsm.domain.interfaces.repositories.MailRepository
@@ -319,6 +321,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single<FriendRepository> { FriendRepositoryImpl() }
     single<HouseResidenceRepository> { HouseResidenceRepositoryImpl() }
     single<HouseFurnitureRepository> { HouseFurnitureRepositoryImpl() }
+    single<HouseExpansionRepository> { HouseExpansionRepositoryImpl() }
     single<HouseWarriorRepository> { HouseWarriorRepositoryImpl() }
     single<HouseBoardRepository> { HouseBoardRepositoryImpl() }
     single<WelfareStateRepository> { WelfareStateRepositoryImpl() }
@@ -829,7 +832,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { MessageBoardHandler(get<RoleCountSystem>(), get<ResponseSender>(), get<MessageBoardRepository>(), get<SessionManager>()) }
     single { FriendHandler(get()) }
     single { HouseBoardHandler(get(), get(), get<ResponseSender>(), get<PointSystem>(), get<WorldManager>()) }
-    single { HouseResidenceHandler(get<HouseVisitSystem>(), get<WorldManager>(), get<ResponseSender>(), get<CharacterRepository>(), get<PartySystem>(), get<HouseResidenceRepository>(), get<HouseFurnitureRepository>(), get<InventorySystem>(), get<GameDataManager>().itemDefs, get<HouseWarriorRepository>(), get<PetSystem>(), get<GameDataManager>().npcDefs, get<GameDataManager>().houseFurnitureDefs, get<GameDataManager>().houseWarriorThresholds) }
+    single { HouseResidenceHandler(get<HouseVisitSystem>(), get<WorldManager>(), get<ResponseSender>(), get<CharacterRepository>(), get<PartySystem>(), get<HouseResidenceRepository>(), get<HouseFurnitureRepository>(), get<InventorySystem>(), get<GameDataManager>().itemDefs, get<HouseWarriorRepository>(), get<PetSystem>(), get<GameDataManager>().npcDefs, get<GameDataManager>().houseFurnitureDefs, get<GameDataManager>().houseWarriorThresholds, get<HouseExpansionRepository>(), get<MoneySystem>(), get<GameDataManager>().houseExpansionDefs) }
     single { CollectionHandler(get<CollectionSystem>(), get<ResponseSender>(), get<MountSystem>()) }
     single {
         UISellHandler(

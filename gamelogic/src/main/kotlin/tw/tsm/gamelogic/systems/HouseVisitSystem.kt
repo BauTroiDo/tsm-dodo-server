@@ -6,7 +6,7 @@ import tw.tsm.domain.interfaces.GameSession
 
 /** Original outdoor location remains the save point while visiting the house. */
 data class HouseReturnLocation(val mapId: Int, val x: Int, val y: Int, val instanceId: Int)
-data class HouseVisit(val ownerId: Long, val roomId: Int, val origin: HouseReturnLocation)
+data class HouseVisit(val ownerId: Long, val roomId: Int, val origin: HouseReturnLocation, var building: Int = 1, var floor: Int = 1)
 
 /**
  * Phase-1 DVT home visit. Rooms are private to their owner; visitor permissions,
@@ -15,6 +15,10 @@ data class HouseVisit(val ownerId: Long, val roomId: Int, val origin: HouseRetur
 class HouseVisitSystem {
     companion object {
         const val STARTER_MAP = 54964
+        const val FINAL_HOUSE_MAP = 54967
+        fun isHouseMap(mapId: Int): Boolean = mapId in STARTER_MAP..FINAL_HOUSE_MAP
+        fun mapForBuilding(building: Int): Int? =
+            if (building in 1..4) STARTER_MAP + building - 1 else null
         const val STARTER_BUILDING = 1
         const val STARTER_FLOOR = 1
         const val STARTER_LEVEL = 1
@@ -29,10 +33,18 @@ class HouseVisitSystem {
 
     fun getVisit(playerId: Long): HouseVisit? = activeVisits[playerId]
 
+    fun moveWithinHouse(session: GameSession, building: Int, floor: Int): Boolean {
+        if (!isInsideOwnHouse(session) || mapForBuilding(building) == null || floor !in 1..2) return false
+        val visit = activeVisits[session.playerId] ?: return false
+        visit.building = building
+        visit.floor = floor
+        return true
+    }
+
     fun beginOwnHouse(session: GameSession): HouseVisit? {
         if (session.playerId <= 0 || session.roleId <= 0) return null
         activeVisits[session.playerId]?.let { return it }
-        if (session.mapId <= 0 || session.mapId == STARTER_MAP || session.instanceId != 0) return null
+        if (session.mapId <= 0 || isHouseMap(session.mapId) || session.instanceId != 0) return null
         // DVT Role.playerId is the network/world ID, not the DB character ID.
         val ownerId = session.playerId
         val room = ownerRoomIds.computeIfAbsent(ownerId) { nextRoom.getAndIncrement() }
@@ -44,13 +56,13 @@ class HouseVisitSystem {
     fun isInsideOwnHouse(session: GameSession): Boolean =
         activeVisits[session.playerId]?.let {
             it.ownerId == session.playerId &&
-                session.mapId == STARTER_MAP && session.instanceId == it.roomId
+                session.mapId == mapForBuilding(it.building) && session.instanceId == it.roomId
         } ?: false
 
     /** Never persist a transient house map as a login location. */
     fun persistedLocation(session: GameSession): HouseReturnLocation {
         val visit = activeVisits[session.playerId]
-        return if (visit != null && session.mapId == STARTER_MAP) visit.origin
+        return if (visit != null && isHouseMap(session.mapId)) visit.origin
         else HouseReturnLocation(session.mapId, session.x, session.y, session.instanceId)
     }
 
