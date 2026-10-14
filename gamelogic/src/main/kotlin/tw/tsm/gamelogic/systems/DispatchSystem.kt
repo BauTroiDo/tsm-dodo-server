@@ -521,10 +521,21 @@ class DispatchSystem(
                 }
             }
 
+            val npcTemplate = npcDefs[innNpc.npcId]
+            val dispatchBonus1 = dispatchBonusDefs[dispatch.effectIndex1]
+            val dispatchBonus2 = dispatchBonusDefs[dispatch.effectIndex2]
+            val matchingBonusConditions = DispatchBonusConditionPolicy.matchingEffects(
+                dispatchBonus1, dispatchBonus2,
+                npcTemplate?.moral ?: -1, npcTemplate?.element ?: -1,
+            )
             logger.info {
                 "Nhận thưởng Điều phái: charId=$characterId slot=$slotIndex " +
                     "kind=${dispatch.dispatchKind} npc=${innNpc.npcId} rewards=$rewards " +
-                    "expKind=${awardDef.expKind} exp=${awardDef.exp}"
+                    "expKind=${awardDef.expKind} exp=${awardDef.exp} " +
+                    "bonus1=${dispatch.effectIndex1}:${dispatchBonus1?.effectKind}:${dispatchBonus1?.effectValue} " +
+                    "bonus1Matched=${matchingBonusConditions.first} " +
+                    "bonus2=${dispatch.effectIndex2}:${dispatchBonus2?.effectKind}:${dispatchBonus2?.effectValue} " +
+                    "bonus2Matched=${matchingBonusConditions.second} bonusRewardParity=pending"
             }
             CompletionOutcome(
                 resultCode = DispatchCompleteResult.SUCCESS,
