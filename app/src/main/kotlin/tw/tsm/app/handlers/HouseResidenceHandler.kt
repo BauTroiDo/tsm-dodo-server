@@ -154,19 +154,8 @@ class HouseResidenceHandler(
         }
     }
 
-    private fun ownedFurniture(session: GameSession): Map<Int, Int> {
-        val owner = session.roleId.toLong()
-        val bag = inventory.getBag(owner) // empty when unloaded: fail-closed for placement
-        val counts = mutableMapOf<Int, Int>()
-        for (thing in bag.values + inventory.getBank(owner).values + inventory.getStorage(owner).values) {
-            val definition = itemDefs[thing.itemId] ?: continue
-            if (definition.kind != 89 || definition.spare3 !in 1..65535 || thing.quantity <= 0) continue
-            val key = definition.spare3
-            counts[key] = (counts.getOrDefault(key, 0).toLong() + thing.quantity)
-                .coerceAtMost(255).toInt()
-        }
-        return counts
-    }
+    private suspend fun ownedFurniture(session: GameSession): Map<Int, Int> =
+        inventory.ownedHouseFurniture(session.roleId.toLong())
 
     private suspend fun sendFurnitureBag(session: GameSession) {
         if (!visits.isInsideOwnHouse(session)) return

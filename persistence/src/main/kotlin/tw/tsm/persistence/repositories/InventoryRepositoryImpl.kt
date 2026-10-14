@@ -21,6 +21,8 @@ import tw.tsm.domain.valueobjects.MythAttribute
 import tw.tsm.domain.valueobjects.ThingData
 import tw.tsm.persistence.tables.CharacterMoney
 import tw.tsm.persistence.tables.Inventories
+import tw.tsm.persistence.tables.CharacterHouseFurnitureOwned
+import tw.tsm.domain.interfaces.repositories.HouseFurnitureRedemption
 import tw.tsm.persistence.tables.TradeSettlementReceipts
 import tw.tsm.persistence.tables.CharacterRoleCounts
 import tw.tsm.persistence.tables.CharacterBattlePassSeasons
@@ -32,6 +34,51 @@ import tw.tsm.domain.constants.EThings
  * Dùng bảng đơn inventories chứa túi đồ/trang bị/Tiền Trang, phân biệt bằng storageType.
  */
 class InventoryRepositoryImpl : InventoryRepository {
+    override suspend fun loadOwnedHouseFurniture(characterId: Long): Map<Int, Int> =
+        suspendTransaction {
+            CharacterHouseFurnitureOwned.selectAll()
+                .where { CharacterHouseFurnitureOwned.characterId eq characterId }
+                .associate {
+                    it[CharacterHouseFurnitureOwned.furnitureId] to
+                        it[CharacterHouseFurnitureOwned.quantity]
+                }
+        }
+
+    /** Source BAG debit and House furniture credit MUST commit in one SQL transaction. */
+    override suspend fun redeemHouseFurnitureAtomic(
+        characterId: Long, slot: Int, itemId: Int, furnitureId: Int, quantity: Int,
+    ): HouseFurnitureRedemption? = suspendTransaction {
+        if (quantity !in 1..255 || furnitureId !in 1..65535) return@suspendTransaction null
+        val key = (Inventories.characterId eq characterId) and
+            (Inventories.storageType eq EThings.BAG) and (Inventories.slot eq slot)
+        val row = Inventories.selectAll().where { key }.forUpdate().firstOrNull()
+            ?: return@suspendTransaction null
+        val actualItemId = row[Inventories.itemId]
+        val available = row[Inventories.quantity]
+        if (actualItemId != itemId || available < quantity || available <= 0 ||
+            row[Inventories.isLocked]) return@suspendTransaction null
+
+        val ownerKey = (CharacterHouseFurnitureOwned.characterId eq characterId) and
+            (CharacterHouseFurnitureOwned.furnitureId eq furnitureId)
+        val current = CharacterHouseFurnitureOwned.selectAll().where { ownerKey }
+            .forUpdate().firstOrNull()?.get(CharacterHouseFurnitureOwned.quantity) ?: 0
+        if (current !in 0..255 || quantity > 255 - current) return@suspendTransaction null
+
+        val after = available - quantity
+        if (after == 0) Inventories.deleteWhere { key }
+        else Inventories.update({ key }) { it[Inventories.quantity] = after }
+
+        CharacterHouseFurnitureOwned.upsert {
+            it[CharacterHouseFurnitureOwned.characterId] = characterId
+            it[CharacterHouseFurnitureOwned.furnitureId] = furnitureId
+            it[CharacterHouseFurnitureOwned.quantity] = current + quantity
+        }
+        HouseFurnitureRedemption(
+            bagAfter = if (after == 0) null else row.toThingData().copy(quantity = after),
+            ownedTotal = current + quantity,
+        )
+    }
+
 
     override suspend fun loadItems(characterId: Long, storageType: Int): Map<Int, ThingData> =
         suspendTransaction {

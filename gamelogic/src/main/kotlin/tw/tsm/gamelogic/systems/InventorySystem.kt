@@ -90,6 +90,24 @@ class InventorySystem(
     // ── Lấy trạng thái ──
 
     /** Lấy tất cả vật phẩm trong túi đồ */
+    suspend fun ownedHouseFurniture(characterId: Long): Map<Int, Int> =
+        inventoryRepo.loadOwnedHouseFurniture(characterId)
+
+    /** Character-fenced publish AFTER bag+furniture SQL commit, never before. */
+    suspend fun redeemHouseFurniture(
+        characterId: Long, slot: Int, itemId: Int, furnitureId: Int, quantity: Int,
+    ): Int? = CharacterPersistenceGuard.withLock(characterId) {
+        val bag = bags[characterId] ?: return@withLock null
+        val current = bag[slot] ?: return@withLock null
+        if (current.itemId != itemId || quantity !in 1..current.quantity || furnitureId !in 1..65535)
+            return@withLock null
+        val result = inventoryRepo.redeemHouseFurnitureAtomic(characterId, slot, itemId, furnitureId, quantity)
+            ?: return@withLock null
+        val after = result.bagAfter
+        if (after == null) bag.remove(slot) else bag[slot] = after
+        result.ownedTotal
+    }
+
     fun getBag(characterId: Long): Map<Int, ThingData> =
         bags[characterId] ?: emptyMap()
 

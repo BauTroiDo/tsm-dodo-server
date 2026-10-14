@@ -627,6 +627,30 @@ class ItemHandler(
             handleNftCardItem(session, characterId, bagIndex, bagItem)
             return
         }
+        if (itemDef?.kind == 89) {
+            // Original DVT furniture item ability238 transfers physical BAG ownership
+            // into the durable Gia Vien catalogue. Never consume it generically.
+            if (quantity <= 0 || quantity > bagItem.quantity || itemDef.spare3 !in 1..65535) return
+            val newOwned = try {
+                inventorySystem.redeemHouseFurniture(
+                    characterId, bagIndex, bagItem.itemId, itemDef.spare3, quantity,
+                )
+            } catch (e: Exception) {
+                logger.error(e) { "Gia Vien redeem DB transaction failed charId=$characterId itemId=${bagItem.itemId}" }
+                null
+            }
+            if (newOwned == null) {
+                logger.warn { "Gia Vien redeem rejected charId=$characterId itemId=${bagItem.itemId} qty=$quantity" }
+                return
+            }
+            responseSender.sendReduceBagItem(session, bagIndex, quantity)
+            responseSender.sendUseItemSuccess(session, bagItem.itemId, quantity, showMsg = true)
+            logger.info {
+                "Gia Vien redeem PASS charId=$characterId itemId=${bagItem.itemId} " +
+                    "furnitureId=${itemDef.spare3} qty=$quantity owned=$newOwned"
+            }
+            return
+        }
         if (
             itemDef != null &&
             itemDef.kind == EItemKind.TRANSFORM &&
