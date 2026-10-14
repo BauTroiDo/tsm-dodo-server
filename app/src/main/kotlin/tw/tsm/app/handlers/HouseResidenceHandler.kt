@@ -381,6 +381,12 @@ class HouseResidenceHandler(
             response.sendPlayerTeleport(session, session.playerId, session.mapId, session.x, session.y)
             response.sendSceneChange(session, session.playerId, session.mapId, session.x, session.y,
                 session.equipItemIds, session.titleId, session.instanceId)
+            if (!movingInside) {
+                // A previous session may have paid and disconnected before
+                // C106-013 arrived. Re-entering a fresh house visit clears
+                // that stale session ACK fence, not the paid replay cooldown.
+                upgradesAwaitingLevelAck.remove(session.playerId)
+            }
             houseLogger.info {
                 "Gia Vien room charId=${session.roleId} owner=$owner building=$building floor=$floor room=${visit.roomId}"
             }
