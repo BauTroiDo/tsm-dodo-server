@@ -7,6 +7,12 @@ import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.PacketHandler
 import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
+import tw.tsm.domain.interfaces.repositories.HouseResidenceRepository
+import tw.tsm.domain.interfaces.repositories.HouseResidenceSettings
+import tw.tsm.domain.interfaces.repositories.HouseFurnitureRepository
+import tw.tsm.domain.interfaces.repositories.HouseFurniturePlacement
+import tw.tsm.domain.data.ItemDef
+import tw.tsm.gamelogic.systems.InventorySystem
 import tw.tsm.gamelogic.systems.HouseVisitSystem
 import tw.tsm.gamelogic.systems.PartySystem
 import tw.tsm.gamelogic.systems.WorldManager
@@ -25,6 +31,10 @@ class HouseResidenceHandler(
     private val response: ResponseSender,
     private val characters: CharacterRepository,
     private val parties: PartySystem,
+    private val houseSettings: HouseResidenceRepository,
+    private val houseFurniture: HouseFurnitureRepository,
+    private val inventory: InventorySystem,
+    private val itemDefs: Map<Int, ItemDef>,
 ) : PacketHandler {
     override val mainKind: Int = Opcodes.HOUSE_RESIDENCE
 
@@ -34,14 +44,16 @@ class HouseResidenceHandler(
             1 -> sendHouseData(session, data)
             2 -> enterHouse(session, data)
             7 -> if (data.isEmpty()) HouseResidencePackets.starterScore(session)
-            8 -> if (data.isEmpty()) HouseResidencePackets.emptyFurnitureBag(session)
+            5 -> updateHouseSettings(session, data)
+            6 -> saveFurniture(session, data)
+            8 -> if (data.isEmpty()) sendFurnitureBag(session)
             12 -> leaveHouse(session, data)
             13 -> {
                 val own = data.size == 8 &&
                     PacketReader(data).readULongLE() == session.playerId
                 HouseResidencePackets.totalLevel(session, if (own) 1 else 0)
             }
-            3, 4, 5, 6, 11 -> {
+            3, 4, 11 -> {
                 // Explicit failure instead of silent packet drops or phantom payment.
                 HouseResidencePackets.result(session, subKind, if (subKind == 11) 0 else 2)
                 houseLogger.info { "Gia Vien write disabled: charId=${session.roleId} request=$subKind" }
@@ -52,7 +64,7 @@ class HouseResidenceHandler(
         }
     }
 
-    private fun sendHouseData(session: GameSession, data: ByteArray) {
+    private suspend fun sendHouseData(session: GameSession, data: ByteArray) {
         if (data.size != 10) return
         val r = PacketReader(data)
         val owner = r.readULongLE()
@@ -63,7 +75,87 @@ class HouseResidenceHandler(
             floor != HouseVisitSystem.STARTER_FLOOR ||
             !visits.isInsideOwnHouse(session)
         ) return
-        HouseResidencePackets.starterRoom(session, owner, building, floor)
+        val settings = houseSettings.load(session.roleId.toLong())
+        HouseResidencePackets.starterRoom(session, owner, building, floor, settings,
+            HouseFurniturePolicy.visible(houseFurniture.load(session.roleId.toLong(), building, floor), ownedFurniture(session)))
+    }
+
+    private fun ownedFurniture(session: GameSession): Map<Int, Int> {
+        val owner = session.roleId.toLong()
+        val bag = inventory.getBag(owner) // empty when unloaded: fail-closed for placement
+        val counts = mutableMapOf<Int, Int>()
+        for (thing in bag.values + inventory.getBank(owner).values + inventory.getStorage(owner).values) {
+            val definition = itemDefs[thing.itemId] ?: continue
+            if (definition.kind != 89 || definition.spare3 !in 1..65535 || thing.quantity <= 0) continue
+            val key = definition.spare3
+            counts[key] = (counts.getOrDefault(key, 0).toLong() + thing.quantity)
+                .coerceAtMost(255).toInt()
+        }
+        return counts
+    }
+
+    private suspend fun sendFurnitureBag(session: GameSession) {
+        if (!visits.isInsideOwnHouse(session)) return
+        val owned = ownedFurniture(session)
+        val placed = HouseFurniturePolicy.visible(
+            houseFurniture.load(session.roleId.toLong(), 1, 1), owned
+        )
+        HouseResidencePackets.furnitureBag(session, owned, placed)
+    }
+
+    private suspend fun saveFurniture(session: GameSession, data: ByteArray) {
+        if (!visits.isInsideOwnHouse(session) || data.size < 6) {
+            HouseResidencePackets.result(session, 6, 2)
+            return
+        }
+        val reader = PacketReader(data)
+        val building = reader.readUByte()
+        val floor = reader.readUByte()
+        val count = reader.readUIntLE()
+        if (building != 1 || floor != 1 || count > HouseFurniturePolicy.MAX_PLACEMENTS ||
+            count * 6L != reader.remaining.toLong()) {
+            HouseResidencePackets.result(session, 6, 4)
+            return
+        }
+        val proposed = ArrayList<HouseFurniturePlacement>(count.toInt())
+        repeat(count.toInt()) {
+            proposed += HouseFurniturePlacement(
+                reader.readUShortLE(), reader.readUByte(), reader.readUByte(),
+                reader.readUByte(), reader.readUByte()
+            )
+        }
+        val owned = ownedFurniture(session)
+        if (!HouseFurniturePolicy.validate(proposed, owned)) {
+            HouseResidencePackets.result(session, 6, 7)
+            return
+        }
+        houseFurniture.replace(session.roleId.toLong(), building, floor, proposed)
+        HouseResidencePackets.result(session, 6, 1)
+        houseLogger.info { "Gia Vien saved furniture charId=${session.roleId} count=${proposed.size}" }
+    }
+
+    private suspend fun updateHouseSettings(session: GameSession, data: ByteArray) {
+        if (!visits.isInsideOwnHouse(session)) {
+            HouseResidencePackets.result(session, 5, 2)
+            return
+        }
+        val next = try {
+            val reader = PacketReader(data)
+            if (data.size < 2) null else {
+                val name = reader.readBig5WithByteLen()
+                val signature = reader.readBig5WithByteLen()
+                if (reader.remaining != 0 || !HouseSettingsPolicy.valid(name, signature)) null
+                else HouseResidenceSettings(name, signature)
+            }
+        } catch (_: Exception) {
+            null
+        }
+        if (next == null) {
+            HouseResidencePackets.result(session, 5, 2)
+            return
+        }
+        houseSettings.save(session.roleId.toLong(), next)
+        HouseResidencePackets.result(session, 5, 1)
     }
 
     private suspend fun enterHouse(session: GameSession, data: ByteArray) {
