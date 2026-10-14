@@ -163,6 +163,9 @@ class HouseResidenceHandler(
         val placed = HouseFurniturePolicy.visible(
             houseFurniture.load(session.roleId.toLong(), 1, 1), owned
         )
+        houseLogger.info {
+            "DVT S106-008 furniture snapshot: charId=${session.roleId} kinds=${owned.size} total=${owned.values.sum()} placed=${placed.size}"
+        }
         HouseResidencePackets.furnitureBag(session, owned, placed)
     }
 

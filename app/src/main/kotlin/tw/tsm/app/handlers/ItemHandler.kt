@@ -611,7 +611,10 @@ class ItemHandler(
      * 5. S:008-001 Gửi từng bản thay đổi thuộc tính
      */
     private suspend fun handleUseItem(session: GameSession, data: ByteArray) {
-        if (data.size != 8) return
+        if (data.size != 8) {
+            logger.warn { "DVT item-use invalid packet: charId=${session.roleId} bytes=${data.size}" }
+            return
+        }
         val reader = PacketReader(data)
         val bagIndex = reader.readUShortLE()
         val quantity = reader.readIntLE()
@@ -619,7 +622,10 @@ class ItemHandler(
         val useType = reader.readUByte()
 
         val characterId = session.roleId.toLong()
-        val bagItem = inventorySystem.getBagItem(characterId, bagIndex) ?: return
+        val bagItem = inventorySystem.getBagItem(characterId, bagIndex) ?: run {
+            logger.warn { "DVT item-use missing bag slot: charId=$characterId slot=$bagIndex qty=$quantity" }
+            return
+        }
 
         // Các direct-use đặc biệt cần mutation server + packet riêng.
         val itemDef = itemDefs[bagItem.itemId]
@@ -628,6 +634,9 @@ class ItemHandler(
             return
         }
         if (itemDef?.kind == 89) {
+            logger.info {
+                "DVT furniture use reached: charId=$characterId slot=$bagIndex itemId=${bagItem.itemId} qty=$quantity available=${bagItem.quantity} follow=$followIndex type=$useType"
+            }
             // Original DVT furniture item ability238 transfers physical BAG ownership
             // into the durable Gia Vien catalogue. Never consume it generically.
             if (quantity <= 0 || quantity > bagItem.quantity || itemDef.spare3 !in 1..65535) return
