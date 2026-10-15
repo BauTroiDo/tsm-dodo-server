@@ -70,6 +70,7 @@ class UISellHandler(
     private val furnaceResponse: FurnaceResponseSender? = null,
     private val pokeSystem: PokeSystem? = null,
     private val expSlotSystem: ExpSlotSystem? = null,
+    private val offlineExp: OfflineExpRewardService? = null,
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.UI_SELL
@@ -99,6 +100,10 @@ class UISellHandler(
             return
         }
 
+        if (offlineExp?.isOfflineSell(sellId) == true) {
+            offlineExp.quote(session,sellId,args.isNotEmpty() || reader.remaining != 0)
+            return
+        }
         val charId = session.roleId.toLong()
 
         // DVT UIAlert.OnClick_Submit invokes its callback BEFORE UI.Close(UIAlert).
@@ -146,6 +151,10 @@ class UISellHandler(
         val reader = PacketReader(data)
         val useKind = reader.readUByte()
         val sellId = reader.readUShortLE()
+        if (offlineExp?.isOfflineSell(sellId) == true) {
+            offlineExp.claim(session,sellId,useKind,reader.remaining!=0)
+            return
+        }
 
         if (sellId == UISellSystem.SELL_SLOT_COIN) {
             handleSlotCoinUse(session, useKind, reader)
