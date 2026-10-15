@@ -10,6 +10,7 @@ import tw.tsm.domain.util.OleDate
 import tw.tsm.gamelogic.systems.DungeonSystem
 import tw.tsm.gamelogic.systems.EveTriggerRouter
 import tw.tsm.gamelogic.systems.WorldManager
+import tw.tsm.gamelogic.systems.MiningSystem
 import tw.tsm.gamelogic.systems.LimitTimeDungeonSystem
 import tw.tsm.protocol.PacketWriter
 
@@ -30,6 +31,7 @@ class RelocateHandler(
     private val dungeonSystem: DungeonSystem? = null,
     private val eveTriggerRouter: EveTriggerRouter? = null,
     private val elfHandler: ElfHandler? = null,
+    private val miningHandler: MiningHandler? = null,
 ) : PacketHandler {
 
     /** mainKind = 12 (0x0C) */
@@ -103,6 +105,12 @@ class RelocateHandler(
         // Client only creates the world sprite after RoleController exists.
         // Restore equipped Elf sprites after scene loading, including nearby players.
         elfHandler?.syncAppearanceForMap(session)
+
+        // Only after the client C012-001 scene-ready acknowledgment, refresh
+        // the in-world mine HUD. No extra teleport and no reserve depletion.
+        if (session.mapId == MiningSystem.MINE_SCENE_ID) {
+            miningHandler?.sendHudSnapshotAfterSceneReady(session)
+        }
     }
 
     private fun sendDungeonStartTime(session: GameSession, startTime: Double, dungeonId: Int) {
