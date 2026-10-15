@@ -9,13 +9,17 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.jdbc.upsert
+import org.jetbrains.exposed.v1.jdbc.update
 import tw.tsm.domain.interfaces.repositories.InventoryRepository
 import tw.tsm.domain.valueobjects.MythAttribute
 import tw.tsm.domain.valueobjects.ThingData
 import tw.tsm.persistence.tables.CharacterMoney
 import tw.tsm.persistence.tables.Inventories
+import tw.tsm.persistence.tables.CharacterHouseFurnitureOwned
+import tw.tsm.domain.interfaces.repositories.HouseFurnitureRedemption
 import tw.tsm.persistence.tables.CharacterRoleCounts
 import tw.tsm.persistence.tables.CharacterBattlePassSeasons
+import tw.tsm.persistence.tables.CharacterWelfareExchangeReceipts
 import tw.tsm.domain.constants.EThings
 
 /**
@@ -24,6 +28,52 @@ import tw.tsm.domain.constants.EThings
  * Dùng bảng đơn inventories chứa túi đồ/trang bị/Tiền Trang, phân biệt bằng storageType.
  */
 class InventoryRepositoryImpl : InventoryRepository {
+
+    override suspend fun loadOwnedHouseFurniture(characterId: Long): Map<Int, Int> =
+        suspendTransaction {
+            CharacterHouseFurnitureOwned.selectAll()
+                .where { CharacterHouseFurnitureOwned.characterId eq characterId }
+                .associate {
+                    it[CharacterHouseFurnitureOwned.furnitureId] to
+                        it[CharacterHouseFurnitureOwned.quantity]
+                }
+        }
+
+    /** Source BAG debit and House furniture credit MUST commit in one SQL transaction. */
+    override suspend fun redeemHouseFurnitureAtomic(
+        characterId: Long, slot: Int, itemId: Int, furnitureId: Int, quantity: Int,
+    ): HouseFurnitureRedemption? = suspendTransaction {
+        if (quantity !in 1..255 || furnitureId !in 1..65535) return@suspendTransaction null
+        val key = (Inventories.characterId eq characterId) and
+            (Inventories.storageType eq EThings.BAG) and (Inventories.slot eq slot)
+        val row = Inventories.selectAll().where { key }.forUpdate().firstOrNull()
+            ?: return@suspendTransaction null
+        val actualItemId = row[Inventories.itemId]
+        val available = row[Inventories.quantity]
+        if (actualItemId != itemId || available < quantity || available <= 0 ||
+            row[Inventories.isLocked]) return@suspendTransaction null
+
+        val ownerKey = (CharacterHouseFurnitureOwned.characterId eq characterId) and
+            (CharacterHouseFurnitureOwned.furnitureId eq furnitureId)
+        val current = CharacterHouseFurnitureOwned.selectAll().where { ownerKey }
+            .forUpdate().firstOrNull()?.get(CharacterHouseFurnitureOwned.quantity) ?: 0
+        if (current !in 0..255 || quantity > 255 - current) return@suspendTransaction null
+
+        val after = available - quantity
+        if (after == 0) Inventories.deleteWhere { key }
+        else Inventories.update({ key }) { it[Inventories.quantity] = after }
+
+        CharacterHouseFurnitureOwned.upsert {
+            it[CharacterHouseFurnitureOwned.characterId] = characterId
+            it[CharacterHouseFurnitureOwned.furnitureId] = furnitureId
+            it[CharacterHouseFurnitureOwned.quantity] = current + quantity
+        }
+        HouseFurnitureRedemption(
+            bagAfter = if (after == 0) null else row.toThingData().copy(quantity = after),
+            ownedTotal = current + quantity,
+        )
+    }
+
 
     override suspend fun loadItems(characterId: Long, storageType: Int): Map<Int, ThingData> =
         suspendTransaction {
@@ -53,6 +103,96 @@ class InventoryRepositoryImpl : InventoryRepository {
             }
             Unit
         }
+
+    /**
+     * Recorded gift exchange and BAG update share the same transaction.
+     * No receipt can be committed if any BAG write fails.
+     */
+    override suspend fun saveWelfareExchangeAtomic(
+        characterId: Long, changes: Map<Int, ThingData?>,
+        recipeDay: Int, exchangeCount: Int, resultItemId: Int, resultQuantity: Int,
+    ) = suspendTransaction {
+        require(characterId > 0L && recipeDay >= 0 && exchangeCount in 1..50 &&
+            resultItemId in 1..65535 && resultQuantity in 1..Int.MAX_VALUE &&
+            changes.isNotEmpty()) { "Invalid welfare exchange receipt metadata" }
+        for ((slot, thing) in changes) {
+            if (thing == null || thing.isEmpty) {
+                Inventories.deleteWhere {
+                    (Inventories.characterId eq characterId) and
+                    (Inventories.storageType eq EThings.BAG) and
+                    (Inventories.slot eq slot)
+                }
+            } else {
+                Inventories.upsert {
+                    it[Inventories.characterId] = characterId
+                    it[Inventories.storageType] = EThings.BAG
+                    it[Inventories.slot] = slot
+                    it.setThingData(thing)
+                }
+            }
+        }
+        CharacterWelfareExchangeReceipts.insert {
+            it[CharacterWelfareExchangeReceipts.characterId] = characterId
+            it[CharacterWelfareExchangeReceipts.recipeDay] = recipeDay
+            it[CharacterWelfareExchangeReceipts.exchangeCount] = exchangeCount
+            it[CharacterWelfareExchangeReceipts.resultItemId] = resultItemId
+            it[CharacterWelfareExchangeReceipts.resultQuantity] = resultQuantity
+            it[CharacterWelfareExchangeReceipts.claimedAtEpochMs] =
+                System.currentTimeMillis()
+        }
+        Unit
+    }
+
+    /**
+     * Spend gold and change BAG slots in a single Exposed transaction.
+     * The exact expected SQL balances prevent stale cache overwrites.
+     * Throw on any mismatch: transaction rollback guarantees no partial prize.
+     */
+    override suspend fun saveWelfareGoldExchangeAtomic(
+        characterId: Long, changes: Map<Int, ThingData?>,
+        recipeDay: Int, exchangeCount: Int, resultItemId: Int, resultQuantity: Int,
+        expectedGold: Int, expectedAuctionGold: Int, goldCost: Int,
+    ) = suspendTransaction {
+        require(characterId > 0 && changes.isNotEmpty() && recipeDay >= 0 &&
+            exchangeCount in 1..50 && resultItemId in 1..65535 &&
+            resultQuantity > 0 && goldCost > 0 && expectedGold >= goldCost &&
+            expectedAuctionGold >= 0) { "Invalid gold exchange request" }
+
+        val goldKey = (CharacterMoney.characterId eq characterId) and
+            (CharacterMoney.gold eq expectedGold) and
+            (CharacterMoney.auctionGold eq expectedAuctionGold)
+        val updated = CharacterMoney.update({ goldKey }) {
+            it[CharacterMoney.gold] = expectedGold - goldCost
+        }
+        check(updated == 1) { "Gold wallet changed before welfare exchange" }
+
+        for ((slot, thing) in changes) {
+            if (thing == null || thing.isEmpty) {
+                Inventories.deleteWhere {
+                    (Inventories.characterId eq characterId) and
+                    (Inventories.storageType eq EThings.BAG) and
+                    (Inventories.slot eq slot)
+                }
+            } else {
+                Inventories.upsert {
+                    it[Inventories.characterId] = characterId
+                    it[Inventories.storageType] = EThings.BAG
+                    it[Inventories.slot] = slot
+                    it.setThingData(thing)
+                }
+            }
+        }
+        CharacterWelfareExchangeReceipts.insert {
+            it[CharacterWelfareExchangeReceipts.characterId] = characterId
+            it[CharacterWelfareExchangeReceipts.recipeDay] = recipeDay
+            it[CharacterWelfareExchangeReceipts.exchangeCount] = exchangeCount
+            it[CharacterWelfareExchangeReceipts.resultItemId] = resultItemId
+            it[CharacterWelfareExchangeReceipts.resultQuantity] = resultQuantity
+            it[CharacterWelfareExchangeReceipts.goldSpent] = goldCost
+            it[CharacterWelfareExchangeReceipts.claimedAtEpochMs] = System.currentTimeMillis()
+        }
+        Unit
+    }
 
     override suspend fun saveItemsAtomic(
         characterId: Long,

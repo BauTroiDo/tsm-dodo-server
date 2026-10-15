@@ -11,22 +11,36 @@ import tw.tsm.persistence.tables.CharacterAstrolabes
 import tw.tsm.persistence.tables.CharacterSouls
 import tw.tsm.persistence.tables.CharacterElfProfiles
 import tw.tsm.persistence.tables.CharacterElfProgress
+import tw.tsm.persistence.tables.CharacterChildStates
 import tw.tsm.persistence.tables.CharacterMallQuotas
 import tw.tsm.persistence.tables.CharacterHouseProfiles
+import tw.tsm.persistence.tables.CharacterHouseFurniture
+import tw.tsm.persistence.tables.CharacterHouseFurnitureOwned
+import tw.tsm.persistence.tables.CharacterHouseExpansion
+import tw.tsm.persistence.tables.CharacterHouseWarriors
+import tw.tsm.persistence.tables.CharacterHouseSettings
 import tw.tsm.persistence.tables.CharacterGiftRecords
 import tw.tsm.persistence.tables.CharacterBitFlags
 import tw.tsm.persistence.tables.CharacterMissionFlags
 import tw.tsm.persistence.tables.CharacterDungeonDays
 import tw.tsm.persistence.tables.CharacterLimitedAreaDays
 import tw.tsm.persistence.tables.CharacterDungeonRuns
+import tw.tsm.persistence.tables.CharacterEveEffectClaims
+import tw.tsm.persistence.tables.CharacterEveEffectSettlements
+import tw.tsm.persistence.tables.CharacterRewardLedger
+import tw.tsm.persistence.tables.CharacterRewardPendingScopes
 import tw.tsm.persistence.tables.CharacterDungeonWeeks
 import tw.tsm.persistence.tables.CharacterWelfareState
+import tw.tsm.persistence.tables.CharacterWelfareLoginDays
+import tw.tsm.persistence.tables.CharacterWelfareExchangeReceipts
 import tw.tsm.persistence.tables.CharacterMissions
 import tw.tsm.persistence.tables.CharacterCompletedEvents
 import tw.tsm.persistence.tables.CharacterCollectionCards
 import tw.tsm.persistence.tables.CharacterCollectionStyles
 import tw.tsm.persistence.tables.CharacterMoney
 import tw.tsm.persistence.tables.CharacterMining
+import tw.tsm.persistence.tables.MiningOreReserves
+import tw.tsm.persistence.tables.MiningTsAwardReceipts
 import tw.tsm.persistence.tables.CharacterCurrencies
 import tw.tsm.persistence.tables.Characters
 import tw.tsm.persistence.tables.CharacterMountEquips
@@ -87,10 +101,10 @@ object DatabaseFactory {
         transaction {
             SchemaUtils.createMissingTablesAndColumns(
                 Accounts, Characters, Inventories, CharacterMoney, CharacterCurrencies,
-                CharacterAstrolabes, CharacterSouls, CharacterElfProfiles, CharacterElfProgress, CharacterMallQuotas,
-                CharacterHouseProfiles, CharacterGiftRecords,
-                CharacterMissions, CharacterMissionFlags, CharacterCompletedEvents, CharacterBitFlags,
-                CharacterDungeonDays, CharacterDungeonRuns, CharacterDungeonWeeks, CharacterWelfareState,
+                CharacterAstrolabes, CharacterSouls, CharacterElfProfiles, CharacterElfProgress, CharacterChildStates, CharacterMallQuotas,
+                CharacterHouseProfiles, CharacterHouseSettings, CharacterHouseFurniture, CharacterHouseFurnitureOwned, CharacterHouseExpansion, CharacterHouseWarriors, CharacterGiftRecords,
+                CharacterMissions, CharacterMissionFlags, CharacterCompletedEvents, CharacterEveEffectClaims, CharacterEveEffectSettlements, CharacterBitFlags,
+                CharacterDungeonDays, CharacterDungeonRuns, CharacterDungeonWeeks, CharacterRewardLedger, CharacterRewardPendingScopes, CharacterWelfareState, CharacterWelfareLoginDays, CharacterWelfareExchangeReceipts,
                 CharacterLimitedAreaDays,
                 CharacterSkills, CharacterTurn2Skills, CharacterTurn3States, CharacterTurn3Skills,
                 CharacterPets,
@@ -100,7 +114,7 @@ object DatabaseFactory {
                 CharacterHotkeys,
                 CharacterRoleCounts, CharacterBattlePassSeasons,
                 CharacterFlyPoints,
-                CharacterMining,
+                CharacterMining, MiningOreReserves, MiningTsAwardReceipts,
                 CharacterUiSellCounts,
                 CharacterSlotMachines, CharacterSlotMachineAwards, ExpSlotStates,
                 CharacterPokes, CharacterPokeAwards,

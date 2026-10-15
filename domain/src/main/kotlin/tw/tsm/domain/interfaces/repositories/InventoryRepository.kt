@@ -7,7 +7,17 @@ import tw.tsm.domain.valueobjects.ThingData
  *
  * storageType tương ứng [tw.tsm.domain.constants.EThings]: BAG=1, BANK=4, EQUIP=8
  */
+data class HouseFurnitureRedemption(val bagAfter: tw.tsm.domain.valueobjects.ThingData?, val ownedTotal: Int)
+
 interface InventoryRepository {
+    /** Persisted furniture ownership independent of BAG. */
+    suspend fun loadOwnedHouseFurniture(characterId: Long): Map<Int, Int> = emptyMap()
+
+    /** Commit BAG debit and furniture credit atomically. */
+    suspend fun redeemHouseFurnitureAtomic(
+        characterId: Long, slot: Int, itemId: Int, furnitureId: Int, quantity: Int,
+    ): HouseFurnitureRedemption? = error("House furniture atomic redeem unsupported")
+
 
     /**
      * Nạp toàn bộ vật phẩm của nhân vật chỉ định với loại lưu trữ chỉ định
@@ -26,6 +36,25 @@ interface InventoryRepository {
      * Implement mặc định giữ tương thích các fake repository trong test; persistence thật override
      * bằng một DB transaction duy nhất.
      */
+    /**
+     * DVT EAward.Change=9 physical-only recipe. Persist the BAG debit/output
+     * AND one durable receipt in the same SQL transaction. Fail closed if
+     * the real repository cannot provide the atomic implementation.
+     * Each valid paid exchange gets its own receipt: repeating a recipe
+     * legitimately spends another full set of materials.
+     */
+    suspend fun saveWelfareExchangeAtomic(
+        characterId: Long, changes: Map<Int, ThingData?>,
+        recipeDay: Int, exchangeCount: Int, resultItemId: Int, resultQuantity: Int,
+    ) { error("Welfare BAG+receipt atomic repository unsupported") }
+
+    /** All-or-nothing BAG swap + paid gold + receipt, with optimistic DB wallet check. */
+    suspend fun saveWelfareGoldExchangeAtomic(
+        characterId: Long, changes: Map<Int, ThingData?>,
+        recipeDay: Int, exchangeCount: Int, resultItemId: Int, resultQuantity: Int,
+        expectedGold: Int, expectedAuctionGold: Int, goldCost: Int,
+    ) { error("Atomic welfare gold exchange repository unavailable") }
+
     suspend fun saveItemsAtomic(characterId: Long, storageType: Int, changes: Map<Int, ThingData?>) {
         for ((slot, thing) in changes) {
             saveItem(characterId, storageType, slot, thing)
