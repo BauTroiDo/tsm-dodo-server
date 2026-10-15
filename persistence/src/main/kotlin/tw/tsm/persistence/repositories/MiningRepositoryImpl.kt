@@ -1,6 +1,14 @@
 package tw.tsm.persistence.repositories
 
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.update
+import org.jetbrains.exposed.v1.core.ResultRow
+import tw.tsm.domain.constants.EThings
+import tw.tsm.domain.interfaces.repositories.MiningFuelCommit
+import tw.tsm.domain.valueobjects.ThingData
+import tw.tsm.persistence.tables.Inventories
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.jdbc.upsert
@@ -9,6 +17,62 @@ import tw.tsm.domain.interfaces.repositories.MiningRepository
 import tw.tsm.persistence.tables.CharacterMining
 
 class MiningRepositoryImpl : MiningRepository {
+    /**
+     * ONE SQL transaction. Lock the BAG row before reading mining state;
+     * never debit food separately from persisting machine durability.
+     */
+    override suspend fun commitFuelRefillAtomic(
+        charId: Long, bagSlot: Int, expectedBag: ThingData, quantity: Int,
+        expectedMine: MiningRecord?, updatedMine: MiningRecord,
+    ): MiningFuelCommit? = suspendTransaction {
+        if (charId <= 0 || bagSlot < 0 || quantity <= 0 ||
+            updatedMine.machineFull.size != 4 ||
+            updatedMine.machineFull.any { it !in 0..65535 }) return@suspendTransaction null
+
+        val bagKey = (Inventories.characterId eq charId) and
+            (Inventories.storageType eq EThings.BAG) and
+            (Inventories.slot eq bagSlot)
+        val bagRow = Inventories.selectAll().where { bagKey }.forUpdate().singleOrNull()
+            ?: return@suspendTransaction null
+        val before = bagRow[Inventories.quantity]
+        if (bagRow[Inventories.itemId] != expectedBag.itemId ||
+            before != expectedBag.quantity || before < quantity ||
+            bagRow[Inventories.isLocked]) return@suspendTransaction null
+
+        val mineRow = CharacterMining.selectAll()
+            .where { CharacterMining.characterId eq charId }
+            .forUpdate().singleOrNull()
+        val persistedMine = mineRow?.asMiningRecord()
+        if (persistedMine != expectedMine) return@suspendTransaction null
+
+        val remaining = before - quantity
+        val changed = if (remaining == 0) Inventories.deleteWhere { bagKey }
+        else Inventories.update({ bagKey }) { it[Inventories.quantity] = remaining }
+        check(changed == 1) { "Mining fuel debit did not affect exactly one BAG row" }
+
+        CharacterMining.upsert {
+            it[characterId] = charId
+            it[mineType] = updatedMine.mineType
+            it[full1] = updatedMine.machineFull[0]
+            it[full2] = updatedMine.machineFull[1]
+            it[full3] = updatedMine.machineFull[2]
+            it[full4] = updatedMine.machineFull[3]
+            it[updatedAtMillis] = updatedMine.updatedAtMillis
+            it[dayLimit] = updatedMine.dayLimit
+        }
+        MiningFuelCommit(if (remaining == 0) null else expectedBag.copy(quantity = remaining))
+    }
+
+    private fun ResultRow.asMiningRecord(): MiningRecord = MiningRecord(
+        mineType = this[CharacterMining.mineType],
+        machineFull = listOf(
+            this[CharacterMining.full1], this[CharacterMining.full2],
+            this[CharacterMining.full3], this[CharacterMining.full4],
+        ),
+        updatedAtMillis = this[CharacterMining.updatedAtMillis],
+        dayLimit = this[CharacterMining.dayLimit],
+    )
+
     override suspend fun load(charId: Long): MiningRecord? = suspendTransaction {
         CharacterMining.selectAll()
             .where { CharacterMining.characterId eq charId }
