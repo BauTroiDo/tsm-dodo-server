@@ -5,6 +5,7 @@ import tw.tsm.domain.constants.Opcodes
 import tw.tsm.domain.interfaces.GameSession
 import tw.tsm.domain.interfaces.PacketHandler
 import tw.tsm.protocol.PacketWriter
+import tw.tsm.gamelogic.systems.OnlineWelfareDaySystem
 
 private val logger = KotlinLogging.logger {}
 
@@ -13,11 +14,12 @@ private val logger = KotlinLogging.logger {}
  *
  * client gửi heartbeat mỗi 20 giây, server trả lời bằng chính gói tin đó
  */
-class KeepaliveHandler : PacketHandler {
+class KeepaliveHandler(private val onlineWelfare: OnlineWelfareDaySystem? = null) : PacketHandler {
     override val mainKind: Int = Opcodes.KEEPALIVE
 
     override suspend fun handle(session: GameSession, subKind: Int, data: ByteArray) {
         session.send(KEEPALIVE_RESPONSE)
+        onlineWelfare?.onHeartbeat(session)
     }
 
     companion object {
