@@ -824,10 +824,10 @@ function UIMain.UpdateMining()
 end
 
 function UIMain.UpdateMiningPercent(type, lastMining)
-  if SceneManager.sceneId == 49996 then
-    slider_Percent.maxValue = UIMine.MaxMine;
-    slider_Percent.value = lastMining;
-    text_Percent.text = string.Concat(math.floor(lastMining / UIMine.MaxMine * 100), "%");
-    text_Mine.text = string.format(string.Get(23894), type);
-  end
+  -- S170-002 can arrive before the new scene finishes loading.
+  -- UIMain.UpdateMining controls visibility, not this data update.
+  slider_Percent.maxValue = UIMine.MaxMine;
+  slider_Percent.value = lastMining;
+  text_Percent.text = string.Concat(math.floor(lastMining / UIMine.MaxMine * 100), "%");
+  text_Mine.text = string.format(string.Get(23894), type);
 end
