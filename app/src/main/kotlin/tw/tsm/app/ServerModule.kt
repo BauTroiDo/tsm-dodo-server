@@ -125,6 +125,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             register(get<StatHandler>())
             register(get<AstrolabeHandler>())
             register(get<SoulHandler>())
+            register(get<RequiemHandler>())
             register(get<ElfHandler>())
             register(get<HouseBoardHandler>())
             register(get<GodskinHandler>())
@@ -725,6 +726,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { StatHandler(get(), get(), get(), get<StatSystem>(), get(), get<SkillRepository>(), get<DailyProgressSystem>()) }
     single { AstrolabeHandler(get<AstrolabeSystem>(), get<ResponseSender>()) }
     single { SoulHandler(get<SoulSystem>(), get<PetSystem>(), get<GameDataManager>().npcDefs, get<ResponseSender>()) }
+    single { RequiemHandler() }
     single { ElfHandler(get<ElfRepository>(), get<BitFlagSystem>(), get<InventorySystem>(), get<ResponseSender>(), get<GameDataManager>().itemDefs, get<ElfCatalog>(), get<WorldManager>()) }
     single { ElfTokenUnlockService(get<BitFlagSystem>(), get<InventorySystem>(), get<ElfCatalog>(), get<ResponseSender>(), get<GameDataManager>().itemDefs) }
     single { FurnaceResponseSender() }

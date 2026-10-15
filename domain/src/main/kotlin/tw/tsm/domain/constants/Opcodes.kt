@@ -203,6 +203,9 @@ object Opcodes {
     const val HOUSE_BOARD = 105
 
     /** Linh Hồn (protocolTable[120]) */
+    /** DVT Requiem (111), not Soul (120). */
+    const val REQUIEM = 111
+
     const val SOUL = 120
 
     /** Kho tướng (protocolTable[122])*/
