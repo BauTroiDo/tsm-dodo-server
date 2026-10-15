@@ -38,6 +38,7 @@ import tw.tsm.persistence.tables.CharacterCollectionStyles
 import tw.tsm.persistence.tables.CharacterMoney
 import tw.tsm.persistence.tables.CharacterMining
 import tw.tsm.persistence.tables.MiningOreReserves
+import tw.tsm.persistence.tables.MiningTsAwardReceipts
 import tw.tsm.persistence.tables.CharacterCurrencies
 import tw.tsm.persistence.tables.Characters
 import tw.tsm.persistence.tables.CharacterMountEquips
@@ -112,7 +113,7 @@ object DatabaseFactory {
                 CharacterHotkeys,
                 CharacterRoleCounts, CharacterBattlePassSeasons,
                 CharacterFlyPoints,
-                CharacterMining, MiningOreReserves,
+                CharacterMining, MiningOreReserves, MiningTsAwardReceipts,
                 CharacterUiSellCounts,
                 CharacterSlotMachines, CharacterSlotMachineAwards, ExpSlotStates,
                 CharacterPokes, CharacterPokeAwards,

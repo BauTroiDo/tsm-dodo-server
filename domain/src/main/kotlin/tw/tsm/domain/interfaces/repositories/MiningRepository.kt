@@ -13,7 +13,28 @@ data class MiningRecord(
 /** One SQL transaction returns the authoritative post-commit BAG snapshot. */
 data class MiningFuelCommit(val bagAfter: ThingData?)
 
+/** Source-confirmed TS currency (ECurrency.TS=8), not an inventory ore item.
+ * The rate is backend-only and still unknown: callers must supply a verified award.
+ */
+data class MiningTsAwardCommit(
+    val newlyApplied: Boolean,
+    val tsBalance: Int,
+    val remainingOre: Long,
+)
 interface MiningRepository {
+    /**
+     * One receipt = one TS coin credit and shared mine depletion, or neither.
+     * Does not generate rewards or choose a yield rate. No gameplay caller yet.
+     */
+    suspend fun commitVerifiedTsAwardAtomic(
+        receiptId: String,
+        characterId: Long,
+        mineType: Int,
+        oreDebit: Long,
+        tsCredit: Int,
+        maxReserve: Long,
+    ): MiningTsAwardCommit? = error("Verified mining TS reward transaction unavailable")
+
     suspend fun load(charId: Long): MiningRecord?
     suspend fun save(charId: Long, record: MiningRecord)
 
