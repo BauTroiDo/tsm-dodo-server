@@ -35,7 +35,7 @@ class DvtMiningTsAwardAtomicSqlTest {
         }.singleOrNull()?.get(CharacterCurrencies.value) ?: 0
     }
     @Test fun verifiedAwardCreditsTsAndDebitsOreWithOneReceipt() = runBlocking {
-        val result = repo.commitVerifiedTsAwardAtomic("mine:1:31:tick100",31,1,100,7,cap)
+        val result = repo.commitVerifiedTsAwardAtomic("mine:1:31:tick100",31,1,100,7,cap,0)
         assertNotNull(result)
         assertTrue(result!!.newlyApplied)
         assertEquals(7,result.tsBalance)
@@ -45,9 +45,9 @@ class DvtMiningTsAwardAtomicSqlTest {
         assertEquals(1L, transaction(db) { MiningTsAwardReceipts.selectAll().count() })
     }
     @Test fun replayDoesNotCreditTwiceAndDifferentPayloadFailsClosed() = runBlocking {
-        val initial=repo.commitVerifiedTsAwardAtomic("mine:1:31:tick101",31,1,10,3,cap)
-        val replay=repo.commitVerifiedTsAwardAtomic("mine:1:31:tick101",31,1,10,3,cap)
-        val tamper=repo.commitVerifiedTsAwardAtomic("mine:1:31:tick101",31,1,10,4,cap)
+        val initial=repo.commitVerifiedTsAwardAtomic("mine:1:31:tick101",31,1,10,3,cap,0)
+        val replay=repo.commitVerifiedTsAwardAtomic("mine:1:31:tick101",31,1,10,3,cap,0)
+        val tamper=repo.commitVerifiedTsAwardAtomic("mine:1:31:tick101",31,1,10,4,cap,0)
         assertTrue(initial!!.newlyApplied)
         assertFalse(replay!!.newlyApplied)
         assertNull(tamper)
@@ -57,19 +57,29 @@ class DvtMiningTsAwardAtomicSqlTest {
     }
     @Test fun depletionAndInvalidCreditCannotMintTs() = runBlocking {
         assertTrue(repo.debitVerifiedOre(1,cap - 5,cap))
-        assertNull(repo.commitVerifiedTsAwardAtomic("mine:1:31:no",31,1,6,1,cap))
-        assertNull(repo.commitVerifiedTsAwardAtomic("mine:1:31:zero",31,1,1,0,cap))
-        assertNull(repo.commitVerifiedTsAwardAtomic("bad id",31,1,1,1,cap))
+        assertNull(repo.commitVerifiedTsAwardAtomic("mine:1:31:no",31,1,6,1,cap,0))
+        assertNull(repo.commitVerifiedTsAwardAtomic("mine:1:31:zero",31,1,1,0,cap,0))
+        assertNull(repo.commitVerifiedTsAwardAtomic("bad id",31,1,1,1,cap,0))
         assertEquals(0,tsBalance(31))
         assertEquals(5L,repo.loadRemainingOre(1))
         assertEquals(0L, transaction(db) { MiningTsAwardReceipts.selectAll().count() })
     }
+    @Test fun staleWalletSnapshotCannotOverwriteOtherTsChanges() = runBlocking {
+        val first=repo.commitVerifiedTsAwardAtomic("mine:1:31:tick500",31,1,10,3,cap,0)
+        assertTrue(first!!.newlyApplied)
+        val stale=repo.commitVerifiedTsAwardAtomic("mine:1:31:tick501",31,1,10,4,cap,0)
+        assertNull(stale)
+        assertEquals(3,tsBalance(31))
+        assertEquals(cap - 10,repo.loadRemainingOre(1))
+        assertEquals(1L, transaction(db) { MiningTsAwardReceipts.selectAll().count() })
+    }
+
     @Test fun sqlFailureRollsBackBothAwardAndReserveAndReceipt() = runBlocking {
         transaction(db) {
             exec("ALTER TABLE character_currencies ADD CONSTRAINT ts_cap CHECK (\"value\" <= 5)")
         }
         var failed=false
-        try { repo.commitVerifiedTsAwardAtomic("mine:1:31:bad",31,1,100,7,cap) }
+        try { repo.commitVerifiedTsAwardAtomic("mine:1:31:bad",31,1,100,7,cap,0) }
         catch (e: Exception) { failed=true }
         assertTrue(failed,"Injected SQL constraint must reject entire transaction")
         assertEquals(0,tsBalance(31))

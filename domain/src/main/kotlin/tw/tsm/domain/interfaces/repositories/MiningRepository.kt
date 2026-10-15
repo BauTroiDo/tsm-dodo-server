@@ -33,6 +33,7 @@ interface MiningRepository {
         oreDebit: Long,
         tsCredit: Int,
         maxReserve: Long,
+        expectedTsBalance: Int,
     ): MiningTsAwardCommit? = error("Verified mining TS reward transaction unavailable")
 
     suspend fun load(charId: Long): MiningRecord?
