@@ -5,7 +5,28 @@ import tw.tsm.domain.data.ItemDef
 import tw.tsm.domain.valueobjects.ThingData
 
 /** Pure source-backed BAG exchange planner for DVT EAward.Change (C087-002 kind9). */
+enum class WelfareExchangeFailure { MISSING_ITEMS, BAG_FULL, OTHER }
+
 object WelfareItemExchangePlanner {
+    /** Count only unlocked source stacks, with overflow-safe multiplied costs. */
+    fun hasRequiredUnlockedItems(
+        bag: Map<Int, ThingData>, costs: List<Pair<Int, Int>>, count: Int,
+    ): Boolean {
+        if (count !in 1..50 || costs.isEmpty()) return false
+        val totals = linkedMapOf<Int, Long>()
+        for ((id, qty) in costs) {
+            if (id <= 0 || qty <= 0) return false
+            val next = (totals[id] ?: 0L) + qty.toLong() * count
+            if (next !in 1L..Int.MAX_VALUE.toLong()) return false
+            totals[id] = next
+        }
+        return totals.all { (id, required) ->
+            bag.values.asSequence()
+                .filter { it.itemId == id && !it.isLocked && it.quantity > 0 }
+                .sumOf { it.quantity.toLong() } >= required
+        }
+    }
+
     fun plan(
         bag: Map<Int, ThingData>, capacity: Int,
         costs: List<Pair<Int, Int>>, output: Pair<Int, Int>,
