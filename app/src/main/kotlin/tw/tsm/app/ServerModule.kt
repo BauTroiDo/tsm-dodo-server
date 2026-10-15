@@ -329,6 +329,15 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single<HouseWarriorRepository> { HouseWarriorRepositoryImpl() }
     single<HouseBoardRepository> { HouseBoardRepositoryImpl() }
     single<WelfareStateRepository> { WelfareStateRepositoryImpl() }
+    single { tw.tsm.persistence.repositories.OfflineExpClaimRepository() }
+    single {
+        OfflineExpRewardService(
+            get<tw.tsm.persistence.repositories.OfflineExpClaimRepository>(),
+            get<RoleCountSystem>(),get<PointSystem>(),get<PlayerStateManager>(),
+            get<StatSystem>(),get<CollectionSystem>(),get<QuestSystem>(),
+            get<OnlineWelfareDaySystem>(),get<ResponseSender>()
+        )
+    }
     single<MiningRepository> { MiningRepositoryImpl() }
 
     // Dữ liệu game
@@ -826,6 +835,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<GameDataManager>().loginAwardDefs, get<WelfareStateRepository>(), get<RoleCountSystem>(),
             get<BitFlagSystem>(), get<InventorySystem>(), get<PointSystem>(), get<MoneySystem>(),
             get<PlayerCurrencySystem>(), get<ResponseSender>(), get<OnlineWelfareDaySystem>(),
+            get<OfflineExpRewardService>(),
         )
     }
     single { MailHandler(get()) }
@@ -864,6 +874,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<FurnaceResponseSender>(),
             get<PokeSystem>(),
             get<ExpSlotSystem>(),
+            get<OfflineExpRewardService>(),
         )
     }
     single { ExpSlotHandler(get<ExpSlotSystem>()) }
