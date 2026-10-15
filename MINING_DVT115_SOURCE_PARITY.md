@@ -68,3 +68,18 @@ The ONLY matching 'Mining' symbol in the 18MB dump.cs text search is eLifeSkillT
 - **SQL-backed regression:** `DvtMiningFuelAtomicSqlTest.concurrentQueriesAndRefillsDoNotLoseTheCommittedWorkerFuel` launches 96 simultaneous queries/refill attempts on a single character, expecting exactly 3 successful refills from a 3-item bag, 0 remaining items, and 30 stored fullness in only the selected worker. It also reloads persistent DB state and compares with another read.
 - Gradle target `DvtMiningFuelAtomicSqlTest` (10), `Dvt115MiningSourceParityTest` (6), `Dvt115MiningUnsupportedStateWireTest` (3): **19/19 PASS**, isolated H2. Git SHA for tested file and pushed blob: `a6cb74f3454dbc2bea3c97a9f4d5759795286afc`.
 - **No race fix was needed** in this scenario; preserve the existing guard. This test does not claim completion of TS currency rewards and does not establish DVT-original daily cap or payout rates.
+
+## Refill HUD / 360-second timer baseline — protocol 170 wire check
+
+Original `UI/UIMine.lua` handles successful S170-010 in `UIMine.Mining` by adding the reported fullness to `machineData[itemIndex].full`; it does **not** update `oldMachineData` which `UIMine.UpdateTimer` uses to recalculate the live fullness. Therefore the backend must follow S170-010 with the authoritative full S170-001 snapshot to reset both live values and the timer baseline via `UIMine.SetData`.
+
+Kotlin `MiningHandler.refill` already does this:
+1. S023-009 BAG reduction
+2. S170-010 success, using original reversed worker wire index
+3. S170-001 fresh `MiningSystem.getView` after commit
+
+New regression `Dvt115MineRefillHudRefreshWireTest` asserts the actual byte sequence and worker-fullness positions for a representative C170-010 (worker1, two foods), rejection behavior without BAG debit or timer refresh, and no mutation from malformed packets.
+
+Combined isolated Gradle `:tests:test` on six DVT mine test classes: **30/30 PASS**, including new 3 tests, prior SQL 10, client source parity 6, fake-state 3, icon wire 5, clock 3. The tested file SHA-1 Git blob matches pushed `9d1381a955b88323d53e99fb928930a1997d1a8e`.
+
+No Kotlin gameplay source change, no client change, no DEV deployment. This still does not prove original server TS payout amounts, daily cap/reset, or actual mining income.
