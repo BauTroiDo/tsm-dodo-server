@@ -2,6 +2,8 @@ package tw.tsm.app.handlers
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import tw.tsm.app.response.InventoryResponseSender
+import tw.tsm.app.response.MallResponseSender
+import tw.tsm.app.response.ChatResponseSender
 import tw.tsm.domain.constants.Opcodes
 import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.GameSession
@@ -25,6 +27,8 @@ class MiningHandler(
 ) : PacketHandler {
     override val mainKind: Int = Opcodes.MINING
     private val inventoryResponse = InventoryResponseSender()
+    private val walletResponse = MallResponseSender()
+    private val mineNotices = ChatResponseSender(worldManager)
 
     override suspend fun handle(session: GameSession, subKind: Int, data: ByteArray) {
         if (session.state != SessionState.IN_GAME) return
@@ -49,7 +53,16 @@ class MiningHandler(
             sendInfoDisabled(session)
             return
         }
-        sendInfo(session, system.getView(session.roleId.toLong()))
+        val view = system.getView(session.roleId.toLong())
+        sendInfo(session, view)
+        sendRewardUpdate(session, view)
+        if (view.rewardNotice == null) {
+            system.getCurrentTsBalance(session.roleId.toLong())?.let { balance ->
+                mineNotices.sendSystemMessage(
+                    session, "Mỏ Thôn Thực: số dư hiện tại $balance TS (tự cộng vào ví)."
+                )
+            }
+        }
     }
 
     private suspend fun enterMine(session: GameSession, data: ByteArray) {
@@ -66,6 +79,7 @@ class MiningHandler(
 
         val view = system.getView(session.roleId.toLong())
         sendEnterResult(session, 1, mineType, view)
+        sendRewardUpdate(session, view)
     }
 
     private suspend fun refill(session: GameSession, data: ByteArray) {
@@ -79,6 +93,11 @@ class MiningHandler(
         val quantity = reader.readUShortLE()
         val wireIndex = reader.readUByte()
 
+        // An old tick can earn a TS reward while opening the refill UI.
+        // Publish its wallet update before refill result; the next getView
+        // otherwise sees only newlyApplied=false and would lose the S035-050.
+        val previous = system.getView(session.roleId.toLong())
+        sendRewardUpdate(session, previous)
         val result = system.refill(
             session.roleId.toLong(), bagIndex, itemId, quantity, wireIndex
         )
@@ -99,7 +118,19 @@ class MiningHandler(
         // otherwise overwrites a successful refill with the previous fullness.
         // Refresh the authoritative persisted mine state after S170-010 so
         // UIMine.SetData updates both the live display and its timer baseline.
-        sendInfo(session, system.getView(session.roleId.toLong()))
+        val view = system.getView(session.roleId.toLong())
+        sendInfo(session, view)
+        sendRewardUpdate(session, view)
+    }
+
+    /**
+     * S035-050 updates the original DVT client's UIMain.text_Ts, but the
+     * original protocol is silent on a mined award. Publish one system chat
+     * notice for a NEW SQL receipt. Replays/new queries remain silent.
+     */
+    private fun sendRewardUpdate(session: GameSession, view: MiningView) {
+        view.tsBalanceUpdate?.let { walletResponse.sendPlayerCurrency(session, 8, it) }
+        view.rewardNotice?.let { mineNotices.sendSystemMessage(session, it) }
     }
 
     private fun setMiningState(session: GameSession, data: ByteArray) {

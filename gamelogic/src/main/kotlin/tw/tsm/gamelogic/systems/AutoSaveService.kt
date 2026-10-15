@@ -32,6 +32,7 @@ class AutoSaveService(
     private val questSystem: QuestSystem? = null,
     private val responseSender: tw.tsm.domain.interfaces.ResponseSender? = null,
     private val houseVisits: HouseVisitSystem? = null,
+    private val miningSystem: MiningSystem? = null,
 ) {
     companion object {
         /** Khoảng thời gian tự động lưu. 30 giây để giới hạn mất dữ liệu khi tiến trình/máy chủ bị reset đột ngột. */
@@ -91,6 +92,15 @@ class AutoSaveService(
                 }
 
                 // Vật phẩm/Tiền/Nguyên bảo/Kỹ năng/Võ tướng/Thú cưỡi
+                // PRIVATE DVT mine economy: every autosave tick settles online miners.
+                // TS wallet S035-050 is pushed only after the durable SQL award.
+                val mineView = miningSystem?.getView(charId)
+                mineView?.tsBalanceUpdate?.let { balance ->
+                    responseSender?.sendPlayerCurrency(session, 8, balance)
+                    mineView.rewardNotice?.let { notice ->
+                        responseSender?.sendSystemMessage(session, notice)
+                    }
+                }
                 inventorySystem.save(charId)
                 moneySystem.saveMoney(charId)
                 pointSystem.savePoints(charId)

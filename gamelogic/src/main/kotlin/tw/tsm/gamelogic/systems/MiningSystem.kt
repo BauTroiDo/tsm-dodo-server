@@ -7,6 +7,7 @@ import tw.tsm.domain.util.OleDate
 import tw.tsm.domain.data.ItemDef
 import tw.tsm.domain.interfaces.repositories.MiningRecord
 import tw.tsm.domain.interfaces.repositories.MiningRepository
+import tw.tsm.domain.interfaces.repositories.CustomMiningRules
 
 /**
  * DVT compares S170-001 setTime against CGTimer.serverTime, which comes from
@@ -23,9 +24,17 @@ object MiningClock {
 data class MiningView(
     val record: MiningRecord,
     val remainingOre: Long,
+    val tsBalanceUpdate: Int? = null,
+    val tsRewardAmount: Int = 0,
 ) {
+    /** An explicit UI notification only when NEW TS was actually credited. */
+    val rewardNotice: String?
+        get() = if (tsRewardAmount > 0 && tsBalanceUpdate != null)
+            "Mỏ Thôn Thực: +$tsRewardAmount Tiền Thôn Thực. Số dư: $tsBalanceUpdate."
+        else null
+
     val isMining: Boolean
-        get() = !record.dayLimit && record.machineFull.any { it > 0 }
+        get() = !record.dayLimit && remainingOre > 0 && record.machineFull.any { it > 0 }
 
     val setTimeOaDate: Double
         get() = MiningClock.toDvtWallClockOaDate(record.updatedAtMillis)
@@ -42,19 +51,36 @@ class MiningSystem(
     private val inventorySystem: InventorySystem,
     private val itemDefs: Map<Int, ItemDef>,
     private val nowMillis: () -> Long = System::currentTimeMillis,
+    private val currencySystem: PlayerCurrencySystem? = null,
+    private val customRules: CustomMiningRules = CustomMiningRules(),
 ) {
+    /** Read the authenticated, already-loaded currency cache; never mint a coin. */
+    fun getCurrentTsBalance(characterId: Long): Int? =
+        if (customRules.enabled) currencySystem?.get(characterId, PlayerCurrencySystem.TS_CURRENCY_KIND)
+        else null
+
     suspend fun getView(characterId: Long): MiningView =
         CharacterPersistenceGuard.withLock(characterId) {
             val now = nowMillis()
+            var tsBeforeAward: Int? = null
+            val awarded = if (customRules.enabled) {
+                currencySystem?.applyVerifiedMiningTsAward(characterId) { oldTs ->
+                    tsBeforeAward = oldTs
+                    repository.settleCustomMining(characterId, now, oldTs, customRules)
+                }
+            } else null
             val persisted = repository.load(characterId)
             val original = persisted ?: MiningRecord(updatedAtMillis = now)
-            val settled = settle(original, now)
-            if (settled != original || persisted == null) {
+            val settled = if (customRules.enabled) original else settle(original, now)
+            if (!customRules.enabled && (settled != original || persisted == null)) {
                 repository.save(characterId, settled)
             }
             val remaining = repository.loadRemainingOre(settled.mineType)
                 ?.coerceIn(0L, MAX_MINE) ?: MAX_MINE
-            MiningView(settled, remaining)
+            val awardedBalance = awarded?.takeIf { it.newlyApplied }?.tsBalance
+            val credited = if (awardedBalance != null && tsBeforeAward != null)
+                (awardedBalance - tsBeforeAward!!).coerceAtLeast(0) else 0
+            MiningView(settled, remaining, awardedBalance, credited)
         }
 
     suspend fun refill(
@@ -66,6 +92,9 @@ class MiningSystem(
     ): MiningRefillResult {
         if (wireIndex !in 0..3 || quantity <= 0) return fail(wireIndex)
         val machineIndex = 3 - wireIndex
+        // Settle old time under the currency writer fence BEFORE adding fuel.
+        // Never burn old fuel without paying in custom economy mode.
+        if (customRules.enabled) getView(characterId)
         val expectedItemId = FUEL_ITEM_IDS[machineIndex]
         if (itemId != expectedItemId) return fail(wireIndex)
 
@@ -79,7 +108,7 @@ class MiningSystem(
             val now = nowMillis()
             val persisted = repository.load(characterId)
             val original = persisted ?: MiningRecord(updatedAtMillis = now)
-            val settled = settle(original, now)
+            val settled = if (customRules.enabled) original else settle(original, now)
             val current = settled.machineFull[machineIndex]
             val room = FULL_MAX - current
             val requested = quantity.toLong() * perItem.toLong()

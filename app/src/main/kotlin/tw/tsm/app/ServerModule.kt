@@ -515,6 +515,8 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<MiningRepository>(),
             get<InventorySystem>(),
             get<GameDataManager>().itemDefs,
+            currencySystem = get<PlayerCurrencySystem>(),
+            customRules = tw.tsm.domain.interfaces.repositories.CustomMiningRules.fromEnvironment(),
         )
     }
     single {
@@ -726,7 +728,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { HouseVisitSystem() }
 
     // Lưu tự động định kỳ (mỗi 30 giây lưu dữ liệu tất cả người chơi trực tuyến)
-    single { AutoSaveService(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get<QuestSystem>(), get<ResponseSender>(), get<HouseVisitSystem>()) }
+    single { AutoSaveService(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get<QuestSystem>(), get<ResponseSender>(), get<HouseVisitSystem>(), get<MiningSystem>()) }
 
     // Bộ xử lý lệnh GM
     single {
