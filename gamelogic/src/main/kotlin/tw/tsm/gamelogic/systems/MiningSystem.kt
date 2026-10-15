@@ -28,16 +28,17 @@ class MiningSystem(
     private val itemDefs: Map<Int, ItemDef>,
     private val nowMillis: () -> Long = System::currentTimeMillis,
 ) {
-    suspend fun getView(characterId: Long): MiningView {
-        val now = nowMillis()
-        val original = repository.load(characterId)
-            ?: MiningRecord(updatedAtMillis = now)
-        val settled = settle(original, now)
-        if (settled != original || repository.load(characterId) == null) {
-            repository.save(characterId, settled)
+    suspend fun getView(characterId: Long): MiningView =
+        CharacterPersistenceGuard.withLock(characterId) {
+            val now = nowMillis()
+            val persisted = repository.load(characterId)
+            val original = persisted ?: MiningRecord(updatedAtMillis = now)
+            val settled = settle(original, now)
+            if (settled != original || persisted == null) {
+                repository.save(characterId, settled)
+            }
+            MiningView(settled, MAX_MINE)
         }
-        return MiningView(settled, MAX_MINE)
-    }
 
     suspend fun refill(
         characterId: Long,
@@ -51,34 +52,36 @@ class MiningSystem(
         val expectedItemId = FUEL_ITEM_IDS[machineIndex]
         if (itemId != expectedItemId) return fail(wireIndex)
 
-        val bagItem = inventorySystem.getBagItem(characterId, bagIndex) ?: return fail(wireIndex)
-        if (bagItem.itemId != itemId || bagItem.quantity < quantity) return fail(wireIndex)
         val perItem = itemDefs[itemId]?.threshold ?: return fail(wireIndex)
         if (perItem <= 0) return fail(wireIndex)
 
-        val now = nowMillis()
-        val original = repository.load(characterId)
-            ?: MiningRecord(updatedAtMillis = now)
-        val settled = settle(original, now)
-        val current = settled.machineFull[machineIndex]
-        val room = FULL_MAX - current
-        if (room <= 0) return fail(wireIndex)
+        var added = 0
+        val result = inventorySystem.consumeMiningFuelAtomic(
+            characterId, bagIndex, itemId, quantity,
+        ) { bagBefore ->
+            val now = nowMillis()
+            val persisted = repository.load(characterId)
+            val original = persisted ?: MiningRecord(updatedAtMillis = now)
+            val settled = settle(original, now)
+            val current = settled.machineFull[machineIndex]
+            val room = FULL_MAX - current
+            val requested = quantity.toLong() * perItem.toLong()
+            // Never consume all requested items for a partially fitting refill.
+            if (room <= 0 || requested <= 0 || requested > room) return@consumeMiningFuelAtomic null
 
-        val requested = quantity.toLong() * perItem.toLong()
-        val added = minOf(room.toLong(), requested).toInt()
-        if (added <= 0) return fail(wireIndex)
+            val full = settled.machineFull.toMutableList()
+            full[machineIndex] = current + requested.toInt()
+            val next = settled.copy(
+                machineFull = full,
+                updatedAtMillis = if (settled.machineFull.none { it > 0 }) now else settled.updatedAtMillis,
+            )
+            val receipt = repository.commitFuelRefillAtomic(
+                characterId, bagIndex, bagBefore, quantity, persisted, next,
+            )
+            if (receipt != null) added = requested.toInt()
+            receipt
+        } ?: return fail(wireIndex)
 
-        if (!inventorySystem.removeBagItemsExact(characterId, listOf(bagIndex to quantity))) {
-            return fail(wireIndex)
-        }
-
-        val full = settled.machineFull.toMutableList()
-        full[machineIndex] = current + added
-        val next = settled.copy(
-            machineFull = full,
-            updatedAtMillis = if (settled.machineFull.none { it > 0 }) now else settled.updatedAtMillis,
-        )
-        repository.save(characterId, next)
         return MiningRefillResult(true, wireIndex, added)
     }
 

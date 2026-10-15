@@ -7,6 +7,7 @@ import tw.tsm.domain.constants.ItemConstants
 import tw.tsm.domain.data.ItemDef
 import tw.tsm.domain.enums.EquipSlot
 import tw.tsm.domain.interfaces.repositories.InventoryRepository
+import tw.tsm.domain.interfaces.repositories.MiningFuelCommit
 import tw.tsm.domain.valueobjects.ThingData
 import java.util.concurrent.ConcurrentHashMap
 
@@ -340,6 +341,32 @@ class InventorySystem(
      * trước khi mutation; nếu bất kỳ save/remove nào thất bại thì khôi phục snapshot.
      */
     /** Character-serialized BAG mutation; coordinates with autosave and staged Treasure commit. */
+    /**
+     * DB-first mining fuel mutation. A successful repository commit returns
+     * the new BAG snapshot. Publish it under the same character write fence
+     * shared by autosave, logout and other inventory writers.
+     */
+    suspend fun consumeMiningFuelAtomic(
+        characterId: Long, slot: Int, itemId: Int, quantity: Int,
+        commit: suspend (ThingData) -> MiningFuelCommit?,
+    ): MiningFuelCommit? = CharacterPersistenceGuard.withLock(characterId) {
+        val bag = bags[characterId] ?: return@withLock null
+        val before = bag[slot] ?: return@withLock null
+        if (slot < 0 || quantity <= 0 || before.itemId != itemId ||
+            before.isLocked || before.quantity < quantity
+        ) return@withLock null
+
+        val outcome = commit(before) ?: return@withLock null
+        val expectedAfter = if (quantity == before.quantity) null
+            else before.copy(quantity = before.quantity - quantity)
+        check(outcome.bagAfter == expectedAfter) {
+            "Mining repository returned inconsistent post-commit BAG state"
+        }
+        if (outcome.bagAfter == null) bag.remove(slot)
+        else bag[slot] = outcome.bagAfter
+        outcome
+    }
+
     suspend fun removeBagItemsExact(characterId: Long, consumptions: List<Pair<Int, Int>>): Boolean =
         CharacterPersistenceGuard.withLock(characterId) { removeBagItemsExactUnfenced(characterId, consumptions) }
 
