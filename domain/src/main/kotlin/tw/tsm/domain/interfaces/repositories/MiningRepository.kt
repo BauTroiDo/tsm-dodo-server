@@ -17,6 +17,13 @@ interface MiningRepository {
     suspend fun load(charId: Long): MiningRecord?
     suspend fun save(charId: Long, record: MiningRecord)
 
+    /** Null means a mine has never been depleted; treat as original full pool. */
+    suspend fun loadRemainingOre(mineType: Int): Long? = null
+
+    /** For an actual, externally verified ore award only; never spend on mere fuel ticks. */
+    suspend fun debitVerifiedOre(mineType: Int, quantity: Long, maxReserve: Long): Boolean =
+        error("No atomic shared mine-reserve debiting implementation")
+
     /**
      * Atomically compare old BAG + mining record, consume fuel and save mining
      * durability. Null = rejected without any mutation. Never split the writes.

@@ -4,6 +4,7 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.update
+import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.jetbrains.exposed.v1.core.ResultRow
 import tw.tsm.domain.constants.EThings
 import tw.tsm.domain.interfaces.repositories.MiningFuelCommit
@@ -15,8 +16,43 @@ import org.jetbrains.exposed.v1.jdbc.upsert
 import tw.tsm.domain.interfaces.repositories.MiningRecord
 import tw.tsm.domain.interfaces.repositories.MiningRepository
 import tw.tsm.persistence.tables.CharacterMining
+import tw.tsm.persistence.tables.MiningOreReserves
 
 class MiningRepositoryImpl : MiningRepository {
+    override suspend fun loadRemainingOre(mineType: Int): Long? = suspendTransaction {
+        MiningOreReserves.selectAll()
+            .where { MiningOreReserves.mineType eq mineType }
+            .singleOrNull()?.get(MiningOreReserves.remainingOre)
+    }
+
+    /**
+     * In one row-locked SQL transaction, debit a VERIFIED awarded ore amount.
+     * The original client does not specify ore rates; do not call from
+     * durability settlement or without a real reward receipt.
+     */
+    override suspend fun debitVerifiedOre(
+        mineType: Int, quantity: Long, maxReserve: Long,
+    ): Boolean = suspendTransaction {
+        if (mineType < 1 || quantity <= 0 || maxReserve <= 0 || quantity > maxReserve) {
+            return@suspendTransaction false
+        }
+        MiningOreReserves.insertIgnore {
+            it[MiningOreReserves.mineType] = mineType
+            it[remainingOre] = maxReserve
+        }
+        val locked = MiningOreReserves.selectAll()
+            .where { MiningOreReserves.mineType eq mineType }
+            .forUpdate().singleOrNull() ?: error("Missing shared mine reserve after initialization")
+        val before = locked[MiningOreReserves.remainingOre]
+        if (before < quantity || before > maxReserve) return@suspendTransaction false
+        val rows = MiningOreReserves.update({ MiningOreReserves.mineType eq mineType }) {
+            it[remainingOre] = before - quantity
+        }
+        check(rows == 1) { "Mining reserve deduction changed $rows rows" }
+        true
+    }
+
+
     /**
      * ONE SQL transaction. Lock the BAG row before reading mining state;
      * never debit food separately from persisting machine durability.
