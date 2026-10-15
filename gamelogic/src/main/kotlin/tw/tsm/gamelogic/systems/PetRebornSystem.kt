@@ -84,22 +84,25 @@ class PetRebornSystem(
         // Tìm định nghĩa tín vật chuyển sinh: Lần 1 kind=37/attrKind=65, Lần 2 kind=51/attrKind=67
         val itemKind = if (rebornKind == REBORN_FIRST) ITEM_KIND_FIRST_TOKEN else ITEM_KIND_SECOND_TOKEN
         val attrKind = if (rebornKind == REBORN_FIRST) ATTR_KIND_FIRST else ATTR_KIND_SECOND
-        val tokenEntry = itemDefs.entries.firstOrNull { (_, def) ->
-            def.kind == itemKind && def.attr1Kind == attrKind &&
-                    def.attr1Value == pet.npcId && def.attr2Kind == attrKind
-        } ?: return RebornResult.Fail(MSG_NO_TOKEN)
+        // Follow UINpcTurn.lua: choose from the real BAG, not the first DAT mapping.
+        // NPC 10001 has two valid first-rebirth tokens with different targets.
+        val heldToken = inventorySystem.getBag(charId).entries.sortedBy { it.key }
+            .firstOrNull { (_, thing) ->
+                val def = itemDefs[thing.itemId]
+                thing.quantity > 0 && def?.kind == itemKind &&
+                    def.attr1Kind == attrKind && def.attr1Value == pet.npcId &&
+                    def.attr2Kind == attrKind
+            } ?: return RebornResult.Fail(MSG_NO_TOKEN)
+        val tokenItemId = heldToken.value.itemId
+        val bagSlot = heldToken.key
+        val targetNpcId = itemDefs.getValue(tokenItemId).attr2Value
 
-        val tokenItemId = tokenEntry.key
-        val targetNpcId = tokenEntry.value.attr2Value
         val targetDef = npcDefs[targetNpcId] ?: run {
             logger.error { "Chuyển sinh thất bại: Tín vật $tokenItemId trỏ đến NPC $targetNpcId không tồn tại" }
             return RebornResult.Fail(MSG_EXCEPTION)
         }
 
         // Trong túi đồ có tín vật
-        val bagSlot = inventorySystem.getBag(charId).entries
-            .firstOrNull { it.value.itemId == tokenItemId && it.value.quantity > 0 }?.key
-            ?: return RebornResult.Fail(MSG_NO_TOKEN)
 
         // Võ tướng sau khi chuyển sinh không được sở hữu trùng lặp: Trên người (mang theo + xe ngựa) / Khách sạn (bao gồm kho võ tướng)
         if (petSystem.hasNpcOnBody(charId, targetNpcId)) {
