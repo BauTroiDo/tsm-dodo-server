@@ -105,7 +105,14 @@ class MiningHandler(
     private fun setMiningState(session: GameSession, data: ByteArray) {
         if (data.size != 1) return
         val mineType = PacketReader(data).readUByte()
-        sendSimpleResult(session, 11, if (mineType == 1) 1 else 255)
+        // DVT 1.15's protocolTable[170][11] parses res=1 as SUCCESS,
+        // but neither original UIMine.lua nor UITeleport.lua sends C170-011.
+        // No authoritative transition logic exists in the client dump.
+        // Never acknowledge a state change that was not implemented.
+        miningHandlerLogger.warn {
+            "C170-011 unsupported state transition: roleId=" + session.roleId + " mineType=" + mineType
+        }
+        sendSimpleResult(session, 11, 255)
     }
 
     private fun sendInfo(session: GameSession, view: MiningView) {
