@@ -138,7 +138,25 @@ class BattlePassSystem(
         const val PAID = 793
         const val PAID_FLAG = 6060
         fun start(d: ActivityTimeDef): LocalDateTime = LocalDateTime.of(d.startYear,d.startMonth,d.startDay,d.startHour,d.startMinute)
-        fun end(d: ActivityTimeDef): LocalDateTime = LocalDateTime.of(d.endYear,d.endMonth,d.endDay,d.endHour,d.endMinute)
+        /**
+         * DEV restoration of the ORIGINAL DVT pass 117, exactly one prior 28-day cycle.
+         *
+         * Source IOS_ActivityTime_C.dat has season 117 (Sep16-Oct13 2026) but no
+         * season 118 schedule; the unmodified Lua ignores schedule packets for a
+         * missing activityTimes[118]. Keep 117's persisted claim ledger intact.
+         *
+         * Both BattlePassSystem and ActivityScheduleSystem call this end() so the
+         * UI S077-001/S077-002 schedule and C077-011 authorization agree.
+         * Never change a nonmatching version of the DAT or synthesize rewards.
+         */
+        fun end(d: ActivityTimeDef): LocalDateTime {
+            val sourceEnd = LocalDateTime.of(d.endYear, d.endMonth, d.endDay, d.endHour, d.endMinute)
+            val expectedStart = LocalDateTime.of(2026, 9, 16, 0, 0)
+            val expectedEnd = LocalDateTime.of(2026, 10, 13, 23, 59)
+            return if (d.id == 117 && d.switchKind > 0 &&
+                start(d) == expectedStart && sourceEnd == expectedEnd
+            ) LocalDateTime.of(2026, 11, 10, 23, 59) else sourceEnd
+        }
         fun levelForExp(rows: List<PassAwardDef>, exp: Int): Int =
             rows.lastOrNull { exp > 0 && exp >= it.totalExp }?.level ?: 0
 
