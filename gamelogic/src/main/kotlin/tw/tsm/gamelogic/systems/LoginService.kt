@@ -178,6 +178,8 @@ class LoginService(
         // Bảo khố: currentStorageGrid = (Storage_1+Storage_2)×5 (Private server mặc định 14 → 70 ô, đầy kho)
         // Khách sạn: Inn.currentSpace = RoleCount[102] + 6 (Khởi tạo 0 → 6 ô)
         // Kho võ tướng: Inn.currentWarriorRepositorySpace = RoleCount[822] + 5 (Khởi tạo 0 → 5 ô)
+        // Restore verified DVT offline minutes before loading cached RoleCounts.
+        onlineWelfare?.beforeRoleCountsLoad(record.id)
         roleCountSystem.loadCounts(record.id)
         // Lưu giá trị mặc định cho Private server: Khi không có bản ghi trong DB thì ghi vào RoleCountSystem (thay vì chỉ gộp vào gói tin),
         // để đảm bảo việc tính toán dung lượng ở server/số lần mua tiêu hao khớp với hiển thị ở client
