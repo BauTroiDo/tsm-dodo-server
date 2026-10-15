@@ -77,6 +77,65 @@ class DvtMiningFuelAtomicSqlTest {
         )
     }
 
+    /**
+     * Original PC DVT UIMine.lua: UI itemIndex=1..4 maps to C170-010
+     * parameter 4-itemIndex (wireIndex 3..0). No cross-worker fuel mixing.
+     * Every worker must be checked in SQL, not just worker index 1.
+     */
+    @Test fun originalClientReversedWireIndexFeedsOnlySelectedWorker() = runBlocking {
+        for (worker in 0..3) {
+            val desiredFood = MiningSystem.FUEL_ITEM_IDS[worker]
+            transaction(db) {
+                exec("UPDATE inventories SET item_id=$desiredFood, quantity=3 WHERE character_id=$character AND slot=$slot")
+                exec("UPDATE character_mining SET full_1=0, full_2=0, full_3=0, full_4=0 WHERE character_id=$character")
+            }
+            val definitions = MiningSystem.FUEL_ITEM_IDS.associateWith { item ->
+                mockk<ItemDef> { every { threshold } returns 10 }
+            }
+            val inventory = InventorySystem(
+                InventoryRepositoryImpl(), definitions, mockk<RoleCountSystem>(relaxed = true)
+            )
+            inventory.loadCharacterData(character)
+            val system = MiningSystem(
+                MiningRepositoryImpl(), inventory, definitions,
+                nowMillis = { 1_000_000L }
+            )
+            val wireIndex = 3 - worker
+            val result = system.refill(character, slot, desiredFood, 1, wireIndex)
+            assertTrue(result.success, "worker=$worker wire=$wireIndex")
+            assertEquals(wireIndex, result.wireIndex)
+            assertEquals(10, result.addedFull)
+            assertEquals(2, dbFood(), "worker=$worker")
+            assertEquals(List(4) { if (it == worker) 10 else 0 },
+                MiningRepositoryImpl().load(character)?.machineFull, "worker=$worker")
+        }
+    }
+
+    @Test fun wrongFoodForWorkerIsRejectedWithoutSpendingBag() = runBlocking {
+        val (bag, mining) = service()
+        val wrongWorkerIndex = 0 // original item 55431 requires wire index 3
+        val result = mining.refill(character, slot, foodId, 1, wrongWorkerIndex)
+        assertFalse(result.success)
+        assertEquals(3, dbFood())
+        assertEquals(3, bag.getBagItem(character, slot)?.quantity)
+        assertEquals(listOf(0, 0, 0, 0),
+            MiningRepositoryImpl().load(character)?.machineFull)
+    }
+
+    @Test fun rejectedMultiFoodOverfillDoesNotPartiallyDebitInventory() = runBlocking {
+        transaction(db) {
+            exec("UPDATE character_mining SET full_1=65520 WHERE character_id=$character")
+        }
+        val (bag, mining) = service()
+        // Original UI's while loop reduces the proposed quantity until it fits.
+        // A forged or stale quantity must not spend 2 food for 15 capacity.
+        val result = mining.refill(character, slot, foodId, 2, 3)
+        assertFalse(result.success)
+        assertEquals(3, dbFood())
+        assertEquals(3, bag.getBagItem(character, slot)?.quantity)
+        assertEquals(65520, MiningRepositoryImpl().load(character)?.machineFull?.first())
+    }
+
     @Test fun successfulRefillDebitsExactlyOneFoodAndPersistsFull() = runBlocking {
         val (bag, miner) = service()
         val result = miner.refill(character, slot, foodId, 1, 3)
