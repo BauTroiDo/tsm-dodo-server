@@ -17,6 +17,67 @@ import tw.tsm.persistence.tables.CharacterWelfareState
 import tw.tsm.persistence.tables.CharacterWelfareLoginDays
 
 class WelfareStateRepositoryImpl : WelfareStateRepository {
+    private fun upsertOfflineCount(characterId: Long, index: Int, value: Int) {
+        val exists = CharacterRoleCounts.selectAll().where {
+            (CharacterRoleCounts.charId eq characterId) and (CharacterRoleCounts.countIndex eq index)
+        }.singleOrNull()
+        if (exists == null) {
+            CharacterRoleCounts.insert {
+                it[charId] = characterId
+                it[countIndex] = index
+                it[CharacterRoleCounts.value] = value
+            }
+        } else {
+            CharacterRoleCounts.update({
+                (CharacterRoleCounts.charId eq characterId) and (CharacterRoleCounts.countIndex eq index)
+            }) { it[CharacterRoleCounts.value] = value }
+        }
+    }
+
+    override suspend fun markCharacterOffline(characterId: Long, atMillis: Long) {
+        require(characterId > 0L && atMillis > 0L)
+        suspendTransaction {
+            CharacterWelfareState.insertIgnore { it[charId] = characterId }
+            val row = CharacterWelfareState.selectAll()
+                .where { CharacterWelfareState.charId eq characterId }
+                .forUpdate().single()
+            if (row[CharacterWelfareState.offlineSinceMillis] == 0L) {
+                CharacterWelfareState.update({ CharacterWelfareState.charId eq characterId }) {
+                    it[offlineSinceMillis] = atMillis
+                }
+            }
+        }
+    }
+
+    override suspend fun resumeCharacterOfflineMinutes(characterId: Long, nowMillis: Long) {
+        require(characterId > 0L && nowMillis > 0L)
+        suspendTransaction {
+            CharacterWelfareState.insertIgnore { it[charId] = characterId }
+            val row = CharacterWelfareState.selectAll()
+                .where { CharacterWelfareState.charId eq characterId }
+                .forUpdate().single()
+            fun count(index: Int): Int = CharacterRoleCounts.selectAll().where {
+                (CharacterRoleCounts.charId eq characterId) and (CharacterRoleCounts.countIndex eq index)
+            }.singleOrNull()?.get(CharacterRoleCounts.value) ?: 0
+
+            val calculated = OfflineWelfareMinutePolicy.calculate(
+                row[CharacterWelfareState.offlineSinceMillis],
+                nowMillis,
+                row[CharacterWelfareState.offlineCounterDay],
+                count(172),
+                count(171),
+            )
+            // Update both counters and the consumed timestamp in the same SQL commit.
+            upsertOfflineCount(characterId, 171, calculated.unclaimedMinutes)
+            upsertOfflineCount(characterId, 172, calculated.todayMinutes)
+            CharacterWelfareState.update({ CharacterWelfareState.charId eq characterId }) {
+                it[offlineSinceMillis] = 0L
+                it[offlineCounterDay] = OfflineWelfareMinutePolicy.dayKey(nowMillis)
+            }
+        }
+    }
+
+
     override suspend fun startOnlineDayIfNeeded(characterId: Long, dayKey: Int): Boolean =
         suspendTransaction {
             require(characterId > 0 && dayKey in 20000101..99991231)
