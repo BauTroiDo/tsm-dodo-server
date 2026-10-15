@@ -109,6 +109,15 @@ class InventorySystem(
         result.ownedTotal
     }
 
+    /**
+     * Publish the already-COMMITTED token quantity in the BAG cache.
+     * Call ONLY within CharacterPersistenceGuard after SQL commit.
+     */
+    fun publishRebirthBagAfterCommit(characterId: Long, slot: Int, bagAfter: ThingData?) {
+        val bag = checkNotNull(bags[characterId]) { "BAG cache missing after rebirth" }
+        if (bagAfter == null) bag.remove(slot) else bag[slot] = bagAfter
+    }
+
     fun getBag(characterId: Long): Map<Int, ThingData> =
         bags[characterId] ?: emptyMap()
 
