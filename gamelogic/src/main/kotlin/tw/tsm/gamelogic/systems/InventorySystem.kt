@@ -723,7 +723,7 @@ class InventorySystem(
      */
     suspend fun exchangeWelfareItemsAtomic(
         characterId: Long, costs: List<Pair<Int, Int>>,
-        output: Pair<Int, Int>, count: Int,
+        output: Pair<Int, Int>, count: Int, recipeDay: Int = 0,
     ): Map<Int, ThingData?>? = CharacterPersistenceGuard.withLock(characterId) {
         val existing = bags[characterId]?.toMap() ?: return@withLock null
         val changes = WelfareItemExchangePlanner.plan(
@@ -731,10 +731,19 @@ class InventorySystem(
             costs, output, count, itemDefs,
         ) ?: return@withLock null
         try {
-            setBagItemsAtomicUnfenced(characterId, changes)
+            // The receipt and inventory changes MUST commit together.
+            // Cache is only changed after persistence confirms success.
+            inventoryRepo.saveWelfareExchangeAtomic(
+                characterId, changes, recipeDay, count, output.first, output.second * count
+            )
+            val bag = bags[characterId] ?: error("Missing loaded BAG after exchange")
+            for ((slot, thing) in changes) {
+                if (thing == null || thing.isEmpty) bag.remove(slot)
+                else bag[slot] = thing
+            }
             changes
         } catch (e: Exception) {
-            logger.error(e) { "Welfare BAG exchange transaction rolled back" }
+            logger.error(e) { "Welfare BAG and receipt transaction rolled back" }
             null
         }
     }
