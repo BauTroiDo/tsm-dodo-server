@@ -15,6 +15,14 @@ import tw.tsm.persistence.tables.Inventories
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.jdbc.upsert
+import tw.tsm.domain.interfaces.repositories.CustomMiningRules
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.ZoneOffset
+import org.jetbrains.exposed.v1.jdbc.insert
+
+import org.jetbrains.exposed.v1.core.like
 import tw.tsm.domain.interfaces.repositories.MiningRecord
 import tw.tsm.domain.interfaces.repositories.MiningRepository
 import tw.tsm.persistence.tables.CharacterMining
@@ -25,6 +33,182 @@ import tw.tsm.persistence.tables.CharacterCurrencies
 private class RejectedMiningStateAward : RuntimeException()
 
 class MiningRepositoryImpl : MiningRepository {
+
+    /**
+     * CUSTOM TS DVT mining emulator (NOT official rates):
+     *   each 360s tick uses one worker fullness unit (worker1..4 order);
+     *   payout according to operator-configured rates;
+     *   ore debit=1 per TS, shared reserve, capped per Vietnam calendar day.
+     * The exact mine state, TS wallet, ore, and per-day receipts all commit in
+     * ONE SQL transaction. Row locking/expected wallet fence protects races.
+     */
+    override suspend fun settleCustomMining(
+        characterId: Long,
+        nowMillis: Long,
+        expectedTsBalance: Int,
+        rules: CustomMiningRules,
+    ): MiningTsAwardCommit? = suspendTransaction {
+        if (!rules.enabled || characterId <= 0 || nowMillis <= 0L ||
+            expectedTsBalance !in 0..999_999_999) return@suspendTransaction null
+
+        val zone = ZoneId.of(rules.zoneId)
+        val key = CharacterMining.characterId eq characterId
+        var mine = CharacterMining.selectAll().where { key }.forUpdate().singleOrNull()
+        if (mine == null) {
+            // First visit starts an empty, non-paying mine. Do not mint TS.
+            CharacterMining.insert {
+                it[CharacterMining.characterId] = characterId
+                it[mineType] = 1
+                it[full1] = 0
+                it[full2] = 0
+                it[full3] = 0
+                it[full4] = 0
+                it[updatedAtMillis] = nowMillis
+                it[dayLimit] = false
+            }
+            return@suspendTransaction MiningTsAwardCommit(false, expectedTsBalance, 600_000_000L)
+        }
+
+        // Peek wallet before any reserve initialization so obvious stale
+        // requests fail without writes; recheck under the SQL row lock later.
+        val walletKey = (CharacterCurrencies.characterId eq characterId) and
+            (CharacterCurrencies.currencyKind eq 8)
+        val previewTs = CharacterCurrencies.selectAll().where { walletKey }
+            .singleOrNull()?.get(CharacterCurrencies.value) ?: 0
+        if (previewTs != expectedTsBalance) return@suspendTransaction null
+
+        // IMPORTANT: on the very FIRST mine payout, every character must
+        // lock the SAME ore row, including when the reserve starts absent.
+        // Otherwise two players can both debit from virtual 600M and mint
+        // TS with only one ore debit (lost shared update).
+        MiningOreReserves.insertIgnore {
+            it[MiningOreReserves.mineType] = 1
+            it[remainingOre] = 600_000_000L
+        }
+        val oreRow = MiningOreReserves.selectAll()
+            .where { MiningOreReserves.mineType eq 1 }
+            .forUpdate().single()
+        var ore = oreRow[MiningOreReserves.remainingOre]
+        val walletRow = CharacterCurrencies.selectAll().where { walletKey }
+            .forUpdate().singleOrNull()
+        val oldTs = walletRow?.get(CharacterCurrencies.value) ?: 0
+        if (oldTs != expectedTsBalance) return@suspendTransaction null
+        if (ore !in 0L..600_000_000L) return@suspendTransaction null
+        val initialOre = ore
+        val full = mutableListOf(
+            mine[CharacterMining.full1], mine[CharacterMining.full2],
+            mine[CharacterMining.full3], mine[CharacterMining.full4]
+        )
+        if (full.any { it !in 0..65535 }) return@suspendTransaction null
+        val initTime = mine[CharacterMining.updatedAtMillis]
+        var cursor = if (initTime in 1L..nowMillis) initTime else nowMillis
+        var capped = mine[CharacterMining.dayLimit]
+        val dayTotal = mutableMapOf<LocalDate,Int>()
+        val payouts = linkedMapOf<LocalDate,Int>()
+        fun dayAt(ts: Long): LocalDate =
+            Instant.ofEpochMilli(ts).atZone(zone).toLocalDate()
+        fun nextMidnight(day: LocalDate): Long =
+            day.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
+        fun used(day:LocalDate):Int = dayTotal.getOrPut(day) {
+            val tag = "custom1:" + day.toString().replace("-","") + ":" + characterId + ":%"
+            MiningTsAwardReceipts.selectAll().where {
+                (MiningTsAwardReceipts.characterId eq characterId) and
+                (MiningTsAwardReceipts.receiptId like tag)
+            }.sumOf { it[MiningTsAwardReceipts.tsCredit].toLong() }
+                .coerceIn(0L,Int.MAX_VALUE.toLong()).toInt()
+        }
+
+        var totalCredit=0L
+        var iterations=0
+        // Bound one request's work; the next poll continues from persisted cursor.
+        while (iterations++ < 20000 && cursor <= nowMillis) {
+            if (full.all { it == 0 } || ore == 0L) {
+                // No retroactive earnings if the worker has been empty.
+                cursor = nowMillis
+                capped = false
+                break
+            }
+            if (capped) {
+                val midnight = nextMidnight(dayAt(cursor))
+                if (nowMillis < midnight) break
+                cursor = midnight
+                capped = false
+                continue
+            }
+            val tick = cursor + 360_000L
+            if (tick > nowMillis) break
+            val day = dayAt(tick)
+            val already=used(day)
+            if (already >= rules.dailyTsCap) {
+                capped = true
+                // Do not eat a worker fullness unit for an unpaid tick.
+                cursor = minOf(cursor,tick - 1L)
+                continue
+            }
+            val i=full.indexOfFirst { it > 0 }
+            val rate=rules.workerTsPerTick[i]
+            val gain=minOf(rate.toLong(), (rules.dailyTsCap-already).toLong(),
+                ore, (999_999_999L-expectedTsBalance-totalCredit))
+            if (gain<=0L) {
+                // Wallet/reserve is exhausted; do not burn worker fullness.
+                if (ore==0L) cursor=nowMillis
+                break
+            }
+            full[i] -= 1
+            cursor=tick
+            ore -= gain
+            totalCredit += gain
+            val credited=gain.toInt()
+            dayTotal[day] = already + credited
+            payouts[day] = (payouts[day] ?: 0) + credited
+            if (dayTotal.getValue(day)>=rules.dailyTsCap) capped=true
+        }
+        val updated = initTime != cursor ||
+            capped != mine[CharacterMining.dayLimit] ||
+            full != listOf(mine[CharacterMining.full1],mine[CharacterMining.full2],
+                mine[CharacterMining.full3],mine[CharacterMining.full4])
+        if (!updated && totalCredit == 0L)
+            return@suspendTransaction MiningTsAwardCommit(false,oldTs,initialOre)
+
+        if (totalCredit > 0L) {
+            CharacterCurrencies.upsert {
+                it[CharacterCurrencies.characterId] = characterId
+                it[CharacterCurrencies.currencyKind] = 8
+                it[CharacterCurrencies.value] = oldTs + totalCredit.toInt()
+            }
+            check(MiningOreReserves.update({ MiningOreReserves.mineType eq 1 }) {
+                it[remainingOre] = ore
+            } == 1) { "Shared ore debit update failed" }
+            var creditedSoFar=0L
+            val firstTimestamp = initTime.coerceAtLeast(1)
+            for ((day, credits) in payouts) {
+                creditedSoFar+=credits
+                val receiptId = "custom1:" + day.toString().replace("-","") +
+                    ":" + characterId + ":" + firstTimestamp
+                MiningTsAwardReceipts.insert {
+                    it[MiningTsAwardReceipts.receiptId] = receiptId
+                    it[MiningTsAwardReceipts.characterId] = characterId
+                    it[MiningTsAwardReceipts.mineType] = 1
+                    it[MiningTsAwardReceipts.oreDebit] = credits.toLong()
+                    it[MiningTsAwardReceipts.tsCredit] = credits
+                    it[MiningTsAwardReceipts.tsBalanceAfter] = oldTs + creditedSoFar.toInt()
+                    it[MiningTsAwardReceipts.oreRemainingAfter] =
+                        initialOre - creditedSoFar
+                }
+            }
+        }
+
+        check(CharacterMining.update({ key }) {
+            it[CharacterMining.full1] = full[0]
+            it[CharacterMining.full2] = full[1]
+            it[CharacterMining.full3] = full[2]
+            it[CharacterMining.full4] = full[3]
+            it[CharacterMining.updatedAtMillis] = cursor
+            it[CharacterMining.dayLimit] = capped
+        } == 1) { "Character mine update failed" }
+        MiningTsAwardCommit(totalCredit>0L,oldTs+totalCredit.toInt(),ore)
+    }
+
     /**
      * Atomic TS currency credit + shared reserve debit + unique durable receipt.
      * Does not choose rates, run on fuel ticks, or publish any client cache.

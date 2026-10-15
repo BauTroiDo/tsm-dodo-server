@@ -23,6 +23,17 @@ data class MiningTsAwardCommit(
 )
 interface MiningRepository {
     /**
+     * Custom private-server, source-agnostic economy: persist an elapsed reward
+     * and hunger consumption together. Never use for original DVT parity claims.
+     * Only call while holding CharacterPersistenceGuard and currency writer fence.
+     * Null means no mutation; the wallet is not loaded or a currency check failed.
+     */
+    suspend fun settleCustomMining(
+        characterId: Long, nowMillis: Long, expectedTsBalance: Int,
+        rules: CustomMiningRules,
+    ): MiningTsAwardCommit? = error("Custom mining economy unavailable")
+
+    /**
      * One receipt = one TS coin credit and shared mine depletion, or neither.
      * Does not generate rewards or choose a yield rate. No gameplay caller yet.
      */

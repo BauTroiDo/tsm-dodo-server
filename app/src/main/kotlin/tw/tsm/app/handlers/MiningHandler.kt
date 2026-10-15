@@ -2,6 +2,7 @@ package tw.tsm.app.handlers
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import tw.tsm.app.response.InventoryResponseSender
+import tw.tsm.app.response.MallResponseSender
 import tw.tsm.domain.constants.Opcodes
 import tw.tsm.domain.enums.SessionState
 import tw.tsm.domain.interfaces.GameSession
@@ -25,6 +26,7 @@ class MiningHandler(
 ) : PacketHandler {
     override val mainKind: Int = Opcodes.MINING
     private val inventoryResponse = InventoryResponseSender()
+    private val walletResponse = MallResponseSender()
 
     override suspend fun handle(session: GameSession, subKind: Int, data: ByteArray) {
         if (session.state != SessionState.IN_GAME) return
@@ -49,7 +51,9 @@ class MiningHandler(
             sendInfoDisabled(session)
             return
         }
-        sendInfo(session, system.getView(session.roleId.toLong()))
+        val view = system.getView(session.roleId.toLong())
+        sendInfo(session, view)
+        view.tsBalanceUpdate?.let { walletResponse.sendPlayerCurrency(session, 8, it) }
     }
 
     private suspend fun enterMine(session: GameSession, data: ByteArray) {
@@ -66,6 +70,7 @@ class MiningHandler(
 
         val view = system.getView(session.roleId.toLong())
         sendEnterResult(session, 1, mineType, view)
+        view.tsBalanceUpdate?.let { walletResponse.sendPlayerCurrency(session, 8, it) }
     }
 
     private suspend fun refill(session: GameSession, data: ByteArray) {
@@ -79,6 +84,11 @@ class MiningHandler(
         val quantity = reader.readUShortLE()
         val wireIndex = reader.readUByte()
 
+        // An old tick can earn a TS reward while opening the refill UI.
+        // Publish its wallet update before refill result; the next getView
+        // otherwise sees only newlyApplied=false and would lose the S035-050.
+        val previous = system.getView(session.roleId.toLong())
+        previous.tsBalanceUpdate?.let { walletResponse.sendPlayerCurrency(session, 8, it) }
         val result = system.refill(
             session.roleId.toLong(), bagIndex, itemId, quantity, wireIndex
         )
@@ -99,7 +109,9 @@ class MiningHandler(
         // otherwise overwrites a successful refill with the previous fullness.
         // Refresh the authoritative persisted mine state after S170-010 so
         // UIMine.SetData updates both the live display and its timer baseline.
-        sendInfo(session, system.getView(session.roleId.toLong()))
+        val view = system.getView(session.roleId.toLong())
+        sendInfo(session, view)
+        view.tsBalanceUpdate?.let { walletResponse.sendPlayerCurrency(session, 8, it) }
     }
 
     private fun setMiningState(session: GameSession, data: ByteArray) {
