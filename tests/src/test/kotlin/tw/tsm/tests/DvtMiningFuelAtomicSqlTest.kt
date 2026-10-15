@@ -24,6 +24,7 @@ import tw.tsm.gamelogic.systems.RoleCountSystem
 import tw.tsm.persistence.repositories.InventoryRepositoryImpl
 import tw.tsm.persistence.repositories.MiningRepositoryImpl
 import tw.tsm.persistence.tables.CharacterMining
+import tw.tsm.persistence.tables.MiningOreReserves
 import tw.tsm.persistence.tables.Inventories
 
 /** Standalone in-memory H2. Never uses DEV MySQL or the user's items. */
@@ -39,7 +40,7 @@ class DvtMiningFuelAtomicSqlTest {
             driver = "org.h2.Driver",
         )
         transaction(db) {
-            SchemaUtils.create(Inventories, CharacterMining)
+            SchemaUtils.create(Inventories, CharacterMining, MiningOreReserves)
             Inventories.insert {
                 it[characterId] = character
                 it[storageType] = 1
@@ -134,6 +135,53 @@ class DvtMiningFuelAtomicSqlTest {
         assertEquals(3, dbFood())
         assertEquals(3, bag.getBagItem(character, slot)?.quantity)
         assertEquals(65520, MiningRepositoryImpl().load(character)?.machineFull?.first())
+    }
+
+    /**
+     * Lua DVT 1.15 UIMine.UpdateTimer sets count=0 when dayLimit=true and
+     * forces isMining=false; this is a client-visible STOP signal.
+     * Test the persisted SQL round-trip (not merely a mocked MiningRecord).
+     * The ORIGINAL server rule that sets/clears dayLimit is still unknown.
+     */
+    @Test fun persistedDayLimitFreezesWorkerFullAndStopsMining() = runBlocking {
+        val start = 1_000_000L
+        transaction(db) {
+            exec("UPDATE character_mining SET full_1=3, full_2=2, full_3=1, full_4=4, " +
+                "day_limit=TRUE, updated_at_ms=$start WHERE character_id=$character")
+        }
+        val late = start + 3 * 24 * 60 * 60 * 1000L
+        val mining = MiningSystem(
+            MiningRepositoryImpl(), mockk<InventorySystem>(relaxed = true),
+            emptyMap(), nowMillis = { late }
+        )
+        val view = mining.getView(character)
+        assertTrue(view.record.dayLimit)
+        assertFalse(view.isMining)
+        assertEquals(listOf(3, 2, 1, 4), view.record.machineFull)
+        val persisted = MiningRepositoryImpl().load(character)!!
+        assertTrue(persisted.dayLimit)
+        assertEquals(listOf(3, 2, 1, 4), persisted.machineFull)
+        assertEquals(MiningSystem.MAX_MINE, view.remainingOre)
+    }
+
+    /** Verify handover in the DATABASE, not just an in-memory Kotlin list. */
+    @Test fun originalSequentialWorkerHandoverIsDurableAcrossSqlReload() = runBlocking {
+        val start = 1_000_000L
+        transaction(db) {
+            exec("UPDATE character_mining SET full_1=1, full_2=2, full_3=1, full_4=3, " +
+                "day_limit=FALSE, updated_at_ms=$start WHERE character_id=$character")
+        }
+        val clock = start + 3 * MiningSystem.TICK_MS
+        val mining = MiningSystem(
+            MiningRepositoryImpl(), mockk<InventorySystem>(relaxed = true),
+            emptyMap(), nowMillis = { clock }
+        )
+        val view = mining.getView(character)
+        assertEquals(listOf(0, 0, 1, 3), view.record.machineFull)
+        assertEquals(start + 3 * MiningSystem.TICK_MS, view.record.updatedAtMillis)
+        assertTrue(view.isMining)
+        val reloaded = MiningRepositoryImpl().load(character)!!
+        assertEquals(view.record, reloaded)
     }
 
     @Test fun successfulRefillDebitsExactlyOneFoodAndPersistsFull() = runBlocking {
