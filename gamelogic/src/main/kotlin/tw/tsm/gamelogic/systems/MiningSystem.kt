@@ -25,7 +25,14 @@ data class MiningView(
     val record: MiningRecord,
     val remainingOre: Long,
     val tsBalanceUpdate: Int? = null,
+    val tsRewardAmount: Int = 0,
 ) {
+    /** An explicit UI notification only when NEW TS was actually credited. */
+    val rewardNotice: String?
+        get() = if (tsRewardAmount > 0 && tsBalanceUpdate != null)
+            "Mỏ Thôn Thực: +$tsRewardAmount Tiền Thôn Thực. Số dư: $tsBalanceUpdate."
+        else null
+
     val isMining: Boolean
         get() = !record.dayLimit && remainingOre > 0 && record.machineFull.any { it > 0 }
 
@@ -47,11 +54,18 @@ class MiningSystem(
     private val currencySystem: PlayerCurrencySystem? = null,
     private val customRules: CustomMiningRules = CustomMiningRules(),
 ) {
+    /** Read the authenticated, already-loaded currency cache; never mint a coin. */
+    fun getCurrentTsBalance(characterId: Long): Int? =
+        if (customRules.enabled) currencySystem?.get(characterId, PlayerCurrencySystem.TS_CURRENCY_KIND)
+        else null
+
     suspend fun getView(characterId: Long): MiningView =
         CharacterPersistenceGuard.withLock(characterId) {
             val now = nowMillis()
+            var tsBeforeAward: Int? = null
             val awarded = if (customRules.enabled) {
                 currencySystem?.applyVerifiedMiningTsAward(characterId) { oldTs ->
+                    tsBeforeAward = oldTs
                     repository.settleCustomMining(characterId, now, oldTs, customRules)
                 }
             } else null
@@ -63,7 +77,10 @@ class MiningSystem(
             }
             val remaining = repository.loadRemainingOre(settled.mineType)
                 ?.coerceIn(0L, MAX_MINE) ?: MAX_MINE
-            MiningView(settled, remaining, awarded?.takeIf { it.newlyApplied }?.tsBalance)
+            val awardedBalance = awarded?.takeIf { it.newlyApplied }?.tsBalance
+            val credited = if (awardedBalance != null && tsBeforeAward != null)
+                (awardedBalance - tsBeforeAward!!).coerceAtLeast(0) else 0
+            MiningView(settled, remaining, awardedBalance, credited)
         }
 
     suspend fun refill(

@@ -97,6 +97,9 @@ class AutoSaveService(
                 val mineView = miningSystem?.getView(charId)
                 mineView?.tsBalanceUpdate?.let { balance ->
                     responseSender?.sendPlayerCurrency(session, 8, balance)
+                    mineView.rewardNotice?.let { notice ->
+                        responseSender?.sendSystemMessage(session, notice)
+                    }
                 }
                 inventorySystem.save(charId)
                 moneySystem.saveMoney(charId)
