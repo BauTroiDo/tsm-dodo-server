@@ -757,7 +757,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     }
 
     // Handler
-    single { KeepaliveHandler(get<OnlineWelfareDaySystem>()) }
+    single { KeepaliveHandler(get<OnlineWelfareDaySystem>(), get<ActivityScheduleSystem>()) }
     single { LoginHandler(get(), get(), get(), get(), get()) }
     single { CreateCharHandler(get(), get()) }
     single { SelectCharHandler(get(), get(), get<PokeSystem>(), get<ChildRepository>(), get<PetSystem>()) }
