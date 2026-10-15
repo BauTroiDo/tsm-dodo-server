@@ -748,6 +748,49 @@ class InventorySystem(
         }
     }
 
+    /**
+     * DVT C087 EAward.Change=9: physical ingredient(s) + virtual gold 65351.
+     * MoneySystem obtains CharacterPersistenceGuard + gold writer fence first.
+     * BAG cache and money cache update only after their shared SQL commit.
+     */
+    suspend fun exchangeWelfareGoldItemsAtomic(
+        characterId: Long, costs: List<Pair<Int, Int>>,
+        output: Pair<Int, Int>, count: Int, recipeDay: Int,
+        goldCost: Int, moneySystem: MoneySystem,
+    ): Map<Int, ThingData?>? {
+        if (goldCost <= 0 || count !in 1..50 ||
+            costs.isEmpty() || costs.any { it.first >= 65300 }) return null
+        val totalOutput = output.second.toLong() * count
+        if (totalOutput !in 1L..Int.MAX_VALUE.toLong()) return null
+        var committedBag: Map<Int, ThingData?>? = null
+        return try {
+            val paid = moneySystem.purchaseHouseExpansionGold(
+                characterId, goldCost
+            ) { expectedGold, expectedAuctionGold ->
+                val existing = bags[characterId]?.toMap() ?: return@purchaseHouseExpansionGold false
+                val changes = WelfareItemExchangePlanner.plan(
+                    existing, roleCountSystem.getBagCapacity(characterId),
+                    costs, output, count, itemDefs,
+                ) ?: return@purchaseHouseExpansionGold false
+                inventoryRepo.saveWelfareGoldExchangeAtomic(
+                    characterId, changes, recipeDay, count, output.first,
+                    totalOutput.toInt(), expectedGold, expectedAuctionGold, goldCost,
+                )
+                val bag = bags[characterId] ?: error("BAG cache missing after gold exchange")
+                for ((slot, thing) in changes) {
+                    if (thing == null || thing.isEmpty) bag.remove(slot)
+                    else bag[slot] = thing
+                }
+                committedBag = changes
+                true
+            }
+            if (paid) committedBag else null
+        } catch (e: Exception) {
+            logger.error(e) { "Welfare gold+BAG+receipt SQL transaction failed" }
+            null
+        }
+    }
+
     suspend fun openGiftBagAtomic(characterId: Long, sourceSlot: Int, sourceItemId: Int, consumedQty: Int, rewards: List<Pair<Int, Int>>): Map<Int, ThingData?>? =
         CharacterPersistenceGuard.withLock(characterId) { openGiftBagAtomicUnfenced(characterId, sourceSlot, sourceItemId, consumedQty, rewards) }
 

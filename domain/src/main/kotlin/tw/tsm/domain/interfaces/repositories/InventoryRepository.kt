@@ -48,6 +48,13 @@ interface InventoryRepository {
         recipeDay: Int, exchangeCount: Int, resultItemId: Int, resultQuantity: Int,
     ) { error("Welfare BAG+receipt atomic repository unsupported") }
 
+    /** All-or-nothing BAG swap + paid gold + receipt, with optimistic DB wallet check. */
+    suspend fun saveWelfareGoldExchangeAtomic(
+        characterId: Long, changes: Map<Int, ThingData?>,
+        recipeDay: Int, exchangeCount: Int, resultItemId: Int, resultQuantity: Int,
+        expectedGold: Int, expectedAuctionGold: Int, goldCost: Int,
+    ) { error("Atomic welfare gold exchange repository unavailable") }
+
     suspend fun saveItemsAtomic(characterId: Long, storageType: Int, changes: Map<Int, ThingData?>) {
         for ((slot, thing) in changes) {
             saveItem(characterId, storageType, slot, thing)

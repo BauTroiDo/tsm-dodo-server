@@ -143,6 +143,57 @@ class InventoryRepositoryImpl : InventoryRepository {
         Unit
     }
 
+    /**
+     * Spend gold and change BAG slots in a single Exposed transaction.
+     * The exact expected SQL balances prevent stale cache overwrites.
+     * Throw on any mismatch: transaction rollback guarantees no partial prize.
+     */
+    override suspend fun saveWelfareGoldExchangeAtomic(
+        characterId: Long, changes: Map<Int, ThingData?>,
+        recipeDay: Int, exchangeCount: Int, resultItemId: Int, resultQuantity: Int,
+        expectedGold: Int, expectedAuctionGold: Int, goldCost: Int,
+    ) = suspendTransaction {
+        require(characterId > 0 && changes.isNotEmpty() && recipeDay >= 0 &&
+            exchangeCount in 1..50 && resultItemId in 1..65535 &&
+            resultQuantity > 0 && goldCost > 0 && expectedGold >= goldCost &&
+            expectedAuctionGold >= 0) { "Invalid gold exchange request" }
+
+        val goldKey = (CharacterMoney.characterId eq characterId) and
+            (CharacterMoney.gold eq expectedGold) and
+            (CharacterMoney.auctionGold eq expectedAuctionGold)
+        val updated = CharacterMoney.update({ goldKey }) {
+            it[CharacterMoney.gold] = expectedGold - goldCost
+        }
+        check(updated == 1) { "Gold wallet changed before welfare exchange" }
+
+        for ((slot, thing) in changes) {
+            if (thing == null || thing.isEmpty) {
+                Inventories.deleteWhere {
+                    (Inventories.characterId eq characterId) and
+                    (Inventories.storageType eq EThings.BAG) and
+                    (Inventories.slot eq slot)
+                }
+            } else {
+                Inventories.upsert {
+                    it[Inventories.characterId] = characterId
+                    it[Inventories.storageType] = EThings.BAG
+                    it[Inventories.slot] = slot
+                    it.setThingData(thing)
+                }
+            }
+        }
+        CharacterWelfareExchangeReceipts.insert {
+            it[CharacterWelfareExchangeReceipts.characterId] = characterId
+            it[CharacterWelfareExchangeReceipts.recipeDay] = recipeDay
+            it[CharacterWelfareExchangeReceipts.exchangeCount] = exchangeCount
+            it[CharacterWelfareExchangeReceipts.resultItemId] = resultItemId
+            it[CharacterWelfareExchangeReceipts.resultQuantity] = resultQuantity
+            it[CharacterWelfareExchangeReceipts.goldSpent] = goldCost
+            it[CharacterWelfareExchangeReceipts.claimedAtEpochMs] = System.currentTimeMillis()
+        }
+        Unit
+    }
+
     override suspend fun saveItemsAtomic(
         characterId: Long,
         storageType: Int,

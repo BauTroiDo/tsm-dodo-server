@@ -15,6 +15,7 @@ object CharacterWelfareExchangeReceipts : Table("character_welfare_exchange_rece
     val exchangeCount = integer("exchange_count")
     val resultItemId = integer("result_item_id")
     val resultQuantity = integer("result_quantity")
+    val goldSpent = integer("gold_spent").default(0)
     val claimedAtEpochMs = long("claimed_at_epoch_ms")
     override val primaryKey = PrimaryKey(id)
 }
