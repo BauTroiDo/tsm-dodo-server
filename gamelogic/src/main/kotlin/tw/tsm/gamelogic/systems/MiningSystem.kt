@@ -1,8 +1,23 @@
 package tw.tsm.gamelogic.systems
 
+import java.time.Instant
+import java.time.ZoneId
+import tw.tsm.domain.util.OleDate
+
 import tw.tsm.domain.data.ItemDef
 import tw.tsm.domain.interfaces.repositories.MiningRecord
 import tw.tsm.domain.interfaces.repositories.MiningRepository
+
+/**
+ * DVT compares S170-001 setTime against CGTimer.serverTime, which comes from
+ * LoginService.currentServerTime() = OleDate.nowLocal(). Persist durations in
+ * UTC epoch millis, but encode protocol dates in the SERVER'S local wall clock.
+ * A UTC OADate makes a Vietnam client immediately consume seven hours of fuel.
+ */
+object MiningClock {
+    fun toDvtWallClockOaDate(epochMillis: Long, zone: ZoneId = ZoneId.systemDefault()): Double =
+        OleDate.fromLocalDateTime(Instant.ofEpochMilli(epochMillis).atZone(zone).toLocalDateTime())
+}
 
 /** View đã settle dùng để encode S:170-001/002. */
 data class MiningView(
@@ -13,7 +28,7 @@ data class MiningView(
         get() = !record.dayLimit && record.machineFull.any { it > 0 }
 
     val setTimeOaDate: Double
-        get() = record.updatedAtMillis / 86_400_000.0 + 25_569.0
+        get() = MiningClock.toDvtWallClockOaDate(record.updatedAtMillis)
 }
 
 data class MiningRefillResult(
