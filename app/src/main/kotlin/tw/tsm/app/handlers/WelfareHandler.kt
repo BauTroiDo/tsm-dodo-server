@@ -241,7 +241,7 @@ class WelfareHandler(
         }
         val changed = inventorySystem.exchangeWelfareItemsAtomic(
             session.roleId.toLong(), inputs,
-            award.changeItemId to award.changeQuantity, count,
+            award.changeItemId to award.changeQuantity, count, award.day,
         ) ?: run {
             sendClaimResult(session, AWARD_CHANGE, RESULT_BAG_FULL)
             return
