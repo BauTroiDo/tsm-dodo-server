@@ -44,13 +44,13 @@ class WelfareItemExchangeWireTest {
         val row=LoginAwardDef(9,0,107,listOf(55403 to 150),55411,1,0,0)
         val (handler,session,inventory)=setup(row)
         coEvery {
-            inventory.exchangeWelfareItemsAtomic(77L,listOf(55403 to 150),55411 to 1,2)
+            inventory.exchangeWelfareItemsAtomic(77L,listOf(55403 to 150),55411 to 1,2,107)
         } returns mapOf(0 to ThingData(itemId=55403,quantity=50),1 to ThingData(itemId=55411,quantity=2))
         every { inventory.getBag(77L) } returns mapOf(0 to ThingData(itemId=55403,quantity=50),1 to ThingData(itemId=55411,quantity=2))
         val packets=mutableListOf<ByteArray>()
         every { session.send(capture(packets)) } just Runs
         handler.handle(session,2,buildPacket(9,107,2))
-        coVerify(exactly=1) { inventory.exchangeWelfareItemsAtomic(77L,any(),any(),2) }
+        coVerify(exactly=1) { inventory.exchangeWelfareItemsAtomic(77L,any(),any(),2,107) }
         val packet=PacketReader(packets.last())
         assertEquals(87,packet.readUByte())
         assertEquals(2,packet.readUByte())
@@ -65,7 +65,7 @@ class WelfareItemExchangeWireTest {
         val packets=mutableListOf<ByteArray>()
         every { session.send(capture(packets)) } just Runs
         handler.handle(session,2,buildPacket(9,101,1))
-        coVerify(exactly=0) { inventory.exchangeWelfareItemsAtomic(any(),any(),any(),any()) }
+        coVerify(exactly=0) { inventory.exchangeWelfareItemsAtomic(any(),any(),any(),any(),any()) }
         val packet=PacketReader(packets.last())
         assertEquals(87,packet.readUByte())
         assertEquals(2,packet.readUByte())
@@ -80,7 +80,7 @@ class WelfareItemExchangeWireTest {
         val packets=mutableListOf<ByteArray>()
         every { session.send(capture(packets)) } just Runs
         handler.handle(session,2,buildPacket(9,107,51))
-        coVerify(exactly=0) { inventory.exchangeWelfareItemsAtomic(any(),any(),any(),any()) }
+        coVerify(exactly=0) { inventory.exchangeWelfareItemsAtomic(any(),any(),any(),any(),any()) }
         val packet=PacketReader(packets.last())
         assertEquals(87,packet.readUByte())
         assertEquals(2,packet.readUByte())
