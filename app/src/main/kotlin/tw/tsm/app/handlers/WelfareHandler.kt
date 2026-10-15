@@ -25,6 +25,7 @@ class WelfareHandler(
     private val moneySystem: MoneySystem,
     private val currencySystem: PlayerCurrencySystem,
     private val responseSender: ResponseSender,
+    private val onlineWelfare: OnlineWelfareDaySystem? = null,
 ) : PacketHandler {
     override val mainKind: Int = Opcodes.WELFARE
 
@@ -133,6 +134,14 @@ class WelfareHandler(
 
     /** EAward.Online=3 — thưởng theo số phút online trong ngày. */
     private suspend fun handleOnlineClaim(session: GameSession, requestedMinute: Int) {
+        if (onlineWelfare != null) {
+            onlineWelfare.withClaimLock(session) {
+                handleOnlineClaimUnlocked(session, requestedMinute)
+            }
+        } else handleOnlineClaimUnlocked(session, requestedMinute)
+    }
+
+    private suspend fun handleOnlineClaimUnlocked(session: GameSession, requestedMinute: Int) {
         val charId = session.roleId.toLong()
         val award = loginAwardDefs.firstOrNull { it.group == AWARD_ONLINE && it.day == requestedMinute }
         if (award == null) {

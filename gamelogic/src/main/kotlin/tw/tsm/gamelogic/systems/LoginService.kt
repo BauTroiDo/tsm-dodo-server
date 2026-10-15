@@ -63,6 +63,7 @@ class LoginService(
     private val messageBoardRepository: MessageBoardRepository? = null,
     private val mallQuotaSystem: MallQuotaSystem? = null,
     private val welfareStateRepository: WelfareStateRepository? = null,
+    private val onlineWelfare: OnlineWelfareDaySystem? = null,
 ) {
 
     /**
@@ -204,6 +205,8 @@ class LoginService(
                 roleCountSystem.setValue(record.id, index, defaultValue)
             }
         }
+        // Reset the SQL daily online day before sending RoleCount and BitFlag snapshots.
+        onlineWelfare?.onCharacterEnter(session)
         mallQuotaSystem?.refreshOnLogin(record.id)
         val mergedCounts = roleCountSystem.getAllCounts(record.id)
             .mapValues { (_, valuePair) -> valuePair.first }  // value (Không phải maxValue)
