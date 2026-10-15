@@ -83,3 +83,24 @@ New regression `Dvt115MineRefillHudRefreshWireTest` asserts the actual byte sequ
 Combined isolated Gradle `:tests:test` on six DVT mine test classes: **30/30 PASS**, including new 3 tests, prior SQL 10, client source parity 6, fake-state 3, icon wire 5, clock 3. The tested file SHA-1 Git blob matches pushed `9d1381a955b88323d53e99fb928930a1997d1a8e`.
 
 No Kotlin gameplay source change, no client change, no DEV deployment. This still does not prove original server TS payout amounts, daily cap/reset, or actual mining income.
+
+## DVT original IOS item DATA — four miner foods and restart fractional timer (2026-10-15)
+
+**Exact original runtime bytes:** user's staged client `D:/Games/Ts-Offline/TSNPCVN_9PET_STAGING/AssetBundles/Data/IOS_Item_C.dat` is byte-for-byte identical to server `C:/Server-Game/tsm_dodo/File.dat/Data-ios/IOS_Item_C.dat`, both SHA256 `51f93c59411105d4de61f154bb29c0db10ca41c36b40ab4b1c99f728abc7845b` (6,472,692 bytes). Server `GameDataManager` loads this `Data-ios/IOS_Item_C.dat` through `ItemDatLoader` as the authoritative `ItemDef` map, not the older `Data/Item_C.dat`.
+
+Lua DVT original `UI/UIMine.lua`, `OnClick_Set`, uses `itemDatas[machineData[itemIndex].item].threshold` to compute refill per food. Loading the exact IOS DAT with the SAME Kotlin `ItemDatLoader` produces:
+
+| Food item ID | Threshold, DVT source |
+| --- | ---: |
+| `55431` | 10 |
+| `55432` | 10 |
+| `55433` | 10 |
+| `55434` | 10 |
+
+New `Dvt115MineFuelOriginalItemDataTest` **pins each exactly to 10**; the value is no longer only a mocked test input. This is **FOOD/fullness**, not DVT original reward TS yield. **Never treat 10 hunger as coin payout rate.**
+
+**Reconnect boundary check:** `DvtMiningFuelAtomicSqlTest.fractional360SecondTickSurvivesMultipleReconnectsAndSqlReloads` uses real isolated H2 persistence. Read mỏ at 359,999 ms after timestamp, then 360,001 ms, then 719,999 ms, then exact 720,000 ms, each with a newly constructed Kotlin `MiningSystem`. It checks the 360,000-ms remainder survives repeated reads and that exhaustion freezes at 0 without dipping into negative food. This mirrors client `UIMine.UpdateTimer` floor(elapsed/360), prevents each UI refresh from resetting the mining timer.
+
+**Validation:** isolated worktree, `gradlew :tests:test` against all seven mine regression suites, **32/32 PASS** and `BUILD SUCCESSFUL`. Exact Git tree blobs from tested files pushed to this Draft PR: `DvtMiningFuelAtomicSqlTest.kt` `3de39da71c2fa9486e46656b5985b2f2e48c0e09`, `Dvt115MineFuelOriginalItemDataTest.kt` `c81601029692457c228dfcbcf2ef04852d136376`. The initial prep script correctly **refused** any edits when it compared a raw Windows CRLF SHA1 against a Git blob SHA1; corrected to use `git hash-object`, backed up the two test files before changes, then normalized LF. All subsequent tests passed. No failed game patch has been applied.
+
+**Important remaining scope:** backend DVT original four-worker TS currency reward formula, daily cap trigger/reset and ore debit still unproven by the client and not implemented. DEV actual gameplay files, client, DB, and JVM PID10012 unchanged.
