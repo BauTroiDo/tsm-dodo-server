@@ -791,6 +791,31 @@ class InventorySystem(
         }
     }
 
+    /**
+     * Explain a declined gift exchange without changing BAG, wallet, or receipts.
+     * Run after an atomic attempt failed. Lock the snapshot against concurrent
+     * inventory mutations; only emit BAG_FULL when the planner proves no room.
+     */
+    suspend fun diagnoseWelfareExchangeFailure(
+        characterId: Long, costs: List<Pair<Int, Int>>,
+        output: Pair<Int, Int>, count: Int,
+    ): WelfareExchangeFailure = CharacterPersistenceGuard.withLock(characterId) {
+        val current = bags[characterId]?.toMap()
+            ?: return@withLock WelfareExchangeFailure.OTHER
+        if (!WelfareItemExchangePlanner.hasRequiredUnlockedItems(current, costs, count)) {
+            return@withLock WelfareExchangeFailure.MISSING_ITEMS
+        }
+        if (output.first !in itemDefs || costs.any { it.first !in itemDefs }) {
+            return@withLock WelfareExchangeFailure.OTHER
+        }
+        val plan = WelfareItemExchangePlanner.plan(
+            current, roleCountSystem.getBagCapacity(characterId),
+            costs, output, count, itemDefs,
+        )
+        if (plan == null) WelfareExchangeFailure.BAG_FULL
+        else WelfareExchangeFailure.OTHER
+    }
+
     suspend fun openGiftBagAtomic(characterId: Long, sourceSlot: Int, sourceItemId: Int, consumedQty: Int, rewards: List<Pair<Int, Int>>): Map<Int, ThingData?>? =
         CharacterPersistenceGuard.withLock(characterId) { openGiftBagAtomicUnfenced(characterId, sourceSlot, sourceItemId, consumedQty, rewards) }
 
