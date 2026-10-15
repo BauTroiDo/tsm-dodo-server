@@ -36,6 +36,28 @@ interface MiningRepository {
         expectedTsBalance: Int,
     ): MiningTsAwardCommit? = error("Verified mining TS reward transaction unavailable")
 
+    /**
+     * A VERIFIED backend award may independently include a change to the current
+     * miner's hunger and tick timestamp. No rate or reward schedule is inferred.
+     *
+     * Optimistic expectedMine + expectedTsBalance are checked INSIDE one SQL
+     * transaction. The entire mine state, currency, shared ore and durable
+     * receipt commit together, or none do.
+     *
+     * Not wired to MiningSystem.settle: DVT-original production rates are unknown.
+     */
+    suspend fun commitVerifiedTsAwardWithMineStateAtomic(
+        receiptId: String,
+        characterId: Long,
+        mineType: Int,
+        oreDebit: Long,
+        tsCredit: Int,
+        maxReserve: Long,
+        expectedTsBalance: Int,
+        expectedMine: MiningRecord,
+        updatedMine: MiningRecord,
+    ): MiningTsAwardCommit? = error("Verified mining TS + hunger settlement unavailable")
+
     suspend fun load(charId: Long): MiningRecord?
     suspend fun save(charId: Long, record: MiningRecord)
 
