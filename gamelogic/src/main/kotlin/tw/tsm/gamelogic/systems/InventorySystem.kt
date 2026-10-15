@@ -362,8 +362,9 @@ class InventorySystem(
         check(outcome.bagAfter == expectedAfter) {
             "Mining repository returned inconsistent post-commit BAG state"
         }
-        if (outcome.bagAfter == null) bag.remove(slot)
-        else bag[slot] = outcome.bagAfter
+        val committedAfter = outcome.bagAfter
+        if (committedAfter == null) bag.remove(slot)
+        else bag[slot] = committedAfter
         outcome
     }
 
