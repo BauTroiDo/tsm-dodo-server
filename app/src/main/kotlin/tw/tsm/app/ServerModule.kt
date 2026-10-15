@@ -748,7 +748,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     single { MoveHandler(get(), get(), get(), get<MineEncounterSystem>(), get<HouseVisitSystem>()) }
     single { ChatHandler(get(), get(), get()) }
     single { SceneHandler(get(), get()) }
-    single { RelocateHandler(get(), get(), get(), get<LimitTimeDungeonSystem>(), get<DungeonSystem>(), get<EveTriggerRouter>(), get<ElfHandler>()) }
+    single { RelocateHandler(get(), get(), get(), get<LimitTimeDungeonSystem>(), get<DungeonSystem>(), get<EveTriggerRouter>(), get<ElfHandler>(), get<MiningHandler>()) }
     single { NpcEventHandler(get<EveTriggerRouter>(), get<EveFlowController>()) }
     single { ItemHandler(get(), get(), get(), get(), get(), get<GameDataManager>().itemDefs, get(), get<PlayerStateManager>(), get<StatSystem>(), get(), get<FlyPointSystem>(), get<CharacterRepository>(), get<PetEquipSystem>(), get<QuestSystem>(), get<SkillSystem>(), get<DailyProgressSystem>(), get<PetSystem>(), get<GameDataManager>().npcDefs, get<RoleCountSystem>(), get<CollectionSystem>(), get<AstrolabeSystem>(), get<GameDataManager>().sacredEquipPrimaryDefs, get<CompoundSystem>(), get<SoulSystem>(), get<OfflineSoulGenerationPolicy>(), get<SoulResponseSender>(), get<PlayerCurrencySystem>(), get<ElfTokenUnlockService>(), get<ElfRepository>(), get<ElfHandler>()) }
     single { NpcTradeHandler(get(), get(), get(), get<GameDataManager>().itemDefs, get()) }

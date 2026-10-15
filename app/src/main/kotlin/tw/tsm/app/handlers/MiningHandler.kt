@@ -37,6 +37,17 @@ class MiningHandler(
         }
     }
 
+    /** C012-001 is sent only after the mine scene has finished loading.
+     * The first S170-002 sent immediately after teleport may arrive before
+     * UIMain exists and leave the prefab placeholders MineCount / 99%.
+     * Replay the same persisted reserve without altering anything in DB.
+     */
+    suspend fun sendHudSnapshotAfterSceneReady(session: GameSession) {
+        if (session.state != SessionState.IN_GAME || session.mapId != MiningSystem.MINE_SCENE_ID) return
+        val view = system.getView(session.roleId.toLong())
+        sendEnterResult(session, 1, view.record.mineType, view)
+    }
+
     private suspend fun queryInfo(session: GameSession, data: ByteArray) {
         if (data.size != 1) return
         val requestedMineType = PacketReader(data).readUByte()
