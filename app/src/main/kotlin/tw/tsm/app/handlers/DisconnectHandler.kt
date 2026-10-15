@@ -34,6 +34,7 @@ class DisconnectHandler(
     private val macroBoxSystem: MacroBoxSystem,
     private val roleCountSystem: RoleCountSystem,
     private val pvpBotMatchmakingSystem: PvpBotMatchmakingSystem? = null,
+    private val houseVisits: HouseVisitSystem? = null,
 ) : PacketHandler {
 
     override val mainKind: Int = Opcodes.DISCONNECT
@@ -51,12 +52,14 @@ class DisconnectHandler(
         macroBoxSystem.cleanup(characterId)
 
         // Chụp snapshot vị trí trước, rồi loại bỏ (leaveMap sẽ đặt session.mapId về 0)
-        val mapId = session.mapId
-        val x = session.x
-        val y = session.y
+        val stable = houseVisits?.persistedLocation(session)
+        val mapId = stable?.mapId ?: session.mapId
+        val x = stable?.x ?: session.x
+        val y = stable?.y ?: session.y
 
         // Gỡ người chơi khỏi thế giới
         worldManager.removePlayer(session)
+        houseVisits?.cleanup(session.playerId)
 
         // Lưu dữ liệu nhân vật vào DB (mỗi mục try-catch riêng, đảm bảo một mục lỗi không ảnh hưởng việc lưu các mục khác)
         if (characterId > 0) {

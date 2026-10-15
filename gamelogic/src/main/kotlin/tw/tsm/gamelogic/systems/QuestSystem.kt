@@ -38,6 +38,9 @@ class QuestSystem(
     weeklyDungeonMissionIds: Set<Int> = emptySet(),
     weeklyClaimMissionIds: Set<Int> = emptySet(),
     private val thisWeek: () -> Int = { currentWeekKey() },
+    // Original IOS_MarkStep_C is required to distinguish one-shot DVT
+    // marker missions from genuine multi-step quests on login.
+    private val markStepMissionIds: Set<Int> = emptySet(),
 ) {
 
     // Only normal kind1/2 dungeon dailyFlag counters proven kind8/bitId0 may be cleared.
@@ -113,6 +116,17 @@ class QuestSystem(
                 return@withLock null
             }
             val newStep = current + delta
+            // Verified DVT limits only: mission12280's missing 6..10 and
+            // mission10120/10164's terminal stage2. Recheck under the
+            // per-character mutation mutex, even if a battle replay races
+            // the earlier whole-chain Eve preflight.
+            if (DvtQuestStepBoundaryPolicy.isUnsupportedAddDestination(missionId, newStep)) {
+                logger.warn {
+                    "Chặn bước nhiệm vụ không xác định trong DVT: charId=$charId mission=$missionId " +
+                        "current=$current delta=$delta target=$newStep"
+                }
+                return@withLock null
+            }
             repo.upsertMission(charId, missionId, newStep)
             logger.info { "Thêm bước nhiệm vụ: charId=$charId missionId=$missionId step: $current → $newStep" }
             return@withLock current
@@ -226,6 +240,12 @@ class QuestSystem(
         }
     }
 
+    /** Pure preflight for a weekly all-pass claim Mark: no database mutation. */
+    fun completionBitId(missionId: Int): Int = markDefs[missionId]?.bitId ?: 0
+
+    /** Same Asia/Taipei Monday period key used by refreshDungeonWeekly. */
+    fun dungeonWeekKey(): Int = thisWeek()
+
     /** Kiểm tra nhiệm vụ đã hoàn thành theo missionId, giống MarkManager.GetMissionFlag(). */
     suspend fun hasMissionFlag(charId: Long, missionId: Int): Boolean {
         val bitId = markDefs[missionId]?.bitId ?: return false
@@ -286,6 +306,44 @@ class QuestSystem(
      * @return Danh sách đánh dấu
      */
     suspend fun getFlags(charId: Long): List<MissionFlagRecord> = repo.getMissionFlags(charId)
+
+    /**
+     * Repair legacy DVT marker ADD_STEP rows before the login S024-007 flags
+     * snapshot. EveStateBuilder repairs these on event access, but login
+     * sends its flags earlier, potentially leaving finished tutorial icons
+     * locked on relog.
+     *
+     * Only an existing positive step for a source Mark with a positive bitId
+     * and NO real MarkStep qualifies. Never invent a new mission or grant
+     * a flag merely because an icon requires it.
+     */
+    suspend fun reconcileStoredMarkerMissionFlags(charId: Long): List<MissionFlagRecord> {
+        if (charId <= 0L || markStepMissionIds.isEmpty()) return emptyList()
+        return mutationLock(charId).withLock {
+            val missions = repo.getMissions(charId)
+            if (missions.isEmpty()) return@withLock emptyList()
+
+            val activeBits = repo.getMissionFlags(charId)
+                .filter { it.bitIndex > 0 && it.bitValue != 0 }
+                .mapTo(mutableSetOf()) { it.bitIndex }
+            val repaired = mutableListOf<MissionFlagRecord>()
+            for (mission in missions) {
+                if (mission.step <= 0 || mission.missionId in markStepMissionIds) continue
+                val bitId = markDefs[mission.missionId]?.bitId ?: continue
+                if (bitId !in 1..65535 || bitId in activeBits) continue
+
+                repo.upsertFlag(charId, bitId, 1)
+                activeBits += bitId
+                repaired += MissionFlagRecord(bitId, 1)
+                logger.info {
+                    "Repaired DVT marker before login: charId=" + charId +
+                        " mission=" + mission.missionId + " step=" + mission.step +
+                        " bitId=" + bitId
+                }
+            }
+            repaired
+        }
+    }
 
     companion object {
         private val GAME_ZONE: ZoneId = ZoneId.of("Asia/Taipei")

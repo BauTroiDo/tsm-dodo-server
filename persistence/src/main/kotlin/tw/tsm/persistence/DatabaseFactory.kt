@@ -11,14 +11,21 @@ import tw.tsm.persistence.tables.CharacterAstrolabes
 import tw.tsm.persistence.tables.CharacterSouls
 import tw.tsm.persistence.tables.CharacterElfProfiles
 import tw.tsm.persistence.tables.CharacterElfProgress
+import tw.tsm.persistence.tables.CharacterChildStates
 import tw.tsm.persistence.tables.CharacterMallQuotas
 import tw.tsm.persistence.tables.CharacterHouseProfiles
+import tw.tsm.persistence.tables.CharacterHouseSettings
+import tw.tsm.persistence.tables.CharacterHouseFurniture
 import tw.tsm.persistence.tables.CharacterGiftRecords
 import tw.tsm.persistence.tables.CharacterBitFlags
 import tw.tsm.persistence.tables.CharacterMissionFlags
 import tw.tsm.persistence.tables.CharacterDungeonDays
 import tw.tsm.persistence.tables.CharacterLimitedAreaDays
 import tw.tsm.persistence.tables.CharacterDungeonRuns
+import tw.tsm.persistence.tables.CharacterEveEffectClaims
+import tw.tsm.persistence.tables.CharacterEveEffectSettlements
+import tw.tsm.persistence.tables.CharacterRewardLedger
+import tw.tsm.persistence.tables.CharacterRewardPendingScopes
 import tw.tsm.persistence.tables.CharacterDungeonWeeks
 import tw.tsm.persistence.tables.CharacterWelfareState
 import tw.tsm.persistence.tables.CharacterMissions
@@ -52,6 +59,7 @@ import tw.tsm.persistence.tables.CharacterTurn3Skills
 import tw.tsm.persistence.tables.FriendInvites
 import tw.tsm.persistence.tables.Friends
 import tw.tsm.persistence.tables.Inventories
+import tw.tsm.persistence.tables.TradeSettlementReceipts
 import tw.tsm.persistence.tables.MailAttachments
 import tw.tsm.persistence.tables.Mails
 import tw.tsm.persistence.tables.MessageBoardMessages
@@ -86,11 +94,11 @@ object DatabaseFactory {
         // Tự tạo bảng (kèm bổ sung các trường mới)
         transaction {
             SchemaUtils.createMissingTablesAndColumns(
-                Accounts, Characters, Inventories, CharacterMoney, CharacterCurrencies,
-                CharacterAstrolabes, CharacterSouls, CharacterElfProfiles, CharacterElfProgress, CharacterMallQuotas,
-                CharacterHouseProfiles, CharacterGiftRecords,
-                CharacterMissions, CharacterMissionFlags, CharacterCompletedEvents, CharacterBitFlags,
-                CharacterDungeonDays, CharacterDungeonRuns, CharacterDungeonWeeks, CharacterWelfareState,
+                Accounts, Characters, Inventories, CharacterMoney, TradeSettlementReceipts, CharacterCurrencies,
+                CharacterAstrolabes, CharacterSouls, CharacterElfProfiles, CharacterElfProgress, CharacterChildStates, CharacterMallQuotas,
+                CharacterHouseProfiles, CharacterHouseSettings, CharacterHouseFurniture, CharacterGiftRecords,
+                CharacterMissions, CharacterMissionFlags, CharacterCompletedEvents, CharacterEveEffectClaims, CharacterEveEffectSettlements, CharacterBitFlags,
+                CharacterDungeonDays, CharacterDungeonRuns, CharacterDungeonWeeks, CharacterRewardLedger, CharacterRewardPendingScopes, CharacterWelfareState,
                 CharacterLimitedAreaDays,
                 CharacterSkills, CharacterTurn2Skills, CharacterTurn3States, CharacterTurn3Skills,
                 CharacterPets,

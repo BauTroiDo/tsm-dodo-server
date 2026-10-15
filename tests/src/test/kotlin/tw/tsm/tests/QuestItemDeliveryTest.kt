@@ -37,6 +37,8 @@ class QuestItemDeliveryTest {
         EveResult(0, 1, type, 1, 29124, style, qty, 0)
 
     @Test fun grantSynchronizesEveryChangedStack() = runTest {
+        // The deployed DVT item preflight validates even one item change.
+        every { inventory.canApplyQuestItemChanges(31L, listOf(29124 to 3)) } returns true
         coEvery { inventory.addItemsToBagExact(31L, 29124, 3) } returns listOf(
             0 to ThingData(itemId = 29124, quantity = 9999),
             7 to ThingData(itemId = 29124, quantity = 2),
@@ -54,6 +56,9 @@ class QuestItemDeliveryTest {
     }
 
     @Test fun submissionConsumesAcrossStacksAndSynchronizesEach() = runTest {
+        // A mocked bag has no storage backing; authorize the checked debit
+        // explicitly while leaving other tests' fail-closed defaults intact.
+        every { inventory.canApplyQuestItemChanges(31L, listOf(29124 to -3)) } returns true
         every { inventory.getBag(31L) } returns mapOf(
             0 to ThingData(itemId = 29124, quantity = 2),
             1 to ThingData(itemId = 29125, quantity = 20),

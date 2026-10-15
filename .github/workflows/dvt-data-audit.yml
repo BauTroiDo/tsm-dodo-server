@@ -17,3 +17,133 @@ jobs:
           python-version: '3.12'
       - name: Verify DVT MarkStep parity audit and original byte fixtures
         run: python -m unittest discover -s tools -p test_dvt_markstep_parity.py -v
+      - name: Audit all active quest blockers, mission step coordinates, and pending effects
+        run: python -m unittest discover -s tools -p test_dvt_quest_blockers_20261011.py -v
+      - name: Verify unsupported class13 reward code provenance and DAT mismatch
+        run: python -m unittest discover -s tools -p test_dvt_class13_award_sources_20261011.py -v
+      - name: Guard DEV quest item pStyle3 multi-stack reclamation from GitHub regressions
+        run: python -m unittest discover -s tools -p test_dvt_pstyle3_live_quest_parity_20261011.py -v
+      - name: Verify five source-proven Qin Tomb quest NPC auto-navigation targets
+        run: python -m unittest discover -s tools -p test_dvt_12158_npc_navigation_20261011.py -v
+      - name: Verify DVT quest10126 step4 original Dong Quan spy and palace route
+        run: python -m unittest discover -s tools -p test_dvt_10126_dongquan_spy_navigation_20261012.py -v
+      - name: Verify original source NPCs for quest10122 spy and quest10290 Dong Tam cave
+        run: python -m unittest discover -s tools -p test_dvt_10122_10290_source_npc_navigation_20261012.py -v
+      - name: Verify 20 poisoned-soldier 12106 medicine delivery NPC destinations
+        run: python -m unittest discover -s tools -p test_dvt_12106_poisoned_soldier_navigation_20261012.py -v
+      - name: Verify three source-proven Christmas quest merchant item waypoints
+        run: python -m unittest discover -s tools -p test_dvt_12509_christmas_vendors_20261011.py -v
+      - name: Verify source Christmas socks quest12509 steps5/6 original NPC and guarded binary routes
+        run: python -m unittest discover -s tools -p test_dvt_12509_socks_source_routes_20261012.py -v
+      - name: Verify four original quest12511 next-day Christmas tree NPC routes and source gates
+        run: python -m unittest discover -s tools -p test_dvt_12511_tree_return_navigation_20261012.py -v
+      - name: Verify quest12509 three-food turn-in at the genuine chef NPC15421
+        run: python -m unittest discover -s tools -p test_dvt_12509_food_turnin_20261012.py -v
+      - name: Verify quest12509 final stolen-thief return routes into original Santa scene-entry Eve9
+        run: python -m unittest discover -s tools -p test_dvt_12509_santa_final_return_20261012.py -v
+      - name: Verify original quest12509 ten-rods acquisition and correct-answer quiz NPCs
+        run: python -m unittest discover -s tools -p test_dvt_12509_rod_collection_and_riddle_20261012.py -v
+      - name: Verify quest12509 cave step12 original Eve unlocked door2 and alternative door3
+        run: python -m unittest discover -s tools -p test_dvt_12509_cave_step12_door_20261012.py -v
+      - name: Verify five original 12998 and 12936 festival relationship stage-gated NPC routes
+        run: python -m unittest discover -s tools -p test_dvt_12998_12936_source_npc_navigation_20261012.py -v
+      - name: Verify original stage12936 quest Door7 and stage17 NPC relationship
+        run: python -m unittest discover -s tools -p test_dvt_12936_stage16_scene_entry_navigation_20261012.py -v
+      - name: Verify quest12936 12509 12938 Door-trigger Eve routes never point to unrelated NPC
+        run: python -m unittest discover -s tools -p test_dvt_quest_door_trigger_corrections_20261012.py -v
+      - name: Verify all 13 Chu-family oil-trail stage routes against original Door Eve sources
+        run: python -m unittest discover -s tools -p test_dvt_12636_12650_oil_trace_door_routes_20261012.py -v
+      - name: Verify original Qin tomb nine real puzzle Doors and all 18 paired quest steps
+        run: python -m unittest discover -s tools -p test_dvt_12138_qin_tomb_nine_door_puzzles_20261012.py -v
+      - name: Verify DVT12080 Godstone stage4 and 7 original battle-gated Door triggers
+        run: python -m unittest discover -s tools -p test_dvt_12080_godstone_two_door_routes_20261012.py -v
+      - name: Verify eight original DVT chest and capture arena entry Door stages
+        run: python -m unittest discover -s tools -p test_dvt_123xx_chest_capture_entry_doors_20261012.py -v
+      - name: Verify quest12513 twelve source NPC routes and original item29465 checks
+        run: python -m unittest discover -s tools -p test_dvt_12513_christmas_tree_source_npc_routes_20261012.py -v
+      - name: Verify original DVT icon level and mission unlock requirements restored
+        run: python -m unittest discover -s tools -p test_dvt_uiopen_original_progression_20261012.py -v
+      - name: Verify authentic four beginner UI marker grants against all DVT Eve scenes
+        run: python -m unittest discover -s tools -p test_dvt_ui_marker_eve_progression_20261012.py -v
+      - name: Verify live icon level and marker flag refresh parity with source Lua
+        run: python -m unittest discover -s tools -p test_dvt_live_icon_refresh_source_parity_20261012.py -v
+      - name: Verify original mining icon C170-001 initial type-zero and safe Kotlin first-mine alias
+        run: python -m unittest discover -s tools -p test_dvt_mine_icon_click_source_20261012.py -v
+      - name: Verify original DVT Treasure icon S123 handshake, mission gate, and no phantom rewards
+        run: python -m unittest discover -s tools -p test_dvt_treasure_icon_protocol_20261012.py -v
+      - name: Decode all six source DVT Treasure tables, cards and exact static upgrade costs
+        run: python -m unittest discover -s tools -p test_dvt_treasure_six_table_source_20261012.py -v
+      - name: Verify Treasure SQL transaction stays dormant until safe in-session cache integration
+        run: python -m unittest discover -s tools -p test_dvt_treasure_dormant_transaction_20261012.py -v
+      - name: Verify Treasure card acquisition remains separate from ordinary bag and SQL caches
+        run: python -m unittest discover -s tools -p test_dvt_treasure_card_acquisition_isolation_20261013.py -v
+      - name: Verify 114 DVT Treasure card reward sources in BlissBag and Exchange tables
+        run: python -m unittest discover -s tools -p test_dvt_treasure_reward_sources_20261013.py -v
+      - name: Guard all 114 Treasure direct-use cards against generic consumption before banking support
+        run: python -m unittest discover -s tools -p test_dvt_treasure_card_direct_use_safety_20261013.py -v
+      - name: Guard staged atomic Treasure bank transfers against phantom credits and handler activation
+        run: python -m unittest discover -s tools -p test_dvt_treasure_bank_staged_atomic_20261013.py -v
+      - name: Verify staged Treasure BAG cache synchronization with autosave and logout
+        run: python -m unittest discover -s tools -p test_dvt_treasure_cache_coherence_staged_20261013.py -v
+      - name: Guard nine core BAG writers against autosave and staged Treasure transfer races
+        run: python -m unittest discover -s tools -p test_dvt_treasure_core_bag_writers_lock_20261013.py -v
+      - name: Guard equipment bank storage and rewards during staged Treasure transfer
+        run: python -m unittest discover -s tools -p test_dvt_treasure_equipment_bank_storage_lock_20261013.py -v
+      - name: Verify two-player trade and cached gold saves join the per-character persistence fences
+        run: python -m unittest discover -s tools -p test_dvt_trade_gold_fence_20261013.py -v
+      - name: Verify two-player SQL BAG and GOLD rollback is staged but not live
+        run: python -m unittest discover -s tools -p test_dvt_trade_two_character_sql_atomic_staged_20261013.py -v
+      - name: Reject duplicated item trade BAG slots at upload and final settlement
+        run: python -m unittest discover -s tools -p test_dvt_trade_duplicate_bag_slot_guard_20261013.py -v
+      - name: Guard staged two-player cache publication and unloaded login/logout races
+        run: python -m unittest discover -s tools -p test_dvt_trade_two_player_cache_publish_staged_20261013.py -v
+      - name: Guard staged C025 single-settler SQL confirmation and post-commit ACK
+        run: python -m unittest discover -s tools -p test_dvt_trade_item_finalization_gate_20261013.py -v
+      - name: Verify actual DVT UTF16 boss defeat talk 41353 in Talk_C.dat
+        run: python -m unittest discover -s tools -p test_dvt_native_boss_talk_asset_20261014.py -v
+      - name: Guard DVT scene12861 Fight28 defeat conduct recovery and post-exit HP sync
+        run: python -m unittest discover -s tools -p test_dvt_defeat_conduct_recovery_20261013.py -v
+      - name: Guard DVT mission10074 Khong Dung one-gift delivery Eve result
+        run: python -m unittest discover -s tools -p test_dvt_khong_dung_gift_delivery_20261013.py -v
+      - name: Guard staged C025 one-winner durable SQL and cache settlement orchestration
+        run: python -m unittest discover -s tools -p test_dvt_trade_staged_durable_orchestrator_20261013.py -v
+      - name: Guard C025 durable receipt atomic read and safe two-player cache reconciliation
+        run: python -m unittest discover -s tools -p test_dvt_trade_receipt_atomic_reconciliation_20261013.py -v
+      - name: Guard C025 frozen item offers, UUID and stale-slot rejection before RAM mutation
+        run: python -m unittest discover -s tools -p test_dvt_trade_frozen_c025_offer_20261013.py -v
+      - name: Guard permanent atomic SQL C025 trade receipts and lost ACK reconciliation
+        run: python -m unittest discover -s tools -p test_dvt_trade_sql_durable_receipt_20261013.py -v
+      - name: Guard staged C025 dynamic full BAG and GOLD conservation planner
+        run: python -m unittest discover -s tools -p test_dvt_trade_item_full_bag_planner_20261013.py -v
+      - name: Check all synchronous gold writer fencing and C031 Inn rest fee debit
+        run: python -m unittest discover -s tools -p test_dvt_sync_gold_writer_fence_inn_20261013.py -v
+      - name: Verify unique genuine A Dou 12444 stage1 ghost-house follower route
+        run: python -m unittest discover -s tools -p test_dvt_12444_unique_adou_route_20261012.py -v
+      - name: Verify 10988 Sun Shangxiang two follower-dependent battle routes
+        run: python -m unittest discover -s tools -p test_dvt_10988_follow_battle_routes_20261012.py -v
+      - name: Verify original timed escort quest11900 follow NPC fallback and seven battle gated routes
+        run: python -m unittest discover -s tools -p test_dvt_11900_timed_escort_source_routes_20261012.py -v
+      - name: Verify seven non-linear herb delivery Doors and two cursed village NPC routes
+        run: python -m unittest discover -s tools -p test_dvt_12763_13051_herb_ghost_source_routes_20261012.py -v
+      - name: Verify original Golden Pig quest12656 12 NPC routes and three distinct Eve stage mechanisms
+        run: python -m unittest discover -s tools -p test_dvt_12656_rock_paper_scissors_npc_navigation_20261012.py -v
+      - name: Verify 30 source-safe Santa daily helper and Grandpa house area waypoints
+        run: python -m unittest discover -s tools -p test_dvt_12511_12634_santa_grandpa_area_guides_20261012.py -v
+      - name: Verify source valid four capture arena quests distinct battle NPC stage choices
+        run: python -m unittest discover -s tools -p test_dvt_123xx_four_capture_battle_routes_20261012.py -v
+      - name: Verify four treasure chest arenas' sixteen distinct genuine source NPC choices
+        run: python -m unittest discover -s tools -p test_dvt_123xx_four_chest_choice_routes_20261012.py -v
+      - name: Verify Wu Gang quest13119 fourteen source chopper NPC routes and original callback progression
+        run: python -m unittest discover -s tools -p test_dvt_13119_wugang_source_tree_routes_20261012.py -v
+      - name: Verify Halloween Su Xiao Mei quest13131 three authentic original candy Door routes
+        run: python -m unittest discover -s tools -p test_dvt_13131_three_candy_source_doors_20261012.py -v
+      - name: Verify original Naihe and Qin Li Si routes and condition-guided blank END classification
+        run: python -m unittest discover -s tools -p test_dvt_11336_12158_source_waypoints_20261012.py -v
+      - name: Verify original DVT Moon Rabbit mission entrance and nearest real battle NPC
+        run: python -m unittest discover -s tools -p test_dvt_10852_rabbit_cave_navigation_20261012.py -v
+      - name: Verify quest10852 source-backed return to original Ngô Cương NPC
+        run: python -m unittest discover -s tools -p test_dvt_10852_rabbit_return_waypoint_20261012.py -v
+      - name: Verify source-proven quest12162 30-pot return route without invented collection
+        run: python -m unittest discover -s tools -p test_dvt_12162_clay_pot_turnin_20261012.py -v
+      - name: Verify DVT 32043 exists in real BlissBag rewards and quest grants
+        run: python -m unittest discover -s tools -p test_dvt_clay_pot_bag_sources_20261012.py -v

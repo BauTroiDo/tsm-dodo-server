@@ -39,7 +39,9 @@ class EveClassCoverageTest : DescribeSpec({
                 .map { it.resultClass }
                 .toSet()
 
-            actual shouldBe setOf(0, 1, 2, 3, 4, 5, 7, 8, 10, 11, 12, 13, 14, 15)
+            // Active DVT Eve (SHA256 03c84cb565d4...) removed obsolete class15
+            // when novice 10821 switched from choice30/31 to step13 -> scene10853.
+            actual shouldBe setOf(0, 1, 2, 3, 4, 5, 7, 8, 10, 11, 12, 13, 14)
         }
     }
 })

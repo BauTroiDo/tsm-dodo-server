@@ -21,6 +21,7 @@ import tw.tsm.domain.interfaces.ResponseSender
 import tw.tsm.domain.interfaces.repositories.SkillRepository
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
 import tw.tsm.domain.interfaces.repositories.ElfRepository
+import tw.tsm.domain.interfaces.repositories.RewardLedgerRepository
 import tw.tsm.domain.valueobjects.FollowNpcData
 import tw.tsm.domain.util.DvtPercentMath
 import tw.tsm.gamelogic.battle.*
@@ -64,9 +65,14 @@ class BattleManager(
     private val soulSystem: SoulSystem? = null,
     private val elfRepository: ElfRepository? = null,
     private val elfBaseExpByNo: Map<Int, Int> = emptyMap(),
+    /** Injected on dev/production; null only for legacy fixtures. */
+    private val rewardLedgerRepository: RewardLedgerRepository? = null,
 ) {
     /** Trình phân tích vật phẩm chiến đấu (stateless, dùng chung cho toàn trận)*/
     private val battleItemResolver = BattleItemResolver(inventorySystem, itemDefs)
+    private val battlePayoutLedger by lazy {
+        rewardLedgerRepository?.let { BattleRewardLedgerCoordinator(it) }
+    }
 
     /**
      * Callback khi kết thúc trận — do ServerModule thiết lập, gọi NpcEventHandler.resumeAfterBattle()
@@ -75,6 +81,7 @@ class BattleManager(
      */
     var onBattleAbortCallback: ((GameSession) -> Unit)? = null
     var onBattleEndCallback: (suspend (GameSession, Long, Boolean) -> Unit)? = null
+    var onBeforeEveBattleRewards: (suspend (GameSession) -> Boolean)? = null
     var onWeeklyDungeonBattleEndCallback:
         (suspend (GameSession, Int, Boolean, Int) -> Unit)? = null
     /** Mọi trận đấu đang diễn ra (battleId → BattleInstance)*/
@@ -417,6 +424,20 @@ class BattleManager(
         session.battleId = battleId
 
         logger.info { "Tạo trận $battleId: người chơi ${session.characterName} vs ${involvedNpcs.size} kẻ địch (sự kiện ${fightData.eveNo}) leftEnemies=${fightData.leftEnemies.size} rightEnemies=${fightData.rightEnemies.size}" }
+
+        // Read-only DVT Eve6 battle roster for owner-vs-automanual flyout correlation.
+        if (session.mapId == 12861 && fightData.eveNo == 28) {
+            val owner = battle.getAllFighters().firstOrNull { it.roleId == session.playerId }
+            val roster = battle.getAllFighters().filter { it.isPlayerSide }
+                .joinToString(";") { f ->
+                    "role=${f.roleId}:kind=${f.kind}:slot=(${f.col},${f.row}):owner=${f.roleId == session.playerId}"
+                }
+            logger.info {
+                "DVT Eve6 roster battle=$battleId charId=${session.roleId} " +
+                    "ownerWorldId=${session.playerId} ownerSlot=(${owner?.col},${owner?.row}) " +
+                    "alliedRoster=[$roster]"
+            }
+        }
 
         installCatchOwnerValidator(battle)
 
@@ -1426,6 +1447,36 @@ class BattleManager(
     }
 
     /**
+     * Native DVT exits the owner's battle UI when the real player flies out.
+     * Followers may still be alive; keeping the server fight open then delays
+     * Eve6's original loss dialogue until those followers also lose.
+     */
+    private suspend fun finishDvtBossOwnerFlyout(battle: BattleInstance): Boolean {
+        val (playerId, session) = battle.playerSessions.entries.singleOrNull() ?: return false
+        val owner = battle.getAllFighters().firstOrNull {
+            it.roleId == playerId && it.isPlayerSide &&
+                (it.kind == EHuman.PLAYER || it.kind == EHuman.PLAYERS)
+        }
+        if (!DvtBossOwnerExitPolicy.shouldEndAsDefeat(
+                mapId = session.mapId,
+                fightId = battle.eventNo,
+                warType = battle.warType,
+                playerSessionCount = battle.playerSessions.size,
+                ownerFlyOut = owner?.isFlyOut == true,
+                ownerAlive = owner?.isAlive == true,
+            )
+        ) return false
+
+        logger.info {
+            "DVT Eve6 real owner flyout ends Fight28: battle=${battle.battleId} " +
+                "charId=${session.roleId} ownerSlot=(${owner?.col},${owner?.row}) " +
+                "aliveAllies=${battle.grid.getAlivePlayerSide().count { it.roleId != playerId }}"
+        }
+        handleBattleEnd(battle, BattleEndResult(playerWin = false))
+        return true
+    }
+
+    /**
      * Coroutine vòng lặp hiệp đấu
      */
     private suspend fun runBattleLoop(battle: BattleInstance) {
@@ -1451,7 +1502,12 @@ class BattleManager(
                 battle.state = BattleInstance.State.WAITING_COMMANDS
 
                 // 2. Chờ lệnh người chơi (tối đa 20 giây hoặc tất cả người chơi đã sẵn sàng)
-                waitForCommands(battle, BattleConstants.COUNTDOWN_NORMAL * 1000L)
+                // DVT ore event NPCs use a one-second fallback, never ordinary quest/PvP battles.
+                val commandWindowMs = OreBattlePacingPolicy.commandWindowMs(
+                    battle.warType, battle.playerSessions.size,
+                    battle.involvedNpcDefs.map { it.second.name }
+                )
+                waitForCommands(battle, commandWindowMs)
 
                 // 3. AI NPC ra quyết định
                 battle.resolveNpcActions()
@@ -1461,6 +1517,28 @@ class BattleManager(
 
                 // 5. Phát rộng kết quả hiệp
                 broadcastRoundResult(battle, roundResult)
+
+                // After skill packets, correlate owner flyout with surviving allies.
+                // The event-specific owner-exit policy runs immediately below.
+                if (battle.eventNo == 28) {
+                    for ((playerId, session) in battle.playerSessions) {
+                        if (session.mapId != 12861) continue
+                        val owner = battle.getAllFighters().firstOrNull { it.roleId == playerId }
+                        val aliveParty = battle.grid.getAlivePlayerSide()
+                        logger.info {
+                            "DVT Eve6 round owner state: battle=${battle.battleId} " +
+                                "charId=${session.roleId} ownerSlot=(${owner?.col},${owner?.row}) " +
+                                "ownerHp=${owner?.hp} ownerDead=${owner?.isDead} " +
+                                "ownerFlyOut=${owner?.isFlyOut} ownerAlive=${owner?.isAlive} " +
+                                "aliveAllies=${aliveParty.count { it.roleId != playerId }} " +
+                                "aliveParty=${aliveParty.size}"
+                        }
+                    }
+                }
+
+                // Native owner has already exited the fight after flyout: do not
+                // wait through another AI/follower command round before loss TALK.
+                if (finishDvtBossOwnerFlyout(battle)) break
 
                 // 5.5 Bỏ chạy thành công → kiểm tra liệu tất cả người chơi đã bỏ chạy chưa
                 if (roundResult.escapeResults.isNotEmpty()) {
@@ -1628,6 +1706,15 @@ class BattleManager(
                     responseSender.sendBattleFlyOut(session, col, row)
                 }
                 logger.info { "Trận ${battle.battleId}: nhân vật ($col,$row) bị đánh văng" }
+                if (battle.eventNo == 28 && battle.playerSessions.values.any { it.mapId == 12861 }) {
+                    val fighter = battle.getAllFighters().firstOrNull { it.col == col && it.row == row }
+                    val realOwner = fighter != null && battle.playerSessions.containsKey(fighter.roleId)
+                    logger.info {
+                        "DVT Eve6 flyout identity: battle=${battle.battleId} " +
+                            "slot=($col,$row) roleId=${fighter?.roleId} kind=${fighter?.kind} " +
+                            "hp=${fighter?.hp} isRealOwner=$realOwner"
+                    }
+                }
             }
         }
 
@@ -1695,9 +1782,39 @@ class BattleManager(
             0
         }
 
+        val deniedBattlePayouts = mutableSetOf<Long>()
         for ((playerId, session) in battle.playerSessions) {
-            // Thưởng (chỉ khi thắng)
-            if (endResult.playerWin && !battle.suppressGenericRewards) {
+            // Each real party member gets a separate DB claim. The battle
+            // UUID becomes durable when reserve() inserts its ledger row;
+            // a crash survivor blocks a different battle via pending scope.
+            val eligibleGenericWin = endResult.playerWin && !battle.suppressGenericRewards
+            val eventFenceRequired = EveBattleRewardFencePolicy.needsReservation(
+                battle.warType, endResult.playerWin, battle.suppressGenericRewards
+            )
+            val eventRewardAllowed = if (eventFenceRequired) {
+                try { onBeforeEveBattleRewards?.invoke(session) ?: true }
+                catch (e: Exception) {
+                    logger.error(e) { "Eve battle reward claim failed before generic payout" }
+                    false
+                }
+            } else true
+            val payoutClaim = if (eligibleGenericWin && eventRewardAllowed) {
+                battlePayoutLedger?.reserve(session.roleId.toLong(), battle.rewardAttemptUuid)
+            } else null
+            val payoutAllowed = !eligibleGenericWin ||
+                (eventRewardAllowed && (battlePayoutLedger == null || payoutClaim != null))
+            if (!payoutAllowed) {
+                deniedBattlePayouts.add(playerId)
+                logger.error {
+                    "Battle generic payout blocked: battle=${battle.battleId} playerId=$playerId " +
+                        "uuid=${battle.rewardAttemptUuid}"
+                }
+                responseSender.sendSystemMessage(
+                    session, "Thưởng trận chiến đang chờ xác minh; không phát thưởng lại."
+                )
+            }
+            // Generic rewards are never dispatched after a rejected ledger.
+            if (eligibleGenericWin && payoutAllowed) {
                 if (defeatedEnemyNpcCount > 0) {
                     grantKillNum(session, battle.battleId, defeatedEnemyNpcCount)
                 }
@@ -1818,7 +1935,8 @@ class BattleManager(
             }
 
             // NPC bắt thành công → thêm vào PetSystem + gửi gói tin cho client
-            if (endResult.playerWin && !battle.suppressGenericRewards && battle.capturedNpcs.isNotEmpty()) {
+            if (endResult.playerWin && !battle.suppressGenericRewards &&
+                payoutAllowed && battle.capturedNpcs.isNotEmpty()) {
                 val charId = session.roleId.toLong()
                 for ((capturerPlayerId, npcId) in battle.capturedNpcs) {
                     if (capturerPlayerId != playerId) continue
@@ -1903,7 +2021,7 @@ class BattleManager(
             // Autosave vẫn chạy nền, nhưng battle checkpoint này loại bỏ cửa sổ mất
             // EXP/vàng/vật phẩm/pet khi máy chủ bị reset ngay sau trận.
             val checkpointCharId = session.roleId.toLong()
-            try {
+            val checkpointSaved = try {
                 val checkpointState = playerStateManager.getState(checkpointCharId)
                 if (checkpointState != null) {
                     characterRepository?.updatePlayerState(
@@ -1923,8 +2041,26 @@ class BattleManager(
                 inventorySystem.save(checkpointCharId)
                 moneySystem.saveMoney(checkpointCharId)
                 petSystem.save(checkpointCharId)
+                true
             } catch (e: Exception) {
                 logger.error(e) { "Trận ${battle.battleId}: lưu checkpoint thất bại charId=$checkpointCharId" }
+                false
+            }
+            if (payoutClaim != null) {
+                val committed = checkpointSaved &&
+                    battlePayoutLedger?.settle(payoutClaim) == true
+                if (!committed) {
+                    // Some effects may already have been applied. Keep a
+                    // PENDING ledger; skip Eve continuation for this player.
+                    deniedBattlePayouts.add(playerId)
+                    logger.error {
+                        "Battle payout receipt unresolved: battle=${battle.battleId} player=$playerId " +
+                            "source=${payoutClaim.sourceKey}"
+                    }
+                    responseSender.sendSystemMessage(
+                        session, "Thưởng trận đã xử lý nhưng chưa được MySQL xác nhận; liên hệ quản trị viên."
+                    )
+                }
             }
 
             // S:011-000 kết thúc chiến đấu
@@ -1952,7 +2088,6 @@ class BattleManager(
                 delay(100)
             }
         }
-
         // Release battle ownership before a continuation can warp or start another fight.
         cleanupBattle(battle)
 
@@ -1981,6 +2116,10 @@ class BattleManager(
         val callback = onBattleEndCallback
         if (callback != null) {
             for ((playerId, session) in battle.playerSessions) {
+                if (playerId in deniedBattlePayouts) {
+                    onBattleAbortCallback?.invoke(session) ?: responseSender.sendEventEnd(session)
+                    continue
+                }
                 BattleEventContinuation.run(
                     resume = { callback(session, playerId, endResult.playerWin) },
                     abort = {

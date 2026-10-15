@@ -76,6 +76,17 @@ class ItemUseProcessor(
             return ItemUseResult(success = false, consumed = false)
         }
 
+        // All 114 original DVT Treasure cards (Item_C.kind=98, specialAbility
+        // 245, directUse=1) use a separate persistent C/S123 entitlement,
+        // NOT generic attribute item use. Until an authoritative atomic
+        // bag-to-Treasure banking transaction exists, never consume or claim
+        // success for any kind98 card. This also covers malicious pet-use
+        // requests before processPetItem can spend the card.
+        if (def.kind == 98) {
+            logger.warn { "Treasure card use blocked before ownership transfer: itemId=$itemId" }
+            return ItemUseResult(success = false, consumed = false)
+        }
+
         val state = playerStateManager.getState(characterId) ?: run {
             logger.warn { "Sử dụng vật phẩm thất bại: Không tìm thấy trạng thái runtime của nhân vật $characterId" }
             return ItemUseResult(success = false, consumed = false)
