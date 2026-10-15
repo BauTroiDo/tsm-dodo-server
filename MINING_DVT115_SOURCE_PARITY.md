@@ -39,3 +39,11 @@ The ONLY matching 'Mining' symbol in the 18MB dump.cs text search is eLifeSkillT
 - Added Dvt115MiningSourceParityTest.kt covering constants, exact 360-second boundary, ordered four-worker consumption, dayLimit, exhaustion and reverse serialized S170-001 worker order.
 - All tests use mocked/in-memory data, not any player's balance or DEV database.
 - Separate atomic TS award infrastructure from PRs #57 and #64 remains DRAFT and cannot be wired to the fuel tick until original *backend* DVT rates and reset conditions are sourced.
+
+## C170-011 action / S170-011 acknowledgement (2026-10-15 audit)
+
+- The exact original Lua `Common/protocal.lua` defines the C170-011 one-byte mine-type request in a protocol comment, and parses S170-011 `result=1` as success and `result=255` as a rejection.
+- Exhaustive Lua sender search in three client trees (`_native_dump_dvt115/_lua_client_decrypted`, `luaDVT`, `TSMlua/lua_decrypted`) found **no sender for C170-011**. The mining-related sender in original `UITeleport.lua` instead sends C170-002; `UIMine.lua` sends C170-001 and C170-010.
+- Previously Kotlin `MiningHandler.setMiningState` returned S170-011 success on `mineType=1`, but performed **no persistent transition**. A false success is not source parity.
+- The server now safely returns S170-011 `255` for a correctly-sized unsupported request and records a warning. Malformed payload remains ignored. It does not invent a DVT mining start/stop state machine; the original server rules are still unknown.
+- Dedicated regression `Dvt115MiningUnsupportedStateWireTest` verifies one-byte requests, invalid type, malformed input and no ore/fuel/teleport effects. No TS currency or ore reserve change is made.
