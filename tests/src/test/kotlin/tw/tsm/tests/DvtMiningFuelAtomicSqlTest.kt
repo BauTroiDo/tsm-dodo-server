@@ -43,7 +43,7 @@ class DvtMiningFuelAtomicSqlTest {
             Inventories.insert {
                 it[characterId] = character
                 it[storageType] = 1
-                it[Inventories.slot] = slot
+                it[Inventories.slot] = this@DvtMiningFuelAtomicSqlTest.slot
                 it[itemId] = foodId
                 it[quantity] = 3
             }
