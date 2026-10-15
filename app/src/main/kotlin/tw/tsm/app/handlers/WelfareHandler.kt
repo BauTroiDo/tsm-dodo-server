@@ -270,7 +270,26 @@ class WelfareHandler(
                 award.changeItemId to award.changeQuantity, count, award.day,
             )
         } ?: run {
-            sendClaimResult(session, AWARD_CHANGE, RESULT_BAG_FULL)
+            // Nullable exchange covers missing ingredients, full BAG and SQL
+            // rollback. Only say 'BAG full' if the planner confirms that state.
+            val reason = if (supportedGold &&
+                moneySystem.getGold(session.roleId.toLong()) < totalGold
+            ) WelfareExchangeFailure.MISSING_ITEMS else
+                inventorySystem.diagnoseWelfareExchangeFailure(
+                    session.roleId.toLong(), physicalInputs,
+                    award.changeItemId to award.changeQuantity, count,
+                )
+            val result = when (reason) {
+                WelfareExchangeFailure.MISSING_ITEMS -> RESULT_CONDITION_NOT_MET
+                WelfareExchangeFailure.BAG_FULL -> RESULT_BAG_FULL
+                WelfareExchangeFailure.OTHER -> RESULT_BAD_REWARD
+            }
+            welfareLogger.warn {
+                "Welfare exchange rejected: charId=" + session.roleId +
+                    " recipe=" + requestedDay + " count=" + count +
+                    " reason=" + reason + " result=" + result
+            }
+            sendClaimResult(session, AWARD_CHANGE, result)
             return
         }
         responseSender.sendAllBagItems(
