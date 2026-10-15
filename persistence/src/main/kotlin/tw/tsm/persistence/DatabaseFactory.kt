@@ -31,6 +31,7 @@ import tw.tsm.persistence.tables.CharacterRewardLedger
 import tw.tsm.persistence.tables.CharacterRewardPendingScopes
 import tw.tsm.persistence.tables.CharacterDungeonWeeks
 import tw.tsm.persistence.tables.CharacterWelfareState
+import tw.tsm.persistence.tables.CharacterWelfareLoginDays
 import tw.tsm.persistence.tables.CharacterWelfareExchangeReceipts
 import tw.tsm.persistence.tables.CharacterMissions
 import tw.tsm.persistence.tables.CharacterCompletedEvents
@@ -103,7 +104,7 @@ object DatabaseFactory {
                 CharacterAstrolabes, CharacterSouls, CharacterElfProfiles, CharacterElfProgress, CharacterChildStates, CharacterMallQuotas,
                 CharacterHouseProfiles, CharacterHouseSettings, CharacterHouseFurniture, CharacterHouseFurnitureOwned, CharacterHouseExpansion, CharacterHouseWarriors, CharacterGiftRecords,
                 CharacterMissions, CharacterMissionFlags, CharacterCompletedEvents, CharacterEveEffectClaims, CharacterEveEffectSettlements, CharacterBitFlags,
-                CharacterDungeonDays, CharacterDungeonRuns, CharacterDungeonWeeks, CharacterRewardLedger, CharacterRewardPendingScopes, CharacterWelfareState, CharacterWelfareExchangeReceipts,
+                CharacterDungeonDays, CharacterDungeonRuns, CharacterDungeonWeeks, CharacterRewardLedger, CharacterRewardPendingScopes, CharacterWelfareState, CharacterWelfareLoginDays, CharacterWelfareExchangeReceipts,
                 CharacterLimitedAreaDays,
                 CharacterSkills, CharacterTurn2Skills, CharacterTurn3States, CharacterTurn3Skills,
                 CharacterPets,

@@ -190,7 +190,11 @@ class WelfareHandler(
             sendClaimResult(session, AWARD_OPEN_SERVER, RESULT_BAD_REWARD)
             return
         }
-        if (OPEN_SERVER_LOGIN_DAY < award.day) {
+        val eligibleDays = WelfareLoginDayPolicy.visibleDay(
+            stateRepo.getLoginDayCount(charId),
+            roleCountSystem.getValue(charId, CONTINUE_LOGIN),
+        )
+        if (eligibleDays < award.day) {
             sendClaimResult(session, AWARD_OPEN_SERVER, RESULT_CONDITION_NOT_MET)
             return
         }
@@ -329,7 +333,6 @@ class WelfareHandler(
         private const val AWARD_CHANGE = 9
         private const val MAX_CHANGE_COUNT = 50
         private const val FIRST_PSEUDO_ITEM_ID = 65300
-        private const val OPEN_SERVER_LOGIN_DAY = 1
         private const val LOGIN_BIT_FLAG = 1
         private const val LOGIN_SIGN_DAY = 107
         private const val CONTINUE_LOGIN = 108

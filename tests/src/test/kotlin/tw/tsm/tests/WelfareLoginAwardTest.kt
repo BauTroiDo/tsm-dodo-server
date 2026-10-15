@@ -218,7 +218,9 @@ class WelfareLoginAwardTest {
         )
         val stateRepo = mockk<WelfareStateRepository>()
         coEvery { stateRepo.getLastLoginClaimDay(77L) } returns DispatchSystem.currentDayKey()
+        coEvery { stateRepo.getLoginDayCount(77L) } returns 1
         val roleCounts = mockk<RoleCountSystem>()
+        every { roleCounts.getValue(77L, 108) } returns 0
         val bitFlags = mockk<BitFlagSystem>()
         coEvery { bitFlags.getSetFlagIds(77L) } returns emptySet()
         coEvery { bitFlags.setFlag(77L, 1500) } just Runs
