@@ -15,6 +15,10 @@ import tw.tsm.domain.valueobjects.MythAttribute
 import tw.tsm.domain.valueobjects.ThingData
 import tw.tsm.persistence.tables.CharacterMoney
 import tw.tsm.persistence.tables.Inventories
+import tw.tsm.persistence.tables.CharacterPets
+import tw.tsm.persistence.tables.CharacterPetEquips
+import tw.tsm.domain.valueobjects.FollowNpcData
+import tw.tsm.domain.interfaces.repositories.PetRebirthCommit
 import tw.tsm.persistence.tables.CharacterHouseFurnitureOwned
 import tw.tsm.domain.interfaces.repositories.HouseFurnitureRedemption
 import tw.tsm.persistence.tables.CharacterRoleCounts
@@ -74,6 +78,98 @@ class InventoryRepositoryImpl : InventoryRepository {
         )
     }
 
+
+    /**
+     * Lock the actual BAG slot and pet row, then debit exactly one token and
+     * transform the SAME pet UUID. A retry cannot transform the old NPC twice.
+     * Any failed check/SQL write rolls back both mutations.
+     */
+    override suspend fun commitPetRebirthAtomic(
+        characterId: Long, tokenSlot: Int, tokenItemId: Int,
+        oldPet: FollowNpcData, newPet: FollowNpcData,
+    ): PetRebirthCommit? = suspendTransaction {
+        if (characterId <= 0L || tokenSlot < 0 || tokenItemId <= 0 ||
+            oldPet.storageType != 1 || newPet.storageType != 1 ||
+            oldPet.slotIndex != newPet.slotIndex ||
+            oldPet.instanceId != newPet.instanceId ||
+            oldPet.npcId == newPet.npcId ||
+            oldPet.turnKind !in 0..1 ||
+            newPet.turnKind != oldPet.turnKind + 1
+        ) return@suspendTransaction null
+
+        val bagKey = (Inventories.characterId eq characterId) and
+            (Inventories.storageType eq EThings.BAG) and
+            (Inventories.slot eq tokenSlot)
+        val item = Inventories.selectAll().where { bagKey }.forUpdate().singleOrNull()
+            ?: return@suspendTransaction null
+        if (item[Inventories.itemId] != tokenItemId ||
+            item[Inventories.quantity] < 1 || item[Inventories.isLocked]
+        ) return@suspendTransaction null
+
+        val petKey = (CharacterPets.characterId eq characterId) and
+            (CharacterPets.storageType eq 1) and
+            (CharacterPets.slotIndex eq oldPet.slotIndex)
+        val saved = CharacterPets.selectAll().where { petKey }.forUpdate().singleOrNull()
+            ?: return@suspendTransaction null
+        if (saved[CharacterPets.instanceId] != oldPet.instanceId ||
+            saved[CharacterPets.npcId] != oldPet.npcId ||
+            saved[CharacterPets.turnKind] != oldPet.turnKind
+        ) return@suspendTransaction null
+
+        // Never silently erase equipped items if the cache was stale.
+        if (CharacterPetEquips.selectAll().where {
+                (CharacterPetEquips.characterId eq characterId) and
+                (CharacterPetEquips.storageType eq 1) and
+                (CharacterPetEquips.slotIndex eq oldPet.slotIndex)
+            }.any()
+        ) return@suspendTransaction null
+
+        check(CharacterPets.update({ petKey }) {
+            it[CharacterPets.npcId] = newPet.npcId
+            it[CharacterPets.name] = newPet.name
+            it[CharacterPets.level] = newPet.level
+            it[CharacterPets.exp] = newPet.exp
+            it[CharacterPets.hp] = newPet.hp
+            it[CharacterPets.sp] = newPet.sp
+            it[CharacterPets.atk] = newPet.atk
+            it[CharacterPets.def] = newPet.def
+            it[CharacterPets.agi] = newPet.agi
+            it[CharacterPets.intelligence] = newPet.intelligence
+            it[CharacterPets.hpx] = newPet.hpx
+            it[CharacterPets.spx] = newPet.spx
+            it[CharacterPets.deathCount] = newPet.deathCount
+            it[CharacterPets.loyalty] = newPet.loyalty
+            it[CharacterPets.skillPoint] = newPet.skillPoint
+            it[CharacterPets.skill1Lv] = newPet.skill1Lv
+            it[CharacterPets.skill2Lv] = newPet.skill2Lv
+            it[CharacterPets.skill3Lv] = newPet.skill3Lv
+            it[CharacterPets.canGrow] = newPet.canGrow
+            it[CharacterPets.soulId] = newPet.soulId
+            it[CharacterPets.upgradeLv] = newPet.upgradeLv
+            it[CharacterPets.ascendPillCount] = newPet.ascendPillCount
+            it[CharacterPets.canUseSpecialSkill] = newPet.canUseSpecialSkill
+            it[CharacterPets.hpPillCount] = newPet.hpPillCount
+            it[CharacterPets.spPillCount] = newPet.spPillCount
+            it[CharacterPets.skill4Lv] = newPet.skill4Lv
+            it[CharacterPets.conjureGrow] = newPet.conjureGrow
+            it[CharacterPets.turnKind] = newPet.turnKind
+            it[CharacterPets.surplus] = newPet.surplus
+            it[CharacterPets.lvUpTime] = newPet.lvUpTime
+            it[CharacterPets.seedFixed] = newPet.seedFixed
+            it[CharacterPets.isDeployed] = newPet.isDeployed
+        } == 1) { "Pet rebirth affected unexpected number of rows" }
+
+        val after = item[Inventories.quantity] - 1
+        if (after == 0) {
+            check(Inventories.deleteWhere { bagKey } == 1)
+            PetRebirthCommit(null)
+        } else {
+            check(Inventories.update({ bagKey }) {
+                it[Inventories.quantity] = after
+            } == 1)
+            PetRebirthCommit(item.toThingData().copy(quantity = after))
+        }
+    }
 
     override suspend fun loadItems(characterId: Long, storageType: Int): Map<Int, ThingData> =
         suspendTransaction {
