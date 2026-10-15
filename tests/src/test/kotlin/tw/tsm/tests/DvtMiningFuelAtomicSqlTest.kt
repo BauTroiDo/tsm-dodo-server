@@ -222,6 +222,41 @@ class DvtMiningFuelAtomicSqlTest {
      * CharacterPersistenceGuard.withLock, so settled snapshots must never
      * replace successful BAG+mine SQL commits from the parallel operation.
      */
+    /**
+     * DVT UIMine.UpdateTimer floors elapsed seconds / 360. Repeated S170-001
+     * requests and reconnect must preserve the unfinished fractional interval,
+     * or reading the panel can extend the robot's hunger duration indefinitely.
+     */
+    @Test fun fractional360SecondTickSurvivesMultipleReconnectsAndSqlReloads() = runBlocking {
+        val start = 1_000_000L
+        transaction(db) {
+            exec("UPDATE character_mining SET full_1=2, full_2=0, full_3=0, full_4=0, " +
+                "updated_at_ms=$start, day_limit=FALSE WHERE character_id=$character")
+        }
+        var now = start + MiningSystem.TICK_MS - 1
+        fun login() = MiningSystem(
+            MiningRepositoryImpl(), mockk<InventorySystem>(relaxed = true),
+            emptyMap(), nowMillis = { now }
+        )
+        val viewBefore = login().getView(character)
+        assertEquals(2, viewBefore.record.machineFull[0])
+        assertEquals(start, viewBefore.record.updatedAtMillis)
+        now = start + MiningSystem.TICK_MS + 1
+        val viewAfterOne = login().getView(character)
+        assertEquals(1, viewAfterOne.record.machineFull[0])
+        assertEquals(start + MiningSystem.TICK_MS, viewAfterOne.record.updatedAtMillis)
+        now = start + 2 * MiningSystem.TICK_MS - 1
+        val viewAtAlmostTwo = login().getView(character)
+        assertEquals(1, viewAtAlmostTwo.record.machineFull[0])
+        assertEquals(start + MiningSystem.TICK_MS, viewAtAlmostTwo.record.updatedAtMillis)
+        now = start + 2 * MiningSystem.TICK_MS
+        val emptyView = login().getView(character)
+        assertEquals(0, emptyView.record.machineFull[0])
+        assertFalse(emptyView.isMining)
+        assertEquals(now, emptyView.record.updatedAtMillis)
+        assertEquals(emptyView.record, MiningRepositoryImpl().load(character))
+    }
+
     @Test fun concurrentQueriesAndRefillsDoNotLoseTheCommittedWorkerFuel() = runBlocking {
         val (bag, miner) = service()
         val outcome = (1..96).map { index ->
