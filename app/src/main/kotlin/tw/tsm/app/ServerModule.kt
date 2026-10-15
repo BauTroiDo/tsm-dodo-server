@@ -278,6 +278,10 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
                     try { mountSystem.saveAndUnload(roleId) }
                     catch (e: Exception) { serverLogger.error(e) { "Lưu ngắt kết nối thất bại (vật cưỡi): roleId=$roleId" } }
 
+                    // TCP drop can bypass the explicit C000 disconnect handler.
+                    try { get<OnlineWelfareDaySystem>().flushOnDisconnect(session) }
+                    catch (e: Exception) { serverLogger.error(e) { "Save online time on TCP drop failed: roleId=$roleId" } }
+
                     try { roleCountSystem.saveAndUnload(roleId) }
                     catch (e: Exception) { serverLogger.error(e) { "Lưu ngắt kết nối thất bại (bộ đếm): roleId=$roleId" } }
 
@@ -334,6 +338,8 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
 
     // Logic game
     single { WorldManager() }
+    single { OnlineWelfareDaySystem(get<WelfareStateRepository>(), get<RoleCountSystem>(),
+        get<BitFlagSystem>(), get<ResponseSender>()) }
     single { AuthSystem(get()) }
     single<ResponseSender> {
         val wm = get<WorldManager>()
@@ -661,7 +667,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
             get<BattleManager>().worldPartyBotProvider = worldBots::battleProfilesFor
         }
     }
-    single { LoginService(get(), get(), get(), get(), get(), get<PointSystem>(), get<PlayerCurrencySystem>(), get(), get(), get<EveEventStateMachine>(), get(), get(), get(), get(), get(), get<AstrolabeSystem>(), get<SoulSystem>(), get(), get<SkillRepository>(), get<RoleCountSystem>(), get<FlyPointSystem>(), get<MailSystem>(), get<FriendSystem>(), get<GameDataManager>().eveData, get<GameDataManager>().itemDefs, get<JiugonggeSystem>(), get<ActivityScheduleSystem>(), get<DailyProgressSystem>(), get<CollectionSystem>(), get<GameDataManager>().sacredEquipPrimaryDefs, get<MessageBoardRepository>(), get<MallQuotaSystem>(), get<WelfareStateRepository>()) }
+    single { LoginService(get(), get(), get(), get(), get(), get<PointSystem>(), get<PlayerCurrencySystem>(), get(), get(), get<EveEventStateMachine>(), get(), get(), get(), get(), get(), get<AstrolabeSystem>(), get<SoulSystem>(), get(), get<SkillRepository>(), get<RoleCountSystem>(), get<FlyPointSystem>(), get<MailSystem>(), get<FriendSystem>(), get<GameDataManager>().eveData, get<GameDataManager>().itemDefs, get<JiugonggeSystem>(), get<ActivityScheduleSystem>(), get<DailyProgressSystem>(), get<CollectionSystem>(), get<GameDataManager>().sacredEquipPrimaryDefs, get<MessageBoardRepository>(), get<MallQuotaSystem>(), get<WelfareStateRepository>(), get<OnlineWelfareDaySystem>()) }
 
     // Hệ thống sự kiện Eve (9 dịch vụ con sau khi tách)
     single {
@@ -742,11 +748,11 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
     }
 
     // Handler
-    single { KeepaliveHandler() }
+    single { KeepaliveHandler(get<OnlineWelfareDaySystem>()) }
     single { LoginHandler(get(), get(), get(), get(), get()) }
     single { CreateCharHandler(get(), get()) }
     single { SelectCharHandler(get(), get(), get<PokeSystem>(), get<ChildRepository>(), get<PetSystem>()) }
-    single { DisconnectHandler(get(), get(), get(), get(), get<PlayerCurrencySystem>(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get<PvpBotMatchmakingSystem>(), get<HouseVisitSystem>()) }
+    single { DisconnectHandler(get(), get(), get(), get(), get<PlayerCurrencySystem>(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get<PvpBotMatchmakingSystem>(), get<HouseVisitSystem>(), get<OnlineWelfareDaySystem>()) }
     single { MoveHandler(get(), get(), get(), get<MineEncounterSystem>(), get<HouseVisitSystem>()) }
     single { ChatHandler(get(), get(), get()) }
     single { SceneHandler(get(), get()) }
@@ -819,7 +825,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
         WelfareHandler(
             get<GameDataManager>().loginAwardDefs, get<WelfareStateRepository>(), get<RoleCountSystem>(),
             get<BitFlagSystem>(), get<InventorySystem>(), get<PointSystem>(), get<MoneySystem>(),
-            get<PlayerCurrencySystem>(), get<ResponseSender>(),
+            get<PlayerCurrencySystem>(), get<ResponseSender>(), get<OnlineWelfareDaySystem>(),
         )
     }
     single { MailHandler(get()) }
