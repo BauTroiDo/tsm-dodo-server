@@ -70,6 +70,9 @@ class WelfareStateRepositoryImpl : WelfareStateRepository {
             // Update both counters and the consumed timestamp in the same SQL commit.
             upsertOfflineCount(characterId, 171, calculated.unclaimedMinutes)
             upsertOfflineCount(characterId, 172, calculated.todayMinutes)
+            // DEV trial approved by owner: 0.05% of next-level EXP per minute.
+            // Client RoleCount[169] displays whole accumulated percent.
+            upsertOfflineCount(characterId, 169, (calculated.unclaimedMinutes * 5) / 100)
             CharacterWelfareState.update({ CharacterWelfareState.charId eq characterId }) {
                 it[offlineSinceMillis] = 0L
                 it[offlineCounterDay] = OfflineWelfareMinutePolicy.dayKey(nowMillis)
