@@ -18,6 +18,25 @@ class ActivityScheduleSystem(
     private val adminBypassPolicy: AdminBypassPolicy = AdminBypassPolicy(),
     private val battlePassSeasonIds: Set<Int> = emptySet(),
 ) {
+    // Store only the last window sent to a live connection. Weak keys are
+    // removed automatically after disconnect; no per-character DB mutation.
+    private val sentPassWindows = java.util.Collections.synchronizedMap(
+        java.util.WeakHashMap<GameSession, LocalDateTime>()
+    )
+
+    /** Heartbeat transition refresh, only when the 28-day pass window changes. */
+    fun refreshPassWindowIfChanged(
+        session: GameSession,
+        now: LocalDateTime = LocalDateTime.now(),
+    ) {
+        val def = activityTimes[117] ?: return
+        val allowLoop = battlePassSeasonIds.none { it > 117 && it in activityTimes }
+        val window = BattlePassSystem.window(def, now, allowLoop)
+        if (sentPassWindows[session] != window.start) {
+            sendActivityState(session, 117, now)
+        }
+    }
+
     fun sendAllActivityStates(
         session: GameSession,
         now: LocalDateTime = LocalDateTime.now(),
@@ -36,8 +55,11 @@ class ActivityScheduleSystem(
         if (def.switchKind < 1) return
 
         if (activityId in battlePassSeasonIds) {
-            val start = BattlePassSystem.start(def)
-            val close = BattlePassSystem.end(def)
+            val allowLoop = battlePassSeasonIds.none { it > activityId && it in activityTimes }
+            val window = BattlePassSystem.window(def, now, allowLoop)
+            val start = window.start
+            val close = window.end
+            if (activityId == 117) sentPassWindows[session] = start
             val state = when {
                 now.isBefore(start) -> STATE_NONE
                 !now.isBefore(close) -> STATE_ENDED

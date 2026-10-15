@@ -28,7 +28,11 @@ class BattlePassSystem(
 
     fun currentSeason(now: LocalDateTime): Int? = awards.map { it.seasonId }.distinct().firstOrNull { id ->
         val def = times[id] ?: return@firstOrNull false
-        def.switchKind > 0 && now.isAfter(start(def)) && now.isBefore(end(def)) &&
+        // Never invent a new client season; if a real subsequent season appears
+        // in the source DAT, it supersedes the DEV fallback.
+        val allowLoop = times.keys.none { it > id && awards.any { row -> row.seasonId == it } }
+        val period = window(def, now, allowLoop)
+        def.switchKind > 0 && !now.isBefore(period.start) && now.isBefore(period.end) &&
             (def.openDayMask == 0 || def.openDayMask and (1 shl (now.dayOfWeek.value - 1)) != 0)
     }
 
@@ -138,25 +142,45 @@ class BattlePassSystem(
         const val PAID = 793
         const val PAID_FLAG = 6060
         fun start(d: ActivityTimeDef): LocalDateTime = LocalDateTime.of(d.startYear,d.startMonth,d.startDay,d.startHour,d.startMinute)
-        /**
-         * DEV restoration of the ORIGINAL DVT pass 117, exactly one prior 28-day cycle.
+        /** Exclusive-end, 28-day recurring DEV window for DVT source season 117.
          *
-         * Source IOS_ActivityTime_C.dat has season 117 (Sep16-Oct13 2026) but no
-         * season 118 schedule; the unmodified Lua ignores schedule packets for a
-         * missing activityTimes[118]. Keep 117's persisted claim ledger intact.
+         * 117 is the only client-scheduled season; no ActivityTime[118] exists.
+         * The original start/end are a 28-day event, but its stored end is
+         * 23:59. Use midnight as exclusive end to avoid a one-minute dead spot.
+         * All account/character fields, pass EXP, paid entitlement and reward
+         * claim ledger remain unchanged: this method computes DATES ONLY.
          *
-         * Both BattlePassSystem and ActivityScheduleSystem call this end() so the
-         * UI S077-001/S077-002 schedule and C077-011 authorization agree.
-         * Never change a nonmatching version of the DAT or synthesize rewards.
+         * If the original DAT is edited or a real next season becomes available,
+         * fallback stops; the authoritative schedule is used unchanged.
          */
-        fun end(d: ActivityTimeDef): LocalDateTime {
-            val sourceEnd = LocalDateTime.of(d.endYear, d.endMonth, d.endDay, d.endHour, d.endMinute)
-            val expectedStart = LocalDateTime.of(2026, 9, 16, 0, 0)
-            val expectedEnd = LocalDateTime.of(2026, 10, 13, 23, 59)
-            return if (d.id == 117 && d.switchKind > 0 &&
-                start(d) == expectedStart && sourceEnd == expectedEnd
-            ) LocalDateTime.of(2026, 11, 10, 23, 59) else sourceEnd
+        data class SeasonWindow(val start: LocalDateTime, val end: LocalDateTime)
+
+        fun window(
+            d: ActivityTimeDef,
+            now: LocalDateTime,
+            allowFallback: Boolean = true,
+        ): SeasonWindow {
+            val sourceStart = start(d)
+            val sourceEnd = LocalDateTime.of(
+                d.endYear,d.endMonth,d.endDay,d.endHour,d.endMinute
+            )
+            val knownOriginal = d.id == 117 && d.switchKind > 0 &&
+                sourceStart == LocalDateTime.of(2026,9,16,0,0) &&
+                sourceEnd == LocalDateTime.of(2026,10,13,23,59)
+            if (!allowFallback || !knownOriginal)
+                return SeasonWindow(sourceStart,sourceEnd)
+
+            val cycleStart = if (now.isBefore(sourceStart)) sourceStart else {
+                val days = java.time.temporal.ChronoUnit.DAYS.between(sourceStart,now)
+                sourceStart.plusDays((days / 28L) * 28L)
+            }
+            return SeasonWindow(cycleStart,cycleStart.plusDays(28))
         }
+
+        /** Legacy callers requiring a date should pass the same instant as their checks. */
+        fun end(d: ActivityTimeDef, now: LocalDateTime = LocalDateTime.now()): LocalDateTime =
+            window(d, now).end
+
         fun levelForExp(rows: List<PassAwardDef>, exp: Int): Int =
             rows.lastOrNull { exp > 0 && exp >= it.totalExp }?.level ?: 0
 
