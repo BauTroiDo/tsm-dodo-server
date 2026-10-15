@@ -235,24 +235,51 @@ class WelfareHandler(
             return
         }
         val inputs = award.rewards.filter { it.first > 0 && it.second > 0 }
+        val virtualInputs = inputs.filter { it.first >= FIRST_PSEUDO_ITEM_ID }
+        // Explicit whitelist: only BAG and a single gold pseudo item may be
+        // exchanged. Point/TS/ticket and scripted conditions stay fail-closed.
+        val goldInputs = virtualInputs.filter { it.first == ITEM_MONEY }
+        val supportedGold = virtualInputs.size == 1 && goldInputs.size == 1
+        val physicalInputs = inputs.filter { it.first < FIRST_PSEUDO_ITEM_ID }
         if (inputs.isEmpty() || award.changeItemId <= 0 || award.changeQuantity <= 0 ||
             award.flag != 0 || award.roleCount != 0 ||
-            inputs.any { it.first >= FIRST_PSEUDO_ITEM_ID } ||
+            (virtualInputs.isNotEmpty() && !supportedGold) ||
             award.changeItemId >= FIRST_PSEUDO_ITEM_ID
         ) {
             sendClaimResult(session, AWARD_CHANGE, RESULT_CONDITION_NOT_MET)
             return
         }
-        val changed = inventorySystem.exchangeWelfareItemsAtomic(
-            session.roleId.toLong(), inputs,
-            award.changeItemId to award.changeQuantity, count, award.day,
-        ) ?: run {
+        val totalGold = if (supportedGold) goldInputs.single().second.toLong() * count else 0L
+        if (totalGold > Int.MAX_VALUE || (supportedGold && totalGold <= 0L)) {
+            sendClaimResult(session, AWARD_CHANGE, RESULT_CONDITION_NOT_MET)
+            return
+        }
+        if (supportedGold && moneySystem.getGold(session.roleId.toLong()) < totalGold) {
+            sendClaimResult(session, AWARD_CHANGE, RESULT_CONDITION_NOT_MET)
+            return
+        }
+        val changed = if (supportedGold) {
+            inventorySystem.exchangeWelfareGoldItemsAtomic(
+                session.roleId.toLong(), physicalInputs,
+                award.changeItemId to award.changeQuantity, count, award.day,
+                totalGold.toInt(), moneySystem,
+            )
+        } else {
+            inventorySystem.exchangeWelfareItemsAtomic(
+                session.roleId.toLong(), physicalInputs,
+                award.changeItemId to award.changeQuantity, count, award.day,
+            )
+        } ?: run {
             sendClaimResult(session, AWARD_CHANGE, RESULT_BAG_FULL)
             return
         }
         responseSender.sendAllBagItems(
             session, inventorySystem.getBag(session.roleId.toLong()), refresh = true
         )
+        if (supportedGold) {
+            val (gold, auctionGold) = moneySystem.getMoney(session.roleId.toLong())
+            responseSender.sendInitMoney(session, gold, auctionGold)
+        }
         sendClaimResult(session, AWARD_CHANGE, RESULT_SUCCESS)
         welfareLogger.info { "Welfare item exchange committed day=" +
             requestedDay + " qty=" + count + " slots=" + changed.size }
