@@ -52,7 +52,9 @@ class MiningSystem(
             if (settled != original || persisted == null) {
                 repository.save(characterId, settled)
             }
-            MiningView(settled, MAX_MINE)
+            val remaining = repository.loadRemainingOre(settled.mineType)
+                ?.coerceIn(0L, MAX_MINE) ?: MAX_MINE
+            MiningView(settled, remaining)
         }
 
     suspend fun refill(
