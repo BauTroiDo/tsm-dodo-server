@@ -217,6 +217,31 @@ class DvtMiningFuelAtomicSqlTest {
         assertEquals(0, MiningRepositoryImpl().load(character)?.machineFull?.first())
     }
 
+    /**
+     * DVT C170-001 can be queried while C170-010 feeds a robot. Both use
+     * CharacterPersistenceGuard.withLock, so settled snapshots must never
+     * replace successful BAG+mine SQL commits from the parallel operation.
+     */
+    @Test fun concurrentQueriesAndRefillsDoNotLoseTheCommittedWorkerFuel() = runBlocking {
+        val (bag, miner) = service()
+        val outcome = (1..96).map { index ->
+            async(Dispatchers.Default) {
+                if (index % 16 == 0) {
+                    miner.refill(character, slot, foodId, 1, 3)
+                } else {
+                    miner.getView(character)
+                    null
+                }
+            }
+        }.awaitAll()
+        assertEquals(3, outcome.count { it?.success == true })
+        assertEquals(0, dbFood())
+        assertNull(bag.getBagItem(character, slot))
+        val persisted = MiningRepositoryImpl().load(character)!!
+        assertEquals(listOf(30, 0, 0, 0), persisted.machineFull)
+        assertEquals(persisted, miner.getView(character).record)
+    }
+
     @Test fun concurrentRequestsNeverSpendMoreFoodThanAvailable() = runBlocking {
         val (bag, miner) = service()
         val attempts = (1..12).map {
