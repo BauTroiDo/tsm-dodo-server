@@ -106,6 +106,69 @@ class WelfareItemExchangeWireTest {
         assertEquals(3,packet.readUByte())
     }
 
+    @Test fun declinedGoldExchangeWithMissingIngredientsMustNotReportFullBag() = runBlocking {
+        val row=LoginAwardDef(9,0,208,listOf(46497 to 10,65351 to 5000),46038,1,0,0)
+        val (handler,session,inventory,money)=setup(row)
+        every { money.getGold(77L) } returns 10000
+        coEvery {
+            inventory.exchangeWelfareGoldItemsAtomic(77L,any(),any(),1,208,5000,money)
+        } returns null
+        coEvery {
+            inventory.diagnoseWelfareExchangeFailure(77L,any(),any(),1)
+        } returns WelfareExchangeFailure.MISSING_ITEMS
+        val packets=mutableListOf<ByteArray>()
+        every { session.send(capture(packets)) } just Runs
+        handler.handle(session,2,buildPacket(9,208,1))
+        val packet=PacketReader(packets.last())
+        assertEquals(87,packet.readUByte())
+        assertEquals(2,packet.readUByte())
+        assertEquals(0,packet.readUByte())
+        assertEquals(9,packet.readUByte())
+        assertEquals(3,packet.readUByte())
+    }
+
+    @Test fun declinedGoldExchangeWithActualBagFullReportsFour() = runBlocking {
+        val row=LoginAwardDef(9,0,208,listOf(46497 to 10,65351 to 5000),46038,1,0,0)
+        val (handler,session,inventory,money)=setup(row)
+        every { money.getGold(77L) } returns 10000
+        coEvery {
+            inventory.exchangeWelfareGoldItemsAtomic(77L,any(),any(),1,208,5000,money)
+        } returns null
+        coEvery {
+            inventory.diagnoseWelfareExchangeFailure(77L,any(),any(),1)
+        } returns WelfareExchangeFailure.BAG_FULL
+        val packets=mutableListOf<ByteArray>()
+        every { session.send(capture(packets)) } just Runs
+        handler.handle(session,2,buildPacket(9,208,1))
+        val packet=PacketReader(packets.last())
+        assertEquals(87,packet.readUByte())
+        assertEquals(2,packet.readUByte())
+        assertEquals(0,packet.readUByte())
+        assertEquals(9,packet.readUByte())
+        assertEquals(4,packet.readUByte())
+    }
+
+    @Test fun sqlRejectionDoesNotMasqueradeAsFullBag() = runBlocking {
+        val row=LoginAwardDef(9,0,208,listOf(46497 to 10,65351 to 5000),46038,1,0,0)
+        val (handler,session,inventory,money)=setup(row)
+        every { money.getGold(77L) } returns 10000
+        coEvery {
+            inventory.exchangeWelfareGoldItemsAtomic(77L,any(),any(),1,208,5000,money)
+        } returns null
+        coEvery {
+            inventory.diagnoseWelfareExchangeFailure(77L,any(),any(),1)
+        } returns WelfareExchangeFailure.OTHER
+        val packets=mutableListOf<ByteArray>()
+        every { session.send(capture(packets)) } just Runs
+        handler.handle(session,2,buildPacket(9,208,1))
+        val packet=PacketReader(packets.last())
+        assertEquals(87,packet.readUByte())
+        assertEquals(2,packet.readUByte())
+        assertEquals(0,packet.readUByte())
+        assertEquals(9,packet.readUByte())
+        assertEquals(7,packet.readUByte())
+    }
+
     @Test fun quantityAboveClientLimitIsRejected() = runBlocking {
         val row=LoginAwardDef(9,0,107,listOf(55403 to 150),55411,1,0,0)
         val (handler,session,inventory)=setup(row)
