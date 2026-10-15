@@ -3,6 +3,10 @@ package tw.tsm.gamelogic.systems
 import io.github.oshai.kotlinlogging.KotlinLogging
 import tw.tsm.domain.interfaces.repositories.CharacterRepository
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Semaphore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 
 private val logger = KotlinLogging.logger {}
 
@@ -25,6 +29,32 @@ class PointSystem(
 ) {
     /** characterId → [Điểm thực, Điểm ảo] */
     private val pointsMap = ConcurrentHashMap<Long, IntArray>()
+    private val writerFences = Array(256) { Semaphore(1,true) }
+    private fun fence(id: Long) = writerFences[(id xor (id ushr 32)).toInt() and 255]
+    private inline fun <T> withPointWriter(id: Long, operation: () -> T): T {
+        val semaphore=fence(id)
+        semaphore.acquireUninterruptibly()
+        try { return operation() } finally { semaphore.release() }
+    }
+    /**
+     * Coordinate SQL transaction + point RAM publication with autosave, logout,
+     * and every synchronous point add/debit. No await after SQL commit outside fence.
+     */
+    suspend fun <T> withOfflineExpClaimFence(
+        id: Long, action: suspend (Int) -> Pair<T,Int>?
+    ): T? = withContext(NonCancellable + Dispatchers.IO) {
+        CharacterPersistenceGuard.withLock(id) {
+            val semaphore=fence(id)
+            semaphore.acquire()
+            try {
+                val arr=pointsMap[id] ?: return@withLock null
+                val old = synchronized(arr) { arr[0] }
+                val claim=action(old) ?: return@withLock null
+                synchronized(arr) { arr[0]=claim.second }
+                claim.first
+            } finally { semaphore.release() }
+        }
+    }
 
     /**
      * Tải điểm nhân vật từ DB
@@ -56,12 +86,14 @@ class PointSystem(
      */
     fun addRealPoint(characterId: Long, amount: Int): Boolean {
         if (amount <= 0) return false
-        val arr = pointsMap[characterId] ?: return false
-        synchronized(arr) {
-            val newValue = arr[0].toLong() + amount
-            if (newValue > MAX_POINT) return false
-            arr[0] = newValue.toInt()
-            return true
+        return withPointWriter(characterId) {
+            val arr=pointsMap[characterId] ?: return@withPointWriter false
+            synchronized(arr) {
+                val n=arr[0].toLong()+amount
+                if (n > MAX_POINT) return@synchronized false
+                arr[0]=n.toInt()
+                true
+            }
         }
     }
 
@@ -88,11 +120,13 @@ class PointSystem(
      */
     fun subtractRealPoint(characterId: Long, amount: Int): Boolean {
         if (amount <= 0) return false
-        val arr = pointsMap[characterId] ?: return false
-        synchronized(arr) {
-            if (arr[0] < amount) return false
-            arr[0] -= amount
-            return true
+        return withPointWriter(characterId) {
+            val arr=pointsMap[characterId] ?: return@withPointWriter false
+            synchronized(arr) {
+                if (arr[0]<amount) return@synchronized false
+                arr[0]-=amount
+                true
+            }
         }
     }
 
@@ -100,8 +134,15 @@ class PointSystem(
      * Lưu điểm nhân vật vào DB
      */
     suspend fun savePoints(characterId: Long) {
-        val arr = pointsMap[characterId] ?: return
-        characterRepo.savePoints(characterId, arr[0], arr[1])
+        CharacterPersistenceGuard.withLock(characterId) {
+            val semaphore=fence(characterId)
+            semaphore.acquire()
+            try {
+                val arr=pointsMap[characterId] ?: return@withLock
+                val snapshot=synchronized(arr) { arr[0] to arr[1] }
+                characterRepo.savePoints(characterId,snapshot.first,snapshot.second)
+            } finally { semaphore.release() }
+        }
     }
 
     /**

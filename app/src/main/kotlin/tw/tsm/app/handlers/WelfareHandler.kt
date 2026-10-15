@@ -26,6 +26,7 @@ class WelfareHandler(
     private val currencySystem: PlayerCurrencySystem,
     private val responseSender: ResponseSender,
     private val onlineWelfare: OnlineWelfareDaySystem? = null,
+    private val offlineExp: OfflineExpRewardService? = null,
 ) : PacketHandler {
     override val mainKind: Int = Opcodes.WELFARE
 
@@ -366,7 +367,8 @@ class WelfareHandler(
     private suspend fun handleOfflineExpData(session: GameSession, payload: ByteArray) {
         if (payload.isNotEmpty()) return
         prepareDaily(session)
-        session.send(PacketWriter(4).writeByte(Opcodes.WELFARE).writeByte(3).writeByte(0).writeByte(0).toByteArray())
+        session.send(offlineExp?.welfareOffers(session) ?:
+            PacketWriter(4).writeByte(Opcodes.WELFARE).writeByte(3).writeByte(0).writeByte(0).toByteArray())
     }
 
     private fun sendClaimResult(session: GameSession, kind: Int, result: Int) {
