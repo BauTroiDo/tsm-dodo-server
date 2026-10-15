@@ -5,9 +5,11 @@ import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
+import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.core.ResultRow
 import tw.tsm.domain.constants.EThings
 import tw.tsm.domain.interfaces.repositories.MiningFuelCommit
+import tw.tsm.domain.interfaces.repositories.MiningTsAwardCommit
 import tw.tsm.domain.valueobjects.ThingData
 import tw.tsm.persistence.tables.Inventories
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -17,8 +19,83 @@ import tw.tsm.domain.interfaces.repositories.MiningRecord
 import tw.tsm.domain.interfaces.repositories.MiningRepository
 import tw.tsm.persistence.tables.CharacterMining
 import tw.tsm.persistence.tables.MiningOreReserves
+import tw.tsm.persistence.tables.MiningTsAwardReceipts
+import tw.tsm.persistence.tables.CharacterCurrencies
 
 class MiningRepositoryImpl : MiningRepository {
+    /**
+     * Atomic TS currency credit + shared reserve debit + unique durable receipt.
+     * Does not choose rates, run on fuel ticks, or publish any client cache.
+     * Must be integrated under the currency writer fence once rates are sourced.
+     */
+    override suspend fun commitVerifiedTsAwardAtomic(
+        receiptId: String,
+        characterId: Long,
+        mineType: Int,
+        oreDebit: Long,
+        tsCredit: Int,
+        maxReserve: Long,
+    ): MiningTsAwardCommit? = suspendTransaction {
+        if (receiptId.length !in 1..128 || !receiptId.all {
+                it.isLetterOrDigit() || it == ':' || it == '-' || it == '_'
+            } || characterId <= 0 || mineType != 1 || oreDebit <= 0 ||
+            maxReserve <= 0 || oreDebit > maxReserve || tsCredit <= 0
+        ) return@suspendTransaction null
+        MiningOreReserves.insertIgnore {
+            it[MiningOreReserves.mineType] = mineType
+            it[remainingOre] = maxReserve
+        }
+        // A shared row lock serializes concurrent awards and repeat receipt IDs.
+        val reserve = MiningOreReserves.selectAll()
+            .where { MiningOreReserves.mineType eq mineType }
+            .forUpdate().singleOrNull() ?: error("Missing mine reserve after initialize")
+        val beforeOre = reserve[MiningOreReserves.remainingOre]
+        if (beforeOre !in 0L..maxReserve) return@suspendTransaction null
+        val existing = MiningTsAwardReceipts.selectAll()
+            .where { MiningTsAwardReceipts.receiptId eq receiptId }
+            .singleOrNull()
+        if (existing != null) {
+            if (existing[MiningTsAwardReceipts.characterId] != characterId ||
+                existing[MiningTsAwardReceipts.mineType] != mineType ||
+                existing[MiningTsAwardReceipts.oreDebit] != oreDebit ||
+                existing[MiningTsAwardReceipts.tsCredit] != tsCredit
+            ) return@suspendTransaction null
+            return@suspendTransaction MiningTsAwardCommit(
+                false, existing[MiningTsAwardReceipts.tsBalanceAfter],
+                existing[MiningTsAwardReceipts.oreRemainingAfter],
+            )
+        }
+        if (beforeOre < oreDebit) return@suspendTransaction null
+        val currencyKey = (CharacterCurrencies.characterId eq characterId) and
+            (CharacterCurrencies.currencyKind eq 8)
+        val wallet = CharacterCurrencies.selectAll().where { currencyKey }
+            .forUpdate().singleOrNull()
+        val oldTs = wallet?.get(CharacterCurrencies.value) ?: 0
+        if (oldTs < 0 || oldTs.toLong() + tsCredit > 999_999_999L) {
+            return@suspendTransaction null
+        }
+        val nextTs = oldTs + tsCredit
+        val nextOre = beforeOre - oreDebit
+        CharacterCurrencies.upsert {
+            it[CharacterCurrencies.characterId] = characterId
+            it[CharacterCurrencies.currencyKind] = 8
+            it[CharacterCurrencies.value] = nextTs
+        }
+        check(MiningOreReserves.update({ MiningOreReserves.mineType eq mineType }) {
+            it[remainingOre] = nextOre
+        } == 1) { "Mining award reserve update lost" }
+        MiningTsAwardReceipts.insert {
+            it[MiningTsAwardReceipts.receiptId] = receiptId
+            it[MiningTsAwardReceipts.characterId] = characterId
+            it[MiningTsAwardReceipts.mineType] = mineType
+            it[MiningTsAwardReceipts.oreDebit] = oreDebit
+            it[MiningTsAwardReceipts.tsCredit] = tsCredit
+            it[MiningTsAwardReceipts.tsBalanceAfter] = nextTs
+            it[MiningTsAwardReceipts.oreRemainingAfter] = nextOre
+        }
+        MiningTsAwardCommit(true, nextTs, nextOre)
+    }
+
     override suspend fun loadRemainingOre(mineType: Int): Long? = suspendTransaction {
         MiningOreReserves.selectAll()
             .where { MiningOreReserves.mineType eq mineType }
