@@ -69,7 +69,10 @@ class MiningHandler(
     }
 
     private suspend fun refill(session: GameSession, data: ByteArray) {
-        if (data.size != 7) return
+        if (data.size != 7) {
+            miningHandlerLogger.warn { "C170-010 invalid payload charId=${session.roleId} bytes=${data.size}" }
+            return
+        }
         val reader = PacketReader(data)
         val bagIndex = reader.readUShortLE()
         val itemId = reader.readUShortLE()
@@ -79,6 +82,11 @@ class MiningHandler(
         val result = system.refill(
             session.roleId.toLong(), bagIndex, itemId, quantity, wireIndex
         )
+        miningHandlerLogger.info {
+            "C170-010 mine fuel refill charId=${session.roleId} bagSlot=$bagIndex " +
+                "itemId=$itemId quantity=$quantity wireIndex=$wireIndex " +
+                "result=${if (result.success) "SUCCESS" else "REJECTED"} addedFull=${result.addedFull}"
+        }
         if (!result.success) {
             sendRefillResult(session, 0, wireIndex, 0)
             return
@@ -86,6 +94,12 @@ class MiningHandler(
 
         inventoryResponse.sendReduceBagItem(session, bagIndex, quantity)
         sendRefillResult(session, 1, result.wireIndex, result.addedFull)
+        // Original UIMine.Mining only mutates machineData, not oldMachineData.
+        // Its 360-second UpdateTimer recalculates from oldMachineData and
+        // otherwise overwrites a successful refill with the previous fullness.
+        // Refresh the authoritative persisted mine state after S170-010 so
+        // UIMine.SetData updates both the live display and its timer baseline.
+        sendInfo(session, system.getView(session.roleId.toLong()))
     }
 
     private fun setMiningState(session: GameSession, data: ByteArray) {
