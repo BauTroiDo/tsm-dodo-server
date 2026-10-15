@@ -35,11 +35,13 @@ class MiningRepositoryImpl : MiningRepository {
         oreDebit: Long,
         tsCredit: Int,
         maxReserve: Long,
+        expectedTsBalance: Int,
     ): MiningTsAwardCommit? = suspendTransaction {
         if (receiptId.length !in 1..128 || !receiptId.all {
                 it.isLetterOrDigit() || it == ':' || it == '-' || it == '_'
             } || characterId <= 0 || mineType != 1 || oreDebit <= 0 ||
-            maxReserve <= 0 || oreDebit > maxReserve || tsCredit <= 0
+            maxReserve <= 0 || oreDebit > maxReserve || tsCredit <= 0 ||
+            expectedTsBalance !in 0..999_999_999
         ) return@suspendTransaction null
         MiningOreReserves.insertIgnore {
             it[MiningOreReserves.mineType] = mineType
@@ -71,7 +73,10 @@ class MiningRepositoryImpl : MiningRepository {
         val wallet = CharacterCurrencies.selectAll().where { currencyKey }
             .forUpdate().singleOrNull()
         val oldTs = wallet?.get(CharacterCurrencies.value) ?: 0
-        if (oldTs < 0 || oldTs.toLong() + tsCredit > 999_999_999L) {
+        // Refuse stale online cache; direct SQL without this check can
+        // overwrite a simultaneous TS purchase or credit.
+        if (oldTs != expectedTsBalance || oldTs < 0 ||
+            oldTs.toLong() + tsCredit > 999_999_999L) {
             return@suspendTransaction null
         }
         val nextTs = oldTs + tsCredit
