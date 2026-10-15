@@ -16063,6 +16063,11 @@ protocolTable[170][1] = function(data)
     end
 
     UIMine.SetData(type, lastMining, setTime, machinesData, dateLimit);
+    -- MineCount (S170-002) and the mine dialog (S170-001) share one ore reserve.
+    -- S170-001 opens/updates UI before SetData; repaint after fresh data.
+    if UI.IsVisible(UIMine) then
+      UIMine.UpdateUI();
+    end
   elseif res == 255 then
     ShowCenterMessage(string.Get(71336));
   end
