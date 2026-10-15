@@ -13,6 +13,7 @@ import tw.tsm.domain.interfaces.SessionSender
 import tw.tsm.domain.interfaces.repositories.CharacterRecord
 import tw.tsm.domain.interfaces.repositories.HotkeyRepository
 import tw.tsm.domain.interfaces.repositories.MessageBoardRepository
+import tw.tsm.domain.interfaces.repositories.WelfareStateRepository
 import tw.tsm.domain.interfaces.repositories.SkillRepository
 import tw.tsm.domain.valueobjects.PlayerDataDto
 import tw.tsm.domain.valueobjects.ThingData
@@ -61,6 +62,7 @@ class LoginService(
     private val sacredEquipPrimaryDefs: Map<Int, SacredEquipPrimaryDef> = emptyMap(),
     private val messageBoardRepository: MessageBoardRepository? = null,
     private val mallQuotaSystem: MallQuotaSystem? = null,
+    private val welfareStateRepository: WelfareStateRepository? = null,
 ) {
 
     /**
@@ -131,6 +133,10 @@ class LoginService(
         // cần MarkManager.flags đã được khởi tạo để có thể hiển thị đúng các nút chức năng
         questSystem.refreshDungeonDaily(record.id)
         questSystem.refreshDungeonWeekly(record.id)
+        // Prior DVT builds could persist an activated marker step without its
+        // one-shot bit. Restore only source-proven markers before S024-007
+        // and before PlayerAppear initializes the function icons.
+        questSystem.reconcileStoredMarkerMissionFlags(record.id)
         val missions = questSystem.getMissions(record.id)
         val flags    = questSystem.getFlags(record.id)
         responseSender.sendInitMissionSteps(session, missions)
@@ -248,7 +254,15 @@ class LoginService(
         responseSender.sendPillCounts(session, attrPill = 0, hpPill = 0, spPill = 0, skillPill = 0)
 
         // 4. S:003-001 Số ngày đăng nhập
-        responseSender.sendLoginDay(session, loginDay = 1, continueLogin = 1)
+        val verifiedClaimDays = roleCountSystem.getValue(record.id, 108).coerceAtLeast(0)
+        val recordedDays = welfareStateRepository?.recordLoginDay(
+            record.id, DispatchSystem.currentDayKey()
+        ) ?: 0
+        responseSender.sendLoginDay(
+            session,
+            loginDay = WelfareLoginDayPolicy.visibleDay(recordedDays, verifiedClaimDays),
+            continueLogin = verifiedClaimDays.coerceIn(1, 65535),
+        )
 
         // 5. S:003-002 Thời gian online hằng ngày. Lua lấy elapsed từ mốc này + RoleCount.OnlineTime.
         session.onlineStartMillis = System.currentTimeMillis()
