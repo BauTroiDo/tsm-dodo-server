@@ -47,3 +47,15 @@ The ONLY matching 'Mining' symbol in the 18MB dump.cs text search is eLifeSkillT
 - Previously Kotlin `MiningHandler.setMiningState` returned S170-011 success on `mineType=1`, but performed **no persistent transition**. A false success is not source parity.
 - The server now safely returns S170-011 `255` for a correctly-sized unsupported request and records a warning. Malformed payload remains ignored. It does not invent a DVT mining start/stop state machine; the original server rules are still unknown.
 - Dedicated regression `Dvt115MiningUnsupportedStateWireTest` verifies one-byte requests, invalid type, malformed input and no ore/fuel/teleport effects. No TS currency or ore reserve change is made.
+
+## Mining day-limit and worker handover — persisted SQL audit (2026-10-15)
+
+**Original client behavior:** `UIMine.lua` `UpdateTimer` initializes `count=0` when `dayLimit=true`, preserves the received worker fullness, and sets `isMining=false` even if workers have food. With `dayLimit=false`, elapsed 360-second fuel ticks consume worker 1, then 2, then 3, then 4. S170-001 exposes the flag as the final UInt8.
+
+**Kotlin current state:** `MiningRecord.dayLimit` defaults false and is saved/loaded through `character_mining.day_limit`; `MiningView.isMining` and `MiningSystem.settle` honor a true flag. But the ONLY references inside app/gamelogic/domain/persistence were model definition, SQL serialization, protocol serialization, and checks. **No producer automatically sets dayLimit true and no verified source-backed daily reset exists.** Thus support for an externally persisted flag is NOT actual enforcement of daily mining limits.
+
+**DEV read-only query:** aggregated `character_mining` returned 1 record, 0 `day_limit=1`, 1 record with fuel. Executed as SELECT; no accounts/identifiers exported or DB mutated. JVM PID 10012 on port 6613 remained unchanged.
+
+**H2 regression:** Expanded `DvtMiningFuelAtomicSqlTest` (SQL-backed, not mocked-only) with (1) dayLimit=true after three simulated days: unchanged worker fuel, stopped mine state, persistent flag; (2) worker handover 1→2→3 across three ticks remains persisted after reload. H2 fixture now includes `MiningOreReserves`, which is required by real `MiningSystem.getView`. Combined 5 classes = **26/26 PASS**. The first experimental run FAILED solely because the fixture omitted that existing table; those two test edits were immediately rolled back and the original file hash `9cf2f850af4cab017637b6f057f5625e27b23f65` re-verified before a new attempt, under mandatory rollback rule #61. Fixed H2 setup then 26/26 PASS. Final verified test-file Git blob SHA: `44a9bbff8901094b0af5a2386c01e3a7d9a40e71`.
+
+**Do not invent** either daily cap threshold, award formula, day-boundary timezone, or reset behavior merely from the existence of a client `dayLimit` boolean. These remain original DVT backend facts still not established by IL2CPP client/Lua. Meanwhile `MiningSystem.settle` spends fullness but does not pay TS; do not ask users to spend fuel until settlement can be proven.
