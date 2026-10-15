@@ -126,7 +126,7 @@ class DvtBattlePassRegressionTest {
         store.bag.putAll((0 until counts.getBagCapacity(1)).associateWith { ThingData(1, 1) })
         system = store.runtime().first
         assertFalse(system.claim(1, now))
-        assertFalse(system.claim(1, BattlePassSystem.end(times.getValue(117))))
+        assertFalse(system.claim(1, LocalDateTime.of(2026, 9, 16, 0, 0).minusSeconds(1)))
         store.season = 116
         assertFalse(system.isOpen(1, now))
         assertFalse(system.claim(1, now))
@@ -142,8 +142,8 @@ class DvtBattlePassRegressionTest {
         val reader = PacketReader(packets[0])
         assertEquals(77,reader.readUByte()); assertEquals(1,reader.readUByte()); reader.readUByte()
         assertEquals(117,reader.readUShortLE())
-        assertEquals(OleDate.fromLocalDateTime(BattlePassSystem.start(times.getValue(117))),reader.readDoubleLE())
-        assertEquals(OleDate.fromLocalDateTime(BattlePassSystem.end(times.getValue(117))),reader.readDoubleLE())
+        assertEquals(OleDate.fromLocalDateTime(BattlePassSystem.window(times.getValue(117),now).start),reader.readDoubleLE())
+        assertEquals(OleDate.fromLocalDateTime(BattlePassSystem.window(times.getValue(117),now).end),reader.readDoubleLE())
         assertArrayEquals(byteArrayOf(77,11,0,128.toByte(),1,0),ActivityHandler.battlePassPacket(1,0))
         assertArrayEquals(byteArrayOf(77,11,0,128.toByte(),255.toByte(),1),ActivityHandler.battlePassPacket(255,1))
     }
