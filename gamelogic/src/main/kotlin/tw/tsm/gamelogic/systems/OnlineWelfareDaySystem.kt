@@ -29,6 +29,18 @@ class OnlineWelfareDaySystem(
 
     private fun lock(id: Long): Mutex = locks.computeIfAbsent(id) { Mutex() }
 
+    /**
+     * Consume the verified character-specific offline period in SQL *before*
+     * RoleCountSystem.loadCounts. Never infer past sessions from account last_login_at.
+     */
+    suspend fun beforeRoleCountsLoad(characterId: Long) {
+        if (characterId > 0L) {
+            lock(characterId).withLock {
+                repo.resumeCharacterOfflineMinutes(characterId, System.currentTimeMillis())
+            }
+        }
+    }
+
     /** Must run after role counts load and before sending S085-001 / S081-002. */
     suspend fun onCharacterEnter(session: GameSession) {
         if (session.roleId <= 0) return
@@ -67,6 +79,8 @@ class OnlineWelfareDaySystem(
             }
             session.onlineStartMillis = 0L
             counts.saveCounts(characterId)
+            // Double close will not extend the offline session; SQL guards 0->timestamp.
+            repo.markCharacterOffline(characterId, now)
         }
     }
 
