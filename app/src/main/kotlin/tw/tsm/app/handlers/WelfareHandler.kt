@@ -65,7 +65,10 @@ class WelfareHandler(
         welfareLogger.info {
             "Welfare C87-002: roleId=${session.roleId} playerId=${session.playerId} kind=$kind day=$requestedDay count=$count"
         }
-        if (reader.remaining != 0 || count != 1) {
+        if (reader.remaining != 0 ||
+            (kind == AWARD_CHANGE && count !in 1..MAX_CHANGE_COUNT) ||
+            (kind != AWARD_CHANGE && count != 1)
+        ) {
             sendClaimResult(session, kind, RESULT_WRONG_KIND)
             return
         }
@@ -74,6 +77,7 @@ class WelfareHandler(
             AWARD_LOGIN -> handleDailyLoginClaim(session, requestedDay)
             AWARD_ONLINE -> handleOnlineClaim(session, requestedDay)
             AWARD_OPEN_SERVER -> handleOpenServerClaim(session, requestedDay)
+            AWARD_CHANGE -> handleItemExchange(session, requestedDay, count)
             else -> sendClaimResult(session, kind, RESULT_WRONG_KIND)
         }
     }
@@ -213,6 +217,43 @@ class WelfareHandler(
         }
     }
 
+    /**
+     * Original DVT Change table group9: rewards are INPUTS, changeItemId and
+     * changeQuantity are OUTPUTS. This branch is only for bag-backed items.
+     * Currency and role-count pseudo-items are rejected instead of granted
+     * freely or debited in separate non-atomic SQL transactions.
+     */
+    private suspend fun handleItemExchange(session: GameSession, requestedDay: Int, count: Int) {
+        val award = loginAwardDefs.firstOrNull {
+            it.group == AWARD_CHANGE && it.day == requestedDay
+        } ?: run {
+            sendClaimResult(session, AWARD_CHANGE, RESULT_BAD_REWARD)
+            return
+        }
+        val inputs = award.rewards.filter { it.first > 0 && it.second > 0 }
+        if (inputs.isEmpty() || award.changeItemId <= 0 || award.changeQuantity <= 0 ||
+            award.flag != 0 || award.roleCount != 0 ||
+            inputs.any { it.first >= FIRST_PSEUDO_ITEM_ID } ||
+            award.changeItemId >= FIRST_PSEUDO_ITEM_ID
+        ) {
+            sendClaimResult(session, AWARD_CHANGE, RESULT_CONDITION_NOT_MET)
+            return
+        }
+        val changed = inventorySystem.exchangeWelfareItemsAtomic(
+            session.roleId.toLong(), inputs,
+            award.changeItemId to award.changeQuantity, count, award.day,
+        ) ?: run {
+            sendClaimResult(session, AWARD_CHANGE, RESULT_BAG_FULL)
+            return
+        }
+        responseSender.sendAllBagItems(
+            session, inventorySystem.getBag(session.roleId.toLong()), refresh = true
+        )
+        sendClaimResult(session, AWARD_CHANGE, RESULT_SUCCESS)
+        welfareLogger.info { "Welfare item exchange committed day=" +
+            requestedDay + " qty=" + count + " slots=" + changed.size }
+    }
+
     private suspend fun grantAward(session: GameSession, award: LoginAwardDef): Boolean {
         val charId = session.roleId.toLong()
         val rewards = award.rewards.filter { it.first > 0 && it.second > 0 }
@@ -285,6 +326,9 @@ class WelfareHandler(
         private const val AWARD_LOGIN = 1
         private const val AWARD_ONLINE = 3
         private const val AWARD_OPEN_SERVER = 4
+        private const val AWARD_CHANGE = 9
+        private const val MAX_CHANGE_COUNT = 50
+        private const val FIRST_PSEUDO_ITEM_ID = 65300
         private const val OPEN_SERVER_LOGIN_DAY = 1
         private const val LOGIN_BIT_FLAG = 1
         private const val LOGIN_SIGN_DAY = 107
