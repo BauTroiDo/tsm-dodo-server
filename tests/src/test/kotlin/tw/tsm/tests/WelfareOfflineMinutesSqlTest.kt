@@ -78,11 +78,11 @@ class WelfareOfflineMinutesSqlTest {
         assertEquals(62,count(88L,171))
         assertEquals(0,count(77L,171))
     }
-    @Test fun noInventedExpOrCurrencyCounters() = runBlocking {
+    @Test fun approvedHistoricExpPercentWithoutCurrencySideEffects() = runBlocking {
         val start=millis("2026-10-16",8,0)
         repo.markCharacterOffline(77L,start)
         repo.resumeCharacterOfflineMinutes(77L,start+480*60_000L)
-        assertEquals(0,count(77L,169))
+        assertEquals(24,count(77L,169))
         assertEquals(0,count(77L,170))
         assertEquals(480,count(77L,171))
     }
