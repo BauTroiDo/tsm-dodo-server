@@ -1,6 +1,7 @@
 package tw.tsm.domain.interfaces.repositories
 
 import tw.tsm.domain.valueobjects.ThingData
+import tw.tsm.domain.valueobjects.FollowNpcData
 
 /**
  * Interface kho vật phẩm — truy cập lưu trữ bền vững cho túi đồ/trang bị/Tiền Trang
@@ -8,6 +9,7 @@ import tw.tsm.domain.valueobjects.ThingData
  * storageType tương ứng [tw.tsm.domain.constants.EThings]: BAG=1, BANK=4, EQUIP=8
  */
 data class HouseFurnitureRedemption(val bagAfter: tw.tsm.domain.valueobjects.ThingData?, val ownedTotal: Int)
+data class PetRebirthCommit(val bagAfter: ThingData?)
 
 interface InventoryRepository {
     /** Persisted furniture ownership independent of BAG. */
@@ -24,6 +26,15 @@ interface InventoryRepository {
      *
      * @return bảng ánh xạ slot → ThingData
      */
+    /**
+     * Atomic token debit and durable rebirth for one pet. Fail closed in fake repositories.
+     * A non-null result means BOTH writes committed and caches may be updated.
+     */
+    suspend fun commitPetRebirthAtomic(
+        characterId: Long, tokenSlot: Int, tokenItemId: Int,
+        oldPet: FollowNpcData, newPet: FollowNpcData,
+    ): PetRebirthCommit? = error("Atomic pet rebirth not available")
+
     suspend fun loadItems(characterId: Long, storageType: Int): Map<Int, ThingData>
 
     /**

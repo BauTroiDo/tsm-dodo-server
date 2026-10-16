@@ -2,6 +2,7 @@ package tw.tsm.gamelogic.systems
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import tw.tsm.domain.data.ItemDef
+import tw.tsm.domain.interfaces.repositories.InventoryRepository
 import tw.tsm.domain.data.NpcDef
 import tw.tsm.domain.interfaces.StatCalculator
 import tw.tsm.domain.valueobjects.FollowNpcData
@@ -47,7 +48,8 @@ class PetRebornSystem(
     private val inventorySystem: InventorySystem,
     private val statCalculator: StatCalculator,
     private val npcDefs: Map<Int, NpcDef>,
-    private val itemDefs: Map<Int, ItemDef>
+    private val itemDefs: Map<Int, ItemDef>,
+    private val inventoryRepository: InventoryRepository
 ) {
 
     /**
@@ -59,66 +61,74 @@ class PetRebornSystem(
      * @param followSlot Ô võ tướng mang theo (hệ cơ số 1 / 1-based)
      * @param rebornKind 1=Chuyển sinh lần 1, 2=Chuyển sinh lần 2
      */
-    suspend fun reborn(charId: Long, followSlot: Int, rebornKind: Int): RebornResult {
+    suspend fun reborn(charId: Long, followSlot: Int, rebornKind: Int): RebornResult =
+        CharacterPersistenceGuard.withLock(charId) {
         val pet = petSystem.getFollowNpc(charId, followSlot)
-            ?: return RebornResult.Fail(MSG_NO_PET)
+            ?: return@withLock RebornResult.Fail(MSG_NO_PET)
 
         // canGrow 0=Không thể trưởng thành, 2=NPC nhiệm vụ → Không thể chuyển sinh
         if (pet.canGrow == 0 || pet.canGrow == 2) {
-            return RebornResult.Fail(MSG_CANNOT_GROW)
+            return@withLock RebornResult.Fail(MSG_CANNOT_GROW)
         }
 
         // Ngưỡng cấp độ: Chuyển sinh lần 1 cần 30 cấp / Chuyển sinh lần 2 cần 60 cấp
-        if (rebornKind == REBORN_FIRST && pet.level < 30) return RebornResult.Fail(MSG_LV_BELOW_30)
-        if (rebornKind == REBORN_SECOND && pet.level < 60) return RebornResult.Fail(MSG_LV_BELOW_60)
+        // Enforce the correct NPC generation and reject duplicate/replayed turns.
+        if (rebornKind !in REBORN_FIRST..REBORN_SECOND ||
+            pet.turnKind != rebornKind - 1 ||
+            npcDefs[pet.npcId]?.turn != rebornKind - 1
+        ) return@withLock RebornResult.Fail(MSG_NO_PET)
+
+        if (rebornKind == REBORN_FIRST && pet.level < 30) return@withLock RebornResult.Fail(MSG_LV_BELOW_30)
+        if (rebornKind == REBORN_SECOND && pet.level < 60) return@withLock RebornResult.Fail(MSG_LV_BELOW_60)
 
         // Ngưỡng độ trung thành: Chuyển sinh lần 1 cần 60 / Chuyển sinh lần 2 cần 100
-        if (rebornKind == REBORN_FIRST && pet.loyalty < 60) return RebornResult.Fail(MSG_FAITH_BELOW_60)
-        if (rebornKind == REBORN_SECOND && pet.loyalty < 100) return RebornResult.Fail(MSG_FAITH_BELOW_100)
+        if (rebornKind == REBORN_FIRST && pet.loyalty < 60) return@withLock RebornResult.Fail(MSG_FAITH_BELOW_60)
+        if (rebornKind == REBORN_SECOND && pet.loyalty < 100) return@withLock RebornResult.Fail(MSG_FAITH_BELOW_100)
 
         // Ô trang bị phải được làm trống (TextData 21078 "Võ tướng muốn chuyển sinh chưa làm trống ô trang bị")
         if (pet.equips.values.any { !it.isEmpty }) {
-            return RebornResult.Fail(MSG_EQUIP_NOT_EMPTY)
+            return@withLock RebornResult.Fail(MSG_EQUIP_NOT_EMPTY)
         }
 
         // Tìm định nghĩa tín vật chuyển sinh: Lần 1 kind=37/attrKind=65, Lần 2 kind=51/attrKind=67
         val itemKind = if (rebornKind == REBORN_FIRST) ITEM_KIND_FIRST_TOKEN else ITEM_KIND_SECOND_TOKEN
         val attrKind = if (rebornKind == REBORN_FIRST) ATTR_KIND_FIRST else ATTR_KIND_SECOND
-        val tokenEntry = itemDefs.entries.firstOrNull { (_, def) ->
-            def.kind == itemKind && def.attr1Kind == attrKind &&
-                    def.attr1Value == pet.npcId && def.attr2Kind == attrKind
-        } ?: return RebornResult.Fail(MSG_NO_TOKEN)
+        // Follow UINpcTurn.lua: choose from the real BAG, not the first DAT mapping.
+        // NPC 10001 has two valid first-rebirth tokens with different targets.
+        val heldToken = inventorySystem.getBag(charId).entries.sortedBy { it.key }
+            .firstOrNull { (_, thing) ->
+                val def = itemDefs[thing.itemId]
+                thing.quantity > 0 && def?.kind == itemKind &&
+                    def.attr1Kind == attrKind && def.attr1Value == pet.npcId &&
+                    def.attr2Kind == attrKind
+            } ?: return@withLock RebornResult.Fail(MSG_NO_TOKEN)
+        val tokenItemId = heldToken.value.itemId
+        val bagSlot = heldToken.key
+        val targetNpcId = itemDefs.getValue(tokenItemId).attr2Value
 
-        val tokenItemId = tokenEntry.key
-        val targetNpcId = tokenEntry.value.attr2Value
         val targetDef = npcDefs[targetNpcId] ?: run {
             logger.error { "Chuyển sinh thất bại: Tín vật $tokenItemId trỏ đến NPC $targetNpcId không tồn tại" }
-            return RebornResult.Fail(MSG_EXCEPTION)
+            return@withLock RebornResult.Fail(MSG_EXCEPTION)
         }
 
         // Trong túi đồ có tín vật
-        val bagSlot = inventorySystem.getBag(charId).entries
-            .firstOrNull { it.value.itemId == tokenItemId && it.value.quantity > 0 }?.key
-            ?: return RebornResult.Fail(MSG_NO_TOKEN)
 
         // Võ tướng sau khi chuyển sinh không được sở hữu trùng lặp: Trên người (mang theo + xe ngựa) / Khách sạn (bao gồm kho võ tướng)
         if (petSystem.hasNpcOnBody(charId, targetNpcId)) {
-            return RebornResult.Fail(MSG_DUP_ON_BODY)
+            return@withLock RebornResult.Fail(MSG_DUP_ON_BODY)
         }
         if (petSystem.hasNpcInInn(charId, targetNpcId)) {
-            return RebornResult.Fail(if (rebornKind == REBORN_FIRST) MSG_DUP_IN_INN else MSG_DUP_IN_INN_2)
+            return@withLock RebornResult.Fail(if (rebornKind == REBORN_FIRST) MSG_DUP_IN_INN else MSG_DUP_IN_INN_2)
         }
 
         // Khấu trừ tín vật
-        if (!inventorySystem.removeFromBag(charId, bagSlot, 1)) {
-            return RebornResult.Fail(MSG_EXCEPTION)
-        }
 
         // Tạo võ tướng sau khi chuyển sinh: Cấp độ 1, Trung thành 60, Đầy HP đầy SP, Thuộc tính cơ bản của NPC mới
         // Tham số turn dùng để tính HP tối đa sẽ sử dụng bậc chuyển sinh của NPC mới (Phản chiếu lại Calc.GetMaxHp của bản xem trước trong UINpcTurn)
         val maxHp = statCalculator.calculateMaxHp(level = 1, hpx = targetDef.hpx, turn = targetDef.turn)
         val maxSp = statCalculator.calculateMaxSp(level = 1, spx = targetDef.spx, turn = targetDef.turn)
         val newPet = FollowNpcData(
+            instanceId = pet.instanceId,
             slotIndex = followSlot,
             npcId = targetNpcId,
             storageType = PetSystem.STORAGE_FOLLOW,
@@ -141,11 +151,23 @@ class PetRebornSystem(
         )
         // TODO: Việc bản gốc có tặng điểm kỹ năng/điểm thuộc tính dựa trên cấp độ cũ hay không cần được xác minh thêm (Không sử dụng công thức tự chế level/(2*Số lần chuyển sinh) của Private server PC)
 
-        val applied = petSystem.rebornFollowNpc(charId, followSlot, newPet)
-            ?: return RebornResult.Fail(MSG_EXCEPTION)
+        // SQL commit comes BEFORE cache publication. Failure leaves both intact.
+        val commit = try {
+            inventoryRepository.commitPetRebirthAtomic(
+                charId, bagSlot, tokenItemId, pet, newPet
+            )
+        } catch (error: Exception) {
+            logger.error(error) { "Atomic pet rebirth failed for characterId=$charId" }
+            null
+        } ?: return@withLock RebornResult.Fail(MSG_EXCEPTION)
+
+        val applied = checkNotNull(petSystem.rebornFollowNpc(charId, followSlot, newPet)) {
+            "Pet cache missing after durable rebirth; reconnect to reload"
+        }
+        inventorySystem.publishRebirthBagAfterCommit(charId, bagSlot, commit.bagAfter)
 
         logger.info { "${if (rebornKind == REBORN_FIRST) "Chuyển sinh lần 1" else "Chuyển sinh lần 2"} thành công: charId=$charId ${pet.npcId} → $targetNpcId" }
-        return RebornResult.Ok(applied, bagSlot)
+        return@withLock RebornResult.Ok(applied, bagSlot)
     }
 
     companion object {

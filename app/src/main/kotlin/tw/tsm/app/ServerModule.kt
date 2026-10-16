@@ -558,7 +558,7 @@ fun serverModule(config: Config, gameDataManager: GameDataManager) = module {
         )
     }
     single { PetUpgradeSystem(get(), get(), get(), get(), get<GameDataManager>().npcDefs, get<GameDataManager>().npcUpgradeDefs) }
-    single { PetRebornSystem(get(), get(), get(), get<GameDataManager>().npcDefs, get<GameDataManager>().itemDefs) }
+    single { PetRebornSystem(get(), get(), get(), get<GameDataManager>().npcDefs, get<GameDataManager>().itemDefs, get<InventoryRepository>()) }
     single { PetEquipSystem(get(), get(), get<GameDataManager>().itemDefs) }
     single {
         AchievementSystem(
