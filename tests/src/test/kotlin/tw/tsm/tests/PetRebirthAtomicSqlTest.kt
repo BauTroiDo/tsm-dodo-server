@@ -6,6 +6,7 @@ import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.Assertions.*
@@ -94,6 +95,30 @@ class PetRebirthAtomicSqlTest {
             runBlocking { repo.commitPetRebirthAtomic(character, 7, 51001, old, next) }
         }
         assertData(db, 41003, 1, 2)
+    }
+
+    @Test fun refusesStalePetInstanceWithoutDebitingToken() = fixture { repo, db ->
+        val other = old.copy(instanceId = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee")
+        assertNull(repo.commitPetRebirthAtomic(character, 7, 51001, other, next))
+        assertData(db, 41003, 1, 2)
+    }
+
+    @Test fun lastTokenIsDeletedAndPetRemainsDurable() = fixture { repo, db ->
+        transaction(db) {
+            Inventories.update({ Inventories.characterId eq character }) {
+                it[quantity] = 1
+            }
+        }
+        val result = repo.commitPetRebirthAtomic(character, 7, 51001, old, next)
+        assertNotNull(result)
+        assertNull(result!!.bagAfter)
+        transaction(db) {
+            assertEquals(0L, Inventories.selectAll().count())
+            val saved = CharacterPets.selectAll().single()
+            assertEquals(45001, saved[CharacterPets.npcId])
+            assertEquals(2, saved[CharacterPets.turnKind])
+            assertEquals(old.instanceId, saved[CharacterPets.instanceId])
+        }
     }
 
     @Test fun refusesPetWithEquipmentWithoutDebitingToken() = fixture { repo, db ->
